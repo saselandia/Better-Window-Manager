@@ -1,0 +1,80 @@
+configuration {
+    show-icons: true;
+}
+
+* {
+    font: "JetBrainsMono Nerd Font 10";
+    background-color: transparent;
+    text-color: #ede0d4;
+}
+
+window {
+    width: 70%;
+    height: 65%;
+    transparency: "real";
+    border-radius: 16px;
+    border: 2px solid;
+    border-color: #f5bc6f;
+    background-color: #18120bF2;
+    padding: 24px;
+}
+
+mainbox {
+    children: [ inputbar, listview ];
+    spacing: 16px;
+}
+
+inputbar {
+    children: [ prompt, entry ];
+    background-color: #251f17;
+    border-radius: 12px;
+    padding: 12px 16px;
+}
+
+prompt {
+    text-color: #f5bc6f;
+    margin: 0px 8px 0px 0px;
+}
+
+entry {
+    placeholder: "Buscar wallpaper...";
+    placeholder-color: #9c8f80;
+    text-color: #ede0d4;
+}
+
+listview {
+    columns: 3;
+    lines: 3;
+    spacing: 14px;
+    layout: vertical;
+    cycle: true;
+}
+
+element {
+    orientation: vertical;
+    padding: 12px;
+    border-radius: 12px;
+    spacing: 8px;
+    cursor: pointer;
+}
+
+element selected {
+    background-color: #633f00;
+    border: 1px solid;
+    border-color: #f5bc6f;
+}
+
+element-icon {
+    size: 115px;
+    horizontal-align: 0.5;
+}
+
+element-text {
+    horizontal-align: 0.5;
+    text-color: #ede0d4;
+}
+
+element-text selected {
+    text-color: #ffddb4;
+    font: "JetBrainsMono Nerd Font Bold 10";
+}

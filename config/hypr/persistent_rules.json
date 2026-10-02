@@ -1,0 +1,19 @@
+{
+    "steam_friends": {
+        "name": "persist_steam_friends",
+        "description": "Steam (Amigos / Chat)",
+        "match": {
+            "class": "^steam$",
+            "title": "(?i).*(friends|amigos|chat).*"
+        },
+        "float": true
+    },
+    "steam_app_22370": {
+        "name": "persist_steam_app_22370",
+        "description": "steam_app_22370",
+        "match": {
+            "class": "^steam_app_22370$"
+        },
+        "float": false
+    }
+}

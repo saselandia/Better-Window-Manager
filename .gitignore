@@ -1,0 +1,20 @@
+# Cache & temporary files
+__pycache__/
+*.py[cod]
+*$py.class
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+*.log
+*.qslog
+
+# System & IDE files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Runtime state files (created dynamically by the DE)
+/config/hypr/persistent_rules.json.tmp

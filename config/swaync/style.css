@@ -1,0 +1,37 @@
+@define-color m3_primary #f5bc6f;
+@define-color m3_on_primary #452b00;
+@define-color m3_primary_container #633f00;
+@define-color m3_surface #18120b;
+@define-color m3_on_surface #ede0d4;
+@define-color m3_outline #9c8f80;
+
+* {
+    font-family: 'JetBrainsMono Nerd Font', 'Noto Sans', sans-serif;
+}
+
+.control-center {
+    background: alpha(@m3_surface, 0.88);
+    border-radius: 16px;
+    border: 2px solid @m3_primary_container;
+    padding: 14px;
+}
+
+.notification {
+    background: @m3_surface;
+    border-radius: 12px;
+    border: 1px solid @m3_outline;
+    padding: 10px;
+}
+
+.notification-default-action {
+    color: @m3_on_surface;
+}
+
+.summary {
+    color: @m3_primary;
+    font-weight: bold;
+}
+
+.body {
+    color: @m3_on_surface;
+}

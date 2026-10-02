@@ -1,0 +1,58 @@
+[config]
+reload_apps = true
+source_color_index = 0
+
+[templates.hyprland_colors]
+input_path = '~/.config/matugen/templates/colors.lua'
+output_path = '~/.config/hypr/modules/colors.lua'
+post_hook = 'hyprctl reload'
+
+[templates.quickshell_colors]
+input_path = '~/.config/matugen/templates/colors.json'
+output_path = '~/.local/state/quickshell/user/generated/colors.json'
+post_hook = 'quickshell -c ii ipc call theme reload 2>/dev/null || true'
+
+[templates.rofi_picker]
+input_path = '~/.config/matugen/templates/rofi-picker.rasi'
+output_path = '~/.config/rofi/wallpaper-picker.rasi'
+
+[templates.kitty]
+input_path = '~/.config/matugen/templates/kitty-colors.conf'
+output_path = '~/.config/kitty/kitty-colors.conf'
+post_hook = 'kill -SIGUSR1 $(pidof kitty) 2>/dev/null || true'
+
+[templates.vesktop]
+input_path = '~/.config/matugen/templates/vesktop.css'
+output_path = '~/.var/app/dev.vencord.Vesktop/config/vesktop/themes/material-you.theme.css'
+
+[templates.vesktop_quickcss]
+input_path = '~/.config/matugen/templates/vesktop.css'
+output_path = '~/.var/app/dev.vencord.Vesktop/config/vesktop/settings/quickCss.css'
+
+[templates.spicetify]
+input_path = '~/.config/matugen/templates/spicetify.ini'
+output_path = '~/.config/spicetify/Themes/MaterialYou/color.ini'
+post_hook = '~/.config/hypr/scripts/reload-spotify.sh'
+
+[templates.firefox]
+input_path = '~/.config/matugen/templates/firefox-colors.css'
+output_path = '~/.mozilla/firefox/ei4nv824.default-release/chrome/material-you.css'
+
+[templates.pywal]
+input_path = '~/.config/matugen/templates/pywal-colors.json'
+output_path = '~/.cache/wal/colors.json'
+post_hook = '~/.local/share/pywalfox-venv/bin/pywalfox update 2>/dev/null || true'
+
+[templates.gtk3]
+input_path = '~/.config/matugen/templates/gtk.css'
+output_path = '~/.config/gtk-3.0/gtk.css'
+
+[templates.gtk4]
+input_path = '~/.config/matugen/templates/gtk.css'
+output_path = '~/.config/gtk-4.0/gtk.css'
+post_hook = '~/.config/hypr/scripts/sync-nautilus.sh 2>/dev/null || true'
+
+[templates.swaync]
+input_path = '~/.config/matugen/templates/swaync.css'
+output_path = '~/.config/swaync/style.css'
+post_hook = 'pgrep -x swaync >/dev/null && timeout 1 swaync-client -rs >/dev/null 2>&1 || true'

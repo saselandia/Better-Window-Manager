@@ -1,0 +1,80 @@
+configuration {
+    show-icons: true;
+}
+
+* {
+    font: "JetBrainsMono Nerd Font 10";
+    background-color: transparent;
+    text-color: {{colors.on_surface.default.hex}};
+}
+
+window {
+    width: 70%;
+    height: 65%;
+    transparency: "real";
+    border-radius: 16px;
+    border: 2px solid;
+    border-color: {{colors.primary.default.hex}};
+    background-color: {{colors.surface.default.hex}}F2;
+    padding: 24px;
+}
+
+mainbox {
+    children: [ inputbar, listview ];
+    spacing: 16px;
+}
+
+inputbar {
+    children: [ prompt, entry ];
+    background-color: {{colors.surface_container.default.hex}};
+    border-radius: 12px;
+    padding: 12px 16px;
+}
+
+prompt {
+    text-color: {{colors.primary.default.hex}};
+    margin: 0px 8px 0px 0px;
+}
+
+entry {
+    placeholder: "Buscar wallpaper...";
+    placeholder-color: {{colors.outline.default.hex}};
+    text-color: {{colors.on_surface.default.hex}};
+}
+
+listview {
+    columns: 3;
+    lines: 3;
+    spacing: 14px;
+    layout: vertical;
+    cycle: true;
+}
+
+element {
+    orientation: vertical;
+    padding: 12px;
+    border-radius: 12px;
+    spacing: 8px;
+    cursor: pointer;
+}
+
+element selected {
+    background-color: {{colors.primary_container.default.hex}};
+    border: 1px solid;
+    border-color: {{colors.primary.default.hex}};
+}
+
+element-icon {
+    size: 115px;
+    horizontal-align: 0.5;
+}
+
+element-text {
+    horizontal-align: 0.5;
+    text-color: {{colors.on_surface.default.hex}};
+}
+
+element-text selected {
+    text-color: {{colors.on_primary_container.default.hex}};
+    font: "JetBrainsMono Nerd Font Bold 10";
+}
