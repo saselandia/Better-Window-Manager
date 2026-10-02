@@ -150,11 +150,11 @@ El instalador `./install.sh` se encarga de configurar y vincular los temas de to
 - **Lanzador:** Pulsa **`Super + E`** o **`Alt + E`** en cualquier momento para abrir el gestor de archivos con el tema y acento activos.
 
 ### 2. 🌐 Firefox
-- **Activar estilos de usuario:** Si no se aplican los colores tras abrir Firefox:
-  1. Escribe `about:config` en la barra de direcciones.
-  2. Asegúrate de que `toolkit.legacyUserProfileCustomizations.stylesheets` esté establecido en **`true`**.
-  3. Reinicia Firefox.
-- *(Opcional - Sincronización en vivo del Theme API)*: Para que la barra de pestañas cambie al vuelo sin recargar la ventana, instala la extensión [Pywalfox](https://addons.mozilla.org/firefox/addon/pywalfox/) y haz clic una vez en **"Fetch Pywal Colors"**.
+- **Habilitar Pywalfox y estilos de usuario:**
+  - El instalador despliega automáticamente `userChrome.css`, la extensión `pywalfox.xpi` en tu perfil de Firefox y configura el host nativo en el sistema.
+  - Al abrir Firefox, si aparece una notificación indicando que se ha añadido la extensión Pywalfox, haz clic en **"Habilitar"** (Enable).
+  - En la barra de herramientas de Firefox, haz clic en el icono de **Pywalfox** y pulsa una vez en **"Fetch Pywal Colors"** para sincronizar la barra de pestañas en vivo.
+  - *(Comprobación opcional)*: Si por algún motivo los estilos personalizados no cargan, entra en `about:config` y confirma que `toolkit.legacyUserProfileCustomizations.stylesheets` esté en **`true`**.
 
 ### 3. 💬 Vesktop (Discord)
 - **Verificación de tema:** En Vesktop, abre **Ajustes de usuario** → **Vencord** → **Temas** y confirma que **Material You** está habilitado.
