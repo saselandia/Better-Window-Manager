@@ -54,7 +54,9 @@ hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("quickshell -c ii ipc call cheatsheet
 
 -- 2. Lanzadores de aplicaciones
 hl.bind("CTRL + RETURN", hl.dsp.exec_cmd(terminal), { description = "Lanzador: Abrir terminal (Kitty)" })
-hl.bind("SUPER_L", hl.dsp.exec_cmd(menu), { description = "Lanzador: Menú de aplicaciones / Búsqueda" })
+local superLauncher = os.getenv("HOME") .. "/.config/hypr/scripts/super-launcher.sh"
+hl.bind("SUPER_L", hl.dsp.exec_cmd(superLauncher), { release = true, description = "Lanzador: Menú de aplicaciones / Búsqueda" })
+hl.bind("SUPER_R", hl.dsp.exec_cmd(superLauncher), { release = true })
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager), { description = "Lanzador: Explorador de archivos (Nautilus)" })
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/hypr/scripts/wallpaper-picker.sh"), { description = "Lanzador: Selector de fondos de pantalla" })
 
@@ -106,13 +108,18 @@ hl.bind(mainMod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }), { descr
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true, description = "Ventana: Arrastrar ventana flotante" })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true, description = "Ventana: Redimensionar ventana flotante" })
 
+local function super_cmd(cmd)
+    return "touch /tmp/.super_interrupted; " .. cmd
+end
+
 -- 7. Sistema y entorno Quickshell
-hl.bind("SUPER + A", hl.dsp.exec_cmd("quickshell -c ii ipc call sidebarRight toggle"), { description = "Sistema: Panel lateral / Ajustes rápidos" })
-hl.bind("SUPER + I", hl.dsp.exec_cmd("qs -p " .. os.getenv("HOME") .. "/.config/quickshell/ii/settings.qml"), { description = "Sistema: Configuración del sistema" })
-hl.bind("SUPER + ALT + A", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/hypr/scripts/open-autostart.sh"), { description = "Sistema: Gestor de inicio automático (Autostart)" })
-hl.bind("SUPER + L", hl.dsp.exec_cmd("quickshell -c ii ipc call lock activate"), { description = "Sistema: Bloquear pantalla" })
+hl.bind("SUPER + A", hl.dsp.exec_cmd(super_cmd("quickshell -c ii ipc call sidebarRight toggle")), { description = "Sistema: Panel lateral / Ajustes rápidos" })
+hl.bind("SUPER + I", hl.dsp.exec_cmd(super_cmd("qs -p " .. os.getenv("HOME") .. "/.config/quickshell/ii/settings.qml")), { description = "Sistema: Configuración del sistema" })
+hl.bind("SUPER + ALT + A", hl.dsp.exec_cmd(super_cmd(os.getenv("HOME") .. "/.config/hypr/scripts/open-autostart.sh")), { description = "Sistema: Gestor de inicio automático (Autostart)" })
+hl.bind("SUPER + L", hl.dsp.exec_cmd(super_cmd("quickshell -c ii ipc call lock activate")), { description = "Sistema: Bloquear pantalla" })
 hl.bind("Print", hl.dsp.exec_cmd("quickshell -c ii ipc call region screenshot"), { description = "Sistema: Captura de pantalla por región" })
-hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd("quickshell -c ii ipc call region screenshot"))
+hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd(super_cmd("quickshell -c ii ipc call region screenshot")))
+hl.bind("SUPER + Escape", hl.dsp.exec_cmd("touch /tmp/.super_interrupted"))
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { description = "Sistema: Menú de apagado / Salir" })
 
 -- 8. Teclas multimedia y brillo
