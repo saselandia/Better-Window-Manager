@@ -45,6 +45,18 @@
 
 ---
 
+## 📸 Galería y Vistas Previas
+
+> 💡 **Tematización Dinámica en Tiempo Real:** Al cambiar el fondo de pantalla, **todas las aplicaciones y widgets adaptan sus colores automáticamente** al esquema tonal generado por `matugen`.
+
+| 🎨 Aplicaciones Tematizadas (Vesktop, Nautilus, Spotify) | 🌐 Firefox con userChrome.css y Terminal Kitty |
+| :---: | :---: |
+| [![Vesktop, Nautilus y Spotify](assets/screenshots/01-apps-material-you.png)](assets/screenshots/01-apps-material-you.png) | [![Firefox y Kitty](assets/screenshots/02-firefox-terminal.png)](assets/screenshots/02-firefox-terminal.png) |
+| **❄️ Entorno Limpio con Barra y Widgets Quickshell** | **⚡ Tema Cyberpunk de Alto Contraste con Neofetch** |
+| [![Gentoo Desktop](assets/screenshots/03-desktop-clean.jpg)](assets/screenshots/03-desktop-clean.jpg) | [![Cyberpunk Theme](assets/screenshots/04-cyberpunk-neofetch.png)](assets/screenshots/04-cyberpunk-neofetch.png) |
+
+---
+
 ## 📦 Estructura del Repositorio
 
 ```text
@@ -65,6 +77,7 @@ Better-Window-Manager/
 │   ├── spicetify/          # Tema MaterialYou (color.ini y user.css) para Spotify
 │   └── xdg-desktop-portal/ # Preferencias de portales Wayland (screencast, selector de archivos)
 ├── assets/
+│   ├── screenshots/        # Capturas de pantalla de muestra del entorno
 │   └── wallpapers/         # Fondos de pantalla incluidos listos para usar
 ├── install.sh              # Script instalador y verificador de dependencias
 ├── .gitignore              # Filtro de archivos temporales, cachés y logs
