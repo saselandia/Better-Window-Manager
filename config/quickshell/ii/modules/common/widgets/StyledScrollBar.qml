@@ -9,7 +9,7 @@ ScrollBar {
     policy: ScrollBar.AsNeeded
     topPadding: Appearance.rounding.normal
     bottomPadding: Appearance.rounding.normal
-    active: hovered || pressed
+    active: hovered || pressed || (parent && (parent.moving || parent.flicking))
 
     contentItem: Rectangle {
         implicitWidth: 4

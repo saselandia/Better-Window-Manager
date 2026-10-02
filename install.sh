@@ -233,6 +233,18 @@ mkdir -p "$HOME/.var/app/dev.vencord.Vesktop/config/vesktop/themes"
 mkdir -p "$HOME/.var/app/dev.vencord.Vesktop/config/vesktop/settings"
 mkdir -p "$HOME/.config/spicetify/Themes/MaterialYou"
 
+# Copiar e instalar fuentes requeridas
+FONTS_DIR="$HOME/.local/share/fonts"
+mkdir -p "$FONTS_DIR"
+if [ -d "$ASSETS_DIR/fonts" ]; then
+    echo -e "  ${BOLD}• Instalando tipografías en ~/.local/share/fonts...${NC}"
+    cp -u "$ASSETS_DIR/fonts/"*.ttf "$FONTS_DIR/" 2>/dev/null || cp "$ASSETS_DIR/fonts/"*.ttf "$FONTS_DIR/" 2>/dev/null || true
+    if command -v fc-cache >/dev/null 2>&1; then
+        fc-cache -f "$FONTS_DIR" >/dev/null 2>&1 || true
+    fi
+    print_success "Fuentes requeridas instaladas y caché actualizada."
+fi
+
 # Copiar fondos incluidos si la carpeta Wallpapers está vacía
 if [ -d "$ASSETS_DIR/wallpapers" ]; then
     cp -n "$ASSETS_DIR/wallpapers/"* "$HOME/Pictures/Wallpapers/" 2>/dev/null || true

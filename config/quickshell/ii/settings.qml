@@ -60,6 +60,11 @@ ApplicationWindow {
             component: "modules/settings/AutostartConfig.qml"
         },
         {
+            name: Translation.tr("Display"),
+            icon: "desktop_windows",
+            component: "modules/settings/DisplayConfig.qml"
+        },
+        {
             name: Translation.tr("Advanced"),
             icon: "construction",
             component: "modules/settings/AdvancedConfig.qml"
@@ -173,17 +178,13 @@ ApplicationWindow {
                 id: navRailWrapper
                 Layout.fillHeight: true
                 Layout.margins: 5
-                implicitWidth: navRail.expanded ? 150 : fab.baseSize
+                implicitWidth: navRail.expanded ? 160 : fab.baseSize
                 Behavior on implicitWidth {
                     animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                 }
                 NavigationRail { // Window content with navigation rail and content pane
                     id: navRail
-                    anchors {
-                        left: parent.left
-                        top: parent.top
-                        bottom: parent.bottom
-                    }
+                    anchors.fill: parent
                     spacing: 10
                     expanded: root.width > 900
                     
@@ -219,27 +220,53 @@ ApplicationWindow {
                         }
                     }
 
-                    NavigationRailTabArray {
-                        currentIndex: root.currentPage
-                        expanded: navRail.expanded
-                        Repeater {
-                            model: root.pages
-                            NavigationRailButton {
-                                required property var index
-                                required property var modelData
-                                toggled: root.currentPage === index
-                                onPressed: root.currentPage = index;
-                                expanded: navRail.expanded
-                                buttonIcon: modelData.icon
-                                buttonIconRotation: modelData.iconRotation || 0
-                                buttonText: modelData.name
-                                showToggledHighlight: false
+                    StyledFlickable {
+                        id: navFlickable
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
+                        contentWidth: width
+                        contentHeight: tabArray.implicitHeight + 16
+                        boundsBehavior: Flickable.StopAtBounds
+
+                        ScrollBar.vertical: StyledScrollBar {
+                            policy: ScrollBar.AsNeeded
+                        }
+
+                        Connections {
+                            target: root
+                            function onCurrentPageChanged() {
+                                const itemY = root.currentPage * 56;
+                                if (itemY < navFlickable.contentY) {
+                                    navFlickable.contentY = Math.max(0, itemY);
+                                } else if (itemY + 56 > navFlickable.contentY + navFlickable.height) {
+                                    navFlickable.contentY = Math.max(0, itemY + 56 - navFlickable.height);
+                                }
                             }
                         }
-                    }
 
-                    Item {
-                        Layout.fillHeight: true
+                        NavigationRailTabArray {
+                            id: tabArray
+                            y: 8
+                            width: navFlickable.width
+                            height: implicitHeight
+                            currentIndex: root.currentPage
+                            expanded: navRail.expanded
+                            Repeater {
+                                model: root.pages
+                                NavigationRailButton {
+                                    required property var index
+                                    required property var modelData
+                                    toggled: root.currentPage === index
+                                    onPressed: root.currentPage = index;
+                                    expanded: navRail.expanded
+                                    buttonIcon: modelData.icon
+                                    buttonIconRotation: modelData.iconRotation || 0
+                                    buttonText: modelData.name
+                                    showToggledHighlight: false
+                                }
+                            }
+                        }
                     }
                 }
             }
