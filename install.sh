@@ -41,8 +41,8 @@ usage() {
     echo "Uso: $0 [OPCIONES]"
     echo ""
     echo "Opciones:"
-    echo "  --symlink        Crea enlaces simbólicos de las configuraciones a ~/.config (Recomendado para desarrollo/cambios en vivo)"
-    echo "  --copy           Copia los archivos de configuración a ~/.config directamente"
+    echo "  --symlink        Crea enlaces simbólicos a ~/.config (Recomendado: actualizaciones automáticas vía git pull)"
+    echo "  --copy           Copia los archivos a ~/.config de forma independiente"
     echo "  --check-deps     Solo comprueba las dependencias instaladas en el sistema"
     echo "  -h, --help       Muestra esta ayuda"
     exit 0

@@ -1,4 +1,4 @@
-# 🌌 Material You Hyprland Desktop Environment
+# 🌌 Better Window Manager (BWM) - Material You Hyprland Desktop
 
 Entorno de escritorio moderno, dinámico y estético basado en **Hyprland** (con configuración modular en **Lua**), widgets en **Quickshell** (Qt 6 / QML) y sincronización de paletas dinámicas en tiempo real con **Matugen** (Material You / M3).
 
@@ -11,7 +11,7 @@ Entorno de escritorio moderno, dinámico y estético basado en **Hyprland** (con
   - Sincronización en vivo de bordes de ventanas en Hyprland, widgets de Quickshell, terminal Kitty, Rofi, SwayNC y temas GTK 3 / GTK 4.
 - 🚀 **Quickshell HUD y Widgets (Qt/QML):**
   - Barra superior y lateral personalizadas con monitoreo de rendimiento, tiempo, batería, red y audio MPRIS.
-  - Selector visual interactivo de ventanas (**Alt + Tab**) con vistas previas.
+  - Selector visual interactivo de ventanas (**Alt + Tab**) con vistas previas en tiempo real.
   - Pantalla de bloqueo elegante y configurable con integración para autologin gráfico.
   - Búsqueda integrada y lanzador de aplicaciones con acceso directo a emojis y portapapeles.
 - 🪟 **Hyprland Modular con Lua:**
@@ -19,15 +19,15 @@ Entorno de escritorio moderno, dinámico y estético basado en **Hyprland** (con
   - **Reglas persistentes inteligentes:** Script en Python para recordar qué ventanas deben ser flotantes o tiled entre sesiones (`ALT + Q`).
 - 🖼️ **Selector Visual de Fondos de Pantalla:**
   - Selector interactivo con previsualización (`ALT + W`) que regenera automáticamente los colores de todo el sistema.
-- ⚡ **Instalador Idempotente:**
-  - Script `install.sh` con soporte para enlaces simbólicos (`--symlink`) para desarrollo activo o copia directa (`--copy`) con copias de seguridad automáticas.
+- ⚡ **Instalador Inteligente e Idempotente:**
+  - Script `install.sh` con soporte para enlaces simbólicos (`--symlink`) para recibir actualizaciones automáticas vía `git pull`, o copia independiente (`--copy`) con respaldo de seguridad automático.
 
 ---
 
 ## 📦 Estructura del Repositorio
 
 ```text
-hyprland-de/
+Better-Window-Manager/
 ├── config/
 │   ├── hypr/               # Configuración modular de Hyprland (Lua) y scripts de automatización
 │   │   ├── modules/        # Binds, apariencia, monitores, reglas, colores
@@ -86,29 +86,73 @@ sudo dnf install hyprland kitty playerctl wl-clipboard jq python3
 
 ---
 
-## 🚀 Instalación y Despliegue
+## 🚀 Descarga e Instalación
 
-1. **Clona el repositorio:**
-   ```bash
-   git clone <URL_DE_TU_REPOSITORIO> ~/Projects/hyprland-de
-   cd ~/Projects/hyprland-de
-   ```
+### 1. Clonar el repositorio
 
-2. **Ejecuta el instalador:**
-   - **Modo Enlace Simbólico (Recomendado):** Enlaza `~/.config/*` directamente a este repositorio, de modo que cualquier ajuste que hagas en tu escritorio quede automáticamente registrado para subirlo a Git:
-     ```bash
-     ./install.sh --symlink
-     ```
-   - **Modo Copia Simple:**
-     ```bash
-     ./install.sh --copy
-     ```
+Puedes descargarlo desde GitHub o GitLab según prefieras:
 
-3. **Inicia o recarga Hyprland:**
-   Si ya estás en una sesión de Hyprland:
-   ```bash
-   hyprctl reload
-   ```
+```bash
+# Desde GitHub:
+git clone https://github.com/saselandia/Better-Window-Manager.git ~/dotfiles/bwm
+cd ~/dotfiles/bwm
+
+# O desde GitLab:
+git clone https://gitlab.com/saselandia/bwm.git ~/dotfiles/bwm
+cd ~/dotfiles/bwm
+```
+
+### 2. Ejecutar el instalador
+
+El instalador ofrece dos métodos de instalación:
+
+- **Modo Enlace Simbólico (Recomendado):**
+  Crea accesos directos desde `~/.config/` hacia la carpeta del repositorio. Esto permite que **cualquier actualización futura que descargues con `git pull` se aplique al instante** en tu sistema sin tener que volver a copiar archivos.
+  ```bash
+  ./install.sh --symlink
+  ```
+
+- **Modo Copia Directa:**
+  Copia los archivos de configuración directamente a tu carpeta `~/.config/` de forma independiente.
+  ```bash
+  ./install.sh --copy
+  ```
+
+*(Nota: En ambos modos, el instalador creará una copia de seguridad automática de cualquier configuración previa que tengas en `~/.config/`)*.
+
+### 3. Iniciar o recargar el entorno
+
+Si ya te encuentras dentro de una sesión de Hyprland:
+```bash
+hyprctl reload
+```
+
+Para aplicar tu fondo de pantalla favorito y generar la paleta de colores Material You:
+```bash
+# Pulsa [ALT + W] o ejecuta:
+~/.config/hypr/scripts/set-wallpaper.sh /ruta/a/tu/imagen.jpg
+```
+
+---
+
+## 🔄 Cómo Actualizar a la Última Versión
+
+Para descargar las últimas mejoras, correcciones y novedades publicadas en el proyecto:
+
+```bash
+# 1. Entra a la carpeta donde descargaste el repositorio:
+cd ~/dotfiles/bwm   # o la ruta donde lo hayas clonado
+
+# 2. Descarga la versión más reciente:
+git pull
+
+# 3. Si instalaste con enlaces simbólicos (--symlink), los cambios ya están activos.
+#    Si instalaste con copia independiente (--copy), vuelve a copiar los cambios:
+#    ./install.sh --copy
+
+# 4. Recarga Hyprland para aplicar los cambios en caliente:
+hyprctl reload
+```
 
 ---
 
@@ -133,22 +177,11 @@ sudo dnf install hyprland kitty playerctl wl-clipboard jq python3
 
 ---
 
-## 🔄 Flujo de Trabajo y Actualizaciones en Git
+## 🤝 Contribuciones y Desarrollo
 
-Si instalaste con `--symlink`, cualquier cambio que hagas en tus archivos de `~/.config/` se reflejará directamente en el repositorio local.
+Si deseas proponer mejoras, corregir errores o colaborar:
 
-Para guardar y subir tus cambios a GitLab / GitHub:
-
-```bash
-cd ~/Projects/hyprland-de
-
-# Ver cambios realizados
-git status
-
-# Añadir cambios y crear commit
-git add .
-git commit -m "feat: actualizar ajustes de la barra y reglas de ventanas"
-
-# Subir al repositorio
-git push
-```
+1. Haz un **Fork** del proyecto en GitHub o GitLab.
+2. Crea una rama para tu función (`git checkout -b feature/nueva-mejora`).
+3. Realiza tus cambios y haz commit (`git commit -m "feat: añadir soporte para..."`).
+4. Sube tu rama (`git push origin feature/nueva-mejora`) y abre un **Pull Request** / **Merge Request**.
