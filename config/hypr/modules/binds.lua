@@ -55,7 +55,9 @@ hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("quickshell -c ii ipc call cheatsheet
 -- 2. Lanzadores de aplicaciones
 hl.bind("CTRL + RETURN", hl.dsp.exec_cmd(terminal), { description = "Lanzador: Abrir terminal (Kitty)" })
 local superLauncher = os.getenv("HOME") .. "/.config/hypr/scripts/super-launcher.sh"
-hl.bind("SUPER_L", hl.dsp.exec_cmd(superLauncher), { release = true, description = "Lanzador: Menú de aplicaciones / Búsqueda" })
+hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd(superLauncher), { release = true, description = "Lanzador: Menú de aplicaciones / Búsqueda" })
+hl.bind("SUPER_L", hl.dsp.exec_cmd(superLauncher), { release = true })
+hl.bind("SUPER + SUPER_R", hl.dsp.exec_cmd(superLauncher), { release = true })
 hl.bind("SUPER_R", hl.dsp.exec_cmd(superLauncher), { release = true })
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager), { description = "Lanzador: Explorador de archivos (Nautilus)" })
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/hypr/scripts/wallpaper-picker.sh"), { description = "Lanzador: Selector de fondos de pantalla" })
