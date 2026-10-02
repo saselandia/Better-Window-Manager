@@ -55,6 +55,14 @@ post_process() {
     local screen_height="$2"
     local wallpaper_path="$3"
 
+    # Sincronizar con swww y caché para persistencia
+    if [ -n "$wallpaper_path" ] && [ -f "$wallpaper_path" ]; then
+        echo "$wallpaper_path" > "$HOME/.cache/current_wallpaper"
+        if command -v swww >/dev/null 2>&1 && pgrep -x swww-daemon >/dev/null 2>&1; then
+            swww img "$wallpaper_path" --transition-type grow --transition-pos center --transition-step 90 --transition-duration 2 --transition-fps 60 2>/dev/null || true
+        fi
+    fi
+
     handle_kde_material_you_colors &
     "$SCRIPT_DIR/code/material-code-set-color.sh" &
 }

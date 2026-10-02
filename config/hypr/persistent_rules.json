@@ -16,27 +16,27 @@
         },
         "float": false
     },
-    "org_gnome_nautilus": {
-        "name": "persist_org_gnome_nautilus",
-        "description": "org.gnome.Nautilus",
-        "match": {
-            "class": "^org\\.gnome\\.Nautilus$"
-        },
-        "float": true
-    },
-    "vesktop": {
-        "name": "persist_vesktop",
-        "description": "vesktop",
-        "match": {
-            "class": "^vesktop$"
-        },
-        "float": true
-    },
     "spotify": {
         "name": "persist_spotify",
         "description": "spotify",
         "match": {
             "class": "^spotify$"
+        },
+        "float": true
+    },
+    "firefox_bin": {
+        "name": "persist_firefox_bin",
+        "description": "firefox-bin",
+        "match": {
+            "class": "^firefox\\-bin$"
+        },
+        "float": false
+    },
+    "org_gnome_nautilus": {
+        "name": "persist_org_gnome_nautilus",
+        "description": "org.gnome.Nautilus",
+        "match": {
+            "class": "^org\\.gnome\\.Nautilus$"
         },
         "float": true
     },

@@ -218,7 +218,7 @@ fi
 # 4. Permisos ejecutables en scripts
 # ==============================================================================
 print_step "4. Verificando permisos ejecutables en scripts..."
-find "$CONFIG_SOURCE/hypr/scripts" -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod +x {} +
+find "$CONFIG_SOURCE/hypr/scripts" "$CONFIG_SOURCE/quickshell" -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod +x {} + 2>/dev/null || true
 print_success "Permisos de ejecución verificados en todos los scripts."
 
 # ==============================================================================

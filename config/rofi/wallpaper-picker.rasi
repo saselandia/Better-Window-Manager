@@ -5,7 +5,7 @@ configuration {
 * {
     font: "JetBrainsMono Nerd Font 10";
     background-color: transparent;
-    text-color: #e8e0e8;
+    text-color: #e6e2d5;
 }
 
 window {
@@ -14,8 +14,8 @@ window {
     transparency: "real";
     border-radius: 16px;
     border: 2px solid;
-    border-color: #dabafa;
-    background-color: #151218F2;
+    border-color: #cdca75;
+    background-color: #14140cF2;
     padding: 24px;
 }
 
@@ -26,20 +26,20 @@ mainbox {
 
 inputbar {
     children: [ prompt, entry ];
-    background-color: #221e24;
+    background-color: #202018;
     border-radius: 12px;
     padding: 12px 16px;
 }
 
 prompt {
-    text-color: #dabafa;
+    text-color: #cdca75;
     margin: 0px 8px 0px 0px;
 }
 
 entry {
     placeholder: "Buscar wallpaper...";
-    placeholder-color: #958e98;
-    text-color: #e8e0e8;
+    placeholder-color: #939181;
+    text-color: #e6e2d5;
 }
 
 listview {
@@ -59,9 +59,9 @@ element {
 }
 
 element selected {
-    background-color: #553b71;
+    background-color: #4a4900;
     border: 1px solid;
-    border-color: #dabafa;
+    border-color: #cdca75;
 }
 
 element-icon {
@@ -71,10 +71,10 @@ element-icon {
 
 element-text {
     horizontal-align: 0.5;
-    text-color: #e8e0e8;
+    text-color: #e6e2d5;
 }
 
 element-text selected {
-    text-color: #efdbff;
+    text-color: #e9e78e;
     font: "JetBrainsMono Nerd Font Bold 10";
 }

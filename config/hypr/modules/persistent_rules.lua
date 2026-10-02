@@ -3,6 +3,15 @@
 -- Archivo gestionado automáticamente por toggle-float-persistent.py
 -- =============================================================================
 
+-- firefox-bin
+hl.window_rule({
+    name  = "persist_firefox_bin",
+    match = {
+        class = "^firefox\\-bin$",
+    },
+    float = false,
+})
+
 -- kitty
 hl.window_rule({
     name  = "persist_kitty",
@@ -45,15 +54,6 @@ hl.window_rule({
     match = {
         class = "^steam$",
         title = "(?i).*(friends|amigos|chat).*",
-    },
-    float = true,
-})
-
--- vesktop
-hl.window_rule({
-    name  = "persist_vesktop",
-    match = {
-        class = "^vesktop$",
     },
     float = true,
 })
