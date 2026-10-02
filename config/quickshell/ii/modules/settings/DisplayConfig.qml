@@ -37,6 +37,114 @@ ContentPage {
         onTriggered: root.feedbackMessage = ""
     }
 
+    // Drag & Drop Commit with Magnetic Snapping
+    function commitMonitorDrag(index, canvasX, canvasY, rectW, rectH) {
+        if (!monitors || index >= monitors.length) return;
+        let updated = JSON.parse(JSON.stringify(monitors));
+        let target = updated[index];
+        if (target.disabled) return;
+
+        // Convert canvas drop position to normalized layout coordinates
+        let dropNormX = canvasX - monitorViewport.offsetX;
+        let dropNormY = canvasY - monitorViewport.offsetY;
+        let targetNormW = target.width * monitorViewport.scaleFactor;
+        let targetNormH = target.height * monitorViewport.scaleFactor;
+
+        const snapDist = 20; // Canvas pixels threshold
+        let bestSnapX = null;
+        let minDeltaX = snapDist;
+        let bestSnapY = null;
+        let minDeltaY = snapDist;
+
+        for (let j = 0; j < updated.length; j++) {
+            if (j === index || updated[j].disabled) continue;
+            let other = updated[j];
+            let otherNormX = other.x * monitorViewport.scaleFactor;
+            let otherNormY = other.y * monitorViewport.scaleFactor;
+            let otherNormW = other.width * monitorViewport.scaleFactor;
+            let otherNormH = other.height * monitorViewport.scaleFactor;
+
+            // Snap X candidates:
+            // 1. Target Left to Other Right
+            let d = Math.abs(dropNormX - (otherNormX + otherNormW));
+            if (d < minDeltaX) {
+                minDeltaX = d;
+                bestSnapX = other.x + other.width;
+            }
+            // 2. Target Right to Other Left
+            d = Math.abs((dropNormX + targetNormW) - otherNormX);
+            if (d < minDeltaX) {
+                minDeltaX = d;
+                bestSnapX = other.x - target.width;
+            }
+            // 3. Target Left to Other Left
+            d = Math.abs(dropNormX - otherNormX);
+            if (d < minDeltaX) {
+                minDeltaX = d;
+                bestSnapX = other.x;
+            }
+            // 4. Target Right to Other Right
+            d = Math.abs((dropNormX + targetNormW) - (otherNormX + otherNormW));
+            if (d < minDeltaX) {
+                minDeltaX = d;
+                bestSnapX = other.x + other.width - target.width;
+            }
+
+            // Snap Y candidates:
+            // 1. Target Top to Other Bottom
+            d = Math.abs(dropNormY - (otherNormY + otherNormH));
+            if (d < minDeltaY) {
+                minDeltaY = d;
+                bestSnapY = other.y + other.height;
+            }
+            // 2. Target Bottom to Other Top
+            d = Math.abs((dropNormY + targetNormH) - otherNormY);
+            if (d < minDeltaY) {
+                minDeltaY = d;
+                bestSnapY = other.y - target.height;
+            }
+            // 3. Target Top to Other Top
+            d = Math.abs(dropNormY - otherNormY);
+            if (d < minDeltaY) {
+                minDeltaY = d;
+                bestSnapY = other.y;
+            }
+            // 4. Target Bottom to Other Bottom
+            d = Math.abs((dropNormY + targetNormH) - (otherNormY + otherNormH));
+            if (d < minDeltaY) {
+                minDeltaY = d;
+                bestSnapY = other.y + other.height - target.height;
+            }
+        }
+
+        let finalRealX = (bestSnapX !== null) ? bestSnapX : Math.round(dropNormX / monitorViewport.scaleFactor / 10) * 10;
+        let finalRealY = (bestSnapY !== null) ? bestSnapY : Math.round(dropNormY / monitorViewport.scaleFactor / 10) * 10;
+
+        target.x = finalRealX;
+        target.y = finalRealY;
+
+        // Normalization: find minX and minY among enabled monitors
+        let minX = Infinity;
+        let minY = Infinity;
+        for (let m of updated) {
+            if (!m.disabled) {
+                if (m.x < minX) minX = m.x;
+                if (m.y < minY) minY = m.y;
+            }
+        }
+        if (minX !== Infinity && minY !== Infinity && (minX !== 0 || minY !== 0)) {
+            for (let m of updated) {
+                if (!m.disabled) {
+                    m.x = Math.max(0, m.x - minX);
+                    m.y = Math.max(0, m.y - minY);
+                }
+            }
+        }
+
+        root.monitors = updated;
+        showFeedback(Translation.tr("Position of %1 updated in preview").arg(target.name), false);
+    }
+
     function alignSelected(direction, refMonitorName) {
         if (!currentMonitor) return;
         const ref = monitors.find(m => m.name === refMonitorName);
@@ -142,7 +250,7 @@ ContentPage {
         Rectangle {
             id: canvasContainer
             Layout.fillWidth: true
-            implicitHeight: 220
+            implicitHeight: 280
             radius: Appearance.rounding.windowRounding
             color: Appearance.colors.colLayer2
             border.width: 1
@@ -153,16 +261,15 @@ ContentPage {
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.margins: 12
-                text: Translation.tr("Click on a display to select and configure it")
+                text: Translation.tr("Drag displays to arrange their positions, or click to configure")
                 font.pixelSize: Appearance.font.pixelSize.small
                 color: Appearance.colors.colOnSurfaceVariant
             }
 
             Item {
                 id: monitorViewport
-                anchors.centerIn: parent
-                width: parent.width - 40
-                height: parent.height - 50
+                anchors.fill: parent
+                anchors.margins: 25
 
                 property real totalWidth: {
                     let maxRight = 1920;
@@ -178,7 +285,9 @@ ContentPage {
                     }
                     return maxBottom;
                 }
-                property real scaleFactor: Math.min(width / Math.max(1, totalWidth), height / Math.max(1, totalHeight)) * 0.85
+                property real scaleFactor: Math.min(width / Math.max(1, totalWidth), height / Math.max(1, totalHeight)) * 0.82
+                property real offsetX: Math.max(0, (width - (totalWidth * scaleFactor)) / 2)
+                property real offsetY: Math.max(0, (height - (totalHeight * scaleFactor)) / 2)
 
                 Repeater {
                     model: root.monitors
@@ -190,25 +299,66 @@ ContentPage {
 
                         readonly property bool isSelected: root.selectedIndex === index
                         readonly property bool isDisabled: modelData.disabled ?? false
+                        readonly property bool isDragging: dragArea.drag.active
 
-                        x: (modelData.x * monitorViewport.scaleFactor)
-                        y: (modelData.y * monitorViewport.scaleFactor)
+                        z: isDragging ? 30 : (isSelected ? 10 : 1)
+                        scale: isDragging ? 1.04 : 1.0
+                        opacity: isDisabled ? 0.45 : (isDragging ? 0.92 : 1.0)
+
+                        Behavior on scale { NumberAnimation { duration: 150 } }
+                        Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                        x: monitorViewport.offsetX + (modelData.x * monitorViewport.scaleFactor)
+                        y: monitorViewport.offsetY + (modelData.y * monitorViewport.scaleFactor)
+
+                        Binding {
+                            target: monitorRect
+                            property: "x"
+                            value: monitorViewport.offsetX + (modelData.x * monitorViewport.scaleFactor)
+                            when: !monitorRect.isDragging
+                        }
+
+                        Binding {
+                            target: monitorRect
+                            property: "y"
+                            value: monitorViewport.offsetY + (modelData.y * monitorViewport.scaleFactor)
+                            when: !monitorRect.isDragging
+                        }
+
+                        Behavior on x {
+                            enabled: !monitorRect.isDragging
+                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on y {
+                            enabled: !monitorRect.isDragging
+                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                        }
+
                         width: Math.max(80, modelData.width * monitorViewport.scaleFactor)
                         height: Math.max(50, modelData.height * monitorViewport.scaleFactor)
 
                         radius: Appearance.rounding.small
                         color: isDisabled ? Appearance.colors.colLayer1 : (isSelected ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSurfaceContainerHigh)
-                        border.width: isSelected ? 2 : 1
-                        border.color: isSelected ? Appearance.colors.colPrimary : Appearance.colors.colOutline
-
-                        Behavior on x { NumberAnimation { duration: 200 } }
-                        Behavior on y { NumberAnimation { duration: 200 } }
+                        border.width: isSelected || isDragging ? 2 : 1
+                        border.color: isSelected || isDragging ? Appearance.colors.colPrimary : Appearance.colors.colOutline
 
                         MouseArea {
+                            id: dragArea
                             anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
+                            cursorShape: drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                            drag.target: monitorRect
+                            drag.axis: Drag.XAndYAxis
+                            drag.minimumX: -50
+                            drag.maximumX: canvasContainer.width - monitorRect.width + 50
+                            drag.minimumY: -50
+                            drag.maximumY: canvasContainer.height - monitorRect.height + 50
+
+                            onPressed: {
                                 root.selectedIndex = index;
+                            }
+
+                            onReleased: {
+                                root.commitMonitorDrag(index, monitorRect.x, monitorRect.y, monitorRect.width, monitorRect.height);
                             }
                         }
 
@@ -231,6 +381,12 @@ ContentPage {
                             StyledText {
                                 Layout.alignment: Qt.AlignHCenter
                                 text: `${modelData.width}x${modelData.height} @ ${modelData.refreshRate}Hz`
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                color: isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSurfaceVariant
+                            }
+                            StyledText {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: monitorRect.isDragging ? `(${Math.max(0, Math.round((monitorRect.x - monitorViewport.offsetX) / monitorViewport.scaleFactor))}, ${Math.max(0, Math.round((monitorRect.y - monitorViewport.offsetY) / monitorViewport.scaleFactor))})` : `(${modelData.x}, ${modelData.y})`
                                 font.pixelSize: Appearance.font.pixelSize.smaller
                                 color: isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSurfaceVariant
                             }
