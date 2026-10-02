@@ -111,8 +111,9 @@ Este entorno no incluye los binarios propietarios o pesados en el repositorio gi
 | Aplicación | ID Flatpak | Rol |
 | :--- | :--- | :--- |
 | **Vesktop** | `dev.vencord.Vesktop` | Cliente de Discord con Vencord integrado y soporte de CSS |
-| **Spotify** | `com.spotify.Client` | Reproductor oficial de Spotify |
-| **Spicetify** | `spicetify-cli` | Herramienta CLI para inyectar temas y CSS en Spotify |
+| **Spotify** | `com.spotify.Client` | Reproductor oficial de música Spotify Desktop |
+
+> ℹ️ **Nota sobre Spicetify:** Spicetify es la herramienta CLI que inyecta los temas en Spotify. No es un paquete Flatpak; el script `install.sh` lo descarga, instala y configura de forma 100% automática.
 
 ---
 
