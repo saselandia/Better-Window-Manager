@@ -440,11 +440,15 @@ fi
 # 8. Sincronización Inicial con Wallpaper Actual
 # ==============================================================================
 CURRENT_WALL="$(cat "$HOME/.cache/current_wallpaper" 2>/dev/null || true)"
-if [ -n "$CURRENT_WALL" ] && [ -f "$CURRENT_WALL" ] && command -v matugen >/dev/null 2>&1; then
+if [ -n "$CURRENT_WALL" ] && [ -f "$CURRENT_WALL" ]; then
     print_step "8. Generando paleta inicial de colores Material You..."
-    matugen image --source-color-index 0 "$CURRENT_WALL" 2>/dev/null || true
-    if [ -x "$TARGET_CONFIG/hypr/scripts/sync-nautilus.sh" ]; then
-        "$TARGET_CONFIG/hypr/scripts/sync-nautilus.sh" 2>/dev/null || true
+    if [ -x "$TARGET_CONFIG/hypr/scripts/set-wallpaper.sh" ]; then
+        "$TARGET_CONFIG/hypr/scripts/set-wallpaper.sh" "$CURRENT_WALL" >/dev/null 2>&1 || true
+    elif command -v matugen >/dev/null 2>&1; then
+        matugen image --source-color-index 0 "$CURRENT_WALL" 2>/dev/null || true
+        if [ -x "$TARGET_CONFIG/hypr/scripts/sync-nautilus.sh" ]; then
+            "$TARGET_CONFIG/hypr/scripts/sync-nautilus.sh" 2>/dev/null || true
+        fi
     fi
     print_success "Esquema de colores Material You generado para todas las aplicaciones."
 fi

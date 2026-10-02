@@ -363,7 +363,7 @@
     "updateInterval": 3000
   },
   "screenRecord": {
-    "savePath": "/home/sasel/Videos"
+    "savePath": ""
   },
   "screenSnip": {
     "savePath": ""
