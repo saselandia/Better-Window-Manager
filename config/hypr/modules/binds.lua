@@ -56,6 +56,7 @@ hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("quickshell -c ii ipc call cheatsheet
 hl.bind("CTRL + RETURN", hl.dsp.exec_cmd(terminal), { description = "Lanzador: Abrir terminal (Kitty)" })
 hl.bind("SUPER_L", hl.dsp.exec_cmd(menu), { description = "Lanzador: Menú de aplicaciones / Búsqueda" })
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager), { description = "Lanzador: Explorador de archivos (Nautilus)" })
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/hypr/scripts/wallpaper-picker.sh"), { description = "Lanzador: Selector de fondos de pantalla" })
 
 -- 3. Gestión de ventanas
 hl.bind("ALT + X", hl.dsp.window.close(), { description = "Ventana: Cerrar ventana activa" })
@@ -110,7 +111,6 @@ hl.bind("SUPER + A", hl.dsp.exec_cmd("quickshell -c ii ipc call sidebarRight tog
 hl.bind("SUPER + I", hl.dsp.exec_cmd("qs -p " .. os.getenv("HOME") .. "/.config/quickshell/ii/settings.qml"), { description = "Sistema: Configuración del sistema" })
 hl.bind("SUPER + ALT + A", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/hypr/scripts/open-autostart.sh"), { description = "Sistema: Gestor de inicio automático (Autostart)" })
 hl.bind("SUPER + L", hl.dsp.exec_cmd("quickshell -c ii ipc call lock activate"), { description = "Sistema: Bloquear pantalla" })
-hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/hypr/scripts/wallpaper-picker.sh"), { description = "Sistema: Selector de fondos de pantalla" })
 hl.bind("Print", hl.dsp.exec_cmd("quickshell -c ii ipc call region screenshot"), { description = "Sistema: Captura de pantalla por región" })
 hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd("quickshell -c ii ipc call region screenshot"))
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { description = "Sistema: Menú de apagado / Salir" })
