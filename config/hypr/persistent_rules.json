@@ -15,5 +15,37 @@
             "class": "^steam_app_22370$"
         },
         "float": false
+    },
+    "org_gnome_nautilus": {
+        "name": "persist_org_gnome_nautilus",
+        "description": "org.gnome.Nautilus",
+        "match": {
+            "class": "^org\\.gnome\\.Nautilus$"
+        },
+        "float": true
+    },
+    "vesktop": {
+        "name": "persist_vesktop",
+        "description": "vesktop",
+        "match": {
+            "class": "^vesktop$"
+        },
+        "float": true
+    },
+    "spotify": {
+        "name": "persist_spotify",
+        "description": "spotify",
+        "match": {
+            "class": "^spotify$"
+        },
+        "float": true
+    },
+    "kitty": {
+        "name": "persist_kitty",
+        "description": "kitty",
+        "match": {
+            "class": "^kitty$"
+        },
+        "float": true
     }
 }

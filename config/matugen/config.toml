@@ -36,7 +36,7 @@ post_hook = '~/.config/hypr/scripts/reload-spotify.sh'
 
 [templates.firefox]
 input_path = '~/.config/matugen/templates/firefox-colors.css'
-output_path = '~/.mozilla/firefox/ei4nv824.default-release/chrome/material-you.css'
+output_path = '~/.cache/material-you-firefox.css'
 
 [templates.pywal]
 input_path = '~/.config/matugen/templates/pywal-colors.json'

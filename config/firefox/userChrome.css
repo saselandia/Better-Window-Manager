@@ -1,0 +1,65 @@
+/* ==============================================================================
+ * Firefox Material You Dynamic Theme - End_4 style (100% Live Reactivity)
+ * Sincronización en vivo con Matugen, Pywalfox y variables Theme API de Firefox
+ * ============================================================================== */
+
+@import "material-you.css";
+
+/* Contenedor de herramientas superior (Barra de pestañas y controles de ventana) */
+#navigator-toolbox {
+    background-color: var(--lwt-frame, var(--lwt-accent-color, var(--mat-surface, var(--toolbar-bgcolor, #18120b)))) !important;
+    border-bottom: 1px solid var(--mat-outline-variant, rgba(255, 255, 255, 0.08)) !important;
+}
+
+#TabsToolbar {
+    background-color: transparent !important;
+}
+
+/* Barra de navegación principal (Botones y barra URL) */
+#nav-bar {
+    background-color: var(--toolbar-bgcolor, var(--mat-surface-low, transparent)) !important;
+    box-shadow: none !important;
+    padding: 2px 6px !important;
+}
+
+/* Barra de direcciones URL y búsqueda con bordes redondeados estilo End_4 */
+#urlbar-background,
+#searchbar {
+    background-color: var(--mat-surface-container, var(--toolbar-field-background-color, rgba(0, 0, 0, 0.2))) !important;
+    border: 1px solid var(--mat-outline-variant, var(--toolbar-field-border-color, rgba(255, 255, 255, 0.12))) !important;
+    border-radius: 12px !important;
+}
+
+#urlbar[focused="true"] > #urlbar-background {
+    background-color: var(--mat-surface-high, var(--toolbar-field-focus-background-color, var(--toolbar-field-background-color))) !important;
+    border-color: var(--mat-primary, var(--toolbar-field-highlight, var(--lwt-highlight-color, #a8c8ff))) !important;
+    box-shadow: 0 0 0 1px var(--mat-primary, var(--toolbar-field-highlight, var(--lwt-highlight-color, #a8c8ff))) !important;
+}
+
+/* Pestañas */
+.tab-background {
+    border-radius: 10px 10px 0 0 !important;
+    margin-block: 2px !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease !important;
+}
+
+/* Pestaña activa: fondo acentuado con indicador de borde superior dinámico */
+.tab-background[selected="true"] {
+    background-color: var(--mat-surface-container, var(--tab-selected-bgcolor, var(--toolbar-bgcolor))) !important;
+    border-top: 3px solid var(--mat-primary, var(--toolbar-field-highlight, var(--lwt-highlight-color, #a8c8ff))) !important;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.25) !important;
+}
+
+.tabbrowser-tab[selected="true"] .tab-label {
+    color: var(--mat-on-surface, var(--tab-selected-textcolor, var(--toolbar-color, inherit))) !important;
+    font-weight: bold !important;
+}
+
+.tabbrowser-tab:not([selected="true"]):hover .tab-background {
+    background-color: var(--mat-outline-variant, var(--button-background-hover, rgba(255, 255, 255, 0.08))) !important;
+}
+
+/* Barra de marcadores */
+#PersonalToolbar {
+    background-color: var(--toolbar-bgcolor, var(--mat-surface-low, transparent)) !important;
+}

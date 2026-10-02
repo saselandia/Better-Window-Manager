@@ -1,0 +1,59 @@
+/* ==============================================================================
+ * Spicetify Material You Theme - Vibrant MD3 Aesthetic
+ * ============================================================================== */
+
+/* Fondo general con sutil degradado de acento Material You */
+.Root__main-view {
+    background: linear-gradient(180deg, rgba(var(--spice-rgb-button), 0.22) 0%, var(--spice-main) 420px) !important;
+}
+
+.main-view-container__scroll-node-child {
+    background: transparent !important;
+}
+
+/* Barra lateral */
+.Root__nav-bar {
+    background-color: var(--spice-sidebar) !important;
+    border-right: 1px solid rgba(var(--spice-rgb-button), 0.12) !important;
+}
+
+/* Barra de reproducción inferior */
+.Root__now-playing-bar {
+    background-color: var(--spice-player) !important;
+    border-top: 1px solid rgba(var(--spice-rgb-button), 0.18) !important;
+}
+
+/* Tarjetas de álbumes y listas con bordes suaves MD3 */
+.main-card-card {
+    background-color: var(--spice-card) !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(var(--spice-rgb-button), 0.08) !important;
+    transition: transform 0.2s ease, background-color 0.2s ease !important;
+}
+
+.main-card-card:hover {
+    background-color: var(--spice-selected-row) !important;
+    border-color: rgba(var(--spice-rgb-button), 0.35) !important;
+    transform: translateY(-2px);
+}
+
+/* Botón de reproducción con color primario */
+.main-playButton-PlayButton {
+    background-color: var(--spice-button) !important;
+    color: var(--spice-main) !important;
+}
+
+/* Barra de progreso de canciones */
+.x-progressBar-fillColor {
+    background-color: var(--spice-button) !important;
+}
+
+/* Cabeceras de listas */
+.main-trackList-trackListHeaderRow {
+    border-bottom: 1px solid rgba(var(--spice-rgb-button), 0.15) !important;
+}
+
+.main-trackList-active {
+    background-color: rgba(var(--spice-rgb-button), 0.15) !important;
+    border-radius: 8px !important;
+}

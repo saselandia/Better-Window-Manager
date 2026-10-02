@@ -57,6 +57,7 @@ hl.bind("CTRL + RETURN", hl.dsp.exec_cmd(terminal), { description = "Lanzador: A
 hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd(menu), { release = true, description = "Lanzador: Menú de aplicaciones / Búsqueda" })
 hl.bind("SUPER + SUPER_R", hl.dsp.exec_cmd(menu), { release = true })
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager), { description = "Lanzador: Explorador de archivos (Nautilus)" })
+hl.bind("SUPER + E", hl.dsp.exec_cmd(fileManager), { description = "Lanzador: Explorador de archivos (Nautilus)" })
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/hypr/scripts/wallpaper-picker.sh"), { description = "Lanzador: Selector de fondos de pantalla" })
 
 -- 3. Gestión de ventanas
