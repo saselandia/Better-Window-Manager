@@ -79,7 +79,7 @@ hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
 hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 
 -- 5. Mover ventanas (Control + Flechas en el layout y entre monitores)
-hl.bind("CTRL + left",  hl.dsp.window.move({ direction = "left" }),  { repeating = true, description = "Ventana: Mover ventana (y entre monitores)" })
+hl.bind("CTRL + left",  hl.dsp.window.move({ direction = "left" }),  { repeating = true, description = "Navegación: Mover ventana (y entre monitores)" })
 hl.bind("CTRL + right", hl.dsp.window.move({ direction = "right" }), { repeating = true })
 hl.bind("CTRL + up",    hl.dsp.window.move({ direction = "up" }),    { repeating = true })
 hl.bind("CTRL + down",  hl.dsp.window.move({ direction = "down" }),  { repeating = true })
