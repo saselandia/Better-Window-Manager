@@ -798,5 +798,13 @@
   "Open Folder": "Abrir Carpeta",
   "Copy Path": "Copiar Ruta",
   "Copied!": "¡Copiado!",
-  "Path copied to clipboard: %1": "Ruta copiada al portapapeles: %1"
+  "Path copied to clipboard: %1": "Ruta copiada al portapapeles: %1",
+  "Online | Google's model\nState-of-the-art fast intelligence, superior coding, reasoning, and up-to-date knowledge.": "En línea | Modelo de Google\nInteligencia punta de alta velocidad, codificación superior, razonamiento y conocimiento actualizado.",
+  "Online | Google's model\nHigh-speed, cost-efficient model for fast everyday tasks.": "En línea | Modelo de Google\nModelo de alta velocidad y máxima eficiencia de coste para tareas cotidianas rápidas.",
+  "Online | Google's flagship reasoning model for complex tasks and deep reasoning.": "En línea | Modelo insignia de razonamiento de Google para tareas complejas y análisis profundo.",
+  "Online | Google's model\nNext-gen fast multimodal model.": "En línea | Modelo de Google\nModelo multimodal rápido de última generación.",
+  "Online | Google's lightweight fast model.": "En línea | Modelo ligero y rápido de Google.",
+  "Online | Google's mid-size multimodal model.": "En línea | Modelo multimodal de tamaño medio de Google.",
+  "Current model: %1\nClick or type %2model to change": "Modelo actual: %1\nHaz clic o escribe %2model para cambiar",
+  "Current tool: %1\nClick or type %2tool to change": "Herramienta actual: %1\nHaz clic o escribe %2tool para cambiar"
 }

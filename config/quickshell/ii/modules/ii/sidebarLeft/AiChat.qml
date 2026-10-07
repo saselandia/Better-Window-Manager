@@ -750,14 +750,24 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                     // Model indicator
                     icon: "api"
                     text: Ai.getModel().name
-                    tooltipText: Translation.tr("Current model: %1\nSet it with %2model MODEL").arg(Ai.getModel().name).arg(root.commandPrefix)
+                    tooltipText: Translation.tr("Current model: %1\nClick or type %2model to change").arg(Ai.getModel().name).arg(root.commandPrefix)
+                    onClicked: {
+                        messageInputField.text = root.commandPrefix + "model ";
+                        messageInputField.forceActiveFocus();
+                        messageInputField.cursorPosition = messageInputField.text.length;
+                    }
                 }
 
                 ApiInputBoxIndicator {
                     // Tool indicator
                     icon: "service_toolbox"
                     text: Ai.currentTool.charAt(0).toUpperCase() + Ai.currentTool.slice(1)
-                    tooltipText: Translation.tr("Current tool: %1\nSet it with %2tool TOOL").arg(Ai.currentTool).arg(root.commandPrefix)
+                    tooltipText: Translation.tr("Current tool: %1\nClick or type %2tool to change").arg(Ai.currentTool).arg(root.commandPrefix)
+                    onClicked: {
+                        messageInputField.text = root.commandPrefix + "tool ";
+                        messageInputField.forceActiveFocus();
+                        messageInputField.cursorPosition = messageInputField.text.length;
+                    }
                 }
 
                 Item {

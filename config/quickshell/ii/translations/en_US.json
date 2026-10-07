@@ -801,5 +801,13 @@
   "Open Folder": "Open Folder",
   "Copy Path": "Copy Path",
   "Copied!": "Copied!",
-  "Path copied to clipboard: %1": "Path copied to clipboard: %1"
+  "Path copied to clipboard: %1": "Path copied to clipboard: %1",
+  "Online | Google's model\nState-of-the-art fast intelligence, superior coding, reasoning, and up-to-date knowledge.": "Online | Google's model\nState-of-the-art fast intelligence, superior coding, reasoning, and up-to-date knowledge.",
+  "Online | Google's model\nHigh-speed, cost-efficient model for fast everyday tasks.": "Online | Google's model\nHigh-speed, cost-efficient model for fast everyday tasks.",
+  "Online | Google's flagship reasoning model for complex tasks and deep reasoning.": "Online | Google's flagship reasoning model for complex tasks and deep reasoning.",
+  "Online | Google's model\nNext-gen fast multimodal model.": "Online | Google's model\nNext-gen fast multimodal model.",
+  "Online | Google's lightweight fast model.": "Online | Google's lightweight fast model.",
+  "Online | Google's mid-size multimodal model.": "Online | Google's mid-size multimodal model.",
+  "Current model: %1\nClick or type %2model to change": "Current model: %1\nClick or type %2model to change",
+  "Current tool: %1\nClick or type %2tool to change": "Current tool: %1\nClick or type %2tool to change"
 }

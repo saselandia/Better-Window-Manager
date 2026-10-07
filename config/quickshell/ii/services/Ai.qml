@@ -255,13 +255,39 @@ Singleton {
     // - api_format: The API format of the model. Can be "openai" or "gemini". Default is "openai".
     // - extraParams: Extra parameters to be passed to the model. This is a JSON object.
     property var models: Config.options.policies.ai === 2 ? {} : {
-        "gemini-2.5-flash": aiModelComponent.createObject(this, {
-            "name": "Gemini 2.5 Flash",
+        "gemini-3.8-flash": aiModelComponent.createObject(this, {
+            "name": "Gemini 3.8 Flash",
             "icon": "google-gemini-symbolic",
-            "description": Translation.tr("Online | Google's model\nNewer model that's slower than its predecessor but should deliver higher quality answers"),
+            "description": Translation.tr("Online | Google's model\nState-of-the-art fast intelligence, superior coding, reasoning, and up-to-date knowledge."),
             "homepage": "https://aistudio.google.com",
-            "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent",
-            "model": "gemini-2.5-flash",
+            "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:streamGenerateContent",
+            "model": "gemini-3.8-flash",
+            "requires_key": true,
+            "key_id": "gemini",
+            "key_get_link": "https://aistudio.google.com/app/apikey",
+            "key_get_description": Translation.tr("**Pricing**: free. Data used for training.\n\n**Instructions**: Log into Google account, allow AI Studio to create Google Cloud project or whatever it asks, go back and click Get API key"),
+            "api_format": "gemini",
+        }),
+        "gemini-3.5-flash": aiModelComponent.createObject(this, {
+            "name": "Gemini 3.5 Flash",
+            "icon": "google-gemini-symbolic",
+            "description": Translation.tr("Online | Google's model\nHigh-speed, cost-efficient model for fast everyday tasks."),
+            "homepage": "https://aistudio.google.com",
+            "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:streamGenerateContent",
+            "model": "gemini-3.5-flash",
+            "requires_key": true,
+            "key_id": "gemini",
+            "key_get_link": "https://aistudio.google.com/app/apikey",
+            "key_get_description": Translation.tr("**Pricing**: free. Data used for training.\n\n**Instructions**: Log into Google account, allow AI Studio to create Google Cloud project or whatever it asks, go back and click Get API key"),
+            "api_format": "gemini",
+        }),
+        "gemini-3.1-pro": aiModelComponent.createObject(this, {
+            "name": "Gemini 3.1 Pro",
+            "icon": "google-gemini-symbolic",
+            "description": Translation.tr("Online | Google's flagship reasoning model for complex tasks and deep reasoning."),
+            "homepage": "https://aistudio.google.com",
+            "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro:streamGenerateContent",
+            "model": "gemini-3.1-pro",
             "requires_key": true,
             "key_id": "gemini",
             "key_get_link": "https://aistudio.google.com/app/apikey",
@@ -275,6 +301,58 @@ Singleton {
             "homepage": "https://aistudio.google.com",
             "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:streamGenerateContent",
             "model": "gemini-3-flash-preview",
+            "requires_key": true,
+            "key_id": "gemini",
+            "key_get_link": "https://aistudio.google.com/app/apikey",
+            "key_get_description": Translation.tr("**Pricing**: free. Data used for training.\n\n**Instructions**: Log into Google account, allow AI Studio to create Google Cloud project or whatever it asks, go back and click Get API key"),
+            "api_format": "gemini",
+        }),
+        "gemini-2.5-flash": aiModelComponent.createObject(this, {
+            "name": "Gemini 2.5 Flash",
+            "icon": "google-gemini-symbolic",
+            "description": Translation.tr("Online | Google's model\nNewer model that's slower than its predecessor but should deliver higher quality answers"),
+            "homepage": "https://aistudio.google.com",
+            "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent",
+            "model": "gemini-2.5-flash",
+            "requires_key": true,
+            "key_id": "gemini",
+            "key_get_link": "https://aistudio.google.com/app/apikey",
+            "key_get_description": Translation.tr("**Pricing**: free. Data used for training.\n\n**Instructions**: Log into Google account, allow AI Studio to create Google Cloud project or whatever it asks, go back and click Get API key"),
+            "api_format": "gemini",
+        }),
+        "gemini-2.0-flash": aiModelComponent.createObject(this, {
+            "name": "Gemini 2.0 Flash",
+            "icon": "google-gemini-symbolic",
+            "description": Translation.tr("Online | Google's model\nNext-gen fast multimodal model."),
+            "homepage": "https://aistudio.google.com",
+            "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent",
+            "model": "gemini-2.0-flash",
+            "requires_key": true,
+            "key_id": "gemini",
+            "key_get_link": "https://aistudio.google.com/app/apikey",
+            "key_get_description": Translation.tr("**Pricing**: free. Data used for training.\n\n**Instructions**: Log into Google account, allow AI Studio to create Google Cloud project or whatever it asks, go back and click Get API key"),
+            "api_format": "gemini",
+        }),
+        "gemini-1.5-flash": aiModelComponent.createObject(this, {
+            "name": "Gemini 1.5 Flash",
+            "icon": "google-gemini-symbolic",
+            "description": Translation.tr("Online | Google's lightweight fast model."),
+            "homepage": "https://aistudio.google.com",
+            "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent",
+            "model": "gemini-1.5-flash",
+            "requires_key": true,
+            "key_id": "gemini",
+            "key_get_link": "https://aistudio.google.com/app/apikey",
+            "key_get_description": Translation.tr("**Pricing**: free. Data used for training.\n\n**Instructions**: Log into Google account, allow AI Studio to create Google Cloud project or whatever it asks, go back and click Get API key"),
+            "api_format": "gemini",
+        }),
+        "gemini-1.5-pro": aiModelComponent.createObject(this, {
+            "name": "Gemini 1.5 Pro",
+            "icon": "google-gemini-symbolic",
+            "description": Translation.tr("Online | Google's mid-size multimodal model."),
+            "homepage": "https://aistudio.google.com",
+            "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:streamGenerateContent",
+            "model": "gemini-1.5-pro",
             "requires_key": true,
             "key_id": "gemini",
             "key_get_link": "https://aistudio.google.com/app/apikey",
@@ -308,6 +386,9 @@ Singleton {
     function addUserModels() {
         (Config?.options.ai?.extraModels ?? []).forEach(model => {
             const safeModelName = root.safeModelName(model["model"]);
+            if (model["api_format"] === "gemini" && (!model["endpoint"] || model["endpoint"].length === 0)) {
+                model["endpoint"] = `https://generativelanguage.googleapis.com/v1beta/models/${model["model"]}:streamGenerateContent`;
+            }
             root.addModel(safeModelName, model)
         });
     }
