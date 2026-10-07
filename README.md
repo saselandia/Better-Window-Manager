@@ -53,6 +53,8 @@ This dotfiles repository keeps binary assets minimal to ensure portability and q
 | Package | Role |
 | :--- | :--- |
 | **`hyprland`** | Dynamic Wayland compositor |
+| **`hyprcursor`** | Native cursor library and theme utility for Hyprland (`hyprcursor-util`) |
+| **`python-pillow`** | Python imaging library used for XCursor preview extraction |
 | **`quickshell`** | Desktop widget and HUD framework built on Qt 6 / QML |
 | **`matugen`** | Material Design 3 color palette generator from wallpapers |
 | **`swww`** | High-performance animated wallpaper daemon for Wayland |
@@ -79,7 +81,7 @@ This dotfiles repository keeps binary assets minimal to ensure portability and q
 #### Arch Linux / CachyOS:
 ```bash
 # System dependencies:
-paru -S hyprland quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak
+paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak
 
 # Required Flatpaks:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client
@@ -88,7 +90,7 @@ flatpak install flathub dev.vencord.Vesktop com.spotify.Client
 #### Gentoo Linux:
 ```bash
 # System dependencies:
-emerge --ask gui-wm/hyprland gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak
+emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak
 
 # Required Flatpaks:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client
@@ -97,7 +99,7 @@ flatpak install flathub dev.vencord.Vesktop com.spotify.Client
 #### Fedora:
 ```bash
 # System dependencies:
-sudo dnf install hyprland kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak
+sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak
 
 # Required Flatpaks:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client

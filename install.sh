@@ -93,6 +93,7 @@ print_step "1. Comprobando componentes y dependencias del sistema..."
 
 DEPENDENCIES=(
     "hyprland:Compositor Wayland principal"
+    "hyprcursor-util:Utilidad y biblioteca de cursores nativos para Hyprland (hyprcursor)"
     "quickshell:Entorno de widgets, HUD y barra (Qt/QML)"
     "matugen:Generador de paletas Material You a partir del fondo de pantalla"
     "swww:Demonio de fondos de pantalla dinámicos para Wayland"
@@ -113,6 +114,16 @@ MISSING_DEPS=()
 for item in "${DEPENDENCIES[@]}"; do
     bin="${item%%:*}"
     desc="${item#*:}"
+    if [ "$bin" = "hyprcursor-util" ]; then
+        if command -v hyprcursor-util >/dev/null 2>&1 || command -v hyprcursor >/dev/null 2>&1 || pkg-config --exists hyprcursor 2>/dev/null || (command -v hyprctl >/dev/null 2>&1 && hyprctl version 2>&1 | grep -iq "hyprcursor"); then
+            echo -e "  ${GREEN}✓${NC} ${BOLD}hyprcursor${NC} - ${desc}"
+        else
+            echo -e "  ${YELLOW}✗${NC} ${YELLOW}[$bin]${NC} ${BOLD}[Falta]${NC} - ${desc}"
+            MISSING_DEPS+=("hyprcursor")
+        fi
+        continue
+    fi
+
     if [ "$bin" = "firefox" ]; then
         if command -v firefox >/dev/null 2>&1 || command -v firefox-bin >/dev/null 2>&1; then
             echo -e "  ${GREEN}✓${NC} ${BOLD}firefox${NC} - ${desc}"
@@ -131,15 +142,22 @@ for item in "${DEPENDENCIES[@]}"; do
     fi
 done
 
+# Comprobar módulo Pillow de Python para previsualizaciones gráficas de cursores
+if python3 -c "import PIL" >/dev/null 2>&1; then
+    echo -e "  ${GREEN}✓${NC} ${BOLD}python-pillow${NC} - Biblioteca Python para previsualización gráfica de cursores"
+else
+    echo -e "  ${YELLOW}•${NC} ${YELLOW}[python-pillow]${NC} - Recomendado para generar vistas previas de cursores XCursor"
+fi
+
 if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
     echo ""
     print_warn "Hay componentes del sistema no encontrados: ${MISSING_DEPS[*]}"
     echo "  Recomendamos instalarlos para que todas las funciones visuales y atajos operen al 100%."
     echo ""
     echo "  Comandos de instalación según tu distribución:"
-    echo "   • Arch / CachyOS: paru -S hyprland quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak"
-    echo "   • Gentoo: emerge --ask gui-wm/hyprland gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak"
-    echo "   • Fedora: sudo dnf install hyprland kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak"
+    echo "   • Arch / CachyOS: paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak"
+    echo "   • Gentoo: emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak"
+    echo "   • Fedora: sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak"
     echo ""
 fi
 
