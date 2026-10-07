@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Cursor Manager for Hyprland (Hyprcursor & XCursor) + GTK & Quickshell
 Handles scanning installed cursor themes, extracting visual previews,
-and applying configuration across Hyprland, GTK, and X11/XDG standards.
+auto-converting legacy XCursor themes to compiled Hyprcursor format,
+and synchronizing theme selections live across Hyprland, GTK, X11, and user environments.
 """
 
-import os
 import sys
+import os
 import json
 import struct
-import zipfile
 import subprocess
+import shutil
+import re
 from pathlib import Path
 from PIL import Image
 
@@ -33,74 +36,261 @@ def extract_xcursor_image(cursor_file: Path, out_png: Path) -> bool:
                 return False
             _, _, ntoc = struct.unpack("<III", f.read(12))
             best_img = None
+            best_diff = 9999
             for _ in range(ntoc):
-                chunk_type, _, chunk_pos = struct.unpack("<III", f.read(12))
-                if chunk_type == 0xfffd0002: # IMAGE
-                    saved = f.tell()
-                    f.seek(chunk_pos)
-                    _, _, _, _, width, height, _, _, _ = struct.unpack("<IIIIIIIII", f.read(36))
-                    raw = f.read(width * height * 4)
-                    f.seek(saved)
-                    if best_img is None or (width >= 32 and (best_img[1] < 32 or width <= best_img[1])):
-                        best_img = (raw, width, height)
-            if best_img:
-                raw, w, h = best_img
-                img = Image.frombytes("RGBA", (w, h), raw, "raw", "BGRA")
-                out_png.parent.mkdir(parents=True, exist_ok=True)
-                img.save(out_png)
+                chunk_type, chunk_subtype, chunk_pos = struct.unpack("<III", f.read(12))
+                if chunk_type == 0xfffd0002: # IMAGE chunk
+                    diff = abs(chunk_subtype - 32)
+                    if diff < best_diff:
+                        best_diff = diff
+                        best_img = chunk_pos
+
+            if best_img is None:
+                return False
+
+            f.seek(best_img)
+            header, chunk_type, chunk_subtype, ver, width, height, xhot, yhot, delay = struct.unpack("<IIIIIIIII", f.read(36))
+            raw_pixels = f.read(width * height * 4)
+            img = Image.frombytes("RGBA", (width, height), raw_pixels, "raw", "BGRA")
+            out_png.parent.mkdir(parents=True, exist_ok=True)
+            img.save(out_png)
+            return True
+    except Exception:
+        return False
+
+def extract_hyprcursor_svg(hlc_file: Path, out_file: Path) -> bool:
+    """Extract SVG or PNG from a hyprcursor .hlc zip archive."""
+    import zipfile
+    try:
+        with zipfile.ZipFile(hlc_file, 'r') as zf:
+            namelist = zf.namelist()
+            svgs = [n for n in namelist if n.endswith('.svg')]
+            pngs = [n for n in namelist if n.endswith('.png')]
+            target = svgs[0] if svgs else (pngs[0] if pngs else None)
+            if target:
+                out_file.parent.mkdir(parents=True, exist_ok=True)
+                with zf.open(target) as src, open(out_file, 'wb') as dst:
+                    dst.write(src.read())
                 return True
     except Exception:
         pass
     return False
 
-def extract_hyprcursor_svg(hlc_file: Path, out_file: Path) -> bool:
-    """Extract SVG or PNG from a hyprcursor .hlc zip archive."""
-    try:
-        with zipfile.ZipFile(hlc_file, "r") as z:
-            for name in z.namelist():
-                if name.endswith(".svg") or name.endswith(".png"):
-                    out_file.parent.mkdir(parents=True, exist_ok=True)
-                    with open(out_file, "wb") as out:
-                        out.write(z.read(name))
-                    return True
-    except Exception:
-        pass
-    return False
+def convert_xcursor_to_hyprcursor(theme_path: Path, dest_dir: Path = None) -> bool:
+    """
+    Automatically converts an XCursor theme into a compiled Hyprcursor theme.
+    Extracts each cursor's images, dimensions, hotspots, delays, and symlinks,
+    generates manifest.hl and meta.hl files, and compiles them via hyprcursor-util.
+    """
+    cursors_dir = theme_path / "cursors"
+    if not cursors_dir.is_dir():
+        return False
+
+    theme_name = theme_path.name
+    if dest_dir is None:
+        dest_dir = theme_path
+
+    work_dir = Path(f"/tmp/hc_work_{theme_name}")
+    out_dir = Path(f"/tmp/hc_out_{theme_name}")
+    shutil.rmtree(work_dir, ignore_errors=True)
+    shutil.rmtree(out_dir, ignore_errors=True)
+    work_dir.mkdir(parents=True, exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    manifest = work_dir / "manifest.hl"
+    manifest.write_text(f"""cursors_directory = hyprcursors
+name = {theme_name}
+description = Auto-converted from XCursor
+version = 0.1
+""")
+
+    symlinks = {}
+    real_files = []
+    for p in cursors_dir.iterdir():
+        if not re.match(r'^[A-Za-z0-9_\-\.]+$', p.name):
+            continue
+        if p.is_symlink():
+            try:
+                target = p.resolve().name
+                symlinks.setdefault(target, []).append(p.name)
+            except Exception:
+                pass
+        elif p.is_file():
+            real_files.append(p)
+
+    for rf in real_files:
+        shape_name = rf.name
+        shape_dir = work_dir / "hyprcursors" / shape_name
+        shape_dir.mkdir(parents=True, exist_ok=True)
+
+        try:
+            with open(rf, "rb") as f:
+                magic = f.read(4)
+                if magic != b"Xcur":
+                    continue
+                _, _, ntoc = struct.unpack("<III", f.read(12))
+                tocs = []
+                for _ in range(ntoc):
+                    ctype, subtype, pos = struct.unpack("<III", f.read(12))
+                    if ctype == 0xfffd0002: # image
+                        tocs.append((subtype, pos))
+        except Exception:
+            continue
+
+        if not tocs:
+            continue
+
+        size_frames = {}
+        hx, hy = 0.0, 0.0
+        for idx, (sz, pos) in enumerate(tocs):
+            try:
+                with open(rf, "rb") as f:
+                    f.seek(pos)
+                    hdr, ctype, subtype, ver, w, h, xhot, yhot, delay = struct.unpack("<IIIIIIIII", f.read(36))
+                    raw = f.read(w * h * 4)
+                    img = Image.frombytes("RGBA", (w, h), raw, "raw", "BGRA")
+                    png_name = f"frame_{w}x{h}_{idx}.png"
+                    img.save(shape_dir / png_name)
+                    size_frames.setdefault(w, []).append((png_name, delay))
+                    if w > 0 and h > 0:
+                        hx = xhot / w
+                        hy = yhot / h
+            except Exception:
+                continue
+
+        meta_lines = [
+            "resize_algorithm = bilinear",
+            f"hotspot_x = {hx:.3f}",
+            f"hotspot_y = {hy:.3f}",
+        ]
+
+        for sz in sorted(size_frames.keys()):
+            for png_name, delay in size_frames[sz]:
+                if delay > 0:
+                    meta_lines.append(f"define_size = {sz}, {png_name}, {delay}")
+                else:
+                    meta_lines.append(f"define_size = {sz}, {png_name}")
+
+        overrides = set(symlinks.get(shape_name, []))
+        if shape_name == "left_ptr":
+            overrides.add("default")
+            overrides.add("arrow")
+        elif shape_name == "default":
+            overrides.add("left_ptr")
+            overrides.add("arrow")
+
+        for ov in sorted(overrides):
+            if re.match(r'^[A-Za-z0-9_\-\.]+$', ov) and ov != shape_name:
+                meta_lines.append(f"define_override = {ov}")
+
+        (shape_dir / "meta.hl").write_text("\n".join(meta_lines) + "\n")
+
+    res = subprocess.run(["hyprcursor-util", "--create", str(work_dir), "-o", str(out_dir)], capture_output=True, text=True)
+    compiled = out_dir / f"theme_{theme_name}"
+    success = False
+    if compiled.exists():
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy(compiled / "manifest.hl", dest_dir / "manifest.hl")
+        dest_hc = dest_dir / "hyprcursors"
+        if dest_hc.exists():
+            shutil.rmtree(dest_hc)
+        shutil.copytree(compiled / "hyprcursors", dest_hc)
+        success = True
+
+    shutil.rmtree(work_dir, ignore_errors=True)
+    shutil.rmtree(out_dir, ignore_errors=True)
+    return success
+
+def ensure_theme_ready(theme: str) -> bool:
+    """Ensure theme exists, is symlinked between user icon dirs, and has hyprcursor support."""
+    theme_path = None
+    for base in SEARCH_DIRS:
+        cand = base / theme
+        if cand.is_dir():
+            theme_path = cand
+            break
+
+    if not theme_path:
+        return False
+
+    user_icons1 = Path.home() / ".local" / "share" / "icons" / theme
+    user_icons2 = Path.home() / ".icons" / theme
+
+    # Symlink between user icon dirs
+    if theme_path == user_icons1 and not user_icons2.exists():
+        try:
+            user_icons2.symlink_to(user_icons1, target_is_directory=True)
+        except Exception:
+            pass
+    elif theme_path == user_icons2 and not user_icons1.exists():
+        try:
+            user_icons1.symlink_to(user_icons2, target_is_directory=True)
+        except Exception:
+            pass
+
+    # Check if Hyprcursor is present
+    has_hc = (theme_path / "manifest.hl").is_file() and (theme_path / "hyprcursors").is_dir()
+    if not has_hc and (user_icons1 / "manifest.hl").is_file() and (user_icons1 / "hyprcursors").is_dir():
+        has_hc = True
+
+    if not has_hc and (theme_path / "cursors").is_dir():
+        # Determine writable destination
+        dest = theme_path
+        if not os.access(theme_path, os.W_OK):
+            dest = user_icons1
+            dest.mkdir(parents=True, exist_ok=True)
+            if not (dest / "cursors").exists():
+                try:
+                    (dest / "cursors").symlink_to(theme_path / "cursors", target_is_directory=True)
+                except Exception:
+                    pass
+        convert_xcursor_to_hyprcursor(theme_path, dest)
+        if dest != user_icons2 and not user_icons2.exists():
+            try:
+                user_icons2.symlink_to(dest, target_is_directory=True)
+            except Exception:
+                pass
+
+    return True
 
 def generate_previews(theme_name: str, theme_path: Path) -> dict:
     """Generate or retrieve cached preview image paths for a cursor theme."""
-    out_dir = CACHE_DIR / theme_name
-    out_dir.mkdir(parents=True, exist_ok=True)
+    theme_cache = CACHE_DIR / theme_name
+    theme_cache.mkdir(parents=True, exist_ok=True)
+
+    shapes = {
+        "pointer": ["left_ptr", "default", "arrow", "top_left_arrow"],
+        "hand": ["pointing_hand", "hand2", "hand1", "pointer", "link"],
+        "text": ["xterm", "text", "ibeam"],
+        "wait": ["wait", "watch", "progress", "left_ptr_watch"]
+    }
 
     result = {}
-    shapes = [
-        ("pointer", ["left_ptr", "arrow", "default"]),
-        ("hand", ["hand2", "hand1", "pointer", "link"]),
-        ("text", ["xterm", "ibeam", "text"]),
-        ("wait", ["wait", "left_ptr_watch", "watch"])
-    ]
 
-    for shape_key, candidates in shapes:
-        cached_target = out_dir / f"{shape_key}.png"
-        cached_svg = out_dir / f"{shape_key}.svg"
+    for key, candidates in shapes.items():
+        cached_svg = theme_cache / f"{key}.svg"
+        cached_png = theme_cache / f"{key}.png"
+
         if cached_svg.exists():
-            result[shape_key] = str(cached_svg)
+            result[key] = str(cached_svg)
             continue
-        if cached_target.exists():
-            result[shape_key] = str(cached_target)
+        if cached_png.exists():
+            result[key] = str(cached_png)
             continue
 
-        found = False
         # 1. Try hyprcursors
         hypr_dir = theme_path / "hyprcursors"
+        found = False
         if hypr_dir.is_dir():
             for c in candidates:
                 hlc = hypr_dir / f"{c}.hlc"
-                if hlc.exists():
+                if hlc.is_file():
                     if extract_hyprcursor_svg(hlc, cached_svg):
-                        result[shape_key] = str(cached_svg)
+                        result[key] = str(cached_svg)
                         found = True
                         break
+        if found:
+            continue
 
         # 2. Try xcursors
         if not found:
@@ -108,14 +298,12 @@ def generate_previews(theme_name: str, theme_path: Path) -> dict:
             if xcur_dir.is_dir():
                 for c in candidates:
                     cur_f = xcur_dir / c
-                    if cur_f.exists() and cur_f.is_file():
+                    if cur_f.is_file():
+                        cached_target = cached_png
                         if extract_xcursor_image(cur_f, cached_target):
-                            result[shape_key] = str(cached_target)
+                            result[key] = str(cached_target)
                             found = True
                             break
-
-        if not found and shape_key == "pointer" and "pointer" not in result:
-            result[shape_key] = ""
 
     return result
 
@@ -123,6 +311,7 @@ def list_themes():
     """List all available cursor themes."""
     (Path.home() / ".local" / "share" / "icons").mkdir(parents=True, exist_ok=True)
     (Path.home() / ".icons").mkdir(parents=True, exist_ok=True)
+
     themes = {}
 
     for base in SEARCH_DIRS:
@@ -155,7 +344,7 @@ def list_themes():
 
             themes[item.name] = {
                 "id": item.name,
-                "name": name if name else item.name,
+                "name": name,
                 "comment": comment,
                 "path": str(item),
                 "has_hyprcursor": has_hyprcursor,
@@ -166,11 +355,8 @@ def list_themes():
                 "preview_wait": previews.get("wait", "")
             }
 
-    # Sort themes alphabetically with Bibata / Adwaita first
     def sort_key(t):
         t_id = t["id"].lower()
-        if "bibata-modern-classic" in t_id:
-            return (0, t_id)
         if "bibata" in t_id:
             return (1, t_id)
         if "adwaita" in t_id:
@@ -204,9 +390,8 @@ def get_current():
         except Exception:
             pass
     else:
-        # Fallback to gsettings
         try:
-            out = subprocess.check_output(["gsettings", "get", "org.gnome.desktop.interface", "cursor-theme"], text=True).strip().strip("'\"")
+            out = subprocess.check_output(["gsettings", "get", "org.gnome.desktop.interface", "cursor-theme"], text=True).strip().strip('"\'')
             if out:
                 theme = out
             s_out = subprocess.check_output(["gsettings", "get", "org.gnome.desktop.interface", "cursor-size"], text=True).strip()
@@ -234,7 +419,6 @@ def update_ini_file(filepath: Path, section: str, updates: dict):
         sline = line.strip()
         if sline.startswith("[") and sline.endswith("]"):
             if in_section:
-                # Add any missing keys before leaving section
                 for k, v in updates.items():
                     if k not in updated_keys:
                         new_lines.append(f"{k}={v}\n")
@@ -275,11 +459,8 @@ def apply_cursor(theme: str, size: int):
     """Apply cursor theme and size system-wide."""
     size_str = str(size)
 
-    # 1. Apply live in Hyprland
-    try:
-        subprocess.run(["hyprctl", "setcursor", theme, size_str], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
+    # 1. Ensure theme has Hyprcursor files and reciprocal user symlinks
+    ensure_theme_ready(theme)
 
     # 2. Write Hyprland persistent lua module
     cursor_lua = CONFIG_DIR / "hypr" / "modules" / "cursor.lua"
@@ -298,14 +479,24 @@ hl.env("XCURSOR_SIZE", "{size_str}")
     with open(cursor_lua, "w", encoding="utf-8") as f:
         f.write(lua_content)
 
-    # 3. Apply GTK gsettings
+    # 3. Export to systemd and D-Bus user environments so newly launched apps get it
+    for env_cmd in [
+        ["systemctl", "--user", "import-environment", "HYPRCURSOR_THEME", "HYPRCURSOR_SIZE", "XCURSOR_THEME", "XCURSOR_SIZE"],
+        ["dbus-update-activation-environment", "--systemd", "HYPRCURSOR_THEME", "HYPRCURSOR_SIZE", "XCURSOR_THEME", "XCURSOR_SIZE"]
+    ]:
+        try:
+            subprocess.run(env_cmd, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+
+    # 4. Apply GTK gsettings
     try:
         subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "cursor-theme", theme], check=False)
         subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "cursor-size", size_str], check=False)
     except Exception:
         pass
 
-    # 4. Write GTK-3 and GTK-4 settings.ini
+    # 5. Write GTK-3 and GTK-4 settings.ini
     gtk_updates = {
         "gtk-cursor-theme-name": theme,
         "gtk-cursor-theme-size": size_str
@@ -313,17 +504,23 @@ hl.env("XCURSOR_SIZE", "{size_str}")
     update_ini_file(CONFIG_DIR / "gtk-3.0" / "settings.ini", "Settings", gtk_updates)
     update_ini_file(CONFIG_DIR / "gtk-4.0" / "settings.ini", "Settings", gtk_updates)
 
-    # 5. Write default X11/XDG index.theme fallback
-    default_icons = Path.home() / ".icons" / "default" / "index.theme"
-    default_icons.parent.mkdir(parents=True, exist_ok=True)
-    with open(default_icons, "w", encoding="utf-8") as f:
-        f.write(f"""[Icon Theme]
+    # 6. Write default X11/XDG index.theme fallbacks
+    for d_path in [
+        Path.home() / ".icons" / "default" / "index.theme",
+        Path.home() / ".local" / "share" / "icons" / "default" / "index.theme"
+    ]:
+        try:
+            d_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(d_path, "w", encoding="utf-8") as f:
+                f.write(f"""[Icon Theme]
 Name=Default
 Comment=Default Cursor Theme
 Inherits={theme}
 """)
+        except Exception:
+            pass
 
-    # 6. Write xsettingsd if present or create it
+    # 7. Write xsettingsd if present or create it
     xsettingsd_file = CONFIG_DIR / "xsettingsd" / "xsettingsd.conf"
     if xsettingsd_file.parent.exists():
         try:
@@ -335,9 +532,14 @@ Gtk/CursorThemeSize {size}
         except Exception:
             pass
 
-    # 7. Reload Hyprland
+    # 8. Reload Hyprland and apply live cursor
     try:
         subprocess.run(["hyprctl", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+    try:
+        subprocess.run(["hyprctl", "setcursor", theme, size_str], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception:
         pass
 
