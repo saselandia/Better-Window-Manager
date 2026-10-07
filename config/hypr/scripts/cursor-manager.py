@@ -121,6 +121,8 @@ def generate_previews(theme_name: str, theme_path: Path) -> dict:
 
 def list_themes():
     """List all available cursor themes."""
+    (Path.home() / ".local" / "share" / "icons").mkdir(parents=True, exist_ok=True)
+    (Path.home() / ".icons").mkdir(parents=True, exist_ok=True)
     themes = {}
 
     for base in SEARCH_DIRS:

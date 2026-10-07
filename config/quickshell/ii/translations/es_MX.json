@@ -792,5 +792,11 @@
   "Text Selection": "Selección de texto",
   "Move / Drag": "Mover / Arrastrar",
   "Apply and Save Cursor": "Aplicar y Guardar Cursor",
-  "Refresh Themes": "Actualizar Temas"
+  "Refresh Themes": "Actualizar Temas",
+  "Where to add new cursor themes": "Dónde añadir nuevos temas de cursor",
+  "Place your extracted cursor folders into %1 (recommended) or %2.<br>Both Hyprcursor and standard XCursor formats are automatically detected.": "Coloca las carpetas de cursores descomprimidas en %1 (recomendado) o %2.<br>Tanto el formato Hyprcursor como XCursor son detectados automáticamente.",
+  "Open Folder": "Abrir Carpeta",
+  "Copy Path": "Copiar Ruta",
+  "Copied!": "¡Copiado!",
+  "Path copied to clipboard: %1": "Ruta copiada al portapapeles: %1"
 }

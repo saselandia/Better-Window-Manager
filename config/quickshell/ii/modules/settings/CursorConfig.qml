@@ -304,6 +304,87 @@ ContentPage {
         icon: "style"
         title: Translation.tr("Installed Cursor Themes")
 
+        // Folder Location & Help Card
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: infoLayout.implicitHeight + 24
+            radius: Appearance.rounding.normal
+            color: Appearance.colors.colLayer3
+            border.width: 1
+            border.color: Appearance.colors.colOutlineVariant
+
+            RowLayout {
+                id: infoLayout
+                anchors.fill: parent
+                anchors.margins: 14
+                spacing: 14
+
+                MaterialSymbol {
+                    text: "folder_special"
+                    iconSize: 28
+                    color: Appearance.colors.colPrimary
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 2
+
+                    StyledText {
+                        text: Translation.tr("Where to add new cursor themes")
+                        font.weight: Font.Bold
+                        font.pixelSize: Appearance.font.pixelSize.normal
+                        color: Appearance.colors.colOnLayer3
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: Translation.tr("Place your extracted cursor folders into %1 (recommended) or %2.<br>Both Hyprcursor and standard XCursor formats are automatically detected.").arg("<b>~/.local/share/icons/</b>").arg("<b>~/.icons/</b>")
+                        wrapMode: Text.Wrap
+                        textFormat: Text.RichText
+                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        color: Appearance.colors.colSubtext
+                    }
+                }
+
+                RowLayout {
+                    spacing: 8
+                    Layout.alignment: Qt.AlignVCenter
+
+                    RippleButtonWithIcon {
+                        materialIcon: "folder_open"
+                        mainText: Translation.tr("Open Folder")
+                        colBackground: Appearance.colors.colSecondaryContainer
+                        onClicked: {
+                            const p = FileUtils.trimFileProtocol(Directories.home) + "/.local/share/icons";
+                            Qt.openUrlExternally("file://" + p);
+                        }
+                    }
+
+                    RippleButtonWithIcon {
+                        id: copyBtn
+                        property bool copied: false
+                        materialIcon: copied ? "check" : "content_copy"
+                        mainText: copied ? Translation.tr("Copied!") : Translation.tr("Copy Path")
+                        colBackground: Appearance.colors.colLayer2
+                        onClicked: {
+                            const p = FileUtils.trimFileProtocol(Directories.home) + "/.local/share/icons";
+                            Quickshell.clipboardText = p;
+                            copyBtn.copied = true;
+                            copyTimer.restart();
+                            root.showFeedback(Translation.tr("Path copied to clipboard: %1").arg(p), false);
+                        }
+
+                        Timer {
+                            id: copyTimer
+                            interval: 2000
+                            onTriggered: copyBtn.copied = false
+                        }
+                    }
+                }
+            }
+        }
+
         ContentSubsection {
             title: Translation.tr("Select a cursor theme from your system")
             Layout.fillWidth: true
