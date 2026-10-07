@@ -48,6 +48,15 @@ hl.window_rule({
     float = false,
 })
 
+-- steam_app_413150
+hl.window_rule({
+    name  = "persist_steam_app_413150",
+    match = {
+        class = "^steam_app_413150$",
+    },
+    float = false,
+})
+
 -- Steam (Amigos / Chat)
 hl.window_rule({
     name  = "persist_steam_friends",

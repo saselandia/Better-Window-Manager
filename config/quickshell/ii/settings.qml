@@ -65,6 +65,11 @@ ApplicationWindow {
             component: "modules/settings/DisplayConfig.qml"
         },
         {
+            name: Translation.tr("Cursor"),
+            icon: "near_me",
+            component: "modules/settings/CursorConfig.qml"
+        },
+        {
             name: Translation.tr("Advanced"),
             icon: "construction",
             component: "modules/settings/AdvancedConfig.qml"

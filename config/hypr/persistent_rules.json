@@ -47,5 +47,13 @@
             "class": "^kitty$"
         },
         "float": true
+    },
+    "steam_app_413150": {
+        "name": "persist_steam_app_413150",
+        "description": "steam_app_413150",
+        "match": {
+            "class": "^steam_app_413150$"
+        },
+        "float": false
     }
 }

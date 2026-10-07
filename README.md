@@ -22,6 +22,7 @@
 
 - 🎨 **Real-Time Dynamic Theming:** Change your wallpaper and the entire desktop (windows, panels, terminal, and applications) instantly adapts its palette using Material You.
 - 🖥️ **Interactive Display & Monitor Manager:** Configure resolution, refresh rate (Hz), scale, and rearrange multi-monitor setups visually with mouse **drag-and-drop** and magnetic edge snapping.
+- 🖱️ **Cursor & Hyprcursor Theme Manager:** Easily switch cursor themes (Hyprcursor and XCursor) and customize cursor sizes (20px to 48px) with a dedicated GUI, complete with live hover testing zones and bundled Bibata Material Design cursors.
 - 📁 **Integrated Nautilus File Manager:** Open your file manager anytime with **`Super + E`** or **`Alt + E`**, featuring dynamic dark mode and synced accent colors.
 - 🚀 **Quickshell HUD & Widgets:** Top bar with system metrics, quick settings sidebar, and an interactive **`Alt + Tab`** window switcher with live visual previews.
 - 🔍 **App Launcher & Search:** Instant access to your applications and smart system search by tapping the **`Super`** key.

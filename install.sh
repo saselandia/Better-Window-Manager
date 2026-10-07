@@ -233,6 +233,19 @@ mkdir -p "$HOME/.var/app/dev.vencord.Vesktop/config/vesktop/themes"
 mkdir -p "$HOME/.var/app/dev.vencord.Vesktop/config/vesktop/settings"
 mkdir -p "$HOME/.config/spicetify/Themes/MaterialYou"
 
+# Copiar e instalar temas de cursor (Hyprcursor & XCursor)
+ICONS_DIR="$HOME/.local/share/icons"
+mkdir -p "$ICONS_DIR" "$HOME/.icons"
+if [ -d "$ASSETS_DIR/cursors" ]; then
+    echo -e "  ${BOLD}• Instalando temas de cursor (Hyprcursor & XCursor)...${NC}"
+    cp -r "$ASSETS_DIR/cursors/"* "$ICONS_DIR/" 2>/dev/null || true
+    cp -r "$ASSETS_DIR/cursors/"* "$HOME/.icons/" 2>/dev/null || true
+    if command -v flatpak >/dev/null 2>&1; then
+        flatpak override --filesystem=~/.icons:ro --filesystem=~/.local/share/icons:ro --user 2>/dev/null || true
+    fi
+    print_success "Temas de cursor instalados (Bibata-Modern-Classic, Bibata-Modern-Ice)."
+fi
+
 # Copiar e instalar fuentes requeridas
 FONTS_DIR="$HOME/.local/share/fonts"
 mkdir -p "$FONTS_DIR"
@@ -485,6 +498,12 @@ if [ "$FOUND_FF_PROFILES" -eq 0 ]; then
     echo "  Abre Firefox por primera vez y vuelve a ejecutar './install.sh' para tematizarlo."
 else
     print_success "Firefox configurado con éxito con userChrome.css y soporte de estilos heredados."
+fi
+
+# Aplicar cursor por defecto si no está configurado
+if [ -x "$CONFIG_SOURCE/hypr/scripts/cursor-manager.py" ]; then
+    "$CONFIG_SOURCE/hypr/scripts/cursor-manager.py" apply Bibata-Modern-Classic 24 >/dev/null 2>&1 || true
+    print_success "Cursor predeterminado configurado (Bibata-Modern-Classic 24px)."
 fi
 
 # ==============================================================================
