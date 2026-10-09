@@ -50,6 +50,11 @@ ApplicationWindow {
             component: "modules/settings/InterfaceConfig.qml"
         },
         {
+            name: Translation.tr("Keybinds"),
+            icon: "keyboard",
+            component: "modules/settings/KeybindsConfig.qml"
+        },
+        {
             name: Translation.tr("Services"),
             icon: "settings",
             component: "modules/settings/ServicesConfig.qml"

@@ -1,0 +1,957 @@
+[
+  {
+    "id": "cheatsheet",
+    "category": "General",
+    "description": "Guía de atajos (Cheatsheet)",
+    "mods": [
+      "ALT"
+    ],
+    "key": "A",
+    "action_type": "exec",
+    "exec": "quickshell -c ii ipc call cheatsheet toggle",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "terminal",
+    "category": "Lanzadores",
+    "description": "Abrir terminal (Kitty)",
+    "mods": [
+      "CTRL"
+    ],
+    "key": "RETURN",
+    "action_type": "exec",
+    "exec": "kitty",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "app_menu",
+    "category": "Lanzadores",
+    "description": "Menú de aplicaciones / Búsqueda",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "SUPER_L",
+    "action_type": "exec",
+    "exec": "quickshell -c ii ipc call search toggle || rofi -show drun",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {
+      "release": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "file_manager",
+    "category": "Lanzadores",
+    "description": "Explorador de archivos (Nautilus)",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "E",
+    "action_type": "exec",
+    "exec": "nautilus",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "file_manager_alt",
+    "category": "Lanzadores",
+    "description": "Explorador de archivos alternativo (Alt+E)",
+    "mods": [
+      "ALT"
+    ],
+    "key": "E",
+    "action_type": "exec",
+    "exec": "nautilus",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "wallpaper_picker",
+    "category": "Lanzadores",
+    "description": "Selector de fondos de pantalla",
+    "mods": [
+      "ALT"
+    ],
+    "key": "W",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/wallpaper-picker.sh",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "window_close",
+    "category": "Ventanas",
+    "description": "Cerrar ventana activa",
+    "mods": [
+      "ALT"
+    ],
+    "key": "X",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "window.close",
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "window_toggle_float_persist",
+    "category": "Ventanas",
+    "description": "Recordar regla flotante persistente",
+    "mods": [
+      "ALT"
+    ],
+    "key": "Q",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/toggle-float-persistent.py",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "window_togglesplit",
+    "category": "Ventanas",
+    "description": "Alternar división horizontal/vertical (Split)",
+    "mods": [
+      "ALT"
+    ],
+    "key": "J",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "layout",
+    "dispatcher_arg": "togglesplit",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "window_fullscreen",
+    "category": "Ventanas",
+    "description": "Alternar pantalla completa",
+    "mods": [
+      "ALT"
+    ],
+    "key": "RETURN",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "window.fullscreen",
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "alt_tab",
+    "category": "Ventanas",
+    "description": "Selector visual de ventanas (Alt+Tab)",
+    "mods": [
+      "ALT"
+    ],
+    "key": "TAB",
+    "action_type": "exec",
+    "exec": "quickshell -c ii ipc call altTab next",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {
+      "repeating": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "focus_left",
+    "category": "Navegación",
+    "description": "Mover foco a la izquierda",
+    "mods": [
+      "ALT"
+    ],
+    "key": "left",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "focus_direction",
+    "dispatcher_arg": "left",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "focus_right",
+    "category": "Navegación",
+    "description": "Mover foco a la derecha",
+    "mods": [
+      "ALT"
+    ],
+    "key": "right",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "focus_direction",
+    "dispatcher_arg": "right",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "focus_up",
+    "category": "Navegación",
+    "description": "Mover foco hacia arriba",
+    "mods": [
+      "ALT"
+    ],
+    "key": "up",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "focus_direction",
+    "dispatcher_arg": "up",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "focus_down",
+    "category": "Navegación",
+    "description": "Mover foco hacia abajo",
+    "mods": [
+      "ALT"
+    ],
+    "key": "down",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "focus_direction",
+    "dispatcher_arg": "down",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "move_win_left",
+    "category": "Navegación",
+    "description": "Mover ventana a la izquierda",
+    "mods": [
+      "CTRL"
+    ],
+    "key": "left",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "window_move_direction",
+    "dispatcher_arg": "left",
+    "options": {
+      "repeating": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "move_win_right",
+    "category": "Navegación",
+    "description": "Mover ventana a la derecha",
+    "mods": [
+      "CTRL"
+    ],
+    "key": "right",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "window_move_direction",
+    "dispatcher_arg": "right",
+    "options": {
+      "repeating": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "move_win_up",
+    "category": "Navegación",
+    "description": "Mover ventana hacia arriba",
+    "mods": [
+      "CTRL"
+    ],
+    "key": "up",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "window_move_direction",
+    "dispatcher_arg": "up",
+    "options": {
+      "repeating": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "move_win_down",
+    "category": "Navegación",
+    "description": "Mover ventana hacia abajo",
+    "mods": [
+      "CTRL"
+    ],
+    "key": "down",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "window_move_direction",
+    "dispatcher_arg": "down",
+    "options": {
+      "repeating": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_toggle_special",
+    "category": "Espacios de trabajo",
+    "description": "Mostrar / Ocultar espacio especial (Magic)",
+    "mods": [
+      "ALT"
+    ],
+    "key": "S",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace.toggle_special",
+    "dispatcher_arg": "magic",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_move_special",
+    "category": "Espacios de trabajo",
+    "description": "Enviar ventana al espacio especial (Magic)",
+    "mods": [
+      "ALT",
+      "SHIFT"
+    ],
+    "key": "S",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_window_move",
+    "dispatcher_arg": "special:magic",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "sidebar_right",
+    "category": "Sistema",
+    "description": "Panel lateral / Ajustes rápidos",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "A",
+    "action_type": "exec",
+    "exec": "quickshell -c ii ipc call sidebarRight toggle",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "open_settings",
+    "category": "Sistema",
+    "description": "Configuración del sistema (Settings)",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "I",
+    "action_type": "exec",
+    "exec": "qs -p /home/sasel/.config/quickshell/ii/settings.qml",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "open_autostart",
+    "category": "Sistema",
+    "description": "Gestor de inicio automático (Autostart)",
+    "mods": [
+      "SUPER",
+      "ALT"
+    ],
+    "key": "A",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/open-autostart.sh",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "screen_lock",
+    "category": "Sistema",
+    "description": "Bloquear pantalla",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "L",
+    "action_type": "exec",
+    "exec": "quickshell -c ii ipc call lock activate",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "screenshot_print",
+    "category": "Sistema",
+    "description": "Captura de pantalla por región (Print)",
+    "mods": [],
+    "key": "Print",
+    "action_type": "exec",
+    "exec": "quickshell -c ii ipc call region screenshot",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "screenshot_super",
+    "category": "Sistema",
+    "description": "Captura de pantalla alternativa (Super+Shift+S)",
+    "mods": [
+      "SUPER",
+      "SHIFT"
+    ],
+    "key": "S",
+    "action_type": "exec",
+    "exec": "quickshell -c ii ipc call region screenshot",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "session_exit",
+    "category": "Sistema",
+    "description": "Menú de apagado / Salir de sesión",
+    "mods": [
+      "ALT"
+    ],
+    "key": "M",
+    "action_type": "exec",
+    "exec": "command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "vol_up",
+    "category": "Multimedia",
+    "description": "Subir volumen",
+    "mods": [],
+    "key": "XF86AudioRaiseVolume",
+    "action_type": "exec",
+    "exec": "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {
+      "locked": true,
+      "repeating": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "vol_down",
+    "category": "Multimedia",
+    "description": "Bajar volumen",
+    "mods": [],
+    "key": "XF86AudioLowerVolume",
+    "action_type": "exec",
+    "exec": "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {
+      "locked": true,
+      "repeating": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "vol_mute",
+    "category": "Multimedia",
+    "description": "Silenciar audio",
+    "mods": [],
+    "key": "XF86AudioMute",
+    "action_type": "exec",
+    "exec": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {
+      "locked": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "mic_mute",
+    "category": "Multimedia",
+    "description": "Silenciar micrófono",
+    "mods": [],
+    "key": "XF86AudioMicMute",
+    "action_type": "exec",
+    "exec": "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {
+      "locked": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "bright_up",
+    "category": "Multimedia",
+    "description": "Subir brillo de pantalla",
+    "mods": [],
+    "key": "XF86MonBrightnessUp",
+    "action_type": "exec",
+    "exec": "quickshell -c ii ipc call brightness increment",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {
+      "locked": true,
+      "repeating": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "bright_down",
+    "category": "Multimedia",
+    "description": "Bajar brillo de pantalla",
+    "mods": [],
+    "key": "XF86MonBrightnessDown",
+    "action_type": "exec",
+    "exec": "quickshell -c ii ipc call brightness decrement",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {
+      "locked": true,
+      "repeating": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "media_play",
+    "category": "Multimedia",
+    "description": "Reproducir / Pausar",
+    "mods": [],
+    "key": "XF86AudioPlay",
+    "action_type": "exec",
+    "exec": "playerctl play-pause",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {
+      "locked": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "media_next",
+    "category": "Multimedia",
+    "description": "Pista siguiente",
+    "mods": [],
+    "key": "XF86AudioNext",
+    "action_type": "exec",
+    "exec": "playerctl next",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {
+      "locked": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "media_prev",
+    "category": "Multimedia",
+    "description": "Pista anterior",
+    "mods": [],
+    "key": "XF86AudioPrev",
+    "action_type": "exec",
+    "exec": "playerctl previous",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {
+      "locked": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "media_stop",
+    "category": "Multimedia",
+    "description": "Detener reproducción",
+    "mods": [],
+    "key": "XF86AudioStop",
+    "action_type": "exec",
+    "exec": "playerctl stop",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {
+      "locked": true
+    },
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_focus_1",
+    "category": "Espacios de trabajo",
+    "description": "Cambiar al espacio de trabajo 1",
+    "mods": [
+      "ALT"
+    ],
+    "key": "1",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_focus",
+    "dispatcher_arg": "1",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_move_1",
+    "category": "Espacios de trabajo",
+    "description": "Mover ventana al espacio de trabajo 1",
+    "mods": [
+      "ALT",
+      "SHIFT"
+    ],
+    "key": "1",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_window_move",
+    "dispatcher_arg": "1",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_focus_2",
+    "category": "Espacios de trabajo",
+    "description": "Cambiar al espacio de trabajo 2",
+    "mods": [
+      "ALT"
+    ],
+    "key": "2",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_focus",
+    "dispatcher_arg": "2",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_move_2",
+    "category": "Espacios de trabajo",
+    "description": "Mover ventana al espacio de trabajo 2",
+    "mods": [
+      "ALT",
+      "SHIFT"
+    ],
+    "key": "2",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_window_move",
+    "dispatcher_arg": "2",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_focus_3",
+    "category": "Espacios de trabajo",
+    "description": "Cambiar al espacio de trabajo 3",
+    "mods": [
+      "ALT"
+    ],
+    "key": "3",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_focus",
+    "dispatcher_arg": "3",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_move_3",
+    "category": "Espacios de trabajo",
+    "description": "Mover ventana al espacio de trabajo 3",
+    "mods": [
+      "ALT",
+      "SHIFT"
+    ],
+    "key": "3",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_window_move",
+    "dispatcher_arg": "3",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_focus_4",
+    "category": "Espacios de trabajo",
+    "description": "Cambiar al espacio de trabajo 4",
+    "mods": [
+      "ALT"
+    ],
+    "key": "4",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_focus",
+    "dispatcher_arg": "4",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_move_4",
+    "category": "Espacios de trabajo",
+    "description": "Mover ventana al espacio de trabajo 4",
+    "mods": [
+      "ALT",
+      "SHIFT"
+    ],
+    "key": "4",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_window_move",
+    "dispatcher_arg": "4",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_focus_5",
+    "category": "Espacios de trabajo",
+    "description": "Cambiar al espacio de trabajo 5",
+    "mods": [
+      "ALT"
+    ],
+    "key": "5",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_focus",
+    "dispatcher_arg": "5",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_move_5",
+    "category": "Espacios de trabajo",
+    "description": "Mover ventana al espacio de trabajo 5",
+    "mods": [
+      "ALT",
+      "SHIFT"
+    ],
+    "key": "5",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_window_move",
+    "dispatcher_arg": "5",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_focus_6",
+    "category": "Espacios de trabajo",
+    "description": "Cambiar al espacio de trabajo 6",
+    "mods": [
+      "ALT"
+    ],
+    "key": "6",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_focus",
+    "dispatcher_arg": "6",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_move_6",
+    "category": "Espacios de trabajo",
+    "description": "Mover ventana al espacio de trabajo 6",
+    "mods": [
+      "ALT",
+      "SHIFT"
+    ],
+    "key": "6",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_window_move",
+    "dispatcher_arg": "6",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_focus_7",
+    "category": "Espacios de trabajo",
+    "description": "Cambiar al espacio de trabajo 7",
+    "mods": [
+      "ALT"
+    ],
+    "key": "7",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_focus",
+    "dispatcher_arg": "7",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_move_7",
+    "category": "Espacios de trabajo",
+    "description": "Mover ventana al espacio de trabajo 7",
+    "mods": [
+      "ALT",
+      "SHIFT"
+    ],
+    "key": "7",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_window_move",
+    "dispatcher_arg": "7",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_focus_8",
+    "category": "Espacios de trabajo",
+    "description": "Cambiar al espacio de trabajo 8",
+    "mods": [
+      "ALT"
+    ],
+    "key": "8",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_focus",
+    "dispatcher_arg": "8",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_move_8",
+    "category": "Espacios de trabajo",
+    "description": "Mover ventana al espacio de trabajo 8",
+    "mods": [
+      "ALT",
+      "SHIFT"
+    ],
+    "key": "8",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_window_move",
+    "dispatcher_arg": "8",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_focus_9",
+    "category": "Espacios de trabajo",
+    "description": "Cambiar al espacio de trabajo 9",
+    "mods": [
+      "ALT"
+    ],
+    "key": "9",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_focus",
+    "dispatcher_arg": "9",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_move_9",
+    "category": "Espacios de trabajo",
+    "description": "Mover ventana al espacio de trabajo 9",
+    "mods": [
+      "ALT",
+      "SHIFT"
+    ],
+    "key": "9",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_window_move",
+    "dispatcher_arg": "9",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_focus_10",
+    "category": "Espacios de trabajo",
+    "description": "Cambiar al espacio de trabajo 10",
+    "mods": [
+      "ALT"
+    ],
+    "key": "0",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_focus",
+    "dispatcher_arg": "10",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  },
+  {
+    "id": "ws_move_10",
+    "category": "Espacios de trabajo",
+    "description": "Mover ventana al espacio de trabajo 10",
+    "mods": [
+      "ALT",
+      "SHIFT"
+    ],
+    "key": "0",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "workspace_window_move",
+    "dispatcher_arg": "10",
+    "options": {},
+    "is_default": true,
+    "enabled": true
+  }
+]

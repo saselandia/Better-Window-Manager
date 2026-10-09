@@ -12,6 +12,15 @@ hl.window_rule({
     float = true,
 })
 
+-- org.quickshell
+hl.window_rule({
+    name  = "persist_org_quickshell",
+    match = {
+        class = "^org\\.quickshell$",
+    },
+    float = true,
+})
+
 -- steam_app_22370
 hl.window_rule({
     name  = "persist_steam_app_22370",

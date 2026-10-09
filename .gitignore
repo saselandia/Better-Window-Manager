@@ -18,3 +18,5 @@ Thumbs.db
 
 # Runtime state files (created dynamically by the DE)
 /config/hypr/persistent_rules.json.tmp
+
+/config/gtk-3.0/bookmarks

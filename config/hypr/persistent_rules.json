@@ -40,5 +40,13 @@
             "class": "^kitty$"
         },
         "float": true
+    },
+    "org_quickshell": {
+        "name": "persist_org_quickshell",
+        "description": "org.quickshell",
+        "match": {
+            "class": "^org\\.quickshell$"
+        },
+        "float": true
     }
 }
