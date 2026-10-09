@@ -62,7 +62,8 @@ def parse_desktop_file(filepath: str) -> Optional[Dict[str, Any]]:
         "terminal": False,
         "type": "Application",
         "nodisplay": False,
-        "workspace": "default"
+        "workspace": "default",
+        "wm_class": ""
     }
 
     in_desktop_entry = False
@@ -91,6 +92,8 @@ def parse_desktop_file(filepath: str) -> Optional[Dict[str, Any]]:
                         data["exec"] = clean_exec_command(val)
                     elif key == "Icon":
                         data["icon"] = val
+                    elif key == "StartupWMClass":
+                        data["wm_class"] = val
                     elif key == "Comment" and not data["comment"]:
                         data["comment"] = val
                     elif key == "Type":
@@ -118,6 +121,8 @@ def parse_desktop_file(filepath: str) -> Optional[Dict[str, Any]]:
 
     if not data["name"]:
         data["name"] = os.path.splitext(os.path.basename(filepath))[0]
+    if not data["wm_class"]:
+        data["wm_class"] = os.path.splitext(os.path.basename(filepath))[0]
     
     # If hidden=true, consider disabled
     if data["hidden"]:
@@ -438,15 +443,138 @@ def launch_command(exec_cmd: str, workspace: str = "default") -> bool:
     except Exception:
         return False
 
-def run_single_entry(filename: str) -> bool:
-    """Executes a single autostart entry detached."""
+def find_matching_clients(entry: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Finds open Hyprland window clients that match this desktop entry."""
+    try:
+        res = subprocess.run(["hyprctl", "clients", "-j"], capture_output=True, text=True)
+        if res.returncode != 0 or not res.stdout.strip():
+            return []
+        clients = json.loads(res.stdout)
+    except Exception:
+        return []
+
+    wm_class = entry.get("wm_class", "").lower()
+    name = entry.get("name", "").lower()
+    file_id = entry.get("file", "").replace(".desktop", "").lower()
+    file_slug = file_id.split(".")[-1]
+    exec_bin = os.path.basename(entry.get("exec", "").split()[0]).lower() if entry.get("exec") else ""
+
+    matched = []
+    for c in clients:
+        c_class = c.get("class", "").lower()
+        c_init = c.get("initialClass", "").lower()
+
+        # Match by StartupWMClass
+        if wm_class and (wm_class == c_class or wm_class == c_init):
+            matched.append(c)
+            continue
+        # Match by file slug (e.g. vesktop from dev.vencord.Vesktop)
+        if file_slug and (file_slug == c_class or file_slug == c_init):
+            matched.append(c)
+            continue
+        # Match by binary name (e.g. signal-desktop or signal)
+        if exec_bin:
+            bin_clean = re.sub(r"[^a-zA-Z0-9]", "", exec_bin)
+            class_clean = re.sub(r"[^a-zA-Z0-9]", "", c_class)
+            if bin_clean and class_clean and (bin_clean in class_clean or class_clean in bin_clean):
+                matched.append(c)
+                continue
+        # Match by app name exact
+        if name and (name == c_class or name == c_init):
+            matched.append(c)
+            continue
+
+    return matched
+
+def move_window_to_workspace(address: str, workspace: int, focus: bool = True) -> bool:
+    """Moves a specific window to a workspace and optionally focuses that workspace."""
+    try:
+        sub_cmd = f"hl.dsp.window.move({{ workspace = {workspace}, window = \"address:{address}\" }})"
+        subprocess.run(["hyprctl", "dispatch", sub_cmd], capture_output=True, text=True)
+        if focus:
+            focus_cmd = f"hl.dsp.focus({{ workspace = {workspace} }})"
+            subprocess.run(["hyprctl", "dispatch", focus_cmd], capture_output=True, text=True)
+        return True
+    except Exception:
+        return False
+
+def focus_workspace(workspace: int) -> bool:
+    """Switches focus to a specific workspace."""
+    try:
+        focus_cmd = f"hl.dsp.focus({{ workspace = {workspace} }})"
+        res = subprocess.run(["hyprctl", "dispatch", focus_cmd], capture_output=True, text=True)
+        return res.returncode == 0
+    except Exception:
+        return False
+
+def run_single_entry(filename: str, override_ws: Optional[str] = None) -> bool:
+    """Executes a single autostart entry detached, handling both new spawn and existing windows."""
     ensure_display_env()
     filepath = os.path.join(AUTOSTART_DIR, filename)
     entry = parse_desktop_file(filepath)
     if not entry or not entry["exec"]:
         return False
-    
-    return launch_command(entry["exec"], entry.get("workspace", "default"))
+
+    raw_ws = override_ws if override_ws is not None else entry.get("workspace", "default")
+    ws_str = str(raw_ws).strip()
+    target_ws = int(ws_str) if ws_str in [str(i) for i in range(1, 11)] else None
+
+    # Check if this application already has one or more windows open
+    matching_windows = find_matching_clients(entry)
+
+    if matching_windows and target_ws is not None:
+        # Move all matching windows to the target workspace and switch focus to it
+        for win in matching_windows:
+            addr = win.get("address")
+            if addr:
+                move_window_to_workspace(addr, target_ws, focus=False)
+        focus_workspace(target_ws)
+        # Also invoke exec in case the app was minimized or in background/tray
+        try:
+            subprocess.Popen(
+                entry["exec"],
+                shell=True,
+                start_new_session=True,
+                env=os.environ.copy(),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        except Exception:
+            pass
+        return True
+
+    # If windows exist and workspace is default, focus the first window
+    if matching_windows and target_ws is None:
+        first_ws = matching_windows[0].get("workspace", {}).get("id")
+        if first_ws:
+            focus_workspace(int(first_ws))
+        return True
+
+    # If no matching window exists yet, launch it targeting the workspace
+    if target_ws is not None:
+        try:
+            lua_str = json.dumps(f"[workspace {target_ws}] {entry['exec']}")
+            sub_cmd = f"hl.dsp.exec_cmd({lua_str})"
+            res = subprocess.run(["hyprctl", "dispatch", sub_cmd], capture_output=True, text=True)
+            if res.returncode == 0 and "ok" in res.stdout:
+                focus_workspace(target_ws)
+                return True
+        except Exception:
+            pass
+
+    # Direct launch fallback (or default workspace)
+    try:
+        subprocess.Popen(
+            entry["exec"],
+            shell=True,
+            start_new_session=True,
+            env=os.environ.copy(),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        return True
+    except Exception:
+        return False
 
 def run_all_autostart(force: bool = False) -> None:
     """Runs all enabled autostart desktop entries at system/hyprland boot."""
@@ -560,6 +688,7 @@ def main():
     # run-one
     run_one_p = subparsers.add_parser("run-one", help="Run a single autostart entry")
     run_one_p.add_argument("filename", help="Desktop file name")
+    run_one_p.add_argument("--workspace", default=None, help="Target workspace (1-10 or default)")
 
     # run-all
     run_all_p = subparsers.add_parser("run-all", help="Run all enabled autostart entries")
@@ -588,7 +717,7 @@ def main():
         ok = set_workspace_entry(args.filename, args.workspace)
         print(json.dumps({"success": ok}))
     elif args.command == "run-one":
-        ok = run_single_entry(args.filename)
+        ok = run_single_entry(args.filename, override_ws=args.workspace)
         print(json.dumps({"success": ok}))
     elif args.command == "run-all":
         run_all_autostart(force=args.force)

@@ -123,10 +123,12 @@ ContentPage {
         showFeedback(Translation.tr("Comando '%1' añadido al inicio").arg(name), false);
     }
 
-    function testRun(filename, name) {
-        testRunProcess.command = ["python3", root.managerScript, "run-one", filename];
+    function testRun(filename, name, ws) {
+        const targetWs = (ws !== undefined && ws !== null && ws !== "") ? ws : "default";
+        testRunProcess.command = ["python3", root.managerScript, "run-one", filename, "--workspace", targetWs];
         testRunProcess.running = true;
-        showFeedback(Translation.tr("Ejecutando '%1'...").arg(name || filename), false);
+        const wsDisplay = (targetWs === "default" || targetWs === "D") ? Translation.tr("espacio por defecto") : Translation.tr("espacio %1").arg(targetWs);
+        showFeedback(Translation.tr("Ejecutando '%1' en %2...").arg(name || filename).arg(wsDisplay), false);
     }
 
     function runAllAutostart() {
@@ -825,6 +827,7 @@ ContentPage {
 
                                 onActivated: (index) => {
                                     const selectedWs = model[index].value;
+                                    modelData.workspace = selectedWs;
                                     root.setWorkspace(modelData.file, modelData.name, selectedWs);
                                 }
 
@@ -851,7 +854,7 @@ ContentPage {
                             implicitHeight: 36
                             buttonRadius: Appearance.rounding.full
                             colBackground: Appearance.colors.colLayer3
-                            onClicked: root.testRun(modelData.file, modelData.name)
+                            onClicked: root.testRun(modelData.file, modelData.name, modelData.workspace)
                             contentItem: MaterialSymbol {
                                 anchors.centerIn: parent
                                 iconSize: 18
