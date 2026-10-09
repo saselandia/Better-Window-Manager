@@ -849,5 +849,17 @@
   "Restaurar todos los atajos originales del sistema": "Restore all default system keybindings",
   "Tecla principal (escribe o selecciona de los botones rápidos)": "Main key (type or select from quick buttons)",
   "Teclas modificadoras (haz clic para alternar)": "Modifier keys (click to toggle)",
-  "Todos los atajos se han restaurado a la configuración original": "All keybindings have been restored to original configuration"
+  "Todos los atajos se han restaurado a la configuración original": "All keybindings have been restored to original configuration",
+  "Eliminados": "Deleted",
+  "Desactivado": "Disabled",
+  "Modificado": "Modified",
+  "Restaurar combinación original de fábrica": "Restore factory original combination",
+  "Restaurar atajo y volver a activarlo": "Restore keybind and reactivate",
+  "Eliminar definitivamente": "Delete permanently",
+  "Atajo '%1' restaurado con éxito": "Keybind '%1' restored successfully",
+  "Atajo '%1' eliminado definitivamente": "Keybind '%1' deleted permanently",
+  "Atajo '%1' eliminado. Puedes restaurarlo desde la pestaña 'Eliminados'.": "Keybind '%1' deleted. You can restore it from the 'Deleted' tab.",
+  "No hay atajos eliminados": "No deleted keybinds",
+  "Todos los atajos de teclado configurados están activos.": "All configured keybinds are active.",
+  "Atajo '%1' restaurado a sus valores de fábrica": "Keybind '%1' restored to factory defaults"
 }

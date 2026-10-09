@@ -13,7 +13,8 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "terminal",
@@ -29,7 +30,8 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "app_menu",
@@ -47,7 +49,8 @@
       "release": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "file_manager",
@@ -63,7 +66,8 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "file_manager_alt",
@@ -79,7 +83,8 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "wallpaper_picker",
@@ -95,7 +100,8 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "window_close",
@@ -111,7 +117,8 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "window_toggle_float_persist",
@@ -127,7 +134,8 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "window_togglesplit",
@@ -143,7 +151,8 @@
     "dispatcher_arg": "togglesplit",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "window_fullscreen",
@@ -159,7 +168,8 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "alt_tab",
@@ -177,7 +187,8 @@
       "repeating": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "focus_left",
@@ -193,7 +204,8 @@
     "dispatcher_arg": "left",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "focus_right",
@@ -209,7 +221,8 @@
     "dispatcher_arg": "right",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "focus_up",
@@ -225,7 +238,8 @@
     "dispatcher_arg": "up",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "focus_down",
@@ -241,7 +255,8 @@
     "dispatcher_arg": "down",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "move_win_left",
@@ -259,7 +274,8 @@
       "repeating": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "move_win_right",
@@ -277,7 +293,8 @@
       "repeating": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "move_win_up",
@@ -295,7 +312,8 @@
       "repeating": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "move_win_down",
@@ -313,7 +331,8 @@
       "repeating": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_toggle_special",
@@ -329,7 +348,8 @@
     "dispatcher_arg": "magic",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_move_special",
@@ -346,7 +366,8 @@
     "dispatcher_arg": "special:magic",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "sidebar_right",
@@ -362,7 +383,8 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "open_settings",
@@ -378,7 +400,8 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "open_autostart",
@@ -395,7 +418,8 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "screen_lock",
@@ -411,7 +435,8 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "screenshot_print",
@@ -425,7 +450,8 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "screenshot_super",
@@ -442,7 +468,8 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "session_exit",
@@ -458,7 +485,8 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "vol_up",
@@ -475,7 +503,8 @@
       "repeating": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "vol_down",
@@ -492,7 +521,8 @@
       "repeating": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "vol_mute",
@@ -508,7 +538,8 @@
       "locked": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "mic_mute",
@@ -524,7 +555,8 @@
       "locked": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "bright_up",
@@ -541,7 +573,8 @@
       "repeating": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "bright_down",
@@ -558,7 +591,8 @@
       "repeating": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "media_play",
@@ -574,7 +608,8 @@
       "locked": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "media_next",
@@ -590,7 +625,8 @@
       "locked": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "media_prev",
@@ -606,7 +642,8 @@
       "locked": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "media_stop",
@@ -622,7 +659,8 @@
       "locked": true
     },
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_focus_1",
@@ -638,7 +676,8 @@
     "dispatcher_arg": "1",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_move_1",
@@ -655,7 +694,8 @@
     "dispatcher_arg": "1",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_focus_2",
@@ -671,7 +711,8 @@
     "dispatcher_arg": "2",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_move_2",
@@ -688,7 +729,8 @@
     "dispatcher_arg": "2",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_focus_3",
@@ -704,7 +746,8 @@
     "dispatcher_arg": "3",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_move_3",
@@ -721,7 +764,8 @@
     "dispatcher_arg": "3",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_focus_4",
@@ -737,7 +781,8 @@
     "dispatcher_arg": "4",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_move_4",
@@ -754,7 +799,8 @@
     "dispatcher_arg": "4",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_focus_5",
@@ -770,7 +816,8 @@
     "dispatcher_arg": "5",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_move_5",
@@ -787,7 +834,8 @@
     "dispatcher_arg": "5",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_focus_6",
@@ -803,7 +851,8 @@
     "dispatcher_arg": "6",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_move_6",
@@ -820,7 +869,8 @@
     "dispatcher_arg": "6",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_focus_7",
@@ -836,7 +886,8 @@
     "dispatcher_arg": "7",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_move_7",
@@ -853,7 +904,8 @@
     "dispatcher_arg": "7",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_focus_8",
@@ -869,7 +921,8 @@
     "dispatcher_arg": "8",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_move_8",
@@ -886,7 +939,8 @@
     "dispatcher_arg": "8",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_focus_9",
@@ -902,7 +956,8 @@
     "dispatcher_arg": "9",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_move_9",
@@ -919,7 +974,8 @@
     "dispatcher_arg": "9",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_focus_10",
@@ -935,7 +991,8 @@
     "dispatcher_arg": "10",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   },
   {
     "id": "ws_move_10",
@@ -952,6 +1009,7 @@
     "dispatcher_arg": "10",
     "options": {},
     "is_default": true,
-    "enabled": true
+    "enabled": true,
+    "is_modified": false
   }
 ]

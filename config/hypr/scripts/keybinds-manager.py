@@ -599,19 +599,43 @@ DEFAULT_DICT = {item["id"]: item for item in DEFAULT_KEYBINDS}
 def load_keybinds() -> List[Dict[str, Any]]:
     """Loads keybinds from JSON, merging with defaults if needed."""
     os.makedirs(CONFIG_DIR, exist_ok=True)
+    raw_binds = []
     if not os.path.exists(JSON_PATH):
         save_keybinds(DEFAULT_KEYBINDS)
-        return copy.deepcopy(DEFAULT_KEYBINDS)
-    
-    try:
-        with open(JSON_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        if isinstance(data, list) and len(data) > 0:
-            return data
-    except Exception as e:
-        print(f"[KeybindsManager] Error reading {JSON_PATH}: {e}", file=sys.stderr)
+        raw_binds = copy.deepcopy(DEFAULT_KEYBINDS)
+    else:
+        try:
+            with open(JSON_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, list) and len(data) > 0:
+                raw_binds = data
+        except Exception as e:
+            print(f"[KeybindsManager] Error reading {JSON_PATH}: {e}", file=sys.stderr)
+            raw_binds = copy.deepcopy(DEFAULT_KEYBINDS)
 
-    return copy.deepcopy(DEFAULT_KEYBINDS)
+    # Decorate with metadata (is_default, is_modified, enabled)
+    for b in raw_binds:
+        bid = b.get("id")
+        if bid in DEFAULT_DICT:
+            b["is_default"] = True
+            d = DEFAULT_DICT[bid]
+            b_mods = sorted([m.upper() for m in b.get("mods") or []])
+            d_mods = sorted([m.upper() for m in d.get("mods") or []])
+            b_key = (b.get("key") or "").upper()
+            d_key = (d.get("key") or "").upper()
+            b_exec = (b.get("exec") or "").strip()
+            d_exec = (d.get("exec") or "").strip()
+            b_dsp = (b.get("dispatcher") or "").strip()
+            d_dsp = (d.get("dispatcher") or "").strip()
+            b_arg = (b.get("dispatcher_arg") or "").strip()
+            d_arg = (d.get("dispatcher_arg") or "").strip()
+            b["is_modified"] = (b_mods != d_mods or b_key != d_key or b_exec != d_exec or b_dsp != d_dsp or b_arg != d_arg)
+        else:
+            b["is_default"] = False
+            b["is_modified"] = False
+        if "enabled" not in b:
+            b["enabled"] = True
+    return raw_binds
 
 def to_lua_string(s: str) -> str:
     return json.dumps(s, ensure_ascii=False)
@@ -813,33 +837,52 @@ def update_keybind(bind_id: str, mods: Optional[List[str]] = None, key: Optional
     return save_keybinds(binds)
 
 def delete_keybind(bind_id: str) -> bool:
-    """Deletes custom bind or disables default bind."""
+    """Disables / marks as deleted a keybind so it is no longer bound."""
     binds = load_keybinds()
-    new_binds = []
     found = False
     for b in binds:
         if b["id"] == bind_id:
+            b["enabled"] = False
             found = True
-            if b.get("is_default", False):
-                # Disable default bind
-                b["enabled"] = False
-                new_binds.append(b)
-            else:
-                # Custom bind: remove completely
-                continue
-        else:
-            new_binds.append(b)
+            break
     if not found:
+        return False
+    return save_keybinds(binds)
+
+def restore_keybind(bind_id: str) -> bool:
+    """Re-enables a keybind that was deleted/disabled."""
+    binds = load_keybinds()
+    found = False
+    for b in binds:
+        if b["id"] == bind_id:
+            b["enabled"] = True
+            found = True
+            break
+    if not found and bind_id in DEFAULT_DICT:
+        item = copy.deepcopy(DEFAULT_DICT[bind_id])
+        item["enabled"] = True
+        binds.append(item)
+        found = True
+    if not found:
+        return False
+    return save_keybinds(binds)
+
+def purge_keybind(bind_id: str) -> bool:
+    """Permanently removes a keybind from the JSON file."""
+    binds = load_keybinds()
+    new_binds = [b for b in binds if b["id"] != bind_id]
+    if len(new_binds) == len(binds):
         return False
     return save_keybinds(new_binds)
 
 def reset_keybind(bind_id: str) -> bool:
-    """Resets a default keybind to its original setting."""
+    """Resets a default keybind to its original setting and marks it enabled."""
     binds = load_keybinds()
     if bind_id not in DEFAULT_DICT:
         return False
     
     default_item = copy.deepcopy(DEFAULT_DICT[bind_id])
+    default_item["enabled"] = True
     found = False
     for i, b in enumerate(binds):
         if b["id"] == bind_id:
@@ -850,9 +893,12 @@ def reset_keybind(bind_id: str) -> bool:
         binds.append(default_item)
     return save_keybinds(binds)
 
-def reset_all() -> bool:
-    """Restores all keybinds to defaults."""
-    return save_keybinds(copy.deepcopy(DEFAULT_KEYBINDS))
+def reset_all(keep_custom: bool = True) -> bool:
+    """Restores all keybinds to defaults, keeping custom ones."""
+    binds = load_keybinds()
+    custom_binds = [b for b in binds if not b.get("is_default", False)] if keep_custom else []
+    new_binds = copy.deepcopy(DEFAULT_KEYBINDS) + custom_binds
+    return save_keybinds(new_binds)
 
 def main():
     parser = argparse.ArgumentParser(description="Keybinds Manager for Hyprland & Quickshell")
@@ -888,6 +934,14 @@ def main():
     del_p = subparsers.add_parser("delete", help="Delete or disable a keybind")
     del_p.add_argument("--id", required=True)
 
+    # restore
+    rest_p = subparsers.add_parser("restore", help="Restore/re-enable a keybind")
+    rest_p.add_argument("--id", required=True)
+
+    # purge
+    pur_p = subparsers.add_parser("purge", help="Permanently delete a keybind")
+    pur_p.add_argument("--id", required=True)
+
     # reset
     res_p = subparsers.add_parser("reset", help="Reset a keybind or all to defaults")
     res_p.add_argument("--id", default=None)
@@ -910,6 +964,12 @@ def main():
         print(json.dumps({"success": ok}))
     elif args.command == "delete":
         ok = delete_keybind(args.id)
+        print(json.dumps({"success": ok}))
+    elif args.command == "restore":
+        ok = restore_keybind(args.id)
+        print(json.dumps({"success": ok}))
+    elif args.command == "purge":
+        ok = purge_keybind(args.id)
         print(json.dumps({"success": ok}))
     elif args.command == "reset":
         if args.id:

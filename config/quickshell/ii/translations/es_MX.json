@@ -846,5 +846,17 @@
   "Restaurar todos los atajos originales del sistema": "Restaurar todos los atajos originales del sistema",
   "Tecla principal (escribe o selecciona de los botones rápidos)": "Tecla principal (escribe o selecciona de los botones rápidos)",
   "Teclas modificadoras (haz clic para alternar)": "Teclas modificadoras (haz clic para alternar)",
-  "Todos los atajos se han restaurado a la configuración original": "Todos los atajos se han restaurado a la configuración original"
+  "Todos los atajos se han restaurado a la configuración original": "Todos los atajos se han restaurado a la configuración original",
+  "Eliminados": "Eliminados",
+  "Desactivado": "Desactivado",
+  "Modificado": "Modificado",
+  "Restaurar combinación original de fábrica": "Restaurar combinación original de fábrica",
+  "Restaurar atajo y volver a activarlo": "Restaurar atajo y volver a activarlo",
+  "Eliminar definitivamente": "Eliminar definitivamente",
+  "Atajo '%1' restaurado con éxito": "Atajo '%1' restaurado con éxito",
+  "Atajo '%1' eliminado definitivamente": "Atajo '%1' eliminado definitivamente",
+  "Atajo '%1' eliminado. Puedes restaurarlo desde la pestaña 'Eliminados'.": "Atajo '%1' eliminado. Puedes restaurarlo desde la pestaña 'Eliminados'.",
+  "No hay atajos eliminados": "No hay atajos eliminados",
+  "Todos los atajos de teclado configurados están activos.": "Todos los atajos de teclado configurados están activos.",
+  "Atajo '%1' restaurado a sus valores de fábrica": "Atajo '%1' restaurado a sus valores de fábrica"
 }

@@ -46,7 +46,8 @@ ContentPage {
         "Espacios de trabajo",
         "Sistema",
         "Multimedia",
-        "Personalizados"
+        "Personalizados",
+        "Eliminados"
     ]
 
     readonly property var dispatcherPresets: [
@@ -81,8 +82,19 @@ ContentPage {
     ]
 
     function refresh() {
-        listProcess.running = false;
-        listProcess.running = true;
+        if (listProcess.running) {
+            listProcess.running = false;
+        }
+        refreshTimer.restart();
+    }
+
+    Timer {
+        id: refreshTimer
+        interval: 60
+        repeat: false
+        onTriggered: {
+            listProcess.running = true;
+        }
     }
 
     function showFeedback(msg, isError) {
@@ -207,15 +219,47 @@ ContentPage {
     }
 
     function deleteItem(item) {
+        // Optimistically mark as disabled immediately so it disappears from active list
+        for (let i = 0; i < root.keybindsList.length; i++) {
+            if (root.keybindsList[i].id === item.id) {
+                root.keybindsList[i].enabled = false;
+                break;
+            }
+        }
+        root.keybindsList = [].concat(root.keybindsList);
+
         actionProcess.command = ["python3", root.managerScript, "delete", "--id", item.id];
         actionProcess.running = true;
-        showFeedback(Translation.tr("Atajo '%1' eliminado").arg(item.description || item.id), false);
+        showFeedback(Translation.tr("Atajo '%1' eliminado. Puedes restaurarlo desde la pestaña 'Eliminados'.").arg(item.description || item.id), false);
+    }
+
+    function restoreItem(item) {
+        // Optimistically re-enable item
+        for (let i = 0; i < root.keybindsList.length; i++) {
+            if (root.keybindsList[i].id === item.id) {
+                root.keybindsList[i].enabled = true;
+                break;
+            }
+        }
+        root.keybindsList = [].concat(root.keybindsList);
+
+        actionProcess.command = ["python3", root.managerScript, "restore", "--id", item.id];
+        actionProcess.running = true;
+        showFeedback(Translation.tr("Atajo '%1' restaurado con éxito").arg(item.description || item.id), false);
+    }
+
+    function purgeItem(item) {
+        root.keybindsList = root.keybindsList.filter(b => b.id !== item.id);
+
+        actionProcess.command = ["python3", root.managerScript, "purge", "--id", item.id];
+        actionProcess.running = true;
+        showFeedback(Translation.tr("Atajo '%1' eliminado definitivamente").arg(item.description || item.id), false);
     }
 
     function resetItem(item) {
         actionProcess.command = ["python3", root.managerScript, "reset", "--id", item.id];
         actionProcess.running = true;
-        showFeedback(Translation.tr("Atajo '%1' restaurado a sus valores por defecto").arg(item.description || item.id), false);
+        showFeedback(Translation.tr("Atajo '%1' restaurado a sus valores de fábrica").arg(item.description || item.id), false);
     }
 
     function resetAllBinds() {
@@ -226,8 +270,13 @@ ContentPage {
 
     function getFilteredList() {
         let list = root.keybindsList || [];
-        if (root.selectedCategory !== "Todos") {
-            list = list.filter(b => (b.category || "Otros").toLowerCase() === root.selectedCategory.toLowerCase());
+        if (root.selectedCategory === "Eliminados") {
+            list = list.filter(b => b.enabled === false);
+        } else {
+            list = list.filter(b => b.enabled !== false);
+            if (root.selectedCategory !== "Todos") {
+                list = list.filter(b => (b.category || "Otros").toLowerCase() === root.selectedCategory.toLowerCase());
+            }
         }
         if (root.searchQuery.trim() !== "") {
             const q = root.searchQuery.toLowerCase().trim();
@@ -245,8 +294,13 @@ ContentPage {
 
     function getCategoryCount(cat) {
         if (!root.keybindsList) return 0;
-        if (cat === "Todos") return root.keybindsList.length;
-        return root.keybindsList.filter(b => (b.category || "Otros").toLowerCase() === cat.toLowerCase()).length;
+        if (cat === "Eliminados") {
+            return root.keybindsList.filter(b => b.enabled === false).length;
+        }
+        if (cat === "Todos") {
+            return root.keybindsList.filter(b => b.enabled !== false).length;
+        }
+        return root.keybindsList.filter(b => b.enabled !== false && (b.category || "Otros").toLowerCase() === cat.toLowerCase()).length;
     }
 
     // Backend process to list current keybinds
@@ -857,19 +911,19 @@ ContentPage {
                     MaterialSymbol {
                         Layout.alignment: Qt.AlignHCenter
                         iconSize: 38
-                        text: "search_off"
+                        text: root.selectedCategory === "Eliminados" ? "check_circle" : "search_off"
                         color: Appearance.colors.colOutline
                     }
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
-                        text: Translation.tr("No se encontraron atajos de teclado")
+                        text: root.selectedCategory === "Eliminados" ? Translation.tr("No hay atajos eliminados") : Translation.tr("No se encontraron atajos de teclado")
                         font.pixelSize: Appearance.font.pixelSize.normal
                         font.weight: Font.DemiBold
                         color: Appearance.colors.colOnSecondaryContainer
                     }
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
-                        text: Translation.tr("Prueba con otros términos de búsqueda o selecciona otra categoría.")
+                        text: root.selectedCategory === "Eliminados" ? Translation.tr("Todos los atajos de teclado configurados están activos.") : Translation.tr("Prueba con otros términos de búsqueda o selecciona otra categoría.")
                         font.pixelSize: Appearance.font.pixelSize.small
                         color: Appearance.colors.colOutline
                     }
@@ -887,6 +941,7 @@ ContentPage {
                     implicitHeight: 70
                     radius: Appearance.rounding.normal
                     color: Appearance.colors.colLayer2
+                    opacity: modelData.enabled === false ? 0.75 : 1.0
                     border.width: 1
                     border.color: Appearance.colors.colOutlineVariant
 
@@ -970,9 +1025,43 @@ ContentPage {
                             }
                         }
 
-                        // Insignia de Estado (Personalizado / Default)
+                        // Insignia de Estado: Desactivado / Modificado / Personalizado
                         Rectangle {
-                            visible: !modelData.is_default
+                            visible: modelData.enabled === false
+                            implicitWidth: disabledBadgeText.implicitWidth + 12
+                            implicitHeight: 22
+                            radius: Appearance.rounding.full
+                            color: Appearance.colors.colErrorContainer
+
+                            StyledText {
+                                id: disabledBadgeText
+                                anchors.centerIn: parent
+                                text: Translation.tr("Desactivado")
+                                font.pixelSize: Appearance.font.pixelSize.smaller - 1
+                                font.weight: Font.Medium
+                                color: Appearance.colors.colOnErrorContainer
+                            }
+                        }
+
+                        Rectangle {
+                            visible: modelData.enabled !== false && modelData.is_default && modelData.is_modified
+                            implicitWidth: modBadgeText.implicitWidth + 12
+                            implicitHeight: 22
+                            radius: Appearance.rounding.full
+                            color: Appearance.colors.colSecondaryContainer
+
+                            StyledText {
+                                id: modBadgeText
+                                anchors.centerIn: parent
+                                text: Translation.tr("Modificado")
+                                font.pixelSize: Appearance.font.pixelSize.smaller - 1
+                                font.weight: Font.Medium
+                                color: Appearance.colors.colOnSecondaryContainer
+                            }
+                        }
+
+                        Rectangle {
+                            visible: modelData.enabled !== false && !modelData.is_default
                             implicitWidth: badgeText.implicitWidth + 12
                             implicitHeight: 22
                             radius: Appearance.rounding.full
@@ -988,8 +1077,70 @@ ContentPage {
                             }
                         }
 
+                        // --- BOTONES PARA ITEMS EN \"ELIMINADOS\" ---
+                        RippleButton {
+                            visible: modelData.enabled === false
+                            implicitWidth: 36
+                            implicitHeight: 36
+                            buttonRadius: Appearance.rounding.full
+                            colBackground: Appearance.colors.colLayer3
+                            colBackgroundHover: Appearance.colors.colPrimaryContainer
+                            onClicked: root.restoreItem(modelData)
+                            contentItem: MaterialSymbol {
+                                anchors.centerIn: parent
+                                iconSize: 18
+                                text: "restore"
+                                color: Appearance.colors.colPrimary
+                            }
+                            StyledToolTip {
+                                text: Translation.tr("Restaurar atajo y volver a activarlo")
+                            }
+                        }
+
+                        RippleButton {
+                            visible: modelData.enabled === false
+                            implicitWidth: 36
+                            implicitHeight: 36
+                            buttonRadius: Appearance.rounding.full
+                            colBackground: Appearance.colors.colLayer3
+                            colBackgroundHover: Appearance.colors.colErrorContainer
+                            colRipple: Appearance.colors.colError
+                            onClicked: root.purgeItem(modelData)
+                            contentItem: MaterialSymbol {
+                                anchors.centerIn: parent
+                                iconSize: 18
+                                text: "delete_forever"
+                                color: Appearance.colors.colOnErrorContainer
+                            }
+                            StyledToolTip {
+                                text: Translation.tr("Eliminar definitivamente")
+                            }
+                        }
+
+                        // --- BOTONES PARA ITEMS ACTIVOS ---
+                        // Botón Restaurar a fábrica (si fue modificado)
+                        RippleButton {
+                            visible: modelData.enabled !== false && modelData.is_default && modelData.is_modified
+                            implicitWidth: 36
+                            implicitHeight: 36
+                            buttonRadius: Appearance.rounding.full
+                            colBackground: Appearance.colors.colLayer3
+                            colBackgroundHover: Appearance.colors.colPrimaryContainer
+                            onClicked: root.resetItem(modelData)
+                            contentItem: MaterialSymbol {
+                                anchors.centerIn: parent
+                                iconSize: 18
+                                text: "restart_alt"
+                                color: Appearance.colors.colPrimary
+                            }
+                            StyledToolTip {
+                                text: Translation.tr("Restaurar combinación original de fábrica")
+                            }
+                        }
+
                         // Botón Editar
                         RippleButton {
+                            visible: modelData.enabled !== false
                             implicitWidth: 36
                             implicitHeight: 36
                             buttonRadius: Appearance.rounding.full
@@ -1006,29 +1157,24 @@ ContentPage {
                             }
                         }
 
-                        // Botón Eliminar o Restaurar
+                        // Botón Eliminar (Visible para TODOS los atajos activos)
                         RippleButton {
+                            visible: modelData.enabled !== false
                             implicitWidth: 36
                             implicitHeight: 36
                             buttonRadius: Appearance.rounding.full
                             colBackground: Appearance.colors.colLayer3
-                            colBackgroundHover: modelData.is_default ? Appearance.colors.colLayer3 : Appearance.colors.colErrorContainer
-                            colRipple: modelData.is_default ? Appearance.colors.colPrimary : Appearance.colors.colError
-                            onClicked: {
-                                if (modelData.is_default) {
-                                    root.resetItem(modelData);
-                                } else {
-                                    root.deleteItem(modelData);
-                                }
-                            }
+                            colBackgroundHover: Appearance.colors.colErrorContainer
+                            colRipple: Appearance.colors.colError
+                            onClicked: root.deleteItem(modelData)
                             contentItem: MaterialSymbol {
                                 anchors.centerIn: parent
                                 iconSize: 18
-                                text: modelData.is_default ? "undo" : "delete"
-                                color: modelData.is_default ? Appearance.colors.colOutline : Appearance.colors.colOnSecondaryContainer
+                                text: "delete"
+                                color: Appearance.colors.colOnErrorContainer
                             }
                             StyledToolTip {
-                                text: modelData.is_default ? Translation.tr("Restaurar tecla original") : Translation.tr("Eliminar atajo")
+                                text: Translation.tr("Eliminar atajo")
                             }
                         }
                     }
