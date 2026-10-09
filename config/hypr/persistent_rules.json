@@ -16,29 +16,22 @@
         },
         "float": false
     },
-    "spotify": {
-        "name": "persist_spotify",
-        "description": "spotify",
+    "steam_app_413150": {
+        "name": "persist_steam_app_413150",
+        "description": "steam_app_413150",
         "match": {
-            "class": "^spotify$"
-        },
-        "float": true
-    },
-    "firefox_bin": {
-        "name": "persist_firefox_bin",
-        "description": "firefox-bin",
-        "match": {
-            "class": "^firefox\\-bin$"
+            "class": "^steam_app_413150$"
         },
         "float": false
     },
-    "org_gnome_nautilus": {
-        "name": "persist_org_gnome_nautilus",
-        "description": "org.gnome.Nautilus",
+    "steam_sign_in_to_steam": {
+        "name": "persist_steam_sign_in_to_steam",
+        "description": "Steam (Sign in to Steam)",
         "match": {
-            "class": "^org\\.gnome\\.Nautilus$"
+            "class": "^steam$",
+            "title": "^Sign\\ in\\ to\\ Steam$"
         },
-        "float": true
+        "float": false
     },
     "kitty": {
         "name": "persist_kitty",
@@ -47,13 +40,5 @@
             "class": "^kitty$"
         },
         "float": true
-    },
-    "steam_app_413150": {
-        "name": "persist_steam_app_413150",
-        "description": "steam_app_413150",
-        "match": {
-            "class": "^steam_app_413150$"
-        },
-        "float": false
     }
 }

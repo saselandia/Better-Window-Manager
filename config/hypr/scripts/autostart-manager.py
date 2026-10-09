@@ -61,7 +61,8 @@ def parse_desktop_file(filepath: str) -> Optional[Dict[str, Any]]:
         "hidden": False,
         "terminal": False,
         "type": "Application",
-        "nodisplay": False
+        "nodisplay": False,
+        "workspace": "default"
     }
 
     in_desktop_entry = False
@@ -106,6 +107,12 @@ def parse_desktop_file(filepath: str) -> Optional[Dict[str, Any]]:
                     elif key == "X-KDE-autostart-condition":
                         if "false" in val.lower():
                             data["enabled"] = False
+                    elif key == "X-Hyprland-Workspace":
+                        val_s = val.strip()
+                        if val_s in [str(i) for i in range(1, 11)]:
+                            data["workspace"] = val_s
+                        else:
+                            data["workspace"] = "default"
     except Exception as e:
         return None
 
@@ -207,6 +214,48 @@ def remove_autostart_entry(filename: str) -> bool:
         return True
     return False
 
+def set_workspace_entry(filename: str, workspace: str) -> bool:
+    """Sets or clears the target Hyprland workspace in an autostart desktop entry."""
+    filepath = os.path.join(AUTOSTART_DIR, filename)
+    if not os.path.isfile(filepath):
+        return False
+
+    ws_clean = str(workspace).strip()
+    if ws_clean not in [str(i) for i in range(1, 11)]:
+        ws_clean = "default"
+
+    lines = []
+    has_ws_key = False
+    in_desktop_entry = False
+
+    with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+        for line in f:
+            stripped = line.strip()
+            if stripped == "[Desktop Entry]":
+                in_desktop_entry = True
+                lines.append(line)
+                continue
+            elif stripped.startswith("["):
+                in_desktop_entry = False
+
+            if in_desktop_entry and stripped.startswith("X-Hyprland-Workspace="):
+                lines.append(f"X-Hyprland-Workspace={ws_clean}\n")
+                has_ws_key = True
+                continue
+            lines.append(line)
+
+    if not has_ws_key:
+        new_lines = []
+        for line in lines:
+            new_lines.append(line)
+            if line.strip() == "[Desktop Entry]":
+                new_lines.append(f"X-Hyprland-Workspace={ws_clean}\n")
+        lines = new_lines
+
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.writelines(lines)
+    return True
+
 def add_app_by_id_or_path(app_id_or_path: str) -> bool:
     """Adds an installed application to ~/.config/autostart/."""
     os.makedirs(AUTOSTART_DIR, exist_ok=True)
@@ -273,7 +322,7 @@ def add_app_by_id_or_path(app_id_or_path: str) -> bool:
         f.write("\n".join(new_lines) + "\n")
     return True
 
-def add_custom_entry(name: str, exec_cmd: str, icon: str = "application-x-executable", comment: str = "") -> bool:
+def add_custom_entry(name: str, exec_cmd: str, icon: str = "application-x-executable", comment: str = "", workspace: str = "default") -> bool:
     """Creates a custom autostart desktop entry."""
     os.makedirs(AUTOSTART_DIR, exist_ok=True)
     # Generate clean filename
@@ -282,6 +331,10 @@ def add_custom_entry(name: str, exec_cmd: str, icon: str = "application-x-execut
         slug = f"autostart_{int(time.time())}"
     filename = f"{slug}.desktop"
     target_path = os.path.join(AUTOSTART_DIR, filename)
+
+    ws_clean = str(workspace).strip()
+    if ws_clean not in [str(i) for i in range(1, 11)]:
+        ws_clean = "default"
 
     content = f"""[Desktop Entry]
 Type=Application
@@ -292,6 +345,7 @@ Comment={comment or 'Custom autostart command'}
 Terminal=false
 X-GNOME-Autostart-enabled=true
 Hidden=false
+X-Hyprland-Workspace={ws_clean}
 """
     with open(target_path, "w", encoding="utf-8") as f:
         f.write(content)
@@ -357,17 +411,23 @@ def ensure_display_env() -> None:
     os.environ.setdefault("XDG_SESSION_TYPE", "wayland")
     os.environ.setdefault("XDG_SESSION_DESKTOP", "Hyprland")
 
-def run_single_entry(filename: str) -> bool:
-    """Executes a single autostart entry detached."""
+def launch_command(exec_cmd: str, workspace: str = "default") -> bool:
+    """Launches an application directly or bound to a Hyprland workspace."""
     ensure_display_env()
-    filepath = os.path.join(AUTOSTART_DIR, filename)
-    entry = parse_desktop_file(filepath)
-    if not entry or not entry["exec"]:
-        return False
-    
+    ws = str(workspace).strip()
+    if ws and ws not in ("default", "D") and ws in [str(i) for i in range(1, 11)]:
+        try:
+            lua_str = json.dumps(f"[workspace {ws} silent] {exec_cmd}")
+            sub_cmd = f"hl.dsp.exec_cmd({lua_str})"
+            res = subprocess.run(["hyprctl", "dispatch", sub_cmd], capture_output=True, text=True)
+            if res.returncode == 0 and "ok" in res.stdout:
+                return True
+        except Exception:
+            pass
+
     try:
         subprocess.Popen(
-            entry["exec"],
+            exec_cmd,
             shell=True,
             start_new_session=True,
             env=os.environ.copy(),
@@ -377,6 +437,16 @@ def run_single_entry(filename: str) -> bool:
         return True
     except Exception:
         return False
+
+def run_single_entry(filename: str) -> bool:
+    """Executes a single autostart entry detached."""
+    ensure_display_env()
+    filepath = os.path.join(AUTOSTART_DIR, filename)
+    entry = parse_desktop_file(filepath)
+    if not entry or not entry["exec"]:
+        return False
+    
+    return launch_command(entry["exec"], entry.get("workspace", "default"))
 
 def run_all_autostart(force: bool = False) -> None:
     """Runs all enabled autostart desktop entries at system/hyprland boot."""
@@ -430,15 +500,13 @@ def run_all_autostart(force: bool = False) -> None:
                 continue
 
             try:
-                proc = subprocess.Popen(
-                    exec_cmd,
-                    shell=True,
-                    start_new_session=True,
-                    env=os.environ.copy(),
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
-                log.write(f"[START] Launched '{name}' (PID {proc.pid}): {exec_cmd}\n")
+                ws = entry.get("workspace", "default")
+                ok = launch_command(exec_cmd, ws)
+                ws_info = f" on workspace {ws}" if str(ws) not in ("default", "D") else ""
+                if ok:
+                    log.write(f"[START] Launched '{name}'{ws_info}: {exec_cmd}\n")
+                else:
+                    log.write(f"[ERROR] Failed to launch '{name}'{ws_info}: {exec_cmd}\n")
                 # Stagger launches slightly to prevent sudden spike during startup
                 time.sleep(0.4)
             except Exception as e:
@@ -482,6 +550,12 @@ def main():
     add_cust_p.add_argument("--exec", required=True, dest="exec_cmd", help="Command line to execute")
     add_cust_p.add_argument("--icon", default="application-x-executable", help="Icon name")
     add_cust_p.add_argument("--comment", default="", help="Description")
+    add_cust_p.add_argument("--workspace", default="default", help="Target workspace (1-10 or default)")
+
+    # set-workspace
+    set_ws_p = subparsers.add_parser("set-workspace", help="Set target workspace for autostart entry")
+    set_ws_p.add_argument("filename", help="Desktop file name in ~/.config/autostart/")
+    set_ws_p.add_argument("workspace", help="Target workspace (1-10 or default)")
 
     # run-one
     run_one_p = subparsers.add_parser("run-one", help="Run a single autostart entry")
@@ -508,7 +582,10 @@ def main():
         ok = add_app_by_id_or_path(args.app_id)
         print(json.dumps({"success": ok}))
     elif args.command == "add-custom":
-        ok = add_custom_entry(args.name, args.exec_cmd, args.icon, args.comment)
+        ok = add_custom_entry(args.name, args.exec_cmd, args.icon, args.comment, args.workspace)
+        print(json.dumps({"success": ok}))
+    elif args.command == "set-workspace":
+        ok = set_workspace_entry(args.filename, args.workspace)
         print(json.dumps({"success": ok}))
     elif args.command == "run-one":
         ok = run_single_entry(args.filename)

@@ -26,6 +26,34 @@ ContentPage {
     property string customExecText: ""
     property string customIconText: "application-x-executable"
     property string customCommentText: ""
+    property string customWorkspace: "default"
+
+    readonly property var workspaceOptions: [
+        { name: "D", value: "default" },
+        { name: "1", value: "1" },
+        { name: "2", value: "2" },
+        { name: "3", value: "3" },
+        { name: "4", value: "4" },
+        { name: "5", value: "5" },
+        { name: "6", value: "6" },
+        { name: "7", value: "7" },
+        { name: "8", value: "8" },
+        { name: "9", value: "9" },
+        { name: "10", value: "10" },
+    ]
+
+    function workspaceToIndex(ws) {
+        if (!ws || ws === "default" || ws === "D") return 0;
+        const n = parseInt(ws, 10);
+        return (n >= 1 && n <= 10) ? n : 0;
+    }
+
+    function setWorkspace(filename, name, ws) {
+        actionProcess.command = ["python3", root.managerScript, "set-workspace", filename, ws];
+        actionProcess.running = true;
+        const wsLabel = (ws === "default" || ws === "D") ? "D (Default)" : ws;
+        showFeedback(Translation.tr("'%1' asignada al workspace %2").arg(name || filename).arg(wsLabel), false);
+    }
 
     readonly property string managerScript: FileUtils.trimFileProtocol(Directories.home) + "/.config/hypr/scripts/autostart-manager.py"
 
@@ -71,17 +99,19 @@ ContentPage {
         showFeedback(Translation.tr("'%1' añadida al inicio automático").arg(appName || appId), false);
     }
 
-    function addCustom(name, execCmd, icon, comment) {
+    function addCustom(name, execCmd, icon, comment, ws) {
         if (!name.trim() || !execCmd.trim()) {
             showFeedback(Translation.tr("El nombre y el comando son obligatorios"), true);
             return;
         }
+        const targetWs = ws || root.customWorkspace || "default";
         actionProcess.command = [
             "python3", root.managerScript, "add-custom",
             "--name", name.trim(),
             "--exec", execCmd.trim(),
             "--icon", icon.trim() || "application-x-executable",
-            "--comment", comment.trim()
+            "--comment", comment.trim(),
+            "--workspace", targetWs
         ];
         actionProcess.running = true;
         root.showCustomDialog = false;
@@ -89,6 +119,7 @@ ContentPage {
         root.customExecText = "";
         root.customIconText = "application-x-executable";
         root.customCommentText = "";
+        root.customWorkspace = "default";
         showFeedback(Translation.tr("Comando '%1' añadido al inicio").arg(name), false);
     }
 
@@ -600,6 +631,29 @@ ContentPage {
                                 onTextChanged: root.customCommentText = text
                             }
                         }
+
+                        ColumnLayout {
+                            Layout.preferredWidth: 100
+                            Layout.fillWidth: false
+                            spacing: 4
+                            StyledText {
+                                text: Translation.tr("Workspace")
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                color: Appearance.colors.colOutline
+                            }
+                            StyledComboBox {
+                                id: customWsCombo
+                                Layout.fillWidth: true
+                                implicitHeight: 40
+                                textRole: "name"
+                                model: root.workspaceOptions
+                                currentIndex: root.workspaceToIndex(root.customWorkspace)
+                                displayText: (currentText || "D")
+                                onActivated: (index) => {
+                                    root.customWorkspace = model[index].value;
+                                }
+                            }
+                        }
                     }
 
                     RowLayout {
@@ -618,7 +672,7 @@ ContentPage {
                             buttonRadius: Appearance.rounding.small
                             colBackground: Appearance.colors.colPrimaryContainer
                             onClicked: {
-                                root.addCustom(root.customNameText, root.customExecText, root.customIconText, root.customCommentText);
+                                root.addCustom(root.customNameText, root.customExecText, root.customIconText, root.customCommentText, root.customWorkspace);
                             }
                         }
                     }
@@ -743,6 +797,40 @@ ContentPage {
                                 elide: Text.ElideMiddle
                                 opacity: modelData.enabled ? 0.9 : 0.4
                                 Layout.fillWidth: true
+                            }
+                        }
+
+                        // Workspace Selector
+                        RowLayout {
+                            spacing: 6
+                            Layout.alignment: Qt.AlignVCenter
+
+                            StyledText {
+                                text: Translation.tr("WS:")
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                font.weight: Font.Medium
+                                color: Appearance.colors.colOutline
+                            }
+
+                            StyledComboBox {
+                                id: wsCombo
+                                Layout.fillWidth: false
+                                Layout.preferredWidth: 92
+                                implicitHeight: 36
+                                buttonRadius: Appearance.rounding.small
+                                textRole: "name"
+                                model: root.workspaceOptions
+                                currentIndex: root.workspaceToIndex(modelData.workspace)
+                                displayText: (currentText || "D")
+
+                                onActivated: (index) => {
+                                    const selectedWs = model[index].value;
+                                    root.setWorkspace(modelData.file, modelData.name, selectedWs);
+                                }
+
+                                StyledToolTip {
+                                    text: Translation.tr("Espacio de trabajo al iniciar (D = Por defecto)")
+                                }
                             }
                         }
 

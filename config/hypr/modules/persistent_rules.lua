@@ -3,38 +3,11 @@
 -- Archivo gestionado automáticamente por toggle-float-persistent.py
 -- =============================================================================
 
--- firefox-bin
-hl.window_rule({
-    name  = "persist_firefox_bin",
-    match = {
-        class = "^firefox\\-bin$",
-    },
-    float = false,
-})
-
 -- kitty
 hl.window_rule({
     name  = "persist_kitty",
     match = {
         class = "^kitty$",
-    },
-    float = true,
-})
-
--- org.gnome.Nautilus
-hl.window_rule({
-    name  = "persist_org_gnome_nautilus",
-    match = {
-        class = "^org\\.gnome\\.Nautilus$",
-    },
-    float = true,
-})
-
--- spotify
-hl.window_rule({
-    name  = "persist_spotify",
-    match = {
-        class = "^spotify$",
     },
     float = true,
 })
@@ -65,6 +38,16 @@ hl.window_rule({
         title = "(?i).*(friends|amigos|chat).*",
     },
     float = true,
+})
+
+-- Steam (Sign in to Steam)
+hl.window_rule({
+    name  = "persist_steam_sign_in_to_steam",
+    match = {
+        class = "^steam$",
+        title = "^Sign\\ in\\ to\\ Steam$",
+    },
+    float = false,
 })
 
 return {}

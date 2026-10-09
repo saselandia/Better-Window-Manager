@@ -809,5 +809,9 @@
   "Online | Google's lightweight fast model.": "Online | Google's lightweight fast model.",
   "Online | Google's mid-size multimodal model.": "Online | Google's mid-size multimodal model.",
   "Current model: %1\nClick or type %2model to change": "Current model: %1\nClick or type %2model to change",
-  "Current tool: %1\nClick or type %2tool to change": "Current tool: %1\nClick or type %2tool to change"
+  "Current tool: %1\nClick or type %2tool to change": "Current tool: %1\nClick or type %2tool to change",
+  "WS:": "WS:",
+  "Espacio de trabajo al iniciar (D = Por defecto)": "Target workspace on startup (D = Default)",
+  "'%1' asignada al workspace %2": "'%1' assigned to workspace %2",
+  "Espacio de trabajo asignado (D = Por defecto)": "Assigned workspace on startup (D = Default)"
 }
