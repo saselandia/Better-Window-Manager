@@ -140,7 +140,7 @@ Item {
     }
 
     readonly property color dynamicFg: "#f8fafc"
-    readonly property color dynamicDim: "#475569"
+    readonly property color dynamicDim: "#64748b"
     readonly property color dynamicMuted: "#94a3b8"
 
     readonly property var omarchyColors: {
@@ -644,8 +644,13 @@ Item {
             implicitHeight: root.itemHeight
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onClicked: {
-                GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onClicked: event => {
+                if (event.button === Qt.RightButton) {
+                    Quickshell.execDetached(["bash", "-c", `${Network.ethernet ? Config.options.apps.networkEthernet : Config.options.apps.network}`]);
+                } else {
+                    GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
+                }
             }
 
             Rectangle {
@@ -655,15 +660,20 @@ Item {
                 Behavior on color { ColorAnimation { duration: 120 } }
             }
 
+            readonly property bool isEthernet: Network.ethernet
+            readonly property bool isWifi: !isEthernet && (Network.wifi || Network.wifiStatus === "connected")
+            readonly property bool isConnected: isEthernet || isWifi
+
             Text {
                 id: netIcon
                 anchors.centerIn: parent
-                text: Network.connected ? "󰖩" : "󰤮"
+                text: netArea.isEthernet ? "󰈀" : (netArea.isWifi ? "󰖩" : "󰤮")
                 font.family: "JetBrains Mono NF"
                 font.pixelSize: root.fontSizeRegular
-                color: Network.connected 
+                color: netArea.isConnected 
                     ? (netArea.containsMouse ? root.dynamicSecondary : root.dynamicAccent)
-                    : root.dynamicDim
+                    : (netArea.containsMouse ? root.dynamicFg : root.dynamicDim)
+                Behavior on color { ColorAnimation { duration: 120 } }
             }
         }
 
@@ -703,8 +713,8 @@ Item {
                 font.family: "JetBrains Mono NF"
                 font.pixelSize: root.fontSizeMedium
                 color: BluetoothStatus.connected 
-                    ? root.dynamicAccent 
-                    : (BluetoothStatus.enabled ? (btArea.containsMouse ? root.dynamicAccent : root.dynamicFg) : root.dynamicDim)
+                    ? (btArea.containsMouse ? root.dynamicSecondary : root.dynamicAccent) 
+                    : (btArea.containsMouse ? root.dynamicFg : root.dynamicDim)
                 Behavior on color { ColorAnimation { duration: 120 } }
             }
         }
