@@ -105,6 +105,7 @@ Singleton {
             }
 
             property JsonObject appearance: JsonObject {
+                property string bwmTheme: "default"
                 property bool extraBackgroundTint: true
                 property int fakeScreenRounding: 2 // 0: None | 1: Always | 2: When not fullscreen
                 property JsonObject fonts: JsonObject {

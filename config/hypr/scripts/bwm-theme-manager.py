@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 BWM Theme Manager (Better Window Manager)
-Manages and switches themes (Default Material You vs Retro Omarchy Minimalist).
-Coordinates Quickshell, Hyprland window decorations, fonts, btop, and UI components.
+Manages and switches themes between Default (Material You) and Retro variants
+(Frost Cyan, Ash Dark Rose, Cyberpunk Neon).
+Synchronizes Quickshell, Hyprland window decorations, fonts, btop, Kitty, and wallpapers.
 """
 
 import sys
@@ -23,10 +24,13 @@ REPO_HYPR_THEME_LUA = REPO_DIR / "config" / "hypr" / "modules" / "theme.lua"
 REPO_II_CONFIG_JSON = REPO_DIR / "config" / "illogical-impulse" / "config.json"
 REPO_BTOP_CONF = REPO_DIR / "config" / "btop" / "btop.conf"
 
+WALLPAPERS_DIR = Path.home() / "Pictures" / "Wallpapers"
+
 THEMES = {
     "default": {
         "title": "Default (Material You)",
         "description": "Estilo Material 3 / End_4 con esquinas redondeadas y fuentes sans-serif",
+        "wallpaper": str(WALLPAPERS_DIR / "default.jpg"),
         "rounding": 14,
         "rounding_power": 2,
         "border_size": 2,
@@ -34,6 +38,7 @@ THEMES = {
         "gaps_out": 8,
         "bar_corner_style": 2,
         "show_app_icons": True,
+        "is_retro": False,
         "fonts": {
             "main": "Google Sans Flex",
             "numbers": "Google Sans Flex",
@@ -46,8 +51,9 @@ THEMES = {
         "btop_rounded": True
     },
     "retro": {
-        "title": "Retro (Omarchy Minimalist)",
-        "description": "Estilo minimalista inspirado en Omarchy con bordes rectos (0px) y tipografía monospace",
+        "title": "Retro Frost (Omarchy Cyan)",
+        "description": "Estilo minimalista Omarchy con paleta Frost cian, barra compacta de 24px y bordes rectos",
+        "wallpaper": str(WALLPAPERS_DIR / "omarchy-frost.jpg"),
         "rounding": 0,
         "rounding_power": 2,
         "border_size": 2,
@@ -55,6 +61,53 @@ THEMES = {
         "gaps_out": 5,
         "bar_corner_style": 2,
         "show_app_icons": False,
+        "is_retro": True,
+        "fonts": {
+            "main": "JetBrains Mono NF",
+            "numbers": "JetBrains Mono NF",
+            "title": "JetBrains Mono NF",
+            "monospace": "JetBrains Mono NF",
+            "reading": "JetBrains Mono NF",
+            "expressive": "JetBrains Mono NF",
+            "iconNerd": "JetBrains Mono NF"
+        },
+        "btop_rounded": False
+    },
+    "retro-ash": {
+        "title": "Retro Ash (Omarchy Dark Rose)",
+        "description": "Estilo minimalista Omarchy con paleta carbón y fondo dark rose",
+        "wallpaper": str(WALLPAPERS_DIR / "omarchy-ash.jpg"),
+        "rounding": 0,
+        "rounding_power": 2,
+        "border_size": 2,
+        "gaps_in": 3,
+        "gaps_out": 5,
+        "bar_corner_style": 2,
+        "show_app_icons": False,
+        "is_retro": True,
+        "fonts": {
+            "main": "JetBrains Mono NF",
+            "numbers": "JetBrains Mono NF",
+            "title": "JetBrains Mono NF",
+            "monospace": "JetBrains Mono NF",
+            "reading": "JetBrains Mono NF",
+            "expressive": "JetBrains Mono NF",
+            "iconNerd": "JetBrains Mono NF"
+        },
+        "btop_rounded": False
+    },
+    "retro-cyberpunk": {
+        "title": "Retro Cyberpunk (Omarchy Neon)",
+        "description": "Estilo minimalista Omarchy con tonos neón y fondo cyberpunk",
+        "wallpaper": str(WALLPAPERS_DIR / "cyberpunk.jpg"),
+        "rounding": 0,
+        "rounding_power": 2,
+        "border_size": 2,
+        "gaps_in": 3,
+        "gaps_out": 5,
+        "bar_corner_style": 2,
+        "show_app_icons": False,
+        "is_retro": True,
         "fonts": {
             "main": "JetBrains Mono NF",
             "numbers": "JetBrains Mono NF",
@@ -70,6 +123,16 @@ THEMES = {
 
 def get_current_theme() -> str:
     """Reads current theme name from II config or Hyprland theme.lua."""
+    if HYPR_THEME_LUA.exists():
+        try:
+            with open(HYPR_THEME_LUA, "r", encoding="utf-8") as f:
+                for line in f:
+                    if "name =" in line:
+                        t_name = line.split('"')[1]
+                        if t_name in THEMES:
+                            return t_name
+        except Exception:
+            pass
     if II_CONFIG_JSON.exists():
         try:
             with open(II_CONFIG_JSON, "r", encoding="utf-8") as f:
@@ -77,14 +140,6 @@ def get_current_theme() -> str:
                 theme = data.get("appearance", {}).get("bwmTheme")
                 if theme in THEMES:
                     return theme
-        except Exception:
-            pass
-    if HYPR_THEME_LUA.exists():
-        try:
-            with open(HYPR_THEME_LUA, "r", encoding="utf-8") as f:
-                content = f.read()
-                if 'name = "retro"' in content:
-                    return "retro"
         except Exception:
             pass
     return "default"
@@ -117,6 +172,7 @@ return theme
 
 def update_ii_config_json(theme_name: str, cfg: dict):
     """Updates appearance and bar in illogical-impulse config.json."""
+    bwm_flag = "retro" if cfg.get("is_retro", False) else "default"
     for target in [II_CONFIG_JSON, REPO_II_CONFIG_JSON]:
         if not target.exists():
             continue
@@ -126,7 +182,7 @@ def update_ii_config_json(theme_name: str, cfg: dict):
             
             if "appearance" not in data:
                 data["appearance"] = {}
-            data["appearance"]["bwmTheme"] = theme_name
+            data["appearance"]["bwmTheme"] = bwm_flag
             
             if "fonts" not in data["appearance"]:
                 data["appearance"]["fonts"] = {}
@@ -184,14 +240,29 @@ def apply_theme(theme_name: str):
     update_ii_config_json(theme_name, cfg)
     update_btop_conf(theme_name, cfg)
 
-    # Recargar Hyprland y Quickshell
-    try:
-        subprocess.run(["hyprctl", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
+    # Aplicar wallpaper específico del tema si existe (lo que regenera Matugen para todo el sistema)
+    wp = cfg.get("wallpaper")
+    set_wp_script = CONFIG_DIR / "hypr" / "scripts" / "set-wallpaper.sh"
+    if wp and os.path.exists(wp) and set_wp_script.exists():
+        subprocess.run([str(set_wp_script), wp], check=False)
+    else:
+        # Recargar Hyprland y Quickshell si no se ejecutó set-wallpaper
+        try:
+            subprocess.run(["hyprctl", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
 
+        try:
+            subprocess.run(["quickshell", "-c", "ii", "ipc", "call", "theme", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+
+    # Reiniciar Quickshell para aplicar altura de barra y diseño de barra
     try:
-        subprocess.run(["quickshell", "-c", "ii", "ipc", "call", "theme", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["pkill", "quickshell"], check=False)
+        import time
+        time.sleep(0.5)
+        subprocess.Popen(["quickshell", "-c", "ii"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
     except Exception:
         pass
 

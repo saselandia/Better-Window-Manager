@@ -15,6 +15,7 @@
 local ok, colors = pcall(require, "modules.colors")
 local ok_theme, active_theme = pcall(require, "modules.theme")
 
+local is_retro = ok_theme and (active_theme.name == "retro" or (active_theme.name and string.find(active_theme.name, "retro") ~= nil))
 local win_rounding = (ok_theme and active_theme.rounding) or 0
 local win_round_pwr = (ok_theme and active_theme.rounding_power) or 2
 local border_sz = (ok_theme and active_theme.border_size) or 2
@@ -22,8 +23,8 @@ local g_in = (ok_theme and active_theme.gaps_in) or 3
 local g_out = (ok_theme and active_theme.gaps_out) or 5
 
 local active_1 = ok and colors.primary or "rgba(33ccffee)"
-local active_2 = ok and colors.primary_container or "rgba(00ff99ee)"
-local inactive = ok and colors.outline or "rgba(595959aa)"
+local active_2 = ok and (is_retro and colors.secondary or colors.primary_container) or "rgba(00ff99ee)"
+local inactive = ok and (is_retro and "rgba(182438aa)" or colors.outline) or "rgba(595959aa)"
 
 hl.config({
     general = {
@@ -48,11 +49,11 @@ hl.config({
         rounding_power = win_round_pwr,
 
         active_opacity   = 1.0,
-        inactive_opacity = 0.95, -- Leve transparencia para ventanas en segundo plano
+        inactive_opacity = is_retro and 0.90 or 0.95,
 
-        -- Sombra amplia y suave estilo Material 3
+        -- Sombra amplia y suave estilo Material 3 (desactivada en retro para estética plana)
         shadow = {
-            enabled      = true,
+            enabled      = not is_retro,
             range        = 18,
             render_power = 3,
             color        = "rgba(00000035)",

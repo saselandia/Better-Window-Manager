@@ -37,7 +37,7 @@ prompt {
 
 listview {
     columns: 1;
-    lines: 2;
+    lines: 4;
     spacing: 8px;
     cycle: true;
 }

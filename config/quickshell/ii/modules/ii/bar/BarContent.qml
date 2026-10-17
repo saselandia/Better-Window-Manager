@@ -61,6 +61,7 @@ Item { // Bar content region
 
     FocusedScrollMouseArea { // Left side | scroll to change brightness
         id: barLeftSideMouseArea
+        visible: !Appearance.isRetro
 
         anchors {
             top: parent.top
@@ -113,6 +114,7 @@ Item { // Bar content region
 
     Row { // Middle section
         id: middleSection
+        visible: !Appearance.isRetro
         anchors {
             top: parent.top
             bottom: parent.bottom
@@ -201,6 +203,7 @@ Item { // Bar content region
 
     FocusedScrollMouseArea { // Right side | scroll to change volume
         id: barRightSideMouseArea
+        visible: !Appearance.isRetro
 
         anchors {
             top: parent.top
@@ -351,5 +354,11 @@ Item { // Bar content region
                 }
             }
         }
+    }
+
+    RetroBarContent {
+        id: retroBarSection
+        anchors.fill: parent
+        visible: Appearance.isRetro
     }
 }
