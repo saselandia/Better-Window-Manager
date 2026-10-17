@@ -54,9 +54,9 @@ Item {
         implicitHeight: parent.height - Appearance.sizes.hyprlandGapsOut * 2
         implicitWidth: sidebarWidth - Appearance.sizes.hyprlandGapsOut * 2
         color: Appearance.colors.colLayer0
-        border.width: 1
+        border.width: Appearance.isRetro ? 2 : 1
         border.color: Appearance.colors.colLayer0Border
-        radius: Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1
+        radius: Math.max(0, Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1)
 
         ColumnLayout {
             anchors.fill: parent
@@ -218,7 +218,9 @@ Item {
                 left: parent.left
             }
             color: Appearance.colors.colLayer1
-            radius: height / 2
+            radius: Appearance.isRetro ? 0 : height / 2
+            border.width: Appearance.isRetro ? 1 : 0
+            border.color: Appearance.colors.colLayer0Border
             implicitWidth: uptimeRow.implicitWidth + 24
             implicitHeight: uptimeRow.implicitHeight + 8
             
@@ -254,6 +256,8 @@ Item {
             }
             color: Appearance.colors.colLayer1
             padding: 4
+            border.width: Appearance.isRetro ? 1 : 0
+            border.color: Appearance.colors.colLayer0Border
 
             QuickToggleButton {
                 toggled: root.editMode

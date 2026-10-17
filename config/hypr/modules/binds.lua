@@ -5,7 +5,7 @@
 -- Set programs that you use
 local terminal    = "kitty"
 local fileManager = "nautilus"
-local menu        = "quickshell -c ii ipc call search toggle || rofi -show drun"
+local menu        = "/home/sasel/.config/hypr/scripts/app-launcher.sh"
 
 ---------------
 ---- INPUT ----

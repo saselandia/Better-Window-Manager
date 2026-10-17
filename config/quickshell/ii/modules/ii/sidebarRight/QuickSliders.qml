@@ -19,6 +19,8 @@ Rectangle {
     implicitHeight: contentItem.implicitHeight + root.verticalPadding * 2
     radius: Appearance.rounding.normal
     color: Appearance.colors.colLayer1
+    border.width: Appearance.isRetro ? 1 : 0
+    border.color: Appearance.isRetro ? Appearance.colors.colLayer0Border : "transparent"
     property real verticalPadding: 4
     property real horizontalPadding: 12
 

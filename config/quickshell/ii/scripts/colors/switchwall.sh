@@ -55,9 +55,21 @@ post_process() {
     local screen_height="$2"
     local wallpaper_path="$3"
 
-    # Sincronizar con swww y caché para persistencia
+    # Sincronizar con swww y caché para persistencia por tema
     if [ -n "$wallpaper_path" ] && [ -f "$wallpaper_path" ]; then
         echo "$wallpaper_path" > "$HOME/.cache/current_wallpaper"
+        local current_theme
+        current_theme="$(python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py get 2>/dev/null || echo "default")"
+        echo "$wallpaper_path" > "$HOME/.cache/current_wallpaper_${current_theme}"
+        if command -v jq >/dev/null 2>&1; then
+            local profile="$HOME/.config/illogical-impulse/config-${current_theme}.json"
+            if [ -f "$profile" ]; then
+                jq --arg path "$wallpaper_path" '.background.wallpaperPath = $path' "$profile" > "$profile.tmp" && mv "$profile.tmp" "$profile"
+            fi
+        fi
+        if [ "$current_theme" == "retro" ]; then
+            python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py apply-wallpaper-colors "$wallpaper_path" 2>/dev/null || true
+        fi
         if command -v swww >/dev/null 2>&1 && pgrep -x swww-daemon >/dev/null 2>&1; then
             swww img "$wallpaper_path" --transition-type grow --transition-pos center --transition-step 90 --transition-duration 2 --transition-fps 60 2>/dev/null || true
         fi

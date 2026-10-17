@@ -12,20 +12,20 @@ hl.window_rule({
     float = true,
 })
 
--- firefox-bin
-hl.window_rule({
-    name  = "persist_firefox_bin",
-    match = {
-        class = "^firefox\\-bin$",
-    },
-    float = false,
-})
-
 -- Minecraft* 26.2
 hl.window_rule({
     name  = "persist_minecraft_26_2",
     match = {
         class = "^Minecraft\\*\\ 26\\.2$",
+    },
+    float = true,
+})
+
+-- org.gnome.Nautilus
+hl.window_rule({
+    name  = "persist_org_gnome_nautilus",
+    match = {
+        class = "^org\\.gnome\\.Nautilus$",
     },
     float = true,
 })
@@ -83,6 +83,15 @@ hl.window_rule({
     match = {
         class = "^steam$",
         title = "^Steam\\ \\-\\ Browser$",
+    },
+    float = true,
+})
+
+-- virt-manager
+hl.window_rule({
+    name  = "persist_virt_manager",
+    match = {
+        class = "^virt\\-manager$",
     },
     float = true,
 })

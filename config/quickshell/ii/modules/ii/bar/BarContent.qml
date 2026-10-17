@@ -34,29 +34,18 @@ Item { // Bar content region
             target: barBackground
         }
     }
-    // Background
+    // Background (Only for Default Material You theme; RetroBarContent handles its own background)
     Rectangle {
         id: barBackground
+        visible: !Appearance.isRetro && Config.options.bar.showBackground
         anchors {
             fill: parent
             margins: Config.options.bar.cornerStyle === 1 ? (Appearance.sizes.hyprlandGapsOut) : 0 // idk why but +1 is needed
         }
-        color: Config.options.bar.showBackground ? Appearance.colors.colLayer0 : "transparent"
+        color: Appearance.colors.colLayer0
         radius: Config.options.bar.cornerStyle === 1 ? Appearance.rounding.windowRounding : 0
         border.width: Config.options.bar.cornerStyle === 1 ? 1 : 0
         border.color: Appearance.colors.colLayer0Border
-
-        Rectangle {
-            id: retroBottomBorder
-            visible: Appearance.isRetro && Config.options.bar.showBackground
-            anchors {
-                left: parent.left
-                right: parent.right
-                bottom: parent.bottom
-            }
-            height: 1
-            color: Appearance.colors.colOutlineVariant
-        }
     }
 
     FocusedScrollMouseArea { // Left side | scroll to change brightness

@@ -42,7 +42,7 @@
     ],
     "key": "SUPER_L",
     "action_type": "exec",
-    "exec": "quickshell -c ii ipc call search toggle || rofi -show drun",
+    "exec": "/home/sasel/.config/hypr/scripts/app-launcher.sh",
     "dispatcher": null,
     "dispatcher_arg": null,
     "options": {

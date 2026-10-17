@@ -14,6 +14,7 @@
 -- 1. Importar los colores calculados por Matugen con valores de respaldo (fallback)
 local ok, colors = pcall(require, "modules.colors")
 local ok_theme, active_theme = pcall(require, "modules.theme")
+local ok_retro, retro_colors = pcall(require, "modules.retro_colors")
 
 local is_retro = ok_theme and (active_theme.name == "retro" or (active_theme.name and string.find(active_theme.name, "retro") ~= nil))
 local win_rounding = (ok_theme and active_theme.rounding) or 0
@@ -22,9 +23,42 @@ local border_sz = (ok_theme and active_theme.border_size) or 2
 local g_in = (ok_theme and active_theme.gaps_in) or 3
 local g_out = (ok_theme and active_theme.gaps_out) or 5
 
-local active_1 = ok and colors.primary or "rgba(33ccffee)"
-local active_2 = ok and (is_retro and colors.secondary or colors.primary_container) or "rgba(00ff99ee)"
-local inactive = ok and (is_retro and "rgba(182438aa)" or colors.outline) or "rgba(595959aa)"
+-- Configuración de colores de bordes:
+-- En tema Retro (Omarchy): se sincroniza dinámicamente con el wallpaper pero potenciando la saturación (colores vivos y chillones).
+-- En tema Default (Material You): mantiene la paleta tonal pastel original de Matugen.
+local function boost_color(c_str, fallback)
+    if not c_str then return fallback end
+    local hex = string.match(c_str, "%x%x%x%x%x%x")
+    if not hex then return fallback end
+    local r = tonumber(string.sub(hex, 1, 2), 16) / 255
+    local g = tonumber(string.sub(hex, 3, 4), 16) / 255
+    local b = tonumber(string.sub(hex, 5, 6), 16) / 255
+    local max_c = math.max(r, math.max(g, b))
+    local min_c = math.min(r, math.min(g, b))
+    local d = max_c - min_c
+    if max_c > 0 and d > 0.05 then
+        local factor = 1.7
+        r = math.min(1.0, math.max(0.0, max_c - (max_c - r) * (1 / factor)))
+        g = math.min(1.0, math.max(0.0, max_c - (max_c - g) * (1 / factor)))
+        b = math.min(1.0, math.max(0.0, max_c - (max_c - b) * (1 / factor)))
+        return string.format("rgba(%02x%02x%02xee)", math.floor(r * 255), math.floor(g * 255), math.floor(b * 255))
+    end
+    return fallback
+end
+
+local active_1
+local active_2
+local inactive
+
+if is_retro then
+    active_1 = (ok_retro and retro_colors and retro_colors.accent) or boost_color(ok and colors.primary, "rgba(33ccffee)")
+    active_2 = (ok_retro and retro_colors and retro_colors.secondary) or boost_color(ok and colors.secondary, "rgba(00ff99ee)")
+    inactive = (ok_retro and retro_colors and retro_colors.border_inactive) or "rgba(101520aa)"
+else
+    active_1 = ok and colors.primary or "rgba(33ccffee)"
+    active_2 = ok and colors.primary_container or "rgba(00ff99ee)"
+    inactive = ok and colors.outline or "rgba(595959aa)"
+end
 
 hl.config({
     general = {

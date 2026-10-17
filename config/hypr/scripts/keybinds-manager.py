@@ -58,7 +58,7 @@ DEFAULT_KEYBINDS: List[Dict[str, Any]] = [
         "mods": ["SUPER"],
         "key": "SUPER_L",
         "action_type": "exec",
-        "exec": "quickshell -c ii ipc call search toggle || rofi -show drun",
+        "exec": "/home/sasel/.config/hypr/scripts/app-launcher.sh",
         "dispatcher": None,
         "dispatcher_arg": None,
         "options": {"release": True},

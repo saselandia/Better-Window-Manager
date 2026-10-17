@@ -43,21 +43,35 @@ swww img "$WALLPAPER" \
     --transition-duration 2 \
     --transition-fps 60
 
-# 2.1 Guardar en caché para recuperación instantánea al encender el PC
+# 2.1 Guardar en caché para recuperación instantánea y persistencia por tema
 mkdir -p "$HOME/.cache"
 echo "$WALLPAPER" > "$HOME/.cache/current_wallpaper"
+
+CURRENT_THEME="$(python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py get 2>/dev/null || echo "default")"
+echo "$WALLPAPER" > "$HOME/.cache/current_wallpaper_${CURRENT_THEME}"
 
 # 2.2 Sincronizar ruta del wallpaper con Quickshell / Illogical Impulse
 if [ -f "$HOME/.config/illogical-impulse/config.json" ] && command -v jq >/dev/null 2>&1; then
     jq --arg path "$WALLPAPER" '.background.wallpaperPath = $path' "$HOME/.config/illogical-impulse/config.json" > "$HOME/.config/illogical-impulse/config.json.tmp" && mv "$HOME/.config/illogical-impulse/config.json.tmp" "$HOME/.config/illogical-impulse/config.json"
 fi
 
-# 3. Generar la paleta de colores con Matugen (Material You / MD3)
-echo "Generando esquema de colores con Matugen..."
+# 2.3 Sincronizar con el perfil aislado del tema activo (config-retro.json / config-default.json)
+PROFILE_JSON="$HOME/.config/illogical-impulse/config-${CURRENT_THEME}.json"
+if [ -f "$PROFILE_JSON" ] && command -v jq >/dev/null 2>&1; then
+    jq --arg path "$WALLPAPER" '.background.wallpaperPath = $path' "$PROFILE_JSON" > "$PROFILE_JSON.tmp" && mv "$PROFILE_JSON.tmp" "$PROFILE_JSON"
+fi
+
+# 3. Generar la paleta de colores con Matugen
+echo "Extrayendo colores del wallpaper..."
 timeout 10 matugen image --source-color-index 0 "$WALLPAPER" || true
+if [[ "$CURRENT_THEME" == "retro" ]]; then
+    echo "Sincronizando paleta viva de Omarchy para Kitty y terminal..."
+    python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py apply-wallpaper-colors "$WALLPAPER" 2>/dev/null || true
+fi
 
 # 3.1 Forzar recarga de colores en Quickshell (barra y widgets)
 quickshell -c ii ipc call theme reload 2>/dev/null || true
+quickshell -c ii ipc call retro reload 2>/dev/null || true
 
 # 4. Actualizar colores en Firefox en caliente sin reiniciar
 ~/.local/share/pywalfox-venv/bin/pywalfox update 2>/dev/null || true

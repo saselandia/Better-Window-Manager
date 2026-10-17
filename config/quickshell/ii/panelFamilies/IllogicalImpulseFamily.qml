@@ -23,6 +23,7 @@ import qs.modules.ii.overlay
 import qs.modules.ii.verticalBar
 import qs.modules.ii.wallpaperSelector
 import qs.modules.ii.altTab
+import qs.modules.ii.omarchyMenu
 
 Scope {
     PanelLoader { extraCondition: !Config.options.bar.vertical; component: Bar {} }
@@ -46,4 +47,5 @@ Scope {
     PanelLoader { extraCondition: Config.options.bar.vertical; component: VerticalBar {} }
     PanelLoader { component: WallpaperSelector {} }
     PanelLoader { component: AltTab {} }
+    PanelLoader { component: OmarchyMenu {} }
 }

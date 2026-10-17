@@ -139,6 +139,18 @@ ContentPage {
                 }
             }
         }
+
+        ConfigSpinBox {
+            icon: "straighten"
+            text: Config.options?.bar?.vertical ? Translation.tr("Bar thickness (pixels)") : Translation.tr("Bar height (pixels)")
+            value: (Config.options?.bar?.height > 0) ? Config.options.bar.height : Appearance.sizes.baseBarHeight
+            from: 16
+            to: 96
+            stepSize: 1
+            onValueChanged: {
+                Config.options.bar.height = value;
+            }
+        }
     }
 
     ContentSection {

@@ -58,19 +58,27 @@
         },
         "float": true
     },
-    "firefox_bin": {
-        "name": "persist_firefox_bin",
-        "description": "firefox-bin",
-        "match": {
-            "class": "^firefox\\-bin$"
-        },
-        "float": false
-    },
     "minecraft_26_2": {
         "name": "persist_minecraft_26_2",
         "description": "Minecraft* 26.2",
         "match": {
             "class": "^Minecraft\\*\\ 26\\.2$"
+        },
+        "float": true
+    },
+    "virt_manager": {
+        "name": "persist_virt_manager",
+        "description": "virt-manager",
+        "match": {
+            "class": "^virt\\-manager$"
+        },
+        "float": true
+    },
+    "org_gnome_nautilus": {
+        "name": "persist_org_gnome_nautilus",
+        "description": "org.gnome.Nautilus",
+        "match": {
+            "class": "^org\\.gnome\\.Nautilus$"
         },
         "float": true
     }

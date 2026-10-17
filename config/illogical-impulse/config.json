@@ -18,6 +18,7 @@
     "tool": "functions"
   },
   "appearance": {
+    "bwmTheme": "retro",
     "extraBackgroundTint": true,
     "fakeScreenRounding": 0,
     "fonts": {
@@ -49,8 +50,7 @@
         "harmony": 0.6,
         "termFgBoost": 0.35
       }
-    },
-    "bwmTheme": "retro"
+    }
   },
   "apps": {
     "bluetooth": "blueman-manager",
@@ -81,7 +81,7 @@
       "workspaceZoom": 1.07
     },
     "thumbnailPath": "",
-    "wallpaperPath": "/home/sasel/Pictures/Wallpapers/omarchy-frost.jpg",
+    "wallpaperPath": "/home/sasel/Pictures/9ub6vykxchzc1.png",
     "widgets": {
       "clock": {
         "cookie": {
@@ -145,6 +145,7 @@
     "bottom": false,
     "cornerStyle": 2,
     "floatStyleShadow": true,
+    "height": 24,
     "indicators": {
       "notifications": {
         "showUnreadCount": false

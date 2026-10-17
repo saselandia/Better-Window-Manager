@@ -858,5 +858,7 @@
   "Atajo '%1' eliminado. Puedes restaurarlo desde la pestaña 'Eliminados'.": "Atajo '%1' eliminado. Puedes restaurarlo desde la pestaña 'Eliminados'.",
   "No hay atajos eliminados": "No hay atajos eliminados",
   "Todos los atajos de teclado configurados están activos.": "Todos los atajos de teclado configurados están activos.",
-  "Atajo '%1' restaurado a sus valores de fábrica": "Atajo '%1' restaurado a sus valores de fábrica"
+  "Atajo '%1' restaurado a sus valores de fábrica": "Atajo '%1' restaurado a sus valores de fábrica",
+  "Bar thickness (pixels)": "Grosor de la barra (píxeles)",
+  "Bar height (pixels)": "Altura de la barra (píxeles)"
 }
