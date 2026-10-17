@@ -228,14 +228,15 @@ Item {
                 id: uptimeRow
                 anchors.centerIn: parent
                 spacing: 8
-                CustomIcon {
+                Text {
                     id: distroIcon
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 25
-                    height: 25
-                    source: SystemInfo.distroIcon
-                    colorize: true
+                    font.family: Appearance.font.family.iconNerd
+                    font.pixelSize: 22
                     color: Appearance.colors.colOnLayer0
+                    text: Config.options?.cheatsheet?.superKey ?? "󰣇"
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignHCenter
                 }
                 StyledText {
                     anchors.verticalCenter: parent.verticalCenter

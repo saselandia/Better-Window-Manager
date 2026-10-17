@@ -198,6 +198,50 @@ Item {
         }
         spacing: Math.max(4, Math.round(6 * root.scaleRatio))
 
+        // Distro / Launcher Menu Button
+        MouseArea {
+            id: menuBtn
+            Layout.alignment: Qt.AlignVCenter
+            implicitWidth: Math.max(root.iconBoxWidth, menuIcon.implicitWidth + Math.round(8 * root.scaleRatio))
+            implicitHeight: root.itemHeight
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+
+            Rectangle {
+                anchors.fill: parent
+                radius: Math.round(4 * root.scaleRatio)
+                color: menuBtn.containsMouse ? root.dynamicHoverBg : "transparent"
+                Behavior on color { ColorAnimation { duration: 120 } }
+            }
+
+            onClicked: event => {
+                if (event.button === Qt.RightButton) {
+                    Quickshell.execDetached(["kitty"]);
+                } else {
+                    Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/app-launcher.sh"]);
+                }
+            }
+
+            Text {
+                id: menuIcon
+                anchors.centerIn: parent
+                text: Config.options?.cheatsheet?.superKey ?? "󰣇"
+                font.family: Appearance.font.family.iconNerd
+                font.pixelSize: root.fontSizeLarge
+                color: menuBtn.containsMouse ? root.dynamicSecondary : root.dynamicAccent
+                Behavior on color { ColorAnimation { duration: 120 } }
+            }
+        }
+
+        // Separator between launcher icon and workspaces
+        Rectangle {
+            Layout.alignment: Qt.AlignVCenter
+            implicitWidth: 1
+            implicitHeight: root.sepHeight
+            color: root.dynamicBorder
+        }
+
         MouseArea {
             id: wsArea
             Layout.alignment: Qt.AlignVCenter
