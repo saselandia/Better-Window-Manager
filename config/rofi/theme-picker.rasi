@@ -1,0 +1,67 @@
+configuration {
+    show-icons: false;
+}
+
+* {
+    font: "JetBrainsMono Nerd Font 10";
+    background-color: transparent;
+    text-color: #e6e2d5;
+}
+
+window {
+    width: 480px;
+    transparency: "real";
+    border-radius: 8px;
+    border: 2px solid;
+    border-color: #cdca75;
+    background-color: #14140cF5;
+    padding: 16px;
+}
+
+mainbox {
+    children: [ inputbar, listview ];
+    spacing: 12px;
+}
+
+inputbar {
+    children: [ prompt ];
+    background-color: #202018;
+    border-radius: 6px;
+    padding: 10px 14px;
+}
+
+prompt {
+    text-color: #cdca75;
+    font: "JetBrainsMono Nerd Font Bold 11";
+}
+
+listview {
+    columns: 1;
+    lines: 2;
+    spacing: 8px;
+    cycle: true;
+}
+
+element {
+    orientation: horizontal;
+    padding: 12px 14px;
+    border-radius: 6px;
+    spacing: 10px;
+    cursor: pointer;
+}
+
+element selected {
+    background-color: #4a4900;
+    border: 1px solid;
+    border-color: #cdca75;
+}
+
+element-text {
+    vertical-align: 0.5;
+    text-color: #e6e2d5;
+}
+
+element-text selected {
+    text-color: #e9e78e;
+    font: "JetBrainsMono Nerd Font Bold 10";
+}

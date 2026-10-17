@@ -45,6 +45,18 @@ Item { // Bar content region
         radius: Config.options.bar.cornerStyle === 1 ? Appearance.rounding.windowRounding : 0
         border.width: Config.options.bar.cornerStyle === 1 ? 1 : 0
         border.color: Appearance.colors.colLayer0Border
+
+        Rectangle {
+            id: retroBottomBorder
+            visible: Appearance.isRetro && Config.options.bar.showBackground
+            anchors {
+                left: parent.left
+                right: parent.right
+                bottom: parent.bottom
+            }
+            height: 1
+            color: Appearance.colors.colOutlineVariant
+        }
     }
 
     FocusedScrollMouseArea { // Left side | scroll to change brightness

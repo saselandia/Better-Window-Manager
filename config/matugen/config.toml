@@ -56,3 +56,11 @@ post_hook = '~/.config/hypr/scripts/sync-nautilus.sh 2>/dev/null || true'
 input_path = '~/.config/matugen/templates/swaync.css'
 output_path = '~/.config/swaync/style.css'
 post_hook = 'pgrep -x swaync >/dev/null && timeout 1 swaync-client -rs >/dev/null 2>&1 || true'
+
+[templates.btop]
+input_path = "~/.config/matugen/templates/btop.theme"
+output_path = "~/.config/btop/themes/matugen.theme"
+
+[templates.rofi_theme_picker]
+input_path = '~/.config/matugen/templates/theme-picker.rasi'
+output_path = '~/.config/rofi/theme-picker.rasi'

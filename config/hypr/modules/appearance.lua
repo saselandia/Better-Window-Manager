@@ -13,6 +13,13 @@
 -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
 -- 1. Importar los colores calculados por Matugen con valores de respaldo (fallback)
 local ok, colors = pcall(require, "modules.colors")
+local ok_theme, active_theme = pcall(require, "modules.theme")
+
+local win_rounding = (ok_theme and active_theme.rounding) or 0
+local win_round_pwr = (ok_theme and active_theme.rounding_power) or 2
+local border_sz = (ok_theme and active_theme.border_size) or 2
+local g_in = (ok_theme and active_theme.gaps_in) or 3
+local g_out = (ok_theme and active_theme.gaps_out) or 5
 
 local active_1 = ok and colors.primary or "rgba(33ccffee)"
 local active_2 = ok and colors.primary_container or "rgba(00ff99ee)"
@@ -20,9 +27,9 @@ local inactive = ok and colors.outline or "rgba(595959aa)"
 
 hl.config({
     general = {
-        gaps_in  = 3,
-        gaps_out = 5,
-        border_size = 2,
+        gaps_in  = g_in,
+        gaps_out = g_out,
+        border_size = border_sz,
 
         col = {
             -- Degradado dinámico según la paleta del wallpaper
@@ -37,8 +44,8 @@ hl.config({
     },
 
     decoration = {
-        rounding       = 0,
-        rounding_power = 2,
+        rounding       = win_rounding,
+        rounding_power = win_round_pwr,
 
         active_opacity   = 1.0,
         inactive_opacity = 0.95, -- Leve transparencia para ventanas en segundo plano

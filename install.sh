@@ -302,6 +302,7 @@ CONFIG_DIRS=(
     "xdg-desktop-portal"
     "gtk-3.0"
     "gtk-4.0"
+    "btop"
 )
 
 print_step "6. Instalando configuraciones principales (Modo: ${INSTALL_MODE})..."

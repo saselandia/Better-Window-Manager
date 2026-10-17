@@ -66,7 +66,7 @@
     "dispatcher_arg": null,
     "options": {},
     "is_default": true,
-    "enabled": true,
+    "enabled": false,
     "is_modified": false
   },
   {
@@ -1007,6 +1007,23 @@
     "exec": null,
     "dispatcher": "workspace_window_move",
     "dispatcher_arg": "10",
+    "options": {},
+    "is_default": true,
+    "enabled": true,
+    "is_modified": false
+  },
+  {
+    "id": "theme_picker",
+    "category": "Lanzadores",
+    "description": "Selector de temas (BWM)",
+    "mods": [
+      "ALT"
+    ],
+    "key": "T",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/theme-picker.sh",
+    "dispatcher": null,
+    "dispatcher_arg": null,
     "options": {},
     "is_default": true,
     "enabled": true,

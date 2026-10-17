@@ -21,13 +21,13 @@
     "extraBackgroundTint": true,
     "fakeScreenRounding": 0,
     "fonts": {
-      "expressive": "Space Grotesk",
+      "expressive": "JetBrains Mono NF",
       "iconNerd": "JetBrains Mono NF",
-      "main": "Google Sans Flex",
+      "main": "JetBrains Mono NF",
       "monospace": "JetBrains Mono NF",
-      "numbers": "Google Sans Flex",
-      "reading": "Readex Pro",
-      "title": "Google Sans Flex"
+      "numbers": "JetBrains Mono NF",
+      "reading": "JetBrains Mono NF",
+      "title": "JetBrains Mono NF"
     },
     "palette": {
       "accentColor": "",
@@ -49,7 +49,8 @@
         "harmony": 0.6,
         "termFgBoost": 0.35
       }
-    }
+    },
+    "bwmTheme": "retro"
   },
   "apps": {
     "bluetooth": "blueman-manager",
@@ -80,7 +81,7 @@
       "workspaceZoom": 1.07
     },
     "thumbnailPath": "",
-    "wallpaperPath": "/home/sasel/Pictures/Wallpapers/cyberpunk.jpg",
+    "wallpaperPath": "/home/sasel/Pictures/cyberpunk-2077-3840x2160-20154.jpg",
     "widgets": {
       "clock": {
         "cookie": {
@@ -187,7 +188,7 @@
         "1",
         "2"
       ],
-      "showAppIcons": true,
+      "showAppIcons": false,
       "showNumberDelay": 300,
       "shown": 10,
       "useNerdFont": false

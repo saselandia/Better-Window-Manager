@@ -33,19 +33,44 @@
         },
         "float": false
     },
-    "kitty": {
-        "name": "persist_kitty",
-        "description": "kitty",
-        "match": {
-            "class": "^kitty$"
-        },
-        "float": true
-    },
     "org_quickshell": {
         "name": "persist_org_quickshell",
         "description": "org.quickshell",
         "match": {
             "class": "^org\\.quickshell$"
+        },
+        "float": true
+    },
+    "com_mojang_minecraft": {
+        "name": "persist_com_mojang_minecraft",
+        "description": "com.mojang.minecraft",
+        "match": {
+            "class": "^com\\.mojang\\.minecraft$"
+        },
+        "float": true
+    },
+    "steam_steam_browser": {
+        "name": "persist_steam_steam_browser",
+        "description": "Steam (Steam - Browser)",
+        "match": {
+            "class": "^steam$",
+            "title": "^Steam\\ \\-\\ Browser$"
+        },
+        "float": true
+    },
+    "firefox_bin": {
+        "name": "persist_firefox_bin",
+        "description": "firefox-bin",
+        "match": {
+            "class": "^firefox\\-bin$"
+        },
+        "float": false
+    },
+    "minecraft_26_2": {
+        "name": "persist_minecraft_26_2",
+        "description": "Minecraft* 26.2",
+        "match": {
+            "class": "^Minecraft\\*\\ 26\\.2$"
         },
         "float": true
     }

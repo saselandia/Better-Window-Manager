@@ -3,11 +3,29 @@
 -- Archivo gestionado automáticamente por toggle-float-persistent.py
 -- =============================================================================
 
--- kitty
+-- com.mojang.minecraft
 hl.window_rule({
-    name  = "persist_kitty",
+    name  = "persist_com_mojang_minecraft",
     match = {
-        class = "^kitty$",
+        class = "^com\\.mojang\\.minecraft$",
+    },
+    float = true,
+})
+
+-- firefox-bin
+hl.window_rule({
+    name  = "persist_firefox_bin",
+    match = {
+        class = "^firefox\\-bin$",
+    },
+    float = false,
+})
+
+-- Minecraft* 26.2
+hl.window_rule({
+    name  = "persist_minecraft_26_2",
+    match = {
+        class = "^Minecraft\\*\\ 26\\.2$",
     },
     float = true,
 })
@@ -57,6 +75,16 @@ hl.window_rule({
         title = "^Sign\\ in\\ to\\ Steam$",
     },
     float = false,
+})
+
+-- Steam (Steam - Browser)
+hl.window_rule({
+    name  = "persist_steam_steam_browser",
+    match = {
+        class = "^steam$",
+        title = "^Steam\\ \\-\\ Browser$",
+    },
+    float = true,
 })
 
 return {}

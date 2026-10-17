@@ -12,7 +12,6 @@ hl.bind("ALT + A", hl.dsp.exec_cmd("quickshell -c ii ipc call cheatsheet toggle"
 -- [Lanzadores]
 hl.bind("CTRL + RETURN", hl.dsp.exec_cmd("kitty"), { description = "Lanzadores: Abrir terminal (Kitty)" })
 hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd("quickshell -c ii ipc call search toggle || rofi -show drun"), { description = "Lanzadores: Menú de aplicaciones / Búsqueda", release = true })
-hl.bind("SUPER + E", hl.dsp.exec_cmd("nautilus"), { description = "Lanzadores: Explorador de archivos (Nautilus)" })
 hl.bind("ALT + E", hl.dsp.exec_cmd("nautilus"), { description = "Lanzadores: Explorador de archivos alternativo (Alt+E)" })
 hl.bind("ALT + W", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/wallpaper-picker.sh"), { description = "Lanzadores: Selector de fondos de pantalla" })
 -- [Ventanas]
@@ -73,6 +72,8 @@ hl.bind("ALT + 9", hl.dsp.focus({ workspace = 9 }), { description = "Espacios de
 hl.bind("ALT + SHIFT + 9", hl.dsp.window.move({ workspace = 9 }), { description = "Espacios de trabajo: Mover ventana al espacio de trabajo 9" })
 hl.bind("ALT + 0", hl.dsp.focus({ workspace = 10 }), { description = "Espacios de trabajo: Cambiar al espacio de trabajo 10" })
 hl.bind("ALT + SHIFT + 0", hl.dsp.window.move({ workspace = 10 }), { description = "Espacios de trabajo: Mover ventana al espacio de trabajo 10" })
+-- [Lanzadores]
+hl.bind("ALT + T", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/theme-picker.sh"), { description = "Lanzadores: Selector de temas (BWM)" })
 
 -- Alt+Tab Helper Releases
 hl.bind("ALT + SHIFT + TAB", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab prev"), { repeating = true })

@@ -429,7 +429,7 @@ ButtonMouseArea {
             property real indicatorThickness: root.activeWorkspaceSize
 
             contentLayer: StyledRectangle.ContentLayer.Group
-            radius: indicatorThickness / 2
+            radius: Appearance.isRetro ? 0 : indicatorThickness / 2
             color: Appearance.colors.colPrimary
 
             x: root.vertical ? null : indicatorPosition
