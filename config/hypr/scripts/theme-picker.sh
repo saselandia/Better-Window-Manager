@@ -2,17 +2,22 @@
 # ==============================================================================
 # Script: theme-picker.sh
 # Descripción: Selector interactivo de temas para BWM (Default vs Retro Omarchy)
+#              Cambia dinámicamente de aspecto según el tema activo.
 # ==============================================================================
 
 set -euo pipefail
 
-ROFI_THEME="$HOME/.config/rofi/theme-picker.rasi"
 THEME_MANAGER="$HOME/.config/hypr/scripts/bwm-theme-manager.py"
+CURRENT_THEME="$("$THEME_MANAGER" get 2>/dev/null || echo "default")"
+
+if [[ "$CURRENT_THEME" == "retro" ]]; then
+    ROFI_THEME="$HOME/.config/rofi/theme-picker-retro.rasi"
+else
+    ROFI_THEME="$HOME/.config/rofi/theme-picker.rasi"
+fi
 
 OPTIONS="🎨 Default (Material You)\n⚡ Retro (Omarchy)"
 
-# Obtener tema actual para preseleccionar
-CURRENT_THEME="$("$THEME_MANAGER" get 2>/dev/null || echo "default")"
 SELECTED_ROW=0
 case "$CURRENT_THEME" in
     "default") SELECTED_ROW=0 ;;

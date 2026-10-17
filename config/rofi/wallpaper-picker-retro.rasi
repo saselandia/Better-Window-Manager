@@ -1,0 +1,94 @@
+configuration {
+    show-icons: true;
+}
+
+@import "omarchy-colors.rasi"
+
+* {
+    font: "JetBrainsMono Nerd Font 10.5";
+    background-color: transparent;
+    text-color: @fg;
+}
+
+window {
+    width: 72%;
+    height: 68%;
+    location: center;
+    anchor: center;
+    transparency: "real";
+    border-radius: 0px;
+    border: 2px solid;
+    border-color: @accent;
+    background-color: @bg;
+    padding: 20px;
+}
+
+mainbox {
+    children: [ inputbar, listview ];
+    spacing: 14px;
+}
+
+inputbar {
+    children: [ prompt, entry ];
+    background-color: @bg-input;
+    border: 1px solid;
+    border-color: @accent;
+    border-radius: 0px;
+    padding: 10px 16px;
+}
+
+prompt {
+    text-color: @accent;
+    font: "JetBrainsMono Nerd Font Bold 11";
+    margin: 0px 8px 0px 0px;
+}
+
+entry {
+    placeholder: "Buscar fondo de pantalla...";
+    placeholder-color: @muted;
+    text-color: @fg;
+    vertical-align: 0.5;
+    font: "JetBrainsMono Nerd Font 10.5";
+}
+
+listview {
+    columns: 3;
+    lines: 3;
+    spacing: 14px;
+    layout: vertical;
+    cycle: true;
+    scrollbar: false;
+}
+
+element {
+    orientation: vertical;
+    padding: 10px;
+    border-radius: 0px;
+    border: 1px solid;
+    border-color: @dim;
+    background-color: @bg-input;
+    spacing: 8px;
+    cursor: pointer;
+}
+
+element selected {
+    background-color: @accent;
+    border: 1px solid;
+    border-color: @accent;
+}
+
+element-icon {
+    size: 110px;
+    horizontal-align: 0.5;
+}
+
+element-text {
+    horizontal-align: 0.5;
+    text-color: @fg;
+    font: "JetBrainsMono Nerd Font 10";
+}
+
+element-text selected {
+    text-color: @bg-selected-text;
+    font: "JetBrainsMono Nerd Font Bold 10";
+}

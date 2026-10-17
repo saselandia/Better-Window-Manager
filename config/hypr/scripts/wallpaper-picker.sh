@@ -9,7 +9,12 @@ set -euo pipefail
 
 WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
 CACHE_DIR="$HOME/.cache/wallpaper-thumbnails"
-ROFI_THEME="$HOME/.config/rofi/wallpaper-picker.rasi"
+CURRENT_THEME="$(python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py get 2>/dev/null || echo "default")"
+if [[ "$CURRENT_THEME" == "retro" ]]; then
+    ROFI_THEME="$HOME/.config/rofi/wallpaper-picker-retro.rasi"
+else
+    ROFI_THEME="$HOME/.config/rofi/wallpaper-picker.rasi"
+fi
 SET_WALLPAPER="$HOME/.config/hypr/scripts/set-wallpaper.sh"
 
 mkdir -p "$WALLPAPER_DIR" "$CACHE_DIR"

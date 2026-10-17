@@ -1,0 +1,74 @@
+configuration {
+    show-icons: false;
+}
+
+@import "omarchy-colors.rasi"
+
+* {
+    font: "JetBrainsMono Nerd Font 10.5";
+    background-color: transparent;
+    text-color: @fg;
+}
+
+window {
+    width: 440px;
+    location: center;
+    anchor: center;
+    transparency: "real";
+    border-radius: 0px;
+    border: 2px solid;
+    border-color: @accent;
+    background-color: @bg;
+    padding: 16px;
+}
+
+mainbox {
+    children: [ inputbar, listview ];
+    spacing: 12px;
+}
+
+inputbar {
+    children: [ prompt ];
+    background-color: @bg-input;
+    border: 1px solid;
+    border-color: @accent;
+    border-radius: 0px;
+    padding: 10px 14px;
+}
+
+prompt {
+    text-color: @accent;
+    font: "JetBrainsMono Nerd Font Bold 11";
+}
+
+listview {
+    columns: 1;
+    lines: 4;
+    spacing: 4px;
+    cycle: true;
+    scrollbar: false;
+}
+
+element {
+    orientation: horizontal;
+    padding: 10px 14px;
+    border-radius: 0px;
+    spacing: 10px;
+    cursor: pointer;
+}
+
+element selected {
+    background-color: @accent;
+    border: 0px;
+}
+
+element-text {
+    vertical-align: 0.5;
+    text-color: @fg;
+    font: "JetBrainsMono Nerd Font 10.5";
+}
+
+element-text selected {
+    text-color: @bg-selected-text;
+    font: "JetBrainsMono Nerd Font Bold 10.5";
+}
