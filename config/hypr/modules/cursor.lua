@@ -8,3 +8,10 @@ hl.env("HYPRCURSOR_THEME", "miku-cursor-linux")
 hl.env("HYPRCURSOR_SIZE", "48")
 hl.env("XCURSOR_THEME", "miku-cursor-linux")
 hl.env("XCURSOR_SIZE", "48")
+
+hl.config({
+    cursor = {
+        no_warps = true,
+        warp_on_change_workspace = false,
+    }
+})

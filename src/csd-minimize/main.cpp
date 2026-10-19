@@ -87,6 +87,7 @@ static void restoreWindow(PHLWINDOW pw) {
 
     Config::Actions::clearTags(pw);
     Config::Actions::moveToWorkspace(targetWS, false, pw);
+    g_pCompositor->changeWindowZOrder(pw, true);
     Config::Actions::focus(pw);
 
     auto minWS = g_pCompositor->getWorkspaceByName("special:minimized");

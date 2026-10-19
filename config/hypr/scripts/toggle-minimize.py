@@ -77,13 +77,20 @@ def restore_win(client: dict):
     else:
         target_clause = "local target = (hl.get_active_workspace() and hl.get_active_workspace().id) or 1"
 
+    # Restore window to workspace, bring to top (primer plano), focus, and keep cursor in place!
     lua_code = f"""(function()
+        local cur = hl.get_cursor_pos()
         local w = hl.get_window("address:{addr}")
         if w then
             {target_clause}
             hl.dispatch(hl.dsp.window.move({{ workspace = target, window = w }}))
+            pcall(function() hl.dispatch(hl.dsp.window.bring_to_top({{ window = w }})) end)
+            pcall(function() hl.dispatch(hl.dsp.window.alter_zorder({{ mode = "top", window = w }})) end)
             hl.dispatch(hl.dsp.focus({{ window = w }}))
             pcall(function() hl.dispatch(hl.dsp.window.clear_tags(w)) end)
+            if cur and cur.x and cur.y then
+                pcall(function() hl.dispatch(hl.dsp.cursor.move({{ x = cur.x, y = cur.y }})) end)
+            end
             if hl.get_active_special_workspace() then
                 hl.dispatch(hl.dsp.workspace.toggle_special("minimized"))
             end
@@ -101,10 +108,17 @@ def toggle_win(client: dict, active_addr: str):
     elif addr == active_addr:
         minimize_win(client)
     else:
+        # Focus and bring to top without warping mouse away from where clicked!
         lua_code = f"""(function()
+            local cur = hl.get_cursor_pos()
             local w = hl.get_window("address:{addr}")
             if w then
+                pcall(function() hl.dispatch(hl.dsp.window.bring_to_top({{ window = w }})) end)
+                pcall(function() hl.dispatch(hl.dsp.window.alter_zorder({{ mode = "top", window = w }})) end)
                 hl.dispatch(hl.dsp.focus({{ window = w }}))
+                if cur and cur.x and cur.y then
+                    pcall(function() hl.dispatch(hl.dsp.cursor.move({{ x = cur.x, y = cur.y }})) end)
+                end
             end
             return hl.dsp.no_op()
         end)()"""
@@ -206,12 +220,18 @@ def main():
             minimize_win(active_match)
             return
 
-        # 3. Otherwise, focus the first window of this app
+        # 3. Otherwise, focus the first window of this app, bring to top (primer plano), and preserve cursor!
         target_addr = matching[0]["address"]
         lua_code = f"""(function()
+            local cur = hl.get_cursor_pos()
             local w = hl.get_window("address:{target_addr}")
             if w then
+                pcall(function() hl.dispatch(hl.dsp.window.bring_to_top({{ window = w }})) end)
+                pcall(function() hl.dispatch(hl.dsp.window.alter_zorder({{ mode = "top", window = w }})) end)
                 hl.dispatch(hl.dsp.focus({{ window = w }}))
+                if cur and cur.x and cur.y then
+                    pcall(function() hl.dispatch(hl.dsp.cursor.move({{ x = cur.x, y = cur.y }})) end)
+                end
             end
             return hl.dsp.no_op()
         end)()"""
