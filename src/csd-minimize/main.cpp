@@ -34,7 +34,7 @@ static void minimizeWindow(PHLWINDOW pw) {
         return;
 
     auto origWS = pw->m_workspace;
-    if (!origWS || origWS->m_isSpecialWorkspace)
+    if (!origWS || origWS->m_id == 99 || origWS->m_isSpecialWorkspace)
         return;
 
     uintptr_t addr = (uintptr_t)pw.get();
@@ -43,22 +43,14 @@ static void minimizeWindow(PHLWINDOW pw) {
     // Tag for external tools / Quickshell
     Config::Actions::tag(std::format("from_ws_{}", origWS->m_id), pw);
 
-    auto minWS = g_pCompositor->getWorkspaceByName("special:minimized");
-    if (!minWS)
-        minWS = g_pCompositor->getWorkspaceByString("special:minimized");
+    PHLWORKSPACE minWS = g_pCompositor->getWorkspaceByID(99);
     if (!minWS && pw->m_monitor.lock())
-        minWS = g_pCompositor->createNewWorkspace(g_pCompositor->getNewSpecialID(), pw->m_monitor.lock()->m_id, "special:minimized", false);
+        minWS = g_pCompositor->createNewWorkspace(99, pw->m_monitor.lock()->m_id, "99", false);
     if (!minWS)
         return;
 
-    // Move to special:minimized SILENTLY (silent = true) so it never shows or dims the screen
+    // Move to background workspace 99 SILENTLY (silent = true) so it never shows or dims the screen
     Config::Actions::moveToWorkspace(minWS, true, pw);
-
-    // If monitor has special workspace active, close it
-    auto mon = pw->m_monitor.lock();
-    if (mon && mon->m_activeSpecialWorkspace) {
-        Config::Actions::toggleSpecial(minWS);
-    }
 }
 
 static void restoreWindow(PHLWINDOW pw) {
@@ -80,8 +72,11 @@ static void restoreWindow(PHLWINDOW pw) {
         }
     }
 
+    if (targetID == 99)
+        targetID = 1;
+
     PHLWORKSPACE targetWS = g_pCompositor->getWorkspaceByID(targetID);
-    if (!targetWS) {
+    if (!targetWS || targetWS->m_id == 99) {
         auto mon = pw->m_monitor.lock();
         targetWS = mon ? mon->m_activeWorkspace : g_pCompositor->getWorkspaceByID(1);
     }
@@ -95,12 +90,6 @@ static void restoreWindow(PHLWINDOW pw) {
     pw->sendWindowSize(true);
     if (g_pHyprRenderer)
         g_pHyprRenderer->damageWindow(pw, true);
-
-    auto minWS = g_pCompositor->getWorkspaceByName("special:minimized");
-    auto mon = pw->m_monitor.lock();
-    if (minWS && mon && mon->m_activeSpecialWorkspace == minWS) {
-        Config::Actions::toggleSpecial(minWS);
-    }
 }
 
 static void hookWindow(PHLWINDOW pw) {
@@ -213,11 +202,14 @@ APICALL EXPORT std::string PLUGIN_API_VERSION() {
     return HYPRLAND_API_VERSION;
 }
 
+static CHyprSignalListener P_OPEN;
+static CHyprSignalListener P_DESTROY;
+
 APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     PHANDLE = handle;
 
-    static auto P_OPEN    = Event::bus()->m_events.window.open.listen([](PHLWINDOW w) { hookWindow(w); });
-    static auto P_DESTROY = Event::bus()->m_events.window.destroy.listen([](PHLWINDOW w) { unhookWindow(w); });
+    P_OPEN    = Event::bus()->m_events.window.open.listen([](PHLWINDOW w) { hookWindow(w); });
+    P_DESTROY = Event::bus()->m_events.window.destroy.listen([](PHLWINDOW w) { unhookWindow(w); });
 
     for (auto& w : g_pCompositor->m_windows) {
         hookWindow(w);
@@ -230,6 +222,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 }
 
 APICALL EXPORT void PLUGIN_EXIT() {
+    P_OPEN.reset();
+    P_DESTROY.reset();
     g_hooks.clear();
     g_originalWorkspaces.clear();
 }

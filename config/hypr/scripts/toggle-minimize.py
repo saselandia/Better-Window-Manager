@@ -1,25 +1,33 @@
 #!/usr/bin/env python3
 """
-Window minimize & restore manager for Hyprland and Quickshell (KDE Plasma style).
-Usage:
+Native-like Window Minimize & Restore Controller for Hyprland (KDE Plasma Style).
+Supports:
   toggle-minimize.py min [address]
   toggle-minimize.py restore [address]
   toggle-minimize.py toggle [address]
   toggle-minimize.py toggle-app <appId>
+
+Uses background workspace 99 instead of special:minimized.
+This completely avoids:
+- Screen dimming / scratchpad animations
+- Special workspace unmapping which crashes/freezes Electron / Chromium WebRTC streams
+- 2 FPS drop and blank void artifacts upon restoring / maximizing
 """
 
 import sys
 import json
 import subprocess
 
-def get_clients():
+MINIMIZED_WS_ID = 99
+
+def get_clients() -> list:
     try:
         out = subprocess.check_output(["hyprctl", "clients", "-j"]).decode("utf-8")
         return json.loads(out)
     except Exception:
         return []
 
-def get_active_window():
+def get_active_window() -> dict:
     try:
         out = subprocess.check_output(["hyprctl", "activewindow", "-j"]).decode("utf-8")
         data = json.loads(out)
@@ -32,27 +40,26 @@ def get_active_window():
 def run_lua(code: str):
     subprocess.run(["hyprctl", "dispatch", code], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-def minimize_win(client: dict):
-    addr = client.get("address")
-    if not addr:
-        return
+def is_minimized(client: dict) -> bool:
     ws = client.get("workspace", {})
     ws_name = str(ws.get("name", ""))
-    ws_id = ws.get("id", 1)
+    ws_id = ws.get("id", 0)
+    return ws_id == MINIMIZED_WS_ID or ws_name == str(MINIMIZED_WS_ID) or ws_name == "minimized" or ws_name.startswith("special:minimized")
 
-    if ws_name.startswith("special:minimized"):
+def minimize_win(client: dict):
+    addr = client.get("address")
+    if not addr or is_minimized(client):
         return
 
-    # Move to special:minimized and immediately close the special workspace
-    # so the screen NEVER dims and NO special workspace or minimized windows are displayed!
+    ws = client.get("workspace", {})
+    ws_id = ws.get("id", 1)
+
+    # Move to background workspace 99 silently
     lua_code = f"""(function()
         local w = hl.get_window("address:{addr}")
         if w then
             pcall(function() hl.dispatch(hl.dsp.window.tag({{ tag = "from_ws_{ws_id}", window = w }})) end)
-            hl.dispatch(hl.dsp.window.move({{ workspace = "special:minimized", window = w }}))
-            if hl.get_active_special_workspace() then
-                hl.dispatch(hl.dsp.workspace.toggle_special("minimized"))
-            end
+            hl.dispatch(hl.dsp.window.move({{ workspace = {MINIMIZED_WS_ID}, window = w }}))
         end
         return hl.dsp.no_op()
     end)()"""
@@ -72,7 +79,7 @@ def restore_win(client: dict):
                 target_ws_id = int(orig_id)
                 break
 
-    if target_ws_id is not None:
+    if target_ws_id is not None and target_ws_id != MINIMIZED_WS_ID:
         target_clause = f"local target = {target_ws_id}"
     else:
         target_clause = "local target = (hl.get_active_workspace() and hl.get_active_workspace().id) or 1"
@@ -101,9 +108,7 @@ def restore_win(client: dict):
 
 def toggle_win(client: dict, active_addr: str):
     addr = client.get("address")
-    ws_name = str(client.get("workspace", {}).get("name", ""))
-
-    if ws_name.startswith("special:minimized"):
+    if is_minimized(client):
         restore_win(client)
     elif addr == active_addr:
         minimize_win(client)
@@ -208,8 +213,8 @@ def main():
         if not matching:
             sys.exit(0)
 
-        # 1. If any window of this app is minimized in special:minimized -> RESTORE IT!
-        minimized_match = next((c for c in matching if str(c.get("workspace", {}).get("name", "")).startswith("special:minimized")), None)
+        # 1. If any window of this app is minimized -> RESTORE IT!
+        minimized_match = next((c for c in matching if is_minimized(c)), None)
         if minimized_match:
             restore_win(minimized_match)
             return

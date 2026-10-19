@@ -134,7 +134,7 @@ fi
 # 9. Cargar plugins (soporte CSD minimize y hyprbars para KDE Plasma)
 (
     sleep 1
-    hyprctl plugin load "/home/sasel/.config/hypr/plugins/hypr-csd.so" 2>/dev/null || true
+    # hypr-csd retired in favor of native hyprbars
     if [ -f "/home/sasel/.config/hypr/modules/theme.lua" ] && grep -q 'name = "plasma"' "/home/sasel/.config/hypr/modules/theme.lua" 2>/dev/null; then
         hyprctl plugin load "/home/sasel/.config/hypr/plugins/hyprbars.so" 2>/dev/null || true
     fi
