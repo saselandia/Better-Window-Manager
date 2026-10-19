@@ -342,6 +342,36 @@ ContentPage {
                         border.width: isSelected || isDragging ? 2 : 1
                         border.color: isSelected || isDragging ? Appearance.colors.colPrimary : Appearance.colors.colOutline
 
+                        // Primary Monitor Chip Badge
+                        Rectangle {
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.margins: 4
+                            radius: Appearance.rounding.verysmall
+                            color: Appearance.colors.colPrimary
+                            visible: modelData.is_primary ?? false
+                            implicitHeight: 18
+                            implicitWidth: badgeRow.implicitWidth + 8
+                            z: 2
+
+                            RowLayout {
+                                id: badgeRow
+                                anchors.centerIn: parent
+                                spacing: 2
+                                MaterialSymbol {
+                                    text: "star"
+                                    iconSize: 11
+                                    color: Appearance.colors.colOnPrimary
+                                }
+                                StyledText {
+                                    text: Translation.tr("Principal") + (modelData.workspaces ? ` (${modelData.workspaces})` : "")
+                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                    font.weight: Font.Bold
+                                    color: Appearance.colors.colOnPrimary
+                                }
+                            }
+                        }
+
                         MouseArea {
                             id: dragArea
                             anchors.fill: parent
@@ -383,6 +413,13 @@ ContentPage {
                                 text: `${modelData.width}x${modelData.height} @ ${modelData.refreshRate}Hz`
                                 font.pixelSize: Appearance.font.pixelSize.smaller
                                 color: isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSurfaceVariant
+                            }
+                            StyledText {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: (modelData.is_primary ?? false) ? Translation.tr("★ Workspaces %1").arg(modelData.workspaces || "1-9") : Translation.tr("Workspaces: %1").arg(modelData.workspaces || "10")
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                font.weight: Font.Medium
+                                color: isSelected ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colPrimary
                             }
                             StyledText {
                                 Layout.alignment: Qt.AlignHCenter
@@ -446,6 +483,87 @@ ContentPage {
         visible: root.currentMonitor !== null
         icon: "tune"
         title: Translation.tr("Settings for: %1 (%2)").arg(root.currentMonitor ? root.currentMonitor.name : "").arg(root.currentMonitor ? root.currentMonitor.model : "")
+
+        // Primary Display Switch
+        ConfigSwitch {
+            buttonIcon: "star"
+            text: Translation.tr("Primary Display (Workspaces 1-9)")
+            checked: root.currentMonitor ? (root.currentMonitor.is_primary ?? false) : false
+            onCheckedChanged: {
+                if (root.currentMonitor && (root.currentMonitor.is_primary ?? false) !== checked) {
+                    let updated = JSON.parse(JSON.stringify(root.monitors));
+                    if (checked) {
+                        for (let i = 0; i < updated.length; i++) {
+                            if (i === root.selectedIndex) {
+                                updated[i].is_primary = true;
+                                updated[i].workspaces = "1-9";
+                            } else {
+                                updated[i].is_primary = false;
+                                updated[i].workspaces = "10";
+                            }
+                        }
+                    } else {
+                        updated[root.selectedIndex].is_primary = false;
+                        updated[root.selectedIndex].workspaces = "10";
+                        for (let i = 0; i < updated.length; i++) {
+                            if (i !== root.selectedIndex) {
+                                updated[i].is_primary = true;
+                                updated[i].workspaces = "1-9";
+                                break;
+                            }
+                        }
+                    }
+                    root.monitors = updated;
+                }
+            }
+            StyledToolTip {
+                text: Translation.tr("Sets this display as Primary. Hyprland will bind workspaces 1 to 9 (Alt+1 to Alt+9) to this display.")
+            }
+        }
+
+        // Assigned Workspaces selector
+        ContentSubsection {
+            title: Translation.tr("Assigned Workspaces")
+            Layout.fillWidth: true
+
+            StyledComboBox {
+                id: wsCombo
+                Layout.fillWidth: true
+                buttonIcon: "view_carousel"
+                textRole: "name"
+                model: [
+                    { name: Translation.tr("Workspaces 1 to 9 (Primary)"), value: "1-9" },
+                    { name: Translation.tr("Workspace 10 (Secondary)"), value: "10" },
+                    { name: Translation.tr("Workspaces 1 to 5"), value: "1-5" },
+                    { name: Translation.tr("Workspaces 6 to 10"), value: "6-10" }
+                ]
+                currentIndex: {
+                    if (!root.currentMonitor) return 0;
+                    const ws = root.currentMonitor.workspaces || (root.currentMonitor.is_primary ? "1-9" : "10");
+                    const values = ["1-9", "10", "1-5", "6-10"];
+                    const idx = values.indexOf(ws);
+                    return idx >= 0 ? idx : (root.currentMonitor.is_primary ? 0 : 1);
+                }
+                onActivated: function(index) {
+                    if (!model || !model[index]) return;
+                    const val = model[index].value;
+                    let updated = JSON.parse(JSON.stringify(root.monitors));
+                    updated[root.selectedIndex].workspaces = val;
+                    if (val === "1-9") {
+                        updated[root.selectedIndex].is_primary = true;
+                        for (let i = 0; i < updated.length; i++) {
+                            if (i !== root.selectedIndex && updated[i].is_primary) {
+                                updated[i].is_primary = false;
+                                if (updated[i].workspaces === "1-9") updated[i].workspaces = "10";
+                            }
+                        }
+                    } else if (updated[root.selectedIndex].is_primary) {
+                        updated[root.selectedIndex].is_primary = false;
+                    }
+                    root.monitors = updated;
+                }
+            }
+        }
 
         // Resolution selector
         ContentSubsection {

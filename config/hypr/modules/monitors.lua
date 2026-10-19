@@ -2,37 +2,37 @@
 ---- MONITORS ----
 ------------------
 
+-- Archivo gestionado automáticamente por Quickshell Display Settings
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
 hl.monitor({
     output   = "DP-2",
-    mode     = "1920x1080@144",
-    position = "0x1080", -- Alineado abajo a la izquierda (borde inferior en Y=2160)
-    scale    = "auto",
+    mode     = "3840x2160@60.0",
+    position = "1920x0",
+    scale    = "1.0",
 })
 hl.monitor({
-    output   = "DP-1",
-    mode     = "preferred",
-    position = "1920x0",
-    scale    = "auto",
+    output   = "DP-3",
+    mode     = "1920x1080@144.0",
+    position = "0x1080",
+    scale    = "1.0",
 })
 
 -------------------------
 ---- WORKSPACE RULES ----
 -------------------------
 
--- Workspaces 1 al 9 vinculados al monitor principal (1080p / DP-2)
-for i = 1, 9 do
-    hl.workspace_rule({
-        workspace = tostring(i),
-        monitor   = "DP-2",
-        default   = (i == 1),
-    })
-end
-
--- Workspace 10 vinculado al monitor secundario (4K / DP-1)
+-- Workspace 10 vinculado al monitor (DP-2) [Secundario]
 hl.workspace_rule({
     workspace = "10",
-    monitor   = "DP-1",
+    monitor   = "DP-2",
     default   = true,
 })
 
+-- Workspaces 1 al 9 vinculados al monitor (DP-3) [Principal]
+for i = 1, 9 do
+    hl.workspace_rule({
+        workspace = tostring(i),
+        monitor   = "DP-3",
+        default   = (i == 1),
+    })
+end

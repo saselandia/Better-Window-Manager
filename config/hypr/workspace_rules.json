@@ -1,0 +1,7 @@
+{
+  "primary_monitor": "DP-3",
+  "monitor_workspaces": {
+    "DP-3": "1-9",
+    "DP-2": "10"
+  }
+}

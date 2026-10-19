@@ -70,6 +70,11 @@ ApplicationWindow {
             component: "modules/settings/DisplayConfig.qml"
         },
         {
+            name: Translation.tr("Workspaces"),
+            icon: "view_carousel",
+            component: "modules/settings/WorkspaceConfig.qml"
+        },
+        {
             name: Translation.tr("Cursor"),
             icon: "near_me",
             component: "modules/settings/CursorConfig.qml"

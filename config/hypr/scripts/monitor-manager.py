@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-""":"
-exec python3 "$0" "$@"
+""":":
+exec python3 "bash" ""
 """
 import os
 import sys
@@ -9,6 +9,24 @@ import argparse
 import subprocess
 
 CONFIG_PATH = os.path.expanduser("~/.config/hypr/modules/monitors.lua")
+WORKSPACE_RULES_PATH = os.path.expanduser("~/.config/hypr/workspace_rules.json")
+
+def load_workspace_config():
+    if os.path.exists(WORKSPACE_RULES_PATH):
+        try:
+            with open(WORKSPACE_RULES_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {"primary_monitor": "DP-3", "monitor_workspaces": {"DP-3": "1-9", "DP-2": "10"}}
+
+def save_workspace_config(cfg):
+    try:
+        os.makedirs(os.path.dirname(WORKSPACE_RULES_PATH), exist_ok=True)
+        with open(WORKSPACE_RULES_PATH, "w", encoding="utf-8") as f:
+            json.dump(cfg, f, indent=2)
+    except Exception as e:
+        print(f"Error saving workspace config: {e}", file=sys.stderr)
 
 def get_monitors():
     try:
@@ -17,8 +35,17 @@ def get_monitors():
     except Exception as e:
         return []
 
+    ws_cfg = load_workspace_config()
+    primary_name = ws_cfg.get("primary_monitor", "DP-3")
+    monitor_workspaces = ws_cfg.get("monitor_workspaces", {})
+    
+    connected_names = [m.get("name") for m in data]
+    if primary_name not in connected_names and connected_names:
+        primary_name = "DP-3" if "DP-3" in connected_names else connected_names[0]
+
     result = []
     for m in data:
+        m_name = m.get("name", "")
         modes = m.get("availableModes", [])
         res_map = {}
         for mode in modes:
@@ -46,11 +73,14 @@ def get_monitors():
             res_list.insert(0, cur_res)
             res_map[cur_res] = [round(float(m.get("refreshRate", 60.0)), 1)]
 
+        is_prim = (m_name == primary_name)
+        assigned_ws = monitor_workspaces.get(m_name, "1-9" if is_prim else "10")
+
         result.append({
             "id": m.get("id", 0),
-            "name": m.get("name", ""),
+            "name": m_name,
             "description": m.get("description", ""),
-            "model": m.get("model", "") or m.get("name", ""),
+            "model": m.get("model", "") or m_name,
             "make": m.get("make", ""),
             "width": cur_w,
             "height": cur_h,
@@ -60,13 +90,58 @@ def get_monitors():
             "scale": m.get("scale", 1.0),
             "focused": m.get("focused", False),
             "disabled": m.get("disabled", False),
+            "is_primary": is_prim,
+            "workspaces": assigned_ws,
             "resolutions": res_list,
             "modesMap": res_map,
             "availableModes": modes
         })
     return result
 
+def parse_workspace_range(ws_str):
+    parts = []
+    for item in ws_str.split(","):
+        item = item.strip()
+        if not item:
+            continue
+        if "-" in item:
+            try:
+                start, end = item.split("-", 1)
+                for x in range(int(start), int(end) + 1):
+                    parts.append(x)
+            except Exception:
+                pass
+        else:
+            try:
+                parts.append(int(item))
+            except Exception:
+                pass
+    return parts
+
 def write_monitors_lua(monitors):
+    ws_cfg = load_workspace_config()
+    active_monitors = [m for m in monitors if not m.get("disabled")]
+    
+    primary_candidate = next((m["name"] for m in active_monitors if m.get("is_primary")), None)
+    if primary_candidate:
+        ws_cfg["primary_monitor"] = primary_candidate
+    elif ws_cfg.get("primary_monitor") not in [m["name"] for m in active_monitors]:
+        ws_cfg["primary_monitor"] = "DP-3" if any(m["name"] == "DP-3" for m in active_monitors) else (active_monitors[0]["name"] if active_monitors else "DP-3")
+
+    if "monitor_workspaces" not in ws_cfg:
+        ws_cfg["monitor_workspaces"] = {}
+
+    for m in active_monitors:
+        name = m["name"]
+        if "workspaces" in m and m["workspaces"]:
+            ws_cfg["monitor_workspaces"][name] = str(m["workspaces"]).strip()
+        elif name == ws_cfg["primary_monitor"]:
+            ws_cfg["monitor_workspaces"][name] = "1-9"
+        else:
+            ws_cfg["monitor_workspaces"][name] = "10"
+
+    save_workspace_config(ws_cfg)
+
     lines = [
         "------------------",
         "---- MONITORS ----",
@@ -89,7 +164,6 @@ def write_monitors_lua(monitors):
         y = m.get("y", 0)
         scale = m.get("scale", 1.0)
 
-        # Formato de modo
         mode_str = f"{w}x{h}@{hz}" if hz else f"{w}x{h}"
         pos_str = f"{x}x{y}"
         scale_str = f"{scale}"
@@ -109,30 +183,42 @@ def write_monitors_lua(monitors):
         "",
     ])
 
-    # Enlazar workspaces al monitor primario/secundario si hay múltiples
-    active_monitors = [m for m in monitors if not m.get("disabled")]
-    if active_monitors:
-        primary = active_monitors[0]["name"]
-        lines.append(f"-- Workspaces 1 al 9 vinculados al monitor principal ({primary})")
-        lines.append("for i = 1, 9 do")
-        lines.append("    hl.workspace_rule({")
-        lines.append("        workspace = tostring(i),")
-        lines.append(f'        monitor   = "{primary}",')
-        lines.append("        default   = (i == 1),")
-        lines.append("    })")
-        lines.append("end")
-
-        if len(active_monitors) > 1:
-            sec = active_monitors[1]["name"]
+    primary_name = ws_cfg.get("primary_monitor", "DP-3")
+    for m in active_monitors:
+        m_name = m["name"]
+        is_prim = (m_name == primary_name)
+        ws_str = ws_cfg["monitor_workspaces"].get(m_name, "1-9" if is_prim else "10")
+        
+        if ws_str == "1-9":
+            lines.append(f"-- Workspaces 1 al 9 vinculados al monitor ({m_name}){' [Principal]' if is_prim else ''}")
+            lines.append("for i = 1, 9 do")
+            lines.append("    hl.workspace_rule({")
+            lines.append("        workspace = tostring(i),")
+            lines.append(f'        monitor   = "{m_name}",')
+            lines.append("        default   = (i == 1),")
+            lines.append("    })")
+            lines.append("end")
             lines.append("")
-            lines.append(f"-- Workspace 10 vinculado al monitor secundario ({sec})")
+        elif ws_str == "10":
+            lines.append(f"-- Workspace 10 vinculado al monitor ({m_name}){' [Secundario]' if not is_prim else ''}")
             lines.append("hl.workspace_rule({")
             lines.append('    workspace = "10",')
-            lines.append(f'    monitor   = "{sec}",')
+            lines.append(f'    monitor   = "{m_name}",')
             lines.append("    default   = true,")
             lines.append("})")
+            lines.append("")
+        else:
+            parsed = parse_workspace_range(ws_str)
+            if parsed:
+                lines.append(f"-- Workspaces personalizados ({ws_str}) vinculados al monitor ({m_name})")
+                for idx, ws_num in enumerate(parsed):
+                    lines.append("hl.workspace_rule({")
+                    lines.append(f'    workspace = "{ws_num}",')
+                    lines.append(f'    monitor   = "{m_name}",')
+                    lines.append(f'    default   = {str(idx == 0).lower()},')
+                    lines.append("})")
+                lines.append("")
 
-    lines.append("")
     content = "\n".join(lines)
 
     os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
@@ -142,6 +228,26 @@ def write_monitors_lua(monitors):
     # Recargar Hyprland
     subprocess.run(["hyprctl", "reload"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+    # Migrar workspaces activos a sus monitores asignados inmediatamente
+    try:
+        ws_out = subprocess.check_output(["hyprctl", "workspaces", "-j"], stderr=subprocess.DEVNULL).decode("utf-8")
+        current_workspaces = json.loads(ws_out)
+        target_map = {}
+        for m_name, ws_str in ws_cfg.get("monitor_workspaces", {}).items():
+            for w in parse_workspace_range(ws_str):
+                target_map[w] = m_name
+        for cw in current_workspaces:
+            wid = cw.get("id")
+            cur_mon = cw.get("monitor")
+            if wid in target_map and target_map[wid] != cur_mon:
+                target_mon = target_map[wid]
+                subprocess.run([
+                    "hyprctl", "dispatch",
+                    f"hl.dsp.workspace.move({{ workspace = {wid}, monitor = '{target_mon}' }})"
+                ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
 def main():
     parser = argparse.ArgumentParser(description="Gestor de Monitores para Hyprland")
     subparsers = parser.add_subparsers(dest="command")
@@ -150,6 +256,9 @@ def main():
 
     apply_parser = subparsers.add_parser("apply", help="Aplica la configuración de monitores desde JSON")
     apply_parser.add_argument("json_data", help="JSON con la lista de monitores configurados")
+
+    set_prim_parser = subparsers.add_parser("set-primary", help="Establece el monitor principal (workspaces 1-9)")
+    set_prim_parser.add_argument("monitor_name", help="Nombre del monitor principal (ej. DP-3)")
 
     align_parser = subparsers.add_parser("align", help="Alinea un monitor relativo a otro")
     align_parser.add_argument("--target", required=True, help="Nombre del monitor a mover")
@@ -169,6 +278,21 @@ def main():
         except Exception as e:
             print(json.dumps({"status": "error", "message": str(e)}), file=sys.stderr)
             sys.exit(1)
+    elif args.command == "set-primary":
+        mons = get_monitors()
+        target = next((m for m in mons if m["name"] == args.monitor_name), None)
+        if not target:
+            print(json.dumps({"status": "error", "message": f"Monitor '{args.monitor_name}' no encontrado"}), file=sys.stderr)
+            sys.exit(1)
+        for m in mons:
+            if m["name"] == args.monitor_name:
+                m["is_primary"] = True
+                m["workspaces"] = "1-9"
+            else:
+                m["is_primary"] = False
+                m["workspaces"] = "10"
+        write_monitors_lua(mons)
+        print(json.dumps({"status": "success", "message": f"Monitor '{args.monitor_name}' establecido como principal (workspaces 1-9)"}))
     elif args.command == "align":
         mons = get_monitors()
         target = next((m for m in mons if m["name"] == args.target), None)
