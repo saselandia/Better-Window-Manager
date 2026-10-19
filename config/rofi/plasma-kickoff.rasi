@@ -1,0 +1,90 @@
+configuration {
+    show-icons: true;
+    display-drun: "󰄛 Aplicaciones";
+    drun-display-format: "{name}";
+}
+
+@import "plasma-colors.rasi"
+
+* {
+    font: "Google Sans Flex 10.5";
+    background-color: transparent;
+    text-color: @fg;
+}
+
+window {
+    width: 540px;
+    height: 520px;
+    location: south west;
+    anchor: south west;
+    x-offset: 6px;
+    y-offset: -50px;
+    transparency: "real";
+    border-radius: 8px;
+    border: 2px solid;
+    border-color: @accent;
+    background-color: @bg;
+    padding: 16px;
+}
+
+mainbox {
+    children: [ inputbar, listview ];
+    spacing: 12px;
+}
+
+inputbar {
+    children: [ prompt, entry ];
+    background-color: @bg-input;
+    border: 1px solid;
+    border-color: @bg-card;
+    border-radius: 6px;
+    padding: 10px 14px;
+    spacing: 10px;
+}
+
+prompt {
+    text-color: @accent;
+    font: "Google Sans Flex Bold 11";
+}
+
+entry {
+    placeholder: "Escriba para buscar...";
+    placeholder-color: @dim;
+    text-color: @fg;
+}
+
+listview {
+    columns: 1;
+    lines: 8;
+    spacing: 4px;
+    cycle: true;
+    scrollbar: false;
+}
+
+element {
+    orientation: horizontal;
+    padding: 8px 12px;
+    border-radius: 6px;
+    spacing: 12px;
+    cursor: pointer;
+}
+
+element selected {
+    background-color: @accent;
+}
+
+element-icon {
+    size: 28px;
+    vertical-align: 0.5;
+}
+
+element-text {
+    vertical-align: 0.5;
+    text-color: @fg;
+    font: "Google Sans Flex 10.5";
+}
+
+element-text selected {
+    text-color: @bg-selected-text;
+    font: "Google Sans Flex Bold 10.5";
+}

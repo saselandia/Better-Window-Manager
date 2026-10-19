@@ -1,0 +1,74 @@
+configuration {
+    show-icons: false;
+}
+
+@import "plasma-colors.rasi"
+
+* {
+    font: "Google Sans Flex 11";
+    background-color: transparent;
+    text-color: @fg;
+}
+
+window {
+    width: 460px;
+    location: center;
+    anchor: center;
+    transparency: "real";
+    border-radius: 8px;
+    border: 2px solid;
+    border-color: @accent;
+    background-color: @bg;
+    padding: 16px;
+}
+
+mainbox {
+    children: [ inputbar, listview ];
+    spacing: 12px;
+}
+
+inputbar {
+    children: [ prompt ];
+    background-color: @bg-input;
+    border: 1px solid;
+    border-color: @bg-card;
+    border-radius: 6px;
+    padding: 10px 14px;
+}
+
+prompt {
+    text-color: @accent;
+    font: "Google Sans Flex Bold 11.5";
+}
+
+listview {
+    columns: 1;
+    lines: 4;
+    spacing: 6px;
+    cycle: true;
+    scrollbar: false;
+}
+
+element {
+    orientation: horizontal;
+    padding: 10px 14px;
+    border-radius: 6px;
+    spacing: 10px;
+    cursor: pointer;
+}
+
+element selected {
+    background-color: @accent;
+    border: 0px;
+}
+
+element-text {
+    vertical-align: 0.5;
+    text-color: @fg;
+    font: "Google Sans Flex 11";
+}
+
+element-text selected {
+    text-color: @bg-selected-text;
+    font: "Google Sans Flex Bold 11";
+}

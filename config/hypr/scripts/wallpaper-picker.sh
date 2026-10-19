@@ -12,6 +12,8 @@ CACHE_DIR="$HOME/.cache/wallpaper-thumbnails"
 CURRENT_THEME="$(python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py get 2>/dev/null || echo "default")"
 if [[ "$CURRENT_THEME" == "retro" ]]; then
     ROFI_THEME="$HOME/.config/rofi/wallpaper-picker-retro.rasi"
+elif [[ "$CURRENT_THEME" == "plasma" ]]; then
+    ROFI_THEME="$HOME/.config/rofi/wallpaper-picker-plasma.rasi"
 else
     ROFI_THEME="$HOME/.config/rofi/wallpaper-picker.rasi"
 fi
@@ -42,7 +44,7 @@ if [ ${#IMAGES[@]} -eq 0 ]; then
 fi
 
 # Generar miniaturas faltantes en paralelo usando Python multihilo ultrarrápido
-python3 - "${CACHE_DIR}" "${IMAGES[@]}" << 'EOF'
+python3 - "${CACHE_DIR}" "${IMAGES[@]}" << 'EOF_PY'
 import sys, os, hashlib, subprocess
 from concurrent.futures import ThreadPoolExecutor
 
@@ -65,7 +67,7 @@ def gen(img):
 
 with ThreadPoolExecutor(max_workers=8) as ex:
     list(ex.map(gen, images))
-EOF
+EOF_PY
 
 # Generar lista con miniaturas para Rofi
 ROFI_INPUT=""

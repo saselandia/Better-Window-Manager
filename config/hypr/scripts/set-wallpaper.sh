@@ -61,12 +61,18 @@ if [ -f "$PROFILE_JSON" ] && command -v jq >/dev/null 2>&1; then
     jq --arg path "$WALLPAPER" '.background.wallpaperPath = $path' "$PROFILE_JSON" > "$PROFILE_JSON.tmp" && mv "$PROFILE_JSON.tmp" "$PROFILE_JSON"
 fi
 
-# 3. Generar la paleta de colores con Matugen
-echo "Extrayendo colores del wallpaper..."
-timeout 10 matugen image --source-color-index 0 "$WALLPAPER" || true
-if [[ "$CURRENT_THEME" == "retro" ]]; then
+# 3. Generar la paleta de colores según el tema
+if [[ "$CURRENT_THEME" == "plasma" ]]; then
+    echo "Tema Plasma activo: manteniendo paleta estática Breeze Dark (sin Matugen ni recoloreo)."
+    python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py apply-plasma-colors 2>/dev/null || true
+elif [[ "$CURRENT_THEME" == "retro" ]]; then
+    echo "Extrayendo colores del wallpaper con Matugen y Omarchy..."
+    timeout 10 matugen image --source-color-index 0 "$WALLPAPER" || true
     echo "Sincronizando paleta viva de Omarchy para Kitty y terminal..."
     python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py apply-wallpaper-colors "$WALLPAPER" 2>/dev/null || true
+else
+    echo "Extrayendo colores del wallpaper..."
+    timeout 10 matugen image --source-color-index 0 "$WALLPAPER" || true
 fi
 
 # 3.1 Forzar recarga de colores en Quickshell (barra y widgets)

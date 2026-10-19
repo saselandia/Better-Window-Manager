@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Script: theme-picker.sh
-# Descripción: Selector interactivo de temas para BWM (Default vs Retro Omarchy)
+# Descripción: Selector interactivo de temas para BWM (Default, Retro, KDE Plasma)
 #              Cambia dinámicamente de aspecto según el tema activo.
 # ==============================================================================
 
@@ -12,16 +12,20 @@ CURRENT_THEME="$("$THEME_MANAGER" get 2>/dev/null || echo "default")"
 
 if [[ "$CURRENT_THEME" == "retro" ]]; then
     ROFI_THEME="$HOME/.config/rofi/theme-picker-retro.rasi"
+elif [[ "$CURRENT_THEME" == "plasma" ]]; then
+    ROFI_THEME="$HOME/.config/rofi/theme-picker-plasma.rasi"
 else
     ROFI_THEME="$HOME/.config/rofi/theme-picker.rasi"
 fi
 
-OPTIONS="🎨 Default (Material You)\n⚡ Retro (Omarchy)"
+OPTIONS="🎨 Default (Material You)\n⚡ Retro (Omarchy)\n❄️ KDE Plasma (Breeze Dark)"
 
 SELECTED_ROW=0
 case "$CURRENT_THEME" in
     "default") SELECTED_ROW=0 ;;
-    *) SELECTED_ROW=1 ;;
+    "retro")   SELECTED_ROW=1 ;;
+    "plasma")  SELECTED_ROW=2 ;;
+    *)         SELECTED_ROW=0 ;;
 esac
 
 CHOICE=$(echo -e "$OPTIONS" | rofi -dmenu \
@@ -40,5 +44,6 @@ fi
 case "$CHOICE" in
     0) "$THEME_MANAGER" set default ;;
     1) "$THEME_MANAGER" set retro ;;
+    2) "$THEME_MANAGER" set plasma ;;
     *) exit 0 ;;
 esac

@@ -15,8 +15,10 @@
 local ok, colors = pcall(require, "modules.colors")
 local ok_theme, active_theme = pcall(require, "modules.theme")
 local ok_retro, retro_colors = pcall(require, "modules.retro_colors")
+local ok_plasma, plasma_colors = pcall(require, "modules.plasma_colors")
 
 local is_retro = ok_theme and (active_theme.name == "retro" or (active_theme.name and string.find(active_theme.name, "retro") ~= nil))
+local is_plasma = ok_theme and (active_theme.name == "plasma" or (active_theme.name and string.find(active_theme.name, "plasma") ~= nil))
 local win_rounding = (ok_theme and active_theme.rounding) or 0
 local win_round_pwr = (ok_theme and active_theme.rounding_power) or 2
 local border_sz = (ok_theme and active_theme.border_size) or 2
@@ -50,7 +52,11 @@ local active_1
 local active_2
 local inactive
 
-if is_retro then
+if is_plasma then
+    active_1 = (ok_plasma and plasma_colors and plasma_colors.accent) or "rgba(3daee9ee)"
+    active_2 = (ok_plasma and plasma_colors and plasma_colors.secondary) or "rgba(1d99f3ee)"
+    inactive = (ok_plasma and plasma_colors and plasma_colors.border_inactive) or "rgba(31363baa)"
+elseif is_retro then
     active_1 = (ok_retro and retro_colors and retro_colors.accent) or boost_color(ok and colors.primary, "rgba(33ccffee)")
     active_2 = (ok_retro and retro_colors and retro_colors.secondary) or boost_color(ok and colors.secondary, "rgba(00ff99ee)")
     inactive = (ok_retro and retro_colors and retro_colors.border_inactive) or "rgba(101520aa)"
@@ -182,3 +188,70 @@ hl.config({
         disable_hyprland_logo   = false, -- If true disables the random hyprland logo / anime girl background. :(
     },
 })
+
+------------------------------------
+---- KDE PLASMA TITLEBAR & BARS ----
+------------------------------------
+
+hl.config({
+    group = {
+        auto_group = false,
+        drag_into_group = 0,
+        merge_groups_on_drag = false,
+        merge_groups_on_groupbar = false,
+        merge_floated_into_tiled_on_groupbar = false,
+        groupbar = {
+            enabled = false,
+        }
+    }
+})
+
+-- plugin.hyprbars solo se configura si el tema activo es Plasma y el plugin está cargado
+if is_plasma and hl.plugin and hl.plugin.hyprbars then
+    hl.config({
+        plugin = {
+            hyprbars = {
+                bar_color = "0xff31363b",
+                ["col.text"] = "0xffeff0f1",
+                bar_height = 28,
+                bar_text_size = 10,
+                bar_text_font = "Google Sans Flex",
+                bar_text_align = "left",
+                bar_part_of_window = true,
+                bar_precedence_over_border = true,
+                bar_buttons_alignment = "right",
+                bar_padding = 12,
+                bar_button_padding = 8,
+                icon_on_hover = false,
+                on_double_click = "fullscreen 1",
+            }
+        }
+    })
+
+    if hl.plugin.hyprbars.add_button then
+        -- Botón 1 (Extremo derecho): Cerrar (✕ Rojo Breeze)
+        hl.plugin.hyprbars.add_button({
+            bg_color = "0xffda4453",
+            fg_color = "0xffffffff",
+            size = 11,
+            icon = "✕",
+            action = "hyprctl dispatch killactive"
+        })
+        -- Botón 2 (Centro): Maximizar (□ Breeze)
+        hl.plugin.hyprbars.add_button({
+            bg_color = "0xff31363b",
+            fg_color = "0xffeff0f1",
+            size = 11,
+            icon = "□",
+            action = "hyprctl dispatch fullscreen 1"
+        })
+        -- Botón 3 (Izquierda): Minimizar (─ Breeze)
+        hl.plugin.hyprbars.add_button({
+            bg_color = "0xff31363b",
+            fg_color = "0xffeff0f1",
+            size = 11,
+            icon = "─",
+            action = "hyprctl dispatch movetoworkspacesilent special:minimized"
+        })
+    end
+end

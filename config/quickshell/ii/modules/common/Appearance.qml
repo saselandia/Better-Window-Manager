@@ -15,6 +15,7 @@ Singleton {
     property QtObject sizes
     property string syntaxHighlightingTheme
     readonly property bool isRetro: Config.options?.appearance?.bwmTheme === "retro"
+    readonly property bool isPlasma: Config.options?.appearance?.bwmTheme === "plasma"
 
     // Transparency. The quadratic functions were derived from analysis of hand-picked transparency values.
     ColorQuantizer {
@@ -208,8 +209,8 @@ Singleton {
         property int large: root.isRetro ? 0 : 23
         property int verylarge: root.isRetro ? 0 : 30
         property int full: root.isRetro ? 0 : 9999
-        property int screenRounding: root.isRetro ? 0 : large
-        property int windowRounding: root.isRetro ? 0 : 18
+        property int screenRounding: root.isRetro ? 0 : (root.isPlasma ? 0 : large)
+        property int windowRounding: root.isRetro ? 0 : (root.isPlasma ? 8 : 18)
     }
 
     font: QtObject {
@@ -386,7 +387,7 @@ Singleton {
     }
 
     sizes: QtObject {
-        property real baseBarHeight: (Config.options?.bar?.height > 0) ? Config.options.bar.height : (root.isRetro ? 24 : 40)
+        property real baseBarHeight: (Config.options?.bar?.height > 0) ? Config.options.bar.height : (root.isRetro ? 24 : (root.isPlasma ? 44 : 40))
         property real barHeight: Config.options.bar.cornerStyle === 1 ? 
             (baseBarHeight + root.sizes.hyprlandGapsOut * 2) : baseBarHeight
         property real barCenterSideModuleWidth: Config.options?.bar.verbose ? 360 : 140

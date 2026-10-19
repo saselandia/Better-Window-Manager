@@ -94,3 +94,29 @@ hl.window_rule({
     },
     workspace = "1",
 })
+
+--------------------------------
+---- KDE PLASMA RULES ----------
+--------------------------------
+
+local ok_theme, active_theme = pcall(require, "modules.theme")
+local is_plasma = ok_theme and (active_theme.name == "plasma" or (active_theme.name and string.find(active_theme.name, "plasma") ~= nil))
+
+if is_plasma then
+    -- 1. Todas las ventanas en modo flotante individual (sin mosaico)
+    hl.window_rule({
+        name  = "plasma-float-all",
+        match = { class = ".*" },
+        float = true,
+    })
+
+    -- 2. Aplicaciones con decoraciones CSD propias (Steam, Firefox, Discord, Antigravity, etc.):
+    --    No ponerles barra superior adicional hyprbars.
+    hl.window_rule({
+        name  = "plasma-csd-no-hyprbars",
+        match = {
+            class = "^(steam|firefox|firefox-bin|vesktop|discord|spotify|antigravity-ide|code|Code|org.gnome.Nautilus|nautilus|gamescope|signal)$",
+        },
+        ["hyprbars:no_bar"] = true,
+    })
+end

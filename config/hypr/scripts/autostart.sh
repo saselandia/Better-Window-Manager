@@ -139,3 +139,11 @@ if [ -f "$HOME/.config/hypr/scripts/autostart-manager.py" ]; then
     ) &
 fi
 
+
+# 9. Cargar plugins según el tema activo (hyprbars para KDE Plasma)
+if [ -f "/home/sasel/.config/hypr/modules/theme.lua" ] && grep -q 'name = "plasma"' "/home/sasel/.config/hypr/modules/theme.lua" 2>/dev/null; then
+    (
+        sleep 1
+        hyprctl plugin load "/home/sasel/.config/hypr/plugins/hyprbars.so" 2>/dev/null || true
+    ) &
+fi

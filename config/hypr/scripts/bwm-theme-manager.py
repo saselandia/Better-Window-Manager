@@ -2,9 +2,13 @@
 # -*- coding: utf-8 -*-
 """
 BWM Theme Manager (Better Window Manager)
-Manages and switches themes between Default (Material You) and Retro (Omarchy).
-Provides complete settings isolation (config-default.json vs config-retro.json),
-dynamic wallpaper color adaptation, and Hyprland / Quickshell synchronization.
+Manages and switches themes between:
+  1. Default (Material You)
+  2. Retro (Omarchy)
+  3. KDE Plasma (Breeze Dark)
+Provides complete settings isolation (config-default.json, config-retro.json, config-plasma.json),
+dynamic wallpaper color adaptation (omitted in Plasma to maintain official Breeze Dark palette),
+and Hyprland / Quickshell synchronization.
 """
 
 import sys
@@ -22,19 +26,23 @@ HYPR_THEME_LUA = CONFIG_DIR / "hypr" / "modules" / "theme.lua"
 II_CONFIG_JSON = CONFIG_DIR / "illogical-impulse" / "config.json"
 CONFIG_DEFAULT_JSON = CONFIG_DIR / "illogical-impulse" / "config-default.json"
 CONFIG_RETRO_JSON = CONFIG_DIR / "illogical-impulse" / "config-retro.json"
+CONFIG_PLASMA_JSON = CONFIG_DIR / "illogical-impulse" / "config-plasma.json"
 BTOP_CONF = CONFIG_DIR / "btop" / "btop.conf"
 KITTY_COLORS_CONF = CONFIG_DIR / "kitty" / "kitty-colors.conf"
 RETRO_COLORS_JSON = Path.home() / ".local" / "state" / "quickshell" / "user" / "generated" / "retro-colors.json"
 HYPR_RETRO_COLORS_LUA = CONFIG_DIR / "hypr" / "modules" / "retro_colors.lua"
+HYPR_PLASMA_COLORS_LUA = CONFIG_DIR / "hypr" / "modules" / "plasma_colors.lua"
 
 REPO_DIR = Path("/mnt/HDD1TB/Projects/hyprland-de")
 REPO_HYPR_THEME_LUA = REPO_DIR / "config" / "hypr" / "modules" / "theme.lua"
 REPO_II_CONFIG_JSON = REPO_DIR / "config" / "illogical-impulse" / "config.json"
 REPO_CONFIG_DEFAULT_JSON = REPO_DIR / "config" / "illogical-impulse" / "config-default.json"
 REPO_CONFIG_RETRO_JSON = REPO_DIR / "config" / "illogical-impulse" / "config-retro.json"
+REPO_CONFIG_PLASMA_JSON = REPO_DIR / "config" / "illogical-impulse" / "config-plasma.json"
 REPO_BTOP_CONF = REPO_DIR / "config" / "btop" / "btop.conf"
 REPO_KITTY_COLORS_CONF = REPO_DIR / "config" / "kitty" / "kitty-colors.conf"
 REPO_HYPR_RETRO_COLORS_LUA = REPO_DIR / "config" / "hypr" / "modules" / "retro_colors.lua"
+REPO_HYPR_PLASMA_COLORS_LUA = REPO_DIR / "config" / "hypr" / "modules" / "plasma_colors.lua"
 
 WALLPAPERS_DIR = Path.home() / "Pictures" / "Wallpapers"
 
@@ -50,9 +58,11 @@ THEMES = {
         "gaps_out": 8,
         "bar_corner_style": 2,
         "bar_height": 40,
+        "bar_bottom": False,
         "show_app_icons": True,
         "always_show_numbers": False,
         "is_retro": False,
+        "is_plasma": False,
         "fonts": {
             "main": "Google Sans Flex",
             "numbers": "Google Sans Flex",
@@ -75,9 +85,11 @@ THEMES = {
         "gaps_out": 5,
         "bar_corner_style": 2,
         "bar_height": 24,
+        "bar_bottom": False,
         "show_app_icons": False,
         "always_show_numbers": True,
         "is_retro": True,
+        "is_plasma": False,
         "fonts": {
             "main": "JetBrains Mono NF",
             "numbers": "JetBrains Mono NF",
@@ -88,6 +100,33 @@ THEMES = {
             "iconNerd": "JetBrains Mono NF"
         },
         "btop_rounded": False
+    },
+    "plasma": {
+        "title": "KDE Plasma (Breeze Dark)",
+        "description": "Estilo KDE Plasma 6 con barra inferior Breeze Dark, ventanas flotantes con barra superior y paleta estática",
+        "wallpaper": str(WALLPAPERS_DIR / "plasma.png"),
+        "rounding": 8,
+        "rounding_power": 2,
+        "border_size": 2,
+        "gaps_in": 0,
+        "gaps_out": 0,
+        "bar_corner_style": 2,
+        "bar_height": 44,
+        "bar_bottom": True,
+        "show_app_icons": True,
+        "always_show_numbers": True,
+        "is_retro": False,
+        "is_plasma": True,
+        "fonts": {
+            "main": "Google Sans Flex",
+            "numbers": "Google Sans Flex",
+            "title": "Google Sans Flex",
+            "monospace": "JetBrains Mono NF",
+            "reading": "Readex Pro",
+            "expressive": "Space Grotesk",
+            "iconNerd": "JetBrains Mono NF"
+        },
+        "btop_rounded": True
     }
 }
 
@@ -127,8 +166,14 @@ def get_theme_wallpaper(theme_name: str) -> str:
         except Exception:
             pass
 
-    # 2. Comprobar perfil JSON del tema (config-retro.json / config-default.json)
-    profile = CONFIG_RETRO_JSON if theme_name == "retro" else CONFIG_DEFAULT_JSON
+    # 2. Comprobar perfil JSON del tema
+    if theme_name == "plasma":
+        profile = CONFIG_PLASMA_JSON
+    elif theme_name == "retro":
+        profile = CONFIG_RETRO_JSON
+    else:
+        profile = CONFIG_DEFAULT_JSON
+
     if profile.exists():
         try:
             with open(profile, "r", encoding="utf-8") as f:
@@ -177,11 +222,19 @@ def save_current_theme_config(theme_name: str):
             except Exception:
                 pass
 
-        target = CONFIG_RETRO_JSON if theme_name == "retro" else CONFIG_DEFAULT_JSON
+        if theme_name == "plasma":
+            target = CONFIG_PLASMA_JSON
+            repo_target = REPO_CONFIG_PLASMA_JSON
+        elif theme_name == "retro":
+            target = CONFIG_RETRO_JSON
+            repo_target = REPO_CONFIG_RETRO_JSON
+        else:
+            target = CONFIG_DEFAULT_JSON
+            repo_target = REPO_CONFIG_DEFAULT_JSON
+
         with open(target, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
-        repo_target = REPO_CONFIG_RETRO_JSON if theme_name == "retro" else REPO_CONFIG_DEFAULT_JSON
         if repo_target.parent.exists():
             try:
                 with open(repo_target, "w", encoding="utf-8") as f:
@@ -193,12 +246,17 @@ def save_current_theme_config(theme_name: str):
 
 def load_theme_config(target_theme: str, cfg: dict):
     """
-    Restores the isolated config for the target theme, ensuring that
-    user settings made in Retro (Omarchy) don't overwrite Material You and vice-versa.
+    Restores the isolated config for the target theme, ensuring settings
+    between Default, Retro, and Plasma remain completely isolated and persistent.
     """
-    profile = CONFIG_RETRO_JSON if target_theme == "retro" else CONFIG_DEFAULT_JSON
-    data = None
+    if target_theme == "plasma":
+        profile = CONFIG_PLASMA_JSON
+    elif target_theme == "retro":
+        profile = CONFIG_RETRO_JSON
+    else:
+        profile = CONFIG_DEFAULT_JSON
 
+    data = None
     if profile.exists():
         try:
             with open(profile, "r", encoding="utf-8") as f:
@@ -229,18 +287,14 @@ def load_theme_config(target_theme: str, cfg: dict):
 
     if "bar" not in data:
         data["bar"] = {}
-    if "cornerStyle" not in data["bar"]:
-        data["bar"]["cornerStyle"] = cfg["bar_corner_style"]
+    data["bar"]["cornerStyle"] = cfg["bar_corner_style"]
+    data["bar"]["bottom"] = cfg.get("bar_bottom", False)
+    data["bar"]["height"] = cfg.get("bar_height", 44 if target_theme == "plasma" else (24 if target_theme == "retro" else 40))
 
     if "workspaces" not in data["bar"]:
         data["bar"]["workspaces"] = {}
-    if "showAppIcons" not in data["bar"]["workspaces"]:
-        data["bar"]["workspaces"]["showAppIcons"] = cfg["show_app_icons"]
-    if "alwaysShowNumbers" not in data["bar"]["workspaces"]:
-        data["bar"]["workspaces"]["alwaysShowNumbers"] = cfg.get("always_show_numbers", True)
-
-    if "height" not in data["bar"] or data["bar"]["height"] <= 0:
-        data["bar"]["height"] = cfg.get("bar_height", 24 if target_theme == "retro" else 40)
+    data["bar"]["workspaces"]["showAppIcons"] = cfg["show_app_icons"]
+    data["bar"]["workspaces"]["alwaysShowNumbers"] = cfg.get("always_show_numbers", True)
 
     # Restaurar el wallpaper persistente del tema objetivo
     wp = get_theme_wallpaper(target_theme)
@@ -248,7 +302,7 @@ def load_theme_config(target_theme: str, cfg: dict):
         data["background"] = {}
     data["background"]["wallpaperPath"] = wp
 
-    # Save to both the active config.json and the theme profile
+    # Guardar en config.json activo y en el perfil
     for target in [II_CONFIG_JSON, REPO_II_CONFIG_JSON]:
         if target.parent.exists():
             try:
@@ -334,26 +388,18 @@ def extract_vivid_palette(img_path: str):
         for count, (r, g, b) in colors:
             h, l, s = colorsys.rgb_to_hls(r/255.0, g/255.0, b/255.0)
             
-            # 1. Dark threshold: dark pixels must have real saturation to not be dark noise
             if l < 0.18 and s < 0.25:
                 continue
             if l < 0.06:
                 continue
-                
-            # 2. Bright threshold: bright pixels must have real saturation to not be white glare/snow
             if l > 0.85 and s < 0.16:
                 continue
             if l > 0.96:
                 continue
-                
-            # 3. Midtones (0.18 <= l <= 0.85): allow soft pastels down to s=0.10
             if s < 0.10:
                 continue
                 
-            # Weighting:
-            # Midtone lightness factor:
             l_factor = 1.0 - 0.45 * (abs(l - 0.52) ** 1.3)
-            # Prevalence-guided saturation (s ** 0.65)
             w = count * (s ** 0.65) * l_factor
             
             b_idx = int(h * 36) % 36
@@ -362,11 +408,9 @@ def extract_vivid_palette(img_path: str):
             bins[b_idx]["samples"].append((w, (r, g, b), h, l, s))
 
         if not bins:
-            # Pure B&W image fallback
             h, l, s = 0.58, 0.5, 0.8
             accent = "#38bdf8"
         else:
-            # Smooth across adjacent hue bins
             smoothed_bins = {}
             for i in range(36):
                 prev_i = (i - 1) % 36
@@ -385,22 +429,18 @@ def extract_vivid_palette(img_path: str):
             r, g, b = top_sample[1]
             h, l, s = top_sample[2], top_sample[3], top_sample[4]
 
-            # Boost saturation to electric vivid retro level
             s_vivid = min(1.0, max(0.85, s * 1.6))
             l_vivid = min(0.62, max(0.48, l))
             r_v, g_v, b_v = colorsys.hls_to_rgb(h, l_vivid, s_vivid)
             accent = f"#{int(r_v*255):02x}{int(g_v*255):02x}{int(b_v*255):02x}"
         
-        # Secondary: harmonious hue shift (~+43 deg)
         h_sec = (h + 0.12) % 1.0
         r_sec, g_sec, b_sec = colorsys.hls_to_rgb(h_sec, min(0.68, max(0.50, l)), s_vivid)
         secondary = f"#{int(r_sec*255):02x}{int(g_sec*255):02x}{int(b_sec*255):02x}"
         
-        # Deep void background tinted with the dominant hue
         r_bg, g_bg, b_bg = colorsys.hls_to_rgb(h, 0.05, 0.25)
         bg = f"#{int(r_bg*255):02x}{int(g_bg*255):02x}{int(b_bg*255):02x}"
         
-        # Terminal 16-color ANSI palette for Kitty
         hues = [0.0, 0.33, 0.14, 0.58, 0.83, 0.50]
         term = [bg]
         for hu in hues:
@@ -479,6 +519,105 @@ inactive_border_color {cols[8]}
         subprocess.run(["pkill", "-SIGUSR1", "kitty"], check=False)
     except Exception:
         pass
+
+def apply_plasma_colors():
+    """
+    Applies the official static KDE Plasma 6 Breeze Dark palette to Kitty,
+    Rofi, and Hyprland. Independent of wallpaper changes.
+    """
+    # 1. Kitty Terminal Breeze Dark palette
+    kitty_content = """# KDE Plasma Breeze Dark Colors for Kitty (Fixed Palette)
+background #24292e
+foreground #eff0f1
+selection_background #3daee9
+selection_foreground #ffffff
+cursor #3daee9
+cursor_text_color #24292e
+url_color #3daee9
+
+# Tabs
+active_tab_background #3daee9
+active_tab_foreground #ffffff
+inactive_tab_background #31363b
+inactive_tab_foreground #bdc3c7
+
+# Normal colors (Breeze Dark Konsole)
+color0  #232629
+color1  #ed1515
+color2  #11d116
+color3  #f67400
+color4  #1d99f3
+color5  #9b59b6
+color6  #1abc9c
+color7  #eff0f1
+
+# Bright colors
+color8  #7f8c8d
+color9  #c0392b
+color10 #27ae60
+color11 #fdbc4b
+color12 #3daee9
+color13 #8e44ad
+color14 #16a085
+color15 #ffffff
+
+# Window borders
+active_border_color #3daee9
+inactive_border_color #31363b
+"""
+    for target in [KITTY_COLORS_CONF, REPO_KITTY_COLORS_CONF]:
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with open(target, "w", encoding="utf-8") as f:
+                f.write(kitty_content)
+        except Exception as e:
+            print(f"[Warning] No se pudo escribir en {target}: {e}", file=sys.stderr)
+
+    try:
+        subprocess.run(["pkill", "-SIGUSR1", "kitty"], check=False)
+    except Exception:
+        pass
+
+    # 2. Hyprland plasma_colors.lua
+    lua_content = """-- Generado por bwm-theme-manager.py para el tema KDE Plasma (Breeze Dark estático)
+local plasma_colors = {
+    accent = "rgba(3daee9ee)",
+    secondary = "rgba(1d99f3ee)",
+    bg = "rgba(24292eee)",
+    border = "rgba(3daee9ee)",
+    border_inactive = "rgba(31363baa)",
+}
+return plasma_colors
+"""
+    for target in [HYPR_PLASMA_COLORS_LUA, REPO_HYPR_PLASMA_COLORS_LUA]:
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with open(target, "w", encoding="utf-8") as f:
+                f.write(lua_content)
+        except Exception as e:
+            print(f"[Warning] Error guardando {target}: {e}", file=sys.stderr)
+
+    # 3. Rofi plasma-colors.rasi
+    rofi_colors = """* {
+    accent: #3daee9;
+    secondary: #1d99f3;
+    bg: #24292ef4;
+    bg-card: #31363b;
+    bg-input: #1e2227;
+    fg: #eff0f1;
+    muted: #bdc3c7;
+    dim: #7f8c8d;
+    border: #3daee9;
+    bg-selected-text: #ffffff;
+}
+"""
+    for target in [CONFIG_DIR / "rofi" / "plasma-colors.rasi", REPO_DIR / "config" / "rofi" / "plasma-colors.rasi"]:
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with open(target, "w", encoding="utf-8") as f:
+                f.write(rofi_colors)
+        except Exception as e:
+            print(f"[Warning] Error guardando {target}: {e}", file=sys.stderr)
 
 def apply_retro_wallpaper_colors(wallpaper_path: str = None):
     """Applies a vivid, saturated Omarchy palette to Kitty, Quickshell retro-colors.json, and Hyprland."""
@@ -576,6 +715,76 @@ return retro_colors
     except Exception:
         pass
 
+def sync_floating_windows(to_plasma: bool):
+    """
+    Transitions window tiling/floating mode between themes:
+    - to_plasma=True: Makes all open windows floating (non-tiling layout) and adds top draggable groupbars.
+    - to_plasma=False: Ungroups windows and restores tiled layout for windows that aren't marked as persistent float in persistent_rules.json.
+    """
+    try:
+        res = subprocess.run(["hyprctl", "clients", "-j"], capture_output=True, text=True, timeout=2)
+        clients = json.loads(res.stdout)
+    except Exception as e:
+        print(f"[Warning] Error consultando clientes de Hyprland: {e}", file=sys.stderr)
+        return
+
+    plugin_path = str(CONFIG_DIR / "hypr" / "plugins" / "hyprbars.so")
+    if to_plasma:
+        subprocess.run(["hyprctl", "plugin", "load", plugin_path], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    else:
+        subprocess.run(["hyprctl", "plugin", "unload", plugin_path], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    persistent_float_classes = set()
+    persist_json = CONFIG_DIR / "hypr" / "persistent_rules.json"
+    if persist_json.exists():
+        try:
+            with open(persist_json, "r", encoding="utf-8") as f:
+                rules = json.load(f)
+                for k, v in rules.items():
+                    if v.get("float", True):
+                        c = v.get("match", {}).get("class", "")
+                        clean_c = c.replace("^", "").replace("$", "").replace("\\", "")
+                        if clean_c:
+                            persistent_float_classes.add(clean_c)
+        except Exception:
+            pass
+
+    for client in clients:
+        addr = client.get("address")
+        cls = client.get("class", "")
+        is_floating = client.get("floating", False)
+        grouped = client.get("grouped", [])
+        if not addr:
+            continue
+
+        is_terminal = any(term in cls.lower() for term in ["kitty", "alacritty", "xterm", "foot", "wezterm", "ghostty"])
+
+        if to_plasma:
+            # 1. Todas las ventanas en modo flotante individual
+            if not is_floating:
+                subprocess.run(["hyprctl", "dispatch", f'hl.dsp.focus({{ window = "address:{addr}" }})'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(["hyprctl", "dispatch", 'hl.dsp.window.float({ action = "set" })'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+            # 2. Asegurar que NINGUNA ventana esté agrupada (todas 100% individuales)
+            if len(grouped) > 0:
+                subprocess.run(["hyprctl", "dispatch", f'hl.dsp.focus({{ window = "address:{addr}" }})'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(["hyprctl", "dispatch", 'hl.dsp.group.toggle()'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            # Al salir de plasma: desagrupar cualquier grupo remanente
+            if len(grouped) > 0:
+                subprocess.run(["hyprctl", "dispatch", f'hl.dsp.focus({{ window = "address:{addr}" }})'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(["hyprctl", "dispatch", 'hl.dsp.group.toggle()'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+            # Restaurar mosaico si la ventana no estaba guardada como flotante persistente
+            is_persistent = False
+            for p_cls in persistent_float_classes:
+                if p_cls.lower() in cls.lower():
+                    is_persistent = True
+                    break
+            if not is_persistent and is_floating:
+                subprocess.run(["hyprctl", "dispatch", f'hl.dsp.focus({{ window = "address:{addr}" }})'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(["hyprctl", "dispatch", 'hl.dsp.window.float({ action = "unset" })'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
 def apply_theme(theme_name: str):
     """Applies theme across all subsystems, with complete isolation."""
     if theme_name not in THEMES:
@@ -612,10 +821,15 @@ def apply_theme(theme_name: str):
     if wp and os.path.exists(wp) and set_wp_script.exists():
         subprocess.run([str(set_wp_script), wp], check=False)
 
-    if cfg.get("is_retro"):
+    if cfg.get("is_plasma"):
+        apply_plasma_colors()
+    elif cfg.get("is_retro"):
         apply_retro_wallpaper_colors(wp)
 
-    # 5. Recargar Hyprland y Quickshell
+    # 5. Sincronizar el estado flotante / mosaico de las ventanas abiertas
+    sync_floating_windows(cfg.get("is_plasma", False))
+
+    # 6. Recargar Hyprland y Quickshell
     try:
         subprocess.run(["hyprctl", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception:
@@ -626,7 +840,7 @@ def apply_theme(theme_name: str):
     except Exception:
         pass
 
-    # Reiniciar Quickshell para aplicar altura de barra y diseño de barra
+    # Reiniciar Quickshell para aplicar altura de barra, orientación inferior y diseño
     try:
         subprocess.run(["pkill", "quickshell"], check=False)
         import time
@@ -643,13 +857,15 @@ def main():
 
     subparsers.add_parser("get", help="Obtener tema actual")
     subparsers.add_parser("list", help="Listar temas disponibles")
-    subparsers.add_parser("toggle", help="Alternar entre temas")
+    subparsers.add_parser("toggle", help="Alternar entre temas (Default -> Retro -> Plasma)")
 
     set_parser = subparsers.add_parser("set", help="Activar un tema específico")
     set_parser.add_argument("theme", choices=list(THEMES.keys()), help="Nombre del tema")
 
-    col_parser = subparsers.add_parser("apply-wallpaper-colors", help="Aplicar colores vivos a partir del wallpaper")
+    col_parser = subparsers.add_parser("apply-wallpaper-colors", help="Aplicar colores vivos a partir del wallpaper (Retro)")
     col_parser.add_argument("wallpaper", help="Ruta al wallpaper")
+
+    subparsers.add_parser("apply-plasma-colors", help="Aplicar colores Breeze Dark estáticos (Plasma)")
 
     args = parser.parse_args()
 
@@ -660,12 +876,19 @@ def main():
             print(f"{k}: {v['title']} - {v['description']}")
     elif args.action == "toggle":
         curr = get_current_theme()
-        nxt = "retro" if curr == "default" else "default"
+        cycle = ["default", "retro", "plasma"]
+        try:
+            idx = cycle.index(curr)
+            nxt = cycle[(idx + 1) % len(cycle)]
+        except ValueError:
+            nxt = "default"
         apply_theme(nxt)
     elif args.action == "set":
         apply_theme(args.theme)
     elif args.action == "apply-wallpaper-colors":
         apply_retro_wallpaper_colors(args.wallpaper)
+    elif args.action == "apply-plasma-colors":
+        apply_plasma_colors()
     else:
         parser.print_help()
 
