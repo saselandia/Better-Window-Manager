@@ -54,18 +54,18 @@ fi
 # 2. Agente de autenticación Polkit (Gentoo en /usr/libexec o PATH)
 if ! pidof hyprpolkitagent >/dev/null 2>&1; then
     if command -v hyprpolkitagent >/dev/null 2>&1; then
-        hyprpolkitagent &
+        nohup hyprpolkitagent >/dev/null 2>&1 & disown || true
     elif [ -x /usr/libexec/hyprpolkitagent ]; then
-        /usr/libexec/hyprpolkitagent &
+        nohup /usr/libexec/hyprpolkitagent >/dev/null 2>&1 & disown || true
     fi
 fi
 
 # 3. Demonio de wallpapers (swww)
 if ! pidof swww-daemon >/dev/null 2>&1; then
-    swww-daemon &
+    nohup swww-daemon >/dev/null 2>&1 & disown || true
 fi
 
-# 4. Restaurar el wallpaper guardado (solo si swww no está mostrando uno ya)
+# 4. Restaurar el wallpaper guardado
 (
     COUNT=0
     TIMEOUT=40
@@ -74,86 +74,76 @@ fi
         COUNT=$((COUNT + 1))
     done
 
-    # Solo restaurar si no hay una imagen activa mostrándose actualmente
-    if ! swww query 2>/dev/null | grep -q "currently displaying: image:"; then
-        WALLPAPER=""
-        # Prioridad 1: archivo de caché
-        if [ -f "$HOME/.cache/current_wallpaper" ] && [ -s "$HOME/.cache/current_wallpaper" ]; then
-            WALLPAPER="$(cat "$HOME/.cache/current_wallpaper")"
-        fi
+    WALLPAPER=""
+    if [ -f "$HOME/.cache/current_wallpaper" ] && [ -s "$HOME/.cache/current_wallpaper" ]; then
+        WALLPAPER="$(cat "$HOME/.cache/current_wallpaper")"
+    fi
 
-        # Prioridad 2: configuración de Illogical Impulse / Quickshell
-        if [ -z "$WALLPAPER" ] || [ ! -f "$WALLPAPER" ]; then
-            if [ -f "$HOME/.config/illogical-impulse/config.json" ] && command -v jq >/dev/null 2>&1; then
-                WALLPAPER="$(jq -r '.background.wallpaperPath // empty' "$HOME/.config/illogical-impulse/config.json" 2>/dev/null || true)"
-            fi
-        fi
-
-        # Prioridad 3: primera imagen en Pictures/Wallpapers o ~/Pictures
-        if [ -z "$WALLPAPER" ] || [ ! -f "$WALLPAPER" ]; then
-            WALLPAPER="$(find "$HOME/Pictures" -maxdepth 2 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) 2>/dev/null | head -n 1 || true)"
-        fi
-
-        # Prioridad 4: wallpaper por defecto del sistema
-        if [ -z "$WALLPAPER" ] || [ ! -f "$WALLPAPER" ]; then
-            if [ -f "/usr/share/hypr/wall0.png" ]; then
-                WALLPAPER="/usr/share/hypr/wall0.png"
-            fi
-        fi
-
-        if [ -n "$WALLPAPER" ] && [ -f "$WALLPAPER" ]; then
-            echo "$WALLPAPER" > "$HOME/.cache/current_wallpaper"
-            swww img "$WALLPAPER" --transition-type none 2>/dev/null || true
+    if [ -z "$WALLPAPER" ] || [ ! -f "$WALLPAPER" ]; then
+        if [ -f "$HOME/.config/illogical-impulse/config.json" ] && command -v jq >/dev/null 2>&1; then
+            WALLPAPER="$(jq -r '.background.wallpaperPath // empty' "$HOME/.config/illogical-impulse/config.json" 2>/dev/null || true)"
         fi
     fi
-) &
+
+    if [ -z "$WALLPAPER" ] || [ ! -f "$WALLPAPER" ]; then
+        WALLPAPER="$(find "$HOME/Pictures" -maxdepth 2 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) 2>/dev/null | head -n 1 || true)"
+    fi
+
+    if [ -z "$WALLPAPER" ] || [ ! -f "$WALLPAPER" ]; then
+        if [ -f "/usr/share/hypr/wall0.png" ]; then
+            WALLPAPER="/usr/share/hypr/wall0.png"
+        fi
+    fi
+
+    if [ -n "$WALLPAPER" ] && [ -f "$WALLPAPER" ]; then
+        echo "$WALLPAPER" > "$HOME/.cache/current_wallpaper"
+        swww img "$WALLPAPER" --transition-type none 2>/dev/null || true
+    fi
+) & disown || true
 
 # 5. Barra y entorno de escritorio Quickshell (End_4 / Illogical Impulse)
 if ! pidof quickshell >/dev/null 2>&1; then
     if command -v quickshell >/dev/null 2>&1; then
-        quickshell -c ii &
+        nohup quickshell -c ii >/run/user/$(id -u)/quickshell-session.log 2>&1 & disown || true
     fi
 fi
 
 # 6. Centro de notificaciones (swaync)
 if ! pidof swaync >/dev/null 2>&1; then
     if command -v swaync >/dev/null 2>&1; then
-        swaync &
+        nohup swaync >/dev/null 2>&1 & disown || true
     fi
 fi
 
 # 7. Demonio de portapapeles (cliphist con wl-paste)
 if ! pgrep -f '^wl-paste --type text' >/dev/null 2>&1; then
-    wl-paste --type text --watch cliphist store &
+    nohup wl-paste --type text --watch cliphist store >/dev/null 2>&1 & disown || true
 fi
 if ! pgrep -f '^wl-paste --type image' >/dev/null 2>&1; then
-    wl-paste --type image --watch cliphist store &
+    nohup wl-paste --type image --watch cliphist store >/dev/null 2>&1 & disown || true
 fi
 
 # 8. Aplicaciones de inicio automático del usuario (XDG Autostart / Quickshell Autostart)
 if [ -f "$HOME/.config/hypr/scripts/autostart-manager.py" ]; then
     (
-        # Esperar 2 segundos para dar tiempo a que Hyprland, los monitores y Xwayland estén listos
         sleep 2
         python3 "$HOME/.config/hypr/scripts/autostart-manager.py" run-all
-    ) &
+    ) & disown || true
 fi
-
 
 # 9. Cargar plugins según el tema activo (hyprbars para KDE Plasma)
 if [ -f "/home/sasel/.config/hypr/modules/theme.lua" ] && grep -q 'name = "plasma"' "/home/sasel/.config/hypr/modules/theme.lua" 2>/dev/null; then
     (
         sleep 1
         hyprctl plugin load "/home/sasel/.config/hypr/plugins/hyprbars.so" 2>/dev/null || true
-    ) &
+    ) & disown || true
 fi
 
 # 10. Asegurar que las pantallas abran en Workspace 1 (Principal 4K) y Workspace 10 (Secundario 1080p)
 (
-    # Esperar a que terminen de lanzarse las aplicaciones de autostart
     sleep 3.5
     hyprctl dispatch 'hl.dsp.focus({ monitor = "desc:HP Inc. HP X24ih 1CR1420TD4" })' 2>/dev/null || hyprctl dispatch 'hl.dsp.focus({ monitor = "DP-2" })' 2>/dev/null || true
     hyprctl dispatch 'hl.dsp.focus({ workspace = 10 })' 2>/dev/null || true
     hyprctl dispatch 'hl.dsp.focus({ monitor = "desc:LG Electronics LG ULTRAFINE 405NTVS2J655" })' 2>/dev/null || hyprctl dispatch 'hl.dsp.focus({ monitor = "DP-1" })' 2>/dev/null || true
     hyprctl dispatch 'hl.dsp.focus({ workspace = 1 })' 2>/dev/null || true
-) &
+) & disown || true
