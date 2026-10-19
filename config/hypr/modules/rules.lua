@@ -120,3 +120,16 @@ if is_plasma then
         ["hyprbars:no_bar"] = true,
     })
 end
+
+--------------------------------
+---- ELECTRON / BROWSER RULES --
+--------------------------------
+
+-- Evitar que Electron / Chromium / Vesktop / Discord congelen WebRTC, decodificadores de video o caigan a 2 FPS al minimizar/perder foco
+hl.window_rule({
+    name = "electron-render-unfocused",
+    match = {
+        class = "^(vesktop|discord|armcord|webcord|google-chrome.*|chromium.*|brave-browser|zen.*|firefox.*|code|Code|code-oss|vscodium|cursor|antigravity-ide|obsidian|spotify)$",
+    },
+    render_unfocused = true,
+})

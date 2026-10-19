@@ -1,5 +1,6 @@
 #include <hyprland/src/plugins/PluginAPI.hpp>
 #include <hyprland/src/Compositor.hpp>
+#include <hyprland/src/render/Renderer.hpp>
 #include <hyprland/src/desktop/state/FocusState.hpp>
 #include <hyprland/src/desktop/view/Window.hpp>
 #include <hyprland/src/protocols/XDGShell.hpp>
@@ -89,6 +90,11 @@ static void restoreWindow(PHLWINDOW pw) {
     Config::Actions::moveToWorkspace(targetWS, false, pw);
     g_pCompositor->changeWindowZOrder(pw, true);
     Config::Actions::focus(pw);
+
+    // Wake up Wayland surface configure and force renderer damage to prevent 2 FPS bug in Electron/Chromium
+    pw->sendWindowSize(true);
+    if (g_pHyprRenderer)
+        g_pHyprRenderer->damageWindow(pw, true);
 
     auto minWS = g_pCompositor->getWorkspaceByName("special:minimized");
     auto mon = pw->m_monitor.lock();

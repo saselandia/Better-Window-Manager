@@ -88,6 +88,12 @@ def restore_win(client: dict):
             pcall(function() hl.dispatch(hl.dsp.window.alter_zorder({{ mode = "top", window = w }})) end)
             hl.dispatch(hl.dsp.focus({{ window = w }}))
             pcall(function() hl.dispatch(hl.dsp.window.clear_tags(w)) end)
+            if w.floating and w.size and w.size.x and w.size.y then
+                pcall(function()
+                    hl.dispatch(hl.dsp.window.resize({{ x = w.size.x + 1, y = w.size.y, window = w }}))
+                    hl.dispatch(hl.dsp.window.resize({{ x = w.size.x, y = w.size.y, window = w }}))
+                end)
+            end
             if cur and cur.x and cur.y then
                 pcall(function() hl.dispatch(hl.dsp.cursor.move({{ x = cur.x, y = cur.y }})) end)
             end
