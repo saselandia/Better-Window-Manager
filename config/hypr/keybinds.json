@@ -1025,7 +1025,147 @@
     "dispatcher": null,
     "dispatcher_arg": null,
     "options": {},
-    "is_default": true,
+    "is_default": false,
+    "enabled": true,
+    "is_modified": false
+  },
+  {
+    "id": "custom_1792430113_59",
+    "category": "Ventanas",
+    "description": "Ajustar ventana a la izquierda (Quick Tile Left)",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "left",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/quick-tile.py left",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "is_modified": false
+  },
+  {
+    "id": "custom_1792430113_60",
+    "category": "Ventanas",
+    "description": "Ajustar ventana a la derecha (Quick Tile Right)",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "right",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/quick-tile.py right",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "is_modified": false
+  },
+  {
+    "id": "custom_1792430113_61",
+    "category": "Ventanas",
+    "description": "Maximizar ventana (Quick Tile Top)",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "up",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/quick-tile.py top",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "is_modified": false
+  },
+  {
+    "id": "custom_1792430113_62",
+    "category": "Ventanas",
+    "description": "Restaurar / Ajustar abajo (Quick Tile Bottom)",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "down",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/quick-tile.py bottom",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "is_modified": false
+  },
+  {
+    "id": "custom_1792430113_63",
+    "category": "Ventanas",
+    "description": "Ajustar esquina superior izquierda (Quick Tile)",
+    "mods": [
+      "SUPER",
+      "ALT"
+    ],
+    "key": "left",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/quick-tile.py top-left",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "is_modified": false
+  },
+  {
+    "id": "custom_1792430113_64",
+    "category": "Ventanas",
+    "description": "Ajustar esquina superior derecha (Quick Tile)",
+    "mods": [
+      "SUPER",
+      "ALT"
+    ],
+    "key": "right",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/quick-tile.py top-right",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "is_modified": false
+  },
+  {
+    "id": "custom_1792430113_65",
+    "category": "Ventanas",
+    "description": "Ajustar esquina inferior derecha (Quick Tile)",
+    "mods": [
+      "SUPER",
+      "ALT"
+    ],
+    "key": "down",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/quick-tile.py bottom-right",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "is_modified": false
+  },
+  {
+    "id": "custom_1792430113_66",
+    "category": "Ventanas",
+    "description": "Ajustar esquina inferior izquierda (Quick Tile)",
+    "mods": [
+      "SUPER",
+      "ALT"
+    ],
+    "key": "up",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/quick-tile.py bottom-left",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
     "enabled": true,
     "is_modified": false
   }

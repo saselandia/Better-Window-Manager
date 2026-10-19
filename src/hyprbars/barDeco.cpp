@@ -218,6 +218,43 @@ bool CHyprBar::inputIsValid() {
     return true;
 }
 
+
+static void checkAndTriggerEdgeSnap(const Vector2D& mousePos) {
+    auto pMonitor = g_pCompositor->getMonitorFromCursor();
+    if (!pMonitor)
+        return;
+
+    const int EDGE_THRESHOLD   = 8;
+    const int CORNER_THRESHOLD = 80;
+
+    bool atTop    = (mousePos.y <= pMonitor->m_position.y + EDGE_THRESHOLD);
+    bool atBottom = (mousePos.y >= pMonitor->m_position.y + pMonitor->m_size.y - EDGE_THRESHOLD);
+    bool atLeft   = (mousePos.x <= pMonitor->m_position.x + EDGE_THRESHOLD);
+    bool atRight  = (mousePos.x >= pMonitor->m_position.x + pMonitor->m_size.x - EDGE_THRESHOLD);
+
+    if (atTop) {
+        if (atLeft || mousePos.x <= pMonitor->m_position.x + CORNER_THRESHOLD) {
+            Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/quick-tile.py top-left");
+        } else if (atRight || mousePos.x >= pMonitor->m_position.x + pMonitor->m_size.x - CORNER_THRESHOLD) {
+            Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/quick-tile.py top-right");
+        } else {
+            Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/quick-tile.py top");
+        }
+    } else if (atLeft) {
+        if (atBottom || mousePos.y >= pMonitor->m_position.y + pMonitor->m_size.y - CORNER_THRESHOLD) {
+            Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-left");
+        } else {
+            Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/quick-tile.py left");
+        }
+    } else if (atRight) {
+        if (atBottom || mousePos.y >= pMonitor->m_position.y + pMonitor->m_size.y - CORNER_THRESHOLD) {
+            Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-right");
+        } else {
+            Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/quick-tile.py right");
+        }
+    }
+}
+
 void CHyprBar::onMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent e) {
     if (e.button != BTN_LEFT)
         return;
@@ -235,6 +272,7 @@ void CHyprBar::onMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent 
                 if (m_bDragInitiated) {
                     Cursor::overrideController->unsetOverride(Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
                     info.cancelled = true;
+                    checkAndTriggerEdgeSnap(g_pInputManager->getMouseCoordsInternal());
                 }
                 m_bDraggingCSD   = false;
                 m_bDragInitiated = false;
@@ -470,6 +508,7 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
     }
 }
 
+
 void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
     if (m_bCancelledDown)
         info.cancelled = true;
@@ -483,6 +522,7 @@ void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
             Config::Actions::floatWindow(Config::Actions::eTogglableAction::TOGGLE_ACTION_DISABLE);
 
         Log::logger->log(Log::DEBUG, "[hyprbars] Dragging ended on {:x}", (uintptr_t)m_pWindow.lock().get());
+        checkAndTriggerEdgeSnap(g_pInputManager->getMouseCoordsInternal());
     }
 
     m_bDragPending = false;
@@ -491,6 +531,10 @@ void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
 }
 
 void CHyprBar::handleMovement() {
+    auto PWINDOW = m_pWindow.lock();
+    if (validMapped(PWINDOW) && PWINDOW->isFullscreen()) {
+        g_pCompositor->setWindowFullscreenInternal(PWINDOW, FSMODE_NONE);
+    }
     g_pKeybindManager->changeMouseBindMode(MBIND_MOVE);
     m_bDraggingThis = true;
     Log::logger->log(Log::DEBUG, "[hyprbars] Dragging initiated on {:x}", (uintptr_t)m_pWindow.lock().get());

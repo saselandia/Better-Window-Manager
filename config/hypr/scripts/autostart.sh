@@ -147,3 +147,13 @@ if [ -f "/home/sasel/.config/hypr/modules/theme.lua" ] && grep -q 'name = "plasm
         hyprctl plugin load "/home/sasel/.config/hypr/plugins/hyprbars.so" 2>/dev/null || true
     ) &
 fi
+
+# 10. Asegurar que las pantallas abran en Workspace 1 (Principal 4K) y Workspace 10 (Secundario 1080p)
+(
+    # Esperar a que terminen de lanzarse las aplicaciones de autostart
+    sleep 3.5
+    hyprctl dispatch 'hl.dsp.focus({ monitor = "desc:HP Inc. HP X24ih 1CR1420TD4" })' 2>/dev/null || hyprctl dispatch 'hl.dsp.focus({ monitor = "DP-2" })' 2>/dev/null || true
+    hyprctl dispatch 'hl.dsp.focus({ workspace = 10 })' 2>/dev/null || true
+    hyprctl dispatch 'hl.dsp.focus({ monitor = "desc:LG Electronics LG ULTRAFINE 405NTVS2J655" })' 2>/dev/null || hyprctl dispatch 'hl.dsp.focus({ monitor = "DP-1" })' 2>/dev/null || true
+    hyprctl dispatch 'hl.dsp.focus({ workspace = 1 })' 2>/dev/null || true
+) &

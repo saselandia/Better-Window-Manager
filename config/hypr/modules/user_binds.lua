@@ -5,7 +5,7 @@
 
 local terminal    = "kitty"
 local fileManager = "nautilus"
-local menu        = "/home/sasel/.config/hypr/scripts/app-launcher.sh"
+local menu        = "quickshell -c ii ipc call search toggle || rofi -show drun"
 
 -- [General]
 hl.bind("ALT + A", hl.dsp.exec_cmd("quickshell -c ii ipc call cheatsheet toggle"), { description = "General: Guía de atajos (Cheatsheet)" })
@@ -74,6 +74,15 @@ hl.bind("ALT + 0", hl.dsp.focus({ workspace = 10 }), { description = "Espacios d
 hl.bind("ALT + SHIFT + 0", hl.dsp.window.move({ workspace = 10 }), { description = "Espacios de trabajo: Mover ventana al espacio de trabajo 10" })
 -- [Lanzadores]
 hl.bind("ALT + T", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/theme-picker.sh"), { description = "Lanzadores: Selector de temas (BWM)" })
+-- [Ventanas]
+hl.bind("SUPER + left", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py left"), { description = "Ventanas: Ajustar ventana a la izquierda (Quick Tile Left)" })
+hl.bind("SUPER + right", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py right"), { description = "Ventanas: Ajustar ventana a la derecha (Quick Tile Right)" })
+hl.bind("SUPER + up", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top"), { description = "Ventanas: Maximizar ventana (Quick Tile Top)" })
+hl.bind("SUPER + down", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom"), { description = "Ventanas: Restaurar / Ajustar abajo (Quick Tile Bottom)" })
+hl.bind("SUPER + ALT + left", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top-left"), { description = "Ventanas: Ajustar esquina superior izquierda (Quick Tile)" })
+hl.bind("SUPER + ALT + right", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top-right"), { description = "Ventanas: Ajustar esquina superior derecha (Quick Tile)" })
+hl.bind("SUPER + ALT + down", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-right"), { description = "Ventanas: Ajustar esquina inferior derecha (Quick Tile)" })
+hl.bind("SUPER + ALT + up", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-left"), { description = "Ventanas: Ajustar esquina inferior izquierda (Quick Tile)" })
 
 -- Alt+Tab Helper Releases
 hl.bind("ALT + SHIFT + TAB", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab prev"), { repeating = true })

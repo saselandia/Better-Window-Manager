@@ -82,6 +82,15 @@ hl.config({
         resize_on_border = true,
         allow_tearing    = false,
         layout           = "dwindle",
+
+        -- Window Snapping magnético para ventanas flotantes (Hyprland 0.45+)
+        snap = {
+            enabled        = true,
+            window_gap     = 10,
+            monitor_gap    = 10,
+            border_overlap = false,
+            respect_gaps   = true,
+        },
     },
 
     decoration = {

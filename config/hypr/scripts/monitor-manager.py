@@ -18,7 +18,7 @@ def load_workspace_config():
                 return json.load(f)
         except Exception:
             pass
-    return {"primary_monitor": "DP-3", "monitor_workspaces": {"DP-3": "1-9", "DP-2": "10"}}
+    return {"primary_monitor": "DP-1", "monitor_workspaces": {"DP-1": "1-9", "DP-2": "10"}}
 
 def save_workspace_config(cfg):
     try:
@@ -36,12 +36,12 @@ def get_monitors():
         return []
 
     ws_cfg = load_workspace_config()
-    primary_name = ws_cfg.get("primary_monitor", "DP-3")
+    primary_name = ws_cfg.get("primary_monitor", "DP-1")
     monitor_workspaces = ws_cfg.get("monitor_workspaces", {})
     
     connected_names = [m.get("name") for m in data]
     if primary_name not in connected_names and connected_names:
-        primary_name = "DP-3" if "DP-3" in connected_names else connected_names[0]
+        primary_name = "DP-1" if "DP-1" in connected_names else connected_names[0]
 
     result = []
     for m in data:
@@ -126,7 +126,7 @@ def write_monitors_lua(monitors):
     if primary_candidate:
         ws_cfg["primary_monitor"] = primary_candidate
     elif ws_cfg.get("primary_monitor") not in [m["name"] for m in active_monitors]:
-        ws_cfg["primary_monitor"] = "DP-3" if any(m["name"] == "DP-3" for m in active_monitors) else (active_monitors[0]["name"] if active_monitors else "DP-3")
+        ws_cfg["primary_monitor"] = "DP-1" if any(m["name"] == "DP-1" for m in active_monitors) else (active_monitors[0]["name"] if active_monitors else "DP-1")
 
     if "monitor_workspaces" not in ws_cfg:
         ws_cfg["monitor_workspaces"] = {}
@@ -183,7 +183,7 @@ def write_monitors_lua(monitors):
         "",
     ])
 
-    primary_name = ws_cfg.get("primary_monitor", "DP-3")
+    primary_name = ws_cfg.get("primary_monitor", "DP-1")
     for m in active_monitors:
         m_name = m["name"]
         is_prim = (m_name == primary_name)
