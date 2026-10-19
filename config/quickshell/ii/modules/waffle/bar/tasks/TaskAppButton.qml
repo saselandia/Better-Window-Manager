@@ -46,7 +46,7 @@ AppButton {
         if (root.multiple) {
             root.hoverPreviewRequested()
         } else if (root.appEntry.toplevels.length === 1) {
-            root.appEntry.toplevels[0].activate()
+            Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/toggle-minimize.py", "toggle-app", root.appEntry.appId])
         } else {
             root.desktopEntry.execute()
         }

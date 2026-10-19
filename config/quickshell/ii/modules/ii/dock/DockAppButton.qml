@@ -66,6 +66,10 @@ DockButton {
             root.desktopEntry?.execute();
             return;
         }
+        if (root.appIsActive && appToplevel.toplevels.length === 1) {
+            Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/toggle-minimize.py", "toggle-app", appToplevel.appId]);
+            return;
+        }
         lastFocused = (lastFocused + 1) % appToplevel.toplevels.length
         appToplevel.toplevels[lastFocused].activate()
     }

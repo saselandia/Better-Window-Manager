@@ -24,6 +24,8 @@
 
 #include "globals.hpp"
 #include "BarPassElement.hpp"
+#include <hyprland/src/protocols/XDGShell.hpp>
+#include <hyprland/src/xwayland/XSurface.hpp>
 
 #include <climits>
 #include <linux/input-event-codes.h>
@@ -137,6 +139,28 @@ CHyprBar::CHyprBar(PHLWINDOW pWindow) : IHyprWindowDecoration(pWindow) {
     g_pAnimationManager->createAnimation(configColor(g_pGlobalState->config.barColor->value()), m_cRealBarColor, Config::animationTree()->getAnimationPropertyConfig("border"),
                                          pWindow, AVARDAMAGE_NONE);
     m_cRealBarColor->setUpdateCallback([&](auto) { damageEntire(); });
+
+    // Listen for minimize requests from client-side decorations (CSD windows like Steam, Firefox, Chrome, etc.)
+    auto pXDG = pWindow->m_xdgSurface.lock();
+    if (pXDG && pXDG->m_toplevel.lock()) {
+        m_pStateChangedCallback = pXDG->m_toplevel.lock()->m_events.stateChanged.listen([this, wpTop = pXDG->m_toplevel] {
+            auto top = wpTop.lock();
+            auto pw = m_pWindow.lock();
+            if (pw && top && top->m_state.requestsMinimize.value_or(false)) {
+                std::string addr = std::format("0x{:x}", (uintptr_t)pw.get());
+                Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/toggle-minimize.py min " + addr);
+            }
+        });
+    } else if (auto pXWayland = pWindow->m_xwaylandSurface.lock()) {
+        m_pStateChangedCallback = pXWayland->m_events.stateChanged.listen([this, wpXW = pWindow->m_xwaylandSurface] {
+            auto xw = wpXW.lock();
+            auto pw = m_pWindow.lock();
+            if (pw && xw && xw->m_state.requestsMinimize.value_or(false)) {
+                std::string addr = std::format("0x{:x}", (uintptr_t)pw.get());
+                Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/toggle-minimize.py min " + addr);
+            }
+        });
+    }
 }
 
 CHyprBar::~CHyprBar() {
@@ -550,8 +574,12 @@ bool CHyprBar::doButtonPress(Config::INTEGER barPadding, Config::INTEGER barButt
         Vector2D   currentPos = Vector2D{(BUTTONSRIGHT ? BARBUF.x - barButtonPadding - b.size - offset : offset), (BARBUF.y - b.size) / 2.0}.floor();
 
         if (VECINRECT(COORDS, currentPos.x, currentPos.y, currentPos.x + b.size + barButtonPadding, currentPos.y + b.size)) {
-            // hit on close
-            g_pKeybindManager->m_dispatchers["exec"](b.cmd);
+            // hit on button
+            std::string cmd = b.cmd;
+            if (cmd.find("toggle-minimize.py min") != std::string::npos && m_pWindow.lock()) {
+                cmd += " " + std::format("0x{:x}", (uintptr_t)m_pWindow.lock().get());
+            }
+            g_pKeybindManager->m_dispatchers["exec"](cmd);
             return true;
         }
 
@@ -933,6 +961,29 @@ void CHyprBar::updateRules() {
         g_pDecorationPositioner->repositionDeco(this);
     if (prevForcedTitleColor != m_bForcedTitleColor)
         m_bTitleColorChanged = true;
+
+    if (!m_pStateChangedCallback) {
+        auto pXDG = PWINDOW->m_xdgSurface.lock();
+        if (pXDG && pXDG->m_toplevel.lock()) {
+            m_pStateChangedCallback = pXDG->m_toplevel.lock()->m_events.stateChanged.listen([this, wpTop = pXDG->m_toplevel] {
+                auto top = wpTop.lock();
+                auto pw = m_pWindow.lock();
+                if (pw && top && top->m_state.requestsMinimize.value_or(false)) {
+                    std::string addr = std::format("0x{:x}", (uintptr_t)pw.get());
+                    Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/toggle-minimize.py min " + addr);
+                }
+            });
+        } else if (auto pXWayland = PWINDOW->m_xwaylandSurface.lock()) {
+            m_pStateChangedCallback = pXWayland->m_events.stateChanged.listen([this, wpXW = PWINDOW->m_xwaylandSurface] {
+                auto xw = wpXW.lock();
+                auto pw = m_pWindow.lock();
+                if (pw && xw && xw->m_state.requestsMinimize.value_or(false)) {
+                    std::string addr = std::format("0x{:x}", (uintptr_t)pw.get());
+                    Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/toggle-minimize.py min " + addr);
+                }
+            });
+        }
+    }
 }
 
 void CHyprBar::damageOnButtonHover() {

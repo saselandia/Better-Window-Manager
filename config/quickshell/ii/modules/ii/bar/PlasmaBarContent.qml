@@ -168,7 +168,7 @@ Item {
                                 taskItem.lastFocusedIdx = (taskItem.lastFocusedIdx + 1) % taskItem.modelData.toplevels.length;
                                 taskItem.modelData.toplevels[taskItem.lastFocusedIdx].activate();
                             } else {
-                                taskItem.modelData.toplevels[0].activate();
+                                Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/toggle-minimize.py", "toggle-app", taskItem.modelData.appId]);
                             }
                         } else if (taskItem.desktopEntry) {
                             taskItem.desktopEntry.execute();

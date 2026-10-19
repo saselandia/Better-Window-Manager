@@ -261,7 +261,7 @@ if is_plasma and hl.plugin and hl.plugin.hyprbars then
             fg_color = "0xffeff0f1",
             size = 12,
             icon = "─",
-            action = "hyprctl dispatch movetoworkspacesilent special:minimized"
+            action = "/home/sasel/.config/hypr/scripts/toggle-minimize.py min"
         })
     end
 end
