@@ -234,6 +234,7 @@ void CHyprBar::onMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent 
                 }
                 if (m_bDragInitiated) {
                     Cursor::overrideController->unsetOverride(Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
+                    info.cancelled = true;
                 }
                 m_bDraggingCSD   = false;
                 m_bDragInitiated = false;
@@ -399,9 +400,6 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
         if (PWINDOW->m_isFloating)
             g_pCompositor->changeWindowZOrder(PWINDOW, true);
 
-        info.cancelled   = true;
-        m_bCancelledDown = true;
-
         // Double click: maximize / restore
         auto now = Time::steadyNow();
         auto diffMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_lastMouseDown).count();
@@ -414,6 +412,8 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
             m_bDraggingCSD   = false;
             m_bDragInitiated = false;
             m_lastMouseDown  = Time::steadyNow() - std::chrono::seconds(5);
+            info.cancelled   = true;
+            m_bCancelledDown = true;
             return;
         }
 
