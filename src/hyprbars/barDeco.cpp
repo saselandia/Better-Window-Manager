@@ -292,33 +292,37 @@ void CHyprBar::onMouseMove(Vector2D coords) {
                 return;
 
             m_bDragInitiated = true;
-            m_vLastMousePos  = currentMouse;
             Cursor::overrideController->setOverride("grabbing", Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
         }
 
-        Vector2D stepDelta = currentMouse - m_vLastMousePos;
-        m_vLastMousePos    = currentMouse;
+        if (!PWINDOW->m_isFloating) {
+            g_layoutManager->changeFloatingMode(PWINDOW->layoutTarget());
+        }
+        if (PWINDOW->isFullscreen()) {
+            g_pCompositor->setWindowFullscreenInternal(PWINDOW, FSMODE_NONE);
+        }
 
-        if (stepDelta.x != 0 || stepDelta.y != 0) {
-            if (!PWINDOW->m_isFloating) {
-                g_layoutManager->changeFloatingMode(PWINDOW->layoutTarget());
-            }
-            if (PWINDOW->isFullscreen()) {
-                g_pCompositor->setWindowFullscreenInternal(PWINDOW, FSMODE_NONE);
-            }
+        // Exact window tracking: window top-left is positioned so m_vGrabOffset stays under the cursor
+        Vector2D newPos = (currentMouse - m_vGrabOffset).round();
+        Vector2D size   = PWINDOW->layoutTarget()->position().size();
+        CBox     newBox = {newPos, size};
 
-            Config::Actions::move(stepDelta, true, PWINDOW);
-            PWINDOW->layoutTarget()->warpPositionSize();
-            PWINDOW->updateWindowDecos();
-            g_pHyprRenderer->damageWindow(PWINDOW);
+        PWINDOW->layoutTarget()->setPositionGlobal(newBox);
+        PWINDOW->layoutTarget()->warpPositionSize();
+        PWINDOW->updateWindowDecos();
+        g_pHyprRenderer->damageWindow(PWINDOW);
 
-            Vector2D middle = PWINDOW->layoutTarget()->position().middle();
-            const auto PMONITOR = g_pCompositor->getMonitorFromVector(middle);
-            if (PMONITOR && PMONITOR->m_activeWorkspace && PWINDOW->m_isFloating) {
-                const auto WS = PMONITOR->m_activeSpecialWorkspace ? PMONITOR->m_activeSpecialWorkspace : PMONITOR->m_activeWorkspace;
-                if (PWINDOW->m_workspace != WS) {
-                    PWINDOW->layoutTarget()->assignToSpace(WS->m_space);
-                }
+        Vector2D middle = newBox.middle();
+        const auto PMONITOR = g_pCompositor->getMonitorFromVector(middle);
+        if (PMONITOR && PMONITOR->m_activeWorkspace && PWINDOW->m_isFloating) {
+            const auto WS = PMONITOR->m_activeSpecialWorkspace ? PMONITOR->m_activeSpecialWorkspace : PMONITOR->m_activeWorkspace;
+            if (PWINDOW->m_workspace != WS) {
+                PWINDOW->layoutTarget()->assignToSpace(WS->m_space);
+                // Immediately re-anchor window to exact cursor position so assignToSpace does not jump
+                PWINDOW->layoutTarget()->setPositionGlobal(newBox);
+                PWINDOW->layoutTarget()->warpPositionSize();
+                PWINDOW->updateWindowDecos();
+                g_pHyprRenderer->damageWindow(PWINDOW);
             }
         }
         return;
@@ -417,7 +421,7 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
         m_bDraggingCSD    = true;
         m_bDragInitiated  = false;
         m_vDragStartMouse = g_pInputManager->getMouseCoordsInternal();
-        m_vLastMousePos   = m_vDragStartMouse;
+        m_vGrabOffset     = mousePos;
         return;
     }
 

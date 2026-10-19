@@ -115,7 +115,7 @@ class CHyprBar : public IHyprWindowDecoration {
     bool                m_bDraggingCSD   = false;
     bool                m_bDragInitiated = false;
     Vector2D            m_vDragStartMouse;
-    Vector2D            m_vLastMousePos;
+    Vector2D            m_vGrabOffset;
 
     // store hover state for buttons as a bitfield
     unsigned int m_iButtonHoverState = 0;
