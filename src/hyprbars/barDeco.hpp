@@ -52,6 +52,8 @@ class CHyprBar : public IHyprWindowDecoration {
     void                               onConfigReloaded();
 
     WP<CHyprBar>                       m_self;
+    bool                               m_hidden = false;
+    bool                               inputIsValid();
 
   private:
     SBoxExtents                m_seExtents;
@@ -63,7 +65,7 @@ class CHyprBar : public IHyprWindowDecoration {
     SP<Render::ITexture>       m_pTextTex;
 
     bool                       m_bWindowSizeChanged = false;
-    bool                       m_hidden             = false;
+
     bool                       m_bTitleColorChanged = false;
     bool                       m_bButtonHovered     = false;
     bool                       m_bLastEnabledState  = false;
@@ -83,7 +85,6 @@ class CHyprBar : public IHyprWindowDecoration {
     void renderBarButtonsText(CBox* barBox, const float scale, const float a);
     void damageOnButtonHover();
 
-    bool inputIsValid();
     void onMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent e);
     void onTouchDown(Event::SCallbackInfo& info, ITouch::SDownEvent e);
     void onTouchUp(Event::SCallbackInfo& info, ITouch::SUpEvent e);
@@ -111,6 +112,10 @@ class CHyprBar : public IHyprWindowDecoration {
     bool                m_bDragPending   = false;
     bool                m_bCancelledDown = false;
     int                 m_touchId        = 0;
+    bool                m_bDraggingCSD   = false;
+    bool                m_bDragInitiated = false;
+    Vector2D            m_vDragStartMouse;
+    Vector2D            m_vLastMousePos;
 
     // store hover state for buttons as a bitfield
     unsigned int m_iButtonHoverState = 0;
