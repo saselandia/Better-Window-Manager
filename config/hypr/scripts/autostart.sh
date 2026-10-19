@@ -131,13 +131,14 @@ if [ -f "$HOME/.config/hypr/scripts/autostart-manager.py" ]; then
     ) & disown || true
 fi
 
-# 9. Cargar plugins según el tema activo (hyprbars para KDE Plasma)
-if [ -f "/home/sasel/.config/hypr/modules/theme.lua" ] && grep -q 'name = "plasma"' "/home/sasel/.config/hypr/modules/theme.lua" 2>/dev/null; then
-    (
-        sleep 1
+# 9. Cargar plugins (soporte CSD minimize y hyprbars para KDE Plasma)
+(
+    sleep 1
+    hyprctl plugin load "/home/sasel/.config/hypr/plugins/hypr-csd.so" 2>/dev/null || true
+    if [ -f "/home/sasel/.config/hypr/modules/theme.lua" ] && grep -q 'name = "plasma"' "/home/sasel/.config/hypr/modules/theme.lua" 2>/dev/null; then
         hyprctl plugin load "/home/sasel/.config/hypr/plugins/hyprbars.so" 2>/dev/null || true
-    ) & disown || true
-fi
+    fi
+) & disown || true
 
 # 10. Asegurar que las pantallas abran en Workspace 1 (Principal 1080p) y Workspace 10 (Secundario 4K)
 (

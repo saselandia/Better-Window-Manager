@@ -43,12 +43,18 @@ def minimize_win(client: dict):
     if ws_name.startswith("special:minimized"):
         return
 
+    # Move to special:minimized and immediately close the special workspace
+    # so the screen NEVER dims and NO special workspace or minimized windows are displayed!
     lua_code = f"""(function()
         local w = hl.get_window("address:{addr}")
         if w then
             pcall(function() hl.dispatch(hl.dsp.window.tag({{ tag = "from_ws_{ws_id}", window = w }})) end)
             hl.dispatch(hl.dsp.window.move({{ workspace = "special:minimized", window = w }}))
+            if hl.get_active_special_workspace() then
+                hl.dispatch(hl.dsp.workspace.toggle_special("minimized"))
+            end
         end
+        return hl.dsp.no_op()
     end)()"""
     run_lua(lua_code)
 
@@ -78,7 +84,11 @@ def restore_win(client: dict):
             hl.dispatch(hl.dsp.window.move({{ workspace = target, window = w }}))
             hl.dispatch(hl.dsp.focus({{ window = w }}))
             pcall(function() hl.dispatch(hl.dsp.window.clear_tags(w)) end)
+            if hl.get_active_special_workspace() then
+                hl.dispatch(hl.dsp.workspace.toggle_special("minimized"))
+            end
         end
+        return hl.dsp.no_op()
     end)()"""
     run_lua(lua_code)
 
@@ -96,6 +106,7 @@ def toggle_win(client: dict, active_addr: str):
             if w then
                 hl.dispatch(hl.dsp.focus({{ window = w }}))
             end
+            return hl.dsp.no_op()
         end)()"""
         run_lua(lua_code)
 
@@ -103,7 +114,6 @@ def find_matching_clients(clients: list, app_id: str) -> list:
     if not app_id:
         return []
     
-    # If app_id is directly a window address (0x...)
     if app_id.startswith("0x"):
         c = next((x for x in clients if x.get("address") == app_id), None)
         return [c] if c else []
@@ -137,7 +147,7 @@ def find_matching_clients(clients: list, app_id: str) -> list:
         for p in parts:
             if not p:
                 continue
-            if p in targets or any(p == t or t.startswith(p) or p.startswith(t) for t in targets if t):
+            if p in targets or any(p in t or t in p for t in targets if t):
                 fuzzy.append(c)
                 break
     return fuzzy
@@ -203,6 +213,7 @@ def main():
             if w then
                 hl.dispatch(hl.dsp.focus({{ window = w }}))
             end
+            return hl.dsp.no_op()
         end)()"""
         run_lua(lua_code)
 
