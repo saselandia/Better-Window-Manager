@@ -1,3 +1,4 @@
+#define hbLog(...) do {} while(0)
 #include "barDeco.hpp"
 
 #include <hyprland/src/Compositor.hpp>
@@ -169,7 +170,7 @@ bool CHyprBar::inputIsValid() {
         return false;
 
     if (!m_pWindow->m_workspace || !m_pWindow->m_workspace->isVisible() || !g_pInputManager->m_exclusiveLSes.empty() ||
-        (g_pSeatManager->m_seatGrab && !g_pSeatManager->m_seatGrab->accepts(m_pWindow->wlSurface()->resource())))
+        (g_pSeatManager->m_seatGrab && (!m_pWindow->wlSurface() || !g_pSeatManager->m_seatGrab->accepts(m_pWindow->wlSurface()->resource()))))
         return false;
 
     const auto WINDOWATCURSOR = g_pCompositor->vectorToWindowUnified(g_pInputManager->getMouseCoordsInternal(),
@@ -206,16 +207,22 @@ void CHyprBar::onMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent 
     if (e.button != BTN_LEFT)
         return;
 
+    auto PW = m_pWindow.lock();
+    std::string cls = PW ? PW->m_class : "";
+
     if (e.state != WL_POINTER_BUTTON_STATE_PRESSED) {
-        if (m_bDraggingThis || m_bDragPending)
+        if (m_bDraggingThis || m_bDragPending) {
+            hbLog("[onMouseButton UP] cls=%s hidden=%d dragging=%d pending=%d\n", cls.c_str(), (int)m_hidden, (int)m_bDraggingThis, (int)m_bDragPending);
             handleUpEvent(info);
+        }
         return;
     }
 
-    if (!inputIsValid())
-        return;
-
-    handleDownEvent(info, std::nullopt);
+    bool valid = inputIsValid();
+    if (valid) {
+        hbLog("[onMouseButton DOWN] cls=%s hidden=%d valid=1\n", cls.c_str(), (int)m_hidden);
+        handleDownEvent(info, std::nullopt);
+    }
 }
 
 void CHyprBar::onTouchDown(Event::SCallbackInfo& info, ITouch::SDownEvent e) {
@@ -238,6 +245,10 @@ void CHyprBar::onMouseMove(Vector2D coords) {
     if (!m_hidden && g_pGlobalState->config.iconOnHover->value())
         damageOnButtonHover();
 
+    if (m_bDragPending) {
+        auto PW = m_pWindow.lock();
+        hbLog("[onMouseMove with pending drag] cls=%s hidden=%d\n", PW ? PW->m_class.c_str() : "null", (int)m_hidden);
+    }
     if (!m_bDragPending || m_bTouchEv || !validMapped(m_pWindow) || m_touchId != 0)
         return;
 
@@ -283,26 +294,26 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
 
     if (m_hidden) {
         // CSD Window (Antigravity IDE, Steam, Firefox, Chrome, Vesktop, etc.)
-        CBox windowBox = {PWINDOW->m_realPosition->value().x + PWINDOW->m_floatingOffset.x,
-                          PWINDOW->m_realPosition->value().y + PWINDOW->m_floatingOffset.y,
-                          PWINDOW->m_realSize->value().x,
-                          PWINDOW->m_realSize->value().y};
-
+        CBox windowBox = PWINDOW->getWindowMainSurfaceBox();
         const auto PWORKSPACE      = PWINDOW->m_workspace;
         const auto WORKSPACEOFFSET = PWORKSPACE && !PWINDOW->m_pinned ? PWORKSPACE->m_renderOffset->value() : Vector2D();
         windowBox.translate(WORKSPACEOFFSET);
 
         Vector2D mousePos = g_pInputManager->getMouseCoordsInternal() - windowBox.pos();
-        const auto CSD_HEIGHT = std::max<int>(35, HEIGHT);
+        const auto CSD_HEIGHT = std::max<int>(45, HEIGHT);
+        hbLog("[handleDown CSD] cls=%s mousePos=(%.1f, %.1f) box=(%.1f, %.1f, %.1f, %.1f) CSD_H=%d\n",
+              PWINDOW->m_class.c_str(), mousePos.x, mousePos.y, windowBox.x, windowBox.y, windowBox.w, windowBox.h, CSD_HEIGHT);
 
-        // Check if click is on the top header/titlebar area of the CSD window
-        if (mousePos.x < 0 || mousePos.x >= windowBox.w || mousePos.y < 0 || mousePos.y >= CSD_HEIGHT)
+        if (mousePos.x < 0 || mousePos.x >= windowBox.w || mousePos.y < 0 || mousePos.y >= CSD_HEIGHT) {
+            hbLog("  -> REJECTED coords check (y=%.1f not in [0, %d])\n", mousePos.y, CSD_HEIGHT);
             return;
+        }
 
-        // In CSD windows, native buttons (close, maximize, minimize) are in the top-right corner (~130px).
-        // Let clicks in that area pass directly to the app without dragging so native close/maximize buttons work.
-        if (mousePos.x > windowBox.w - 130)
+        if (mousePos.x > windowBox.w - 140) {
+            hbLog("  -> REJECTED in native buttons zone (x=%.1f > %.1f)\n", mousePos.x, windowBox.w - 140);
             return;
+        }
+        hbLog("  -> ACCEPTED CSD top click! Setting info.cancelled=true, m_bCancelledDown=true, m_bDragPending=true\n");
 
         if (Desktop::focusState()->window() != PWINDOW)
             Desktop::focusState()->fullWindowFocus(PWINDOW, Desktop::FOCUS_REASON_CLICK);
@@ -310,7 +321,9 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
         if (PWINDOW->m_isFloating)
             g_pCompositor->changeWindowZOrder(PWINDOW, true);
 
-        // Double click: maximize / restore
+        info.cancelled   = true;
+        m_bCancelledDown = true;
+
         if (!ON_DOUBLE_CLICK.empty() &&
             std::chrono::duration_cast<std::chrono::milliseconds>(Time::steadyNow() - m_lastMouseDown).count() < 350) {
             Config::Supplementary::executor()->spawn(ON_DOUBLE_CLICK);
@@ -320,6 +333,8 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
             m_bDragPending  = true;
         }
         return;
+
+
     }
 
     auto COORDS = cursorRelativeToBar();
@@ -388,7 +403,11 @@ void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
 }
 
 void CHyprBar::handleMovement() {
-    g_pKeybindManager->changeMouseBindMode(MBIND_MOVE);
+    auto PW = m_pWindow.lock();
+    hbLog("[handleMovement] cls=%s hidden=%d calling changeMouseBindMode(MBIND_MOVE)\n",
+          PW ? PW->m_class.c_str() : "null", (int)m_hidden);
+    auto res = g_pKeybindManager->changeMouseBindMode(MBIND_MOVE);
+    hbLog("  -> changeMouseBindMode returned success=%d error=%s\n", (int)res.success, res.error.c_str());
     m_bDraggingThis = true;
     Log::logger->log(Log::DEBUG, "[hyprbars] Dragging initiated on {:x}", (uintptr_t)m_pWindow.lock().get());
     return;
