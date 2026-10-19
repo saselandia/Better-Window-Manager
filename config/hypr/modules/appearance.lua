@@ -89,9 +89,9 @@ hl.config({
         snap = {
             enabled        = true,
             window_gap     = 10,
-            monitor_gap    = 10,
-            border_overlap = false,
-            respect_gaps   = true,
+            monitor_gap    = 0,
+            border_overlap = true,
+            respect_gaps   = false,
         },
     },
 

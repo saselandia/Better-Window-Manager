@@ -243,39 +243,70 @@ bool CHyprBar::inputIsValid() {
 }
 
 
-static void checkAndTriggerEdgeSnap(const Vector2D& mousePos) {
-    auto pMonitor = g_pCompositor->getMonitorFromCursor();
+static void checkAndTriggerEdgeSnap(PHLWINDOW pWindow, const Vector2D& mousePos) {
+    if (!validMapped(pWindow))
+        return;
+
+    // Determine target monitor from window center to avoid multi-monitor boundary flipping
+    Vector2D middle = pWindow->layoutTarget()->position().middle();
+    auto pMonitor = g_pCompositor->getMonitorFromVector(middle);
+    if (!pMonitor)
+        pMonitor = g_pCompositor->getMonitorFromCursor();
     if (!pMonitor)
         return;
 
-    const int EDGE_THRESHOLD   = 8;
-    const int CORNER_THRESHOLD = 80;
+    const int EDGE_THRESHOLD    = 24;
+    const int CORNER_THRESHOLD  = 120;
+    const int BOTTOM_BAR_HEIGHT = 44;
 
-    bool atTop    = (mousePos.y <= pMonitor->m_position.y + EDGE_THRESHOLD);
-    bool atBottom = (mousePos.y >= pMonitor->m_position.y + pMonitor->m_size.y - EDGE_THRESHOLD);
-    bool atLeft   = (mousePos.x <= pMonitor->m_position.x + EDGE_THRESHOLD);
-    bool atRight  = (mousePos.x >= pMonitor->m_position.x + pMonitor->m_size.x - EDGE_THRESHOLD);
+    float relX = mousePos.x - pMonitor->m_position.x;
+    float relY = mousePos.y - pMonitor->m_position.y;
+    float monW = pMonitor->m_size.x;
+    float monH = pMonitor->m_size.y;
+
+    bool atTop    = (relY <= EDGE_THRESHOLD);
+    bool atBottom = (relY >= monH - BOTTOM_BAR_HEIGHT - EDGE_THRESHOLD);
+    bool atLeft   = (relX <= EDGE_THRESHOLD);
+    bool atRight  = (relX >= monW - EDGE_THRESHOLD);
+
+    std::string direction = "";
 
     if (atTop) {
-        if (atLeft || mousePos.x <= pMonitor->m_position.x + CORNER_THRESHOLD) {
-            Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/quick-tile.py top-left");
-        } else if (atRight || mousePos.x >= pMonitor->m_position.x + pMonitor->m_size.x - CORNER_THRESHOLD) {
-            Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/quick-tile.py top-right");
+        if (atLeft || relX <= CORNER_THRESHOLD) {
+            direction = "top-left";
+        } else if (atRight || relX >= monW - CORNER_THRESHOLD) {
+            direction = "top-right";
         } else {
-            Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/quick-tile.py top");
+            direction = "top";
+        }
+    } else if (atBottom) {
+        if (atLeft || relX <= CORNER_THRESHOLD) {
+            direction = "bottom-left";
+        } else if (atRight || relX >= monW - CORNER_THRESHOLD) {
+            direction = "bottom-right";
         }
     } else if (atLeft) {
-        if (atBottom || mousePos.y >= pMonitor->m_position.y + pMonitor->m_size.y - CORNER_THRESHOLD) {
-            Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-left");
+        if (relY >= monH - BOTTOM_BAR_HEIGHT - CORNER_THRESHOLD) {
+            direction = "bottom-left";
+        } else if (relY <= CORNER_THRESHOLD) {
+            direction = "top-left";
         } else {
-            Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/quick-tile.py left");
+            direction = "left";
         }
     } else if (atRight) {
-        if (atBottom || mousePos.y >= pMonitor->m_position.y + pMonitor->m_size.y - CORNER_THRESHOLD) {
-            Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-right");
+        if (relY >= monH - BOTTOM_BAR_HEIGHT - CORNER_THRESHOLD) {
+            direction = "bottom-right";
+        } else if (relY <= CORNER_THRESHOLD) {
+            direction = "top-right";
         } else {
-            Config::Supplementary::executor()->spawn("/home/sasel/.config/hypr/scripts/quick-tile.py right");
+            direction = "right";
         }
+    }
+
+    if (!direction.empty()) {
+        std::string addr = std::format("0x{:x}", (uintptr_t)pWindow.get());
+        std::string cmd  = std::format("/home/sasel/.config/hypr/scripts/quick-tile.py {} {}", direction, addr);
+        Config::Supplementary::executor()->spawn(cmd);
     }
 }
 
@@ -296,7 +327,7 @@ void CHyprBar::onMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent 
                 if (m_bDragInitiated) {
                     Cursor::overrideController->unsetOverride(Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
                     info.cancelled = true;
-                    checkAndTriggerEdgeSnap(g_pInputManager->getMouseCoordsInternal());
+                    checkAndTriggerEdgeSnap(PW, g_pInputManager->getMouseCoordsInternal());
                 }
                 m_bDraggingCSD   = false;
                 m_bDragInitiated = false;
@@ -546,7 +577,7 @@ void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
             Config::Actions::floatWindow(Config::Actions::eTogglableAction::TOGGLE_ACTION_DISABLE);
 
         Log::logger->log(Log::DEBUG, "[hyprbars] Dragging ended on {:x}", (uintptr_t)m_pWindow.lock().get());
-        checkAndTriggerEdgeSnap(g_pInputManager->getMouseCoordsInternal());
+        checkAndTriggerEdgeSnap(m_pWindow.lock(), g_pInputManager->getMouseCoordsInternal());
     }
 
     m_bDragPending = false;
