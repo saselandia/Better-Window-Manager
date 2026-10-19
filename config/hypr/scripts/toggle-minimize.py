@@ -54,12 +54,16 @@ def minimize_win(client: dict):
     ws = client.get("workspace", {})
     ws_id = ws.get("id", 1)
 
-    # Move to background workspace 99 silently
+    # Move to background workspace 99 silently without switching to it (follow = false)
     lua_code = f"""(function()
+        local cur = hl.get_cursor_pos()
         local w = hl.get_window("address:{addr}")
         if w then
             pcall(function() hl.dispatch(hl.dsp.window.tag({{ tag = "from_ws_{ws_id}", window = w }})) end)
-            hl.dispatch(hl.dsp.window.move({{ workspace = {MINIMIZED_WS_ID}, window = w }}))
+            hl.dispatch(hl.dsp.window.move({{ workspace = {MINIMIZED_WS_ID}, follow = false, window = w }}))
+            if cur and cur.x and cur.y then
+                pcall(function() hl.dispatch(hl.dsp.cursor.move({{ x = cur.x, y = cur.y }})) end)
+            end
         end
         return hl.dsp.no_op()
     end)()"""
@@ -90,7 +94,7 @@ def restore_win(client: dict):
         local w = hl.get_window("address:{addr}")
         if w then
             {target_clause}
-            hl.dispatch(hl.dsp.window.move({{ workspace = target, window = w }}))
+            hl.dispatch(hl.dsp.window.move({{ workspace = target, follow = false, window = w }}))
             pcall(function() hl.dispatch(hl.dsp.window.bring_to_top({{ window = w }})) end)
             pcall(function() hl.dispatch(hl.dsp.window.alter_zorder({{ mode = "top", window = w }})) end)
             hl.dispatch(hl.dsp.focus({{ window = w }}))
