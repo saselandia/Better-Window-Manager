@@ -1,7 +1,7 @@
 {
-  "primary_monitor": "DP-1",
+  "primary_monitor": "DP-2",
   "monitor_workspaces": {
-    "DP-1": "1-9",
-    "DP-2": "10"
+    "DP-1": "10",
+    "DP-2": "1-9"
   }
 }

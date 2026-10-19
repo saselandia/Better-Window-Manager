@@ -139,11 +139,14 @@ if [ -f "/home/sasel/.config/hypr/modules/theme.lua" ] && grep -q 'name = "plasm
     ) & disown || true
 fi
 
-# 10. Asegurar que las pantallas abran en Workspace 1 (Principal 4K) y Workspace 10 (Secundario 1080p)
+# 10. Asegurar que las pantallas abran en Workspace 1 (Principal 1080p) y Workspace 10 (Secundario 4K)
 (
     sleep 3.5
-    hyprctl dispatch 'hl.dsp.focus({ monitor = "desc:HP Inc. HP X24ih 1CR1420TD4" })' 2>/dev/null || hyprctl dispatch 'hl.dsp.focus({ monitor = "DP-2" })' 2>/dev/null || true
-    hyprctl dispatch 'hl.dsp.focus({ workspace = 10 })' 2>/dev/null || true
+    # Pantalla secundaria 4K -> Workspace 10
     hyprctl dispatch 'hl.dsp.focus({ monitor = "desc:LG Electronics LG ULTRAFINE 405NTVS2J655" })' 2>/dev/null || hyprctl dispatch 'hl.dsp.focus({ monitor = "DP-1" })' 2>/dev/null || true
+    hyprctl dispatch 'hl.dsp.focus({ workspace = 10 })' 2>/dev/null || true
+
+    # Pantalla principal 1080p -> Workspace 1 y enfocar
+    hyprctl dispatch 'hl.dsp.focus({ monitor = "desc:HP Inc. HP X24ih 1CR1420TD4" })' 2>/dev/null || hyprctl dispatch 'hl.dsp.focus({ monitor = "DP-2" })' 2>/dev/null || true
     hyprctl dispatch 'hl.dsp.focus({ workspace = 1 })' 2>/dev/null || true
 ) & disown || true

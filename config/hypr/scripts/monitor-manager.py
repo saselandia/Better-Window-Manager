@@ -196,6 +196,7 @@ def write_monitors_lua(monitors):
             lines.append("        workspace = tostring(i),")
             lines.append(f'        monitor   = "{m_name}",')
             lines.append("        default   = (i == 1),")
+            lines.append("        persistent = (i == 1),")
             lines.append("    })")
             lines.append("end")
             lines.append("")
@@ -205,6 +206,7 @@ def write_monitors_lua(monitors):
             lines.append('    workspace = "10",')
             lines.append(f'    monitor   = "{m_name}",')
             lines.append("    default   = true,")
+            lines.append("    persistent = true,")
             lines.append("})")
             lines.append("")
         else:
