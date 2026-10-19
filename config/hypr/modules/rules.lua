@@ -117,7 +117,7 @@ if is_plasma then
         match = {
             class = "^(steam|steamwebhelper|firefox|firefox-bin|google-chrome.*|chromium.*|brave-browser|zen.*|vesktop|discord|armcord|webcord|spotify|antigravity-ide|code|Code|code-oss|vscodium|cursor|org.gnome..*|nautilus|pavucontrol|easyeffects|gamescope|signal|telegram-desktop|org.telegram.desktop|baobab|evince|loupe)$",
         },
-        ["hyprbars:no_bar"] = true,
+        -- ["hyprbars:no_bar"] = true,
     })
 end
 

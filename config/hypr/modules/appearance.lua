@@ -215,53 +215,64 @@ hl.config({
     }
 })
 
--- plugin.hyprbars solo se configura si el tema activo es Plasma y el plugin está cargado
-if is_plasma and hl.plugin and hl.plugin.hyprbars then
-    hl.config({
-        plugin = {
-            hyprbars = {
-                bar_color = "0xff24292e",
-                ["col.text"] = "0xffeff0f1",
-                bar_height = 30,
-                bar_text_size = 11,
-                bar_text_font = "Google Sans Flex",
-                bar_text_align = "left",
-                bar_part_of_window = true,
-                bar_precedence_over_border = true,
-                bar_buttons_alignment = "right",
-                bar_padding = 10,
-                bar_button_padding = 6,
-                inactive_button_color = "0xff24292e",
-                icon_on_hover = false,
-                on_double_click = "fullscreen 1",
+-- plugin.hyprbars: habilitar en Plasma y deshabilitar limpiamente en otros temas
+if hl.plugin and hl.plugin.hyprbars then
+    if is_plasma then
+        hl.config({
+            plugin = {
+                hyprbars = {
+                    enabled = true,
+                    bar_color = "0xff24292e",
+                    ["col.text"] = "0xffeff0f1",
+                    bar_height = 30,
+                    bar_text_size = 11,
+                    bar_text_font = "Google Sans Flex",
+                    bar_text_align = "left",
+                    bar_part_of_window = true,
+                    bar_precedence_over_border = true,
+                    bar_buttons_alignment = "right",
+                    bar_padding = 10,
+                    bar_button_padding = 6,
+                    inactive_button_color = "0xff24292e",
+                    icon_on_hover = false,
+                    on_double_click = "fullscreen 1",
+                }
             }
-        }
-    })
+        })
 
-    if hl.plugin.hyprbars.add_button then
-        -- Botón 1 (Extremo derecho): Cerrar (✕ Rojo Breeze #da4453)
-        hl.plugin.hyprbars.add_button({
-            bg_color = "0xffda4453",
-            fg_color = "0xffffffff",
-            size = 12,
-            icon = "✕",
-            action = "hyprctl dispatch killactive"
-        })
-        -- Botón 2 (Centro): Maximizar (□ Breeze Slate #31363b)
-        hl.plugin.hyprbars.add_button({
-            bg_color = "0xff31363b",
-            fg_color = "0xffeff0f1",
-            size = 12,
-            icon = "□",
-            action = "hyprctl dispatch fullscreen 1"
-        })
-        -- Botón 3 (Izquierda): Minimizar (─ Breeze Slate #31363b)
-        hl.plugin.hyprbars.add_button({
-            bg_color = "0xff31363b",
-            fg_color = "0xffeff0f1",
-            size = 12,
-            icon = "─",
-            action = "/home/sasel/.config/hypr/scripts/toggle-minimize.py min"
+        if hl.plugin.hyprbars.add_button then
+            -- Botón 1 (Extremo derecho): Cerrar (✕ Rojo Breeze #da4453)
+            hl.plugin.hyprbars.add_button({
+                bg_color = "0xffda4453",
+                fg_color = "0xffffffff",
+                size = 12,
+                icon = "✕",
+                action = "hyprctl dispatch killactive"
+            })
+            -- Botón 2 (Centro): Maximizar (□ Breeze Slate #31363b)
+            hl.plugin.hyprbars.add_button({
+                bg_color = "0xff31363b",
+                fg_color = "0xffeff0f1",
+                size = 12,
+                icon = "□",
+                action = "hyprctl dispatch fullscreen 1"
+            })
+            -- Botón 3 (Izquierda): Minimizar (─ Breeze Slate #31363b)
+            hl.plugin.hyprbars.add_button({
+                bg_color = "0xff31363b",
+                fg_color = "0xffeff0f1",
+                size = 12,
+                icon = "─",
+                action = "/home/sasel/.config/hypr/scripts/toggle-minimize.py min"
+            })
+        end
+    else
+        hl.config({
+            plugin = {
+                hyprbars = {
+                    enabled = false,
+                }
+            }
         })
     end
 end

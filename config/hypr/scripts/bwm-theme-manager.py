@@ -731,8 +731,10 @@ def sync_floating_windows(to_plasma: bool):
     plugin_path = str(CONFIG_DIR / "hypr" / "plugins" / "hyprbars.so")
     if to_plasma:
         subprocess.run(["hyprctl", "plugin", "load", plugin_path], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["hyprctl", "keyword", "plugin:hyprbars:enabled", "true"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     else:
-        subprocess.run(["hyprctl", "plugin", "unload", plugin_path], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        # DO NOT unload plugins dynamically at runtime to prevent compositor segfaults
+        subprocess.run(["hyprctl", "keyword", "plugin:hyprbars:enabled", "false"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     persistent_float_classes = set()
     persist_json = CONFIG_DIR / "hypr" / "persistent_rules.json"

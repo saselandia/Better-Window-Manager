@@ -12,11 +12,15 @@ export PATH="/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$PATH"
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 
 # Evitar ejecuciones simultáneas de autostart.sh
-LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/hypr-autostart-script.lock"
-exec 200>"$LOCK_FILE"
-if ! flock -n 200; then
-    exit 0
+LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/hypr-autostart-script.pid"
+if [ -f "$LOCK_FILE" ]; then
+    OLD_PID="$(cat "$LOCK_FILE" 2>/dev/null || true)"
+    if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null && [ "$OLD_PID" != "$$" ]; then
+        exit 0
+    fi
 fi
+echo "$$" > "$LOCK_FILE"
+trap 'rm -f "$LOCK_FILE"' EXIT INT TERM
 
 # 1. Esperar activamente a que el socket de Wayland esté completamente disponible
 COUNT=0
@@ -137,6 +141,7 @@ fi
     # hypr-csd retired in favor of native hyprbars
     if [ -f "/home/sasel/.config/hypr/modules/theme.lua" ] && grep -q 'name = "plasma"' "/home/sasel/.config/hypr/modules/theme.lua" 2>/dev/null; then
         hyprctl plugin load "/home/sasel/.config/hypr/plugins/hyprbars.so" 2>/dev/null || true
+        hyprctl keyword windowrulev2 "plugin:hyprbars:nobar, class:^(steam|steamwebhelper|firefox|firefox-bin|google-chrome.*|chromium.*|brave-browser|zen.*|vesktop|discord|armcord|webcord|spotify|antigravity-ide|code|Code|code-oss|vscodium|cursor|org.gnome..*|nautilus|pavucontrol|easyeffects|gamescope|signal|telegram-desktop|org.telegram.desktop|baobab|evince|loupe)$" 2>/dev/null || true
     fi
 ) & disown || true
 

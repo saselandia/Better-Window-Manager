@@ -231,8 +231,7 @@
     "ignoredAppRegexes": [],
     "monochromeIcons": true,
     "pinnedApps": [
-      "org.gnome.Nautilus",
-      "kitty"
+      "org.gnome.Nautilus"
     ],
     "pinnedOnStartup": false
   },
