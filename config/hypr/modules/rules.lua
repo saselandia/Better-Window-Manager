@@ -133,3 +133,16 @@ hl.window_rule({
     },
     render_unfocused = true,
 })
+
+-- Bordes cuadrados al maximizar o snapear ventanas (Estilo KDE Plasma)
+hl.window_rule({
+    name     = "plasma-maximized-square",
+    match    = { fullscreen = true },
+    rounding = 0,
+})
+
+hl.window_rule({
+    name     = "plasma-snapped-square",
+    match    = { tag = "snapped" },
+    rounding = 0,
+})

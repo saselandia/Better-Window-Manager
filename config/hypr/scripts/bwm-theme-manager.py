@@ -105,7 +105,7 @@ THEMES = {
         "title": "KDE Plasma (Breeze Dark)",
         "description": "Estilo KDE Plasma 6 con barra inferior Breeze Dark, ventanas flotantes con barra superior y paleta estática",
         "wallpaper": str(WALLPAPERS_DIR / "plasma.png"),
-        "rounding": 8,
+        "rounding": 5,
         "rounding_power": 2,
         "border_size": 2,
         "gaps_in": 0,
@@ -562,7 +562,7 @@ color14 #16a085
 color15 #ffffff
 
 # Window borders
-active_border_color #3daee9
+active_border_color #31363b
 inactive_border_color #31363b
 """
     for target in [KITTY_COLORS_CONF, REPO_KITTY_COLORS_CONF]:
@@ -584,7 +584,7 @@ local plasma_colors = {
     accent = "rgba(3daee9ee)",
     secondary = "rgba(3daee9ee)",
     bg = "rgba(24292eee)",
-    border = "rgba(3daee9ee)",
+    border = "rgba(31363baa)",
     border_inactive = "rgba(31363baa)",
 }
 return plasma_colors

@@ -53,9 +53,11 @@ local active_2
 local inactive
 
 if is_plasma then
-    active_1 = (ok_plasma and plasma_colors and plasma_colors.accent) or "rgba(3daee9ee)"
-    active_2 = (ok_plasma and plasma_colors and plasma_colors.secondary) or "rgba(3daee9ee)"
-    inactive = (ok_plasma and plasma_colors and plasma_colors.border_inactive) or "rgba(31363baa)"
+    -- En KDE Plasma Breeze Dark: bordes elegantes, sobrios y sin halo azul de neón al pasar el ratón o enfocar
+    local breeze_border = (ok_plasma and plasma_colors and plasma_colors.border_inactive) or "rgba(31363baa)"
+    active_1 = breeze_border
+    active_2 = breeze_border
+    inactive = breeze_border
 elseif is_retro then
     active_1 = (ok_retro and retro_colors and retro_colors.accent) or boost_color(ok and colors.primary, "rgba(33ccffee)")
     active_2 = (ok_retro and retro_colors and retro_colors.secondary) or boost_color(ok and colors.secondary, "rgba(00ff99ee)")

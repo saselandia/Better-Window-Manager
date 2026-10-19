@@ -5,7 +5,7 @@
 
 local theme = {
     name = "plasma",
-    rounding = 8,
+    rounding = 5,
     rounding_power = 2,
     border_size = 2,
     gaps_in = 0,
