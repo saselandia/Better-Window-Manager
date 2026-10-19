@@ -4,12 +4,12 @@
 -- =============================================================================
 
 local theme = {
-    name = "retro",
-    rounding = 0,
+    name = "plasma",
+    rounding = 8,
     rounding_power = 2,
     border_size = 2,
-    gaps_in = 3,
-    gaps_out = 5,
+    gaps_in = 0,
+    gaps_out = 0,
 }
 
 return theme

@@ -115,7 +115,7 @@ if is_plasma then
     hl.window_rule({
         name  = "plasma-csd-no-hyprbars",
         match = {
-            class = "^(steam|firefox|firefox-bin|vesktop|discord|spotify|antigravity-ide|code|Code|org.gnome.Nautilus|nautilus|gamescope|signal)$",
+            class = "^(steam|steamwebhelper|firefox|firefox-bin|google-chrome.*|chromium.*|brave-browser|zen.*|vesktop|discord|armcord|webcord|spotify|antigravity-ide|code|Code|code-oss|vscodium|cursor|org.gnome..*|nautilus|pavucontrol|easyeffects|gamescope|signal|telegram-desktop|org.telegram.desktop|baobab|evince|loupe)$",
         },
         ["hyprbars:no_bar"] = true,
     })

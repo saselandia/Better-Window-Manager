@@ -81,5 +81,13 @@
             "class": "^org\\.gnome\\.Nautilus$"
         },
         "float": true
+    },
+    "antigravity_ide": {
+        "name": "persist_antigravity_ide",
+        "description": "antigravity-ide",
+        "match": {
+            "class": "^antigravity\\-ide$"
+        },
+        "float": true
     }
 }

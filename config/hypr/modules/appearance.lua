@@ -54,7 +54,7 @@ local inactive
 
 if is_plasma then
     active_1 = (ok_plasma and plasma_colors and plasma_colors.accent) or "rgba(3daee9ee)"
-    active_2 = (ok_plasma and plasma_colors and plasma_colors.secondary) or "rgba(1d99f3ee)"
+    active_2 = (ok_plasma and plasma_colors and plasma_colors.secondary) or "rgba(3daee9ee)"
     inactive = (ok_plasma and plasma_colors and plasma_colors.border_inactive) or "rgba(31363baa)"
 elseif is_retro then
     active_1 = (ok_retro and retro_colors and retro_colors.accent) or boost_color(ok and colors.primary, "rgba(33ccffee)")
@@ -211,17 +211,18 @@ if is_plasma and hl.plugin and hl.plugin.hyprbars then
     hl.config({
         plugin = {
             hyprbars = {
-                bar_color = "0xff31363b",
+                bar_color = "0xff24292e",
                 ["col.text"] = "0xffeff0f1",
-                bar_height = 28,
-                bar_text_size = 10,
+                bar_height = 30,
+                bar_text_size = 11,
                 bar_text_font = "Google Sans Flex",
                 bar_text_align = "left",
                 bar_part_of_window = true,
                 bar_precedence_over_border = true,
                 bar_buttons_alignment = "right",
-                bar_padding = 12,
-                bar_button_padding = 8,
+                bar_padding = 10,
+                bar_button_padding = 6,
+                inactive_button_color = "0xff24292e",
                 icon_on_hover = false,
                 on_double_click = "fullscreen 1",
             }
@@ -229,27 +230,27 @@ if is_plasma and hl.plugin and hl.plugin.hyprbars then
     })
 
     if hl.plugin.hyprbars.add_button then
-        -- Botón 1 (Extremo derecho): Cerrar (✕ Rojo Breeze)
+        -- Botón 1 (Extremo derecho): Cerrar (✕ Rojo Breeze #da4453)
         hl.plugin.hyprbars.add_button({
             bg_color = "0xffda4453",
             fg_color = "0xffffffff",
-            size = 11,
+            size = 12,
             icon = "✕",
             action = "hyprctl dispatch killactive"
         })
-        -- Botón 2 (Centro): Maximizar (□ Breeze)
+        -- Botón 2 (Centro): Maximizar (□ Breeze Slate #31363b)
         hl.plugin.hyprbars.add_button({
             bg_color = "0xff31363b",
             fg_color = "0xffeff0f1",
-            size = 11,
+            size = 12,
             icon = "□",
             action = "hyprctl dispatch fullscreen 1"
         })
-        -- Botón 3 (Izquierda): Minimizar (─ Breeze)
+        -- Botón 3 (Izquierda): Minimizar (─ Breeze Slate #31363b)
         hl.plugin.hyprbars.add_button({
             bg_color = "0xff31363b",
             fg_color = "0xffeff0f1",
-            size = 11,
+            size = 12,
             icon = "─",
             action = "hyprctl dispatch movetoworkspacesilent special:minimized"
         })

@@ -18,7 +18,7 @@
     "tool": "functions"
   },
   "appearance": {
-    "bwmTheme": "retro",
+    "bwmTheme": "plasma",
     "extraBackgroundTint": true,
     "fakeScreenRounding": 0,
     "fonts": {
@@ -81,7 +81,7 @@
       "workspaceZoom": 1.07
     },
     "thumbnailPath": "",
-    "wallpaperPath": "/home/sasel/Pictures/cyberpunk-2077-3840x2160-20154.jpg",
+    "wallpaperPath": "/home/sasel/Pictures/goku-orange-3840x2160-23199.jpg",
     "widgets": {
       "clock": {
         "cookie": {
@@ -142,10 +142,10 @@
       }
     },
     "borderless": false,
-    "bottom": false,
+    "bottom": true,
     "cornerStyle": 2,
     "floatStyleShadow": true,
-    "height": 24,
+    "height": 44,
     "indicators": {
       "notifications": {
         "showUnreadCount": false
@@ -189,7 +189,7 @@
         "1",
         "2"
       ],
-      "showAppIcons": false,
+      "showAppIcons": true,
       "showNumberDelay": 300,
       "shown": 10,
       "useNerdFont": false
@@ -231,7 +231,7 @@
     "ignoredAppRegexes": [],
     "monochromeIcons": true,
     "pinnedApps": [
-      "org.kde.dolphin",
+      "org.gnome.Nautilus",
       "kitty"
     ],
     "pinnedOnStartup": false
