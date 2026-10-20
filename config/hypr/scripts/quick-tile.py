@@ -9,6 +9,90 @@ import sys
 import os
 import json
 import subprocess
+PRESNAP_JSON = "/tmp/hypr_presnap_sizes.json"
+PRESNAP_TXT  = "/tmp/hypr_presnap_sizes.txt"
+
+def get_saved_presnap(addr: str):
+    # Try .txt first (used by hyprbars plugin)
+    try:
+        if os.path.exists(PRESNAP_TXT):
+            with open(PRESNAP_TXT, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith(addr + ":"):
+                        parts = line.split(":", 1)[1].split(",")
+                        return [int(parts[0]), int(parts[1])]
+    except Exception:
+        pass
+    # Try .json
+    try:
+        if os.path.exists(PRESNAP_JSON):
+            with open(PRESNAP_JSON, "r") as f:
+                data = json.load(f)
+                return data.get(addr)
+    except Exception:
+        pass
+    return None
+
+def save_presnap(addr: str, size: list):
+    # Save to JSON
+    try:
+        data = {}
+        if os.path.exists(PRESNAP_JSON):
+            try:
+                with open(PRESNAP_JSON, "r") as f:
+                    data = json.load(f)
+            except Exception:
+                data = {}
+        data[addr] = size
+        with open(PRESNAP_JSON, "w") as f:
+            json.dump(data, f)
+    except Exception:
+        pass
+    # Save to TXT
+    try:
+        txt_data = {}
+        if os.path.exists(PRESNAP_TXT):
+            try:
+                with open(PRESNAP_TXT, "r") as f:
+                    for line in f:
+                        line = line.strip()
+                        if ":" in line and "," in line:
+                            k, v = line.split(":", 1)
+                            w, h = v.split(",", 1)
+                            txt_data[k] = (int(w), int(h))
+            except Exception:
+                txt_data = {}
+        txt_data[addr] = (int(size[0]), int(size[1]))
+        with open(PRESNAP_TXT, "w") as f:
+            for k, (w, h) in txt_data.items():
+                f.write(f"{k}:{w},{h}\n")
+    except Exception:
+        pass
+
+def remove_presnap(addr: str):
+    try:
+        if os.path.exists(PRESNAP_JSON):
+            with open(PRESNAP_JSON, "r") as f:
+                data = json.load(f)
+            if addr in data:
+                del data[addr]
+                with open(PRESNAP_JSON, "w") as f:
+                    json.dump(data, f)
+    except Exception:
+        pass
+    try:
+        if os.path.exists(PRESNAP_TXT):
+            lines = []
+            with open(PRESNAP_TXT, "r") as f:
+                for line in f:
+                    if not line.strip().startswith(addr + ":"):
+                        lines.append(line)
+            with open(PRESNAP_TXT, "w") as f:
+                f.writelines(lines)
+    except Exception:
+        pass
+
 
 def run_lua(lua: str):
     subprocess.run(["hyprctl", "dispatch", lua], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -92,9 +176,20 @@ def main():
     is_fullscreen = target_win.get("fullscreen", 0) > 0 or target_win.get("fullscreenClient", 0) > 0
     is_floating = target_win.get("floating", True)
 
+    if not is_snapped and not is_fullscreen:
+        cur_sz = target_win.get("size", [900, 600])
+        if cur_sz and len(cur_sz) == 2 and cur_sz[0] > 100 and cur_sz[1] > 100:
+            save_presnap(addr, cur_sz)
+
     def restore():
-        target_w = int(usable_w * 0.65)
-        target_h = int(usable_h * 0.70)
+        saved = get_saved_presnap(addr)
+        if saved and len(saved) == 2 and saved[0] > 100 and saved[1] > 100:
+            target_w = saved[0]
+            target_h = saved[1]
+            remove_presnap(addr)
+        else:
+            target_w = int(usable_w * 0.65)
+            target_h = int(usable_h * 0.70)
         target_x = usable_x + (usable_w - target_w) // 2
         target_y = usable_y + (usable_h - target_h) // 2
         lua = f"""(function()

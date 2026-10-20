@@ -18,6 +18,7 @@
 #include <algorithm>
 
 #include "barDeco.hpp"
+#include "SnapHelper.hpp"
 #include <hyprland/src/config/shared/actions/ConfigActions.hpp>
 #include <hyprland/src/managers/KeybindManager.hpp>
 #include <hyprland/src/managers/input/InputManager.hpp>
@@ -197,13 +198,32 @@ int newLuaButton(lua_State* L) {
 static bool s_bAltDragging = false;
 static PHLWINDOWREF s_pAltDraggedWindow;
 
+static void onGlobalMouseMove(const Vector2D& coords) {
+    bool isDragging = s_bAltDragging;
+    if (!isDragging && g_pGlobalState) {
+        for (const auto& bar : g_pGlobalState->bars) {
+            if (bar->isDragging()) {
+                isDragging = true;
+                break;
+            }
+        }
+    }
+
+    if (isDragging) {
+        updateSnapPreview(coords);
+    } else if (g_bSnapPreviewActive) {
+        hideSnapPreview();
+    }
+}
+
 static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent e) {
     const auto MODS = g_pInputManager->getModsFromAllKBs();
     const auto ALTMASK = g_pKeybindManager->stringToModMask("ALT");
+    const auto SUPERMASK = g_pKeybindManager->stringToModMask("SUPER");
 
     if (e.button == BTN_LEFT) {
         if (e.state == WL_POINTER_BUTTON_STATE_PRESSED) {
-            if ((MODS & ALTMASK) != 0) {
+            if ((MODS & ALTMASK) != 0 || (MODS & SUPERMASK) != 0) {
                 auto pWindow = g_pCompositor->vectorToWindowUnified(
                     g_pInputManager->getMouseCoordsInternal(),
                     Desktop::View::RESERVED_EXTENTS | Desktop::View::INPUT_EXTENTS | Desktop::View::ALLOW_FLOATING);
@@ -213,12 +233,34 @@ static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEve
                 if (validMapped(pWindow)) {
                     s_bAltDragging = true;
                     s_pAltDraggedWindow = pWindow;
+
+                    bool wasSnapped = pWindow->m_ruleApplicator && pWindow->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
                     Config::Actions::clearTags(pWindow);
                     pWindow->updateWindowData();
+
+                    if (wasSnapped) {
+                        auto optSize = getAndConsumePreSnapSize(pWindow);
+                        Vector2D targetSize = optSize.value_or(Vector2D{900, 600});
+
+                        CBox curBox = pWindow->layoutTarget()->position();
+                        Vector2D mousePos = g_pInputManager->getMouseCoordsInternal();
+                        float ratioX = curBox.w > 0 ? std::clamp((double)((mousePos.x - curBox.x) / curBox.w), 0.05, 0.95) : 0.5f;
+                        float ratioY = curBox.h > 0 ? std::clamp((double)((mousePos.y - curBox.y) / curBox.h), 0.05, 0.95) : 0.5f;
+
+                        Vector2D newPos = {mousePos.x - targetSize.x * ratioX, mousePos.y - targetSize.y * ratioY};
+                        CBox newBox = {newPos.round(), targetSize};
+
+                        pWindow->layoutTarget()->setPositionGlobal(newBox);
+                        g_layoutManager->setTargetGeom(newBox, pWindow->layoutTarget());
+                        pWindow->layoutTarget()->warpPositionSize();
+                        pWindow->updateWindowDecos();
+                        g_pHyprRenderer->damageWindow(pWindow);
+                    }
                 }
             }
         } else {
             // Button release
+            hideSnapPreview();
             if (s_bAltDragging) {
                 s_bAltDragging = false;
                 auto pWin = s_pAltDraggedWindow.lock();
@@ -265,6 +307,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     static auto P  = Event::bus()->m_events.window.open.listen([&](PHLWINDOW w) { onNewWindow(w); });
     static auto P3 = Event::bus()->m_events.window.updateRules.listen([&](PHLWINDOW w) { onUpdateWindowRules(w); });
     static auto P_GlobalMouse = Event::bus()->m_events.input.mouse.button.listen([&](IPointer::SButtonEvent e, Event::SCallbackInfo& info) { onGlobalMouseButton(info, e); });
+    static auto P_GlobalMouseMove = Event::bus()->m_events.input.mouse.move.listen([&](Vector2D coords, Event::SCallbackInfo& info) { onGlobalMouseMove(coords); });
+    static auto P_Render = Event::bus()->m_events.render.stage.listen([&](eRenderStage stage) { renderSnapPreviewOverlay(stage); });
 
     g_pGlobalState->config.barColor            = makeShared<Config::Values::CColorValue>("plugin:hyprbars:bar_color", "Change the bar color", 0x88333333);
     g_pGlobalState->config.textColor           = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.text", "Change the text color", 0xffffffff);

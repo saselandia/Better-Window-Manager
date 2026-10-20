@@ -1,5 +1,6 @@
 
 #include "barDeco.hpp"
+#include "SnapHelper.hpp"
 
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/desktop/state/FocusState.hpp>
@@ -243,73 +244,6 @@ bool CHyprBar::inputIsValid() {
 }
 
 
-void checkAndTriggerEdgeSnap(PHLWINDOW pWindow, const Vector2D& mousePos) {
-    if (!validMapped(pWindow))
-        return;
-
-    // Determine target monitor from window center to avoid multi-monitor boundary flipping
-    Vector2D middle = pWindow->layoutTarget()->position().middle();
-    auto pMonitor = g_pCompositor->getMonitorFromVector(middle);
-    if (!pMonitor)
-        pMonitor = g_pCompositor->getMonitorFromCursor();
-    if (!pMonitor)
-        return;
-
-    const int EDGE_THRESHOLD    = 24;
-    const int CORNER_THRESHOLD  = 120;
-    const int BOTTOM_BAR_HEIGHT = 44;
-
-    float relX = mousePos.x - pMonitor->m_position.x;
-    float relY = mousePos.y - pMonitor->m_position.y;
-    float monW = pMonitor->m_size.x;
-    float monH = pMonitor->m_size.y;
-
-    bool atTop    = (relY <= EDGE_THRESHOLD);
-    bool atBottom = (relY >= monH - BOTTOM_BAR_HEIGHT - EDGE_THRESHOLD);
-    bool atLeft   = (relX <= EDGE_THRESHOLD);
-    bool atRight  = (relX >= monW - EDGE_THRESHOLD);
-
-    std::string direction = "";
-
-    if (atTop) {
-        if (atLeft || relX <= CORNER_THRESHOLD) {
-            direction = "top-left";
-        } else if (atRight || relX >= monW - CORNER_THRESHOLD) {
-            direction = "top-right";
-        } else {
-            direction = "top";
-        }
-    } else if (atBottom) {
-        if (atLeft || relX <= CORNER_THRESHOLD) {
-            direction = "bottom-left";
-        } else if (atRight || relX >= monW - CORNER_THRESHOLD) {
-            direction = "bottom-right";
-        }
-    } else if (atLeft) {
-        if (relY >= monH - BOTTOM_BAR_HEIGHT - CORNER_THRESHOLD) {
-            direction = "bottom-left";
-        } else if (relY <= CORNER_THRESHOLD) {
-            direction = "top-left";
-        } else {
-            direction = "left";
-        }
-    } else if (atRight) {
-        if (relY >= monH - BOTTOM_BAR_HEIGHT - CORNER_THRESHOLD) {
-            direction = "bottom-right";
-        } else if (relY <= CORNER_THRESHOLD) {
-            direction = "top-right";
-        } else {
-            direction = "right";
-        }
-    }
-
-    if (!direction.empty()) {
-        std::string addr = std::format("0x{:x}", (uintptr_t)pWindow.get());
-        std::string cmd  = std::format("/home/sasel/.config/hypr/scripts/quick-tile.py {} {}", direction, addr);
-        Config::Supplementary::executor()->spawn(cmd);
-    }
-}
-
 void CHyprBar::onMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent e) {
     if (e.button != BTN_LEFT)
         return;
@@ -326,6 +260,7 @@ void CHyprBar::onMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent 
                 }
                 if (m_bDragInitiated) {
                     Cursor::overrideController->unsetOverride(Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
+                    hideSnapPreview();
                     // Do NOT set info.cancelled = true!
                     // Removing info.cancelled allows pointer button UP to reach Electron/GTK,
                     // preventing swallowed / frozen clicks on menu items or buttons.
@@ -389,9 +324,30 @@ void CHyprBar::onMouseMove(Vector2D coords) {
 
             m_bDragInitiated = true;
             Cursor::overrideController->setOverride("grabbing", Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
-            // Window moved out of snapping -> clear snapped tag and restore rounded corners
+
+            bool wasSnapped = PWINDOW->m_ruleApplicator && PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
             Config::Actions::clearTags(PWINDOW);
             PWINDOW->updateWindowData();
+
+            if (wasSnapped) {
+                auto optSize = getAndConsumePreSnapSize(PWINDOW);
+                Vector2D targetSize = optSize.value_or(Vector2D{900, 600});
+
+                float curW = PWINDOW->layoutTarget()->position().w;
+                float ratioX = curW > 0 ? std::clamp((double)(m_vGrabOffset.x / curW), 0.05, 0.95) : 0.5f;
+
+                m_vGrabOffset.x = targetSize.x * ratioX;
+                m_vGrabOffset.y = std::clamp((double)m_vGrabOffset.y, 5.0, 35.0);
+
+                Vector2D newPos = (currentMouse - m_vGrabOffset).round();
+                CBox newBox = {newPos, targetSize};
+
+                PWINDOW->layoutTarget()->setPositionGlobal(newBox);
+                g_layoutManager->setTargetGeom(newBox, PWINDOW->layoutTarget());
+                PWINDOW->layoutTarget()->warpPositionSize();
+                PWINDOW->updateWindowDecos();
+                g_pHyprRenderer->damageWindow(PWINDOW);
+            }
         }
 
         if (!PWINDOW->m_isFloating) {
@@ -419,11 +375,13 @@ void CHyprBar::onMouseMove(Vector2D coords) {
                 PWINDOW->layoutTarget()->assignToSpace(WS->m_space);
                 // Immediately re-anchor window to exact cursor position so assignToSpace does not jump
                 PWINDOW->layoutTarget()->setPositionGlobal(newBox);
+                g_layoutManager->setTargetGeom(newBox, PWINDOW->layoutTarget());
                 PWINDOW->layoutTarget()->warpPositionSize();
                 PWINDOW->updateWindowDecos();
                 g_pHyprRenderer->damageWindow(PWINDOW);
             }
         }
+        updateSnapPreview(currentMouse);
         return;
     }
 
@@ -436,6 +394,7 @@ void CHyprBar::onMouseMove(Vector2D coords) {
 
     m_bDragPending = false;
     handleMovement();
+    updateSnapPreview(g_pInputManager->getMouseCoordsInternal());
 }
 
 void CHyprBar::onTouchMove(Event::SCallbackInfo& info, ITouch::SMotionEvent e) {
@@ -583,6 +542,7 @@ void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
     if (m_bDraggingThis) {
         g_pKeybindManager->changeMouseBindMode(MBIND_INVALID);
         m_bDraggingThis = false;
+        hideSnapPreview();
         if (m_bTouchEv)
             Config::Actions::floatWindow(Config::Actions::eTogglableAction::TOGGLE_ACTION_DISABLE);
 
@@ -595,14 +555,38 @@ void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
     m_touchId      = 0;
 }
 
+
+bool CHyprBar::isDragging() const {
+    return m_bDraggingThis || (m_hidden && m_bDraggingCSD && m_bDragInitiated);
+}
+
 void CHyprBar::handleMovement() {
     auto PWINDOW = m_pWindow.lock();
     if (validMapped(PWINDOW)) {
         if (PWINDOW->isFullscreen())
             g_pCompositor->setWindowFullscreenInternal(PWINDOW, FSMODE_NONE);
-        // Window moved out of snapping -> clear snapped tag and restore rounded corners
+
+        bool wasSnapped = PWINDOW->m_ruleApplicator && PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
         Config::Actions::clearTags(PWINDOW);
         PWINDOW->updateWindowData();
+
+        if (wasSnapped) {
+            auto optSize = getAndConsumePreSnapSize(PWINDOW);
+            Vector2D targetSize = optSize.value_or(Vector2D{900, 600});
+
+            CBox curBox = PWINDOW->layoutTarget()->position();
+            Vector2D mousePos = g_pInputManager->getMouseCoordsInternal();
+            float ratioX = curBox.w > 0 ? std::clamp((double)((mousePos.x - curBox.x) / curBox.w), 0.05, 0.95) : 0.5f;
+
+            Vector2D newPos = {mousePos.x - targetSize.x * ratioX, mousePos.y - 15.0f};
+            CBox newBox = {newPos.round(), targetSize};
+
+            PWINDOW->layoutTarget()->setPositionGlobal(newBox);
+            g_layoutManager->setTargetGeom(newBox, PWINDOW->layoutTarget());
+            PWINDOW->layoutTarget()->warpPositionSize();
+            PWINDOW->updateWindowDecos();
+            g_pHyprRenderer->damageWindow(PWINDOW);
+        }
     }
     g_pKeybindManager->changeMouseBindMode(MBIND_MOVE);
     m_bDraggingThis = true;

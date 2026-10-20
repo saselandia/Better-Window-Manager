@@ -56,6 +56,7 @@ class CHyprBar : public IHyprWindowDecoration {
     WP<CHyprBar>                       m_self;
     bool                               m_hidden = false;
     bool                               inputIsValid();
+    bool                               isDragging() const;
 
   private:
     SBoxExtents                m_seExtents;
