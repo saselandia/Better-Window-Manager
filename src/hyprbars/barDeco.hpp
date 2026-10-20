@@ -21,6 +21,8 @@ namespace Event {
     struct SCallbackInfo;
 }
 
+void checkAndTriggerEdgeSnap(PHLWINDOW pWindow, const Vector2D& mousePos);
+
 class CHyprBar : public IHyprWindowDecoration {
   public:
     CHyprBar(PHLWINDOW);

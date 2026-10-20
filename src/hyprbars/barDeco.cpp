@@ -243,7 +243,7 @@ bool CHyprBar::inputIsValid() {
 }
 
 
-static void checkAndTriggerEdgeSnap(PHLWINDOW pWindow, const Vector2D& mousePos) {
+void checkAndTriggerEdgeSnap(PHLWINDOW pWindow, const Vector2D& mousePos) {
     if (!validMapped(pWindow))
         return;
 
@@ -326,7 +326,9 @@ void CHyprBar::onMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent 
                 }
                 if (m_bDragInitiated) {
                     Cursor::overrideController->unsetOverride(Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
-                    info.cancelled = true;
+                    // Do NOT set info.cancelled = true!
+                    // Removing info.cancelled allows pointer button UP to reach Electron/GTK,
+                    // preventing swallowed / frozen clicks on menu items or buttons.
                     checkAndTriggerEdgeSnap(PW, g_pInputManager->getMouseCoordsInternal());
                 }
                 m_bDraggingCSD   = false;
@@ -387,6 +389,9 @@ void CHyprBar::onMouseMove(Vector2D coords) {
 
             m_bDragInitiated = true;
             Cursor::overrideController->setOverride("grabbing", Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
+            // Window moved out of snapping -> clear snapped tag and restore rounded corners
+            Config::Actions::clearTags(PWINDOW);
+            PWINDOW->updateWindowData();
         }
 
         if (!PWINDOW->m_isFloating) {
@@ -459,6 +464,11 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
 
     const auto PWINDOW = m_pWindow.lock();
     if (!PWINDOW)
+        return;
+
+    const auto MODS = g_pInputManager->getModsFromAllKBs();
+    const auto ALTMASK = g_pKeybindManager->stringToModMask("ALT");
+    if ((MODS & ALTMASK) != 0)
         return;
 
     const auto HEIGHT           = g_pGlobalState->config.barHeight->value();
@@ -587,8 +597,12 @@ void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
 
 void CHyprBar::handleMovement() {
     auto PWINDOW = m_pWindow.lock();
-    if (validMapped(PWINDOW) && PWINDOW->isFullscreen()) {
-        g_pCompositor->setWindowFullscreenInternal(PWINDOW, FSMODE_NONE);
+    if (validMapped(PWINDOW)) {
+        if (PWINDOW->isFullscreen())
+            g_pCompositor->setWindowFullscreenInternal(PWINDOW, FSMODE_NONE);
+        // Window moved out of snapping -> clear snapped tag and restore rounded corners
+        Config::Actions::clearTags(PWINDOW);
+        PWINDOW->updateWindowData();
     }
     g_pKeybindManager->changeMouseBindMode(MBIND_MOVE);
     m_bDraggingThis = true;
