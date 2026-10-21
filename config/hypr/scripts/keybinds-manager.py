@@ -660,7 +660,7 @@ def build_dispatcher_call(action_type: str, exec_cmd: Optional[str], dispatcher:
         if d == "window.close":
             return "hl.dsp.window.close()"
         elif d == "window.fullscreen":
-            return 'hl.dsp.window.fullscreen({ mode = 0, action = "toggle" })'
+            return 'hl.dsp.window.fullscreen({ mode = fullscreen_mode, action = "toggle" })'
         elif d == "window.drag":
             return "hl.dsp.window.drag()"
         elif d == "window.resize":
@@ -700,6 +700,10 @@ def generate_lua(binds: List[Dict[str, Any]]) -> str:
         "local terminal    = \"kitty\"",
         "local fileManager = \"nautilus\"",
         "local menu        = \"quickshell -c ii ipc call search toggle || rofi -show drun\"",
+        "",
+        "local ok_theme, active_theme = pcall(require, \"modules.theme\")",
+        "local is_plasma = ok_theme and (active_theme.name == \"plasma\" or (active_theme.name and string.find(active_theme.name, \"plasma\") ~= nil))",
+        "local fullscreen_mode = is_plasma and 1 or 0",
         ""
     ]
 

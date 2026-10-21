@@ -237,7 +237,7 @@ if hl.plugin and hl.plugin.hyprbars then
                     bar_button_padding = 6,
                     inactive_button_color = "0xff24292e",
                     icon_on_hover = false,
-                    on_double_click = "fullscreen 1",
+                    on_double_click = "hyprctl dispatch \"hl.dsp.window.fullscreen({ mode = 1, action = 'toggle' })\"",
                 }
             }
         })
@@ -249,7 +249,7 @@ if hl.plugin and hl.plugin.hyprbars then
                 fg_color = "0xffffffff",
                 size = 12,
                 icon = "✕",
-                action = "hyprctl dispatch killactive"
+                action = "hyprctl dispatch \"hl.dsp.window.close()\""
             })
             -- Botón 2 (Centro): Maximizar (□ Breeze Slate #31363b)
             hl.plugin.hyprbars.add_button({
@@ -257,7 +257,7 @@ if hl.plugin and hl.plugin.hyprbars then
                 fg_color = "0xffeff0f1",
                 size = 12,
                 icon = "□",
-                action = "hyprctl dispatch fullscreen 1"
+                action = "hyprctl dispatch \"hl.dsp.window.fullscreen({ mode = 1, action = 'toggle' })\""
             })
             -- Botón 3 (Izquierda): Minimizar (─ Breeze Slate #31363b)
             hl.plugin.hyprbars.add_button({

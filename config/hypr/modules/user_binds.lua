@@ -7,6 +7,10 @@ local terminal    = "kitty"
 local fileManager = "nautilus"
 local menu        = "quickshell -c ii ipc call search toggle || rofi -show drun"
 
+local ok_theme, active_theme = pcall(require, "modules.theme")
+local is_plasma = ok_theme and (active_theme.name == "plasma" or (active_theme.name and string.find(active_theme.name, "plasma") ~= nil))
+local fullscreen_mode = is_plasma and 1 or 0
+
 -- [General]
 hl.bind("ALT + A", hl.dsp.exec_cmd("quickshell -c ii ipc call cheatsheet toggle"), { description = "General: Guía de atajos (Cheatsheet)" })
 -- [Lanzadores]
@@ -18,7 +22,7 @@ hl.bind("ALT + W", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/wallpaper-p
 hl.bind("ALT + X", hl.dsp.window.close(), { description = "Ventanas: Cerrar ventana activa" })
 hl.bind("ALT + Q", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/toggle-float-persistent.py"), { description = "Ventanas: Recordar regla flotante persistente" })
 hl.bind("ALT + J", hl.dsp.layout("togglesplit"), { description = "Ventanas: Alternar división horizontal/vertical (Split)" })
-hl.bind("ALT + RETURN", hl.dsp.window.fullscreen({ mode = 0, action = "toggle" }), { description = "Ventanas: Alternar pantalla completa" })
+hl.bind("ALT + RETURN", hl.dsp.window.fullscreen({ mode = fullscreen_mode, action = "toggle" }), { description = "Ventanas: Alternar pantalla completa" })
 hl.bind("ALT + TAB", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab next"), { description = "Ventanas: Selector visual de ventanas (Alt+Tab)", repeating = true })
 -- [Navegación]
 hl.bind("ALT + left", hl.dsp.focus({ direction = "left" }), { description = "Navegación: Mover foco a la izquierda" })

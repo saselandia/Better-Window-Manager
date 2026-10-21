@@ -187,6 +187,16 @@ def main():
             target_w = saved[0]
             target_h = saved[1]
             remove_presnap(addr)
+        elif is_fullscreen and not is_snapped:
+            lua = f"""(function()
+                local win = hl.get_window("address:{addr}")
+                if not win then return hl.dsp.no_op() end
+                hl.dispatch(hl.dsp.window.fullscreen({{ mode = 1, action = 'unset', window = win }}))
+                hl.dispatch(hl.dsp.window.fullscreen({{ mode = 0, action = 'unset', window = win }}))
+                return hl.dsp.no_op()
+            end)()"""
+            run_lua(lua)
+            return
         else:
             target_w = int(usable_w * 0.65)
             target_h = int(usable_h * 0.70)

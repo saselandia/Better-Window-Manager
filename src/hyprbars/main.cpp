@@ -234,15 +234,23 @@ static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEve
                     s_bAltDragging = true;
                     s_pAltDraggedWindow = pWindow;
 
+                    CBox curBox = pWindow->layoutTarget()->position();
+                    bool wasFullscreen = pWindow->isFullscreen();
                     bool wasSnapped = pWindow->m_ruleApplicator && pWindow->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
+
+                    if (wasFullscreen)
+                        g_pCompositor->setWindowFullscreenInternal(pWindow, FSMODE_NONE);
+
                     Config::Actions::clearTags(pWindow);
                     pWindow->updateWindowData();
 
-                    if (wasSnapped) {
-                        auto optSize = getAndConsumePreSnapSize(pWindow);
-                        Vector2D targetSize = optSize.value_or(Vector2D{900, 600});
+                    if (wasSnapped || wasFullscreen) {
+                        Vector2D targetSize = pWindow->layoutTarget()->position().size();
+                        if (wasSnapped) {
+                            auto optSize = getAndConsumePreSnapSize(pWindow);
+                            targetSize = optSize.value_or(Vector2D{900, 600});
+                        }
 
-                        CBox curBox = pWindow->layoutTarget()->position();
                         Vector2D mousePos = g_pInputManager->getMouseCoordsInternal();
                         float ratioX = curBox.w > 0 ? std::clamp((double)((mousePos.x - curBox.x) / curBox.w), 0.05, 0.95) : 0.5f;
                         float ratioY = curBox.h > 0 ? std::clamp((double)((mousePos.y - curBox.y) / curBox.h), 0.05, 0.95) : 0.5f;

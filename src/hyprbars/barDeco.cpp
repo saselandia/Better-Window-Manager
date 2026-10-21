@@ -325,15 +325,23 @@ void CHyprBar::onMouseMove(Vector2D coords) {
             m_bDragInitiated = true;
             Cursor::overrideController->setOverride("grabbing", Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
 
+            bool wasFullscreen = PWINDOW->isFullscreen();
             bool wasSnapped = PWINDOW->m_ruleApplicator && PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
+            float curW = PWINDOW->layoutTarget()->position().w;
+
+            if (wasFullscreen) {
+                g_pCompositor->setWindowFullscreenInternal(PWINDOW, FSMODE_NONE);
+            }
             Config::Actions::clearTags(PWINDOW);
             PWINDOW->updateWindowData();
 
-            if (wasSnapped) {
-                auto optSize = getAndConsumePreSnapSize(PWINDOW);
-                Vector2D targetSize = optSize.value_or(Vector2D{900, 600});
+            if (wasSnapped || wasFullscreen) {
+                Vector2D targetSize = PWINDOW->layoutTarget()->position().size();
+                if (wasSnapped) {
+                    auto optSize = getAndConsumePreSnapSize(PWINDOW);
+                    targetSize = optSize.value_or(Vector2D{900, 600});
+                }
 
-                float curW = PWINDOW->layoutTarget()->position().w;
                 float ratioX = curW > 0 ? std::clamp((double)(m_vGrabOffset.x / curW), 0.05, 0.95) : 0.5f;
 
                 m_vGrabOffset.x = targetSize.x * ratioX;
@@ -524,7 +532,12 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
 
     if (!ON_DOUBLE_CLICK.empty() &&
         std::chrono::duration_cast<std::chrono::milliseconds>(Time::steadyNow() - m_lastMouseDown).count() < 400 /* Arbitrary delay I found suitable */) {
-        Config::Supplementary::executor()->spawn(ON_DOUBLE_CLICK);
+        if (ON_DOUBLE_CLICK == "fullscreen 1" || ON_DOUBLE_CLICK.find("window.fullscreen") != std::string::npos) {
+            if (validMapped(PWINDOW))
+                g_pCompositor->setWindowFullscreenInternal(PWINDOW, PWINDOW->isFullscreen() ? FSMODE_NONE : FSMODE_MAXIMIZED);
+        } else {
+            Config::Supplementary::executor()->spawn(ON_DOUBLE_CLICK);
+        }
         m_bDragPending = false;
     } else {
         m_lastMouseDown = Time::steadyNow();
@@ -563,18 +576,23 @@ bool CHyprBar::isDragging() const {
 void CHyprBar::handleMovement() {
     auto PWINDOW = m_pWindow.lock();
     if (validMapped(PWINDOW)) {
-        if (PWINDOW->isFullscreen())
+        CBox curBox = PWINDOW->layoutTarget()->position();
+        bool wasFullscreen = PWINDOW->isFullscreen();
+        bool wasSnapped = PWINDOW->m_ruleApplicator && PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
+
+        if (wasFullscreen)
             g_pCompositor->setWindowFullscreenInternal(PWINDOW, FSMODE_NONE);
 
-        bool wasSnapped = PWINDOW->m_ruleApplicator && PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
         Config::Actions::clearTags(PWINDOW);
         PWINDOW->updateWindowData();
 
-        if (wasSnapped) {
-            auto optSize = getAndConsumePreSnapSize(PWINDOW);
-            Vector2D targetSize = optSize.value_or(Vector2D{900, 600});
+        if (wasSnapped || wasFullscreen) {
+            Vector2D targetSize = PWINDOW->layoutTarget()->position().size();
+            if (wasSnapped) {
+                auto optSize = getAndConsumePreSnapSize(PWINDOW);
+                targetSize = optSize.value_or(Vector2D{900, 600});
+            }
 
-            CBox curBox = PWINDOW->layoutTarget()->position();
             Vector2D mousePos = g_pInputManager->getMouseCoordsInternal();
             float ratioX = curBox.w > 0 ? std::clamp((double)((mousePos.x - curBox.x) / curBox.w), 0.05, 0.95) : 0.5f;
 
@@ -605,8 +623,19 @@ bool CHyprBar::doButtonPress(Config::INTEGER barPadding, Config::INTEGER barButt
         if (VECINRECT(COORDS, currentPos.x, currentPos.y, currentPos.x + b.size + barButtonPadding, currentPos.y + b.size)) {
             // hit on button
             std::string cmd = b.cmd;
-            if (cmd.find("toggle-minimize.py min") != std::string::npos && m_pWindow.lock()) {
-                cmd += " " + std::format("0x{:x}", (uintptr_t)m_pWindow.lock().get());
+            auto PW = m_pWindow.lock();
+            if (validMapped(PW)) {
+                if (cmd == "hyprctl dispatch fullscreen 1" || cmd.find("window.fullscreen") != std::string::npos) {
+                    g_pCompositor->setWindowFullscreenInternal(PW, PW->isFullscreen() ? FSMODE_NONE : FSMODE_MAXIMIZED);
+                    return true;
+                }
+                if (cmd == "hyprctl dispatch killactive" || cmd.find("window.close") != std::string::npos) {
+                    Config::Actions::closeWindow(PW);
+                    return true;
+                }
+            }
+            if (cmd.find("toggle-minimize.py min") != std::string::npos && PW) {
+                cmd += " " + std::format("0x{:x}", (uintptr_t)PW.get());
             }
             g_pKeybindManager->m_dispatchers["exec"](cmd);
             return true;
