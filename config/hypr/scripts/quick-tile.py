@@ -234,43 +234,102 @@ def main():
         end)()"""
         run_lua(lua)
 
-    # 1. Super+Up / Maximize
-    if direction in ("top", "maximize"):
-        if f"snapped_{direction}" in tags or "snapped_top" in tags or "snapped_maximize" in tags or is_fullscreen:
-            restore()
-        else:
-            apply_snap("top", usable_x, usable_y, usable_w, usable_h)
-        return
-
-    # 2. Super+Down / Restore
-    if direction == "bottom":
-        if is_fullscreen or is_snapped:
-            restore()
-            return
-
-    # 3. Toggle off if already snapped to the same direction
-    if f"snapped_{direction}" in tags:
-        restore()
-        return
-
-    # 4. Center mode
-    if direction == "center":
-        restore()
-        return
-
     # 5. Snap to halves / quarters with 0 gaps touching edges & bottom bar flush
     half_w = usable_w // 2
     half_h = usable_h // 2
     rem_w  = usable_w - half_w
     rem_h  = usable_h - half_h
 
+    cur_at = target_win.get("at", [0, 0])
+    cur_sz = target_win.get("size", [0, 0])
+    cur_x, cur_y = cur_at[0], cur_at[1]
+    cur_w, cur_h = cur_sz[0], cur_sz[1]
+
+    # Precise detection of current snapped position (via tags or geometry)
+    is_top_left = "snapped_top-left" in tags or "snapped_up-left" in tags or (abs(cur_x - usable_x) <= 25 and abs(cur_y - usable_y) <= 25 and cur_w <= half_w + 35 and cur_h <= half_h + 35)
+    is_bottom_left = "snapped_bottom-left" in tags or "snapped_down-left" in tags or (abs(cur_x - usable_x) <= 25 and abs(cur_y - (usable_y + half_h)) <= 35 and cur_w <= half_w + 35 and cur_h <= rem_h + 35)
+    is_top_right = "snapped_top-right" in tags or "snapped_up-right" in tags or (abs(cur_x - (usable_x + half_w)) <= 35 and abs(cur_y - usable_y) <= 25 and cur_w <= rem_w + 35 and cur_h <= half_h + 35)
+    is_bottom_right = "snapped_bottom-right" in tags or "snapped_down-right" in tags or (abs(cur_x - (usable_x + half_w)) <= 35 and abs(cur_y - (usable_y + half_h)) <= 35 and cur_w <= rem_w + 35 and cur_h <= rem_h + 35)
+
+    is_left_side = ("snapped_left" in tags or (abs(cur_x - usable_x) <= 25 and cur_w <= half_w + 35 and cur_h > usable_h * 0.7)) and not (is_top_left or is_bottom_left)
+    is_right_side = ("snapped_right" in tags or (abs(cur_x - (usable_x + half_w)) <= 35 and cur_w <= rem_w + 35 and cur_h > usable_h * 0.7)) and not (is_top_right or is_bottom_right)
+
+    # 1. Down / Bottom
+    if direction in ("bottom", "down"):
+        if is_left_side or is_top_left:
+            apply_snap("bottom-left", usable_x, usable_y + half_h, half_w, rem_h)
+            return
+        elif is_right_side or is_top_right:
+            apply_snap("bottom-right", usable_x + half_w, usable_y + half_h, rem_w, rem_h)
+            return
+        elif is_bottom_left or is_bottom_right or is_snapped or is_fullscreen:
+            restore()
+            return
+        else:
+            restore()
+            return
+
+    # 2. Up / Top / Maximize
+    if direction in ("top", "maximize", "up"):
+        if is_left_side or is_bottom_left:
+            apply_snap("top-left", usable_x, usable_y, half_w, half_h)
+            return
+        elif is_right_side or is_bottom_right:
+            apply_snap("top-right", usable_x + half_w, usable_y, rem_w, half_h)
+            return
+        elif is_top_left or is_top_right:
+            apply_snap("top", usable_x, usable_y, usable_w, usable_h)
+            return
+        elif "snapped_top" in tags or "snapped_maximize" in tags or is_fullscreen:
+            restore()
+            return
+        else:
+            apply_snap("top", usable_x, usable_y, usable_w, usable_h)
+            return
+
+    # 3. Left
     if direction == "left":
-        apply_snap(direction, usable_x, usable_y, half_w, usable_h)
-    elif direction == "right":
-        apply_snap(direction, usable_x + half_w, usable_y, rem_w, usable_h)
-    elif direction == "bottom":
-        apply_snap(direction, usable_x, usable_y + half_h, usable_w, rem_h)
-    elif direction in ("top-left", "up-left"):
+        if is_top_right:
+            apply_snap("top-left", usable_x, usable_y, half_w, half_h)
+            return
+        elif is_bottom_right:
+            apply_snap("bottom-left", usable_x, usable_y + half_h, half_w, rem_h)
+            return
+        elif is_top_left or is_bottom_left:
+            apply_snap("left", usable_x, usable_y, half_w, usable_h)
+            return
+        elif "snapped_left" in tags or is_left_side:
+            restore()
+            return
+        else:
+            apply_snap("left", usable_x, usable_y, half_w, usable_h)
+            return
+
+    # 4. Right
+    if direction == "right":
+        if is_top_left:
+            apply_snap("top-right", usable_x + half_w, usable_y, rem_w, half_h)
+            return
+        elif is_bottom_left:
+            apply_snap("bottom-right", usable_x + half_w, usable_y + half_h, rem_w, rem_h)
+            return
+        elif is_top_right or is_bottom_right:
+            apply_snap("right", usable_x + half_w, usable_y, rem_w, usable_h)
+            return
+        elif "snapped_right" in tags or is_right_side:
+            restore()
+            return
+        else:
+            apply_snap("right", usable_x + half_w, usable_y, rem_w, usable_h)
+            return
+
+    # 5. Center mode
+    if direction == "center":
+        restore()
+        return
+
+    # 6. Specific corner directives
+    if direction in ("top-left", "up-left"):
         apply_snap(direction, usable_x, usable_y, half_w, half_h)
     elif direction in ("top-right", "up-right"):
         apply_snap(direction, usable_x + half_w, usable_y, rem_w, half_h)
