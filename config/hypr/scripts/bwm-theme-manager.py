@@ -105,7 +105,7 @@ THEMES = {
         "title": "KDE Plasma (Breeze Dark)",
         "description": "Estilo KDE Plasma 6 con barra inferior Breeze Dark, ventanas flotantes con barra superior y paleta estática",
         "wallpaper": str(WALLPAPERS_DIR / "plasma.png"),
-        "rounding": 5,
+        "rounding": 8,
         "rounding_power": 2,
         "border_size": 0,
         "gaps_in": 0,
