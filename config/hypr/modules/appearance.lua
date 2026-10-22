@@ -21,7 +21,7 @@ local is_retro = ok_theme and (active_theme.name == "retro" or (active_theme.nam
 local is_plasma = ok_theme and (active_theme.name == "plasma" or (active_theme.name and string.find(active_theme.name, "plasma") ~= nil))
 local win_rounding = (ok_theme and active_theme.rounding) or 0
 local win_round_pwr = (ok_theme and active_theme.rounding_power) or 2
-local border_sz = (ok_theme and active_theme.border_size) or 2
+local border_sz = is_plasma and 0 or ((ok_theme and active_theme.border_size) or 2)
 local g_in = (ok_theme and active_theme.gaps_in) or 3
 local g_out = (ok_theme and active_theme.gaps_out) or 5
 
@@ -53,11 +53,10 @@ local active_2
 local inactive
 
 if is_plasma then
-    -- En KDE Plasma Breeze Dark: bordes elegantes, sobrios y sin halo azul de neón al pasar el ratón o enfocar
-    local breeze_border = (ok_plasma and plasma_colors and plasma_colors.border_inactive) or "rgba(31363baa)"
-    active_1 = breeze_border
-    active_2 = breeze_border
-    inactive = breeze_border
+    -- En KDE Plasma Breeze Dark: sin estela ni borde gris alrededor de las ventanas
+    active_1 = "rgba(00000000)"
+    active_2 = "rgba(00000000)"
+    inactive = "rgba(00000000)"
 elseif is_retro then
     active_1 = (ok_retro and retro_colors and retro_colors.accent) or boost_color(ok and colors.primary, "rgba(33ccffee)")
     active_2 = (ok_retro and retro_colors and retro_colors.secondary) or boost_color(ok and colors.secondary, "rgba(00ff99ee)")
@@ -100,19 +99,19 @@ hl.config({
         rounding_power = win_round_pwr,
 
         active_opacity   = 1.0,
-        inactive_opacity = is_retro and 0.90 or 0.95,
+        inactive_opacity = is_plasma and 1.0 or (is_retro and 0.90 or 0.95),
 
-        -- Sombra amplia y suave estilo Material 3 (desactivada en retro para estética plana)
+        -- Sombra desactivada en retro y plasma para evitar estela/halo gris en los bordes
         shadow = {
-            enabled      = not is_retro,
+            enabled      = not is_retro and not is_plasma,
             range        = 18,
             render_power = 3,
             color        = "rgba(00000035)",
         },
 
-        -- Blur Dual-Kawase suave para Rofi, terminales translúcidas y paneles
+        -- Blur Dual-Kawase desactivado en plasma para evitar halo gris en márgenes CSD
         blur = {
-            enabled           = true,
+            enabled           = not is_plasma,
             size              = 6,
             passes            = 3,
             vibrancy          = 0.2,

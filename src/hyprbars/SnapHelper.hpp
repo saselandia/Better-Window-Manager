@@ -1,6 +1,7 @@
 #pragma once
 
 #include "globals.hpp"
+#include "BarPassElement.hpp"
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/render/Renderer.hpp>
 #include <hyprland/src/render/OpenGL.hpp>
@@ -142,8 +143,8 @@ inline std::optional<SSnapTarget> getSnapTarget(const Vector2D& mousePos) {
     if (!pMonitor)
         return std::nullopt;
 
-    const int EDGE_THRESHOLD    = 28;
-    const int CORNER_THRESHOLD  = 130;
+    const int EDGE_THRESHOLD    = 40;
+    const int CORNER_THRESHOLD  = 150;
     const int BOTTOM_BAR_HEIGHT = 44;
 
     float relX = mousePos.x - pMonitor->m_position.x;
@@ -190,6 +191,9 @@ inline std::optional<SSnapTarget> getSnapTarget(const Vector2D& mousePos) {
         } else if (atRight || relX >= monW - CORNER_THRESHOLD) {
             dir = "bottom-right";
             box = CBox{usableX + halfW, usableY + halfH, remW, remH};
+        } else {
+            dir = "bottom";
+            box = CBox{usableX, usableY + halfH, usableW, remH};
         }
     } else if (atLeft) {
         if (relY >= monH - BOTTOM_BAR_HEIGHT - CORNER_THRESHOLD) {
@@ -221,36 +225,60 @@ inline std::optional<SSnapTarget> getSnapTarget(const Vector2D& mousePos) {
     return SSnapTarget{dir, box, pMonitor};
 }
 
-inline void updateSnapPreview(const Vector2D& mousePos) {
-    auto target = getSnapTarget(mousePos);
-    if (target.has_value() && target->monitor) {
-        bool changed = !g_bSnapPreviewActive || !(g_snapPreviewBox == target->box) || g_snapPreviewMonitor.lock() != target->monitor;
-        g_bSnapPreviewActive = true;
-        g_snapPreviewBox     = target->box;
-        g_snapPreviewMonitor = target->monitor;
-        if (changed) {
-            g_pHyprRenderer->damageMonitor(target->monitor);
-        }
-    } else {
-        if (g_bSnapPreviewActive) {
-            g_bSnapPreviewActive = false;
-            if (auto pOld = g_snapPreviewMonitor.lock())
-                g_pHyprRenderer->damageMonitor(pOld);
-        }
-    }
-}
-
 inline void hideSnapPreview() {
     if (g_bSnapPreviewActive) {
         g_bSnapPreviewActive = false;
+        CBox dmgBox          = g_snapPreviewBox;
+        dmgBox.expand(16);
+        g_pHyprRenderer->damageBox(dmgBox);
         if (auto pOld = g_snapPreviewMonitor.lock())
             g_pHyprRenderer->damageMonitor(pOld);
     }
 }
 
-inline void checkAndTriggerEdgeSnap(PHLWINDOW pWindow, const Vector2D& mousePos) {
-    if (!validMapped(pWindow))
+inline void updateSnapPreview(const Vector2D& mousePos) {
+    if (!g_pGlobalState || !g_pGlobalState->config.enabled->value()) {
+        hideSnapPreview();
         return;
+    }
+
+    auto target = getSnapTarget(mousePos);
+    if (target.has_value() && target->monitor) {
+        auto pOldMon   = g_snapPreviewMonitor.lock();
+        CBox oldBox    = g_snapPreviewBox;
+        bool wasActive = g_bSnapPreviewActive;
+
+        g_bSnapPreviewActive = true;
+        g_snapPreviewBox     = target->box;
+        g_snapPreviewMonitor = target->monitor;
+
+        if (wasActive && pOldMon && pOldMon != target->monitor) {
+            g_pHyprRenderer->damageMonitor(pOldMon);
+        } else if (wasActive && !(oldBox == target->box)) {
+            CBox dmgOld = oldBox;
+            dmgOld.expand(16);
+            g_pHyprRenderer->damageBox(dmgOld);
+        }
+
+        CBox dmgNew = target->box;
+        dmgNew.expand(16);
+        g_pHyprRenderer->damageBox(dmgNew);
+        g_pHyprRenderer->damageMonitor(target->monitor);
+    } else {
+        hideSnapPreview();
+    }
+}
+
+inline void checkAndTriggerEdgeSnap(PHLWINDOW pWindow, const Vector2D& mousePos) {
+    if (!validMapped(pWindow)) {
+        hideSnapPreview();
+        return;
+    }
+
+    if (!g_pGlobalState || !g_pGlobalState->config.enabled->value()) {
+        hideSnapPreview();
+        return;
+    }
 
     auto target = getSnapTarget(mousePos);
     if (target.has_value() && !target->direction.empty()) {
@@ -266,24 +294,14 @@ inline void renderSnapPreviewOverlay(eRenderStage stage) {
     if (stage != RENDER_LAST_MOMENT || !g_bSnapPreviewActive)
         return;
 
+    if (!g_pGlobalState || !g_pGlobalState->config.enabled->value())
+        return;
+
     auto pMonitor = g_pHyprRenderer->m_renderData.pMonitor.lock();
     if (!pMonitor || pMonitor != g_snapPreviewMonitor.lock())
         return;
 
-    CBox box = g_snapPreviewBox;
-    box.translate(-pMonitor->m_position).scale(pMonitor->m_scale).round();
-
-    const int inset = (int)(6 * pMonitor->m_scale);
-    box.x += inset;
-    box.y += inset;
-    box.w = std::max(10, (int)box.w - inset * 2);
-    box.h = std::max(10, (int)box.h - inset * 2);
-
-    int radius = (int)(10 * pMonitor->m_scale);
-    CHyprColor fillCol{61.0 / 255.0, 174.0 / 255.0, 233.0 / 255.0, 0.25};
-    Render::GL::g_pHyprOpenGL->renderRect(box, fillCol, {.round = radius, .roundingPower = 2.0f});
-
-    Config::CGradientValueData borderGrad;
-    borderGrad.m_colors.push_back(CHyprColor{61.0 / 255.0, 174.0 / 255.0, 233.0 / 255.0, 0.85});
-    Render::GL::g_pHyprOpenGL->renderBorder(box, borderGrad, {.round = radius, .roundingPower = 2.0f, .borderSize = (int)(2 * pMonitor->m_scale)});
+    CSnapPreviewPassElement::SSnapData snapData{g_snapPreviewBox};
+    g_pHyprRenderer->m_renderPass.add(makeUnique<CSnapPreviewPassElement>(snapData));
 }
+

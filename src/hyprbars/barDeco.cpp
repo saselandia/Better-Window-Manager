@@ -70,6 +70,7 @@ static bool isKnownCSD(PHLWINDOW window) {
         "code-oss",
         "vscodium",
         "cursor",
+        "antigravity",
         "antigravity-ide",
         "firefox",
         "firefox-bin",
@@ -259,6 +260,8 @@ void CHyprBar::onMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent 
                     Desktop::focusState()->fullWindowFocus(PW, Desktop::FOCUS_REASON_CLICK);
                 }
                 if (m_bDragInitiated) {
+                    if (g_layoutManager && g_layoutManager->dragController() && g_layoutManager->dragController()->mode() == MBIND_MOVE)
+                        g_pKeybindManager->changeMouseBindMode(MBIND_INVALID);
                     Cursor::overrideController->unsetOverride(Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
                     hideSnapPreview();
                     // Do NOT set info.cancelled = true!
@@ -329,6 +332,8 @@ void CHyprBar::onMouseMove(Vector2D coords) {
             bool wasSnapped = PWINDOW->m_ruleApplicator && PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
             float curW = PWINDOW->layoutTarget()->position().w;
 
+            g_pHyprRenderer->damageWindow(PWINDOW, true);
+
             if (wasFullscreen) {
                 g_pCompositor->setWindowFullscreenInternal(PWINDOW, FSMODE_NONE);
             }
@@ -354,7 +359,7 @@ void CHyprBar::onMouseMove(Vector2D coords) {
                 g_layoutManager->setTargetGeom(newBox, PWINDOW->layoutTarget());
                 PWINDOW->layoutTarget()->warpPositionSize();
                 PWINDOW->updateWindowDecos();
-                g_pHyprRenderer->damageWindow(PWINDOW);
+                g_pHyprRenderer->damageWindow(PWINDOW, true);
             }
         }
 
@@ -370,23 +375,25 @@ void CHyprBar::onMouseMove(Vector2D coords) {
         Vector2D size   = PWINDOW->layoutTarget()->position().size();
         CBox     newBox = {newPos, size};
 
+        g_pHyprRenderer->damageWindow(PWINDOW, true);
         PWINDOW->layoutTarget()->setPositionGlobal(newBox);
         PWINDOW->layoutTarget()->warpPositionSize();
         PWINDOW->updateWindowDecos();
-        g_pHyprRenderer->damageWindow(PWINDOW);
+        g_pHyprRenderer->damageWindow(PWINDOW, true);
 
         Vector2D middle = newBox.middle();
         const auto PMONITOR = g_pCompositor->getMonitorFromVector(middle);
         if (PMONITOR && PMONITOR->m_activeWorkspace && PWINDOW->m_isFloating) {
             const auto WS = PMONITOR->m_activeSpecialWorkspace ? PMONITOR->m_activeSpecialWorkspace : PMONITOR->m_activeWorkspace;
             if (PWINDOW->m_workspace != WS) {
+                g_pHyprRenderer->damageWindow(PWINDOW, true);
                 PWINDOW->layoutTarget()->assignToSpace(WS->m_space);
                 // Immediately re-anchor window to exact cursor position so assignToSpace does not jump
                 PWINDOW->layoutTarget()->setPositionGlobal(newBox);
                 g_layoutManager->setTargetGeom(newBox, PWINDOW->layoutTarget());
                 PWINDOW->layoutTarget()->warpPositionSize();
                 PWINDOW->updateWindowDecos();
-                g_pHyprRenderer->damageWindow(PWINDOW);
+                g_pHyprRenderer->damageWindow(PWINDOW, true);
             }
         }
         updateSnapPreview(currentMouse);
@@ -580,6 +587,9 @@ void CHyprBar::handleMovement() {
         bool wasFullscreen = PWINDOW->isFullscreen();
         bool wasSnapped = PWINDOW->m_ruleApplicator && PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
 
+        damageEntire();
+        g_pHyprRenderer->damageWindow(PWINDOW, true);
+
         if (wasFullscreen)
             g_pCompositor->setWindowFullscreenInternal(PWINDOW, FSMODE_NONE);
 
@@ -603,7 +613,8 @@ void CHyprBar::handleMovement() {
             g_layoutManager->setTargetGeom(newBox, PWINDOW->layoutTarget());
             PWINDOW->layoutTarget()->warpPositionSize();
             PWINDOW->updateWindowDecos();
-            g_pHyprRenderer->damageWindow(PWINDOW);
+            damageEntire();
+            g_pHyprRenderer->damageWindow(PWINDOW, true);
         }
     }
     g_pKeybindManager->changeMouseBindMode(MBIND_MOVE);
@@ -857,10 +868,9 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
     g_pHyprOpenGL->scissor(titleBarBox);
 
     if (ROUNDING) {
-        // the +1 is a shit garbage temp fix until renderRect supports an alpha matte
-        CBox windowBox = {PWINDOW->m_realPosition->value().x + PWINDOW->m_floatingOffset.x - pMonitor->m_position.x + 1,
-                          PWINDOW->m_realPosition->value().y + PWINDOW->m_floatingOffset.y - pMonitor->m_position.y + 1, PWINDOW->m_realSize->value().x - 2,
-                          PWINDOW->m_realSize->value().y - 2};
+        CBox windowBox = {PWINDOW->m_realPosition->value().x + PWINDOW->m_floatingOffset.x - pMonitor->m_position.x,
+                          PWINDOW->m_realPosition->value().y + PWINDOW->m_floatingOffset.y - pMonitor->m_position.y + 1, PWINDOW->m_realSize->value().x,
+                          PWINDOW->m_realSize->value().y - 1};
 
         if (windowBox.w < 1 || windowBox.h < 1)
             return;

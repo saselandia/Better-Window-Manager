@@ -29,3 +29,35 @@ class CBarPassElement : public IPassElement {
   private:
     SBarData data;
 };
+
+class CSnapPreviewPassElement : public IPassElement {
+  public:
+    struct SSnapData {
+        CBox box;
+    };
+
+    CSnapPreviewPassElement(const SSnapData& data_);
+    virtual ~CSnapPreviewPassElement() = default;
+
+    virtual std::vector<UP<IPassElement>> draw() override;
+    virtual bool                          needsLiveBlur() override;
+    virtual bool                          needsPrecomputeBlur() override;
+    virtual std::optional<CBox>           boundingBox() override;
+    virtual bool                          undiscardable() override {
+        return true;
+    }
+    virtual bool                          disableSimplification() override {
+        return true;
+    }
+
+    virtual const char*                   passName() override {
+        return "CSnapPreviewPassElement";
+    }
+
+    virtual ePassElementType type() override {
+        return EK_CUSTOM;
+    }
+
+  private:
+    SSnapData data;
+};

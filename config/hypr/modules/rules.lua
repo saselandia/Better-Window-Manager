@@ -103,11 +103,14 @@ local ok_theme, active_theme = pcall(require, "modules.theme")
 local is_plasma = ok_theme and (active_theme.name == "plasma" or (active_theme.name and string.find(active_theme.name, "plasma") ~= nil))
 
 if is_plasma then
-    -- 1. Todas las ventanas en modo flotante individual (sin mosaico)
+    -- 1. Todas las ventanas en modo flotante individual (sin mosaico ni estela gris)
     hl.window_rule({
-        name  = "plasma-float-all",
-        match = { class = ".*" },
-        float = true,
+        name        = "plasma-float-all",
+        match       = { class = ".*" },
+        float       = true,
+        no_shadow   = true,
+        no_blur     = true,
+        border_size = 0,
     })
 
     -- 2. Aplicaciones con decoraciones CSD propias (Steam, Firefox, Discord, Antigravity, etc.):
@@ -115,7 +118,7 @@ if is_plasma then
     hl.window_rule({
         name  = "plasma-csd-no-hyprbars",
         match = {
-            class = "^(steam|steamwebhelper|firefox|firefox-bin|google-chrome.*|chromium.*|brave-browser|zen.*|vesktop|discord|armcord|webcord|spotify|antigravity-ide|code|Code|code-oss|vscodium|cursor|org.gnome..*|nautilus|pavucontrol|easyeffects|gamescope|signal|telegram-desktop|org.telegram.desktop|baobab|evince|loupe)$",
+            class = "^(steam|steamwebhelper|firefox|firefox-bin|google-chrome.*|chromium.*|brave-browser|zen.*|vesktop|discord|armcord|webcord|spotify|antigravity|antigravity-ide|code|Code|code-oss|vscodium|cursor|org.gnome..*|nautilus|pavucontrol|easyeffects|gamescope|signal|telegram-desktop|org.telegram.desktop|baobab|evince|loupe)$",
         },
         -- ["hyprbars:no_bar"] = true,
     })

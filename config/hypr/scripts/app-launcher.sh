@@ -12,15 +12,16 @@ set -euo pipefail
 CURRENT_THEME="$(python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py get 2>/dev/null || echo "default")"
 
 if [[ "$CURRENT_THEME" == "plasma" ]]; then
-    # Toggle Rofi Kickoff
-    if pgrep -x "rofi" > /dev/null 2>&1; then
-        pkill -x "rofi"
-    else
-        rofi -show drun -theme "$HOME/.config/rofi/plasma-kickoff.rasi"
-    fi
+    pkill -x "rofi" 2>/dev/null || true
+    quickshell -c ii ipc call omarchyMenu close 2>/dev/null || true
+    quickshell -c ii ipc call plasmaKickoff toggle 2>/dev/null || rofi -show drun -theme "$HOME/.config/rofi/plasma-kickoff.rasi"
 elif [[ "$CURRENT_THEME" == "retro" ]]; then
+    pkill -x "rofi" 2>/dev/null || true
+    quickshell -c ii ipc call plasmaKickoff close 2>/dev/null || true
     quickshell -c ii ipc call omarchyMenu toggle 2>/dev/null || rofi -show drun -theme "$HOME/.config/rofi/omarchy.rasi"
 else
+    pkill -x "rofi" 2>/dev/null || true
     quickshell -c ii ipc call omarchyMenu close 2>/dev/null || true
+    quickshell -c ii ipc call plasmaKickoff close 2>/dev/null || true
     quickshell -c ii ipc call search toggle || rofi -show drun
 fi

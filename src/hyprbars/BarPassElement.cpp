@@ -32,3 +32,53 @@ std::optional<CBox> CBarPassElement::boundingBox() {
 bool CBarPassElement::needsPrecomputeBlur() {
     return false;
 }
+
+CSnapPreviewPassElement::CSnapPreviewPassElement(const CSnapPreviewPassElement::SSnapData& data_) : data(data_) {
+    ;
+}
+
+std::vector<UP<IPassElement>> CSnapPreviewPassElement::draw() {
+    auto pMonitor = g_pHyprRenderer->m_renderData.pMonitor.lock();
+    if (!pMonitor)
+        return {};
+
+    CBox box = data.box;
+    box.translate(-pMonitor->m_position).scale(pMonitor->m_scale).round();
+
+    const int inset = std::max(4, (int)std::round(6 * pMonitor->m_scale));
+    box.x += inset;
+    box.y += inset;
+    box.w = std::max(10, (int)box.w - inset * 2);
+    box.h = std::max(10, (int)box.h - inset * 2);
+
+    const int radius     = std::max(4, (int)std::round(6 * pMonitor->m_scale));
+    const int borderSize = std::max(2, (int)std::round(2 * pMonitor->m_scale));
+
+    g_pHyprOpenGL->scissor(nullptr);
+
+    // Translucent KDE Plasma Breeze Blue highlight fill (#3daee9)
+    CHyprColor fillCol{61.0 / 255.0, 174.0 / 255.0, 233.0 / 255.0, 0.28};
+    g_pHyprOpenGL->renderRect(box, fillCol, {.round = radius, .roundingPower = 2.0f});
+
+    // Crisp KDE Plasma Breeze Blue border (#3daee9)
+    Config::CGradientValueData borderGrad(CHyprColor{61.0 / 255.0, 174.0 / 255.0, 233.0 / 255.0, 0.90});
+    g_pHyprOpenGL->renderBorder(box, borderGrad, {.round = radius, .roundingPower = 2.0f, .borderSize = borderSize, .a = 1.0f});
+
+    return {};
+}
+
+bool CSnapPreviewPassElement::needsLiveBlur() {
+    return false;
+}
+
+bool CSnapPreviewPassElement::needsPrecomputeBlur() {
+    return false;
+}
+
+std::optional<CBox> CSnapPreviewPassElement::boundingBox() {
+    if (!g_pHyprRenderer->m_renderData.pMonitor)
+        return std::nullopt;
+    CBox b = data.box;
+    return b.translate(-g_pHyprRenderer->m_renderData.pMonitor->m_position).expand(10);
+}
+

@@ -195,24 +195,57 @@ int newLuaButton(lua_State* L) {
 }
 
 
-static bool s_bAltDragging = false;
+static bool         s_bAltDragging       = false;
 static PHLWINDOWREF s_pAltDraggedWindow;
+static PHLWINDOWREF s_pNativeDraggedWindow;
+static bool         s_bHasLastDraggedBox = false;
+static CBox         s_lastDraggedBox;
 
 static void onGlobalMouseMove(const Vector2D& coords) {
-    bool isDragging = s_bAltDragging;
-    if (!isDragging && g_pGlobalState) {
+    const Vector2D mousePos = g_pInputManager->getMouseCoordsInternal();
+
+    PHLWINDOW draggedWin = s_bAltDragging ? s_pAltDraggedWindow.lock() : nullptr;
+    bool      barHandled = false;
+
+    if (g_pGlobalState) {
         for (const auto& bar : g_pGlobalState->bars) {
-            if (bar->isDragging()) {
-                isDragging = true;
+            if (bar && bar->isDragging()) {
+                if (!draggedWin)
+                    draggedWin = bar->getOwner();
+                barHandled = true;
                 break;
             }
         }
     }
 
-    if (isDragging) {
-        updateSnapPreview(coords);
-    } else if (g_bSnapPreviewActive) {
-        hideSnapPreview();
+    if (!draggedWin && g_layoutManager && g_layoutManager->dragController()) {
+        if (g_layoutManager->dragController()->mode() == MBIND_MOVE) {
+            if (auto target = g_layoutManager->dragController()->target()) {
+                draggedWin = target->window();
+                if (!barHandled && !s_bAltDragging)
+                    s_pNativeDraggedWindow = draggedWin;
+            }
+        }
+    }
+
+    if (validMapped(draggedWin)) {
+        if (s_bHasLastDraggedBox)
+            g_pHyprRenderer->damageBox(s_lastDraggedBox);
+
+        g_pHyprRenderer->damageWindow(draggedWin, true);
+        CBox curBox = draggedWin->layoutTarget()->position();
+        curBox.expand(48);
+        s_lastDraggedBox     = curBox;
+        s_bHasLastDraggedBox = true;
+
+        updateSnapPreview(mousePos);
+    } else {
+        if (s_bHasLastDraggedBox) {
+            g_pHyprRenderer->damageBox(s_lastDraggedBox);
+            s_bHasLastDraggedBox = false;
+        }
+        if (g_bSnapPreviewActive)
+            hideSnapPreview();
     }
 }
 
@@ -238,6 +271,8 @@ static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEve
                     bool wasFullscreen = pWindow->isFullscreen();
                     bool wasSnapped = pWindow->m_ruleApplicator && pWindow->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
 
+                    g_pHyprRenderer->damageWindow(pWindow, true);
+
                     if (wasFullscreen)
                         g_pCompositor->setWindowFullscreenInternal(pWindow, FSMODE_NONE);
 
@@ -262,19 +297,42 @@ static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEve
                         g_layoutManager->setTargetGeom(newBox, pWindow->layoutTarget());
                         pWindow->layoutTarget()->warpPositionSize();
                         pWindow->updateWindowDecos();
-                        g_pHyprRenderer->damageWindow(pWindow);
+                        g_pHyprRenderer->damageWindow(pWindow, true);
                     }
                 }
             }
         } else {
             // Button release
+            if (s_bHasLastDraggedBox) {
+                g_pHyprRenderer->damageBox(s_lastDraggedBox);
+                s_bHasLastDraggedBox = false;
+            }
             hideSnapPreview();
             if (s_bAltDragging) {
                 s_bAltDragging = false;
                 auto pWin = s_pAltDraggedWindow.lock();
                 s_pAltDraggedWindow.reset();
+                s_pNativeDraggedWindow.reset();
+                if (g_layoutManager && g_layoutManager->dragController() && g_layoutManager->dragController()->mode() == MBIND_MOVE)
+                    g_pKeybindManager->changeMouseBindMode(MBIND_INVALID);
                 if (validMapped(pWin)) {
                     checkAndTriggerEdgeSnap(pWin, g_pInputManager->getMouseCoordsInternal());
+                }
+            } else if (auto pNativeWin = s_pNativeDraggedWindow.lock()) {
+                s_pNativeDraggedWindow.reset();
+                bool anyBarDragging = false;
+                if (g_pGlobalState) {
+                    for (const auto& bar : g_pGlobalState->bars) {
+                        if (bar && bar->isDragging()) {
+                            anyBarDragging = true;
+                            break;
+                        }
+                    }
+                }
+                if (!anyBarDragging && validMapped(pNativeWin)) {
+                    if (g_layoutManager && g_layoutManager->dragController() && g_layoutManager->dragController()->mode() == MBIND_MOVE)
+                        g_pKeybindManager->changeMouseBindMode(MBIND_INVALID);
+                    checkAndTriggerEdgeSnap(pNativeWin, g_pInputManager->getMouseCoordsInternal());
                 }
             }
         }
