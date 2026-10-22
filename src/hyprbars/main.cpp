@@ -1,6 +1,16 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #define WLR_USE_UNSTABLE
 
 #include <unistd.h>
+#include <elf.h>
+#include </usr/include/link.h>
+#include <dlfcn.h>
+
+#define protected public
+#include <hyprutils/signal/Signal.hpp>
+#undef protected
 
 #include <any>
 #include <hyprland/src/Compositor.hpp>
@@ -16,6 +26,7 @@
 #include <hyprutils/string/VarList.hpp>
 
 #include <algorithm>
+#include <set>
 
 #include "barDeco.hpp"
 #include "SnapHelper.hpp"
@@ -36,7 +47,7 @@ APICALL EXPORT std::string PLUGIN_API_VERSION() {
 }
 
 static void onNewWindow(PHLWINDOW window) {
-    if (!validMapped(window))
+    if (!g_pGlobalState || !validMapped(window))
         return;
 
     if (std::ranges::any_of(window->m_windowDecorations, [](const auto& d) { return d->getDisplayName() == "Hyprbar"; }))
@@ -49,10 +60,14 @@ static void onNewWindow(PHLWINDOW window) {
 }
 
 static void onPreConfigReload() {
+    if (!g_pGlobalState)
+        return;
     g_pGlobalState->buttons.clear();
 }
 
 static void onConfigReloaded() {
+    if (!g_pGlobalState)
+        return;
     for (auto& b : g_pGlobalState->bars) {
         if (!b)
             continue;
@@ -62,6 +77,8 @@ static void onConfigReloaded() {
 }
 
 static void onUpdateWindowRules(PHLWINDOW window) {
+    if (!g_pGlobalState)
+        return;
     const auto BARIT = std::find_if(g_pGlobalState->bars.begin(), g_pGlobalState->bars.end(), [window](const auto& bar) { return bar->getOwner() == window; });
 
     if (BARIT == g_pGlobalState->bars.end())
@@ -352,6 +369,60 @@ static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEve
     }
 }
 
+static void cleanupLegacyPinnedModule() {
+    std::set<std::pair<void*, void*>> activePairs;
+    auto collectFrom = [&](auto& sig) {
+        for (const auto& w : sig.m_vListeners) {
+            if (w.impl_ && w.m_data)
+                activePairs.insert({(void*)w.impl_, w.m_data});
+        }
+    };
+
+    if (Event::bus()) {
+        collectFrom(Event::bus()->m_events.window.open);
+        collectFrom(Event::bus()->m_events.window.updateRules);
+        collectFrom(Event::bus()->m_events.input.mouse.button);
+        collectFrom(Event::bus()->m_events.input.mouse.move);
+        collectFrom(Event::bus()->m_events.render.stage);
+        collectFrom(Event::bus()->m_events.config.preReload);
+        collectFrom(Event::bus()->m_events.config.reloaded);
+    }
+
+    dl_iterate_phdr(
+        [](struct dl_phdr_info* info, size_t, void* data) -> int {
+            if (!info->dlpi_name || std::string(info->dlpi_name).find("hyprbars") == std::string::npos)
+                return 0;
+
+            uintptr_t selfAddr = (uintptr_t)&cleanupLegacyPinnedModule;
+            for (int i = 0; i < info->dlpi_phnum; ++i) {
+                const auto& ph = info->dlpi_phdr[i];
+                if (ph.p_type == PT_LOAD) {
+                    uintptr_t start = info->dlpi_addr + ph.p_vaddr;
+                    uintptr_t end   = start + ph.p_memsz;
+                    if (selfAddr >= start && selfAddr < end)
+                        return 0; // Skip our own module
+                }
+            }
+
+            auto* pairs = static_cast<std::set<std::pair<void*, void*>>*>(data);
+            for (int i = 0; i < info->dlpi_phnum; ++i) {
+                const auto& ph = info->dlpi_phdr[i];
+                if (ph.p_type == PT_LOAD && (ph.p_flags & PF_W)) {
+                    uintptr_t start = info->dlpi_addr + ph.p_vaddr;
+                    uintptr_t end   = start + ph.p_memsz;
+                    for (uintptr_t addr = (start + 7) & ~uintptr_t(7); addr + sizeof(CHyprSignalListener) <= end; addr += 8) {
+                        auto* cand = reinterpret_cast<CHyprSignalListener*>(addr);
+                        if (cand->impl_ && cand->m_data && pairs->contains({(void*)cand->impl_, cand->m_data})) {
+                            cand->reset();
+                        }
+                    }
+                }
+            }
+            return 0;
+        },
+        &activePairs);
+}
+
 APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     PHANDLE = handle;
 
@@ -364,17 +435,18 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
         throw std::runtime_error("[hb] Version mismatch");
     }
 
+    cleanupLegacyPinnedModule();
 
     g_pGlobalState                    = makeUnique<SGlobalState>();
     g_pGlobalState->nobarRuleIdx      = Desktop::Rule::windowEffects()->registerEffect("hyprbars:no_bar");
     g_pGlobalState->barColorRuleIdx   = Desktop::Rule::windowEffects()->registerEffect("hyprbars:bar_color");
     g_pGlobalState->titleColorRuleIdx = Desktop::Rule::windowEffects()->registerEffect("hyprbars:title_color");
 
-    static auto P  = Event::bus()->m_events.window.open.listen([&](PHLWINDOW w) { onNewWindow(w); });
-    static auto P3 = Event::bus()->m_events.window.updateRules.listen([&](PHLWINDOW w) { onUpdateWindowRules(w); });
-    static auto P_GlobalMouse = Event::bus()->m_events.input.mouse.button.listen([&](IPointer::SButtonEvent e, Event::SCallbackInfo& info) { onGlobalMouseButton(info, e); });
-    static auto P_GlobalMouseMove = Event::bus()->m_events.input.mouse.move.listen([&](Vector2D coords, Event::SCallbackInfo& info) { onGlobalMouseMove(coords); });
-    static auto P_Render = Event::bus()->m_events.render.stage.listen([&](eRenderStage stage) { renderSnapPreviewOverlay(stage); });
+    g_pGlobalState->pOpenListener        = Event::bus()->m_events.window.open.listen([](PHLWINDOW w) { onNewWindow(w); });
+    g_pGlobalState->pUpdateRulesListener = Event::bus()->m_events.window.updateRules.listen([](PHLWINDOW w) { onUpdateWindowRules(w); });
+    g_pGlobalState->pMouseButtonListener = Event::bus()->m_events.input.mouse.button.listen([](IPointer::SButtonEvent e, Event::SCallbackInfo& info) { onGlobalMouseButton(info, e); });
+    g_pGlobalState->pMouseMoveListener   = Event::bus()->m_events.input.mouse.move.listen([](Vector2D coords, Event::SCallbackInfo& info) { onGlobalMouseMove(coords); });
+    g_pGlobalState->pRenderListener      = Event::bus()->m_events.render.stage.listen([](eRenderStage stage) { renderSnapPreviewOverlay(stage); });
 
     g_pGlobalState->config.barColor            = makeShared<Config::Values::CColorValue>("plugin:hyprbars:bar_color", "Change the bar color", 0x88333333);
     g_pGlobalState->config.textColor           = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.text", "Change the text color", 0xffffffff);
@@ -419,8 +491,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
         HyprlandAPI::addConfigKeyword(PHANDLE, "plugin:hyprbars:hyprbars-button", onNewButton, Hyprlang::SHandlerOptions{});
     else
         HyprlandAPI::addLuaFunction(PHANDLE, "hyprbars", "add_button", ::newLuaButton);
-    static auto P4 = Event::bus()->m_events.config.preReload.listen([&] { onPreConfigReload(); });
-    static auto P5 = Event::bus()->m_events.config.reloaded.listen([&] { onConfigReloaded(); });
+    g_pGlobalState->pPreReloadListener = Event::bus()->m_events.config.preReload.listen([] { onPreConfigReload(); });
+    g_pGlobalState->pReloadedListener  = Event::bus()->m_events.config.reloaded.listen([] { onConfigReloaded(); });
 
     // add deco to existing windows
     for (auto& w : g_pCompositor->m_windows) {
@@ -436,13 +508,24 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 }
 
 APICALL EXPORT void PLUGIN_EXIT() {
+    hideSnapPreview();
     for (auto& m : g_pCompositor->m_monitors)
         m->m_scheduledRecalc = true;
 
     g_pHyprRenderer->m_renderPass.removeAllOfType("CBarPassElement");
     g_pHyprRenderer->m_renderPass.removeAllOfType("CSnapPreviewPassElement");
 
-    Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->barColorRuleIdx);
-    Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->titleColorRuleIdx);
-    Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->nobarRuleIdx);
+    if (g_pGlobalState) {
+        g_pGlobalState->pOpenListener.reset();
+        g_pGlobalState->pUpdateRulesListener.reset();
+        g_pGlobalState->pMouseButtonListener.reset();
+        g_pGlobalState->pMouseMoveListener.reset();
+        g_pGlobalState->pRenderListener.reset();
+        g_pGlobalState->pPreReloadListener.reset();
+        g_pGlobalState->pReloadedListener.reset();
+
+        Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->barColorRuleIdx);
+        Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->titleColorRuleIdx);
+        Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->nobarRuleIdx);
+    }
 }

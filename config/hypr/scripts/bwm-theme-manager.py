@@ -728,9 +728,11 @@ def sync_floating_windows(to_plasma: bool):
         print(f"[Warning] Error consultando clientes de Hyprland: {e}", file=sys.stderr)
         return
 
-    plugin_path = str(CONFIG_DIR / "hypr" / "plugins" / "hyprbars.so")
+    plugin_path = str(CONFIG_DIR / "hypr" / "plugins" / "hyprbars-plasma.so")
     if to_plasma:
-        subprocess.run(["hyprctl", "plugin", "load", plugin_path], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        plist = subprocess.run(["hyprctl", "plugin", "list"], capture_output=True, text=True, check=False)
+        if "Plugin hyprbars" not in plist.stdout:
+            subprocess.run(["hyprctl", "plugin", "load", plugin_path], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run(["hyprctl", "keyword", "plugin:hyprbars:enabled", "true"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     else:
         # DO NOT unload plugins dynamically at runtime to prevent compositor segfaults
