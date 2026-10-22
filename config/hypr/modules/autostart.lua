@@ -10,8 +10,3 @@ local autostart_script = os.getenv("HOME") .. "/.config/hypr/scripts/autostart.s
 hl.on("hyprland.start", function()
     hl.exec_cmd(autostart_script)
 end)
-
--- 2. Asegurar demonios si se recarga la configuración en caliente (idempotente)
-hl.on("config.reloaded", function()
-    hl.exec_cmd(autostart_script)
-end)

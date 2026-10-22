@@ -753,47 +753,48 @@ def sync_floating_windows(to_plasma: bool):
         except Exception:
             pass
 
+    lua_cmds = []
     for client in clients:
         addr = client.get("address")
         cls = client.get("class", "")
         is_floating = client.get("floating", False)
-        grouped = client.get("grouped", [])
         if not addr:
             continue
 
-        is_terminal = any(term in cls.lower() for term in ["kitty", "alacritty", "xterm", "foot", "wezterm", "ghostty"])
-
         if to_plasma:
-            # 1. Todas las ventanas en modo flotante individual
+            # Todas las ventanas en modo flotante individual
             if not is_floating:
-                subprocess.run(["hyprctl", "dispatch", f'hl.dsp.focus({{ window = "address:{addr}" }})'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                subprocess.run(["hyprctl", "dispatch", 'hl.dsp.window.float({ action = "set" })'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-            # 2. Asegurar que NINGUNA ventana esté agrupada (todas 100% individuales)
-            if len(grouped) > 0:
-                subprocess.run(["hyprctl", "dispatch", f'hl.dsp.focus({{ window = "address:{addr}" }})'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                subprocess.run(["hyprctl", "dispatch", 'hl.dsp.group.toggle()'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                lua_cmds.append(f'do local win = hl.get_window("address:{addr}"); if win then hl.dispatch(hl.dsp.window.float({{ window = win }})) end end')
         else:
-            # Al salir de plasma: desagrupar cualquier grupo remanente
-            if len(grouped) > 0:
-                subprocess.run(["hyprctl", "dispatch", f'hl.dsp.focus({{ window = "address:{addr}" }})'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                subprocess.run(["hyprctl", "dispatch", 'hl.dsp.group.toggle()'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-            # Restaurar mosaico si la ventana no estaba guardada como flotante persistente
+            # Al salir de plasma: limpiar tags de snap y restaurar mosaico si no es flotante persistente
+            lua_cmds.append(f'do local win = hl.get_window("address:{addr}"); if win then hl.dispatch(hl.dsp.window.clear_tags({{ window = win }})) end end')
             is_persistent = False
             for p_cls in persistent_float_classes:
                 if p_cls.lower() in cls.lower():
                     is_persistent = True
                     break
             if not is_persistent and is_floating:
-                subprocess.run(["hyprctl", "dispatch", f'hl.dsp.focus({{ window = "address:{addr}" }})'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                subprocess.run(["hyprctl", "dispatch", 'hl.dsp.window.float({ action = "unset" })'], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                lua_cmds.append(f'do local win = hl.get_window("address:{addr}"); if win then hl.dispatch(hl.dsp.window.float({{ window = win }})) end end')
+
+    if lua_cmds:
+        full_lua = "(function() " + " ".join(lua_cmds) + " return hl.dsp.no_op() end)()"
+        subprocess.run(["hyprctl", "dispatch", full_lua], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def apply_theme(theme_name: str):
     """Applies theme across all subsystems, with complete isolation."""
     if theme_name not in THEMES:
         print(f"Error: Tema '{theme_name}' no reconocido. Opciones: {list(THEMES.keys())}", file=sys.stderr)
         sys.exit(1)
+
+    import fcntl
+    import signal
+    import time
+
+    lock_fd = open("/tmp/bwm-theme-manager.lock", "w")
+    try:
+        fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        return
 
     curr_theme = get_current_theme()
     cfg = THEMES[theme_name]
@@ -830,26 +831,29 @@ def apply_theme(theme_name: str):
     elif cfg.get("is_retro"):
         apply_retro_wallpaper_colors(wp)
 
-    # 5. Sincronizar el estado flotante / mosaico de las ventanas abiertas
-    sync_floating_windows(cfg.get("is_plasma", False))
-
-    # 6. Recargar Hyprland y Quickshell
+    # 5. Recargar Hyprland primero para aplicar las reglas del nuevo tema
     try:
         subprocess.run(["hyprctl", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception:
         pass
 
-    try:
-        subprocess.run(["quickshell", "-c", "ii", "ipc", "call", "theme", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
+    # 6. Sincronizar el estado flotante / mosaico de las ventanas abiertas tras la recarga
+    sync_floating_windows(cfg.get("is_plasma", False))
 
-    # Reiniciar Quickshell para aplicar altura de barra, orientación inferior y diseño
+    # 7. Reiniciar Quickshell de forma atómica (sin duplicados ni bloqueo de SIGTERM)
     try:
-        subprocess.run(["pkill", "quickshell"], check=False)
-        import time
-        time.sleep(0.4)
-        subprocess.Popen(["quickshell", "-c", "ii"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+        subprocess.run(["pkill", "-9", "-x", "quickshell"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        for _ in range(25):
+            if subprocess.run(["pidof", "quickshell"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
+                break
+            time.sleep(0.05)
+        subprocess.Popen(
+            ["quickshell", "-c", "ii"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+            preexec_fn=lambda: signal.pthread_sigmask(signal.SIG_SETMASK, []),
+        )
     except Exception:
         pass
 
