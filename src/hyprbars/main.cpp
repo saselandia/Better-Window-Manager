@@ -440,6 +440,7 @@ APICALL EXPORT void PLUGIN_EXIT() {
         m->m_scheduledRecalc = true;
 
     g_pHyprRenderer->m_renderPass.removeAllOfType("CBarPassElement");
+    g_pHyprRenderer->m_renderPass.removeAllOfType("CSnapPreviewPassElement");
 
     Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->barColorRuleIdx);
     Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->titleColorRuleIdx);
