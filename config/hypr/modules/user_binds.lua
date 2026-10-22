@@ -29,10 +29,10 @@ hl.bind("ALT + left", hl.dsp.focus({ direction = "left" }), { description = "Nav
 hl.bind("ALT + right", hl.dsp.focus({ direction = "right" }), { description = "Navegación: Mover foco a la derecha" })
 hl.bind("ALT + up", hl.dsp.focus({ direction = "up" }), { description = "Navegación: Mover foco hacia arriba" })
 hl.bind("ALT + down", hl.dsp.focus({ direction = "down" }), { description = "Navegación: Mover foco hacia abajo" })
-hl.bind("CTRL + left", hl.dsp.window.move({ direction = "left" }), { description = "Navegación: Mover ventana a la izquierda", repeating = true })
-hl.bind("CTRL + right", hl.dsp.window.move({ direction = "right" }), { description = "Navegación: Mover ventana a la derecha", repeating = true })
-hl.bind("CTRL + up", hl.dsp.window.move({ direction = "up" }), { description = "Navegación: Mover ventana hacia arriba", repeating = true })
-hl.bind("CTRL + down", hl.dsp.window.move({ direction = "down" }), { description = "Navegación: Mover ventana hacia abajo", repeating = true })
+hl.bind((is_plasma and "SUPER + left" or "CTRL + left"), hl.dsp.window.move({ direction = "left" }), { description = "Navegación: Mover ventana a la izquierda", repeating = true })
+hl.bind((is_plasma and "SUPER + right" or "CTRL + right"), hl.dsp.window.move({ direction = "right" }), { description = "Navegación: Mover ventana a la derecha", repeating = true })
+hl.bind((is_plasma and "SUPER + up" or "CTRL + up"), hl.dsp.window.move({ direction = "up" }), { description = "Navegación: Mover ventana hacia arriba", repeating = true })
+hl.bind((is_plasma and "SUPER + down" or "CTRL + down"), hl.dsp.window.move({ direction = "down" }), { description = "Navegación: Mover ventana hacia abajo", repeating = true })
 -- [Espacios de trabajo]
 hl.bind("ALT + S", hl.dsp.workspace.toggle_special("magic"), { description = "Espacios de trabajo: Mostrar / Ocultar espacio especial (Magic)" })
 hl.bind("ALT + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }), { description = "Espacios de trabajo: Enviar ventana al espacio especial (Magic)" })
@@ -79,14 +79,22 @@ hl.bind("ALT + SHIFT + 0", hl.dsp.window.move({ workspace = 10 }), { description
 -- [Lanzadores]
 hl.bind("ALT + T", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/theme-picker.sh"), { description = "Lanzadores: Selector de temas (BWM)" })
 -- [Ventanas]
-hl.bind("SUPER + left", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py left"), { description = "Ventanas: Ajustar ventana a la izquierda (Quick Tile Left)" })
-hl.bind("SUPER + right", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py right"), { description = "Ventanas: Ajustar ventana a la derecha (Quick Tile Right)" })
-hl.bind("SUPER + up", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top"), { description = "Ventanas: Maximizar ventana (Quick Tile Top)" })
-hl.bind("SUPER + down", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom"), { description = "Ventanas: Restaurar / Ajustar abajo (Quick Tile Bottom)" })
-hl.bind("SUPER + ALT + left", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top-left"), { description = "Ventanas: Ajustar esquina superior izquierda (Quick Tile)" })
-hl.bind("SUPER + ALT + right", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top-right"), { description = "Ventanas: Ajustar esquina superior derecha (Quick Tile)" })
-hl.bind("SUPER + ALT + down", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-right"), { description = "Ventanas: Ajustar esquina inferior derecha (Quick Tile)" })
-hl.bind("SUPER + ALT + up", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-left"), { description = "Ventanas: Ajustar esquina inferior izquierda (Quick Tile)" })
+hl.bind((is_plasma and "CTRL + left" or "SUPER + left"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py left"), { description = "Ventanas: Ajustar ventana a la izquierda (Quick Tile Left)" })
+hl.bind((is_plasma and "CTRL + right" or "SUPER + right"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py right"), { description = "Ventanas: Ajustar ventana a la derecha (Quick Tile Right)" })
+hl.bind((is_plasma and "CTRL + up" or "SUPER + up"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top"), { description = "Ventanas: Maximizar ventana (Quick Tile Top)" })
+hl.bind((is_plasma and "CTRL + down" or "SUPER + down"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom"), { description = "Ventanas: Restaurar / Ajustar abajo (Quick Tile Bottom)" })
+hl.bind((is_plasma and "CTRL + ALT + left" or "SUPER + ALT + left"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top-left"), { description = "Ventanas: Ajustar esquina superior izquierda (Quick Tile)" })
+hl.bind((is_plasma and "CTRL + ALT + right" or "SUPER + ALT + right"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top-right"), { description = "Ventanas: Ajustar esquina superior derecha (Quick Tile)" })
+hl.bind((is_plasma and "CTRL + ALT + down" or "SUPER + ALT + down"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-right"), { description = "Ventanas: Ajustar esquina inferior derecha (Quick Tile)" })
+hl.bind((is_plasma and "CTRL + ALT + up" or "SUPER + ALT + up"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-left"), { description = "Ventanas: Ajustar esquina inferior izquierda (Quick Tile)" })
+
+-- Helper binds: allow Super+Alt for corner snaps in Plasma as well
+if is_plasma then
+    hl.bind("SUPER + ALT + left", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top-left"), { description = "Ventanas: Ajustar esquina superior izquierda (Quick Tile)" })
+    hl.bind("SUPER + ALT + right", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top-right"), { description = "Ventanas: Ajustar esquina superior derecha (Quick Tile)" })
+    hl.bind("SUPER + ALT + down", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-right"), { description = "Ventanas: Ajustar esquina inferior derecha (Quick Tile)" })
+    hl.bind("SUPER + ALT + up", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-left"), { description = "Ventanas: Ajustar esquina inferior izquierda (Quick Tile)" })
+end
 
 -- Alt+Tab Helper Releases
 hl.bind("ALT + SHIFT + TAB", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab prev"), { repeating = true })

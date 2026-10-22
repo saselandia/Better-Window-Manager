@@ -747,13 +747,42 @@ def generate_lua(binds: List[Dict[str, Any]]) -> str:
             elif isinstance(v, str):
                 opts.append(f"{k} = {to_lua_string(v)}")
 
+        mods_upper = [m.upper().strip() for m in b.get("mods", []) if m.strip()]
+        key_name = (b.get("key") or "").strip()
+        key_lower = key_name.lower()
+        action_exec = (b.get("exec") or "").strip()
+        dispatcher_name = (b.get("dispatcher") or "").strip()
+
+        # Theme-aware keybinds:
+        # In KDE Plasma: quick-tile on CTRL + arrows, window move on SUPER + arrows
+        # In other themes: quick-tile on SUPER + arrows, window move on CTRL + arrows
+        if key_lower in ("left", "right", "up", "down"):
+            if "quick-tile.py" in action_exec and mods_upper == ["SUPER"]:
+                combo_expr = f'(is_plasma and "CTRL + {key_name}" or "SUPER + {key_name}")'
+            elif dispatcher_name == "window_move_direction" and mods_upper == ["CTRL"]:
+                combo_expr = f'(is_plasma and "SUPER + {key_name}" or "CTRL + {key_name}")'
+            elif "quick-tile.py" in action_exec and set(mods_upper) == {"SUPER", "ALT"}:
+                combo_expr = f'(is_plasma and "CTRL + ALT + {key_name}" or "SUPER + ALT + {key_name}")'
+            else:
+                combo_expr = to_lua_string(combo)
+        else:
+            combo_expr = to_lua_string(combo)
+
         opts_table = f"{{ {', '.join(opts)} }}" if opts else ""
         if opts_table:
-            lines.append(f"hl.bind({to_lua_string(combo)}, {dsp_call}, {opts_table})")
+            lines.append(f"hl.bind({combo_expr}, {dsp_call}, {opts_table})")
         else:
-            lines.append(f"hl.bind({to_lua_string(combo)}, {dsp_call})")
+            lines.append(f"hl.bind({combo_expr}, {dsp_call})")
 
     # Extra Alt+Tab helper releases and mouse binds
+    lines.append("")
+    lines.append("-- Helper binds: allow Super+Alt for corner snaps in Plasma as well")
+    lines.append('if is_plasma then')
+    lines.append('    hl.bind("SUPER + ALT + left", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top-left"), { description = "Ventanas: Ajustar esquina superior izquierda (Quick Tile)" })')
+    lines.append('    hl.bind("SUPER + ALT + right", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top-right"), { description = "Ventanas: Ajustar esquina superior derecha (Quick Tile)" })')
+    lines.append('    hl.bind("SUPER + ALT + down", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-right"), { description = "Ventanas: Ajustar esquina inferior derecha (Quick Tile)" })')
+    lines.append('    hl.bind("SUPER + ALT + up", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-left"), { description = "Ventanas: Ajustar esquina inferior izquierda (Quick Tile)" })')
+    lines.append('end')
     lines.append("")
     lines.append("-- Alt+Tab Helper Releases")
     lines.append('hl.bind("ALT + SHIFT + TAB", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab prev"), { repeating = true })')
