@@ -51,17 +51,17 @@ std::vector<UP<IPassElement>> CSnapPreviewPassElement::draw() {
     box.w = std::max(10, (int)box.w - inset * 2);
     box.h = std::max(10, (int)box.h - inset * 2);
 
-    const int radius     = std::max(4, (int)std::round(6 * pMonitor->m_scale));
-    const int borderSize = std::max(2, (int)std::round(2 * pMonitor->m_scale));
+    const int radius     = std::max(6, (int)std::round(8 * pMonitor->m_scale));
+    const int borderSize = std::max(2, (int)std::round(3 * pMonitor->m_scale));
 
     g_pHyprOpenGL->scissor(nullptr);
 
     // Translucent KDE Plasma Breeze Blue highlight fill (#3daee9)
-    CHyprColor fillCol{61.0 / 255.0, 174.0 / 255.0, 233.0 / 255.0, 0.28};
+    CHyprColor fillCol{61.0 / 255.0, 174.0 / 255.0, 233.0 / 255.0, 0.35};
     g_pHyprOpenGL->renderRect(box, fillCol, {.round = radius, .roundingPower = 2.0f});
 
     // Crisp KDE Plasma Breeze Blue border (#3daee9)
-    Config::CGradientValueData borderGrad(CHyprColor{61.0 / 255.0, 174.0 / 255.0, 233.0 / 255.0, 0.90});
+    Config::CGradientValueData borderGrad(CHyprColor{61.0 / 255.0, 174.0 / 255.0, 233.0 / 255.0, 0.95});
     g_pHyprOpenGL->renderBorder(box, borderGrad, {.round = radius, .roundingPower = 2.0f, .borderSize = borderSize, .a = 1.0f});
 
     return {};

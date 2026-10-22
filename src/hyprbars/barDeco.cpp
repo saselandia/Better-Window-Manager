@@ -169,7 +169,8 @@ CHyprBar::~CHyprBar() {
     if (m_bDraggingCSD && m_bDragInitiated) {
         Cursor::overrideController->unsetOverride(Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
     }
-    std::erase(g_pGlobalState->bars, m_self);
+    if (g_pGlobalState)
+        std::erase(g_pGlobalState->bars, m_self);
 }
 
 SDecorationPositioningInfo CHyprBar::getPositioningInfo() {

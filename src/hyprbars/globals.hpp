@@ -7,6 +7,8 @@
 #include <hyprland/src/config/values/types/StringValue.hpp>
 #include <hyprland/src/config/values/types/ColorValue.hpp>
 
+#include <hyprland/src/helpers/signal/Signal.hpp>
+
 inline HANDLE PHANDLE = nullptr;
 
 struct SHyprButton {
@@ -28,6 +30,14 @@ struct SGlobalState {
     uint32_t                  barColorRuleIdx   = 0;
     uint32_t                  titleColorRuleIdx = 0;
 
+    CHyprSignalListener       pOpenListener;
+    CHyprSignalListener       pUpdateRulesListener;
+    CHyprSignalListener       pMouseButtonListener;
+    CHyprSignalListener       pMouseMoveListener;
+    CHyprSignalListener       pRenderListener;
+    CHyprSignalListener       pPreReloadListener;
+    CHyprSignalListener       pReloadedListener;
+
     struct {
         SP<Config::Values::CColorValue>  barColor, textColor, inactiveButtonColor;
         SP<Config::Values::CIntValue>    barHeight;
@@ -39,4 +49,5 @@ struct SGlobalState {
     } config;
 };
 
-inline UP<SGlobalState> g_pGlobalState;
+#define g_pGlobalState g_pHyprbarsState
+inline UP<SGlobalState> g_pHyprbarsState;

@@ -1,8 +1,7 @@
-pragma ComponentBehavior: Bound
-
 import qs
 import qs.services
 import qs.modules.common
+import qs.modules.common.functions
 import qs.modules.common.widgets
 import QtQuick
 import QtQuick.Layouts
@@ -18,7 +17,8 @@ import Quickshell.Hyprland
  * - Anchored right above the bottom taskbar at the bottom-left corner.
  * - Breeze Dark styling (#24292e, accent #3daee9).
  * - Split view: Left Categories sidebar, Right Applications view.
- * - Real-time fast fuzzy search with clear button.
+ * - Real-time fast fuzzy & substring search with clear button.
+ * - Recent applications ("Últimas abiertas") tracked persistently and from running windows.
  * - System Places & Quick Favorites.
  * - KDE Plasma Session & Power actions (Lock, Suspend, Reboot, Logout, Shutdown).
  * - Full keyboard navigation (Arrows, Enter, Escape, Tab).
@@ -31,6 +31,7 @@ Scope {
     property string filterText: ""
     property int selectedCategory: 0
     property int selectedAppIndex: 0
+    property var recentAppIds: []
 
     // KDE Plasma Breeze Dark Palette
     readonly property color colPanelBg: "#f024292e"
@@ -48,11 +49,40 @@ Scope {
     // Dimensions (Authentic KDE Plasma 6 Kickoff proportions)
     readonly property int kickoffWidth: 650
     readonly property int kickoffHeight: 540
-    readonly property int sidebarWidth: 180
+    readonly property int sidebarWidth: 190
 
-    // Categories definition
+    // Persistent storage for recently opened apps
+    FileView {
+        id: recentAppsFileView
+        path: (Quickshell.env("HOME") || "/home/sasel") + "/.cache/bwm_recent_apps.json"
+        onLoaded: {
+            try {
+                const raw = JSON.parse(recentAppsFileView.text());
+                if (Array.isArray(raw)) {
+                    root.recentAppIds = raw;
+                }
+            } catch (e) {
+                console.warn("[Kickoff] Could not parse recent apps cache:", e);
+            }
+        }
+        onLoadFailed: error => {
+            root.recentAppIds = [];
+        }
+    }
+
+    function recordRecentApp(appId) {
+        if (!appId || typeof appId !== "string") return;
+        const current = root.recentAppIds.filter(id => id !== appId);
+        current.unshift(appId);
+        const trimmed = current.slice(0, 30);
+        root.recentAppIds = trimmed;
+        recentAppsFileView.setText(JSON.stringify(trimmed));
+    }
+
+    // Categories definition (Matching KDE Plasma Kickoff)
     readonly property var categories: [
         { id: "favorites", name: "Favoritos", icon: "bookmarks" },
+        { id: "recent", name: "Recientes", icon: "document-open-recent" },
         { id: "all", name: "Todas las aplicaciones", icon: "applications-all" },
         { id: "internet", name: "Internet", icon: "applications-internet", filter: ["Network", "WebBrowser", "Email", "Feed", "InstantMessaging", "Chat", "FileTransfer", "P2P"] },
         { id: "development", name: "Desarrollo", icon: "applications-development", filter: ["Development", "IDE", "Debugger", "Building", "RevisionControl", "Translation", "GUIDesigner"] },
@@ -86,18 +116,110 @@ Scope {
     ]
 
     readonly property var allApps: {
-        const list = AppSearch.list ? Array.from(AppSearch.list) : [];
-        return list.slice().sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        const raw = (DesktopEntries.applications?.values && DesktopEntries.applications.values.length > 0)
+            ? Array.from(DesktopEntries.applications.values)
+            : (AppSearch.list ? Array.from(AppSearch.list) : []);
+        return raw.filter(a => a && a.name && !a.noDisplay)
+                  .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    }
+
+    // Recent applications: combines persistent launch history and open Hyprland clients
+    readonly property var recentApps: {
+        const result = [];
+        const seen = new Set();
+
+        // 1. From persistent recent launches
+        for (let i = 0; i < root.recentAppIds.length; i++) {
+            const id = root.recentAppIds[i];
+            if (!id || seen.has(id)) continue;
+            const entry = DesktopEntries.byId(id) || allApps.find(a => a.id === id);
+            if (entry) {
+                seen.add(entry.id);
+                result.push(entry);
+            }
+        }
+
+        // 2. From currently active / open Hyprland client windows
+        const clients = Hyprland.clients?.values || [];
+        for (let i = 0; i < clients.length; i++) {
+            const c = clients[i];
+            if (!c) continue;
+            const appId = c.class || c.initialClass || c.appId;
+            if (!appId) continue;
+            const entry = DesktopEntries.heuristicLookup(appId) || DesktopEntries.byId(appId) || allApps.find(a => (a.id || "").toLowerCase().includes(appId.toLowerCase()));
+            if (entry && entry.id && !seen.has(entry.id)) {
+                seen.add(entry.id);
+                result.push(entry);
+            }
+        }
+
+        // 3. Fallback to default popular apps if nothing recorded yet
+        if (result.length === 0) {
+            for (let i = 0; i < defaultFavorites.length; i++) {
+                const fav = defaultFavorites[i];
+                const entry = allApps.find(a => (a.id || "").toLowerCase().includes(fav.toLowerCase()));
+                if (entry && !seen.has(entry.id)) {
+                    seen.add(entry.id);
+                    result.push(entry);
+                }
+            }
+        }
+
+        return result.slice(0, 25);
+    }
+
+    // Fast and comprehensive search (FuzzySort + Substring on name, id, categories, description)
+    function searchItems(query) {
+        const q = query.trim().toLowerCase();
+        if (q.length === 0) return [];
+
+        const seenIds = new Set();
+        const results = [];
+
+        // 1. Fuzzy query via AppSearch
+        try {
+            const raw = AppSearch.fuzzyQuery(query) || [];
+            for (let i = 0; i < raw.length; i++) {
+                const a = raw[i];
+                if (a && a.id && !seenIds.has(a.id)) {
+                    seenIds.add(a.id);
+                    results.push(a);
+                }
+            }
+        } catch (err) {
+            console.warn("[Kickoff] Fuzzy query error:", err);
+        }
+
+        // 2. Comprehensive substring matching across allApps
+        for (let i = 0; i < allApps.length; i++) {
+            const a = allApps[i];
+            if (!a || !a.id || seenIds.has(a.id)) continue;
+
+            const name = (a.name || "").toLowerCase();
+            const id = (a.id || "").toLowerCase();
+            const gen = (a.genericName || "").toLowerCase();
+            const comm = (a.comment || "").toLowerCase();
+            const cats = (a.categories || []).join(" ").toLowerCase();
+
+            if (name.includes(q) || id.includes(q) || gen.includes(q) || comm.includes(q) || cats.includes(q)) {
+                seenIds.add(a.id);
+                results.push(a);
+            }
+        }
+
+        // 3. Search matching Places
+        const matchedPlaces = places.filter(p => p.name.toLowerCase().includes(q) || p.subtitle.toLowerCase().includes(q));
+        for (let i = 0; i < matchedPlaces.length; i++) {
+            results.push(matchedPlaces[i]);
+        }
+
+        return results.slice(0, 40);
     }
 
     readonly property var displayedItems: {
         const q = filterText.trim();
         if (q.length > 0) {
-            const rawApps = AppSearch.fuzzyQuery(q) || [];
-            const apps = Array.from(rawApps).slice(0, 35);
-            const ql = q.toLowerCase();
-            const matchedPlaces = places.filter(p => p.name.toLowerCase().includes(ql) || p.subtitle.toLowerCase().includes(ql));
-            return apps.concat(matchedPlaces);
+            return searchItems(q);
         }
 
         const cat = categories[selectedCategory] || categories[0];
@@ -105,6 +227,8 @@ Scope {
             const pinned = (Config.options?.launcher?.pinnedApps || []).map(id => DesktopEntries.byId(id)).filter(e => !!e);
             if (pinned.length > 0) return pinned;
             return allApps.filter(a => defaultFavorites.some(f => (a.id || "").toLowerCase().includes(f.toLowerCase())));
+        } else if (cat.id === "recent") {
+            return recentApps;
         } else if (cat.id === "all") {
             return allApps;
         } else if (cat.id === "places") {
@@ -121,6 +245,7 @@ Scope {
 
     function open() {
         filterText = "";
+        searchInput.text = "";
         selectedCategory = 0;
         selectedAppIndex = 0;
         opened = true;
@@ -129,6 +254,7 @@ Scope {
     function close() {
         opened = false;
         filterText = "";
+        searchInput.text = "";
     }
 
     function toggle() {
@@ -141,6 +267,9 @@ Scope {
         if (item.isPlace && item.cmd) {
             Quickshell.execDetached(item.cmd);
         } else if (typeof item.execute === "function") {
+            if (item.id) {
+                recordRecentApp(item.id);
+            }
             item.execute();
         }
     }
@@ -238,10 +367,8 @@ Scope {
                                 focus: root.opened
                                 text: root.filterText
 
-                                onTextChanged: {
-                                    if (text !== root.filterText) {
-                                        root.filterText = text;
-                                    }
+                                onTextEdited: {
+                                    root.filterText = text;
                                 }
 
                                 Text {
@@ -259,6 +386,7 @@ Scope {
                                     if (event.key === Qt.Key_Escape) {
                                         if (root.filterText.length > 0) {
                                             root.filterText = "";
+                                            searchInput.text = "";
                                         } else {
                                             root.close();
                                         }
@@ -293,6 +421,7 @@ Scope {
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     root.filterText = "";
+                                    searchInput.text = "";
                                     searchInput.forceActiveFocus();
                                 }
 
@@ -347,6 +476,8 @@ Scope {
 
                             delegate: MouseArea {
                                 id: catMouse
+                                required property var modelData
+                                required property int index
                                 width: categoriesList.width
                                 height: 36
                                 hoverEnabled: true
@@ -384,13 +515,13 @@ Scope {
                                             Layout.preferredWidth: 20
                                             Layout.preferredHeight: 20
                                             Layout.alignment: Qt.AlignVCenter
-                                            source: Quickshell.iconPath(modelData.icon, "applications-other")
+                                            source: Quickshell.iconPath(catMouse.modelData.icon)
                                         }
 
                                         Text {
                                             Layout.fillWidth: true
                                             Layout.alignment: Qt.AlignVCenter
-                                            text: modelData.name
+                                            text: catMouse.modelData.name
                                             color: catMouse.isSelected ? root.colText : (catMouse.containsMouse ? root.colText : root.colTextMuted)
                                             font.family: "Google Sans Flex"
                                             font.pixelSize: 13
@@ -400,9 +531,17 @@ Scope {
                                     }
                                 }
 
+                                onEntered: {
+                                    if (root.filterText.length === 0) {
+                                        root.selectedCategory = catMouse.index;
+                                        root.selectedAppIndex = 0;
+                                    }
+                                }
+
                                 onClicked: {
-                                    root.selectedCategory = index;
+                                    root.selectedCategory = catMouse.index;
                                     root.filterText = "";
+                                    searchInput.text = "";
                                     root.selectedAppIndex = 0;
                                     searchInput.forceActiveFocus();
                                 }
@@ -434,12 +573,14 @@ Scope {
 
                             delegate: MouseArea {
                                 id: appMouse
+                                required property var modelData
+                                required property int index
                                 width: appsList.width
                                 height: 48
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
 
-                                readonly property bool isSelected: root.selectedAppIndex === index
+                                readonly property bool isSelected: root.selectedAppIndex === appMouse.index
 
                                 Rectangle {
                                     anchors.fill: parent
@@ -459,9 +600,9 @@ Scope {
                                             Layout.preferredWidth: 32
                                             Layout.preferredHeight: 32
                                             Layout.alignment: Qt.AlignVCenter
-                                            source: modelData.isPlace
-                                                ? Quickshell.iconPath(modelData.icon, "folder")
-                                                : (modelData.icon ? Quickshell.iconPath(modelData.icon, "application-x-executable") : Quickshell.iconPath(AppSearch.guessIcon(modelData.id), "application-x-executable"))
+                                            source: appMouse.modelData.isPlace
+                                                ? Quickshell.iconPath(appMouse.modelData.icon)
+                                                : Quickshell.iconPath(appMouse.modelData.icon || AppSearch.guessIcon(appMouse.modelData.id))
                                         }
 
                                         // App Title & Generic Name Subtitle
@@ -472,7 +613,7 @@ Scope {
 
                                             Text {
                                                 Layout.fillWidth: true
-                                                text: modelData.name || ""
+                                                text: appMouse.modelData.name || ""
                                                 color: root.colText
                                                 font.family: "Google Sans Flex"
                                                 font.pixelSize: 13
@@ -482,7 +623,7 @@ Scope {
 
                                             Text {
                                                 Layout.fillWidth: true
-                                                text: modelData.isPlace ? modelData.subtitle : (modelData.genericName || modelData.comment || "")
+                                                text: appMouse.modelData.isPlace ? appMouse.modelData.subtitle : (appMouse.modelData.genericName || appMouse.modelData.comment || "")
                                                 color: root.colTextMuted
                                                 font.family: "Google Sans Flex"
                                                 font.pixelSize: 11
@@ -494,11 +635,11 @@ Scope {
                                 }
 
                                 onEntered: {
-                                    root.selectedAppIndex = index;
+                                    root.selectedAppIndex = appMouse.index;
                                 }
 
                                 onClicked: {
-                                    root.launchItem(modelData);
+                                    root.launchItem(appMouse.modelData);
                                 }
                             }
 

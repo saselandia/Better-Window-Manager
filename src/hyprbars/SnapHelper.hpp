@@ -18,7 +18,8 @@
 #include <optional>
 
 // In-memory store of pre-snap floating window sizes
-inline std::unordered_map<uintptr_t, Vector2D> g_preSnapSizes;
+#define g_preSnapSizes g_plasmaPreSnapSizes
+inline std::unordered_map<uintptr_t, Vector2D> g_plasmaPreSnapSizes;
 
 inline void savePresnapToFile(const std::string& addr, int w, int h) {
     try {
@@ -126,9 +127,12 @@ inline std::optional<Vector2D> getAndConsumePreSnapSize(PHLWINDOW pWindow) {
 }
 
 // Snap preview overlay state
-inline bool          g_bSnapPreviewActive = false;
-inline CBox          g_snapPreviewBox;
-inline PHLMONITORREF g_snapPreviewMonitor;
+#define g_bSnapPreviewActive g_bPlasmaSnapPreviewActive
+#define g_snapPreviewBox     g_plasmaSnapPreviewBox
+#define g_snapPreviewMonitor g_plasmaSnapPreviewMonitor
+inline bool          g_bPlasmaSnapPreviewActive = false;
+inline CBox          g_plasmaSnapPreviewBox;
+inline PHLMONITORREF g_plasmaSnapPreviewMonitor;
 
 struct SSnapTarget {
     std::string direction;

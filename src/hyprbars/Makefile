@@ -1,12 +1,7 @@
-# Else exist specifically for clang
-ifeq ($(CXX),g++)
-    EXTRA_FLAGS = --no-gnu-unique
-else
-    EXTRA_FLAGS =
-endif
+EXTRA_FLAGS = -fno-gnu-unique
 
 CXXFLAGS ?= -O2
-CXXFLAGS += -shared -fPIC -std=c++2b -Wno-c++11-narrowing
+CXXFLAGS += -shared -fPIC -fno-gnu-unique -std=c++2b -Wno-c++11-narrowing
 INCLUDES = `pkg-config --cflags pixman-1 libdrm hyprland libinput libudev wayland-server xkbcommon lua5.4`
 LIBS =
 
