@@ -15,11 +15,11 @@ import Quickshell.Hyprland
 /**
  * Authentic KDE Plasma Kickoff Application Launcher
  * - Anchored right above the bottom taskbar at the bottom-left corner.
- * - Breeze Dark styling (#24292e, accent #3daee9).
+ * - Breeze Dark styling (#24292e, accent #3daee9) with slim, refined proportions.
  * - Split view: Left Categories sidebar, Right Applications view.
  * - Real-time fast fuzzy & substring search with clear button.
  * - Recent applications ("Últimas abiertas") tracked persistently and from running windows.
- * - System Places & Quick Favorites.
+ * - System Places & Quick Favorites with bundled Breeze Dark SVG assets.
  * - KDE Plasma Session & Power actions (Lock, Suspend, Reboot, Logout, Shutdown).
  * - Full keyboard navigation (Arrows, Enter, Escape, Tab).
  * - IPC: quickshell -c ii ipc call plasmaKickoff toggle|open|close
@@ -35,21 +35,83 @@ Scope {
 
     // KDE Plasma Breeze Dark Palette
     readonly property color colPanelBg: "#f024292e"
-    readonly property color colSidebarBg: "#1a1e22"
-    readonly property color colBorder: "#31363b"
+    readonly property color colSidebarBg: "#191d21"
+    readonly property color colBorder: "#2e353b"
     readonly property color colAccent: "#3daee9"
     readonly property color colAccentHover: "#4fc3f7"
     readonly property color colAccentSubtle: "#283daee9"
     readonly property color colText: "#eff0f1"
     readonly property color colTextMuted: "#a1a9b1"
-    readonly property color colHover: "#18ffffff"
-    readonly property color colActive: "#2e3daee9"
+    readonly property color colHover: "#15ffffff"
+    readonly property color colActive: "#283daee9"
     readonly property color colInputBg: "#1c2024"
 
-    // Dimensions (Authentic KDE Plasma 6 Kickoff proportions)
-    readonly property int kickoffWidth: 650
-    readonly property int kickoffHeight: 540
-    readonly property int sidebarWidth: 190
+    // Refined slim proportions (Sleek KDE Plasma Kickoff)
+    readonly property int kickoffWidth: 560
+    readonly property int kickoffHeight: 490
+    readonly property int sidebarWidth: 155
+
+    // Bundled Breeze Dark icon assets directory
+    readonly property string breezeAssetsDir: Directories.assetsPath + "/icons/breeze-dark"
+
+    readonly property var bundledBreezeIcons: [
+        "applications-accessories", "applications-all", "applications-development",
+        "applications-games", "applications-graphics", "applications-internet",
+        "applications-multimedia", "applications-office", "applications-other",
+        "applications-science", "applications-system", "applications-utilities",
+        "application-x-executable", "bookmarks", "configure", "dialog-information",
+        "document-open-recent", "drive-harddisk", "edit-clear", "edit-find",
+        "folder-documents", "folder-download", "folder-home", "folder-music",
+        "folder-pictures", "folder", "folder-videos", "help-about", "image-missing",
+        "internet-mail", "internet-web-browser", "preferences-system",
+        "system-file-manager", "system-lock-screen", "system-log-out",
+        "system-reboot", "system-search", "system-shutdown", "system-suspend",
+        "user-home", "user-identity", "user-trash-full", "user-trash",
+        "utilities-terminal"
+    ]
+
+    function getIconUrl(iconName, fallbackName) {
+        const raw = iconName || fallbackName || "application-x-executable";
+
+        // 1. Exact match in bundled Breeze Dark assets
+        if (bundledBreezeIcons.indexOf(raw) !== -1) {
+            return "file://" + root.breezeAssetsDir + "/" + raw + ".svg";
+        }
+
+        // 2. Standard freedesktop / Breeze aliases
+        if (raw === "user-trash" || raw === "trash" || raw === "trash-empty") {
+            return "file://" + root.breezeAssetsDir + "/user-trash.svg";
+        }
+        if (raw === "folder-home" || raw === "user-home") {
+            return "file://" + root.breezeAssetsDir + "/folder-home.svg";
+        }
+        if (raw === "terminal" || raw === "kitty" || raw === "konsole" || raw === "foot" || raw === "alacritty") {
+            const sys = Quickshell.iconPath(raw);
+            if (sys && !sys.includes("image-missing")) return sys;
+            return "file://" + root.breezeAssetsDir + "/utilities-terminal.svg";
+        }
+
+        // 3. System icon resolver
+        const sysPath = Quickshell.iconPath(raw);
+        if (sysPath && sysPath.length > 0 && !sysPath.includes("image-missing")) {
+            return sysPath;
+        }
+
+        // 4. Guess icon from AppSearch
+        const guessed = AppSearch.guessIcon(raw);
+        if (guessed && guessed.length > 0) {
+            if (bundledBreezeIcons.indexOf(guessed) !== -1) {
+                return "file://" + root.breezeAssetsDir + "/" + guessed + ".svg";
+            }
+            const guessedPath = Quickshell.iconPath(guessed);
+            if (guessedPath && !guessedPath.includes("image-missing")) {
+                return guessedPath;
+            }
+        }
+
+        // 5. Fallback to bundled executable icon
+        return "file://" + root.breezeAssetsDir + "/application-x-executable.svg";
+    }
 
     // Persistent storage for recently opened apps
     FileView {
@@ -83,7 +145,7 @@ Scope {
     readonly property var categories: [
         { id: "favorites", name: "Favoritos", icon: "bookmarks" },
         { id: "recent", name: "Recientes", icon: "document-open-recent" },
-        { id: "all", name: "Todas las aplicaciones", icon: "applications-all" },
+        { id: "all", name: "Todas", icon: "applications-all" },
         { id: "internet", name: "Internet", icon: "applications-internet", filter: ["Network", "WebBrowser", "Email", "Feed", "InstantMessaging", "Chat", "FileTransfer", "P2P"] },
         { id: "development", name: "Desarrollo", icon: "applications-development", filter: ["Development", "IDE", "Debugger", "Building", "RevisionControl", "Translation", "GUIDesigner"] },
         { id: "office", name: "Oficina", icon: "applications-office", filter: ["Office", "WordProcessor", "Spreadsheet", "Presentation", "Publishing", "Viewer"] },
@@ -312,13 +374,13 @@ Scope {
             width: root.kickoffWidth
             height: root.kickoffHeight
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: 48
+            anchors.bottomMargin: 46
             anchors.left: parent.left
             anchors.leftMargin: 6
             color: root.colPanelBg
             border.width: 1
             border.color: root.colBorder
-            radius: 8
+            radius: 7
             clip: true
 
             MouseArea { anchors.fill: parent } // Prevent backdrop click through
@@ -328,32 +390,32 @@ Scope {
                 spacing: 0
 
                 // =============================================================
-                // 1. TOP HEADER: Breeze Search Bar
+                // 1. TOP HEADER: Breeze Search Bar (Slim & Refined)
                 // =============================================================
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 52
+                    Layout.preferredHeight: 44
                     color: "transparent"
 
                     Rectangle {
                         anchors.fill: parent
-                        anchors.margins: 8
+                        anchors.margins: 6
                         color: root.colInputBg
-                        radius: 6
+                        radius: 5
                         border.width: searchInput.activeFocus ? 1.5 : 1
                         border.color: searchInput.activeFocus ? root.colAccent : root.colBorder
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 12
+                            anchors.leftMargin: 10
                             anchors.rightMargin: 8
                             spacing: 8
 
                             IconImage {
-                                Layout.preferredWidth: 18
-                                Layout.preferredHeight: 18
+                                Layout.preferredWidth: 16
+                                Layout.preferredHeight: 16
                                 Layout.alignment: Qt.AlignVCenter
-                                source: Quickshell.iconPath("system-search", "edit-find")
+                                source: root.getIconUrl("system-search", "edit-find")
                             }
 
                             TextInput {
@@ -362,7 +424,7 @@ Scope {
                                 verticalAlignment: TextInput.AlignVCenter
                                 color: root.colText
                                 font.family: "Google Sans Flex"
-                                font.pixelSize: 13
+                                font.pixelSize: 12
                                 clip: true
                                 focus: root.opened
                                 text: root.filterText
@@ -377,7 +439,7 @@ Scope {
                                     text: "Escriba para buscar..."
                                     color: root.colTextMuted
                                     font.family: "Google Sans Flex"
-                                    font.pixelSize: 13
+                                    font.pixelSize: 12
                                     visible: !searchInput.text && !searchInput.inputMethodComposing
                                 }
 
@@ -414,8 +476,8 @@ Scope {
 
                             // Clear button (✕)
                             MouseArea {
-                                Layout.preferredWidth: 24
-                                Layout.preferredHeight: 24
+                                Layout.preferredWidth: 22
+                                Layout.preferredHeight: 22
                                 Layout.alignment: Qt.AlignVCenter
                                 visible: root.filterText.length > 0
                                 cursorShape: Qt.PointingHandCursor
@@ -427,15 +489,15 @@ Scope {
 
                                 Rectangle {
                                     anchors.centerIn: parent
-                                    width: 18
-                                    height: 18
-                                    radius: 9
+                                    width: 16
+                                    height: 16
+                                    radius: 8
                                     color: parent.containsMouse ? root.colHover : "transparent"
                                     Text {
                                         anchors.centerIn: parent
                                         text: "✕"
                                         color: root.colTextMuted
-                                        font.pixelSize: 11
+                                        font.pixelSize: 10
                                     }
                                 }
                             }
@@ -459,7 +521,7 @@ Scope {
                     spacing: 0
 
                     // ---------------------------------------------------------
-                    // Left Column: Categories Sidebar
+                    // Left Column: Categories Sidebar (Slim 155px)
                     // ---------------------------------------------------------
                     Rectangle {
                         Layout.preferredWidth: root.sidebarWidth
@@ -479,16 +541,16 @@ Scope {
                                 required property var modelData
                                 required property int index
                                 width: categoriesList.width
-                                height: 36
+                                height: 33
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
 
-                                readonly property bool isSelected: root.selectedCategory === index && root.filterText.length === 0
+                                readonly property bool isSelected: root.selectedCategory === catMouse.index && root.filterText.length === 0
 
                                 Rectangle {
                                     anchors.fill: parent
-                                    anchors.leftMargin: 4
-                                    anchors.rightMargin: 4
+                                    anchors.leftMargin: 3
+                                    anchors.rightMargin: 3
                                     radius: 4
                                     color: catMouse.isSelected ? root.colActive : (catMouse.containsMouse ? root.colHover : "transparent")
                                     border.width: catMouse.isSelected ? 1 : 0
@@ -498,24 +560,24 @@ Scope {
                                     Rectangle {
                                         anchors.left: parent.left
                                         anchors.verticalCenter: parent.verticalCenter
-                                        width: 3
-                                        height: 18
-                                        radius: 1.5
+                                        width: 2.5
+                                        height: 16
+                                        radius: 1.25
                                         color: root.colAccent
                                         visible: catMouse.isSelected
                                     }
 
                                     RowLayout {
                                         anchors.fill: parent
-                                        anchors.leftMargin: 10
-                                        anchors.rightMargin: 8
-                                        spacing: 10
+                                        anchors.leftMargin: 8
+                                        anchors.rightMargin: 6
+                                        spacing: 8
 
                                         IconImage {
-                                            Layout.preferredWidth: 20
-                                            Layout.preferredHeight: 20
+                                            Layout.preferredWidth: 18
+                                            Layout.preferredHeight: 18
                                             Layout.alignment: Qt.AlignVCenter
-                                            source: Quickshell.iconPath(catMouse.modelData.icon)
+                                            source: root.getIconUrl(catMouse.modelData.icon, "applications-other")
                                         }
 
                                         Text {
@@ -524,7 +586,7 @@ Scope {
                                             text: catMouse.modelData.name
                                             color: catMouse.isSelected ? root.colText : (catMouse.containsMouse ? root.colText : root.colTextMuted)
                                             font.family: "Google Sans Flex"
-                                            font.pixelSize: 13
+                                            font.pixelSize: 12
                                             font.weight: catMouse.isSelected ? Font.DemiBold : Font.Normal
                                             elide: Text.ElideRight
                                         }
@@ -557,7 +619,7 @@ Scope {
                     }
 
                     // ---------------------------------------------------------
-                    // Right Column: Applications List / Search Results
+                    // Right Column: Applications List / Search Results (Slim)
                     // ---------------------------------------------------------
                     Item {
                         Layout.fillWidth: true
@@ -568,7 +630,7 @@ Scope {
                             anchors.fill: parent
                             anchors.margins: 4
                             clip: true
-                            spacing: 2
+                            spacing: 1
                             model: root.displayedItems
 
                             delegate: MouseArea {
@@ -576,7 +638,7 @@ Scope {
                                 required property var modelData
                                 required property int index
                                 width: appsList.width
-                                height: 48
+                                height: 42
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
 
@@ -584,39 +646,37 @@ Scope {
 
                                 Rectangle {
                                     anchors.fill: parent
-                                    radius: 5
+                                    radius: 4
                                     color: appMouse.isSelected ? root.colActive : (appMouse.containsMouse ? root.colHover : "transparent")
                                     border.width: appMouse.isSelected ? 1 : 0
                                     border.color: root.colAccent
 
                                     RowLayout {
                                         anchors.fill: parent
-                                        anchors.leftMargin: 10
-                                        anchors.rightMargin: 10
-                                        spacing: 12
+                                        anchors.leftMargin: 8
+                                        anchors.rightMargin: 8
+                                        spacing: 10
 
                                         // App Icon
                                         IconImage {
-                                            Layout.preferredWidth: 32
-                                            Layout.preferredHeight: 32
+                                            Layout.preferredWidth: 26
+                                            Layout.preferredHeight: 26
                                             Layout.alignment: Qt.AlignVCenter
-                                            source: appMouse.modelData.isPlace
-                                                ? Quickshell.iconPath(appMouse.modelData.icon)
-                                                : Quickshell.iconPath(appMouse.modelData.icon || AppSearch.guessIcon(appMouse.modelData.id))
+                                            source: root.getIconUrl(appMouse.modelData.icon || appMouse.modelData.id, appMouse.modelData.isPlace ? "folder" : "application-x-executable")
                                         }
 
                                         // App Title & Generic Name Subtitle
                                         ColumnLayout {
                                             Layout.fillWidth: true
                                             Layout.alignment: Qt.AlignVCenter
-                                            spacing: 1
+                                            spacing: 0
 
                                             Text {
                                                 Layout.fillWidth: true
                                                 text: appMouse.modelData.name || ""
                                                 color: root.colText
                                                 font.family: "Google Sans Flex"
-                                                font.pixelSize: 13
+                                                font.pixelSize: 12
                                                 font.weight: Font.DemiBold
                                                 elide: Text.ElideRight
                                             }
@@ -626,7 +686,7 @@ Scope {
                                                 text: appMouse.modelData.isPlace ? appMouse.modelData.subtitle : (appMouse.modelData.genericName || appMouse.modelData.comment || "")
                                                 color: root.colTextMuted
                                                 font.family: "Google Sans Flex"
-                                                font.pixelSize: 11
+                                                font.pixelSize: 10
                                                 elide: Text.ElideRight
                                                 visible: text.length > 0
                                             }
@@ -649,7 +709,7 @@ Scope {
                                 text: root.filterText.length > 0 ? "No se encontraron aplicaciones" : "No hay aplicaciones en esta categoría"
                                 color: root.colTextMuted
                                 font.family: "Google Sans Flex"
-                                font.pixelSize: 13
+                                font.pixelSize: 12
                                 visible: root.displayedItems.length === 0
                             }
                         }
@@ -668,13 +728,13 @@ Scope {
                 // =============================================================
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 48
+                    Layout.preferredHeight: 42
                     color: root.colSidebarBg
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 12
-                        anchors.rightMargin: 12
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
                         spacing: 8
 
                         // User Avatar & Name
@@ -683,17 +743,17 @@ Scope {
                             spacing: 8
 
                             Rectangle {
-                                width: 28
-                                height: 28
-                                radius: 14
+                                width: 24
+                                height: 24
+                                radius: 12
                                 color: root.colActive
                                 border.width: 1
                                 border.color: root.colAccent
 
                                 IconImage {
                                     anchors.centerIn: parent
-                                    implicitSize: 16
-                                    source: Quickshell.iconPath("user-identity", "avatar-default")
+                                    implicitSize: 14
+                                    source: root.getIconUrl("user-identity", "avatar-default")
                                 }
                             }
 
@@ -701,7 +761,7 @@ Scope {
                                 text: Quickshell.env("USER") || "sasel"
                                 color: root.colText
                                 font.family: "Google Sans Flex"
-                                font.pixelSize: 13
+                                font.pixelSize: 12
                                 font.weight: Font.DemiBold
                             }
                         }
@@ -711,13 +771,13 @@ Scope {
                         // Session Actions (Breeze Icons & Clean actions)
                         RowLayout {
                             Layout.alignment: Qt.AlignVCenter
-                            spacing: 4
+                            spacing: 2
 
                             // 1. Lock screen
                             MouseArea {
                                 id: lockBtn
-                                width: 32
-                                height: 32
+                                width: 28
+                                height: 28
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
@@ -731,8 +791,8 @@ Scope {
                                     color: lockBtn.containsMouse ? root.colHover : "transparent"
                                     IconImage {
                                         anchors.centerIn: parent
-                                        implicitSize: 18
-                                        source: Quickshell.iconPath("system-lock-screen", "lock")
+                                        implicitSize: 16
+                                        source: root.getIconUrl("system-lock-screen")
                                     }
                                 }
                             }
@@ -740,8 +800,8 @@ Scope {
                             // 2. Suspend
                             MouseArea {
                                 id: suspBtn
-                                width: 32
-                                height: 32
+                                width: 28
+                                height: 28
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
@@ -755,8 +815,8 @@ Scope {
                                     color: suspBtn.containsMouse ? root.colHover : "transparent"
                                     IconImage {
                                         anchors.centerIn: parent
-                                        implicitSize: 18
-                                        source: Quickshell.iconPath("system-suspend", "system-suspend-symbolic")
+                                        implicitSize: 16
+                                        source: root.getIconUrl("system-suspend")
                                     }
                                 }
                             }
@@ -764,8 +824,8 @@ Scope {
                             // 3. Reboot
                             MouseArea {
                                 id: rebBtn
-                                width: 32
-                                height: 32
+                                width: 28
+                                height: 28
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
@@ -779,8 +839,8 @@ Scope {
                                     color: rebBtn.containsMouse ? root.colHover : "transparent"
                                     IconImage {
                                         anchors.centerIn: parent
-                                        implicitSize: 18
-                                        source: Quickshell.iconPath("system-reboot", "system-reboot-symbolic")
+                                        implicitSize: 16
+                                        source: root.getIconUrl("system-reboot")
                                     }
                                 }
                             }
@@ -788,8 +848,8 @@ Scope {
                             // 4. Logout
                             MouseArea {
                                 id: logBtn
-                                width: 32
-                                height: 32
+                                width: 28
+                                height: 28
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
@@ -803,8 +863,8 @@ Scope {
                                     color: logBtn.containsMouse ? root.colHover : "transparent"
                                     IconImage {
                                         anchors.centerIn: parent
-                                        implicitSize: 18
-                                        source: Quickshell.iconPath("system-log-out", "system-log-out-symbolic")
+                                        implicitSize: 16
+                                        source: root.getIconUrl("system-log-out")
                                     }
                                 }
                             }
@@ -812,8 +872,8 @@ Scope {
                             // 5. Shutdown
                             MouseArea {
                                 id: shutBtn
-                                width: 32
-                                height: 32
+                                width: 28
+                                height: 28
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
@@ -827,8 +887,8 @@ Scope {
                                     color: shutBtn.containsMouse ? "#33da4453" : "transparent"
                                     IconImage {
                                         anchors.centerIn: parent
-                                        implicitSize: 18
-                                        source: Quickshell.iconPath("system-shutdown", "system-shutdown-symbolic")
+                                        implicitSize: 16
+                                        source: root.getIconUrl("system-shutdown")
                                     }
                                 }
                             }
