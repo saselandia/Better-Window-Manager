@@ -7,6 +7,13 @@
 
 set -euo pipefail
 
+# Asegurar que las señales (SIGTERM, SIGHUP, etc.) no estén bloqueadas
+# Hyprland usa signalfd en su hilo principal, lo que bloquea SIGTERM en procesos hijos.
+if [ -z "${_SIG_UNMASKED:-}" ]; then
+    export _SIG_UNMASKED=1
+    exec python3 -c "import os, signal, sys; signal.pthread_sigmask(signal.SIG_SETMASK, []); os.execvp(sys.argv[1], sys.argv[1:])" "$0" "$@"
+fi
+
 # Asegurar entorno y PATH
 export PATH="/usr/local/bin:/usr/bin:/bin:$HOME/.local/bin:$PATH"
 export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
@@ -58,15 +65,15 @@ fi
 # 2. Agente de autenticación Polkit (Gentoo en /usr/libexec o PATH)
 if ! pidof hyprpolkitagent >/dev/null 2>&1; then
     if command -v hyprpolkitagent >/dev/null 2>&1; then
-        nohup hyprpolkitagent >/dev/null 2>&1 & disown || true
+        hyprpolkitagent >/dev/null 2>&1 &
     elif [ -x /usr/libexec/hyprpolkitagent ]; then
-        nohup /usr/libexec/hyprpolkitagent >/dev/null 2>&1 & disown || true
+        /usr/libexec/hyprpolkitagent >/dev/null 2>&1 &
     fi
 fi
 
 # 3. Demonio de wallpapers (swww)
 if ! pidof swww-daemon >/dev/null 2>&1; then
-    nohup swww-daemon >/dev/null 2>&1 & disown || true
+    swww-daemon >/dev/null 2>&1 &
 fi
 
 # 4. Restaurar el wallpaper guardado
@@ -103,28 +110,28 @@ fi
         echo "$WALLPAPER" > "$HOME/.cache/current_wallpaper"
         swww img "$WALLPAPER" --transition-type none 2>/dev/null || true
     fi
-) & disown || true
+) &
 
 # 5. Barra y entorno de escritorio Quickshell (End_4 / Illogical Impulse)
 if ! pidof quickshell >/dev/null 2>&1; then
     if command -v quickshell >/dev/null 2>&1; then
-        nohup quickshell -c ii >/run/user/$(id -u)/quickshell-session.log 2>&1 & disown || true
+        quickshell -c ii >/run/user/$(id -u)/quickshell-session.log 2>&1 &
     fi
 fi
 
 # 6. Centro de notificaciones (swaync)
 if ! pidof swaync >/dev/null 2>&1; then
     if command -v swaync >/dev/null 2>&1; then
-        nohup swaync >/dev/null 2>&1 & disown || true
+        swaync >/dev/null 2>&1 &
     fi
 fi
 
 # 7. Demonio de portapapeles (cliphist con wl-paste)
 if ! pgrep -f '^wl-paste --type text' >/dev/null 2>&1; then
-    nohup wl-paste --type text --watch cliphist store >/dev/null 2>&1 & disown || true
+    wl-paste --type text --watch cliphist store >/dev/null 2>&1 &
 fi
 if ! pgrep -f '^wl-paste --type image' >/dev/null 2>&1; then
-    nohup wl-paste --type image --watch cliphist store >/dev/null 2>&1 & disown || true
+    wl-paste --type image --watch cliphist store >/dev/null 2>&1 &
 fi
 
 # 8. Aplicaciones de inicio automático del usuario (XDG Autostart / Quickshell Autostart)
@@ -132,7 +139,7 @@ if [ -f "$HOME/.config/hypr/scripts/autostart-manager.py" ]; then
     (
         sleep 2
         python3 "$HOME/.config/hypr/scripts/autostart-manager.py" run-all
-    ) & disown || true
+    ) &
 fi
 
 # 9. Cargar plugins (soporte CSD minimize y hyprbars para KDE Plasma)
@@ -143,7 +150,7 @@ fi
         hyprctl plugin load "/home/sasel/.config/hypr/plugins/hyprbars.so" 2>/dev/null || true
         hyprctl keyword windowrulev2 "plugin:hyprbars:nobar, class:^(steam|steamwebhelper|firefox|firefox-bin|google-chrome.*|chromium.*|brave-browser|zen.*|vesktop|discord|armcord|webcord|spotify|antigravity-ide|code|Code|code-oss|vscodium|cursor|org.gnome..*|nautilus|pavucontrol|easyeffects|gamescope|signal|telegram-desktop|org.telegram.desktop|baobab|evince|loupe)$" 2>/dev/null || true
     fi
-) & disown || true
+) &
 
 # 10. Asegurar que las pantallas abran en Workspace 1 (Principal 1080p) y Workspace 10 (Secundario 4K)
 (
@@ -155,4 +162,5 @@ fi
     # Pantalla principal 1080p -> Workspace 1 y enfocar
     hyprctl dispatch 'hl.dsp.focus({ monitor = "desc:HP Inc. HP X24ih 1CR1420TD4" })' 2>/dev/null || hyprctl dispatch 'hl.dsp.focus({ monitor = "DP-2" })' 2>/dev/null || true
     hyprctl dispatch 'hl.dsp.focus({ workspace = 1 })' 2>/dev/null || true
-) & disown || true
+) &
+
