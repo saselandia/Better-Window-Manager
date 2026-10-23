@@ -113,15 +113,11 @@ if is_plasma then
         border_size = 0,
     })
 
-    -- 2. Aplicaciones con decoraciones CSD propias (Steam, Firefox, Discord, Antigravity, Claude, etc.):
-    --    No ponerles barra superior adicional hyprbars.
-    hl.window_rule({
-        name  = "plasma-csd-no-hyprbars",
-        match = {
-            class = "^(steam|steamwebhelper|firefox|firefox-bin|google-chrome.*|chromium.*|brave-browser|zen.*|vesktop|discord|armcord|webcord|spotify|antigravity|antigravity-ide|code|Code|code-oss|vscodium|cursor|claude|claude-desktop|com.anthropic.Claude|org.gnome..*|nautilus|pavucontrol|easyeffects|gamescope|signal|telegram-desktop|org.telegram.desktop|baobab|evince|loupe)$",
-        },
-        -- ["hyprbars:no_bar"] = true,
-    })
+    -- 2. Barras de título: hyprbars detecta solo qué ventanas traen sus propios
+    --    botones (xdg-decoration / kde-server-decoration / _MOTIF_WM_HINTS).
+    --    Forzar a mano solo si hiciera falta:
+    --      ["hyprbars:no_bar"] = true   -> quitar barra
+    --      ["hyprbars:no_bar"] = false  -> forzar barra
 end
 
 --------------------------------

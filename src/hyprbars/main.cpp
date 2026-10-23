@@ -29,6 +29,7 @@
 #include <set>
 
 #include "barDeco.hpp"
+#include "CSDDetect.hpp"
 #include "SnapHelper.hpp"
 #include <hyprland/src/config/shared/actions/ConfigActions.hpp>
 #include <hyprland/src/managers/KeybindManager.hpp>
@@ -57,6 +58,23 @@ static void onNewWindow(PHLWINDOW window) {
     g_pGlobalState->bars.emplace_back(bar);
     bar->m_self = bar;
     HyprlandAPI::addWindowDecoration(PHANDLE, window, std::move(bar));
+}
+
+// hyprctl hyprbars-csd: qué ha detectado el plugin para cada ventana y por qué
+static std::string csdReport(eHyprCtlOutputFormat, std::string) {
+    std::string out;
+    for (auto& w : g_pCompositor->m_windows) {
+        if (!w->m_isMapped)
+            continue;
+        const auto det = detectDecorations(w);
+        bool       bar = false;
+        for (auto& b : g_pGlobalState->bars)
+            if (b && b->getOwner() == w)
+                bar = !b->m_hidden;
+        out += std::format("{} | {} | barra={} | xdg={} kde={} | {}\n", w->m_class, w->m_title.substr(0, 40), bar ? "si" : "no", det.xdgRequested, det.kdeRequested,
+                           det.reason);
+    }
+    return out;
 }
 
 static void onPreConfigReload() {
@@ -128,7 +146,10 @@ Hyprlang::CParseResult onNewButton(const char* K, const char* V) {
         return result;
     }
 
-    g_pGlobalState->buttons.push_back(SHyprButton{vars[3], userfg, *fgcolor, *bgcolor, size, vars[2]});
+    SHyprButton button{vars[3], userfg, *fgcolor, *bgcolor, size, vars[2]};
+    if (button.icon.starts_with("breeze:"))
+        button.breezeKind = button.icon.substr(7);
+    g_pGlobalState->buttons.push_back(std::move(button));
 
     for (auto& b : g_pGlobalState->bars) {
         b->m_bButtonsDirty = true;
@@ -189,6 +210,8 @@ int newLuaButton(lua_State* L) {
             return Config::Lua::Bindings::Internal::configError(L, "add_button: icon must be a string");
 
         button.icon = lua_tostring(L, -1);
+        if (button.icon.starts_with("breeze:"))
+            button.breezeKind = button.icon.substr(7);
     }
 
     {
@@ -452,6 +475,10 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g_pGlobalState->config.textColor           = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.text", "Change the text color", 0xffffffff);
     g_pGlobalState->config.inactiveButtonColor = makeShared<Config::Values::CColorValue>(
         "plugin:hyprbars:inactive_button_color", "Change the inactive button's color. 0x00000000 means unset", 0x00000000);
+    g_pGlobalState->config.inactiveBarColor =
+        makeShared<Config::Values::CColorValue>("plugin:hyprbars:inactive_bar_color", "Bar color of unfocused windows. 0x00000000 means same as bar_color", 0x00000000);
+    g_pGlobalState->config.inactiveTextColor =
+        makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.inactive_text", "Title/icon color of unfocused windows. 0x00000000 means same as col.text", 0x00000000);
     g_pGlobalState->config.barHeight       = makeShared<Config::Values::CIntValue>("plugin:hyprbars:bar_height", "Change the bar's height", 15);
     g_pGlobalState->config.barTextSize     = makeShared<Config::Values::CIntValue>("plugin:hyprbars:bar_text_size", "Change the bar's text size", 10);
     g_pGlobalState->config.barTitleEnabled = makeShared<Config::Values::CBoolValue>("plugin:hyprbars:bar_title_enabled", "Whether to enable titles in the bar", true);
@@ -472,6 +499,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.barColor);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.textColor);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.inactiveButtonColor);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.inactiveBarColor);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.inactiveTextColor);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.barHeight);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.barTextSize);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.barTitleEnabled);
@@ -491,6 +520,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
         HyprlandAPI::addConfigKeyword(PHANDLE, "plugin:hyprbars:hyprbars-button", onNewButton, Hyprlang::SHandlerOptions{});
     else
         HyprlandAPI::addLuaFunction(PHANDLE, "hyprbars", "add_button", ::newLuaButton);
+    g_pGlobalState->csdCommand = HyprlandAPI::registerHyprCtlCommand(PHANDLE, SHyprCtlCommand{.name = "hyprbars-csd", .exact = true, .fn = csdReport});
     g_pGlobalState->pPreReloadListener = Event::bus()->m_events.config.preReload.listen([] { onPreConfigReload(); });
     g_pGlobalState->pReloadedListener  = Event::bus()->m_events.config.reloaded.listen([] { onConfigReloaded(); });
 
@@ -509,6 +539,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 
 APICALL EXPORT void PLUGIN_EXIT() {
     hideSnapPreview();
+    closeDecorationDetection();
     for (auto& m : g_pCompositor->m_monitors)
         m->m_scheduledRecalc = true;
 
@@ -523,6 +554,8 @@ APICALL EXPORT void PLUGIN_EXIT() {
         g_pGlobalState->pRenderListener.reset();
         g_pGlobalState->pPreReloadListener.reset();
         g_pGlobalState->pReloadedListener.reset();
+        if (g_pGlobalState->csdCommand)
+            HyprlandAPI::unregisterHyprCtlCommand(PHANDLE, g_pGlobalState->csdCommand);
 
         Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->barColorRuleIdx);
         Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->titleColorRuleIdx);

@@ -1,5 +1,6 @@
 
 #include "barDeco.hpp"
+#include "CSDDetect.hpp"
 #include "SnapHelper.hpp"
 
 #include <hyprland/src/Compositor.hpp>
@@ -37,89 +38,64 @@ static CHyprColor configColor(Config::INTEGER color) {
     return CHyprColor{static_cast<uint64_t>(color)};
 }
 
+// La ventana trae sus propios botones: no se le dibuja barra (pero se sigue
+// gestionando su arrastre CSD para el snapping).
 static bool isKnownCSD(PHLWINDOW window) {
-    if (!window)
-        return false;
-    if (window->m_X11DoesntWantBorders)
-        return true;
+    return detectDecorations(window).clientDraws;
+}
 
-    const std::string& cls = window->m_class;
-    const std::string& initCls = window->m_initialClass;
+// Iconos de la decoración Breeze (KDE Plasma), con la misma geometría que
+// breeze/kdecoration: rejilla de 18x18, trazo de ~1px y extremos redondeados.
+static SP<Render::ITexture> breezeIcon(SHyprButton& button, bool maximized, const CHyprColor& col, int px) {
+    const std::string kind = button.breezeKind == "maximize" && maximized ? "restore" : button.breezeKind;
+    const auto        key  = std::format("{}:{}:{:x}", kind, px, col.getAsHex());
+    if (auto it = button.breezeTex.find(key); it != button.breezeTex.end() && it->second && it->second->m_texID != 0)
+        return it->second;
 
-    static const std::vector<std::string> csdPrefixes = {
-        "org.gnome.",
-        "com.github.",
-        "io.github.",
-    };
+    auto surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, px, px);
+    auto cr   = cairo_create(surf);
+    cairo_scale(cr, px / 18.0, px / 18.0);
+    cairo_set_source_rgba(cr, col.r, col.g, col.b, col.a);
+    cairo_set_line_width(cr, std::max(1.01, 18.0 / px));
+    cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND);
+    cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
 
-    static const std::vector<std::string> csdClasses = {
-        "steam",
-        "steamwebhelper",
-        "gamescope",
-        "spotify",
-        "discord",
-        "vesktop",
-        "armcord",
-        "webcord",
-        "telegram-desktop",
-        "org.telegram.desktop",
-        "signal",
-        "obsidian",
-        "code",
-        "Code",
-        "code-oss",
-        "vscodium",
-        "cursor",
-        "antigravity",
-        "antigravity-ide",
-        "firefox",
-        "firefox-bin",
-        "google-chrome",
-        "google-chrome-stable",
-        "chromium",
-        "Brave-browser",
-        "brave-browser",
-        "zen-browser",
-        "zen-alpha",
-        "zen-beta",
-        "microsoft-edge",
-        "nautilus",
-        "org.gnome.Nautilus",
-        "pavucontrol",
-        "org.pulseaudio.pavucontrol",
-        "easyeffects",
-        "com.github.wwmm.easyeffects",
-        "gnome-calculator",
-        "org.gnome.Calculator",
-        "gnome-disks",
-        "org.gnome.DiskUtility",
-        "baobab",
-        "org.gnome.baobab",
-        "evince",
-        "org.gnome.Evince",
-        "loupe",
-        "org.gnome.Loupe",
-    };
+    if (kind == "close") {
+        cairo_move_to(cr, 5, 5);
+        cairo_line_to(cr, 13, 13);
+        cairo_move_to(cr, 13, 5);
+        cairo_line_to(cr, 5, 13);
+    } else if (kind == "maximize") {
+        cairo_move_to(cr, 3.5, 11.5);
+        cairo_line_to(cr, 9, 6);
+        cairo_line_to(cr, 14.5, 11.5);
+    } else if (kind == "restore") {
+        cairo_move_to(cr, 4.5, 9);
+        cairo_line_to(cr, 9, 4.5);
+        cairo_line_to(cr, 13.5, 9);
+        cairo_line_to(cr, 9, 13.5);
+        cairo_close_path(cr);
+    } else if (kind == "minimize") {
+        cairo_move_to(cr, 3.5, 6.5);
+        cairo_line_to(cr, 9, 12);
+        cairo_line_to(cr, 14.5, 6.5);
+    }
+    cairo_stroke(cr);
+    cairo_surface_flush(surf);
 
-    auto matches = [](const std::string& name) {
-        if (name.empty()) return false;
-        std::string lower = name;
-        std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+    auto tex = g_pHyprRenderer->createTexture(surf);
+    cairo_destroy(cr);
+    cairo_surface_destroy(surf);
 
-        for (const auto& csd : csdClasses) {
-            std::string csdLower = csd;
-            std::transform(csdLower.begin(), csdLower.end(), csdLower.begin(), ::tolower);
-            if (lower == csdLower || lower.starts_with(csdLower + "-") || lower.starts_with(csdLower + "_") || lower.starts_with(csdLower + "."))
-                return true;
-        }
-        for (const auto& pref : csdPrefixes) {
-            if (name.starts_with(pref))
-                return true;
-        }
-        return false;
-    };
+    button.breezeTex[key] = tex;
+    return tex;
+}
 
-    return matches(cls) || matches(initCls);
+CHyprColor CHyprBar::currentTextColor() {
+    const auto INACTIVE = g_pGlobalState->config.inactiveTextColor->value();
+    if (!m_bWindowHasFocus && INACTIVE > 0)
+        return configColor(INACTIVE);
+    return configColor(g_pGlobalState->config.textColor->value());
 }
 
 CHyprBar::CHyprBar(PHLWINDOW pWindow) : IHyprWindowDecoration(pWindow) {
@@ -682,7 +658,8 @@ void CHyprBar::renderBarTitle(const Vector2D& bufferSize, const float scale) {
         return;
     }
 
-    const CHyprColor COLOR = m_bForcedTitleColor.value_or(configColor(COLORVAL));
+    (void)COLORVAL;
+    const CHyprColor COLOR = m_bForcedTitleColor.value_or(currentTextColor());
     m_pTextTex             = g_pHyprRenderer->renderText(m_szLastTitle, COLOR, scaledSize, false, FONT, maxWidth);
 }
 
@@ -717,6 +694,20 @@ void CHyprBar::renderBarButtons(CBox* barBox, const float scale, const float a) 
         auto&      button           = g_pGlobalState->buttons[i];
         const auto scaledButtonSize = button.size * scale;
         const auto scaledButtonsPad = BARBUTTONPADDING * scale;
+
+        if (!button.breezeKind.empty()) {
+            // Breeze: el círculo solo aparece al pasar el ratón
+            if (m_iButtonHoverState & (1 << i)) {
+                auto color = button.bgcol;
+                color.a *= a;
+                CBox buttonBox = {barBox->x + (BUTTONSRIGHT ? barBox->w - offset - scaledButtonSize : offset), barBox->y + (barBox->h - scaledButtonSize) / 2.0,
+                                  scaledButtonSize, scaledButtonSize};
+                buttonBox.round();
+                g_pHyprOpenGL->renderRect(buttonBox, color, {.round = static_cast<int>(std::round(scaledButtonSize / 2.0)), .roundingPower = 2.F});
+            }
+            offset += scaledButtonsPad + scaledButtonSize;
+            continue;
+        }
 
         auto       color = button.bgcol;
 
@@ -762,6 +753,27 @@ void CHyprBar::renderBarButtonsText(CBox* barBox, const float scale, const float
         Vector2D   currentPos = Vector2D{(BUTTONSRIGHT ? BARBUF.x - BARBUTTONPADDING - button.size - noScaleOffset : noScaleOffset), (BARBUF.y - button.size) / 2.0}.floor();
         bool       hovering   = VECINRECT(COORDS, currentPos.x, currentPos.y, currentPos.x + button.size + BARBUTTONPADDING, currentPos.y + button.size);
         noScaleOffset += BARBUTTONPADDING + button.size;
+
+        if (!button.breezeKind.empty()) {
+            const bool hovered = (m_iButtonHoverState & (1 << i)) != 0;
+            // con hover el icono toma el color de la barra sobre el círculo, como en Breeze
+            const auto fg  = hovered ? m_cRealBarColor->value() : (button.userfg && m_bWindowHasFocus ? button.fgcol : currentTextColor());
+            const int  px  = std::round(scaledButtonSize);
+            auto       tex = breezeIcon(button, m_pWindow->isFullscreen(), CHyprColor(fg.r, fg.g, fg.b, 1.F), px);
+            if (tex && tex->m_texID != 0) {
+                CBox pos = {barBox->x + (BUTTONSRIGHT ? barBox->width - offset - scaledButtonSize : offset), barBox->y + (barBox->height - scaledButtonSize) / 2.0,
+                            scaledButtonSize, scaledButtonSize};
+                pos.round();
+                g_pHyprOpenGL->renderTexture(tex, pos, {.a = a});
+            }
+            offset += scaledButtonsPad + scaledButtonSize;
+
+            if (hovering != hovered) {
+                m_iButtonHoverState ^= (1 << i);
+                damageEntire();
+            }
+            continue;
+        }
 
         if ((!button.iconTex || button.iconTex->m_texID == 0) && !button.icon.empty()) {
             // render icon
@@ -822,15 +834,18 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
     const auto  ENABLEBLUR        = g_pGlobalState->config.barBlur->value();
     const auto  INACTIVECOLOR     = g_pGlobalState->config.inactiveButtonColor->value();
 
-    if (INACTIVECOLOR > 0) {
+    (void)INACTIVECOLOR;
+    {
         bool currentWindowFocus = PWINDOW == Desktop::focusState()->window();
         if (currentWindowFocus != m_bWindowHasFocus) {
-            m_bWindowHasFocus = currentWindowFocus;
-            m_bButtonsDirty   = true;
+            m_bWindowHasFocus    = currentWindowFocus;
+            m_bButtonsDirty      = true;
+            m_bTitleColorChanged = true;
         }
     }
 
-    const CHyprColor DEST_COLOR = m_bForcedBarColor.value_or(configColor(BARCOLOR));
+    const auto       INACTIVEBAR = g_pGlobalState->config.inactiveBarColor->value();
+    const CHyprColor DEST_COLOR  = m_bForcedBarColor.value_or(configColor(!m_bWindowHasFocus && INACTIVEBAR > 0 ? INACTIVEBAR : BARCOLOR));
     if (DEST_COLOR != m_cRealBarColor->goal())
         *m_cRealBarColor = DEST_COLOR;
 

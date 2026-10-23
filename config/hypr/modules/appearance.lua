@@ -223,47 +223,54 @@ if hl.plugin and hl.plugin.hyprbars then
             plugin = {
                 hyprbars = {
                     enabled = true,
-                    bar_color = "0xff24292e",
-                    ["col.text"] = "0xffeff0f1",
+                    -- Paleta Breeze Dark (Plasma 6): cabecera activa / inactiva
+                    bar_color = "0xff2a2e32",
+                    inactive_bar_color = "0xff202326",
+                    ["col.text"] = "0xfffcfcfc",
+                    ["col.inactive_text"] = "0xffa1a9b1",
                     bar_height = 30,
-                    bar_text_size = 11,
+                    bar_text_size = 10,
                     bar_text_font = "Google Sans Flex",
-                    bar_text_align = "left",
+                    bar_text_align = "center",
                     bar_part_of_window = true,
                     bar_precedence_over_border = true,
                     bar_buttons_alignment = "right",
-                    bar_padding = 10,
-                    bar_button_padding = 6,
-                    inactive_button_color = "0xff24292e",
+                    bar_padding = 6,
+                    bar_button_padding = 4,
                     icon_on_hover = false,
                     on_double_click = "hyprctl dispatch \"hl.dsp.window.fullscreen({ mode = 1, action = 'toggle' })\"",
                 }
             }
         })
 
+        -- Botones con la decoración Breeze real (iconos vectoriales "breeze:*"):
+        -- bg_color = círculo al pasar el ratón, fg_color = color del icono.
+        -- La barra solo aparece en ventanas que piden decoración al compositor;
+        -- las que traen sus propios botones (CSD) se detectan solas
+        -- (comprobar con: hyprctl hyprbars-csd).
         if hl.plugin.hyprbars.add_button then
-            -- Botón 1 (Extremo derecho): Cerrar (✕ Rojo Breeze #da4453)
+            -- Extremo derecho: Cerrar (círculo rojo Breeze #da4453 al pasar el ratón)
             hl.plugin.hyprbars.add_button({
                 bg_color = "0xffda4453",
-                fg_color = "0xffffffff",
-                size = 12,
-                icon = "✕",
+                fg_color = "0xfffcfcfc",
+                size = 20,
+                icon = "breeze:close",
                 action = "hyprctl dispatch \"hl.dsp.window.close()\""
             })
-            -- Botón 2 (Centro): Maximizar (□ Breeze Slate #31363b)
+            -- Centro: Maximizar / Restaurar
             hl.plugin.hyprbars.add_button({
-                bg_color = "0xff31363b",
-                fg_color = "0xffeff0f1",
-                size = 12,
-                icon = "□",
+                bg_color = "0xfffcfcfc",
+                fg_color = "0xfffcfcfc",
+                size = 20,
+                icon = "breeze:maximize",
                 action = "hyprctl dispatch \"hl.dsp.window.fullscreen({ mode = 1, action = 'toggle' })\""
             })
-            -- Botón 3 (Izquierda): Minimizar (─ Breeze Slate #31363b)
+            -- Izquierda: Minimizar
             hl.plugin.hyprbars.add_button({
-                bg_color = "0xff31363b",
-                fg_color = "0xffeff0f1",
-                size = 12,
-                icon = "─",
+                bg_color = "0xfffcfcfc",
+                fg_color = "0xfffcfcfc",
+                size = 20,
+                icon = "breeze:minimize",
                 action = "/home/sasel/.config/hypr/scripts/toggle-minimize.py min"
             })
         end
