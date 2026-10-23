@@ -281,13 +281,14 @@ Item {
             Layout.preferredWidth: 32
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
+            readonly property bool popupOpen: GlobalStates.plasmaNetworkOpen && GlobalStates.plasmaNetworkScreen === (root.screen?.name ?? "")
 
             Rectangle {
                 anchors.fill: parent
                 radius: 4
-                color: netBtn.containsMouse ? root.colHover : "transparent"
-                border.width: netBtn.containsMouse ? 1 : 0
-                border.color: "#20ffffff"
+                color: netBtn.popupOpen ? root.colActive : (netBtn.containsMouse ? root.colHover : "transparent")
+                border.width: (netBtn.containsMouse || netBtn.popupOpen) ? 1 : 0
+                border.color: netBtn.popupOpen ? "#403daee9" : "#20ffffff"
 
                 MaterialSymbol {
                     anchors.centerIn: parent
@@ -297,8 +298,11 @@ Item {
                 }
             }
 
+            // Plasma Networks applet anchored above the button
             onClicked: {
-                GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
+                GlobalStates.plasmaNetworkAnchorX = netBtn.mapToItem(null, netBtn.width / 2, 0).x;
+                GlobalStates.plasmaNetworkScreen = root.screen?.name ?? "";
+                GlobalStates.plasmaNetworkOpen = !GlobalStates.plasmaNetworkOpen;
             }
         }
 
@@ -470,8 +474,11 @@ Item {
                 }
             }
 
+            // Plasma Networks applet anchored above the button
             onClicked: {
-                GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
+                GlobalStates.plasmaNetworkAnchorX = netBtn.mapToItem(null, netBtn.width / 2, 0).x;
+                GlobalStates.plasmaNetworkScreen = root.screen?.name ?? "";
+                GlobalStates.plasmaNetworkOpen = !GlobalStates.plasmaNetworkOpen;
             }
         }
 

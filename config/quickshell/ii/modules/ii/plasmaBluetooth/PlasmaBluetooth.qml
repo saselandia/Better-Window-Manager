@@ -3,11 +3,11 @@ pragma ComponentBehavior: Bound
 import qs
 import qs.services
 import qs.modules.common
+import qs.modules.ii.plasmaCommon
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import Quickshell.Bluetooth
 
 /**
@@ -27,27 +27,8 @@ Scope {
     readonly property bool adapterEnabled: adapter?.enabled ?? false
     readonly property bool discovering: adapter?.discovering ?? false
 
-    // KDE Plasma Breeze Dark Palette (same tokens as PlasmaKickoff)
-    readonly property color colPanelBg: "#f024292e"
-    readonly property color colHeaderBg: "#2a2e32"
-    readonly property color colBorder: "#2e353b"
-    readonly property color colAccent: "#3daee9"
-    readonly property color colAccentSubtle: "#283daee9"
-    readonly property color colAccentBorder: "#803daee9"
-    readonly property color colText: "#eff0f1"
-    readonly property color colTextMuted: "#a1a9b1"
-    readonly property color colHover: "#15ffffff"
-    readonly property color colButtonBg: "#31363b"
-    readonly property color colButtonBorder: "#4d5257"
-    readonly property color colNegative: "#da4453"
-    readonly property string fontFamily: "Google Sans Flex"
-
-    readonly property int popupWidth: 380
-    readonly property int popupHeight: 440
-
-    readonly property string iconsDir: Directories.assetsPath + "/icons/breeze-dark/bluetooth"
     function icon(name) {
-        return "file://" + root.iconsDir + "/" + name + ".svg";
+        return Breeze.icon("bluetooth", name);
     }
 
     // BlueZ device icon names -> bundled Breeze Dark device icons
@@ -141,158 +122,6 @@ Scope {
         function close(): void { root.close(); }
     }
 
-    // =================================================================
-    // Reusable Breeze controls
-    // =================================================================
-    component BreezeSwitch: MouseArea {
-        id: sw
-        property bool checked: false
-        signal toggled()
-        implicitWidth: 36
-        implicitHeight: 20
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: sw.toggled()
-
-        Rectangle {
-            anchors.fill: parent
-            radius: height / 2
-            color: sw.checked ? root.colAccent : root.colButtonBg
-            border.width: 1
-            border.color: sw.checked ? root.colAccent : (sw.containsMouse ? root.colAccent : root.colButtonBorder)
-            Behavior on color { ColorAnimation { duration: 120 } }
-
-            Rectangle {
-                width: 16
-                height: 16
-                radius: 8
-                anchors.verticalCenter: parent.verticalCenter
-                x: sw.checked ? parent.width - width - 2 : 2
-                color: sw.checked ? "#fcfcfc" : "#bdc3c7"
-                Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-            }
-        }
-    }
-
-    // Flat tool button (Plasma header style): transparent, hover fill + accent frame
-    component BreezeToolButton: MouseArea {
-        id: tb
-        property string iconName: ""
-        property string label: ""
-        property string tooltip: ""
-        implicitHeight: 28
-        implicitWidth: tbRow.implicitWidth + (label.length > 0 ? 16 : 10)
-        hoverEnabled: true
-        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-        opacity: enabled ? 1 : 0.4
-
-        Rectangle {
-            anchors.fill: parent
-            radius: 4
-            color: tb.containsPress ? root.colAccentSubtle : (tb.containsMouse ? root.colHover : "transparent")
-            border.width: tb.containsMouse ? 1 : 0
-            border.color: root.colAccentBorder
-        }
-
-        RowLayout {
-            id: tbRow
-            anchors.centerIn: parent
-            spacing: 6
-            Image {
-                visible: tb.iconName.length > 0
-                Layout.preferredWidth: 16
-                Layout.preferredHeight: 16
-                sourceSize: Qt.size(16, 16)
-                source: tb.iconName.length > 0 ? root.icon(tb.iconName) : ""
-            }
-            Text {
-                visible: tb.label.length > 0
-                text: tb.label
-                color: root.colText
-                font.family: root.fontFamily
-                font.pixelSize: 12
-            }
-        }
-    }
-
-    // Push button (Breeze frame)
-    component BreezeButton: MouseArea {
-        id: bb
-        property string iconName: ""
-        property string label: ""
-        property bool destructive: false
-        implicitHeight: 28
-        implicitWidth: bbRow.implicitWidth + 20
-        hoverEnabled: true
-        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-        opacity: enabled ? 1 : 0.4
-
-        Rectangle {
-            anchors.fill: parent
-            radius: 4
-            color: bb.containsPress ? root.colAccentSubtle : root.colButtonBg
-            border.width: 1
-            border.color: bb.containsMouse ? (bb.destructive ? root.colNegative : root.colAccent) : root.colButtonBorder
-            Behavior on border.color { ColorAnimation { duration: 100 } }
-        }
-
-        RowLayout {
-            id: bbRow
-            anchors.centerIn: parent
-            spacing: 6
-            Image {
-                visible: bb.iconName.length > 0
-                Layout.preferredWidth: 16
-                Layout.preferredHeight: 16
-                sourceSize: Qt.size(16, 16)
-                source: bb.iconName.length > 0 ? root.icon(bb.iconName) : ""
-            }
-            Text {
-                text: bb.label
-                color: root.colText
-                font.family: root.fontFamily
-                font.pixelSize: 12
-            }
-        }
-    }
-
-    component SectionHeader: RowLayout {
-        id: sh
-        property string title: ""
-        Layout.fillWidth: true
-        Layout.topMargin: 6
-        Layout.leftMargin: 6
-        Layout.rightMargin: 6
-        spacing: 8
-        Text {
-            text: sh.title
-            color: root.colTextMuted
-            font.family: root.fontFamily
-            font.pixelSize: 11
-            font.weight: Font.DemiBold
-        }
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: root.colBorder
-        }
-    }
-
-    component DetailKey: Text {
-        Layout.alignment: Qt.AlignRight | Qt.AlignTop
-        color: root.colTextMuted
-        font.family: root.fontFamily
-        font.pixelSize: 11
-    }
-    component DetailValue: Text {
-        Layout.fillWidth: true
-        color: root.colText
-        font.family: root.fontFamily
-        font.pixelSize: 11
-        elide: Text.ElideRight
-        textFormat: Text.PlainText
-    }
-
     // Plasma "ExpandableListItem" for one Bluetooth device
     component DeviceItem: Rectangle {
         id: item
@@ -304,9 +133,9 @@ Scope {
         Layout.fillWidth: true
         implicitHeight: itemCol.implicitHeight + 12
         radius: 4
-        color: item.expanded ? root.colAccentSubtle : (item.hovered ? root.colHover : "transparent")
+        color: item.expanded ? Breeze.accentSubtle : (item.hovered ? Breeze.hover : "transparent")
         border.width: (item.expanded || item.hovered) ? 1 : 0
-        border.color: root.colAccentBorder
+        border.color: Breeze.accentBorder
         Behavior on color { ColorAnimation { duration: 100 } }
 
         // Pair -> trust -> connect, like Bluedevil's wizard does
@@ -360,16 +189,16 @@ Scope {
                         text: item.device?.name || "Dispositivo desconocido"
                         textFormat: Text.PlainText
                         elide: Text.ElideRight
-                        color: root.colText
-                        font.family: root.fontFamily
+                        color: Breeze.text
+                        font.family: Breeze.fontFamily
                         font.pixelSize: 13
                     }
                     Text {
                         Layout.fillWidth: true
                         text: root.deviceStatus(item.device)
                         elide: Text.ElideRight
-                        color: (item.device?.connected ?? false) ? root.colAccent : root.colTextMuted
-                        font.family: root.fontFamily
+                        color: (item.device?.connected ?? false) ? Breeze.accent : Breeze.textMuted
+                        font.family: Breeze.fontFamily
                         font.pixelSize: 11
                     }
                 }
@@ -394,7 +223,7 @@ Scope {
                 BreezeButton {
                     id: actionBtn
                     visible: (item.hovered || item.expanded) && !root.isBusy(item.device)
-                    iconName: item.device?.connected ? "network-disconnect" : (item.device?.paired ? "network-connect" : "list-add")
+                    iconSource: root.icon(item.device?.connected ? "network-disconnect" : (item.device?.paired ? "network-connect" : "list-add"))
                     label: item.device?.connected ? "Desconectar" : (item.device?.paired ? "Conectar" : "Emparejar")
                     onClicked: {
                         const d = item.device;
@@ -405,25 +234,12 @@ Scope {
                     }
                 }
 
-                MouseArea {
+                BreezeToolButton {
                     id: expandBtn
-                    Layout.preferredWidth: 24
-                    Layout.preferredHeight: 24
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
+                    implicitWidth: 24
+                    implicitHeight: 24
+                    iconSource: root.icon(item.expanded ? "arrow-up" : "arrow-down")
                     onClicked: item.expanded = !item.expanded
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: 4
-                        color: expandBtn.containsMouse ? root.colHover : "transparent"
-                    }
-                    Image {
-                        anchors.centerIn: parent
-                        width: 16
-                        height: 16
-                        sourceSize: Qt.size(16, 16)
-                        source: root.icon(item.expanded ? "arrow-up" : "arrow-down")
-                    }
                 }
             }
 
@@ -436,19 +252,18 @@ Scope {
                 columnSpacing: 10
                 rowSpacing: 3
 
-
-                DetailKey { text: "Nombre:" }
-                DetailValue { text: item.device?.deviceName || item.device?.name || "—" }
-                DetailKey { text: "Dirección:" }
-                DetailValue { text: item.device?.address ?? "—" }
-                DetailKey { text: "Tipo:" }
-                DetailValue { text: root.deviceType(item.device) }
-                DetailKey { visible: item.device?.batteryAvailable ?? false; text: "Batería:" }
-                DetailValue { visible: item.device?.batteryAvailable ?? false; text: `${Math.round((item.device?.battery ?? 0) * 100)} %` }
-                DetailKey { text: "De confianza:" }
-                DetailValue { text: (item.device?.trusted ?? false) ? "Sí" : "No" }
-                DetailKey { text: "Adaptador:" }
-                DetailValue { text: root.adapter?.name ?? "—" }
+                BreezeDetailKey { text: "Nombre:" }
+                BreezeDetailValue { text: item.device?.deviceName || item.device?.name || "—" }
+                BreezeDetailKey { text: "Dirección:" }
+                BreezeDetailValue { text: item.device?.address ?? "—" }
+                BreezeDetailKey { text: "Tipo:" }
+                BreezeDetailValue { text: root.deviceType(item.device) }
+                BreezeDetailKey { visible: item.device?.batteryAvailable ?? false; text: "Batería:" }
+                BreezeDetailValue { visible: item.device?.batteryAvailable ?? false; text: `${Math.round((item.device?.battery ?? 0) * 100)} %` }
+                BreezeDetailKey { text: "De confianza:" }
+                BreezeDetailValue { text: (item.device?.trusted ?? false) ? "Sí" : "No" }
+                BreezeDetailKey { text: "Adaptador:" }
+                BreezeDetailValue { text: root.adapter?.name ?? "—" }
             }
 
             RowLayout {
@@ -458,13 +273,13 @@ Scope {
                 Layout.bottomMargin: 2
                 spacing: 6
                 BreezeButton {
-                    iconName: "dialog-ok-apply"
+                    iconSource: root.icon("dialog-ok-apply")
                     label: (item.device?.trusted ?? false) ? "Dejar de confiar" : "Confiar"
                     onClicked: item.device.trusted = !item.device.trusted
                 }
                 BreezeButton {
                     destructive: true
-                    iconName: "edit-delete"
+                    iconSource: root.icon("edit-delete")
                     label: "Olvidar"
                     onClicked: item.device.forget()
                 }
@@ -473,252 +288,122 @@ Scope {
         }
     }
 
-    // Big centered message with optional action (PlasmaExtras.PlaceholderMessage)
-    component Placeholder: ColumnLayout {
-        id: ph
-        property string iconName: "network-bluetooth-inactive"
-        property string text: ""
-        property string actionLabel: ""
-        property string actionIcon: ""
-        signal triggered()
-        spacing: 10
+    BreezePopupWindow {
+        opened: root.opened
+        anchorX: GlobalStates.plasmaBluetoothAnchorX
+        screenName: GlobalStates.plasmaBluetoothScreen
+        namespace: "quickshell:plasmaBluetooth"
+        popupWidth: 380
+        popupHeight: 440
+        onCloseRequested: root.close()
 
-        Image {
-            Layout.alignment: Qt.AlignHCenter
-            Layout.preferredWidth: 64
-            Layout.preferredHeight: 64
-            sourceSize: Qt.size(64, 64)
-            source: root.icon(ph.iconName)
-            opacity: 0.6
-        }
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            Layout.maximumWidth: root.popupWidth - 60
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.WordWrap
-            text: ph.text
-            color: root.colTextMuted
-            font.family: root.fontFamily
-            font.pixelSize: 15
-        }
-        BreezeButton {
-            visible: ph.actionLabel.length > 0
-            Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: 4
-            iconName: ph.actionIcon
-            label: ph.actionLabel
-            onClicked: ph.triggered()
-        }
-    }
-
-    // =================================================================
-    // Popup window
-    // =================================================================
-    PanelWindow {
-        id: win
-        visible: root.opened || card.opacity > 0
-        screen: Quickshell.screens.find(s => s.name === GlobalStates.plasmaBluetoothScreen) ?? Quickshell.screens[0]
-        color: "transparent"
-        exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.namespace: "quickshell:plasmaBluetooth"
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.keyboardFocus: root.opened ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-        anchors { top: true; bottom: true; left: true; right: true }
-
-        // Click-outside closes (also catches the taskbar button -> natural toggle)
-        MouseArea {
+        ColumnLayout {
             anchors.fill: parent
-            onClicked: root.close()
-        }
+            anchors.margins: 1
+            spacing: 0
 
-        Item {
-            anchors.fill: parent
-            focus: root.opened
-            Keys.onEscapePressed: root.close()
-        }
+            BreezeHeader {
+                busy: root.discovering
 
-        Rectangle {
-            id: card
-            width: root.popupWidth
-            height: root.popupHeight
-            // Centered over the taskbar button, clamped to the screen edges
-            x: {
-                const ax = GlobalStates.plasmaBluetoothAnchorX;
-                const centered = ax >= 0 ? ax - width / 2 : win.width - width - 6;
-                return Math.max(6, Math.min(win.width - width - 6, centered));
-            }
-            y: win.height - height - 46 + (root.opened ? 0 : 12)
-            opacity: root.opened ? 1 : 0
-            color: root.colPanelBg
-            border.width: 1
-            border.color: root.colBorder
-            radius: 7
-            clip: true
-
-            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-            Behavior on y { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
-
-            MouseArea { anchors.fill: parent } // Block backdrop click-through
-
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 1
-                spacing: 0
-
-                // ---------------------------------------------------------
-                // Header (PlasmoidHeading)
-                // ---------------------------------------------------------
-                Rectangle {
+                BreezeSwitch {
+                    enabled: !!root.adapter
+                    checked: root.adapterEnabled
+                    onToggled: root.adapter.enabled = !root.adapter.enabled
+                }
+                Text {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 44
-                    color: root.colHeaderBg
-                    topLeftRadius: 6
-                    topRightRadius: 6
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 10
-                        anchors.rightMargin: 6
-                        spacing: 6
-
-                        BreezeSwitch {
-                            enabled: !!root.adapter
-                            checked: root.adapterEnabled
-                            onToggled: {
-                                if (!root.adapter) return;
-                                root.adapter.enabled = !root.adapter.enabled;
-                            }
-                        }
-                        Text {
-                            Layout.fillWidth: true
-                            text: "Bluetooth"
-                            color: root.colText
-                            font.family: root.fontFamily
-                            font.pixelSize: 13
-                            font.weight: Font.DemiBold
-                            elide: Text.ElideRight
-                        }
-                        BreezeToolButton {
-                            enabled: root.adapterEnabled
-                            iconName: root.discovering ? "view-refresh" : "list-add"
-                            label: root.discovering ? "Buscando…" : "Emparejar dispositivo…"
-                            onClicked: root.setDiscovering(!root.discovering)
-                        }
-                        BreezeToolButton {
-                            iconName: "configure"
-                            onClicked: {
-                                root.close();
-                                Quickshell.execDetached(["bash", "-c", Config.options.apps.bluetooth]);
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        anchors.bottom: parent.bottom
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        height: 1
-                        color: root.colBorder
-                    }
-
-                    // Indeterminate scan bar
-                    Item {
-                        anchors.bottom: parent.bottom
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        height: 2
-                        clip: true
-                        visible: root.discovering
-                        Rectangle {
-                            id: scanBar
-                            width: parent.width / 3
-                            height: parent.height
-                            color: root.colAccent
-                            NumberAnimation on x {
-                                running: root.discovering
-                                from: -scanBar.width
-                                to: root.popupWidth
-                                duration: 1200
-                                loops: Animation.Infinite
-                            }
-                        }
+                    text: "Bluetooth"
+                    color: Breeze.text
+                    font.family: Breeze.fontFamily
+                    font.pixelSize: 13
+                    font.weight: Font.DemiBold
+                    elide: Text.ElideRight
+                }
+                BreezeToolButton {
+                    enabled: root.adapterEnabled
+                    iconSource: root.icon(root.discovering ? "view-refresh" : "list-add")
+                    label: root.discovering ? "Buscando…" : "Emparejar dispositivo…"
+                    onClicked: root.setDiscovering(!root.discovering)
+                }
+                BreezeToolButton {
+                    iconSource: root.icon("configure")
+                    onClicked: {
+                        root.close();
+                        Quickshell.execDetached(["bash", "-c", Config.options.apps.bluetooth]);
                     }
                 }
+            }
 
-                // ---------------------------------------------------------
-                // Body
-                // ---------------------------------------------------------
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
 
-                    Placeholder {
-                        anchors.centerIn: parent
-                        visible: !BluetoothStatus.available
-                        iconName: "network-bluetooth-inactive"
-                        text: "No se encontraron adaptadores Bluetooth"
-                    }
+                BreezePlaceholder {
+                    anchors.centerIn: parent
+                    visible: !BluetoothStatus.available
+                    iconSource: root.icon("network-bluetooth-inactive")
+                    text: "No se encontraron adaptadores Bluetooth"
+                }
 
-                    Placeholder {
-                        anchors.centerIn: parent
-                        visible: BluetoothStatus.available && !root.adapterEnabled
-                        iconName: "network-bluetooth-inactive"
-                        text: "Bluetooth está desactivado"
-                        actionLabel: "Activar"
-                        actionIcon: "network-bluetooth"
-                        onTriggered: root.adapter.enabled = true
-                    }
+                BreezePlaceholder {
+                    anchors.centerIn: parent
+                    visible: BluetoothStatus.available && !root.adapterEnabled
+                    iconSource: root.icon("network-bluetooth-inactive")
+                    text: "Bluetooth está desactivado"
+                    actionLabel: "Activar"
+                    actionIcon: root.icon("network-bluetooth")
+                    onTriggered: root.adapter.enabled = true
+                }
 
-                    Placeholder {
-                        anchors.centerIn: parent
-                        visible: root.adapterEnabled && !root.hasAnyDevice
-                        iconName: "preferences-system-bluetooth"
-                        text: root.discovering ? "Buscando dispositivos cercanos…" : "No hay dispositivos emparejados"
-                        actionLabel: root.discovering ? "" : "Emparejar dispositivo…"
-                        actionIcon: "list-add"
-                        onTriggered: root.setDiscovering(true)
-                    }
+                BreezePlaceholder {
+                    anchors.centerIn: parent
+                    visible: root.adapterEnabled && !root.hasAnyDevice
+                    iconSource: root.icon("preferences-system-bluetooth")
+                    text: root.discovering ? "Buscando dispositivos cercanos…" : "No hay dispositivos emparejados"
+                    actionLabel: root.discovering ? "" : "Emparejar dispositivo…"
+                    actionIcon: root.icon("list-add")
+                    onTriggered: root.setDiscovering(true)
+                }
 
-                    Flickable {
-                        id: flick
-                        anchors.fill: parent
-                        anchors.margins: 6
-                        visible: root.adapterEnabled && root.hasAnyDevice
-                        contentHeight: listCol.implicitHeight
-                        clip: true
-                        boundsBehavior: Flickable.StopAtBounds
+                Flickable {
+                    id: flick
+                    anchors.fill: parent
+                    anchors.margins: 6
+                    visible: root.adapterEnabled && root.hasAnyDevice
+                    contentHeight: listCol.implicitHeight
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
 
-                        ColumnLayout {
-                            id: listCol
-                            width: flick.width
-                            spacing: 2
+                    ColumnLayout {
+                        id: listCol
+                        width: flick.width
+                        spacing: 2
 
-                            SectionHeader {
-                                visible: BluetoothStatus.connectedDevices.length > 0
-                                title: "Conectados"
-                            }
-                            Repeater {
-                                model: ScriptModel { values: BluetoothStatus.connectedDevices }
-                                delegate: DeviceItem {}
-                            }
+                        BreezeSectionHeader {
+                            visible: BluetoothStatus.connectedDevices.length > 0
+                            title: "Conectados"
+                        }
+                        Repeater {
+                            model: ScriptModel { values: BluetoothStatus.connectedDevices }
+                            delegate: DeviceItem {}
+                        }
 
-                            SectionHeader {
-                                visible: BluetoothStatus.pairedButNotConnectedDevices.length > 0
-                                title: "Disponibles"
-                            }
-                            Repeater {
-                                model: ScriptModel { values: BluetoothStatus.pairedButNotConnectedDevices }
-                                delegate: DeviceItem {}
-                            }
+                        BreezeSectionHeader {
+                            visible: BluetoothStatus.pairedButNotConnectedDevices.length > 0
+                            title: "Disponibles"
+                        }
+                        Repeater {
+                            model: ScriptModel { values: BluetoothStatus.pairedButNotConnectedDevices }
+                            delegate: DeviceItem {}
+                        }
 
-                            SectionHeader {
-                                visible: root.foundDevices.length > 0
-                                title: "Dispositivos encontrados"
-                            }
-                            Repeater {
-                                model: ScriptModel { values: root.foundDevices }
-                                delegate: DeviceItem {}
-                            }
+                        BreezeSectionHeader {
+                            visible: root.foundDevices.length > 0
+                            title: "Dispositivos encontrados"
+                        }
+                        Repeater {
+                            model: ScriptModel { values: root.foundDevices }
+                            delegate: DeviceItem {}
                         }
                     }
                 }

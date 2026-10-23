@@ -34,6 +34,10 @@ Singleton {
     property bool plasmaBluetoothOpen: false
     property real plasmaBluetoothAnchorX: -1
     property string plasmaBluetoothScreen: ""
+    // KDE Plasma Networks applet (opened from the Plasma taskbar)
+    property bool plasmaNetworkOpen: false
+    property real plasmaNetworkAnchorX: -1
+    property string plasmaNetworkScreen: ""
 
     onSidebarRightOpenChanged: {
         if (GlobalStates.sidebarRightOpen) {

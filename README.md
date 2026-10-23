@@ -68,6 +68,7 @@ This dotfiles repository keeps binary assets minimal to ensure portability and q
 | **`wl-clipboard`** | Wayland clipboard utilities (`wl-copy` / `wl-paste`) |
 | **`jq` & `python3`** | JSON processing, display arrangement backend, and automations |
 | **`bluez` & `blueman`** | Bluetooth stack (`bluetoothd`) for the KDE Plasma-style Bluetooth applet, plus advanced settings (`blueman-manager`) |
+| **`networkmanager`** | Backend (`nmcli`) for the KDE Plasma-style Networks applet; `nm-connection-editor` for its Configure button |
 
 ### Required Flatpak Applications:
 | Application | Flatpak App ID | Role |
@@ -82,7 +83,7 @@ This dotfiles repository keeps binary assets minimal to ensure portability and q
 #### Arch Linux / CachyOS:
 ```bash
 # System dependencies:
-paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman
+paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman networkmanager network-manager-applet
 
 # Required Flatpaks:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client
@@ -91,7 +92,7 @@ flatpak install flathub dev.vencord.Vesktop com.spotify.Client
 #### Gentoo Linux:
 ```bash
 # System dependencies:
-emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman
+emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman net-misc/networkmanager gnome-extra/nm-applet
 
 # Required Flatpaks:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client
@@ -100,7 +101,7 @@ flatpak install flathub dev.vencord.Vesktop com.spotify.Client
 #### Fedora:
 ```bash
 # System dependencies:
-sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman
+sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman NetworkManager nm-connection-editor
 
 # Required Flatpaks:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client
