@@ -598,8 +598,9 @@ Item {
             }
 
             // =============================================================
-            // 11. KDE Plasma Show Desktop Button: square strip spanning the whole
-            //     panel height at the far right edge (not a floating pill)
+            // 11. KDE Plasma "Show Desktop": square strip spanning the whole panel height
+            //     at the far right edge. Inside a floating panel it is cut with the same
+            //     curve as the panel, so it never sticks out of the rounded corners.
             // =============================================================
             MouseArea {
                 id: showDesktopBtn
@@ -607,21 +608,26 @@ Item {
                 Layout.preferredWidth: 8
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
+                clip: true
+                readonly property bool active: PlasmaPanelState.showingDesktop
 
+                // Wider than the button and shifted left: only its right side (rounded
+                // like the panel) stays inside the clipped area. 2x the radius wide so
+                // the radius is not clamped and the curve matches the panel exactly
                 Rectangle {
-                    anchors.fill: parent
-                    color: showDesktopBtn.containsMouse ? root.colAccent : root.colPanelBorder
-                    topRightRadius: root.panelRadius
-                    bottomRightRadius: root.panelRadius
+                    x: -2 * root.panelRadius
+                    width: parent.width + 2 * root.panelRadius
+                    height: parent.height
+                    radius: root.panelRadius
+                    color: (showDesktopBtn.containsMouse || showDesktopBtn.active) ? root.colAccent : root.colPanelBorder
 
                     Behavior on color {
                         ColorAnimation { duration: 150 }
                     }
                 }
 
-                onClicked: {
-                    Quickshell.execDetached(["quickshell", "-c", "ii", "ipc", "call", "overview", "toggle"]);
-                }
+                // Minimizes every window (or brings them back), like Plasma
+                onClicked: PlasmaPanelState.toggleShowDesktop()
             }
         }
     }

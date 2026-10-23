@@ -14,6 +14,10 @@ import Quickshell.Hyprland
  * "Maximized" covers Hyprland fullscreen modes and the KDE-style maximize used
  * by the Plasma theme (quick-tile.py / titlebar button), which is a floating
  * window filling the monitor's usable area.
+ *
+ * It also docks while "Show Desktop" (taskbar button, toggle-minimize.py
+ * show-desktop) has every window minimized; the first window that shows up
+ * again ends that mode, so the panel floats again.
  */
 Singleton {
     id: root
@@ -22,8 +26,42 @@ Singleton {
     // Monitor name -> true while it has a maximized window on its active workspace
     property var docked: ({})
 
+    // "Show Desktop" state written by toggle-minimize.py
+    readonly property string showDesktopFile: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/bwm-show-desktop.json"
+    property bool showingDesktop: false
+    property real showingDesktopSince: 0
+    onShowingDesktopChanged: {
+        showingDesktopSince = Date.now();
+        refresh();
+    }
+
+    function toggleShowDesktop() {
+        Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/toggle-minimize.py", "show-desktop"]);
+    }
+    // A window appeared: leave the mode and bring the hidden windows back behind it (KWin)
+    function endShowDesktop() {
+        root.showingDesktop = false;
+        Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/toggle-minimize.py", "show-desktop", "leave"]);
+    }
+
+    FileView {
+        id: showDesktopView
+        path: root.showDesktopFile
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+        onLoaded: {
+            try {
+                root.showingDesktop = (JSON.parse(text()).windows ?? []).length > 0;
+            } catch (e) {
+                root.showingDesktop = false;
+            }
+        }
+        onLoadFailed: root.showingDesktop = false
+    }
+
     function isDocked(screenName) {
-        return root.active && root.docked[screenName] === true;
+        return root.active && (root.showingDesktop || root.docked[screenName] === true);
     }
     // Gap the panel and its popups keep from the screen edges on that screen
     function gapFor(screenName) {
@@ -38,7 +76,7 @@ Singleton {
     }
 
     function refresh() {
-        if (root.active && !stateProc.running) stateProc.running = true;
+        if ((root.active || root.showingDesktop) && !stateProc.running) stateProc.running = true;
     }
 
     Process {
@@ -54,18 +92,23 @@ Singleton {
                 }
                 const result = {};
                 const tolerance = 24;
+                let anyVisible = false;
                 for (const m of monitors) {
                     // reserved = [left, top, right, bottom]
                     const [rl, rt, rr, rb] = m.reserved ?? [0, 0, 0, 0];
                     const usableW = m.width / m.scale - rl - rr;
                     const usableH = m.height / m.scale - rt - rb;
                     const workspaces = [m.activeWorkspace?.id, m.specialWorkspace?.id].filter(id => id !== undefined && id !== 0);
-                    result[m.name] = clients.some(c =>
+                    const visible = clients.filter(c =>
                         c.monitor === m.id && c.mapped !== false && !c.hidden
-                        && workspaces.includes(c.workspace?.id)
-                        && (c.fullscreen > 0
-                            || (c.size[0] >= usableW - tolerance && c.size[1] >= usableH - tolerance)));
+                        && workspaces.includes(c.workspace?.id));
+                    anyVisible = anyVisible || visible.length > 0;
+                    result[m.name] = visible.some(c => c.fullscreen > 0
+                        || (c.size[0] >= usableW - tolerance && c.size[1] >= usableH - tolerance));
                 }
+                // A window opened or restored while showing the desktop ends the mode (like KWin)
+                if (root.showingDesktop && anyVisible && Date.now() - root.showingDesktopSince > 800)
+                    root.endShowDesktop();
                 if (JSON.stringify(result) !== JSON.stringify(root.docked))
                     root.docked = result;
             }
@@ -75,7 +118,7 @@ Singleton {
     // Window/workspace/fullscreen events refresh immediately (debounced)
     Connections {
         target: Hyprland
-        enabled: root.active
+        enabled: root.active || root.showingDesktop
         function onRawEvent(event) {
             debounce.restart();
         }
@@ -89,7 +132,7 @@ Singleton {
     Timer {
         interval: 700
         repeat: true
-        running: root.active
+        running: root.active || root.showingDesktop
         triggeredOnStart: true
         onTriggered: root.refresh()
     }

@@ -107,7 +107,7 @@ hl.bind("ALT + Escape", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab cancel
 -- Mouse Window Gestures
 hl.bind("ALT + mouse:272", hl.dsp.window.drag(), { mouse = true, description = "Ventanas: Arrastrar ventana flotante" })
 hl.bind("ALT + mouse:273", hl.dsp.window.resize(), { mouse = true, description = "Ventanas: Redimensionar ventana flotante" })
-hl.bind("ALT + mouse_down", hl.dsp.focus({ workspace = "e+1" }), { description = "Espacios de trabajo: Espacio de trabajo siguiente" })
-hl.bind("ALT + mouse_up",   hl.dsp.focus({ workspace = "e-1" }), { description = "Espacios de trabajo: Espacio de trabajo anterior" })
+hl.bind("ALT + mouse_down", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/cycle-workspace.py next"), { description = "Espacios de trabajo: Espacio de trabajo siguiente" })
+hl.bind("ALT + mouse_up",   hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/cycle-workspace.py prev"), { description = "Espacios de trabajo: Espacio de trabajo anterior" })
 
 return {}
