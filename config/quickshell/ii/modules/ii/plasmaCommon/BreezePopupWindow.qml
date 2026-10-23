@@ -1,3 +1,4 @@
+import qs.modules.common
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -16,7 +17,7 @@ PanelWindow {
     property string namespace: "quickshell:plasmaApplet"
     property int popupWidth: 380
     property int popupHeight: 440
-    property int bottomMargin: 46       // Plasma panel height + gap
+    property int bottomMargin: Appearance.sizes.baseBarHeight // flush with the Plasma panel
     default property alias content: card.data
     signal closeRequested()
 
@@ -47,15 +48,18 @@ PanelWindow {
         height: win.popupHeight
         // Centered over the taskbar button, clamped to the screen edges
         x: {
-            const centered = win.anchorX >= 0 ? win.anchorX - width / 2 : win.width - width - 6;
-            return Math.max(6, Math.min(win.width - width - 6, centered));
+            const centered = win.anchorX >= 0 ? win.anchorX - width / 2 : win.width - width;
+            return Math.max(0, Math.min(win.width - width, centered));
         }
         y: win.height - height - win.bottomMargin + (win.opened ? 0 : 12)
         opacity: win.opened ? 1 : 0
         color: Breeze.panelBg
         border.width: 1
         border.color: Breeze.border
-        radius: 7
+        // Docked to the panel: only the top corners are rounded
+        radius: 0
+        topLeftRadius: 7
+        topRightRadius: 7
         clip: true
 
         Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
