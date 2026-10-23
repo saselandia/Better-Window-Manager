@@ -59,7 +59,7 @@ export XDG_SESSION_DESKTOP="Hyprland"
 
 # Actualizar entorno en systemd y dbus (vital para Flatpak, Signal, Steam, Polkit)
 if command -v dbus-update-activation-environment >/dev/null 2>&1; then
-    dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP 2>/dev/null || true
+    dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP QT_QPA_PLATFORMTHEME 2>/dev/null || true
 fi
 
 # 2. Agente de autenticación Polkit (Gentoo en /usr/libexec o PATH)

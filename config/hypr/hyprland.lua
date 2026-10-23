@@ -28,6 +28,7 @@ local fileManager = "nautilus"
 local menu        = "quickshell -c ii ipc call search toggle || rofi -show drun"
 
 
+require("modules.environment")
 require("modules.monitors")
 require("modules.rules")
 require("modules.autostart")

@@ -643,6 +643,96 @@ return plasma_colors
         except Exception as e:
             print(f"[Warning] Error guardando {target}: {e}", file=sys.stderr)
 
+    # 4. Every other app themed by matugen (GTK, Vesktop, Spotify, Firefox, swaync, btop,
+    #    rofi pickers, Quickshell) gets Breeze Dark instead of the last wallpaper colors
+    apply_plasma_app_themes()
+
+# Breeze Dark (Plasma 6) colour scheme mapped onto the Material 3 roles used by the
+# matugen templates. Same mapping as MaterialThemeLoader.applyBreezeColors() in Quickshell.
+BREEZE_DARK_M3 = {
+    "primary": "#3daee9", "on_primary": "#fcfcfc", "primary_container": "#1e4f6a", "on_primary_container": "#fcfcfc",
+    "inverse_primary": "#3daee9", "surface_tint": "#3daee9",
+    "secondary": "#3daee9", "on_secondary": "#fcfcfc", "secondary_container": "#26404f", "on_secondary_container": "#fcfcfc",
+    "tertiary": "#1abc9c", "on_tertiary": "#fcfcfc", "tertiary_container": "#1d4a43", "on_tertiary_container": "#fcfcfc",
+    "background": "#202326", "on_background": "#fcfcfc",
+    "surface": "#202326", "surface_dim": "#1b1e20", "surface_bright": "#31363b",
+    "surface_container_lowest": "#141618", "surface_container_low": "#1b1e20", "surface_container": "#232629",
+    "surface_container_high": "#292c30", "surface_container_highest": "#31363b",
+    "on_surface": "#fcfcfc", "surface_variant": "#31363b", "on_surface_variant": "#a1a9b1",
+    "inverse_surface": "#fcfcfc", "inverse_on_surface": "#202326",
+    "outline": "#4d5257", "outline_variant": "#3c4148", "shadow": "#000000", "scrim": "#000000",
+    "error": "#da4453", "on_error": "#fcfcfc", "error_container": "#5a1d24", "on_error_container": "#fcfcfc",
+    "primary_fixed": "#3daee9", "primary_fixed_dim": "#2d8fc2", "on_primary_fixed": "#fcfcfc", "on_primary_fixed_variant": "#fcfcfc",
+    "secondary_fixed": "#3daee9", "secondary_fixed_dim": "#2d8fc2", "on_secondary_fixed": "#fcfcfc", "on_secondary_fixed_variant": "#fcfcfc",
+    "tertiary_fixed": "#1abc9c", "tertiary_fixed_dim": "#16a085", "on_tertiary_fixed": "#fcfcfc", "on_tertiary_fixed_variant": "#fcfcfc",
+}
+
+# matugen templates handled elsewhere in the Plasma theme: Hyprland reads plasma_colors.lua
+# and kitty gets the real Breeze/Konsole terminal palette from apply_plasma_colors()
+PLASMA_SKIPPED_TEMPLATES = {"hyprland_colors", "kitty"}
+
+def apply_plasma_app_themes():
+    """Renders the matugen templates with the Breeze Dark palette (no wallpaper colors) and
+    sets the GTK dark theme, so GTK, Qt and the themed apps all look the same in Plasma."""
+    import re
+    import tomllib
+
+    matugen_cfg = CONFIG_DIR / "matugen" / "config.toml"
+    try:
+        with open(matugen_cfg, "rb") as f:
+            templates = tomllib.load(f).get("templates", {})
+    except Exception as e:
+        print(f"[Warning] No se pudo leer {matugen_cfg}: {e}", file=sys.stderr)
+        return
+
+    wallpaper = ""
+    try:
+        wallpaper = (Path.home() / ".cache" / "current_wallpaper").read_text(encoding="utf-8").strip()
+    except Exception:
+        pass
+
+    def fill(match):
+        expr = match.group(1).strip()
+        if expr == "image":
+            return wallpaper
+        m = re.fullmatch(r"colors\.([a-z_]+)\.(?:default|dark|light)\.(hex|hex_stripped)", expr)
+        if not m or m.group(1) not in BREEZE_DARK_M3:
+            return match.group(0)
+        value = BREEZE_DARK_M3[m.group(1)]
+        return value.lstrip("#") if m.group(2) == "hex_stripped" else value
+
+    hooks = []
+    for name, tpl in templates.items():
+        if name in PLASMA_SKIPPED_TEMPLATES:
+            continue
+        src = Path(os.path.expanduser(tpl.get("input_path", "")))
+        dst = Path(os.path.expanduser(tpl.get("output_path", "")))
+        if not src.is_file() or not tpl.get("output_path"):
+            continue
+        try:
+            rendered = re.sub(r"\{\{([^}]*)\}\}", fill, src.read_text(encoding="utf-8"))
+            # The palette is static: skip unchanged files so their reload hooks (Spotify
+            # relaunch, Nautilus reload...) don't run on every wallpaper change
+            if dst.is_file() and dst.read_text(encoding="utf-8") == rendered:
+                continue
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            dst.write_text(rendered, encoding="utf-8")
+        except Exception as e:
+            print(f"[Warning] Error aplicando Breeze a {dst}: {e}", file=sys.stderr)
+            continue
+        if tpl.get("post_hook"):
+            hooks.append(tpl["post_hook"])
+
+    # GTK 3/4 (libadwaita) dark theme; Qt follows the same preference through the portal
+    for key, value in (("gtk-theme", "adw-gtk3-dark"), ("color-scheme", "prefer-dark")):
+        subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", key, value],
+                       check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # Same reload hooks matugen would run (Quickshell theme, Spotify, Nautilus, swaync...)
+    for hook in hooks:
+        subprocess.Popen(["sh", "-c", hook], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                         start_new_session=True)
+
 def apply_retro_wallpaper_colors(wallpaper_path: str = None):
     """Applies a vivid, saturated Omarchy palette to Kitty, Quickshell retro-colors.json, and Hyprland."""
     wp = wallpaper_path
