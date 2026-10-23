@@ -161,7 +161,7 @@ ContentPage {
             Layout.fillWidth: true
             wrapMode: Text.Wrap
             color: Appearance.colors.colSubtext
-            text: "Pantalla de arranque (Plymouth, con la contraseña del disco cifrado) y de inicio de sesión (SDDM) con el logo de BWM y los colores del tema activo, como en Omarchy. Instalarlas necesita root: tras generarlas ejecuta en una terminal\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh          (añade --sddm para SDDM)"
+            text: "Pantalla de arranque (Plymouth) y de inicio de sesión (SDDM) con el logo de BWM y los colores del tema activo, como en Omarchy. Instalarlas necesita root; en una terminal:\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --plymouth   (pantalla de arranque)\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --sddm       (tema de SDDM; --enable-sddm para usarlo)\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --revert     (arranque como antes)"
         }
         RippleButtonWithIcon {
             materialIcon: "palette"

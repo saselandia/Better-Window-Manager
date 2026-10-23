@@ -118,6 +118,13 @@ def parse_workspace_range(ws_str):
                 pass
     return parts
 
+def monitor_selector(m):
+    """desc:<descripción> en vez del conector: los nombres DP-N cambian si cambia el orden en
+    que arrancan las GPU (p. ej. la iGPU AMD antes que la NVIDIA) y las reglas por nombre
+    acaban en el monitor equivocado (resolución mala, monitores superpuestos)."""
+    desc = (m.get("description") or "").strip()
+    return f"desc:{desc}" if desc else m.get("name", "")
+
 def write_monitors_lua(monitors):
     ws_cfg = load_workspace_config()
     active_monitors = [m for m in monitors if not m.get("disabled")]
@@ -153,7 +160,7 @@ def write_monitors_lua(monitors):
 
     for m in monitors:
         if m.get("disabled"):
-            lines.append(f'hl.monitor({{ output = "{m["name"]}", mode = "disable" }})')
+            lines.append(f'hl.monitor({{ output = "{monitor_selector(m)}", mode = "disable" }})')
             continue
 
         name = m.get("name")
@@ -168,8 +175,9 @@ def write_monitors_lua(monitors):
         pos_str = f"{x}x{y}"
         scale_str = f"{scale}"
 
+        lines.append(f"-- {name}")
         lines.append("hl.monitor({")
-        lines.append(f'    output   = "{name}",')
+        lines.append(f'    output   = "{monitor_selector(m)}",')
         lines.append(f'    mode     = "{mode_str}",')
         lines.append(f'    position = "{pos_str}",')
         lines.append(f'    scale    = "{scale_str}",')
@@ -186,6 +194,7 @@ def write_monitors_lua(monitors):
     primary_name = ws_cfg.get("primary_monitor", "DP-1")
     for m in active_monitors:
         m_name = m["name"]
+        sel = monitor_selector(m)
         is_prim = (m_name == primary_name)
         ws_str = ws_cfg["monitor_workspaces"].get(m_name, "1-9" if is_prim else "10")
         
@@ -194,7 +203,7 @@ def write_monitors_lua(monitors):
             lines.append("for i = 1, 9 do")
             lines.append("    hl.workspace_rule({")
             lines.append("        workspace = tostring(i),")
-            lines.append(f'        monitor   = "{m_name}",')
+            lines.append(f'        monitor   = "{sel}",')
             lines.append("        default   = (i == 1),")
             lines.append("        persistent = (i == 1),")
             lines.append("    })")
@@ -204,7 +213,7 @@ def write_monitors_lua(monitors):
             lines.append(f"-- Workspace 10 vinculado al monitor ({m_name}){' [Secundario]' if not is_prim else ''}")
             lines.append("hl.workspace_rule({")
             lines.append('    workspace = "10",')
-            lines.append(f'    monitor   = "{m_name}",')
+            lines.append(f'    monitor   = "{sel}",')
             lines.append("    default   = true,")
             lines.append("    persistent = true,")
             lines.append("})")
@@ -216,7 +225,7 @@ def write_monitors_lua(monitors):
                 for idx, ws_num in enumerate(parsed):
                     lines.append("hl.workspace_rule({")
                     lines.append(f'    workspace = "{ws_num}",')
-                    lines.append(f'    monitor   = "{m_name}",')
+                    lines.append(f'    monitor   = "{sel}",')
                     lines.append(f'    default   = {str(idx == 0).lower()},')
                     lines.append("})")
                 lines.append("")
