@@ -30,6 +30,13 @@ Singleton {
         return root.active && !root.isDocked(screenName) ? Appearance.sizes.plasmaFloatingGap : 0;
     }
 
+    // Distance from the screen edge to the outer side of the panel, where popups attach:
+    // floating = gap + panel thickness + gap above it; docked = just the panel thickness.
+    // The panel keeps its thickness in both states (only its side/bottom margins change).
+    function panelEdgeOffset(screenName) {
+        return Appearance.sizes.plasmaPanelHeight + 2 * root.gapFor(screenName);
+    }
+
     function refresh() {
         if (root.active && !stateProc.running) stateProc.running = true;
     }

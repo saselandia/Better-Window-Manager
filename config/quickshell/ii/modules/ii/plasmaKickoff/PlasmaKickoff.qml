@@ -397,7 +397,7 @@ Scope {
             // Floating panel: Kickoff floats with the same gap and gets all corners rounded
             readonly property int edgeGap: PlasmaPanelState.gapFor(win.screen?.name ?? "")
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: Appearance.sizes.baseBarHeight + edgeGap
+            anchors.bottomMargin: PlasmaPanelState.panelEdgeOffset(win.screen?.name ?? "")
             anchors.left: parent.left
             anchors.leftMargin: edgeGap
             color: root.colPanelBg

@@ -27,7 +27,7 @@ Item {
     // Floating panel docks while a window is maximized on this screen (Plasma 6 behaviour)
     readonly property bool floating: PlasmaPanelState.active && !PlasmaPanelState.isDocked(root.screen?.name ?? "")
     readonly property int floatingGap: floating ? Appearance.sizes.plasmaFloatingGap : 0
-    readonly property int panelRadius: floating ? 14 : 0
+    readonly property int panelRadius: floating ? 18 : 0
 
     readonly property color colPanelBase: Config.options?.bar?.plasma?.color || "#24292e"
     readonly property color colPanelBg: Qt.rgba(colPanelBase.r, colPanelBase.g, colPanelBase.b,
@@ -63,11 +63,18 @@ Item {
         Behavior on gap {
             NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
         }
+        // Fixed thickness: docking only removes the side/bottom gaps (no vertical growth)
+        height: Appearance.sizes.plasmaPanelHeight
+        readonly property bool atBottom: Config.options?.bar?.bottom ?? true
         anchors {
-            fill: parent
+            left: parent.left
+            right: parent.right
+            bottom: panel.atBottom ? parent.bottom : undefined
+            top: panel.atBottom ? undefined : parent.top
             leftMargin: panel.gap
             rightMargin: panel.gap
             bottomMargin: panel.gap
+            topMargin: panel.gap
         }
 
         Rectangle {

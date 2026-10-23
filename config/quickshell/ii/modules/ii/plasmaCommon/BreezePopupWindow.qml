@@ -19,7 +19,7 @@ PanelWindow {
     property int popupHeight: 440
     // Docked panel: flush with it. Floating panel: float with the same gap as the panel
     readonly property int edgeGap: PlasmaPanelState.gapFor(win.screen?.name ?? "")
-    property int bottomMargin: Appearance.sizes.baseBarHeight + edgeGap
+    property int bottomMargin: PlasmaPanelState.panelEdgeOffset(win.screen?.name ?? "")
     default property alias content: card.data
     signal closeRequested()
 
