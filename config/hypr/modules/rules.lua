@@ -113,12 +113,12 @@ if is_plasma then
         border_size = 0,
     })
 
-    -- 2. Aplicaciones con decoraciones CSD propias (Steam, Firefox, Discord, Antigravity, etc.):
+    -- 2. Aplicaciones con decoraciones CSD propias (Steam, Firefox, Discord, Antigravity, Claude, etc.):
     --    No ponerles barra superior adicional hyprbars.
     hl.window_rule({
         name  = "plasma-csd-no-hyprbars",
         match = {
-            class = "^(steam|steamwebhelper|firefox|firefox-bin|google-chrome.*|chromium.*|brave-browser|zen.*|vesktop|discord|armcord|webcord|spotify|antigravity|antigravity-ide|code|Code|code-oss|vscodium|cursor|org.gnome..*|nautilus|pavucontrol|easyeffects|gamescope|signal|telegram-desktop|org.telegram.desktop|baobab|evince|loupe)$",
+            class = "^(steam|steamwebhelper|firefox|firefox-bin|google-chrome.*|chromium.*|brave-browser|zen.*|vesktop|discord|armcord|webcord|spotify|antigravity|antigravity-ide|code|Code|code-oss|vscodium|cursor|claude|claude-desktop|com.anthropic.Claude|org.gnome..*|nautilus|pavucontrol|easyeffects|gamescope|signal|telegram-desktop|org.telegram.desktop|baobab|evince|loupe)$",
         },
         -- ["hyprbars:no_bar"] = true,
     })
@@ -132,7 +132,7 @@ end
 hl.window_rule({
     name = "electron-render-unfocused",
     match = {
-        class = "^(vesktop|discord|armcord|webcord|google-chrome.*|chromium.*|brave-browser|zen.*|firefox.*|code|Code|code-oss|vscodium|cursor|antigravity-ide|obsidian|spotify)$",
+        class = "^(vesktop|discord|armcord|webcord|google-chrome.*|chromium.*|brave-browser|zen.*|firefox.*|code|Code|code-oss|vscodium|cursor|antigravity-ide|obsidian|spotify|claude|claude-desktop|com.anthropic.Claude)$",
     },
     render_unfocused = true,
 })
