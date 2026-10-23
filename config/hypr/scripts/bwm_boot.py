@@ -63,6 +63,32 @@ def tint(src: Path, dst: Path, color: str):
     out.save(dst)
 
 
+def write_greeter_conf(dst: Path):
+    """Keyboard layout and monitor layout for SDDM's Hyprland greeter (Omarchy runs the
+    greeter in a minimal Hyprland too). Plain key=value data: install-boot-theme.sh
+    validates every field and writes the greeter's Lua config itself as root."""
+    def opt(name):
+        try:
+            out = subprocess.run(["hyprctl", "getoption", f"input:{name}", "-j"],
+                                 capture_output=True, text=True, timeout=3).stdout
+            return json.loads(out).get("str", "")
+        except Exception:
+            return ""
+    lines = [f"kb_layout={opt('kb_layout') or 'us'}", f"kb_variant={opt('kb_variant')}",
+             f"kb_options={opt('kb_options')}"]
+    try:
+        out = subprocess.run(["hyprctl", "monitors", "-j"], capture_output=True, text=True, timeout=3).stdout
+        for m in json.loads(out):
+            desc = (m.get("description") or "").strip()
+            if not desc or m.get("disabled"):
+                continue
+            mode = f"{m['width']}x{m['height']}@{round(m['refreshRate'], 2)}"
+            lines.append(f"monitor=desc:{desc}|{mode}|{m['x']}x{m['y']}|{m['scale']}")
+    except Exception:
+        pass
+    dst.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def render():
     bg, text = theme_colors()
     ply, sddm = OUT / "plymouth", OUT / "sddm"
@@ -95,6 +121,8 @@ def render():
     for asset in ("entry", "lock"):
         tint(ASSETS / "plymouth" / f"{asset}.png", sddm / f"{asset}-failed.png", FAILED)
     shutil.copy(ply / "logo.png", sddm / "logo.png")
+
+    write_greeter_conf(sddm / "greeter.conf")
 
     # Only a real change wakes the root service (bwm-boot-theme.path)
     digest = hashlib.sha256()

@@ -161,7 +161,7 @@ ContentPage {
             Layout.fillWidth: true
             wrapMode: Text.Wrap
             color: Appearance.colors.colSubtext
-            text: "Pantalla de arranque (Plymouth) y de inicio de sesión (SDDM) con el logo de BWM y los colores del tema activo, como en Omarchy. Se regeneran solas al cambiar de fondo o de tema. Instalarlas necesita root, una sola vez, en una terminal:\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --auto         (mantenerlas al día solas)\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --plymouth     (pantalla de arranque)\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --sddm --enable-sddm   (pantalla de inicio de sesión)\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --revert       (arranque como antes)"
+            text: "Pantalla de inicio de sesión (SDDM, en un Hyprland mínimo como en Omarchy) y de arranque (Plymouth) con el logo de BWM y los colores del tema activo. Se regeneran solas al cambiar de fondo o de tema. Instalarlas necesita root, una sola vez, en una terminal:\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --all            (SDDM + actualización automática)\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --plymouth       (pantalla de arranque)\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --disable-sddm   (volver al autologin)\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --revert         (quitar la pantalla de arranque)"
         }
         RippleButtonWithIcon {
             materialIcon: "palette"

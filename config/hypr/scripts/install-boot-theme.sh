@@ -7,12 +7,22 @@
 # (Omarchy, MIT).
 #
 # Uso:
-#   sudo ~/.config/hypr/scripts/install-boot-theme.sh --auto       # actualizar solo
+#   sudo ~/.config/hypr/scripts/install-boot-theme.sh --all        # SDDM + actualizar solo
 #   sudo ~/.config/hypr/scripts/install-boot-theme.sh --plymouth   # pantalla de arranque
-#   sudo ~/.config/hypr/scripts/install-boot-theme.sh --sddm [--enable-sddm]
-#   sudo ~/.config/hypr/scripts/install-boot-theme.sh --revert     # arranque como antes
+#   sudo ~/.config/hypr/scripts/install-boot-theme.sh --sddm [--enable-sddm] [--autologin]
+#   sudo ~/.config/hypr/scripts/install-boot-theme.sh --auto       # actualizar solo
+#   sudo ~/.config/hypr/scripts/install-boot-theme.sh --revert     # arranque sin Plymouth
+#   sudo ~/.config/hypr/scripts/install-boot-theme.sh --disable-sddm  # volver al autologin
 #   sudo ~/.config/hypr/scripts/install-boot-theme.sh --no-auto    # quitar el servicio
-# Requisitos (Gentoo): sys-boot/plymouth (--plymouth), x11-misc/sddm (--sddm)
+# Requisitos: plymouth + dracut (--plymouth), sddm con Qt 6 (--sddm)
+#
+# SDDM como en Omarchy (etc/sddm.conf.d y default/sddm/hyprland.lua de Omarchy): el tema
+# "omarchy" (aquí "bwm", mismo Main.qml) dentro de un Hyprland mínimo (DisplayServer=wayland,
+# sin logo ni animaciones, con la distribución de teclado y los monitores del usuario),
+# recordando último usuario y sesión (sesión por defecto hyprland.desktop).
+# --enable-sddm lo activa al arrancar y aparca el autologin de getty en tty1 (si lo había);
+# --autologin entra sin contraseña como hace Omarchy con el disco cifrado.
+# --disable-sddm lo desactiva y devuelve el autologin de getty.
 #
 # --auto: copia este script a /usr/local/sbin/bwm-boot-theme (de root: el del repo lo puede
 #   editar el usuario) y crea bwm-boot-theme.path/.service. bwm_boot.py render se ejecuta
@@ -45,17 +55,24 @@ UNIT_DIR=/etc/systemd/system
 GRUB_CFG=/boot/grub/grub.cfg
 PLY_DIR=/usr/share/plymouth/themes/bwm
 SDDM_DIR=/usr/share/sddm/themes/bwm
+GREETER_LUA=/usr/share/sddm/bwm-hyprland.lua
+SDDM_CONF_D=/etc/sddm.conf.d
+GETTY_AUTOLOGIN=/etc/systemd/system/getty@tty1.service.d/autologin.conf
 GPU_DRIVERS='amdgpu|radeon|i915|xe|nouveau|nvidia|nvidia_drm|nvidia_modeset|nvidia_uvm|simpledrm'
 
-usage() { sed -n '9,16p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
+usage() { sed -n '9,18p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
 
-PLYMOUTH=false REVERT=false SDDM=false ENABLE_SDDM=false AUTO=false NO_AUTO=false SYNC_USER=""
+PLYMOUTH=false REVERT=false SDDM=false ENABLE_SDDM=false AUTOLOGIN=false DISABLE_SDDM=false
+AUTO=false NO_AUTO=false SYNC_USER=""
 while (($#)); do
   case "$1" in
     --plymouth) PLYMOUTH=true ;;
     --revert) REVERT=true ;;
     --sddm) SDDM=true ;;
     --enable-sddm) SDDM=true; ENABLE_SDDM=true ;;
+    --autologin) SDDM=true; AUTOLOGIN=true ;;
+    --disable-sddm) DISABLE_SDDM=true ;;
+    --all) SDDM=true; ENABLE_SDDM=true; AUTO=true ;;
     --auto) AUTO=true ;;
     --no-auto) NO_AUTO=true ;;
     --sync) SYNC_USER="${2:?--sync necesita el usuario}"; shift ;;  # lo usa el servicio
@@ -63,7 +80,11 @@ while (($#)); do
   esac
   shift
 done
-$PLYMOUTH || $REVERT || $SDDM || $AUTO || $NO_AUTO || [[ -n $SYNC_USER ]] || usage
+$PLYMOUTH || $REVERT || $SDDM || $DISABLE_SDDM || $AUTO || $NO_AUTO || [[ -n $SYNC_USER ]] || usage
+if $SDDM && $DISABLE_SDDM; then
+  echo "--sddm y --disable-sddm no van juntos." >&2
+  exit 1
+fi
 if $PLYMOUTH && $REVERT; then
   echo "--plymouth y --revert no van juntos." >&2
   exit 1
@@ -101,6 +122,60 @@ copy_theme() {
     fi
   done
   return $changed
+}
+
+# Escribe un archivo de root de forma atómica (contenido por stdin)
+write_root_file() {
+  local dest=$1 mode=${2:-0644} tmp
+  install -d -m 0755 "${dest%/*}"
+  tmp=$(mktemp "${dest%/*}/.${dest##*/}.bwm-new.XXXXXX")
+  cat >"$tmp"
+  chmod "$mode" "$tmp"
+  mv -fT "$tmp" "$dest"
+}
+
+# Config de Hyprland del saludo de SDDM (como default/sddm/hyprland.lua de Omarchy) con el
+# teclado y los monitores del usuario. greeter.conf viene de $HOME: cada campo se valida y
+# el Lua lo escribe este script, nunca se copia (lo ejecuta Hyprland como usuario sddm).
+write_greeter_config() {
+  local conf="$SRC/sddm/greeter.conf" key value kb_layout=us kb_variant="" kb_options=""
+  local monitors="" out mode pos scale
+  if [[ -f $conf && ! -L $conf ]]; then
+    while IFS='=' read -r key value; do
+      case "$key" in
+        kb_layout|kb_variant|kb_options)
+          [[ $value =~ ^[A-Za-z0-9_,:()+-]*$ ]] || continue
+          printf -v "$key" '%s' "$value" ;;
+        monitor)
+          IFS='|' read -r out mode pos scale <<<"$value"
+          [[ $out =~ ^desc:[A-Za-z0-9\ ._,()+-]+$ && $mode =~ ^[0-9]+x[0-9]+(@[0-9.]+)?$ &&
+             $pos =~ ^-?[0-9]+x-?[0-9]+$ && $scale =~ ^[0-9]+(\.[0-9]+)?$ ]] || continue
+          monitors+="hl.monitor({ output = \"$out\", mode = \"$mode\", position = \"$pos\", scale = \"$scale\" })"$'\n' ;;
+      esac
+    done <"$conf"
+  fi
+  write_root_file "$GREETER_LUA" <<EOF
+-- Generado por install-boot-theme.sh (BWM). Hyprland mínimo para el saludo de SDDM, como
+-- default/sddm/hyprland.lua de Omarchy (MIT). SDDM arranca el saludo cuando está listo.
+${monitors}hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "1" })
+
+hl.config({
+  input = {
+    kb_layout = "$kb_layout",
+    kb_variant = "$kb_variant",
+    kb_options = "$kb_options",
+  },
+  misc = {
+    disable_hyprland_logo = true,
+    disable_splash_rendering = true,
+    background_color = "rgb(000000)",
+    force_default_wallpaper = 0,
+  },
+  animations = {
+    enabled = false,
+  },
+})
+EOF
 }
 
 # Drivers de GPU que lleva un initramfs (uno por línea, ordenados)
@@ -166,8 +241,9 @@ if [[ -n $SYNC_USER ]]; then
     last=$(cat "$SRC/.stamp" 2>/dev/null)
     sleep 20
   done
-  if [[ -f $STATE_DIR/sddm ]] && copy_theme "$SRC/sddm" "$SDDM_DIR"; then
-    echo "Tema de SDDM actualizado."
+  if [[ -f $STATE_DIR/sddm ]]; then
+    if copy_theme "$SRC/sddm" "$SDDM_DIR"; then echo "Tema de SDDM actualizado."; fi
+    write_greeter_config
   fi
   if [[ -f $STATE_DIR/plymouth ]] && copy_theme "$SRC/plymouth" "$PLY_DIR"; then
     echo "Tema de Plymouth actualizado; rehaciendo el initramfs."
@@ -229,19 +305,62 @@ fi
 # ------------------------------------------------------------------------------
 if $SDDM; then
   if ! command -v sddm >/dev/null; then
-    echo "Falta SDDM: emerge --ask x11-misc/sddm" >&2
+    echo "Falta SDDM: emerge --ask x11-misc/sddm  |  pacman -S sddm  |  dnf install sddm" >&2
+    exit 1
+  fi
+  if ! command -v start-hyprland >/dev/null; then
+    echo "Falta start-hyprland (viene con Hyprland): el saludo de SDDM corre en Hyprland." >&2
     exit 1
   fi
   render
   copy_theme "$SRC/sddm" "$SDDM_DIR" || true
-  install -d -m 0755 /etc/sddm.conf.d
-  printf '[Theme]\nCurrent=bwm\n' >/etc/sddm.conf.d/10-bwm.conf
-  touch "$STATE_DIR/sddm"
-  echo "Tema de SDDM instalado."
-  if $ENABLE_SDDM; then
-    systemctl enable sddm.service
-    echo "SDDM se usará en el próximo arranque (desactiva el autologin de tty1 si lo tienes)."
+  write_greeter_config
+  # Lo mismo que etc/sddm.conf.d de Omarchy (10-theme, 10-wayland, 99-omarchy-login)
+  write_root_file "$SDDM_CONF_D/10-bwm-theme.conf" <<<$'[Theme]\nCurrent=bwm'
+  write_root_file "$SDDM_CONF_D/10-bwm-wayland.conf" <<EOF
+[General]
+DisplayServer=wayland
+
+[Wayland]
+CompositorCommand=start-hyprland -- --config $GREETER_LUA
+EOF
+  write_root_file "$SDDM_CONF_D/99-bwm-login.conf" <<<$'[Users]\nRememberLastUser=true\nRememberLastSession=true'
+  rm -f "$SDDM_CONF_D/10-bwm.conf"   # nombre anterior
+  # Último usuario y sesión: el tema entra con ellos (el Main.qml de Omarchy no tiene selector)
+  if [[ -f /usr/share/wayland-sessions/hyprland.desktop ]]; then
+    install -d -m 0755 /var/lib/sddm
+    write_root_file /var/lib/sddm/state.conf <<<$'[Last]\nSession=/usr/share/wayland-sessions/hyprland.desktop\nUser='"$USER_NAME"
+    chown sddm:sddm /var/lib/sddm /var/lib/sddm/state.conf 2>/dev/null || true
   fi
+  if $AUTOLOGIN; then
+    write_root_file "$SDDM_CONF_D/autologin.conf" <<<$'[Autologin]\nUser='"$USER_NAME"$'\nSession=hyprland.desktop'
+  else
+    rm -f "$SDDM_CONF_D/autologin.conf"
+  fi
+  touch "$STATE_DIR/sddm"
+  echo "Tema de SDDM instalado (saludo en Hyprland, con tu teclado y tus monitores)."
+  if $ENABLE_SDDM; then
+    if [[ -f $GETTY_AUTOLOGIN ]]; then
+      mv "$GETTY_AUTOLOGIN" "$STATE_DIR/getty-autologin.conf"
+      echo "Autologin de getty en tty1 aparcado en $STATE_DIR (--disable-sddm lo devuelve)."
+    fi
+    systemctl daemon-reload
+    systemctl enable -f sddm.service
+    echo "SDDM se usará en el próximo arranque."
+    echo "  Si algo falla: Ctrl+Alt+F2, entra con tu usuario y ejecuta"
+    echo "  sudo ~/.config/hypr/scripts/install-boot-theme.sh --disable-sddm"
+  fi
+fi
+
+if $DISABLE_SDDM; then
+  systemctl disable sddm.service 2>/dev/null || true
+  if [[ -f $STATE_DIR/getty-autologin.conf ]]; then
+    install -d -m 0755 "${GETTY_AUTOLOGIN%/*}"
+    mv "$STATE_DIR/getty-autologin.conf" "$GETTY_AUTOLOGIN"
+    echo "Autologin de getty en tty1 restaurado."
+  fi
+  systemctl daemon-reload
+  echo "SDDM desactivado (el tema sigue instalado). Reinicia para comprobarlo."
 fi
 
 # ------------------------------------------------------------------------------

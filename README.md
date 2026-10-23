@@ -69,7 +69,9 @@ This dotfiles repository keeps binary assets minimal to ensure portability and q
 | **`jq` & `python3`** | JSON processing, display arrangement backend, and automations |
 | **`bluez` & `blueman`** | Bluetooth stack (`bluetoothd`) for the KDE Plasma-style Bluetooth applet, plus advanced settings (`blueman-manager`) |
 | **`networkmanager`** | Backend (`nmcli`) for the KDE Plasma-style Networks applet; `nm-connection-editor` for its Configure button |
-| **`qt6ct`, `papirus-icon-theme`, `socat`** | Theme palette for Qt apps, per-theme icons (Retro: folders in the wallpaper colour) and the terminal screensaver. Optional: `plymouth` / `sddm` for the boot and login themes (`install-boot-theme.sh`) |
+| **`qt6ct`, `papirus-icon-theme`, `socat`** | Theme palette for Qt apps, per-theme icons (Retro: folders in the wallpaper colour) and the terminal screensaver |
+| **`sddm`** (Qt 6) | Omarchy-style login screen in the theme colours, running in a minimal Hyprland like Omarchy's (optional, set up by `install.sh`) |
+| **`plymouth`** + **`dracut`** | Omarchy-style boot splash (optional, `install-boot-theme.sh --plymouth`) |
 
 ### Required Flatpak Applications:
 | Application | Flatpak App ID | Role |
@@ -84,7 +86,7 @@ This dotfiles repository keeps binary assets minimal to ensure portability and q
 #### Arch Linux / CachyOS:
 ```bash
 # System dependencies:
-paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman networkmanager network-manager-applet socat qt6ct papirus-icon-theme
+paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman networkmanager network-manager-applet socat qt6ct papirus-icon-theme sddm plymouth
 
 # Required Flatpaks:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client
@@ -93,7 +95,7 @@ flatpak install flathub dev.vencord.Vesktop com.spotify.Client
 #### Gentoo Linux:
 ```bash
 # System dependencies:
-emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman net-misc/networkmanager gnome-extra/nm-applet net-misc/socat gui-apps/qt6ct x11-themes/papirus-icon-theme
+emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman net-misc/networkmanager gnome-extra/nm-applet net-misc/socat gui-apps/qt6ct x11-themes/papirus-icon-theme x11-misc/sddm sys-boot/plymouth
 
 # Required Flatpaks:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client
@@ -102,7 +104,7 @@ flatpak install flathub dev.vencord.Vesktop com.spotify.Client
 #### Fedora:
 ```bash
 # System dependencies:
-sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman NetworkManager nm-connection-editor socat qt6ct papirus-icon-theme
+sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman NetworkManager nm-connection-editor socat qt6ct papirus-icon-theme sddm plymouth
 
 # Required Flatpaks:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client
@@ -150,6 +152,20 @@ To set your wallpaper and generate your initial Material You color palette:
 # Press [ALT + W] or run:
 ~/.config/hypr/scripts/set-wallpaper.sh /path/to/your/image.jpg
 ```
+
+### 4. Login screen and boot splash (Omarchy style)
+
+`install.sh` offers to set this up (or pass `--login` / `--no-login`). It does what Omarchy's installer does: SDDM with Omarchy's login theme (BWM logo, active theme colours) inside a minimal Hyprland with your keyboard layout and monitor layout, remembering the last user and session. A root service then refreshes the colours on every wallpaper or theme change. By hand:
+
+```bash
+sudo ~/.config/hypr/scripts/install-boot-theme.sh --all            # SDDM + automatic updates
+sudo ~/.config/hypr/scripts/install-boot-theme.sh --sddm --autologin   # no password (encrypted disk, like Omarchy)
+sudo ~/.config/hypr/scripts/install-boot-theme.sh --disable-sddm   # back to the previous login (tty1 autologin)
+sudo ~/.config/hypr/scripts/install-boot-theme.sh --plymouth       # boot splash (rebuilds the initramfs)
+sudo ~/.config/hypr/scripts/install-boot-theme.sh --revert         # remove the boot splash
+```
+
+The boot splash is opt-in: it rebuilds the initramfs with dracut (keeping the same GPU drivers, refusing images that grow more than 50 %) and adds `splash` to the existing `grub.cfg` without regenerating it. Backups are kept and `--revert` restores them.
 
 ---
 
@@ -228,6 +244,7 @@ This project is inspired by and builds upon the incredible work of the open-sour
 - **[Hyprland](https://hyprland.org)**: Dynamic, extensible, and GPU-driven Wayland compositor.
 - **[Quickshell](https://quickshell.outfoxxed.me)**: Modern and flexible desktop HUD & widget framework using Qt 6 and QML.
 - **[Matugen](https://github.com/InioX/matugen)**: Dynamic Material Design 3 color palette generator.
+- **[Omarchy](https://github.com/basecamp/omarchy)** (MIT): Retro theme app templates, Plymouth/SDDM login themes, the SDDM Hyprland greeter, hyprlock-style lock screen, screensaver, glass mode and font switcher.
 
 ---
 

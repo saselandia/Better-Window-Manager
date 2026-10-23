@@ -11,6 +11,7 @@ ASSETS_DIR="$SCRIPT_DIR/assets"
 TARGET_CONFIG="$HOME/.config"
 BACKUP_DIR="$HOME/.config/hyprland-de-backup-$(date +%Y%m%d_%H%M%S)"
 INSTALL_MODE="symlink"
+LOGIN_SETUP="ask"   # ask | yes | no: pantalla de inicio de sesión SDDM estilo Omarchy
 
 # Colors for terminal output
 RED='[0;31m'
@@ -50,6 +51,8 @@ usage() {
     echo "  --symlink        Crea enlaces simbólicos a ~/.config (Recomendado: actualizaciones automáticas vía git pull)"
     echo "  --copy           Copia los archivos a ~/.config de forma independiente"
     echo "  --check-deps     Solo comprueba las dependencias y flatpaks instalados"
+    echo "  --login          Configura sin preguntar el inicio de sesión SDDM estilo Omarchy (pide sudo)"
+    echo "  --no-login       No toca el inicio de sesión ni el arranque"
     echo "  -h, --help       Muestra esta ayuda"
     exit 0
 }
@@ -67,6 +70,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         --check-deps)
             INSTALL_MODE="check"
+            shift
+            ;;
+        --login)
+            LOGIN_SETUP="yes"
+            shift
+            ;;
+        --no-login)
+            LOGIN_SETUP="no"
             shift
             ;;
         -h|--help)
@@ -113,6 +124,8 @@ DEPENDENCIES=(
     "nm-connection-editor:Editor de conexiones de red (botón Configurar del applet de redes)"
     "socat:Eventos de Hyprland para el salvapantallas de terminal"
     "qt6ct:Paleta del tema BWM en las apps Qt (opcional)"
+    "sddm:Pantalla de inicio de sesión estilo Omarchy con los colores del tema (opcional)"
+    "plymouth:Pantalla de arranque estilo Omarchy (opcional, ver install-boot-theme.sh --plymouth)"
 )
 
 MISSING_DEPS=()
@@ -161,9 +174,9 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
     echo "  Recomendamos instalarlos para que todas las funciones visuales y atajos operen al 100%."
     echo ""
     echo "  Comandos de instalación según tu distribución:"
-    echo "   • Arch / CachyOS: paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman networkmanager network-manager-applet socat qt6ct papirus-icon-theme"
-    echo "   • Gentoo: emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman net-misc/networkmanager gnome-extra/nm-applet net-misc/socat gui-apps/qt6ct x11-themes/papirus-icon-theme"
-    echo "   • Fedora: sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman NetworkManager nm-connection-editor socat qt6ct papirus-icon-theme"
+    echo "   • Arch / CachyOS: paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman networkmanager network-manager-applet socat qt6ct papirus-icon-theme sddm plymouth"
+    echo "   • Gentoo: emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman net-misc/networkmanager gnome-extra/nm-applet net-misc/socat gui-apps/qt6ct x11-themes/papirus-icon-theme x11-misc/sddm sys-boot/plymouth"
+    echo "   • Fedora: sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman NetworkManager nm-connection-editor socat qt6ct papirus-icon-theme sddm plymouth"
     echo ""
 fi
 
@@ -546,6 +559,33 @@ if [ -n "$CURRENT_WALL" ] && [ -f "$CURRENT_WALL" ]; then
         fi
     fi
     print_success "Esquema de colores Material You generado para todas las aplicaciones."
+fi
+
+# ==============================================================================
+# 9. Inicio de sesión estilo Omarchy (SDDM) con los colores del tema
+# ==============================================================================
+# Lo mismo que hace Omarchy al instalar: SDDM con su tema dentro de un Hyprland mínimo.
+# install-boot-theme.sh --all lo instala, lo activa (aparcando el autologin de getty si lo
+# hay) y deja un servicio que actualiza los colores del tema tras cada cambio de fondo/tema.
+# Plymouth (pantalla de arranque) no se activa solo: toca el initramfs y el grub.cfg.
+BOOT_SCRIPT="$TARGET_CONFIG/hypr/scripts/install-boot-theme.sh"
+if [ "$LOGIN_SETUP" != "no" ] && command -v sddm >/dev/null 2>&1 && [ -x "$BOOT_SCRIPT" ]; then
+    if [ "$LOGIN_SETUP" = "ask" ] && [ -t 0 ]; then
+        echo ""
+        read -r -p "¿Usar la pantalla de inicio de sesión estilo Omarchy (SDDM)? Pide sudo. [S/n] " reply
+        case "$reply" in [nN]*) LOGIN_SETUP="no" ;; *) LOGIN_SETUP="yes" ;; esac
+    fi
+    if [ "$LOGIN_SETUP" = "yes" ]; then
+        print_step "9. Configurando el inicio de sesión (SDDM estilo Omarchy)..."
+        python3 "$TARGET_CONFIG/hypr/scripts/bwm_boot.py" render >/dev/null 2>&1 || true
+        if sudo "$BOOT_SCRIPT" --all; then
+            print_success "SDDM listo: se verá en el próximo arranque y seguirá los colores del tema."
+        else
+            print_warn "No se pudo configurar SDDM. Puedes repetirlo con: sudo $BOOT_SCRIPT --all"
+        fi
+    fi
+elif [ "$LOGIN_SETUP" = "yes" ]; then
+    print_warn "SDDM no está instalado: instálalo y ejecuta sudo $BOOT_SCRIPT --all"
 fi
 
 if [ -d "$BACKUP_DIR" ]; then
