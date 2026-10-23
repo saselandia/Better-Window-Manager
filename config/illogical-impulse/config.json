@@ -151,6 +151,12 @@
         "showUnreadCount": false
       }
     },
+    "plasma": {
+      "centerTasks": false,
+      "floatingGap": 8,
+      "style": "translucent",
+      "floating": true
+    },
     "resources": {
       "alwaysShowCpu": true,
       "alwaysShowSwap": true,
@@ -193,10 +199,6 @@
       "showNumberDelay": 300,
       "shown": 10,
       "useNerdFont": false
-    },
-    "plasma": {
-      "style": "translucent",
-      "centerTasks": false
     }
   },
   "battery": {

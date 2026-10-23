@@ -245,9 +245,12 @@ Singleton {
                 property bool vertical: false
                 // KDE Plasma theme panel (PlasmaBarContent)
                 property JsonObject plasma: JsonObject {
-                    property string style: "translucent" // "translucent" | "opaque" | "floating"
+                    property string style: "translucent" // "translucent" | "opaque" ("floating" = legacy, read as translucent + floating)
+                    property bool floating: false // Floating panel; it docks while a window is maximized on its screen
+                    property int floatingGap: 8 // Gap around the panel when floating
+                    property string color: "#24292e" // Panel background (Breeze Dark by default)
+                    property real opacity: 0.91 // Panel opacity in translucent style
                     property bool centerTasks: false // Center the task manager icons like Plasma's "centered" option
-                    property int floatingGap: 8 // Gap around the panel in floating style
                 }
                 property JsonObject resources: JsonObject {
                     property bool alwaysShowSwap: true

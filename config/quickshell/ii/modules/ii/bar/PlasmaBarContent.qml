@@ -11,6 +11,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.models
+import qs.modules.ii.plasmaCommon
 
 Item {
     id: root
@@ -21,13 +22,16 @@ Item {
     // -----------------------------------------------------------------
     // KDE Plasma Breeze Dark Palette (Fixed, independent of wallpaper)
     // -----------------------------------------------------------------
-    // Panel style (Settings > Barra de tareas): "translucent" | "opaque" | "floating"
+    // Panel style (Settings > Barra de tareas): translucent/opaque, optional floating
     readonly property string panelStyle: Config.options?.bar?.plasma?.style ?? "translucent"
-    readonly property bool floating: Appearance.sizes.plasmaFloating
-    readonly property int floatingGap: Appearance.sizes.plasmaFloatingGap
-    readonly property int panelRadius: floating ? 8 : 0
+    // Floating panel docks while a window is maximized on this screen (Plasma 6 behaviour)
+    readonly property bool floating: PlasmaPanelState.active && !PlasmaPanelState.isDocked(root.screen?.name ?? "")
+    readonly property int floatingGap: floating ? Appearance.sizes.plasmaFloatingGap : 0
+    readonly property int panelRadius: floating ? 14 : 0
 
-    readonly property color colPanelBg: panelStyle === "opaque" ? "#ff24292e" : "#e824292e"
+    readonly property color colPanelBase: Config.options?.bar?.plasma?.color || "#24292e"
+    readonly property color colPanelBg: Qt.rgba(colPanelBase.r, colPanelBase.g, colPanelBase.b,
+        panelStyle === "opaque" ? 1 : (Config.options?.bar?.plasma?.opacity ?? 0.91))
     readonly property color colPanelBorder: "#31363b"
     readonly property color colAccent: "#3daee9"
     readonly property color colAccentHover: "#4fc3f7"
@@ -42,7 +46,7 @@ Item {
     // (only one applet popup open at a time, like Plasma)
     function togglePopup(name, button) {
         const wasOpen = GlobalStates[name + "Open"];
-        for (const other of ["plasmaBluetooth", "plasmaNetwork", "plasmaCalendar"])
+        for (const other of ["plasmaBluetooth", "plasmaNetwork", "plasmaCalendar", "plasmaNotifications"])
             GlobalStates[other + "Open"] = false;
         if (wasOpen) return;
         GlobalStates[name + "AnchorX"] = button.mapToItem(null, button.width / 2, 0).x;
@@ -54,17 +58,25 @@ Item {
     // corners when floating (like Plasma's floating panel)
     Item {
         id: panel
+        // Animated like Plasma when the panel floats / docks
+        property real gap: root.floatingGap
+        Behavior on gap {
+            NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+        }
         anchors {
             fill: parent
-            leftMargin: root.floatingGap
-            rightMargin: root.floatingGap
-            bottomMargin: root.floatingGap
+            leftMargin: panel.gap
+            rightMargin: panel.gap
+            bottomMargin: panel.gap
         }
 
         Rectangle {
             anchors.fill: parent
             color: root.colPanelBg
             radius: root.panelRadius
+            Behavior on radius {
+                NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+            }
             border.width: root.floating ? 1 : 0
             border.color: root.colPanelBorder
 
@@ -244,6 +256,72 @@ Item {
                 Layout.fillHeight: true
                 invertSide: true
                 showSeparator: false
+            }
+
+            // =============================================================
+            // 4b. Notifications (Plasma tray bell). Unread count in a badge when
+            //     Settings > Barra de tareas > "mostrar número" is on, a dot otherwise
+            // =============================================================
+            MouseArea {
+                id: notifBtn
+                Layout.alignment: Qt.AlignVCenter
+                Layout.preferredHeight: 38
+                Layout.preferredWidth: 32
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                readonly property int unread: Notifications.unread
+                readonly property bool showCount: Config.options.bar.indicators.notifications.showUnreadCount
+                readonly property bool popupOpen: GlobalStates.plasmaNotificationsOpen && GlobalStates.plasmaNotificationsScreen === (root.screen?.name ?? "")
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 4
+                    color: notifBtn.popupOpen ? root.colActive : (notifBtn.containsMouse ? root.colHover : "transparent")
+                    border.width: (notifBtn.containsMouse || notifBtn.popupOpen) ? 1 : 0
+                    border.color: notifBtn.popupOpen ? "#403daee9" : "#20ffffff"
+
+                    Image {
+                        anchors.centerIn: parent
+                        width: 22
+                        height: 22
+                        sourceSize: Qt.size(22, 22)
+                        source: Breeze.icon("notifications", Notifications.silent ? "notifications-disabled"
+                            : (notifBtn.unread > 0 ? "notification-active" : "notification-inactive"))
+                    }
+
+                    // Unread badge: number (option on) or dot (option off)
+                    Rectangle {
+                        visible: notifBtn.unread > 0 && !Notifications.silent
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.rightMargin: notifBtn.showCount ? 1 : 6
+                        anchors.topMargin: notifBtn.showCount ? 5 : 9
+                        width: notifBtn.showCount ? Math.max(16, countText.implicitWidth + 8) : 7
+                        height: notifBtn.showCount ? 16 : 7
+                        radius: height / 2
+                        color: root.colAccent
+                        Text {
+                            id: countText
+                            visible: notifBtn.showCount
+                            anchors.centerIn: parent
+                            text: notifBtn.unread > 99 ? "99+" : notifBtn.unread
+                            color: "#fcfcfc"
+                            font.family: Appearance.font.family.main
+                            font.pixelSize: 10
+                            font.weight: Font.Bold
+                        }
+                    }
+                }
+
+                // Left click: notifications applet. Middle click: toggle "Do not disturb" (like Plasma)
+                onClicked: mouse => {
+                    if (mouse.button === Qt.MiddleButton) {
+                        Notifications.silent = !Notifications.silent;
+                        return;
+                    }
+                    root.togglePopup("plasmaNotifications", notifBtn);
+                }
             }
 
             // Vertical divider

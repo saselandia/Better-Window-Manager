@@ -388,7 +388,7 @@ Singleton {
 
     sizes: QtObject {
         // Plasma floating panel: the panel keeps its height and floats `floatingGap` px above the screen edge
-        readonly property bool plasmaFloating: root.isPlasma && Config.options?.bar?.plasma?.style === "floating"
+        readonly property bool plasmaFloating: root.isPlasma && ((Config.options?.bar?.plasma?.floating ?? false) || Config.options?.bar?.plasma?.style === "floating")
         readonly property int plasmaFloatingGap: plasmaFloating ? (Config.options?.bar?.plasma?.floatingGap ?? 8) : 0
         property real plasmaPanelHeight: (Config.options?.bar?.height > 0) ? Config.options.bar.height : 44
         property real baseBarHeight: root.isPlasma ? (plasmaPanelHeight + plasmaFloatingGap)

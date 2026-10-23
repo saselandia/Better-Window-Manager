@@ -3,6 +3,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.functions
 import qs.modules.common.widgets
+import qs.modules.ii.plasmaCommon
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -394,7 +395,7 @@ Scope {
             width: root.kickoffWidth
             height: root.kickoffHeight
             // Floating panel: Kickoff floats with the same gap and gets all corners rounded
-            readonly property int edgeGap: Appearance.sizes.plasmaFloatingGap
+            readonly property int edgeGap: PlasmaPanelState.gapFor(win.screen?.name ?? "")
             anchors.bottom: parent.bottom
             anchors.bottomMargin: Appearance.sizes.baseBarHeight + edgeGap
             anchors.left: parent.left

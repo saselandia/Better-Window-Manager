@@ -78,7 +78,7 @@ Singleton {
     property var filePath: Directories.notificationsPath
     property list<Notif> list: []
     property var popupList: list.filter((notif) => notif.popup);
-    property bool popupInhibited: (GlobalStates?.sidebarRightOpen ?? false) || silent
+    property bool popupInhibited: (GlobalStates?.sidebarRightOpen ?? false) || (GlobalStates?.plasmaNotificationsOpen ?? false) || silent
     property var latestTimeForApp: ({})
     Component {
         id: notifComponent
