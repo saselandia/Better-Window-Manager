@@ -66,9 +66,9 @@ if [[ "$CURRENT_THEME" == "plasma" ]]; then
     echo "Tema Plasma activo: manteniendo paleta estática Breeze Dark (sin Matugen ni recoloreo)."
     python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py apply-plasma-colors 2>/dev/null || true
 elif [[ "$CURRENT_THEME" == "retro" ]]; then
-    echo "Extrayendo colores del wallpaper con Matugen y Omarchy..."
-    timeout 10 matugen image --source-color-index 0 "$WALLPAPER" || true
-    echo "Sincronizando paleta viva de Omarchy para Kitty y terminal..."
+    # Sin matugen: bwm_omarchy.py genera desde el fondo una paleta estilo Omarchy y rellena
+    # con ella todas las plantillas de apps (más la capa TUI y el tema Spicetify de Retro)
+    echo "Sincronizando paleta Omarchy del wallpaper para todas las apps..."
     python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py apply-wallpaper-colors "$WALLPAPER" 2>/dev/null || true
 else
     echo "Extrayendo colores del wallpaper..."

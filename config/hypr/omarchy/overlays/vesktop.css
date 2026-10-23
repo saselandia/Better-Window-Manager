@@ -1,0 +1,32 @@
+
+/* ==============================================================================
+ * BWM Retro (Omarchy) - TUI overlay for Vesktop / Vencord
+ * Terminal font, square corners and flat surfaces on top of the wallpaper palette.
+ * ============================================================================== */
+:root {
+    --font-primary: "JetBrainsMono Nerd Font", monospace !important;
+    --font-display: "JetBrainsMono Nerd Font", monospace !important;
+    --font-headline: "JetBrainsMono Nerd Font", monospace !important;
+    --font-code: "JetBrainsMono Nerd Font", monospace !important;
+}
+
+*, *::before, *::after {
+    font-family: "JetBrainsMono Nerd Font", monospace !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+/* Avatars and server icons keep their shape readable as squares (TUI style) */
+img, svg mask, foreignObject {
+    border-radius: 0 !important;
+}
+
+/* Chat box, popouts and modals framed like terminal panes */
+[class*="channelTextArea"], [class*="popout"], [class*="menu_"], [class*="modal"], [class*="tooltip"] {
+    border: 1px solid var(--brand-500) !important;
+}
+
+[class*="scroller"]::-webkit-scrollbar-thumb {
+    border-radius: 0 !important;
+}

@@ -737,8 +737,9 @@ def apply_plasma_app_themes():
     # windows that lose nothing on restart (Bluetooth devices, volume, connection editor)
     if "gtk3" in changed:
         for app in GTK_RELAUNCH_APPS:
-            if subprocess.run(["pgrep", "-x", app], stdout=subprocess.DEVNULL).returncode == 0:
-                subprocess.run(["pkill", "-x", app], check=False)
+            # pgrep -x only sees 15 characters of the name (nm-connection-editor)
+            if subprocess.run(["pgrep", "-f", f"(^|/){app}( |$)"], stdout=subprocess.DEVNULL).returncode == 0:
+                subprocess.run(["pkill", "-f", f"(^|/){app}( |$)"], check=False)
                 subprocess.Popen(["sh", "-c", f"sleep 0.5; exec {app}"], stdout=subprocess.DEVNULL,
                                  stderr=subprocess.DEVNULL, start_new_session=True)
 
@@ -766,8 +767,10 @@ def apply_retro_wallpaper_colors(wallpaper_path: str = None):
     if not palette:
         return
 
-    # 1. Kitty Terminal
-    apply_retro_kitty_colors(palette)
+    # 1. Omarchy-style themes for every app (kitty, btop, GTK, Spotify, Vesktop, Firefox,
+    #    swaync, VSCodium, Quickshell...), see bwm_omarchy.py
+    import bwm_omarchy
+    bwm_omarchy.apply_retro_apps(palette, wp)
 
     # 2. Quickshell retro-colors.json
     try:
@@ -930,6 +933,15 @@ def apply_theme(theme_name: str):
 
     # 1. Guardar la configuración del tema actual antes de cambiar
     save_current_theme_config(curr_theme)
+
+    # Al salir de Retro: devolver Spicetify, btop y VSCodium a su tema (lo demás lo regenera
+    # matugen en Default o la paleta Breeze en Plasma)
+    if not cfg.get("is_retro"):
+        try:
+            import bwm_omarchy
+            bwm_omarchy.restore_non_retro()
+        except Exception as e:
+            print(f"[Warning] No se pudo restaurar el tema de apps de Retro: {e}", file=sys.stderr)
 
     # 2. Cargar el perfil de configuración aislado del tema seleccionado
     load_theme_config(theme_name, cfg)

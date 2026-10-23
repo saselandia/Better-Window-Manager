@@ -1,0 +1,70 @@
+/* ==============================================================================
+ * BWM Retro (Omarchy) - terminal-style Spicetify theme for Spotify
+ * Colours come from the wallpaper (color.ini, rendered by bwm_omarchy.py). The look
+ * is a TUI: monospace everywhere, square panes framed with thin borders, flat
+ * backgrounds without gradients, like Omarchy's btop / terminal apps.
+ * ============================================================================== */
+:root {
+    --bwm-mono: "JetBrainsMono Nerd Font", monospace;
+}
+
+*, *::before, *::after {
+    font-family: var(--bwm-mono) !important;
+    letter-spacing: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Panes: flat background with a 1px terminal frame */
+.Root__nav-bar, .Root__main-view, .Root__right-sidebar, .Root__now-playing-bar,
+.main-yourLibraryX-entryPoints, .main-nowPlayingView-section {
+    background: var(--spice-main) !important;
+    border: 1px solid rgba(var(--spice-rgb-misc), 0.55) !important;
+}
+
+/* No gradients or coloured headers */
+.main-entityHeader-backgroundColor, .main-actionBarBackground-background,
+.main-home-homeHeader, .main-entityHeader-overlay, .before-scroll-node {
+    display: none !important;
+    background: none !important;
+}
+.main-topBar-background, .main-home-filterChipsSection, .main-view-container__scroll-node-child {
+    background: var(--spice-main) !important;
+}
+
+/* Cards and rows */
+.main-card-card {
+    background: var(--spice-main) !important;
+    border: 1px solid rgba(var(--spice-rgb-subtext), 0.25) !important;
+}
+.main-card-card:hover {
+    border-color: var(--spice-button) !important;
+    background: var(--spice-card) !important;
+}
+.main-trackList-trackListRow:hover, .main-trackList-selected {
+    background: var(--spice-selected-row) !important;
+    outline: 1px solid var(--spice-button) !important;
+}
+
+/* Section titles as terminal headings */
+.main-shelf-title, .main-entityHeader-title, h1, h2 {
+    text-transform: lowercase;
+}
+.main-shelf-title::before {
+    content: "> ";
+    color: var(--spice-button);
+}
+
+/* Buttons and chips */
+.encore-bright-accent-set, .main-playButton-PlayButton button, [data-encore-id="buttonPrimary"] {
+    --background-base: var(--spice-button) !important;
+}
+[data-encore-id="chip"], .main-buttonTertiary-buttonTertiary {
+    border: 1px solid rgba(var(--spice-rgb-misc), 0.6) !important;
+}
+
+/* Progress / volume bars like btop meters */
+.progress-bar {
+    --fg-color: var(--spice-button) !important;
+    --bg-color: rgba(var(--spice-rgb-subtext), 0.25) !important;
+}

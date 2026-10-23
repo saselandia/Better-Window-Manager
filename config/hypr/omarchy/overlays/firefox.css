@@ -1,0 +1,25 @@
+
+/* ==============================================================================
+ * BWM Retro (Omarchy) - TUI overlay for Firefox's browser chrome (not web pages)
+ * Imported at the top of userChrome.css, so selectors are doubled with :root:root
+ * to win over the Material You rules that come later in that file.
+ * ============================================================================== */
+:root:root * {
+    font-family: "JetBrainsMono Nerd Font", monospace !important;
+}
+
+:root:root .tab-background, :root:root #urlbar-background, :root:root #urlbar,
+:root:root toolbarbutton, :root:root .toolbarbutton-icon, :root:root .toolbarbutton-badge-stack,
+:root:root menupopup, :root:root panel, :root:root .panel-arrowcontent, :root:root #searchbar,
+:root:root .urlbarView, :root:root .urlbarView-row {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+:root:root .tab-background[selected] {
+    border: 1px solid var(--mat-primary, AccentColor) !important;
+}
+
+:root:root #urlbar[focused] #urlbar-background {
+    border: 1px solid var(--mat-primary, AccentColor) !important;
+}

@@ -1,0 +1,20 @@
+
+/* ==============================================================================
+ * BWM Retro (Omarchy) - TUI overlay for swaync (like Omarchy's mako)
+ * ============================================================================== */
+* {
+    font-family: "JetBrainsMono Nerd Font", monospace;
+}
+
+.control-center, .notification, .notification-row, .widget-title, .widget-dnd, button {
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.control-center {
+    border: 2px solid @m3_primary;
+}
+
+.notification {
+    border: 2px solid @m3_primary;
+}
