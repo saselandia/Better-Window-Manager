@@ -85,7 +85,11 @@ quickshell -c ii ipc call retro reload 2>/dev/null || true
 # 5. Sincronizar Nautilus / GNOME en caliente
 ~/.config/hypr/scripts/sync-nautilus.sh 2>/dev/null || true
 
-# 6. Recargar Hyprland para aplicar la nueva paleta en caliente
+# 6. Tema de arranque / inicio de sesión con los colores nuevos (lo instala el servicio
+#    root de install-boot-theme.sh --auto, si está activado)
+python3 ~/.config/hypr/scripts/bwm_boot.py render >/dev/null 2>&1 &
+
+# 7. Recargar Hyprland para aplicar la nueva paleta en caliente
 echo "Recargando configuración de Hyprland..."
 hyprctl reload
 

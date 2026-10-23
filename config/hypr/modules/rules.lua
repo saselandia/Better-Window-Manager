@@ -154,5 +154,12 @@ hl.window_rule({
     fullscreen = true,
     float      = true,
     animation  = "slide",
-    ["hyprbars:no_bar"] = true,
 })
+-- Sin barra de título; el campo sólo existe con hyprbars cargado (tema Plasma)
+if hl.plugin and hl.plugin.hyprbars then
+    hl.window_rule({
+        name  = "bwm-screensaver-nobar",
+        match = { class = "^org\\.bwm\\.screensaver$" },
+        ["hyprbars:no_bar"] = true,
+    })
+end

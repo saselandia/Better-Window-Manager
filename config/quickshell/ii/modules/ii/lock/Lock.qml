@@ -33,8 +33,19 @@ LockScreen {
         }
     }
 
-    lockSurface: LockSurface {
-        context: root.context
+    // Retro: Omarchy's hyprlock look; the other themes keep the Material You one
+    lockSurface: Appearance.isRetro ? omarchySurface : defaultSurface
+    Component {
+        id: defaultSurface
+        LockSurface {
+            context: root.context
+        }
+    }
+    Component {
+        id: omarchySurface
+        OmarchyLockSurface {
+            context: root.context
+        }
     }
 
     // Single batch for lock and unlock so we don't race multiple hyprctl calls

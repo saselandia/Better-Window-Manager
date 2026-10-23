@@ -979,6 +979,10 @@ def apply_theme(theme_name: str):
         except Exception as e:
             print(f"[Warning] No se pudo aplicar el tema de iconos: {e}", file=sys.stderr)
 
+    # Boot splash / login screen in the new colours (installed by the root service, if set up)
+    subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_boot.py"), "render"],
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
     # Firefox only reads its chrome CSS (Retro's TUI overlay) at startup: entering or leaving
     # Retro restarts it in the background, keeping the session and each window's workspace
     if (theme_name == "retro") != (curr_theme == "retro"):

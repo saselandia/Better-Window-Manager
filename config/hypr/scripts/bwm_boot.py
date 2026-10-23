@@ -5,11 +5,14 @@ Boot splash (Plymouth) and login screen (SDDM) matching the active BWM theme, li
 omarchy-plymouth-set-by-theme: Omarchy's terminal-style themes (MIT, vendored in
 config/hypr/omarchy/boot) with the BWM logo, recoloured with the theme's background
 and text colours. This only renders them into ~/.local/state/bwm/boot (no root);
-install-boot-theme.sh copies them into the system.
+install-boot-theme.sh copies them into the system. It runs after every wallpaper and theme
+change; when the result differs it rewrites boot/.stamp, which the root service that
+`install-boot-theme.sh --auto` sets up watches to update the installed themes.
 
   bwm_boot.py render        render for the active theme
 """
 
+import hashlib
 import json
 import re
 import shutil
@@ -92,6 +95,14 @@ def render():
     for asset in ("entry", "lock"):
         tint(ASSETS / "plymouth" / f"{asset}.png", sddm / f"{asset}-failed.png", FAILED)
     shutil.copy(ply / "logo.png", sddm / "logo.png")
+
+    # Only a real change wakes the root service (bwm-boot-theme.path)
+    digest = hashlib.sha256()
+    for f in sorted(p for p in OUT.rglob("*") if p.is_file() and p.name != ".stamp"):
+        digest.update(str(f.relative_to(OUT)).encode() + b"\0" + f.read_bytes())
+    stamp = OUT / ".stamp"
+    if not stamp.is_file() or stamp.read_text().strip() != digest.hexdigest():
+        stamp.write_text(digest.hexdigest() + "\n")
     return bg, text
 
 
