@@ -12,9 +12,13 @@
 #                                                                # + usar SDDM al iniciar
 # Requisitos (Gentoo): sys-boot/plymouth (y x11-misc/sddm para --sddm)
 # Lo que cambia en el sistema:
-#   /usr/share/plymouth/themes/bwm, tema por defecto de Plymouth, initramfs (dracut),
-#   "quiet splash" en GRUB_CMDLINE_LINUX_DEFAULT (copia en /etc/default/grub.bwm-backup)
-#   y grub.cfg; con --sddm /usr/share/sddm/themes/bwm y /etc/sddm.conf.d/10-bwm.conf
+#   /usr/share/plymouth/themes/bwm y el tema por defecto de Plymouth;
+#   initramfs rehecho con dracut con los MISMOS argumentos con que se generó
+#   (copia en /boot/initramfs-<kver>.img.bwm-backup);
+#   "quiet splash" añadido a las líneas "linux" del grub.cfg actual, sin regenerarlo
+#   (copia en /boot/grub/grub.cfg.bwm-backup): aquí la línea de arranque (rd.luks..., root=)
+#   no está en /etc/default/grub, así que grub-mkconfig la perdería y no arrancaría;
+#   con --sddm /usr/share/sddm/themes/bwm y /etc/sddm.conf.d/10-bwm.conf
 # ==============================================================================
 set -euo pipefail
 
@@ -49,22 +53,32 @@ install -m 0644 "$SRC"/plymouth/* /usr/share/plymouth/themes/bwm/
 plymouth-set-default-theme bwm
 echo "Tema de Plymouth: $(plymouth-set-default-theme)"
 
-# initramfs con Plymouth (dracut añade el módulo si Plymouth está instalado)
-if command -v dracut >/dev/null; then
+# initramfs con Plymouth: rehacerlo con los mismos argumentos de dracut que el actual
+# (lsinitrd los guarda), y sólo si el actual lo generó dracut
+if command -v dracut >/dev/null && command -v lsinitrd >/dev/null; then
   for kver in $(ls /lib/modules); do
-    [[ -f /boot/initramfs-$kver.img ]] && dracut --force "/boot/initramfs-$kver.img" "$kver"
+    img="/boot/initramfs-$kver.img"
+    [[ -f $img ]] || continue
+    info=$(lsinitrd "$img" 2>/dev/null | sed -n '1,/^dracut modules:/p')
+    if ! lsinitrd "$img" 2>/dev/null | sed -n '/^dracut modules:/,/^=====/p' | grep -qvE '^(dracut modules:|=+)$'; then
+      echo "AVISO: $img no parece generado por dracut: no lo toco. Plymouth no se verá hasta incluirlo." >&2
+      continue
+    fi
+    args=$(printf '%s\n' "$info" | sed -n 's/^Arguments: //p')
+    cp -n "$img" "$img.bwm-backup"
+    echo "Rehaciendo $img (dracut $args)"
+    # shellcheck disable=SC2086 # los argumentos originales van tal cual
+    eval dracut --force $args "$img" "$kver"
   done
 fi
 
-# Línea de comandos del kernel: "quiet splash" para ver el tema en lugar del texto
-if [[ -f /etc/default/grub ]] && ! grep -qE '^GRUB_CMDLINE_LINUX_DEFAULT=.*\bsplash\b' /etc/default/grub; then
-  cp -n /etc/default/grub /etc/default/grub.bwm-backup
-  if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT=' /etc/default/grub; then
-    sed -i -E 's/^GRUB_CMDLINE_LINUX_DEFAULT="([^"]*)"/GRUB_CMDLINE_LINUX_DEFAULT="\1 quiet splash"/' /etc/default/grub
-  else
-    echo 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"' >>/etc/default/grub
-  fi
-  grub-mkconfig -o /boot/grub/grub.cfg
+# "quiet splash" en el grub.cfg actual (sin grub-mkconfig, ver la cabecera)
+GRUB_CFG=/boot/grub/grub.cfg
+if [[ -f $GRUB_CFG ]] && grep -qE '^[[:space:]]*linux[[:space:]]' "$GRUB_CFG"; then
+  cp -n "$GRUB_CFG" "$GRUB_CFG.bwm-backup"
+  sed -i -E '/^[[:space:]]*linux[[:space:]]/{/[[:space:]]splash([[:space:]]|$)/!s/$/ quiet splash/}' "$GRUB_CFG"
+  echo "Añadido \"quiet splash\" a $(grep -cE '^[[:space:]]*linux[[:space:]].*splash' "$GRUB_CFG") entradas de $GRUB_CFG"
+  echo "  (si algún día regeneras grub.cfg con grub-mkconfig, añade también \"quiet splash\" a GRUB_CMDLINE_LINUX_DEFAULT)"
 fi
 
 # 3. SDDM (opcional)

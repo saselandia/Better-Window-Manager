@@ -114,24 +114,34 @@ def icon_theme_for(theme: str, accent: str = "") -> str:
     return "Adwaita"
 
 
-def write_qt6ct(icon_theme: str):
-    """qt6ct: Fusion with the theme palette (colors/bwm.conf) and the same icons."""
+def write_qt6ct(icon_theme: str, mono_font: str = ""):
+    """qt6ct: Fusion with the theme palette (colors/bwm.conf) and the same icons. With
+    `mono_font` (Retro) the whole UI uses the system monospace font, like the GTK TUI overlay."""
     QT6CT_CONF.parent.mkdir(parents=True, exist_ok=True)
-    QT6CT_CONF.write_text(
+    text = (
         "[Appearance]\n"
         f"color_scheme_path={HOME}/.config/qt6ct/colors/bwm.conf\n"
         "custom_palette=true\n"
         f"icon_theme={icon_theme}\n"
         "standard_dialogs=xdgdesktopportal\n"
-        "style=Fusion\n",
-        encoding="utf-8")
+        "style=Fusion\n")
+    if mono_font:
+        text += f'\n[Fonts]\nfixed="{mono_font},10"\ngeneral="{mono_font},10"\n'
+    QT6CT_CONF.write_text(text, encoding="utf-8")
 
 
 def apply(theme: str, accent: str = ""):
     icons = icon_theme_for(theme, accent)
     subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "icon-theme", icons],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    write_qt6ct(icons)
+    mono = ""
+    if theme == "retro":
+        try:
+            import bwm_omarchy
+            mono = bwm_omarchy.system_font()
+        except Exception:
+            mono = "JetBrainsMono Nerd Font"
+    write_qt6ct(icons, mono)
     return icons
 
 

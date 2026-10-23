@@ -2,25 +2,29 @@
 # ==============================================================================
 # Script: steam-theme.sh
 # Descripción: Aplica a Steam los colores del tema BWM con Adwaita-for-Steam
-# (https://github.com/tkashkin/Adwaita-for-Steam), como el módulo de Steam de
-# omarchy-theme-hook. No hace nada si Adwaita-for-Steam no está en
-# ~/.local/share/steam-adwaita. Steam aplica el cambio la próxima vez que se abra.
+# (https://github.com/tkashkin/Adwaita-for-Steam, MIT), como el módulo de Steam de
+# omarchy-theme-hook. En Retro añade además esquinas rectas y la fuente monoespaciada
+# del sistema (aspecto TUI). Sin Adwaita-for-Steam en ~/.local/share/steam-adwaita no
+# hace nada. Steam aplica el cambio la próxima vez que se abra.
 # ==============================================================================
 
 ADW="$HOME/.local/share/steam-adwaita"
 CSS="$HOME/.local/state/bwm/steam/bwm.css"
 [[ -f $ADW/install.py && -f $CSS ]] || exit 0
 
-# Las --adw-*-rgb de Adwaita-for-Steam son tripletes "r, g, b": convertir los #rrggbb
 mkdir -p "$ADW/adwaita/colorthemes/bwm"
-python3 - "$CSS" "$ADW/adwaita/colorthemes/bwm/bwm.css" <<'PY'
-import re, sys
-text = open(sys.argv[1]).read()
-text = re.sub(r"#([0-9a-fA-F]{6})", lambda m: ", ".join(str(int(m.group(1)[i:i + 2], 16)) for i in (0, 2, 4)), text)
-open(sys.argv[2], "w").write(text)
-PY
+cp -f "$CSS" "$ADW/adwaita/colorthemes/bwm/bwm.css"
 
-cd "$ADW" && python3 install.py --color-theme bwm >/dev/null 2>&1
+args=(--color-theme bwm --color-scheme dark --accent-color theme --extras library/hide-whats-new)
+if [[ $(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null) == "retro" ]]; then
+  font=$("$HOME/.config/hypr/scripts/font-set.sh" current 2>/dev/null)
+  tui="$HOME/.local/state/bwm/steam/tui.css"
+  printf '* { font-family: "%s", monospace !important; }\n' "${font:-JetBrainsMono Nerd Font}" >"$tui"
+  args=(--color-theme bwm --color-scheme dark --accent-color theme
+        --extras library/hide-whats-new general/no-rounded-corners --custom-css "$tui")
+fi
+
+cd "$ADW" && python3 install.py "${args[@]}" >"$HOME/.local/state/bwm/steam/install.log" 2>&1
 
 if pgrep -x steam >/dev/null; then
   notify-send -a "BWM" "Steam" "El tema de Steam se aplicará al reiniciarlo." 2>/dev/null
