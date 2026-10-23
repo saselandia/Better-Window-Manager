@@ -313,13 +313,15 @@ Item {
             Layout.preferredWidth: 32
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
+            acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+            readonly property bool popupOpen: GlobalStates.plasmaBluetoothOpen && GlobalStates.plasmaBluetoothScreen === (root.screen?.name ?? "")
 
             Rectangle {
                 anchors.fill: parent
                 radius: 4
-                color: btBtn.containsMouse ? root.colHover : "transparent"
-                border.width: btBtn.containsMouse ? 1 : 0
-                border.color: "#20ffffff"
+                color: btBtn.popupOpen ? root.colActive : (btBtn.containsMouse ? root.colHover : "transparent")
+                border.width: (btBtn.containsMouse || btBtn.popupOpen) ? 1 : 0
+                border.color: btBtn.popupOpen ? "#403daee9" : "#20ffffff"
 
                 MaterialSymbol {
                     anchors.centerIn: parent
@@ -329,8 +331,16 @@ Item {
                 }
             }
 
-            onClicked: {
-                Quickshell.execDetached(["bluetoothctl", "power", BluetoothStatus.enabled ? "off" : "on"]);
+            // Left click: Plasma Bluetooth applet. Middle click: toggle power (like Plasma).
+            onClicked: mouse => {
+                if (mouse.button === Qt.MiddleButton) {
+                    if (Bluetooth.defaultAdapter)
+                        Bluetooth.defaultAdapter.enabled = !Bluetooth.defaultAdapter.enabled;
+                    return;
+                }
+                GlobalStates.plasmaBluetoothAnchorX = btBtn.mapToItem(null, btBtn.width / 2, 0).x;
+                GlobalStates.plasmaBluetoothScreen = root.screen?.name ?? "";
+                GlobalStates.plasmaBluetoothOpen = !GlobalStates.plasmaBluetoothOpen;
             }
         }
 

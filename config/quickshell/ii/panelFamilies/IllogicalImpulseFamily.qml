@@ -25,6 +25,7 @@ import qs.modules.ii.wallpaperSelector
 import qs.modules.ii.altTab
 import qs.modules.ii.omarchyMenu
 import qs.modules.ii.plasmaKickoff
+import qs.modules.ii.plasmaBluetooth
 
 Scope {
     PanelLoader { extraCondition: !Config.options.bar.vertical; component: Bar {} }
@@ -50,4 +51,5 @@ Scope {
     PanelLoader { component: AltTab {} }
     PanelLoader { component: OmarchyMenu {} }
     PanelLoader { component: PlasmaKickoff {} }
+    PanelLoader { component: PlasmaBluetooth {} }
 }

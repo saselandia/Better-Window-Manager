@@ -67,6 +67,7 @@ Este entorno no incluye los binarios propietarios o pesados en el repositorio gi
 | **`playerctl`** | Integración y control multimedia MPRIS |
 | **`wl-clipboard`** | Gestión de portapapeles (`wl-copy` / `wl-paste`) |
 | **`jq` & `python3`** | Procesamiento de configuraciones, backend de monitores y automatizaciones |
+| **`bluez` & `blueman`** | Pila Bluetooth (`bluetoothd`) para el applet Bluetooth estilo KDE Plasma y ajustes avanzados (`blueman-manager`) |
 
 ### Aplicaciones Flatpak Obligatorias:
 | Aplicación | ID Flatpak | Rol |
@@ -81,7 +82,7 @@ Este entorno no incluye los binarios propietarios o pesados en el repositorio gi
 #### Arch Linux / CachyOS:
 ```bash
 # Dependencias del sistema:
-paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak
+paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman
 
 # Flatpaks obligatorios:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client
@@ -90,7 +91,7 @@ flatpak install flathub dev.vencord.Vesktop com.spotify.Client
 #### Gentoo Linux:
 ```bash
 # Dependencias del sistema:
-emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak
+emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman
 
 # Flatpaks obligatorios:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client
@@ -99,7 +100,7 @@ flatpak install flathub dev.vencord.Vesktop com.spotify.Client
 #### Fedora:
 ```bash
 # Dependencias del sistema:
-sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak
+sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman
 
 # Flatpaks obligatorios:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client

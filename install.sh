@@ -107,6 +107,8 @@ DEPENDENCIES=(
     "nautilus:Gestor de archivos gráfico GNOME Files (tematizado con Material You)"
     "firefox:Navegador web principal nativo (tematizado con Material You)"
     "flatpak:Gestor de paquetes Flatpak (requerido para Vesktop y Spotify)"
+    "bluetoothctl:Pila Bluetooth BlueZ (bluetoothd), usada por el applet Bluetooth de Quickshell"
+    "blueman-manager:Ajustes avanzados de Bluetooth (botón Configurar del applet Plasma)"
 )
 
 MISSING_DEPS=()
@@ -155,9 +157,9 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
     echo "  Recomendamos instalarlos para que todas las funciones visuales y atajos operen al 100%."
     echo ""
     echo "  Comandos de instalación según tu distribución:"
-    echo "   • Arch / CachyOS: paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak"
-    echo "   • Gentoo: emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak"
-    echo "   • Fedora: sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak"
+    echo "   • Arch / CachyOS: paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman"
+    echo "   • Gentoo: emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman"
+    echo "   • Fedora: sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman"
     echo ""
 fi
 

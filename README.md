@@ -67,6 +67,7 @@ This dotfiles repository keeps binary assets minimal to ensure portability and q
 | **`playerctl`** | MPRIS media controller and media key integration |
 | **`wl-clipboard`** | Wayland clipboard utilities (`wl-copy` / `wl-paste`) |
 | **`jq` & `python3`** | JSON processing, display arrangement backend, and automations |
+| **`bluez` & `blueman`** | Bluetooth stack (`bluetoothd`) for the KDE Plasma-style Bluetooth applet, plus advanced settings (`blueman-manager`) |
 
 ### Required Flatpak Applications:
 | Application | Flatpak App ID | Role |
@@ -81,7 +82,7 @@ This dotfiles repository keeps binary assets minimal to ensure portability and q
 #### Arch Linux / CachyOS:
 ```bash
 # System dependencies:
-paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak
+paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman
 
 # Required Flatpaks:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client
@@ -90,7 +91,7 @@ flatpak install flathub dev.vencord.Vesktop com.spotify.Client
 #### Gentoo Linux:
 ```bash
 # System dependencies:
-emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak
+emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman
 
 # Required Flatpaks:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client
@@ -99,7 +100,7 @@ flatpak install flathub dev.vencord.Vesktop com.spotify.Client
 #### Fedora:
 ```bash
 # System dependencies:
-sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak
+sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman
 
 # Required Flatpaks:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client

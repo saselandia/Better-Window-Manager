@@ -32,4 +32,4 @@ meson-build:
 	mkdir -p build
 	cd build && meson .. && ninja
 
-.PHONY: all meson-build clean install install
+.PHONY: all meson-build clean install

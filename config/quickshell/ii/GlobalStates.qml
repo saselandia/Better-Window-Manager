@@ -30,6 +30,10 @@ Singleton {
     property bool superReleaseMightTrigger: true
     property bool wallpaperSelectorOpen: false
     property bool workspaceShowNumbers: false
+    // KDE Plasma Bluetooth applet (opened from the Plasma taskbar)
+    property bool plasmaBluetoothOpen: false
+    property real plasmaBluetoothAnchorX: -1
+    property string plasmaBluetoothScreen: ""
 
     onSidebarRightOpenChanged: {
         if (GlobalStates.sidebarRightOpen) {
