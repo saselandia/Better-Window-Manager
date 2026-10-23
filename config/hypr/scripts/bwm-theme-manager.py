@@ -671,6 +671,9 @@ BREEZE_DARK_M3 = {
 # and kitty gets the real Breeze/Konsole terminal palette from apply_plasma_colors()
 PLASMA_SKIPPED_TEMPLATES = {"hyprland_colors", "kitty"}
 
+# Stateless GTK 3 windows reopened when the GTK palette changes (see apply_plasma_app_themes)
+GTK_RELAUNCH_APPS = ("blueman-manager", "pavucontrol", "nm-connection-editor")
+
 def apply_plasma_app_themes():
     """Renders the matugen templates with the Breeze Dark palette (no wallpaper colors) and
     sets the GTK dark theme, so GTK, Qt and the themed apps all look the same in Plasma."""
@@ -702,6 +705,7 @@ def apply_plasma_app_themes():
         return value.lstrip("#") if m.group(2) == "hex_stripped" else value
 
     hooks = []
+    changed = set()
     for name, tpl in templates.items():
         if name in PLASMA_SKIPPED_TEMPLATES:
             continue
@@ -717,6 +721,7 @@ def apply_plasma_app_themes():
                 continue
             dst.parent.mkdir(parents=True, exist_ok=True)
             dst.write_text(rendered, encoding="utf-8")
+            changed.add(name)
         except Exception as e:
             print(f"[Warning] Error aplicando Breeze a {dst}: {e}", file=sys.stderr)
             continue
@@ -727,6 +732,15 @@ def apply_plasma_app_themes():
     for key, value in (("gtk-theme", "adw-gtk3-dark"), ("color-scheme", "prefer-dark")):
         subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", key, value],
                        check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # GTK 3 only reads ~/.config/gtk-3.0/gtk.css at startup: reopen the open GTK utility
+    # windows that lose nothing on restart (Bluetooth devices, volume, connection editor)
+    if "gtk3" in changed:
+        for app in GTK_RELAUNCH_APPS:
+            if subprocess.run(["pgrep", "-x", app], stdout=subprocess.DEVNULL).returncode == 0:
+                subprocess.run(["pkill", "-x", app], check=False)
+                subprocess.Popen(["sh", "-c", f"sleep 0.5; exec {app}"], stdout=subprocess.DEVNULL,
+                                 stderr=subprocess.DEVNULL, start_new_session=True)
 
     # Same reload hooks matugen would run (Quickshell theme, Spotify, Nautilus, swaync...)
     for hook in hooks:

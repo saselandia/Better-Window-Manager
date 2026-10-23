@@ -32,9 +32,7 @@ Scope {
         command: ["/home/sasel/.config/hypr/scripts/alt-release-monitor.py"]
         onExited: (exitCode, exitStatus) => {
             console.log("[AltTab] altMonitor detected Alt release, isOpen:", root.isOpen);
-            if (root.isOpen) {
-                root.selectAndClose();
-            }
+            root.selectAndClose();
         }
     }
 
@@ -72,14 +70,32 @@ Scope {
         return null;
     }
 
-    function getVisibleWindows() {
-        var clients = HyprlandData.windowList || [];
+    property string appFilter: ""   // non-empty: only windows of this class (Alt+` mode)
+    property bool appFilterFromActive: false // Alt+`: take the class of the focused window
+
+    // The switcher opens from a fresh `hyprctl clients/monitors` snapshot. HyprlandData drops
+    // refreshes that arrive while one is running, so its focus history (the MRU order) was
+    // often stale: a single Alt+Tab then selected the wrong window or the current one.
+    property bool opening: false
+    property int pendingSteps: 0      // Tab / Shift+Tab presses received while opening
+    property bool releasedEarly: false // Alt released before the snapshot arrived (quick tap)
+
+    function getVisibleWindows(clients, monitors) {
+        const activeWorkspaceIds = (monitors || []).map(m => m.activeWorkspace?.id);
+        if (root.appFilterFromActive) {
+            root.appFilter = (clients || []).find(w => w.focusHistoryID === 0)?.class ?? "";
+            root.appFilterFromActive = false;
+        }
         var visible = [];
         for (var i = 0; i < clients.length; i++) {
             var c = clients[i];
             if (!c || !c.class || c.class.length === 0) continue;
             if (c.mapped === false || c.hidden === true) continue;
             if (!c.workspace || c.workspace.id <= 0) continue;
+            // KDE Plasma: like KWin's default, only windows of the visible workspaces
+            // (plus minimized ones, which live on workspace 99) and, for Alt+`, one app
+            if (Appearance.isPlasma && c.workspace.id !== 99 && !activeWorkspaceIds.includes(c.workspace.id)) continue;
+            if (appFilter !== "" && c.class !== appFilter) continue;
             visible.push({
                 address: c.address,
                 title: c.title || "",
@@ -98,16 +114,28 @@ Scope {
         return visible;
     }
 
+    // Focus is only changed on release (like KWin): the highlighted window is shown by the
+    // switcher itself, so no focus changes (and frame flicker) while navigating
+    property string origAddress: ""
+
+    // Alt+` : cycle through the windows of the focused application only
+    function nextApp(backwards) {
+        if (!root.isOpen && !root.opening) {
+            root.appFilterFromActive = true;
+            root.next();
+            if (backwards) { root.prev(); root.prev(); }
+        } else if (backwards) root.prev(); else root.next();
+    }
+
     function next() {
         console.log("[AltTab] next() called, current isOpen:", root.isOpen);
-        if (!root.isOpen) {
-            HyprlandData.updateAll();
-            var list = getVisibleWindows();
-            if (list.length === 0) return;
-            root.windowList = list;
-            root.selectedIndex = (list.length > 1) ? 1 : 0;
-            root.focusedScreen = Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0];
-            root.isOpen = true;
+        if (root.opening) {
+            root.pendingSteps++;
+        } else if (!root.isOpen) {
+            root.opening = true;
+            root.pendingSteps = 0;
+            root.releasedEarly = false;
+            snapshot.running = true;
             altMonitor.running = false;
             altMonitor.running = true;
         } else {
@@ -122,7 +150,9 @@ Scope {
 
     function prev() {
         console.log("[AltTab] prev() called, current isOpen:", root.isOpen);
-        if (root.isOpen && root.windowList.length > 0) {
+        if (root.opening) {
+            root.pendingSteps--;
+        } else if (root.isOpen && root.windowList.length > 0) {
             root.selectedIndex = (root.selectedIndex - 1 + root.windowList.length) % root.windowList.length;
             if (!altMonitor.running) {
                 altMonitor.running = true;
@@ -130,16 +160,80 @@ Scope {
         }
     }
 
+    // Focus + bring to the front of the stacking order (floating windows are not raised by focus alone)
+    function focusAndRaise(address) {
+        const w = "\"address:" + address + "\"";
+        Hyprland.dispatch("hl.dsp.focus({window = " + w + "})");
+        Hyprland.dispatch("hl.dsp.window.bring_to_top({window = " + w + "})");
+        Hyprland.dispatch("hl.dsp.window.alter_zorder({mode = \"top\", window = " + w + "})");
+    }
+
+    function focusTarget(target) {
+        if (!target || !target.address) return;
+        const minimized = (target.workspace?.id ?? 0) === 99;
+        // minimized window: restore it first
+        if (minimized)
+            Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/toggle-minimize.py", "restore", target.address]);
+        else
+            root.focusAndRaise(target.address);
+        // The switcher layer still holds the keyboard until it unmaps; focus again once it is gone
+        pendingFocus = target.address;
+        focusTimer.interval = minimized ? 160 : 70;
+        focusTimer.restart();
+    }
+    property string pendingFocus: ""
+    Timer {
+        id: focusTimer
+        interval: 160
+        onTriggered: root.focusAndRaise(root.pendingFocus)
+    }
+
+    // Fresh window list + monitors, then the switcher opens
+    Process {
+        id: snapshot
+        command: ["sh", "-c", "printf '['; hyprctl -j clients; printf ','; hyprctl -j monitors; printf ']'"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let clients = [], monitors = [];
+                try {
+                    [clients, monitors] = JSON.parse(text);
+                } catch (e) {
+                    clients = HyprlandData.windowList || [];
+                    monitors = HyprlandData.monitors || [];
+                }
+                root.opening = false;
+                const list = root.getVisibleWindows(clients, monitors);
+                if (list.length === 0) {
+                    altMonitor.running = false;
+                    return;
+                }
+                root.windowList = list;
+                // KDE order: current window first, selection starts on the previous one
+                root.origAddress = list[0].address;
+                const start = list.length > 1 ? 1 : 0;
+                root.selectedIndex = ((start + root.pendingSteps) % list.length + list.length) % list.length;
+                root.focusedScreen = Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0];
+                root.isOpen = true;
+                // Quick tap: Alt was already released, switch straight away
+                if (root.releasedEarly)
+                    root.selectAndClose();
+            }
+        }
+    }
+
     function selectAndClose() {
         console.log("[AltTab] selectAndClose() called, isOpen:", root.isOpen, "selectedIndex:", root.selectedIndex);
+        if (root.opening) {
+            root.releasedEarly = true;
+            return;
+        }
         if (root.isOpen) {
             root.isOpen = false;
             altMonitor.running = false;
             if (root.windowList.length > 0 && root.selectedIndex >= 0 && root.selectedIndex < root.windowList.length) {
                 var target = root.windowList[root.selectedIndex];
                 if (target && target.address) {
-                    console.log("[AltTab] Focusing window:", target.class, target.title, target.address);
-                    Hyprland.dispatch("hl.dsp.focus({window = \"address:" + target.address + "\"})");
+                    root.focusTarget(target);
                 }
             }
         }
@@ -153,8 +247,7 @@ Scope {
             if (index >= 0 && index < root.windowList.length) {
                 var target = root.windowList[index];
                 if (target && target.address) {
-                    console.log("[AltTab] Focusing clicked window:", target.class, target.title, target.address);
-                    Hyprland.dispatch("hl.dsp.focus({window = \"address:" + target.address + "\"})");
+                    root.focusTarget(target);
                 }
             }
         }
@@ -162,9 +255,11 @@ Scope {
 
     function cancel() {
         console.log("[AltTab] cancel() called");
+        root.opening = false;
         if (root.isOpen) {
             root.isOpen = false;
             altMonitor.running = false;
+
         }
     }
 
@@ -172,11 +267,23 @@ Scope {
         target: "altTab"
 
         function next(): void {
+            if (!root.isOpen && !root.opening) {
+                root.appFilter = "";
+                root.appFilterFromActive = false;
+            }
             root.next();
         }
 
         function prev(): void {
             root.prev();
+        }
+
+        function nextApp(): void {
+            root.nextApp(false);
+        }
+
+        function prevApp(): void {
+            root.nextApp(true);
         }
 
         function release(): void {
@@ -194,7 +301,7 @@ Scope {
 
     PanelWindow {
         id: panelWindow
-        visible: root.isOpen
+        visible: root.isOpen && !Appearance.isPlasma
         screen: root.focusedScreen
 
         WlrLayershell.namespace: "quickshell:altTab"
@@ -479,5 +586,9 @@ Scope {
                 }
             }
         }
+    }
+
+    PlasmaSwitcher {
+        controller: root
     }
 }

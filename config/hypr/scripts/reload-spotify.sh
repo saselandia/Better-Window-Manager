@@ -12,7 +12,8 @@ if [ "$WAS_RUNNING" -eq 1 ]; then
     pkill -9 -f "com.spotify.Client" 2>/dev/null || true
     pkill -9 -x "spotify" 2>/dev/null || true
     sleep 0.5
-    hyprctl dispatch exec "flatpak run com.spotify.Client" >/dev/null 2>&1
+    # Lua config: the old "hyprctl dispatch exec <cmd>" syntax no longer works
+    hyprctl dispatch 'hl.dsp.exec_cmd("flatpak run com.spotify.Client")' >/dev/null 2>&1
 else
     # Si Spotify no está activo, regenerar en segundo plano para no ralentizar el cambio de fondo
     (spicetify -n apply >/dev/null 2>&1 || true) & disown
