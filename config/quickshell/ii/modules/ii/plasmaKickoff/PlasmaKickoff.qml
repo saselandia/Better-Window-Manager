@@ -368,19 +368,20 @@ Scope {
             onClicked: root.close()
         }
 
-        // Kickoff Window Container (Anchored right above bottom panel)
+        // Kickoff Window Container: docked to the screen's left edge and flush with the
+        // top of the Plasma panel (non-floating panel look), only the free corner is rounded
         Rectangle {
             id: kickoffCard
             width: root.kickoffWidth
             height: root.kickoffHeight
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: 46
+            anchors.bottomMargin: Appearance.sizes.baseBarHeight
             anchors.left: parent.left
-            anchors.leftMargin: 6
             color: root.colPanelBg
             border.width: 1
             border.color: root.colBorder
-            radius: 7
+            radius: 0
+            topRightRadius: 7
             clip: true
 
             MouseArea { anchors.fill: parent } // Prevent backdrop click through
