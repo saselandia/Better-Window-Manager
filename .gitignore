@@ -20,3 +20,7 @@ Thumbs.db
 /config/hypr/persistent_rules.json.tmp
 
 /config/gtk-3.0/bookmarks
+
+# Local AI Context & Notes
+BWM_CONTEXT.md
+

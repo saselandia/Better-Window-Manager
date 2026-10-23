@@ -3,6 +3,15 @@
 -- Archivo gestionado automáticamente por toggle-float-persistent.py
 -- =============================================================================
 
+-- antigravity
+hl.window_rule({
+    name  = "persist_antigravity",
+    match = {
+        class = "^antigravity$",
+    },
+    float = true,
+})
+
 -- antigravity-ide
 hl.window_rule({
     name  = "persist_antigravity_ide",
@@ -17,6 +26,15 @@ hl.window_rule({
     name  = "persist_com_mojang_minecraft",
     match = {
         class = "^com\\.mojang\\.minecraft$",
+    },
+    float = true,
+})
+
+-- kitty
+hl.window_rule({
+    name  = "persist_kitty",
+    match = {
+        class = "^kitty$",
     },
     float = true,
 })

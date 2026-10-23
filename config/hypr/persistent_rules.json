@@ -89,5 +89,21 @@
             "class": "^antigravity\\-ide$"
         },
         "float": true
+    },
+    "kitty": {
+        "name": "persist_kitty",
+        "description": "kitty",
+        "match": {
+            "class": "^kitty$"
+        },
+        "float": true
+    },
+    "antigravity": {
+        "name": "persist_antigravity",
+        "description": "antigravity",
+        "match": {
+            "class": "^antigravity$"
+        },
+        "float": true
     }
 }
