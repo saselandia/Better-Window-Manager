@@ -1,0 +1,7 @@
+[SddmGreeterTheme]
+Name=BWM
+Description=Minimal terminal-style login theme matching the Limine bootloader aesthetic
+Author=Omarchy (MIT), adapted for BWM
+Type=sddm-theme
+Version=1.0
+QtVersion=6

@@ -111,6 +111,8 @@ DEPENDENCIES=(
     "blueman-manager:Ajustes avanzados de Bluetooth (botón Configurar del applet Plasma)"
     "nmcli:NetworkManager, backend del applet de redes de Quickshell"
     "nm-connection-editor:Editor de conexiones de red (botón Configurar del applet de redes)"
+    "socat:Eventos de Hyprland para el salvapantallas de terminal"
+    "qt6ct:Paleta del tema BWM en las apps Qt (opcional)"
 )
 
 MISSING_DEPS=()
@@ -159,9 +161,9 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
     echo "  Recomendamos instalarlos para que todas las funciones visuales y atajos operen al 100%."
     echo ""
     echo "  Comandos de instalación según tu distribución:"
-    echo "   • Arch / CachyOS: paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman networkmanager network-manager-applet"
-    echo "   • Gentoo: emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman net-misc/networkmanager gnome-extra/nm-applet"
-    echo "   • Fedora: sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman NetworkManager nm-connection-editor"
+    echo "   • Arch / CachyOS: paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman networkmanager network-manager-applet socat qt6ct papirus-icon-theme"
+    echo "   • Gentoo: emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman net-misc/networkmanager gnome-extra/nm-applet net-misc/socat gui-apps/qt6ct x11-themes/papirus-icon-theme"
+    echo "   • Fedora: sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman NetworkManager nm-connection-editor socat qt6ct papirus-icon-theme"
     echo ""
 fi
 

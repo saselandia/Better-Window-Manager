@@ -57,6 +57,24 @@ MATUGEN_OVERLAYS = {
 # Templates handled by their own Omarchy step instead (kitty template, BWM-Omarchy Spicetify theme)
 MATUGEN_SKIPPED = {"kitty", "spicetify"}
 
+# System monospace font (font-set.sh); the TUI overlays are written with this default
+FONT_STATE = HOME / ".local" / "state" / "bwm" / "font"
+DEFAULT_FONT = "JetBrainsMono Nerd Font"
+
+def system_font() -> str:
+    try:
+        font = FONT_STATE.read_text(encoding="utf-8").strip()
+        if font:
+            return font
+    except Exception:
+        pass
+    return DEFAULT_FONT
+
+def _asset(*parts) -> str:
+    """An overlay / theme file, with the system monospace font in place of the default."""
+    text = ASSETS_DIR.joinpath(*parts).read_text(encoding="utf-8")
+    return text.replace(f'"{DEFAULT_FONT}"', f'"{system_font()}"')
+
 # Stateless GTK 3 windows reopened when the GTK palette changes (GTK 3 reads gtk.css at startup)
 GTK_RELAUNCH_APPS = ("blueman-manager", "pavucontrol", "nm-connection-editor")
 
@@ -240,7 +258,7 @@ def apply_matugen_apps(colors: dict, wallpaper: str) -> set:
             continue
         content = render_matugen(src.read_text(encoding="utf-8"), roles, wallpaper)
         if overlay:
-            content += (ASSETS_DIR / "overlays" / overlay).read_text(encoding="utf-8")
+            content += _asset("overlays", overlay)
         try:
             if _write_if_changed(dst, content):
                 changed.add(name)
@@ -281,8 +299,7 @@ highlight          = {s('selection')}
 highlight-elevated = {s('lighter_background')}
 """
     changed = _write_if_changed(SPICETIFY_THEME_DIR / "color.ini", color_ini)
-    changed |= _write_if_changed(SPICETIFY_THEME_DIR / "user.css",
-                                 (ASSETS_DIR / "spicetify" / "user.css").read_text(encoding="utf-8"))
+    changed |= _write_if_changed(SPICETIFY_THEME_DIR / "user.css", _asset("spicetify", "user.css"))
     changed |= _set_spicetify_theme("BWM-Omarchy", "Base")
     if changed:
         _detached("~/.config/hypr/scripts/reload-spotify.sh")
@@ -388,6 +405,13 @@ def apply_retro_apps(palette: dict, wallpaper: str = ""):
 
     changed = apply_matugen_apps(colors, wallpaper)
 
+    # Icons follow the accent too (Papirus folders of the closest colour), see bwm_icons.py
+    try:
+        import bwm_icons
+        bwm_icons.apply("retro", colors["accent"])
+    except Exception as e:
+        print(f"[Warning] iconos: {e}", file=sys.stderr)
+
     if "gtk3" in changed:
         for app in GTK_RELAUNCH_APPS:
             if _running(app):
@@ -406,5 +430,84 @@ def restore_non_retro():
         pass
 
 
+# ------------------------------------------------------------------------------
+# Firefox: its chrome CSS (TUI overlay) is only read at startup
+# ------------------------------------------------------------------------------
+def _hypr_clients():
+    try:
+        return json.loads(subprocess.check_output(["hyprctl", "clients", "-j"]).decode())
+    except Exception:
+        return []
+
+def restart_firefox():
+    """Quit Firefox cleanly (it saves the session), start it again with the same command and
+    put every restored window back on its workspace with its size. Session restore relies on
+    browser.startup.page = 3 ("open previous windows and tabs"), which is forced once if unset."""
+    import signal
+    import time
+
+    windows = [c for c in _hypr_clients() if "firefox" in c.get("class", "").lower()]
+    pids = {c["pid"] for c in windows}
+    if not pids:
+        return
+    pid = min(pids)
+    try:
+        cmdline = Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0")
+        cmd = [a.decode() for a in cmdline if a]
+    except Exception:
+        cmd = ["firefox"]
+    layout = [(c["title"], c["workspace"]["id"], c["at"], c["size"], c.get("floating", True)) for c in windows]
+
+    os.kill(pid, signal.SIGTERM)  # graceful quit: Firefox writes its session on SIGTERM
+    for _ in range(150):
+        if not Path(f"/proc/{pid}").exists():
+            break
+        time.sleep(0.1)
+    else:
+        return  # still running (dialog?): leave it alone
+
+    # Restore the session even if "open previous windows" is off (one time only)
+    for prefs in (HOME / ".mozilla" / "firefox").glob("*/prefs.js"):
+        try:
+            text = prefs.read_text(encoding="utf-8")
+            if 'browser.startup.page", 3' not in text and "resume_session_once" not in text:
+                prefs.write_text(text + 'user_pref("browser.sessionstore.resume_session_once", true);\n',
+                                 encoding="utf-8")
+        except Exception:
+            pass
+
+    subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
+    # Windows come back with the titles of their selected tabs: match them to the old layout
+    # by title, and by order for any that still has another title after a while
+    pending = list(layout)
+    placed = set()
+    start = time.time()
+    while pending and time.time() - start < 25:
+        time.sleep(0.5)
+        for c in _hypr_clients():
+            if "firefox" not in c.get("class", "").lower() or c["address"] in placed or not pending:
+                continue
+            match = next((l for l in pending if l[0] == c["title"]), None)
+            if not match and time.time() - start > 12:
+                match = pending[0]
+            if not match:
+                continue
+            title, ws, at, size, floating = match
+            addr = c["address"]
+            lua = (f"(function() local w = hl.get_window('address:{addr}'); if w then "
+                   f"hl.dispatch(hl.dsp.window.move({{ workspace = {ws}, follow = false, window = w }})) ")
+            if floating:
+                lua += (f"hl.dispatch(hl.dsp.window.resize({{ x = {size[0]}, y = {size[1]}, relative = false, window = w }})) "
+                        f"hl.dispatch(hl.dsp.window.move({{ x = {at[0]}, y = {at[1]}, relative = false, window = w }})) ")
+            lua += "end; return hl.dsp.no_op() end)()"
+            subprocess.run(["hyprctl", "dispatch", lua], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            placed.add(addr)
+            pending.remove(match)
+
+
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "restart-firefox":
+        restart_firefox()
+        sys.exit(0)
     print(json.dumps(build_colors({"accent": sys.argv[1] if len(sys.argv) > 1 else "#38bdf8"}), indent=2))

@@ -64,3 +64,12 @@ output_path = "~/.config/btop/themes/matugen.theme"
 [templates.rofi_theme_picker]
 input_path = '~/.config/matugen/templates/theme-picker.rasi'
 output_path = '~/.config/rofi/theme-picker.rasi'
+
+[templates.qt6ct]
+input_path = '~/.config/matugen/templates/qt6ct-colors.conf'
+output_path = '~/.config/qt6ct/colors/bwm.conf'
+
+[templates.steam]
+input_path = '~/.config/matugen/templates/steam-adwaita.css'
+output_path = '~/.local/state/bwm/steam/bwm.css'
+post_hook = '~/.config/hypr/scripts/steam-theme.sh'

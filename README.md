@@ -69,6 +69,7 @@ This dotfiles repository keeps binary assets minimal to ensure portability and q
 | **`jq` & `python3`** | JSON processing, display arrangement backend, and automations |
 | **`bluez` & `blueman`** | Bluetooth stack (`bluetoothd`) for the KDE Plasma-style Bluetooth applet, plus advanced settings (`blueman-manager`) |
 | **`networkmanager`** | Backend (`nmcli`) for the KDE Plasma-style Networks applet; `nm-connection-editor` for its Configure button |
+| **`qt6ct`, `papirus-icon-theme`, `socat`** | Theme palette for Qt apps, per-theme icons (Retro: folders in the wallpaper colour) and the terminal screensaver. Optional: `plymouth` / `sddm` for the boot and login themes (`install-boot-theme.sh`) |
 
 ### Required Flatpak Applications:
 | Application | Flatpak App ID | Role |
@@ -83,7 +84,7 @@ This dotfiles repository keeps binary assets minimal to ensure portability and q
 #### Arch Linux / CachyOS:
 ```bash
 # System dependencies:
-paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman networkmanager network-manager-applet
+paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman networkmanager network-manager-applet socat qt6ct papirus-icon-theme
 
 # Required Flatpaks:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client
@@ -92,7 +93,7 @@ flatpak install flathub dev.vencord.Vesktop com.spotify.Client
 #### Gentoo Linux:
 ```bash
 # System dependencies:
-emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman net-misc/networkmanager gnome-extra/nm-applet
+emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman net-misc/networkmanager gnome-extra/nm-applet net-misc/socat gui-apps/qt6ct x11-themes/papirus-icon-theme
 
 # Required Flatpaks:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client
@@ -101,7 +102,7 @@ flatpak install flathub dev.vencord.Vesktop com.spotify.Client
 #### Fedora:
 ```bash
 # System dependencies:
-sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman NetworkManager nm-connection-editor
+sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman NetworkManager nm-connection-editor socat qt6ct papirus-icon-theme
 
 # Required Flatpaks:
 flatpak install flathub dev.vencord.Vesktop com.spotify.Client

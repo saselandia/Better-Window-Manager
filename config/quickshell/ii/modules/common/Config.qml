@@ -307,6 +307,12 @@ Singleton {
                 property string locale: "en-GB"
             }
 
+            // Terminal screensaver on idle (modules/ii/screensaver, launch-screensaver.sh)
+            property JsonObject screensaver: JsonObject {
+                property bool enable: true
+                property int timeoutMinutes: 5
+            }
+
             property JsonObject cheatsheet: JsonObject {
                 // Use a nerdfont to see the icons
                 // 0: 󰖳  | 1: 󰌽 | 2: 󰘳 | 3:  | 4: 󰨡

@@ -34,5 +34,6 @@ require("modules.rules")
 require("modules.autostart")
 require("modules.binds")
 require("modules.appearance")
+require("modules.glass")
 
 require("modules.cursor")

@@ -145,3 +145,14 @@ hl.window_rule({
     match    = { tag = "snapped" },
     rounding = 0,
 })
+
+-- Salvapantallas de terminal (launch-screensaver.sh), como el de Omarchy:
+-- pantalla completa, sin barra de título y en su workspace especial si se reabre
+hl.window_rule({
+    name       = "bwm-screensaver",
+    match      = { class = "^org\\.bwm\\.screensaver$" },
+    fullscreen = true,
+    float      = true,
+    animation  = "slide",
+    ["hyprbars:no_bar"] = true,
+})

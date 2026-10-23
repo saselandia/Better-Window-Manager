@@ -8,7 +8,21 @@
     font-family: "JetBrainsMono Nerd Font", monospace !important;
 }
 
-:root:root .tab-background, :root:root #urlbar-background, :root:root #urlbar,
+/* Recent Firefox rounds its chrome through these variables */
+:root:root {
+    --border-radius-small: 0 !important;
+    --border-radius-medium: 0 !important;
+    --border-radius-large: 0 !important;
+    --border-radius-xlarge: 0 !important;
+    --border-radius-circle: 0 !important;
+    --toolbarbutton-border-radius: 0 !important;
+    --tab-border-radius: 0 !important;
+    --arrowpanel-border-radius: 0 !important;
+    --panel-border-radius: 0 !important;
+    --urlbar-icon-border-radius: 0 !important;
+}
+
+:root:root .tab-background, :root:root #urlbar-background, :root:root .urlbar-background, :root:root #urlbar,
 :root:root toolbarbutton, :root:root .toolbarbutton-icon, :root:root .toolbarbutton-badge-stack,
 :root:root menupopup, :root:root panel, :root:root .panel-arrowcontent, :root:root #searchbar,
 :root:root .urlbarView, :root:root .urlbarView-row {

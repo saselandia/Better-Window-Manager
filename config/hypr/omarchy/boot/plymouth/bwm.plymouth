@@ -1,0 +1,11 @@
+[Plymouth Theme]
+Name=BWM
+Description=BWM (Better Window Manager) splash screen, from Omarchy (MIT).
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/bwm
+ScriptFile=/usr/share/plymouth/themes/bwm/bwm.script
+ConsoleLogBackgroundColor=0x1a1b26
+MonospaceFont=JetBrainsMono Nerd Font 11
+Font=JetBrainsMono Nerd Font 11

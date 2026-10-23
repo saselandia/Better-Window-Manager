@@ -25,6 +25,7 @@ import qs.modules.ii.wallpaperSelector
 import qs.modules.ii.altTab
 import qs.modules.ii.omarchyMenu
 import qs.modules.ii.plasmaKickoff
+import qs.modules.ii.screensaver
 import qs.modules.ii.plasmaBluetooth
 import qs.modules.ii.plasmaNetwork
 import qs.modules.ii.plasmaCalendar
@@ -54,6 +55,7 @@ Scope {
     PanelLoader { component: AltTab {} }
     PanelLoader { component: OmarchyMenu {} }
     PanelLoader { component: PlasmaKickoff {} }
+    PanelLoader { component: ScreensaverIdle {} }
     PanelLoader { component: PlasmaBluetooth {} }
     PanelLoader { component: PlasmaNetwork {} }
     PanelLoader { component: PlasmaCalendar {} }

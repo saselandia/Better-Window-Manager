@@ -971,6 +971,20 @@ def apply_theme(theme_name: str):
     elif cfg.get("is_retro"):
         apply_retro_wallpaper_colors(wp)
 
+    # Icon theme per BWM theme, like Omarchy's icons.theme (Retro sets it with its accent)
+    if not cfg.get("is_retro"):
+        try:
+            import bwm_icons
+            bwm_icons.apply(theme_name)
+        except Exception as e:
+            print(f"[Warning] No se pudo aplicar el tema de iconos: {e}", file=sys.stderr)
+
+    # Firefox only reads its chrome CSS (Retro's TUI overlay) at startup: entering or leaving
+    # Retro restarts it in the background, keeping the session and each window's workspace
+    if (theme_name == "retro") != (curr_theme == "retro"):
+        subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_omarchy.py"), "restart-firefox"],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
     # 5. Recargar Hyprland primero para aplicar las reglas del nuevo tema
     try:
         subprocess.run(["hyprctl", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

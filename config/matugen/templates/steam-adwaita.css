@@ -1,0 +1,41 @@
+/* Adwaita-for-Steam colour theme "bwm", rendered by matugen (Default), the Breeze palette
+   (Plasma) or the Omarchy palette (Retro); applied to Steam by steam-theme.sh.
+   Same idea as omarchy-theme-hook's Steam module: Adwaita's --adw-*-rgb variables. */
+:root {
+    --adw-accent-bg-rgb: {{colors.primary.default.hex}} !important;
+    --adw-accent-fg-rgb: {{colors.on_primary.default.hex}} !important;
+    --adw-accent-rgb: {{colors.primary.default.hex}} !important;
+    --adw-destructive-bg-rgb: {{colors.error.default.hex}} !important;
+    --adw-destructive-fg-rgb: {{colors.on_error.default.hex}} !important;
+    --adw-destructive-rgb: {{colors.error.default.hex}} !important;
+    --adw-success-bg-rgb: {{colors.tertiary.default.hex}} !important;
+    --adw-success-fg-rgb: {{colors.on_tertiary.default.hex}} !important;
+    --adw-success-rgb: {{colors.tertiary.default.hex}} !important;
+    --adw-warning-bg-rgb: {{colors.secondary.default.hex}} !important;
+    --adw-warning-fg-rgb: {{colors.on_secondary.default.hex}} !important;
+    --adw-warning-rgb: {{colors.secondary.default.hex}} !important;
+    --adw-error-bg-rgb: {{colors.error.default.hex}} !important;
+    --adw-error-fg-rgb: {{colors.on_error.default.hex}} !important;
+    --adw-error-rgb: {{colors.error.default.hex}} !important;
+    --adw-window-bg-rgb: {{colors.surface.default.hex}} !important;
+    --adw-window-fg-rgb: {{colors.on_surface.default.hex}} !important;
+    --adw-view-bg-rgb: {{colors.surface_container_lowest.default.hex}} !important;
+    --adw-view-fg-rgb: {{colors.on_surface.default.hex}} !important;
+    --adw-headerbar-bg-rgb: {{colors.surface_container.default.hex}} !important;
+    --adw-headerbar-fg-rgb: {{colors.on_surface.default.hex}} !important;
+    --adw-headerbar-border-rgb: {{colors.outline_variant.default.hex}} !important;
+    --adw-headerbar-backdrop-rgb: {{colors.surface_dim.default.hex}} !important;
+    --adw-sidebar-bg-rgb: {{colors.surface_container_low.default.hex}} !important;
+    --adw-sidebar-fg-rgb: {{colors.on_surface.default.hex}} !important;
+    --adw-sidebar-backdrop-rgb: {{colors.surface_dim.default.hex}} !important;
+    --adw-secondary-sidebar-bg-rgb: {{colors.surface_container_low.default.hex}} !important;
+    --adw-secondary-sidebar-fg-rgb: {{colors.on_surface.default.hex}} !important;
+    --adw-secondary-sidebar-backdrop-rgb: {{colors.surface_dim.default.hex}} !important;
+    --adw-card-bg-rgb: {{colors.surface_container_high.default.hex}} !important;
+    --adw-card-fg-rgb: {{colors.on_surface.default.hex}} !important;
+    --adw-dialog-bg-rgb: {{colors.surface_container.default.hex}} !important;
+    --adw-dialog-fg-rgb: {{colors.on_surface.default.hex}} !important;
+    --adw-popover-bg-rgb: {{colors.surface_container_high.default.hex}} !important;
+    --adw-popover-fg-rgb: {{colors.on_surface.default.hex}} !important;
+    --adw-thumbnail-bg-rgb: {{colors.surface_container.default.hex}} !important;
+}
