@@ -38,7 +38,7 @@ hl.bind("ALT + S", hl.dsp.workspace.toggle_special("magic"), { description = "Es
 hl.bind("ALT + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }), { description = "Espacios de trabajo: Enviar ventana al espacio especial (Magic)" })
 -- [Sistema]
 hl.bind("SUPER + A", hl.dsp.exec_cmd("quickshell -c ii ipc call sidebarRight toggle"), { description = "Sistema: Panel lateral / Ajustes rápidos" })
-hl.bind("SUPER + I", hl.dsp.exec_cmd("qs -p /home/sasel/.config/quickshell/ii/settings.qml"), { description = "Sistema: Configuración del sistema (Settings)" })
+hl.bind("SUPER + I", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/open-settings.sh"), { description = "Sistema: Configuración del sistema (Settings)" })
 hl.bind("SUPER + ALT + A", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/open-autostart.sh"), { description = "Sistema: Gestor de inicio automático (Autostart)" })
 hl.bind("SUPER + L", hl.dsp.exec_cmd("quickshell -c ii ipc call lock activate"), { description = "Sistema: Bloquear pantalla" })
 hl.bind("Print", hl.dsp.exec_cmd("quickshell -c ii ipc call region screenshot"), { description = "Sistema: Captura de pantalla por región (Print)" })

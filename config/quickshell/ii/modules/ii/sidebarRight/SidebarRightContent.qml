@@ -285,7 +285,7 @@ Item {
                 buttonIcon: "settings"
                 onClicked: {
                     GlobalStates.sidebarRightOpen = false;
-                    Quickshell.execDetached(["qs", "-p", root.settingsQmlPath]);
+                    Quickshell.execDetached([Directories.home.replace("file://", "") + "/.config/hypr/scripts/open-settings.sh"]);
                 }
                 StyledToolTip {
                     text: Translation.tr("Settings")

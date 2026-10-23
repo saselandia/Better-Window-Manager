@@ -244,6 +244,22 @@ def save_current_theme_config(theme_name: str):
     except Exception as e:
         print(f"[Warning] Error guardando config para {theme_name}: {e}", file=sys.stderr)
 
+# Secciones de config.json que son estéticas y por tanto propias de cada tema
+# (barra, fondo, apariencia, dock...). Todo lo demás (apps, audio, IA, idioma,
+# notificaciones, servicios, hora...) se comparte entre Default, Retro y Plasma.
+# El inicio automático y los atajos viven fuera de config.json y ya son comunes.
+THEME_SPECIFIC_SECTIONS = {
+    "appearance", "background", "bar", "dock", "lock", "osd", "overview",
+    "panelFamily", "waffles", "wallpaperSelector", "windows",
+}
+
+def merge_shared_sections(target: dict, source: dict) -> dict:
+    """Copies the non-aesthetic (shared) sections of `source` into `target`."""
+    for key, value in source.items():
+        if key not in THEME_SPECIFIC_SECTIONS:
+            target[key] = value
+    return target
+
 def load_theme_config(target_theme: str, cfg: dict):
     """
     Restores the isolated config for the target theme, ensuring settings
@@ -273,6 +289,14 @@ def load_theme_config(target_theme: str, cfg: dict):
 
     if not data:
         data = {}
+
+    # Los ajustes no estéticos del tema saliente (config.json activo) se heredan
+    if II_CONFIG_JSON.exists():
+        try:
+            with open(II_CONFIG_JSON, "r", encoding="utf-8") as f:
+                merge_shared_sections(data, json.load(f))
+        except Exception as e:
+            print(f"[Warning] No se pudieron compartir ajustes entre temas: {e}", file=sys.stderr)
 
     # Update theme tokens
     if "appearance" not in data:

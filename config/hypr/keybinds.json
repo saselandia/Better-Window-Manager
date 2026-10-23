@@ -395,7 +395,7 @@
     ],
     "key": "I",
     "action_type": "exec",
-    "exec": "qs -p /home/sasel/.config/quickshell/ii/settings.qml",
+    "exec": "/home/sasel/.config/hypr/scripts/open-settings.sh",
     "dispatcher": null,
     "dispatcher_arg": null,
     "options": {},

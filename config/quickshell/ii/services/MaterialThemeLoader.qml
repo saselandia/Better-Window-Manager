@@ -15,6 +15,36 @@ Singleton {
     id: root
     property string filePath: Directories.generatedMaterialThemePath
     property string retroFilePath: Directories.generatedRetroThemePath
+    // Static KDE Plasma Breeze Dark palette instead of the wallpaper colors.
+    // Only set by the Plasma settings app (its own process), not by the shell.
+    property bool forceBreeze: false
+
+    onForceBreezeChanged: if (forceBreeze) applyBreezeColors()
+
+    // Breeze Dark (Plasma 6) colour scheme mapped onto the Material 3 roles
+    function applyBreezeColors() {
+        const c = {
+            m3primary: "#3daee9", m3onPrimary: "#fcfcfc", m3primaryContainer: "#1e4f6a", m3onPrimaryContainer: "#fcfcfc",
+            m3inversePrimary: "#3daee9", m3surfaceTint: "#3daee9",
+            m3secondary: "#3daee9", m3onSecondary: "#fcfcfc", m3secondaryContainer: "#26404f", m3onSecondaryContainer: "#fcfcfc",
+            m3tertiary: "#1abc9c", m3onTertiary: "#fcfcfc", m3tertiaryContainer: "#1d4a43", m3onTertiaryContainer: "#fcfcfc",
+            m3background: "#202326", m3onBackground: "#fcfcfc",
+            m3surface: "#202326", m3surfaceDim: "#1b1e20", m3surfaceBright: "#31363b",
+            m3surfaceContainerLowest: "#141618", m3surfaceContainerLow: "#1b1e20", m3surfaceContainer: "#232629",
+            m3surfaceContainerHigh: "#292c30", m3surfaceContainerHighest: "#31363b",
+            m3onSurface: "#fcfcfc", m3surfaceVariant: "#31363b", m3onSurfaceVariant: "#a1a9b1",
+            m3inverseSurface: "#fcfcfc", m3inverseOnSurface: "#202326",
+            m3outline: "#4d5257", m3outlineVariant: "#3c4148", m3shadow: "#000000", m3scrim: "#000000",
+            m3error: "#da4453", m3onError: "#fcfcfc", m3errorContainer: "#5a1d24", m3onErrorContainer: "#fcfcfc",
+            m3success: "#27ae60", m3onSuccess: "#fcfcfc", m3successContainer: "#1d4a2f", m3onSuccessContainer: "#fcfcfc",
+            m3primaryFixed: "#3daee9", m3primaryFixedDim: "#2d8fc2", m3onPrimaryFixed: "#fcfcfc", m3onPrimaryFixedVariant: "#fcfcfc",
+            m3secondaryFixed: "#3daee9", m3secondaryFixedDim: "#2d8fc2", m3onSecondaryFixed: "#fcfcfc", m3onSecondaryFixedVariant: "#fcfcfc",
+            m3tertiaryFixed: "#1abc9c", m3tertiaryFixedDim: "#16a085", m3onTertiaryFixed: "#fcfcfc", m3onTertiaryFixedVariant: "#fcfcfc"
+        };
+        for (const key in c)
+            Appearance.m3colors[key] = c[key];
+        Appearance.m3colors.darkmode = true;
+    }
 
     function reapplyTheme() {
         if (Appearance.isRetro) {
@@ -85,6 +115,10 @@ Singleton {
     }
 
     function applyColors(fileContent) {
+        if (root.forceBreeze) {
+            applyBreezeColors();
+            return;
+        }
         if (!fileContent) return;
         try {
             const json = JSON.parse(fileContent);

@@ -5,4 +5,4 @@
 # ==============================================================================
 
 export SETTINGS_PAGE="Autostart"
-exec qs -p "$HOME/.config/quickshell/ii/settings.qml" "$@"
+exec "$HOME/.config/hypr/scripts/open-settings.sh" "$@"

@@ -47,9 +47,9 @@ Scope {
     readonly property color colInputBg: "#1c2024"
 
     // Refined slim proportions (Sleek KDE Plasma Kickoff)
-    readonly property int kickoffWidth: 560
+    readonly property int kickoffWidth: 460
     readonly property int kickoffHeight: 490
-    readonly property int sidebarWidth: 155
+    readonly property int sidebarWidth: 140
 
     // Bundled Breeze Dark icon assets directory
     readonly property string breezeAssetsDir: Directories.assetsPath + "/icons/breeze-dark"
@@ -374,13 +374,16 @@ Scope {
             id: kickoffCard
             width: root.kickoffWidth
             height: root.kickoffHeight
+            // Floating panel: Kickoff floats with the same gap and gets all corners rounded
+            readonly property int edgeGap: Appearance.sizes.plasmaFloatingGap
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: Appearance.sizes.baseBarHeight
+            anchors.bottomMargin: Appearance.sizes.baseBarHeight + edgeGap
             anchors.left: parent.left
+            anchors.leftMargin: edgeGap
             color: root.colPanelBg
             border.width: 1
             border.color: root.colBorder
-            radius: 0
+            radius: edgeGap > 0 ? 7 : 0
             topRightRadius: 7
             clip: true
 

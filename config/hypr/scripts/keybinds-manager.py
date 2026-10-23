@@ -342,7 +342,7 @@ DEFAULT_KEYBINDS: List[Dict[str, Any]] = [
         "mods": ["SUPER"],
         "key": "I",
         "action_type": "exec",
-        "exec": "qs -p " + os.path.expanduser("~/.config/quickshell/ii/settings.qml"),
+        "exec": os.path.expanduser("~/.config/hypr/scripts/open-settings.sh"),
         "dispatcher": None,
         "dispatcher_arg": None,
         "options": {},

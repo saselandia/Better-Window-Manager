@@ -193,6 +193,10 @@
       "showNumberDelay": 300,
       "shown": 10,
       "useNerdFont": false
+    },
+    "plasma": {
+      "style": "translucent",
+      "centerTasks": false
     }
   },
   "battery": {

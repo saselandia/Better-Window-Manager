@@ -38,6 +38,10 @@ Singleton {
     property bool plasmaNetworkOpen: false
     property real plasmaNetworkAnchorX: -1
     property string plasmaNetworkScreen: ""
+    // KDE Plasma digital clock calendar (opened from the Plasma taskbar clock)
+    property bool plasmaCalendarOpen: false
+    property real plasmaCalendarAnchorX: -1
+    property string plasmaCalendarScreen: ""
 
     onSidebarRightOpenChanged: {
         if (GlobalStates.sidebarRightOpen) {

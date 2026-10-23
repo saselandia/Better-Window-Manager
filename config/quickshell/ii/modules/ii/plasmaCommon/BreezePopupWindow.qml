@@ -17,7 +17,9 @@ PanelWindow {
     property string namespace: "quickshell:plasmaApplet"
     property int popupWidth: 380
     property int popupHeight: 440
-    property int bottomMargin: Appearance.sizes.baseBarHeight // flush with the Plasma panel
+    // Docked panel: flush with it. Floating panel: float with the same gap as the panel
+    readonly property int edgeGap: Appearance.sizes.plasmaFloatingGap
+    property int bottomMargin: Appearance.sizes.baseBarHeight + edgeGap
     default property alias content: card.data
     signal closeRequested()
 
@@ -49,7 +51,7 @@ PanelWindow {
         // Centered over the taskbar button, clamped to the screen edges
         x: {
             const centered = win.anchorX >= 0 ? win.anchorX - width / 2 : win.width - width;
-            return Math.max(0, Math.min(win.width - width, centered));
+            return Math.max(win.edgeGap, Math.min(win.width - width - win.edgeGap, centered));
         }
         y: win.height - height - win.bottomMargin + (win.opened ? 0 : 12)
         opacity: win.opened ? 1 : 0
@@ -57,7 +59,7 @@ PanelWindow {
         border.width: 1
         border.color: Breeze.border
         // Docked to the panel: only the top corners are rounded
-        radius: 0
+        radius: win.edgeGap > 0 ? 7 : 0
         topLeftRadius: 7
         topRightRadius: 7
         clip: true

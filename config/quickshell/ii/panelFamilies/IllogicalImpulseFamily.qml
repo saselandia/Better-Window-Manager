@@ -27,6 +27,7 @@ import qs.modules.ii.omarchyMenu
 import qs.modules.ii.plasmaKickoff
 import qs.modules.ii.plasmaBluetooth
 import qs.modules.ii.plasmaNetwork
+import qs.modules.ii.plasmaCalendar
 
 Scope {
     PanelLoader { extraCondition: !Config.options.bar.vertical; component: Bar {} }
@@ -54,4 +55,5 @@ Scope {
     PanelLoader { component: PlasmaKickoff {} }
     PanelLoader { component: PlasmaBluetooth {} }
     PanelLoader { component: PlasmaNetwork {} }
+    PanelLoader { component: PlasmaCalendar {} }
 }
