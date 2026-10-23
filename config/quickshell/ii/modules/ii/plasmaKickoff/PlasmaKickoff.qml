@@ -73,6 +73,11 @@ Scope {
     function getIconUrl(iconName, fallbackName) {
         const raw = iconName || fallbackName || "application-x-executable";
 
+        // 0. Absolute icon paths (built-in entries such as the settings app)
+        if (raw.startsWith("/")) {
+            return "file://" + raw;
+        }
+
         // 1. Exact match in bundled Breeze Dark assets
         if (bundledBreezeIcons.indexOf(raw) !== -1) {
             return "file://" + root.breezeAssetsDir + "/" + raw + ".svg";
@@ -177,11 +182,25 @@ Scope {
         { name: "Sistema de archivos", subtitle: "/", icon: "drive-harddisk", isPlace: true, cmd: ["xdg-open", "/"] }
     ]
 
+    // BWM's Plasma settings app (plasmaSettings.qml). It is not a .desktop file on purpose:
+    // it only exists inside this launcher, so rofi and the other themes' launchers never list it.
+    readonly property var plasmaSettingsEntry: ({
+        id: "bwm-plasma-settings",
+        name: "Preferencias del sistema",
+        genericName: "Configuración del sistema",
+        comment: "Ajustes de BWM: barra de tareas, fondo, atajos, inicio automático…",
+        icon: Directories.assetsPath + "/icons/breeze-dark/settings/systemsettings.svg",
+        categories: ["Settings", "DesktopSettings", "System"],
+        noDisplay: false,
+        execute: () => Quickshell.execDetached(["qs", "-p", Quickshell.shellPath("plasmaSettings.qml")])
+    })
+
     readonly property var allApps: {
         const raw = (DesktopEntries.applications?.values && DesktopEntries.applications.values.length > 0)
             ? Array.from(DesktopEntries.applications.values)
             : (AppSearch.list ? Array.from(AppSearch.list) : []);
         return raw.filter(a => a && a.name && !a.noDisplay)
+                  .concat([root.plasmaSettingsEntry])
                   .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     }
 
