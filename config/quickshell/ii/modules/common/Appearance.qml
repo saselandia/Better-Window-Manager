@@ -210,7 +210,7 @@ Singleton {
         property int verylarge: root.isRetro ? 0 : 30
         property int full: root.isRetro ? 0 : 9999
         property int screenRounding: root.isRetro ? 0 : (root.isPlasma ? 0 : large)
-        property int windowRounding: root.isRetro ? 0 : (root.isPlasma ? 8 : 18)
+        property int windowRounding: root.isRetro ? 0 : (root.isPlasma ? 12 : 18)
     }
 
     font: QtObject {

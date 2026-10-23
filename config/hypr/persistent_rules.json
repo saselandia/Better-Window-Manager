@@ -90,20 +90,13 @@
         },
         "float": true
     },
-    "kitty": {
-        "name": "persist_kitty",
-        "description": "kitty",
+    "steam_main": {
+        "name": "persist_steam_main",
+        "description": "Steam (Ventana Principal)",
         "match": {
-            "class": "^kitty$"
+            "class": "^steam$",
+            "title": "^Steam$"
         },
-        "float": true
-    },
-    "antigravity": {
-        "name": "persist_antigravity",
-        "description": "antigravity",
-        "match": {
-            "class": "^antigravity$"
-        },
-        "float": true
+        "float": false
     }
 }

@@ -30,6 +30,7 @@
 
 #include "barDeco.hpp"
 #include "CSDDetect.hpp"
+#include "SquareTop.hpp"
 #include "SnapHelper.hpp"
 #include <hyprland/src/config/shared/actions/ConfigActions.hpp>
 #include <hyprland/src/managers/KeybindManager.hpp>
@@ -469,7 +470,11 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g_pGlobalState->pUpdateRulesListener = Event::bus()->m_events.window.updateRules.listen([](PHLWINDOW w) { onUpdateWindowRules(w); });
     g_pGlobalState->pMouseButtonListener = Event::bus()->m_events.input.mouse.button.listen([](IPointer::SButtonEvent e, Event::SCallbackInfo& info) { onGlobalMouseButton(info, e); });
     g_pGlobalState->pMouseMoveListener   = Event::bus()->m_events.input.mouse.move.listen([](Vector2D coords, Event::SCallbackInfo& info) { onGlobalMouseMove(coords); });
-    g_pGlobalState->pRenderListener      = Event::bus()->m_events.render.stage.listen([](eRenderStage stage) { renderSnapPreviewOverlay(stage); });
+    g_pGlobalState->pRenderListener      = Event::bus()->m_events.render.stage.listen([](eRenderStage stage) {
+        if (stage == RENDER_POST_WINDOWS)
+            squareBarredWindowTops();
+        renderSnapPreviewOverlay(stage);
+    });
 
     g_pGlobalState->config.barColor            = makeShared<Config::Values::CColorValue>("plugin:hyprbars:bar_color", "Change the bar color", 0x88333333);
     g_pGlobalState->config.textColor           = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.text", "Change the text color", 0xffffffff);
@@ -545,6 +550,7 @@ APICALL EXPORT void PLUGIN_EXIT() {
 
     g_pHyprRenderer->m_renderPass.removeAllOfType("CBarPassElement");
     g_pHyprRenderer->m_renderPass.removeAllOfType("CSnapPreviewPassElement");
+    removeSquareTopElements();
 
     if (g_pGlobalState) {
         g_pGlobalState->pOpenListener.reset();

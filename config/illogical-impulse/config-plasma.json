@@ -151,6 +151,14 @@
         "showUnreadCount": false
       }
     },
+    "plasma": {
+      "centerTasks": false,
+      "color": "#000000",
+      "floating": false,
+      "floatingGap": 8,
+      "opacity": 0.91,
+      "style": "opaque"
+    },
     "resources": {
       "alwaysShowCpu": true,
       "alwaysShowSwap": true,

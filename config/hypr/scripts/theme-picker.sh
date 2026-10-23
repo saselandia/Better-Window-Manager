@@ -10,6 +10,11 @@ set -euo pipefail
 THEME_MANAGER="$HOME/.config/hypr/scripts/bwm-theme-manager.py"
 CURRENT_THEME="$("$THEME_MANAGER" get 2>/dev/null || echo "default")"
 
+# Tema Plasma: selector nativo de Quickshell (estilo "Tema global" de KDE)
+if [[ "$CURRENT_THEME" == "plasma" ]] && qs -c ii ipc call plasmaThemePicker toggle >/dev/null 2>&1; then
+    exit 0
+fi
+
 if [[ "$CURRENT_THEME" == "retro" ]]; then
     ROFI_THEME="$HOME/.config/rofi/theme-picker-retro.rasi"
 elif [[ "$CURRENT_THEME" == "plasma" ]]; then

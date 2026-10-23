@@ -3,15 +3,6 @@
 -- Archivo gestionado automáticamente por toggle-float-persistent.py
 -- =============================================================================
 
--- antigravity
-hl.window_rule({
-    name  = "persist_antigravity",
-    match = {
-        class = "^antigravity$",
-    },
-    float = true,
-})
-
 -- antigravity-ide
 hl.window_rule({
     name  = "persist_antigravity_ide",
@@ -26,15 +17,6 @@ hl.window_rule({
     name  = "persist_com_mojang_minecraft",
     match = {
         class = "^com\\.mojang\\.minecraft$",
-    },
-    float = true,
-})
-
--- kitty
-hl.window_rule({
-    name  = "persist_kitty",
-    match = {
-        class = "^kitty$",
     },
     float = true,
 })
@@ -92,6 +74,16 @@ hl.window_rule({
         title = "(?i).*(friends|amigos|chat).*",
     },
     float = true,
+})
+
+-- Steam (Ventana Principal)
+hl.window_rule({
+    name  = "persist_steam_main",
+    match = {
+        class = "^steam$",
+        title = "^Steam$",
+    },
+    float = false,
 })
 
 -- Steam (Sign in to Steam)

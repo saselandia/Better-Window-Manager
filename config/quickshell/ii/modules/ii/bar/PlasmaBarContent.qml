@@ -46,7 +46,7 @@ Item {
     // (only one applet popup open at a time, like Plasma)
     function togglePopup(name, button) {
         const wasOpen = GlobalStates[name + "Open"];
-        for (const other of ["plasmaBluetooth", "plasmaNetwork", "plasmaCalendar", "plasmaNotifications"])
+        for (const other of ["plasmaBluetooth", "plasmaNetwork", "plasmaCalendar", "plasmaNotifications", "plasmaTaskMenu", "plasmaThemePicker", "plasmaAudio"])
             GlobalStates[other + "Open"] = false;
         if (wasOpen) return;
         GlobalStates[name + "AnchorX"] = button.mapToItem(null, button.width / 2, 0).x;
@@ -186,6 +186,17 @@ Item {
                     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                     cursorShape: Qt.PointingHandCursor
 
+                    // Hover window list for apps with 2+ windows (see PlasmaTaskMenu)
+                    onEntered: {
+                        GlobalStates.plasmaTaskHoverX = taskItem.mapToItem(null, taskItem.width / 2, 0).x;
+                        GlobalStates.plasmaTaskHoverScreen = root.screen?.name ?? "";
+                        GlobalStates.plasmaTaskHoverApp = taskItem.modelData.appId;
+                    }
+                    onExited: {
+                        if (GlobalStates.plasmaTaskHoverApp === taskItem.modelData.appId)
+                            GlobalStates.plasmaTaskHoverApp = "";
+                    }
+
                     Rectangle {
                         anchors.fill: parent
                         radius: 4
@@ -221,6 +232,10 @@ Item {
                     }
 
                     onClicked: mouse => {
+                        if (mouse.button !== Qt.RightButton) {
+                            GlobalStates.plasmaTaskHoverApp = "";
+                            GlobalStates.plasmaTaskMenuOpen = false;
+                        }
                         if (mouse.button === Qt.LeftButton) {
                             if (taskItem.hasWindows) {
                                 if (taskItem.isActive && taskItem.modelData.toplevels.length > 1) {
@@ -233,11 +248,18 @@ Item {
                                 taskItem.desktopEntry.execute();
                             }
                         } else if (mouse.button === Qt.RightButton) {
-                            if (taskItem.hasWindows) {
-                                taskItem.modelData.toplevels[0].close();
-                            } else {
-                                TaskbarApps.togglePin(taskItem.modelData.appId);
+                            // Plasma-style context menu above the button
+                            GlobalStates.plasmaTaskHoverApp = "";
+                            if (GlobalStates.plasmaTaskMenuOpen && GlobalStates.plasmaTaskMenuApp === taskItem.modelData.appId) {
+                                GlobalStates.plasmaTaskMenuOpen = false;
+                                return;
                             }
+                            for (const other of ["plasmaBluetooth", "plasmaNetwork", "plasmaCalendar", "plasmaNotifications", "plasmaThemePicker", "plasmaAudio"])
+                                GlobalStates[other + "Open"] = false;
+                            GlobalStates.plasmaTaskMenuApp = taskItem.modelData.appId;
+                            GlobalStates.plasmaTaskMenuAnchorX = taskItem.mapToItem(null, taskItem.width / 2, 0).x;
+                            GlobalStates.plasmaTaskMenuScreen = root.screen?.name ?? "";
+                            GlobalStates.plasmaTaskMenuOpen = true;
                         } else if (mouse.button === Qt.MiddleButton) {
                             if (taskItem.desktopEntry) {
                                 taskItem.desktopEntry.execute();
@@ -370,14 +392,6 @@ Item {
                             color: volBtn.isMuted ? "#da4453" : root.colText
                             text: volBtn.isMuted ? "volume_off" : (volBtn.currentVol > 0.5 ? "volume_up" : (volBtn.currentVol > 0.0 ? "volume_down" : "volume_mute"))
                         }
-
-                        Text {
-                            font.family: Appearance.font.family.main
-                            font.pixelSize: 11
-                            font.weight: Font.DemiBold
-                            color: volBtn.isMuted ? "#da4453" : root.colText
-                            text: volBtn.isMuted ? "Mute" : `${Math.round(volBtn.currentVol * 100)}%`
-                        }
                     }
                 }
 
@@ -389,9 +403,14 @@ Item {
                     }
                 }
 
-                onClicked: {
-                    if (Audio.sink?.audio) {
-                        Audio.sink.audio.muted = !Audio.sink.audio.muted;
+                acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+
+                // Left click: Plasma audio applet above the button; middle click: mute
+                onClicked: mouse => {
+                    if (mouse.button === Qt.MiddleButton) {
+                        if (Audio.sink?.audio) Audio.sink.audio.muted = !Audio.sink.audio.muted;
+                    } else {
+                        root.togglePopup("plasmaAudio", volBtn);
                     }
                 }
             }
@@ -537,7 +556,7 @@ Item {
                     if (mouse.button === Qt.RightButton) {
                         Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/bwm-theme-manager.py", "toggle"]);
                     } else {
-                        Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/theme-picker.sh"]);
+                        root.togglePopup("plasmaThemePicker", themeSwitcherBtn);
                     }
                 }
             }

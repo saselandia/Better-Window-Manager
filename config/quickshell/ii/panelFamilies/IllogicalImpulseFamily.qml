@@ -30,6 +30,9 @@ import qs.modules.ii.plasmaBluetooth
 import qs.modules.ii.plasmaNetwork
 import qs.modules.ii.plasmaCalendar
 import qs.modules.ii.plasmaNotifications
+import qs.modules.ii.plasmaTaskMenu
+import qs.modules.ii.plasmaAudio
+import qs.modules.ii.plasmaThemePicker
 
 Scope {
     PanelLoader { extraCondition: !Config.options.bar.vertical; component: Bar {} }
@@ -58,6 +61,9 @@ Scope {
     PanelLoader { component: ScreensaverIdle {} }
     PanelLoader { component: PlasmaBluetooth {} }
     PanelLoader { component: PlasmaNetwork {} }
+    PanelLoader { component: PlasmaTaskMenu {} }
+    PanelLoader { component: PlasmaAudio {} }
+    PanelLoader { component: PlasmaThemePicker {} }
     PanelLoader { component: PlasmaCalendar {} }
     PanelLoader { component: PlasmaNotifications {} }
 }

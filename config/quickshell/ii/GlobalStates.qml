@@ -38,6 +38,23 @@ Singleton {
     property bool plasmaNetworkOpen: false
     property real plasmaNetworkAnchorX: -1
     property string plasmaNetworkScreen: ""
+    // KDE Plasma audio applet (opened from the Plasma taskbar volume button)
+    property bool plasmaAudioOpen: false
+    property real plasmaAudioAnchorX: -1
+    property string plasmaAudioScreen: ""
+    // KDE Plasma global theme picker (opened from the Plasma taskbar palette button)
+    property bool plasmaThemePickerOpen: false
+    property real plasmaThemePickerAnchorX: -1
+    property string plasmaThemePickerScreen: ""
+    // KDE Plasma task manager: right-click menu, hover window list and window peek
+    property bool plasmaTaskMenuOpen: false
+    property real plasmaTaskMenuAnchorX: -1
+    property string plasmaTaskMenuScreen: ""
+    property string plasmaTaskMenuApp: ""
+    property string plasmaTaskHoverApp: ""
+    property real plasmaTaskHoverX: -1
+    property string plasmaTaskHoverScreen: ""
+    property string plasmaTaskPeek: ""   // Hyprland address (no 0x) of the window being peeked
     // KDE Plasma notifications applet (opened from the bell in the Plasma taskbar tray)
     property bool plasmaNotificationsOpen: false
     property real plasmaNotificationsAnchorX: -1

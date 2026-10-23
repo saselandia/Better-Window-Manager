@@ -98,6 +98,8 @@ end
 
 -- Alt+Tab Helper Releases
 hl.bind("ALT + SHIFT + TAB", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab prev"), { repeating = true })
+hl.bind("ALT + grave", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab nextApp"), { description = "Ventanas: Alternar entre ventanas de la misma aplicación (Alt+`)", repeating = true })
+hl.bind("ALT + SHIFT + grave", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab prevApp"), { repeating = true })
 hl.bind("Alt_L", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab release"), { release = true })
 hl.bind("Alt_R", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab release"), { release = true })
 hl.bind("ALT + Alt_L", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab release"), { release = true })
