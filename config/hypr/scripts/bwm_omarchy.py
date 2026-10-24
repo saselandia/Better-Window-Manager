@@ -417,7 +417,29 @@ def apply_retro_apps(palette: dict, wallpaper: str = ""):
             if _running(app):
                 subprocess.run(["pkill", "-f", f"(^|/){app}( |$)"], check=False)
                 _detached(f"sleep 0.5; exec {app}")
+    run_hooks("retro")
     return colors
+
+HOOKS_DIR = CONFIG_DIR / "bwm" / "hooks"
+
+def run_hooks(theme: str):
+    """Hotswap hook for any app BWM does not theme itself, like `omarchy-hook theme-set`.
+
+    Runs ~/.config/bwm/hooks/theme-set and every executable in theme-set.d/ (sorted), in the
+    background, with BWM_THEME=<default|retro|plasma> and BWM_COLORS=<Omarchy colors.toml>
+    (the wallpaper palette in Retro). Drop a script there to retint an extra app live.
+    """
+    scripts = []
+    single = HOOKS_DIR / "theme-set"
+    if single.is_file() and os.access(single, os.X_OK):
+        scripts.append(single)
+    d = HOOKS_DIR / "theme-set.d"
+    if d.is_dir():
+        scripts += sorted(p for p in d.iterdir() if p.is_file() and os.access(p, os.X_OK))
+    env = dict(os.environ, BWM_THEME=theme, BWM_COLORS=str(COLORS_TOML), BWM_STATE=str(STATE_DIR))
+    for script in scripts:
+        subprocess.Popen([str(script), theme], env=env, stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL, start_new_session=True)
 
 def restore_non_retro():
     """Leaving Retro: give back what the other themes do not regenerate by themselves."""
@@ -507,6 +529,9 @@ def restart_firefox():
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 2 and sys.argv[1] == "hook":
+        run_hooks(sys.argv[2])
+        sys.exit(0)
     if len(sys.argv) > 1 and sys.argv[1] == "restart-firefox":
         restart_firefox()
         sys.exit(0)

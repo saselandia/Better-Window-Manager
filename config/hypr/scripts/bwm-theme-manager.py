@@ -983,6 +983,12 @@ def apply_theme(theme_name: str):
     subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_boot.py"), "render"],
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
+    # User hooks (~/.config/bwm/hooks/theme-set[.d]) for extra apps; Retro runs them itself
+    # after its palette is written
+    if theme_name != "retro":
+        subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_omarchy.py"), "hook", theme_name],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
     # Firefox only reads its chrome CSS (Retro's TUI overlay) at startup: entering or leaving
     # Retro restarts it in the background, keeping the session and each window's workspace
     if (theme_name == "retro") != (curr_theme == "retro"):

@@ -99,7 +99,8 @@ hl.config({
         rounding_power = win_round_pwr,
 
         active_opacity   = 1.0,
-        inactive_opacity = is_plasma and 1.0 or (is_retro and 0.90 or 0.95),
+        -- Retro, como Omarchy: apps opacas (sólo terminales/TUIs son translúcidos, ver omarchy_windows.lua)
+        inactive_opacity = (is_plasma or is_retro) and 1.0 or 0.95,
 
         -- Sombra desactivada en retro y plasma para evitar estela/halo gris en los bordes
         shadow = {
@@ -111,7 +112,7 @@ hl.config({
 
         -- Blur Dual-Kawase desactivado en plasma para evitar halo gris en márgenes CSD
         blur = {
-            enabled           = not is_plasma,
+            enabled           = not is_plasma and not is_retro,  -- Omarchy: sin blur salvo modo glass
             size              = 6,
             passes            = 3,
             vibrancy          = 0.2,

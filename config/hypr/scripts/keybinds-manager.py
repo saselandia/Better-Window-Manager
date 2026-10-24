@@ -72,7 +72,7 @@ DEFAULT_KEYBINDS: List[Dict[str, Any]] = [
         "mods": ["SUPER"],
         "key": "E",
         "action_type": "exec",
-        "exec": "nautilus",
+        "exec": "nautilus --new-window",
         "dispatcher": None,
         "dispatcher_arg": None,
         "options": {},
@@ -86,7 +86,7 @@ DEFAULT_KEYBINDS: List[Dict[str, Any]] = [
         "mods": ["ALT"],
         "key": "E",
         "action_type": "exec",
-        "exec": "nautilus",
+        "exec": "nautilus --new-window",
         "dispatcher": None,
         "dispatcher_arg": None,
         "options": {},
@@ -698,7 +698,7 @@ def generate_lua(binds: List[Dict[str, Any]]) -> str:
         "-- =============================================================================",
         "",
         "local terminal    = \"kitty\"",
-        "local fileManager = \"nautilus\"",
+        "local fileManager = \"nautilus --new-window\"",
         "local menu        = \"quickshell -c ii ipc call search toggle || rofi -show drun\"",
         "",
         "local ok_theme, active_theme = pcall(require, \"modules.theme\")",
@@ -791,6 +791,9 @@ def generate_lua(binds: List[Dict[str, Any]]) -> str:
     lines.append('hl.bind("ALT + Alt_L", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab release"), { release = true })')
     lines.append('hl.bind("ALT + Alt_R", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab release"), { release = true })')
     lines.append('hl.bind("ALT + Escape", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab cancel"))')
+    lines.append('hl.bind("ALT + grave", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab nextApp"), { description = "Ventanas: Alternar entre ventanas de la misma aplicación (Alt+`)", repeating = true })')
+    lines.append('hl.bind("ALT + SHIFT + grave", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab prevApp"), { repeating = true })')
+    lines.append('hl.bind("SUPER + BACKSPACE", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/window-transparency.sh toggle-window"), { description = "Ventanas: Alternar transparencia de la ventana activa (Omarchy)" })')
     lines.append("")
     lines.append("-- Mouse Window Gestures")
     lines.append('hl.bind("ALT + mouse:272", hl.dsp.window.drag(), { mouse = true, description = "Ventanas: Arrastrar ventana flotante" })')

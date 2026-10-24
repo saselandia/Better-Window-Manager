@@ -1,8 +1,9 @@
-
 /* ==============================================================================
  * BWM Retro (Omarchy) - TUI overlay for Firefox's browser chrome (not web pages)
  * Imported at the top of userChrome.css, so selectors are doubled with :root:root
  * to win over the Material You rules that come later in that file.
+ * Look: monospace, square, flat, tabs marked by a line, 1px accent frames.
+ * Firefox only reads userChrome.css at startup (restart-firefox handles that).
  * ============================================================================== */
 :root:root * {
     font-family: "JetBrainsMono Nerd Font", monospace !important;
@@ -20,20 +21,43 @@
     --arrowpanel-border-radius: 0 !important;
     --panel-border-radius: 0 !important;
     --urlbar-icon-border-radius: 0 !important;
+    --tab-block-margin: 0 !important;
+    --toolbarbutton-inner-padding: 6px !important;
 }
 
 :root:root .tab-background, :root:root #urlbar-background, :root:root .urlbar-background, :root:root #urlbar,
 :root:root toolbarbutton, :root:root .toolbarbutton-icon, :root:root .toolbarbutton-badge-stack,
 :root:root menupopup, :root:root panel, :root:root .panel-arrowcontent, :root:root #searchbar,
-:root:root .urlbarView, :root:root .urlbarView-row {
+:root:root .urlbarView, :root:root .urlbarView-row, :root:root .tab-content, :root:root .tabbrowser-tab,
+:root:root #nav-bar, :root:root .bookmark-item, :root:root #PersonalToolbar {
     border-radius: 0 !important;
     box-shadow: none !important;
+    background-image: none !important;
 }
 
+/* Tabs: flat, the selected one underlined with the accent (like a tmux status line) */
+:root:root .tab-background { margin-block: 0 !important; border: 0 !important; }
 :root:root .tab-background[selected] {
-    border: 1px solid var(--mat-primary, AccentColor) !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 2px solid var(--mat-primary, AccentColor) !important;
+}
+:root:root .tabbrowser-tab:not([selected]):hover .tab-background { background: color-mix(in srgb, var(--mat-primary, AccentColor) 12%, transparent) !important; }
+:root:root .tab-close-button { border-radius: 0 !important; }
+
+/* Address bar: 1px frame, accent while focused */
+:root:root #urlbar-background { border: 1px solid color-mix(in srgb, var(--mat-primary, AccentColor) 40%, transparent) !important; }
+:root:root #urlbar[focused] #urlbar-background,
+:root:root #urlbar[open] #urlbar-background { border: 1px solid var(--mat-primary, AccentColor) !important; }
+
+/* Menus and panels framed like terminal popups */
+:root:root menupopup, :root:root panel .panel-arrowcontent { border: 1px solid var(--mat-primary, AccentColor) !important; }
+:root:root menuitem[_moz-menuactive], :root:root .urlbarView-row[selected] { background: color-mix(in srgb, var(--mat-primary, AccentColor) 22%, transparent) !important; }
+
+/* Hover/pressed buttons: flat tint, no pill */
+:root:root toolbarbutton:hover > .toolbarbutton-icon, :root:root toolbarbutton:hover > .toolbarbutton-badge-stack {
+    background: color-mix(in srgb, var(--mat-primary, AccentColor) 18%, transparent) !important;
 }
 
-:root:root #urlbar[focused] #urlbar-background {
-    border: 1px solid var(--mat-primary, AccentColor) !important;
-}
+/* Thin square scrollbars in the chrome */
+:root:root * { scrollbar-width: thin; }

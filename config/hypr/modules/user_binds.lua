@@ -4,7 +4,7 @@
 -- =============================================================================
 
 local terminal    = "kitty"
-local fileManager = "nautilus"
+local fileManager = "nautilus --new-window"
 local menu        = "quickshell -c ii ipc call search toggle || rofi -show drun"
 
 local ok_theme, active_theme = pcall(require, "modules.theme")
@@ -16,7 +16,7 @@ hl.bind("ALT + A", hl.dsp.exec_cmd("quickshell -c ii ipc call cheatsheet toggle"
 -- [Lanzadores]
 hl.bind("CTRL + RETURN", hl.dsp.exec_cmd("kitty"), { description = "Lanzadores: Abrir terminal (Kitty)" })
 hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/app-launcher.sh"), { description = "Lanzadores: Menú de aplicaciones / Búsqueda", release = true })
-hl.bind("ALT + E", hl.dsp.exec_cmd("nautilus"), { description = "Lanzadores: Explorador de archivos alternativo (Alt+E)" })
+hl.bind("ALT + E", hl.dsp.exec_cmd("nautilus --new-window"), { description = "Lanzadores: Explorador de archivos alternativo (Alt+E)" })
 hl.bind("ALT + W", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/wallpaper-picker.sh"), { description = "Lanzadores: Selector de fondos de pantalla" })
 -- [Ventanas]
 hl.bind("ALT + X", hl.dsp.window.close(), { description = "Ventanas: Cerrar ventana activa" })
@@ -105,6 +105,7 @@ hl.bind("Alt_R", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab release"), { 
 hl.bind("ALT + Alt_L", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab release"), { release = true })
 hl.bind("ALT + Alt_R", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab release"), { release = true })
 hl.bind("ALT + Escape", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab cancel"))
+hl.bind("SUPER + BACKSPACE", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/window-transparency.sh toggle-window"), { description = "Ventanas: Alternar transparencia de la ventana activa (Omarchy)" })
 
 -- Mouse Window Gestures
 hl.bind("ALT + mouse:272", hl.dsp.window.drag(), { mouse = true, description = "Ventanas: Arrastrar ventana flotante" })

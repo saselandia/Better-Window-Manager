@@ -1,13 +1,17 @@
-
 /* ==============================================================================
  * BWM Retro (Omarchy) - TUI overlay for Vesktop / Vencord
- * Terminal font, square corners and flat surfaces on top of the wallpaper palette.
+ * Omarchy does not theme Discord itself; this follows its terminal look: monospace
+ * everywhere, square corners, flat surfaces, 1px accent frames, no gradients.
+ * Appended after the Material You variables, so the wallpaper palette still applies.
  * ============================================================================== */
 :root {
     --font-primary: "JetBrainsMono Nerd Font", monospace !important;
     --font-display: "JetBrainsMono Nerd Font", monospace !important;
     --font-headline: "JetBrainsMono Nerd Font", monospace !important;
     --font-code: "JetBrainsMono Nerd Font", monospace !important;
+    --radius-xs: 0 !important; --radius-sm: 0 !important; --radius-md: 0 !important;
+    --radius-lg: 0 !important; --radius-xl: 0 !important; --radius-round: 0 !important;
+    --custom-border-radius: 0 !important;
 }
 
 *, *::before, *::after {
@@ -15,18 +19,57 @@
     border-radius: 0 !important;
     box-shadow: none !important;
     text-shadow: none !important;
+    background-image: none;
 }
 
-/* Avatars and server icons keep their shape readable as squares (TUI style) */
-img, svg mask, foreignObject {
+/* Avatars, server icons and status dots as squares (TUI style) */
+img, svg mask, foreignObject, [class*="avatar"], [class*="icon_"] {
     border-radius: 0 !important;
 }
+[class*="avatarDecoration"], [class*="bannerSVGWrapper"], [class*="profileEffects"], [class*="nameplate"] {
+    display: none !important;
+}
 
-/* Chat box, popouts and modals framed like terminal panes */
-[class*="channelTextArea"], [class*="popout"], [class*="menu_"], [class*="modal"], [class*="tooltip"] {
+/* Terminal panes: panels framed with a thin line, active ones with the accent */
+[class*="sidebar_"], [class*="chatContent"], [class*="membersWrap"], [class*="guilds_"], [class*="panels_"] {
+    border: 0 !important;
+    border-right: 1px solid var(--bg-mod-subtle, rgba(255,255,255,.08)) !important;
+}
+[class*="channelTextArea"], [class*="popout"], [class*="menu_"], [class*="modal"], [class*="tooltip"],
+[class*="searchBar"], [class*="floating"] {
     border: 1px solid var(--brand-500) !important;
 }
+[class*="channelTextArea"]:focus-within { border-color: var(--text-primary, var(--brand-500)) !important; }
 
-[class*="scroller"]::-webkit-scrollbar-thumb {
-    border-radius: 0 !important;
+/* Selected channel / server: accent bar on the left, no filled pill */
+[class*="modeSelected"], [class*="selected_"] {
+    background: transparent !important;
+    box-shadow: inset 2px 0 0 var(--brand-500) !important;
+    color: var(--brand-500) !important;
 }
+[class*="modeSelected"] *, [class*="selected_"] * { color: inherit !important; }
+[class*="pill"], [class*="wrapper_"] > [class*="pill"] { background: var(--brand-500) !important; }
+
+/* Buttons and inputs: flat boxes with a 1px frame */
+[class*="button_"], [class*="lookFilled"], [class*="lookOutlined"] {
+    background: transparent !important;
+    border: 1px solid var(--brand-500) !important;
+    color: var(--brand-500) !important;
+}
+[class*="button_"]:hover, [class*="lookFilled"]:hover { background: var(--brand-500) !important; color: var(--background-primary) !important; }
+input, textarea, [class*="input_"] { border-radius: 0 !important; }
+
+/* Messages: no hover bubble, mentions marked by a bar instead of a tinted block */
+[class*="messageListItem"] [class*="message_"]:hover { background: var(--bg-mod-faint, transparent) !important; }
+[class*="mentioned_"] { background: transparent !important; box-shadow: inset 2px 0 0 var(--brand-500) !important; }
+[class*="embedWrapper"], [class*="codeBlock"], code, pre {
+    border: 1px solid var(--bg-mod-subtle, rgba(255,255,255,.1)) !important;
+}
+
+/* Thin square scrollbars, selection in the accent colour, no promotional upsells */
+* { scrollbar-width: thin; }
+::-webkit-scrollbar { width: 6px !important; height: 6px !important; }
+::-webkit-scrollbar-thumb { border-radius: 0 !important; background: var(--brand-500) !important; }
+::-webkit-scrollbar-track { background: transparent !important; }
+::selection { background: var(--brand-500); color: var(--background-primary); }
+[class*="upsell"], [class*="premiumPromo"], [class*="giftButton"] { display: none !important; }
