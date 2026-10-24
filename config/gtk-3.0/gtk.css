@@ -3,40 +3,40 @@
 */
 
 /* Accents */
-@define-color accent_color #a859f8;
-@define-color accent_fg_color #16101c;
-@define-color accent_bg_color #a859f8;
-@define-color destructive_bg_color #794534;
-@define-color destructive_fg_color #f0edf3;
-@define-color destructive_color #e76a80;
+@define-color accent_color #ffb599;
+@define-color accent_fg_color #552009;
+@define-color accent_bg_color #ffb599;
+@define-color destructive_bg_color #93000a;
+@define-color destructive_fg_color #ffdad6;
+@define-color destructive_color #ffb4ab;
 @define-color success_bg_color #374B3E;
 @define-color success_fg_color #D1E9D6;
 @define-color success_color #B5CCBA;
 
 /* Base surfaces */
-@define-color window_bg_color #16101c;
-@define-color window_fg_color #d1c9d9;
-@define-color headerbar_bg_color #16101c;
-@define-color headerbar_backdrop_color #16101c;
-@define-color headerbar_fg_color #d1c9d9;
-@define-color card_bg_color #16101c;
-@define-color card_fg_color #d1c9d9;
-@define-color sidebar_bg_color #110c15;
-@define-color sidebar_fg_color #d1c9d9;
-@define-color secondary_sidebar_bg_color #0b080f;
-@define-color secondary_sidebar_fg_color #d1c9d9;
+@define-color window_bg_color #1a110e;
+@define-color window_fg_color #f1dfd9;
+@define-color headerbar_bg_color #271e1a;
+@define-color headerbar_backdrop_color #271e1a;
+@define-color headerbar_fg_color #f1dfd9;
+@define-color card_bg_color #271e1a;
+@define-color card_fg_color #f1dfd9;
+@define-color sidebar_bg_color #231a16;
+@define-color sidebar_fg_color #f1dfd9;
+@define-color secondary_sidebar_bg_color #140c09;
+@define-color secondary_sidebar_fg_color #f1dfd9;
 @define-color sidebar_border_color transparent;
 @define-color sidebar_backdrop_color @sidebar_bg_color;
-@define-color view_bg_color #16101c;
-@define-color view_fg_color #d1c9d9;
-@define-color overview_bg_color #16101c;
-@define-color overview_fg_color #d1c9d9;
+@define-color view_bg_color #1a110e;
+@define-color view_fg_color #f1dfd9;
+@define-color overview_bg_color #1a110e;
+@define-color overview_fg_color #f1dfd9;
 
 /* Popups & Dialogs */
-@define-color popover_bg_color #302140;
-@define-color popover_fg_color #d1c9d9;
-@define-color dialog_bg_color #211929;
-@define-color dialog_fg_color #d1c9d9;
+@define-color popover_bg_color #3d322f;
+@define-color popover_fg_color #f1dfd9;
+@define-color dialog_bg_color #322824;
+@define-color dialog_fg_color #f1dfd9;
 
 /* ==============================================================================
  * Material Design 3 / End_4 Polish for Nautilus (GNOME Files) & Libadwaita
@@ -51,13 +51,13 @@ navigation-sidebar > row {
 }
 
 navigation-sidebar > row:selected {
-    background-color: #211929 !important;
-    color: #d1c9d9 !important;
+    background-color: #5d4035 !important;
+    color: #ffdbce !important;
     font-weight: bold;
 }
 
 navigation-sidebar > row:hover:not(:selected) {
-    background-color: #211929;
+    background-color: #322824;
 }
 
 /* Barra de ruta y búsqueda tipo píldora */
@@ -68,65 +68,17 @@ searchbar entry {
 
 /* Vista de archivos con bordes suaves */
 .view {
-    background-color: #16101c;
+    background-color: #1a110e;
 }
 
 .view:selected {
-    background-color: #302140;
-    color: #f0edf3;
+    background-color: #71361d;
+    color: #ffdbce;
 }
 
 /* Botones de acción principales */
 button.suggested-action {
-    background-color: #a859f8;
-    color: #16101c;
+    background-color: #ffb599;
+    color: #552009;
     border-radius: 12px;
-}
-
-/* ==============================================================================
- * BWM Retro (Omarchy) - TUI overlay for GTK 3/4
- * Appended by bwm_omarchy.py after the wallpaper palette: terminal font, square
- * corners, no shadows and thin accent borders, like Omarchy's terminal-first look.
- * ============================================================================== */
-* {
-    font-family: "JetBrainsMono Nerd Font", monospace;
-    border-radius: 0;
-    box-shadow: none;
-    -gtk-icon-shadow: none;
-    text-shadow: none;
-}
-
-headerbar, .titlebar {
-    box-shadow: none;
-    border-bottom: 1px solid alpha(@accent_color, 0.35);
-}
-
-button, entry, spinbutton, combobox button, dropdown button, switch, checkbutton check, radiobutton radio {
-    border: 1px solid alpha(@window_fg_color, 0.18);
-}
-
-button:hover, entry:focus, spinbutton:focus {
-    border-color: @accent_color;
-}
-
-button.suggested-action, button.default {
-    background-image: none;
-    background-color: @accent_bg_color;
-    color: @accent_fg_color;
-}
-
-popover > contents, popover.background > contents, menu, .menu, .csd.popup decoration, tooltip, .tooltip {
-    border: 1px solid @accent_color;
-    box-shadow: none;
-}
-
-selection, row:selected, *:selected {
-    background-color: alpha(@accent_color, 0.25);
-    color: @window_fg_color;
-}
-
-scrollbar slider {
-    min-width: 6px;
-    min-height: 6px;
-    border-radius: 0;
 }
