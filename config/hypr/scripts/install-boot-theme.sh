@@ -20,9 +20,13 @@
 # "omarchy" (aquí "bwm", mismo Main.qml) dentro de un Hyprland mínimo (DisplayServer=wayland,
 # sin logo ni animaciones, con la distribución de teclado y los monitores del usuario),
 # recordando último usuario y sesión (sesión por defecto hyprland.desktop).
+# Inicio de sesión según el tema BWM activo: en Retro se entra con contraseña en SDDM (como
+# Omarchy) y Quickshell no vuelve a bloquear; en Default y Plasma SDDM entra solo y el
+# bloqueo del propio tema (Quickshell, lock.launchOnStartup) hace de inicio de sesión. Al
+# cambiar de tema el servicio de --auto cambia el autologin de SDDM para el próximo arranque.
 # --enable-sddm lo activa al arrancar y aparca el autologin de getty en tty1 (si lo había);
-# --autologin entra sin contraseña como hace Omarchy con el disco cifrado.
-# --disable-sddm lo desactiva y devuelve el autologin de getty.
+# --autologin: SDDM entra siempre solo, sea cual sea el tema (sin --autologin vuelve al modo
+# por tema). --disable-sddm lo desactiva y devuelve el autologin de getty.
 #
 # --auto: copia este script a /usr/local/sbin/bwm-boot-theme (de root: el del repo lo puede
 #   editar el usuario) y crea bwm-boot-theme.path/.service. bwm_boot.py render se ejecuta
@@ -178,6 +182,17 @@ hl.config({
 EOF
 }
 
+# Autologin de SDDM según el tema (ver la cabecera). El tema viene de greeter.conf.
+apply_login_mode() {
+  local theme
+  theme=$(sed -n 's/^theme=\([a-z]*\)$/\1/p' "$SRC/sddm/greeter.conf" 2>/dev/null | head -n1)
+  if [[ -f $STATE_DIR/autologin-always ]] || [[ $theme == default || $theme == plasma ]]; then
+    write_root_file "$SDDM_CONF_D/autologin.conf" <<<$'[Autologin]\nUser='"$USER_NAME"$'\nSession=hyprland.desktop'
+  elif [[ $theme == retro ]]; then
+    rm -f "$SDDM_CONF_D/autologin.conf"
+  fi
+}
+
 # Drivers de GPU que lleva un initramfs (uno por línea, ordenados)
 gpu_drivers() {
   lsinitrd "$1" 2>/dev/null | grep -oE "/($GPU_DRIVERS)\.ko(\.[a-z]+)?$" \
@@ -244,6 +259,7 @@ if [[ -n $SYNC_USER ]]; then
   if [[ -f $STATE_DIR/sddm ]]; then
     if copy_theme "$SRC/sddm" "$SDDM_DIR"; then echo "Tema de SDDM actualizado."; fi
     write_greeter_config
+    apply_login_mode
   fi
   if [[ -f $STATE_DIR/plymouth ]] && copy_theme "$SRC/plymouth" "$PLY_DIR"; then
     echo "Tema de Plymouth actualizado; rehaciendo el initramfs."
@@ -333,10 +349,11 @@ EOF
     chown sddm:sddm /var/lib/sddm /var/lib/sddm/state.conf 2>/dev/null || true
   fi
   if $AUTOLOGIN; then
-    write_root_file "$SDDM_CONF_D/autologin.conf" <<<$'[Autologin]\nUser='"$USER_NAME"$'\nSession=hyprland.desktop'
+    touch "$STATE_DIR/autologin-always"
   else
-    rm -f "$SDDM_CONF_D/autologin.conf"
+    rm -f "$STATE_DIR/autologin-always"
   fi
+  apply_login_mode
   touch "$STATE_DIR/sddm"
   echo "Tema de SDDM instalado (saludo en Hyprland, con tu teclado y tus monitores)."
   if $ENABLE_SDDM; then

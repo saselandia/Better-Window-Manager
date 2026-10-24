@@ -29,13 +29,17 @@ SCRIPTS = HOME / ".config" / "hypr" / "scripts"
 FAILED = "#f7768e"  # Omarchy's colour for a wrong password
 
 
+def active_theme():
+    try:
+        return subprocess.run([sys.executable, str(SCRIPTS / "bwm-theme-manager.py"), "get"],
+                              capture_output=True, text=True).stdout.strip() or "default"
+    except Exception:
+        return "default"
+
+
 def theme_colors():
     """(background, text) of the active BWM theme."""
-    try:
-        theme = subprocess.run([sys.executable, str(SCRIPTS / "bwm-theme-manager.py"), "get"],
-                               capture_output=True, text=True).stdout.strip()
-    except Exception:
-        theme = "default"
+    theme = active_theme()
     if theme == "plasma":
         return "#202326", "#fcfcfc"
     if theme == "retro":
@@ -74,7 +78,9 @@ def write_greeter_conf(dst: Path):
             return json.loads(out).get("str", "")
         except Exception:
             return ""
-    lines = [f"kb_layout={opt('kb_layout') or 'us'}", f"kb_variant={opt('kb_variant')}",
+    # theme: Retro logs in at SDDM (Omarchy); the other themes autologin into their own
+    # lock screen (install-boot-theme.sh switches SDDM's autologin to match)
+    lines = [f"theme={active_theme()}", f"kb_layout={opt('kb_layout') or 'us'}", f"kb_variant={opt('kb_variant')}",
              f"kb_options={opt('kb_options')}"]
     try:
         out = subprocess.run(["hyprctl", "monitors", "-j"], capture_output=True, text=True, timeout=3).stdout

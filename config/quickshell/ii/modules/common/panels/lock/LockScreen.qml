@@ -132,7 +132,11 @@ Scope {
 
     function initIfReady() {
         if (!Config.ready || !Persistent.ready) return;
-        if (Config.options.lock.launchOnStartup && Persistent.isNewHyprlandInstance) {
+        // Retro logs in at SDDM with a password (Omarchy style, install-boot-theme.sh): don't ask
+        // again. Default/Plasma come from SDDM's autologin and this lock is their login screen.
+        const loggedInAtGreeter = Appearance.isRetro
+            && (Quickshell.env("XDG_SESSION_PATH") ?? "").startsWith("/org/freedesktop/DisplayManager");
+        if (Config.options.lock.launchOnStartup && Persistent.isNewHyprlandInstance && !loggedInAtGreeter) {
             root.lock();
         } else {
             KeyringStorage.fetchKeyringData();

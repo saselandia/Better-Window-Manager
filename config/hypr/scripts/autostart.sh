@@ -108,7 +108,16 @@ fi
 
     if [ -n "$WALLPAPER" ] && [ -f "$WALLPAPER" ]; then
         echo "$WALLPAPER" > "$HOME/.cache/current_wallpaper"
-        swww img "$WALLPAPER" --transition-type none 2>/dev/null || true
+        # swww-daemon responde antes de tener todos los monitores (más aún al entrar desde
+        # SDDM, con la GPU recién liberada por el saludo): reintentar hasta que todos
+        # muestren la imagen, o quedan en negro.
+        for _ in $(seq 1 30); do
+            swww img "$WALLPAPER" --transition-type none 2>/dev/null || true
+            sleep 0.5
+            if swww query 2>/dev/null | grep -q . && ! swww query 2>/dev/null | grep -q "currently displaying: color"; then
+                break
+            fi
+        done
     fi
 ) &
 
