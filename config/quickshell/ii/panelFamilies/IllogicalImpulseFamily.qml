@@ -27,6 +27,7 @@ import qs.modules.ii.omarchyMenu
 import qs.modules.ii.plasmaKickoff
 import qs.modules.ii.screensaver
 import qs.modules.ii.screenshotPreview
+import qs.modules.ii.omarchyNotifications
 import qs.modules.ii.plasmaBluetooth
 import qs.modules.ii.plasmaNetwork
 import qs.modules.ii.plasmaCalendar
@@ -50,6 +51,8 @@ Scope {
     PanelLoader { component: Polkit {} }
     PanelLoader { component: RegionSelector {} }
     PanelLoader { extraCondition: Appearance.isRetro; component: OmarchyScreenshotPreview {} }
+    // Retro: Omarchy's notification daemon instead of BWM's (services/Notifications.qml)
+    PanelLoader { extraCondition: Config.ready && Appearance.isRetro; component: OmarchyNotifications {} }
     PanelLoader { component: ScreenCorners {} }
     PanelLoader { component: ScreenTranslator {} }
     PanelLoader { component: SessionScreen {} }

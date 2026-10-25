@@ -16,6 +16,7 @@ import os
 import json
 import argparse
 import subprocess
+import shutil
 import colorsys
 from pathlib import Path
 from PIL import Image
@@ -1003,6 +1004,17 @@ def apply_theme(theme_name: str):
 
     # 6. Sincronizar el estado flotante / mosaico de las ventanas abiertas tras la recarga
     sync_floating_windows(cfg.get("is_plasma", False))
+
+    # 6.1 Demonio de notificaciones: en Retro el de Omarchy (dentro de Quickshell), así que swaync
+    #     se cierra para soltar org.freedesktop.Notifications; en los otros temas vuelve swaync
+    try:
+        if theme_name == "retro":
+            subprocess.run(["pkill", "-x", "swaync"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        elif shutil.which("swaync") and subprocess.run(["pidof", "swaync"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
+            subprocess.Popen(["swaync"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True,
+                             preexec_fn=lambda: signal.pthread_sigmask(signal.SIG_SETMASK, []))
+    except Exception:
+        pass
 
     # 7. Reiniciar Quickshell de forma atómica (sin duplicados ni bloqueo de SIGTERM)
     try:
