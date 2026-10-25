@@ -3,9 +3,71 @@ import QtQuick.Layouts
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import Quickshell
+import Quickshell.Io
 
 ContentPage {
     forceWidth: true
+
+    // Retro only: the Omarchy bar plugins (preinstalled in quickshell/ii/omarchy-plugins plus any
+    // added with bwm-plugin.sh), each one can be turned off. Stored in
+    // ~/.config/bwm/omarchy-plugins.json, which the Retro bar watches. Read here through
+    // `bwm-plugin.sh catalog`, so this app never loads the plugins themselves.
+    readonly property string pluginScript: Quickshell.env("HOME") + "/.config/hypr/scripts/bwm-plugin.sh"
+    property var omarchyPlugins: []
+    property var omarchyLayout: ({ bar: [] })
+    function pluginEnabled(p) {
+        const placed = (omarchyLayout.bar ?? []).some(e => e.id === p.id);
+        return placed || (p.builtin && !(omarchyLayout.disabled ?? []).includes(p.id));
+    }
+    Process {
+        id: pluginCatalog
+        running: Appearance.isRetro
+        command: [pluginScript, "catalog"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    omarchyLayout = data.layout ?? { bar: [] };
+                    omarchyPlugins = (data.plugins ?? []).filter(p => p.barWidget);
+                } catch (e) {}
+            }
+        }
+    }
+    Process {
+        id: pluginToggle
+        onExited: pluginCatalog.running = true
+    }
+
+    ContentSection {
+        visible: Appearance.isRetro
+        icon: "extension"
+        title: Translation.tr("Omarchy plugins")
+
+        StyledText {
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+            color: Appearance.colors.colSubtext
+            text: Translation.tr("Widgets from Omarchy's shell in the Retro bar. More: ~/.config/hypr/scripts/bwm-plugin.sh add <git-url>")
+        }
+
+        Repeater {
+            model: omarchyPlugins
+            delegate: ConfigSwitch {
+                required property var modelData
+                buttonIcon: modelData.id === "omarchy.clock" ? "calendar_month" : "widgets"
+                text: modelData.name + (modelData.builtin ? "" : "  ·  " + Translation.tr("installed"))
+                checked: pluginEnabled(modelData)
+                onClicked: {
+                    pluginToggle.command = [pluginScript, pluginEnabled(modelData) ? "disable" : "enable", modelData.id];
+                    pluginToggle.running = true;
+                }
+                StyledToolTip {
+                    text: modelData.description ?? ""
+                }
+            }
+        }
+    }
 
     ContentSection {
         icon: "notifications"

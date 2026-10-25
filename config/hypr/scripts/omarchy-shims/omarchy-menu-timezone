@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# BWM stand-in for Omarchy's timezone picker (middle click on the clock): BWM has none, so it
+# just tells which timezone is in use.
+notify-send -a Clock "Timezone" "$(timedatectl show -p Timezone --value 2>/dev/null || date +%Z)"

@@ -12,7 +12,7 @@ TARGET_CONFIG="$HOME/.config"
 BACKUP_DIR="$HOME/.config/hyprland-de-backup-$(date +%Y%m%d_%H%M%S)"
 INSTALL_MODE="symlink"
 LOGIN_SETUP="ask"   # ask | yes | no: pantalla de inicio de sesión SDDM estilo Omarchy
-PLUGINS_SETUP="ask" # ask | yes | no: plugins de la barra de Omarchy para el tema Retro
+PLUGINS_SETUP="yes" # yes | no: compilar ai-usagebar para el plugin preinstalado de uso de IA
 
 # Colors for terminal output
 RED='[0;31m'
@@ -54,8 +54,7 @@ usage() {
     echo "  --check-deps     Solo comprueba las dependencias y flatpaks instalados"
     echo "  --login          Configura sin preguntar el inicio de sesión SDDM estilo Omarchy (pide sudo)"
     echo "  --no-login       No toca el inicio de sesión ni el arranque"
-    echo "  --plugins        Instala sin preguntar los plugins de Omarchy por defecto (tema Retro)"
-    echo "  --no-plugins     No instala plugins de Omarchy"
+    echo "  --no-plugins     No compila ai-usagebar (plugin de uso de IA del tema Retro)"
     echo "  -h, --help       Muestra esta ayuda"
     exit 0
 }
@@ -602,19 +601,18 @@ fi
 # ==============================================================================
 # 10. Plugins de la barra de Omarchy (tema Retro)
 # ==============================================================================
-# Los plugins de terceros más usados de Omarchy (uso de IA, monitor del sistema, multimedia,
-# ventana activa) desde sus repositorios git, como `omarchy plugin add`. Son código sin
-# aislar que corre dentro de la barra: por eso se pregunta.
+# Vienen preinstalados (config/quickshell/ii/omarchy-plugins) y activos; se desactivan uno a
+# uno en Ajustes → Barra. ai-usagebar es sólo la interfaz: su programa se compila aquí con
+# cargo (fijado a una versión concreta) si no está ya instalado.
 PLUGIN_SCRIPT="$TARGET_CONFIG/hypr/scripts/bwm-plugin.sh"
-if [ "$PLUGINS_SETUP" != "no" ] && [ -x "$PLUGIN_SCRIPT" ] && command -v git >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
-    if [ "$PLUGINS_SETUP" = "ask" ] && [ -t 0 ]; then
-        echo ""
-        read -r -p "¿Instalar los plugins de Omarchy por defecto para el tema Retro? [s/N] " reply
-        case "$reply" in [sSyY]*) PLUGINS_SETUP="yes" ;; *) PLUGINS_SETUP="no" ;; esac
-    fi
-    if [ "$PLUGINS_SETUP" = "yes" ]; then
-        print_step "10. Instalando los plugins de Omarchy (bwm-plugin.sh defaults)..."
-        "$PLUGIN_SCRIPT" defaults || print_warn "Algún plugin no se pudo instalar; repítelo con: $PLUGIN_SCRIPT defaults"
+if [ "$PLUGINS_SETUP" != "no" ] && [ -x "$PLUGIN_SCRIPT" ] && ! command -v ai-usagebar >/dev/null 2>&1; then
+    if command -v cargo >/dev/null 2>&1; then
+        print_step "10. Compilando ai-usagebar para el plugin de uso de IA (cargo)..."
+        "$PLUGIN_SCRIPT" build >/dev/null 2>&1 \
+            && print_success "ai-usagebar instalado en ~/.local/bin." \
+            || print_warn "No se pudo compilar ai-usagebar; repítelo con: $PLUGIN_SCRIPT build"
+    else
+        print_warn "Sin cargo no se compila ai-usagebar (plugin de uso de IA). Instala rust y ejecuta: $PLUGIN_SCRIPT build"
     fi
 fi
 

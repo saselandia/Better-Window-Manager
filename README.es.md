@@ -171,15 +171,14 @@ La pantalla de arranque es opcional: rehace el initramfs con dracut (con los mis
 
 ### 5. Plugins de la barra de Omarchy (tema Retro)
 
-La barra Retro ejecuta **plugins del shell de Omarchy** sin cambios: las librerías `qs.Commons` / `qs.Ui` de Omarchy (MIT) van incluidas en `config/quickshell/ii/Commons` y `Ui` y leen la paleta Omarchy de BWM. Se instalan como con `omarchy plugin add`:
+La barra Retro ejecuta **plugins del shell de Omarchy** sin cambios: las librerías `qs.Commons` / `qs.Ui` de Omarchy (MIT) van incluidas en `config/quickshell/ii/Commons` y `Ui` y leen la paleta Omarchy de BWM. Vienen **preinstalados y activos** (`config/quickshell/ii/omarchy-plugins`, todos MIT): el reloj de Omarchy con su calendario desplegable, uso de IA (`ai-usagebar`, cuyo programa compila `install.sh` con cargo), OmaStats, controles multimedia con carátula del disco y ventana activa. Cada uno se desactiva en **Ajustes → Barra** (Retro). Más plugins, como con `omarchy plugin add`:
 
 ```bash
-~/.config/hypr/scripts/bwm-plugin.sh defaults        # uso de IA, OmaStats, multimedia con carátula, ventana activa
-~/.config/hypr/scripts/bwm-plugin.sh add https://github.com/<usuario>/<plugin>.git [--section left|center|right]
-~/.config/hypr/scripts/bwm-plugin.sh list | update | disable <id> | remove <id>
+~/.config/hypr/scripts/bwm-plugin.sh add https://github.com/<usuario>/<plugin>.git [--section left|center|centerEnd|right]
+~/.config/hypr/scripts/bwm-plugin.sh list | update | enable <id> | disable <id> | remove <id> | build
 ```
 
-Los plugins son código sin aislar que corre dentro de la barra (igual que en Omarchy): revísalos antes de instalarlos.
+Los plugins son código sin aislar que corre dentro de la barra (igual que en Omarchy): revisa los que añadas.
 
 ---
 

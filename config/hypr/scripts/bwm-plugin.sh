@@ -8,11 +8,15 @@
 # (quickshell/ii/Commons, quickshell/ii/Ui) y modules/ii/bar/omarchy/.
 #
 # Uso:
-#   bwm-plugin.sh add <url-git> [--section left|center|right] [--disabled] [--yes]
+#   bwm-plugin.sh add <url-git> [--section left|center|centerEnd|right] [--disabled] [--yes]
 #   bwm-plugin.sh remove <id>        bwm-plugin.sh update [id]
 #   bwm-plugin.sh enable <id> [--section S]   bwm-plugin.sh disable <id>
 #   bwm-plugin.sh list               bwm-plugin.sh catalog   (JSON para la barra)
-#   bwm-plugin.sh defaults           # instala los plugins por defecto de BWM
+#   bwm-plugin.sh build              # compila el binario de ai-usagebar (cargo)
+#
+# Preinstalados (quickshell/ii/omarchy-plugins, activos salvo que se desactiven en Ajustes →
+# Barra): el reloj con calendario de Omarchy y los plugins más usados de Omarchy que no
+# necesitan cuentas: ai-usagebar, omastats, omarchy-mpris y omarchy-active-window.
 #
 # Como en Omarchy, un plugin es código sin aislar que corre dentro de Quickshell: revisa
 # lo que instalas. No se ejecutan hooks de instalación ni se pide sudo.
@@ -20,18 +24,12 @@
 set -euo pipefail
 
 PLUGINS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/bwm/omarchy-plugins"
+BUILTIN_DIR="${BWM_BUILTIN_PLUGINS:-$HOME/.config/quickshell/ii/omarchy-plugins}"
+# ai-usagebar: el plugin preinstalado es sólo la interfaz; su binario sale de este commit
+AI_USAGEBAR_GIT="https://github.com/akitaonrails/ai-usagebar.git"
+AI_USAGEBAR_REV="d1af986fe4bf8d05316bc8d6e1506881b5f4d265"
 LAYOUT="${XDG_CONFIG_HOME:-$HOME/.config}/bwm/omarchy-plugins.json"
 export GIT_TERMINAL_PROMPT=0
-
-# Plugins por defecto: los más usados de Omarchy (estrellas en GitHub, 2026-10) que tienen
-# sentido aquí y no necesitan cuentas: uso de IA (Claude...), monitor del sistema,
-# multimedia con carátula y ventana activa con icono.
-DEFAULT_PLUGINS=(
-  "https://github.com/akitaonrails/ai-usagebar.git right"
-  "https://github.com/crmne/omastats.git right"
-  "https://github.com/crmne/omarchy-mpris.git center"
-  "https://github.com/crmne/omarchy-active-window.git left"
-)
 
 fail() { echo "bwm-plugin: $*" >&2; exit 1; }
 need() { command -v "$1" >/dev/null || fail "falta $1"; }
@@ -49,9 +47,9 @@ save_layout() {   # stdin: nuevo JSON
   qs -c ii ipc call omarchyPlugins reload >/dev/null 2>&1 || true
 }
 
-plugin_dir() {    # id -> carpeta
+plugin_dir() {    # id -> carpeta (instalados por el usuario o preinstalados)
   local id=$1 d
-  for d in "$PLUGINS_DIR"/*/; do
+  for d in "$PLUGINS_DIR"/*/ "$BUILTIN_DIR"/*/; do
     [[ -f $d/manifest.json ]] || continue
     [[ $(jq -r '.id // ""' "$d/manifest.json") == "$id" ]] && { echo "${d%/}"; return 0; }
   done
@@ -61,8 +59,10 @@ plugin_dir() {    # id -> carpeta
 # Secciones de Omarchy (left, centerBegin, center, centerEnd, tray, right) -> las de BWM
 section_for() {
   case "$1" in
+    clock) echo clock ;;
     left) echo left ;;
-    center|centerBegin|centerEnd) echo center ;;
+    center|centerBegin) echo center ;;
+    centerEnd|after-clock) echo centerEnd ;;
     *) echo right ;;
   esac
 }
@@ -74,7 +74,11 @@ enable_plugin() { # id [section]
   if ! jq -e '(.kinds // []) | index("bar-widget")' "$manifest" >/dev/null; then
     echo "$id no es un widget de barra; sus servicios se cargan igualmente."
   fi
-  [[ -n $section ]] || section=$(section_for "$(jq -r '.barWidget.defaultSection // "right"' "$manifest")")
+  if [[ -z $section ]]; then
+    if [[ $id == omarchy.clock ]]; then section=clock
+    elif [[ $id == crmne.omastats ]]; then section=centerEnd   # junto al reloj: cabe sin pisarlo
+    else section=$(section_for "$(jq -r '.barWidget.defaultSection // "right"' "$manifest")"); fi
+  fi
   jq --arg id "$id" --arg s "$section" --argjson d "$(jq '.barWidget.defaults // {}' "$manifest")" '
     .bar |= ((map(select(.id != $id))) + [{id: $id, section: $s, settings: $d}])
     | .disabled = ((.disabled // []) - [$id])' "$LAYOUT" | save_layout
@@ -116,6 +120,7 @@ cmd_add() {
 cmd_remove() {
   local id=${1:?id} dir
   dir=$(plugin_dir "$id") || fail "no está instalado: $id"
+  [[ $dir == "$BUILTIN_DIR"/* ]] && fail "$id viene preinstalado: desactívalo (bwm-plugin.sh disable $id)"
   jq --arg id "$id" '.bar |= map(select(.id != $id)) | .disabled = ((.disabled // []) - [$id])' "$LAYOUT" | save_layout
   rm -rf -- "$dir"
   echo "Eliminado $id."
@@ -140,24 +145,28 @@ cmd_disable() {
 
 cmd_list() {
   local d id
-  for d in "$PLUGINS_DIR"/*/; do
+  for d in "$BUILTIN_DIR"/*/ "$PLUGINS_DIR"/*/; do
     [[ -f $d/manifest.json ]] || continue
     id=$(jq -r '.id' "$d/manifest.json")
     printf '%-32s %-8s %s\n' "$id" \
-      "$(jq -r --arg id "$id" '(.bar[] | select(.id == $id) | .section) // (if ((.disabled // []) | index($id)) then "off" else "-" end)' "$LAYOUT")" \
+      "$(jq -r --arg id "$id" --argjson b "$([[ $d == "$BUILTIN_DIR"/* ]] && echo true || echo false)" '(.bar[] | select(.id == $id) | .section) // (if ((.disabled // []) | index($id)) then "off" elif $b then "default" else "-" end)' "$LAYOUT")" \
       "$(jq -r '.name // ""' "$d/manifest.json")"
   done
 }
 
 # JSON para modules/ii/bar/omarchy/OmarchyPlugins.qml: plugins instalados y activos
 cmd_catalog() {
-  local d first=true
+  local d first=true builtin
   printf '{"layout": %s, "plugins": [' "$(jq -c '.' "$LAYOUT")"
-  for d in "$PLUGINS_DIR"/*/; do
+  for d in "$BUILTIN_DIR"/*/ "$PLUGINS_DIR"/*/; do
     [[ -f $d/manifest.json ]] || continue
     $first || printf ','
     first=false
-    jq -c --arg dir "${d%/}" '{
+    builtin=false; [[ $d == "$BUILTIN_DIR"/* ]] && builtin=true
+    jq -c --arg dir "${d%/}" --argjson builtin "$builtin" '{
+      builtin: $builtin,
+      defaultSection: (if .id == "omarchy.clock" then "clock" elif .id == "crmne.omastats" then "centerEnd" else (.barWidget.defaultSection // "right" | if . == "left" then "left" elif (. == "center" or . == "centerBegin") then "center" elif . == "centerEnd" then "centerEnd" else "right" end) end),
+      description: (.description // ""),
       id, name, version, kinds: (.kinds // []), dir: $dir,
       keepLoaded: (.keepLoaded // false),
       barWidget: (if .entryPoints.barWidget then ($dir + "/" + .entryPoints.barWidget) else null end),
@@ -168,21 +177,14 @@ cmd_catalog() {
   printf ']}\n'
 }
 
-cmd_defaults() {
-  local entry
-  for entry in "${DEFAULT_PLUGINS[@]}"; do
-    # shellcheck disable=SC2086 # url y sección
-    set -- $entry
-    cmd_add "$1" --section "$2" --yes || echo "  (falló $1)" >&2
-  done
-  # ai-usagebar es sólo la interfaz: el binario se compila con cargo si no está
-  if ! command -v ai-usagebar >/dev/null && command -v cargo >/dev/null && [[ -d $PLUGINS_DIR/ai-usagebar ]]; then
-    echo "Compilando ai-usagebar (cargo, unos minutos)..."
-    cargo install --locked --root "$HOME/.local" --path "$PLUGINS_DIR/ai-usagebar" \
-      --bin ai-usagebar --bin ai-usagebar-tui >/dev/null 2>&1 \
-      && echo "ai-usagebar instalado en ~/.local/bin" \
-      || echo "No se pudo compilar ai-usagebar; el widget mostrará que falta el programa." >&2
-  fi
+# Binario de ai-usagebar (el plugin preinstalado es sólo su interfaz) en ~/.local/bin
+cmd_build() {
+  command -v ai-usagebar >/dev/null && { echo "ai-usagebar ya está instalado."; return 0; }
+  need cargo
+  echo "Compilando ai-usagebar ${AI_USAGEBAR_REV:0:8} con cargo (unos minutos)..."
+  cargo install --locked --root "$HOME/.local" --git "$AI_USAGEBAR_GIT" --rev "$AI_USAGEBAR_REV" \
+    --bin ai-usagebar --bin ai-usagebar-tui
+  echo "ai-usagebar instalado en ~/.local/bin"
 }
 
 case "${1:-}" in
@@ -193,6 +195,7 @@ case "${1:-}" in
   disable) shift; cmd_disable "$@" ;;
   list|ls) cmd_list ;;
   catalog) cmd_catalog ;;
-  defaults) cmd_defaults ;;
+  build) cmd_build ;;
+  defaults) cmd_build ;;   # nombre anterior: los plugins ya vienen preinstalados
   *) sed -n '9,16p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
 esac

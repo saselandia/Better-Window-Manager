@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# BWM stand-in for Omarchy's command of the same name (used by Omarchy bar plugins):
+# runs the command in a floating kitty and waits for Enter, like Omarchy's Done prompt.
+cmd="$*"
+exec setsid kitty --class org.omarchy.terminal --title Omarchy \
+  -o remember_window_size=no -o initial_window_width=110c -o initial_window_height=32c \
+  bash -c "$cmd; code=\$?; [ \$code -eq 130 ] || { echo; read -rp \"[\$([ \$code -eq 0 ] && echo done || echo failed \$code)] Enter to close \"; }"

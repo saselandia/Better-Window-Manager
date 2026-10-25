@@ -379,8 +379,22 @@ Item {
     // -----------------------------------------------------------------
     // Center Section: Monospace Date & Time (Omarchy Clean Format)
     // -----------------------------------------------------------------
+    // Omarchy's own clock (omarchy-plugins/omarchy-clock): its formats and calendar dropdown.
+    // Turned off in Settings → Bar, BWM's clock below takes its place.
+    OmarchyPluginSlot {
+        id: omarchyClock
+        section: "clock"
+        anchors.centerIn: parent
+        foreground: root.dynamicFg
+        background: root.dynamicBg
+        urgent: root.omarchyColors.urgent
+        barSize: root.itemHeight
+        HoverHandler { id: omarchyClockHover }
+    }
+
     MouseArea {
         id: centerClockArea
+        visible: !omarchyClock.visible
         anchors.centerIn: parent
         implicitWidth: centerClockText.implicitWidth + Math.round(16 * root.scaleRatio)
         implicitHeight: root.itemHeight
@@ -415,19 +429,31 @@ Item {
     // Omarchy's indicators group, just before the clock (its "centerBegin" section)
     OmarchyIndicators {
         id: omarchyIndicators
-        anchors.right: centerClockArea.left
+        anchors.right: omarchyClock.visible ? omarchyClock.left : centerClockArea.left
         anchors.verticalCenter: parent.verticalCenter
         foreground: root.dynamicFg
         urgent: root.omarchyColors.urgent
         itemHeight: root.itemHeight
         fontSize: root.fontSizeRegular
-        revealHeld: centerClockArea.containsMouse
+        revealHeld: centerClockArea.containsMouse || omarchyClockHover.hovered
     }
 
     OmarchyPluginSlot {
         section: "center"
         anchors.right: omarchyIndicators.left
         anchors.rightMargin: 6
+        anchors.verticalCenter: parent.verticalCenter
+        foreground: root.dynamicFg
+        background: root.dynamicBg
+        urgent: root.omarchyColors.urgent
+        barSize: root.itemHeight
+    }
+
+    // Omarchy's "centerEnd" section: plugins right after the clock
+    OmarchyPluginSlot {
+        section: "centerEnd"
+        anchors.left: omarchyClock.visible ? omarchyClock.right : centerClockArea.right
+        anchors.leftMargin: 6
         anchors.verticalCenter: parent.verticalCenter
         foreground: root.dynamicFg
         background: root.dynamicBg

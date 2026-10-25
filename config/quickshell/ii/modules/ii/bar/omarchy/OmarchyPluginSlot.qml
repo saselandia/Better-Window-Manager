@@ -49,7 +49,8 @@ Row {
                 barSize: root.barSize
                 layoutConfig: OmarchyPlugins.barConfig
 
-                _run: command => Quickshell.execDetached(["sh", "-c", command])
+                // Omarchy commands the plugins run (omarchy-launch-*) come from BWM's stand-ins
+                _run: command => Quickshell.execDetached(["sh", "-c", `PATH="$HOME/.config/hypr/scripts/omarchy-shims:$PATH"; ${command}`])
                 _moduleWidgets: id => (loader.item ? [loader.item] : [])
                 _requestPopout: owner => {
                     api.activePopout = owner;

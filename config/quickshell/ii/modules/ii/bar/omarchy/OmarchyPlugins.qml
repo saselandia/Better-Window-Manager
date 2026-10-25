@@ -51,9 +51,21 @@ Singleton {
     function pluginById(id) {
         return root.plugins.find(p => p.id === id) ?? null;
     }
-    // Enabled bar widgets of one section ("left", "center", "right"), in layout order
+    // Layout entries plus the preinstalled plugins (quickshell/ii/omarchy-plugins) that the user
+    // has neither placed nor turned off: those go to their default section.
+    function effectiveEntries() {
+        const placed = root.layout.bar ?? [];
+        const disabled = root.layout.disabled ?? [];
+        const extra = root.plugins.filter(p => p.builtin && p.barWidget && !disabled.includes(p.id) && !placed.some(e => e.id === p.id))
+            .map(p => ({ id: p.id, section: p.defaultSection, settings: {} }));
+        return placed.concat(extra);
+    }
+    function isEnabled(id) {
+        return root.effectiveEntries().some(e => e.id === id);
+    }
+    // Enabled bar widgets of one section ("left", "center", "right", "clock"), in layout order
     function entriesFor(section) {
-        return (root.layout.bar ?? []).filter(e => e.section === section).map(e => {
+        return root.effectiveEntries().filter(e => e.section === section).map(e => {
             const p = root.pluginById(e.id);
             if (!p || !p.barWidget)
                 return null;
@@ -65,8 +77,8 @@ Singleton {
         }).filter(e => e !== null);
     }
     function sectionsLayout() {
-        const out = { left: [], center: [], right: [] };
-        for (const e of (root.layout.bar ?? []))
+        const out = { left: [], center: [], centerEnd: [], right: [] };
+        for (const e of root.effectiveEntries())
             (out[e.section] ?? out.right).push({ id: e.id });
         return out;
     }

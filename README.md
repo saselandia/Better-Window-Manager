@@ -171,15 +171,14 @@ The boot splash is opt-in: it rebuilds the initramfs with dracut (keeping the sa
 
 ### 5. Omarchy bar plugins (Retro theme)
 
-The Retro bar runs **Omarchy shell plugins** unchanged: Omarchy's `qs.Commons` / `qs.Ui` libraries (MIT) are vendored in `config/quickshell/ii/Commons` and `Ui`, and read BWM's Omarchy palette. Install them like `omarchy plugin add`:
+The Retro bar runs **Omarchy shell plugins** unchanged: Omarchy's `qs.Commons` / `qs.Ui` libraries (MIT) are vendored in `config/quickshell/ii/Commons` and `Ui`, and read BWM's Omarchy palette. These come **preinstalled and enabled** (`config/quickshell/ii/omarchy-plugins`, all MIT): Omarchy's clock with its calendar dropdown, AI usage (`ai-usagebar`, its binary is built by `install.sh` with cargo), OmaStats, media controls with album art and active window. Turn each one off in **Settings → Bar** (Retro). More plugins, like `omarchy plugin add`:
 
 ```bash
-~/.config/hypr/scripts/bwm-plugin.sh defaults        # AI usage, OmaStats, media + album art, active window
-~/.config/hypr/scripts/bwm-plugin.sh add https://github.com/<user>/<plugin>.git [--section left|center|right]
-~/.config/hypr/scripts/bwm-plugin.sh list | update | disable <id> | remove <id>
+~/.config/hypr/scripts/bwm-plugin.sh add https://github.com/<user>/<plugin>.git [--section left|center|centerEnd|right]
+~/.config/hypr/scripts/bwm-plugin.sh list | update | enable <id> | disable <id> | remove <id> | build
 ```
 
-Plugins are unsandboxed code running inside the bar (as in Omarchy): review them before installing.
+Plugins are unsandboxed code running inside the bar (as in Omarchy): review the ones you add.
 
 ---
 

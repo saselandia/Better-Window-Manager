@@ -1,0 +1,65 @@
+# Shared CLI: gem install native-packages --version 0.10.0
+---
+schema: 1
+tool:
+  version: 0.10.0
+  nfpm: 2.47.0
+nfpm:
+  name: omastats-sampler
+  maintainer: Carmine Paolino <carmine@paolino.me>
+  homepage: https://github.com/crmne/omastats
+  description: Native Linux system sampler for OmaStats
+  license: MIT
+  contents:
+  - src: "@PAYLOAD@/omastats-sampler-v@VERSION@-@TARGET@/omastats-sampler"
+    dst: "/usr/bin/omastats-sampler"
+    file_info:
+      mode: 493
+  - src: "@PAYLOAD@/omastats-sampler-v@VERSION@-@TARGET@/LICENSE"
+    dst: "/usr/share/licenses/omastats-sampler/LICENSE"
+    file_info:
+      mode: 420
+  - src: "@PAYLOAD@/omastats-sampler-v@VERSION@-@TARGET@/README.md"
+    dst: "/usr/share/doc/omastats-sampler/README.md"
+    file_info:
+      mode: 420
+  overrides:
+    deb:
+      depends:
+      - libc6 (>= 2.39)
+      - libgcc-s1
+    rpm:
+      depends:
+      - glibc >= 2.39
+      - libgcc
+  rpm:
+    buildhost: github-actions
+targets:
+  linux-amd64:
+    platform: linux
+    arch: amd64
+    libc: glibc
+    compiler_target: x86_64-unknown-linux-gnu
+    formats:
+    - deb
+    - rpm
+    input:
+      local: dist/omastats-sampler-v@VERSION@-x86_64-unknown-linux-gnu.tar.gz
+      release_asset: omastats-sampler-v@VERSION@-x86_64-unknown-linux-gnu.tar.gz
+  linux-arm64:
+    platform: linux
+    arch: arm64
+    libc: glibc
+    compiler_target: aarch64-unknown-linux-gnu
+    formats:
+    - deb
+    - rpm
+    input:
+      local: dist/omastats-sampler-v@VERSION@-aarch64-unknown-linux-gnu.tar.gz
+      release_asset: omastats-sampler-v@VERSION@-aarch64-unknown-linux-gnu.tar.gz
+release:
+  repository: crmne/omastats
+  checksums: checksums.txt
+templates: {}
+repositories: {}
+version_file: sampler/Cargo.toml
