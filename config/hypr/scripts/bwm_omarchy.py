@@ -418,6 +418,8 @@ def apply_retro_apps(palette: dict, wallpaper: str = ""):
     colors = build_colors(palette)
     write_colors_toml(colors)
 
+    apply_task_manager(True)
+
     for step in (apply_shell_toml, apply_kitty, apply_btop, apply_vscodium, apply_spotify):
         try:
             step(colors)
@@ -462,8 +464,21 @@ def run_hooks(theme: str):
         subprocess.Popen([str(script), theme], env=env, stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL, start_new_session=True)
 
+TASK_MANAGER_DESKTOP = HOME / ".local" / "share" / "applications" / "bwm-task-manager.desktop"
+
+def apply_task_manager(present: bool):
+    """Retro's "Task Manager" / "Gestor de tareas" app: btop in a terminal, as in Omarchy
+    (assets: omarchy/applications/bwm-task-manager.desktop, translated names and keywords)."""
+    if present:
+        tpl = (ASSETS_DIR / "applications" / "bwm-task-manager.desktop").read_text(encoding="utf-8")
+        TASK_MANAGER_DESKTOP.parent.mkdir(parents=True, exist_ok=True)
+        _write_if_changed(TASK_MANAGER_DESKTOP, tpl.replace("@HOME@", str(HOME)))
+    else:
+        TASK_MANAGER_DESKTOP.unlink(missing_ok=True)
+
 def restore_non_retro():
     """Leaving Retro: give back what the other themes do not regenerate by themselves."""
+    apply_task_manager(False)
     set_btop_theme("matugen")
     restore_vscodium()
     try:

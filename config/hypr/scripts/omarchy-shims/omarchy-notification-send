@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# BWM stand-in for Omarchy's notification helper: headline and optional description.
+exec notify-send -a Omarchy "${1:-}" "${2:-}"

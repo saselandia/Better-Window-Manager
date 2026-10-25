@@ -15,8 +15,9 @@
 #   bwm-plugin.sh build              # compila el binario de ai-usagebar (cargo)
 #
 # Preinstalados (quickshell/ii/omarchy-plugins, activos salvo que se desactiven en Ajustes →
-# Barra): el reloj con calendario de Omarchy y los plugins más usados de Omarchy que no
-# necesitan cuentas: ai-usagebar, omastats, omarchy-mpris y omarchy-active-window.
+# Barra): los plugins más usados de Omarchy que no necesitan cuentas: ai-usagebar, omastats,
+# omarchy-mpris y omarchy-active-window. El reloj con calendario de Omarchy no es un plugin:
+# forma parte de la barra Retro (quickshell/ii/modules/ii/bar/omarchy/clock).
 #
 # Como en Omarchy, un plugin es código sin aislar que corre dentro de Quickshell: revisa
 # lo que instalas. No se ejecutan hooks de instalación ni se pide sudo.
@@ -59,7 +60,6 @@ plugin_dir() {    # id -> carpeta (instalados por el usuario o preinstalados)
 # Secciones de Omarchy (left, centerBegin, center, centerEnd, tray, right) -> las de BWM
 section_for() {
   case "$1" in
-    clock) echo clock ;;
     left) echo left ;;
     center|centerBegin) echo center ;;
     centerEnd|after-clock) echo centerEnd ;;
@@ -75,8 +75,8 @@ enable_plugin() { # id [section]
     echo "$id no es un widget de barra; sus servicios se cargan igualmente."
   fi
   if [[ -z $section ]]; then
-    if [[ $id == omarchy.clock ]]; then section=clock
-    elif [[ $id == crmne.omastats ]]; then section=centerEnd   # junto al reloj: cabe sin pisarlo
+    # Como en el shell.json de Omarchy: Elsewhen y el tiempo justo después del reloj
+    if [[ $id == omarchy.elsewhen || $id == omarchy.weather ]]; then section=centerEnd
     else section=$(section_for "$(jq -r '.barWidget.defaultSection // "right"' "$manifest")"); fi
   fi
   jq --arg id "$id" --arg s "$section" --argjson d "$(jq '.barWidget.defaults // {}' "$manifest")" '
@@ -155,7 +155,22 @@ cmd_list() {
 }
 
 # JSON para modules/ii/bar/omarchy/OmarchyPlugins.qml: plugins instalados y activos
+# Las órdenes omarchy-* que los plugins lanzan por su cuenta (sin bar.run) tienen que estar en el
+# PATH de Quickshell: enlaces en ~/.local/bin a hypr/scripts/omarchy-shims, sin pisar nada propio
+link_shims() {
+  local shim_dir="$HOME/.config/hypr/scripts/omarchy-shims" bin="$HOME/.local/bin" f name
+  [[ -d $shim_dir ]] || return 0
+  mkdir -p "$bin"
+  for f in "$shim_dir"/omarchy-*; do
+    name=${f##*/}
+    if [[ ! -e $bin/$name || ( -L $bin/$name && $(readlink "$bin/$name") == "$f" ) ]]; then
+      ln -sfn "$f" "$bin/$name"
+    fi
+  done
+}
+
 cmd_catalog() {
+  link_shims
   local d first=true builtin
   printf '{"layout": %s, "plugins": [' "$(jq -c '.' "$LAYOUT")"
   for d in "$BUILTIN_DIR"/*/ "$PLUGINS_DIR"/*/; do
@@ -165,7 +180,7 @@ cmd_catalog() {
     builtin=false; [[ $d == "$BUILTIN_DIR"/* ]] && builtin=true
     jq -c --arg dir "${d%/}" --argjson builtin "$builtin" '{
       builtin: $builtin,
-      defaultSection: (if .id == "omarchy.clock" then "clock" elif .id == "crmne.omastats" then "centerEnd" else (.barWidget.defaultSection // "right" | if . == "left" then "left" elif (. == "center" or . == "centerBegin") then "center" elif . == "centerEnd" then "centerEnd" else "right" end) end),
+      defaultSection: (if (.id == "omarchy.elsewhen" or .id == "omarchy.weather") then "centerEnd" else (.barWidget.defaultSection // "right" | if . == "left" then "left" elif (. == "center" or . == "centerBegin") then "center" elif . == "centerEnd" then "centerEnd" else "right" end) end),
       description: (.description // ""),
       id, name, version, kinds: (.kinds // []), dir: $dir,
       keepLoaded: (.keepLoaded // false),

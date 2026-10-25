@@ -12,6 +12,9 @@ Row {
     id: root
 
     required property string section
+    // Built-in Omarchy widgets of the Retro bar (the clock) are given here instead of coming
+    // from the plugin catalog: [{ id, source, settings }]
+    property var fixedEntries: null
     property color foreground: "white"
     property color background: "black"
     property color urgent: "red"
@@ -23,11 +26,15 @@ Row {
 
     Repeater {
         id: repeater
-        model: OmarchyPlugins.entriesFor(root.section)
+        model: root.fixedEntries ?? OmarchyPlugins.entriesFor(root.section)
 
         delegate: Item {
             id: slot
             required property var modelData
+            // What omarchy-shell's bar slots expose: plugins such as omarchy-mpris measure the
+            // free space between slots (BarGeometry.js) through these two
+            readonly property var activeItem: loader.item
+            readonly property string region: root.section === "left" ? "left" : (root.section === "right" ? "right" : "center")
 
             implicitWidth: loader.item ? loader.item.implicitWidth : 0
             implicitHeight: root.barSize

@@ -171,7 +171,7 @@ The boot splash is opt-in: it rebuilds the initramfs with dracut (keeping the sa
 
 ### 5. Omarchy bar plugins (Retro theme)
 
-The Retro bar runs **Omarchy shell plugins** unchanged: Omarchy's `qs.Commons` / `qs.Ui` libraries (MIT) are vendored in `config/quickshell/ii/Commons` and `Ui`, and read BWM's Omarchy palette. These come **preinstalled and enabled** (`config/quickshell/ii/omarchy-plugins`, all MIT): Omarchy's clock with its calendar dropdown, AI usage (`ai-usagebar`, its binary is built by `install.sh` with cargo), OmaStats, media controls with album art and active window. Turn each one off in **Settings → Bar** (Retro). More plugins, like `omarchy plugin add`:
+The Retro bar runs **Omarchy shell plugins** unchanged: Omarchy's `qs.Commons` / `qs.Ui` libraries (MIT) are vendored in `config/quickshell/ii/Commons` and `Ui`, and read BWM's Omarchy palette. Omarchy's clock and calendar dropdown are part of the Retro bar. These plugins come **preinstalled and enabled** (`config/quickshell/ii/omarchy-plugins`, all MIT): Omarchy's weather and Elsewhen (world clocks) after the clock, AI usage (`ai-usagebar`, its binary is built by `install.sh` with cargo), OmaStats, media controls with album art and active window. Turn each one off in **Settings → Bar** (Retro). More plugins, like `omarchy plugin add`:
 
 ```bash
 ~/.config/hypr/scripts/bwm-plugin.sh add https://github.com/<user>/<plugin>.git [--section left|center|centerEnd|right]

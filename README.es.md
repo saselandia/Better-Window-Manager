@@ -171,7 +171,7 @@ La pantalla de arranque es opcional: rehace el initramfs con dracut (con los mis
 
 ### 5. Plugins de la barra de Omarchy (tema Retro)
 
-La barra Retro ejecuta **plugins del shell de Omarchy** sin cambios: las librerías `qs.Commons` / `qs.Ui` de Omarchy (MIT) van incluidas en `config/quickshell/ii/Commons` y `Ui` y leen la paleta Omarchy de BWM. Vienen **preinstalados y activos** (`config/quickshell/ii/omarchy-plugins`, todos MIT): el reloj de Omarchy con su calendario desplegable, uso de IA (`ai-usagebar`, cuyo programa compila `install.sh` con cargo), OmaStats, controles multimedia con carátula del disco y ventana activa. Cada uno se desactiva en **Ajustes → Barra** (Retro). Más plugins, como con `omarchy plugin add`:
+La barra Retro ejecuta **plugins del shell de Omarchy** sin cambios: las librerías `qs.Commons` / `qs.Ui` de Omarchy (MIT) van incluidas en `config/quickshell/ii/Commons` y `Ui` y leen la paleta Omarchy de BWM. El reloj de Omarchy con su calendario desplegable forma parte de la barra Retro. Estos plugins vienen **preinstalados y activos** (`config/quickshell/ii/omarchy-plugins`, todos MIT): el tiempo y Elsewhen (relojes del mundo) de Omarchy tras el reloj, uso de IA (`ai-usagebar`, cuyo programa compila `install.sh` con cargo), OmaStats, controles multimedia con carátula del disco y ventana activa. Cada uno se desactiva en **Ajustes → Barra** (Retro). Más plugins, como con `omarchy plugin add`:
 
 ```bash
 ~/.config/hypr/scripts/bwm-plugin.sh add https://github.com/<usuario>/<plugin>.git [--section left|center|centerEnd|right]

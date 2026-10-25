@@ -55,7 +55,7 @@ ContentPage {
             model: omarchyPlugins
             delegate: ConfigSwitch {
                 required property var modelData
-                buttonIcon: modelData.id === "omarchy.clock" ? "calendar_month" : "widgets"
+                buttonIcon: "widgets"
                 text: modelData.name + (modelData.builtin ? "" : "  ·  " + Translation.tr("installed"))
                 checked: pluginEnabled(modelData)
                 onClicked: {

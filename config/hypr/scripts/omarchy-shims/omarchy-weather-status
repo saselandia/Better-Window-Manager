@@ -1,0 +1,27 @@
+#!/bin/bash
+# From Omarchy (https://github.com/basecamp/omarchy, bin/omarchy-weather-status), MIT. Copied for BWM's Retro bar.
+
+# omarchy:summary=Returns a formatted weather status string with temperature and wind speed.
+
+place=$(omarchy-weather-location 2>/dev/null)
+
+if [[ -z $place ]]; then
+  echo "Weather unavailable"
+  exit 1
+fi
+
+query=$(jq -rn --arg place "$place" '$place | @uri')
+# BWM: metric unless BWM's weather settings ask for US units (bar.weather.useUSCS)
+units="&m"; [[ $(jq -r '.bar.weather.useUSCS // false' "$HOME/.config/illogical-impulse/config.json" 2>/dev/null) == true ]] && units="&u"
+weather=$(curl -fsS --max-time 4 "https://wttr.in/${query}?format=%t|%w${units}" 2>/dev/null | tr -d '\n')
+
+if [[ -z $weather ]]; then
+  echo "Weather unavailable"
+  exit 1
+fi
+
+IFS='|' read -r temperature wind <<< "$weather"
+place=${place^}
+temperature=${temperature#+}
+
+echo "$place  ·  Temp $temperature  ·  Wind $wind"

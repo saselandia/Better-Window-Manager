@@ -379,11 +379,17 @@ Item {
     // -----------------------------------------------------------------
     // Center Section: Monospace Date & Time (Omarchy Clean Format)
     // -----------------------------------------------------------------
-    // Omarchy's own clock (omarchy-plugins/omarchy-clock): its formats and calendar dropdown.
-    // Turned off in Settings → Bar, BWM's clock below takes its place.
+    // Omarchy's clock (bar/omarchy/clock, from Omarchy's omarchy.clock, MIT): its formats
+    // (right click cycles them) and its calendar dropdown on click. Part of the Retro bar, not
+    // a plugin; BWM's clock below is only the fallback if it fails to load.
     OmarchyPluginSlot {
         id: omarchyClock
         section: "clock"
+        fixedEntries: [{
+            id: "omarchy.clock",
+            source: Qt.resolvedUrl("omarchy/clock/BarWidget.qml"),
+            settings: OmarchyPlugins.builtinSettings("omarchy.clock")
+        }]
         anchors.centerIn: parent
         foreground: root.dynamicFg
         background: root.dynamicBg
@@ -449,8 +455,20 @@ Item {
         barSize: root.itemHeight
     }
 
+    // Stand-in slot for BWM's own status icons on the right: plugins that size themselves from
+    // the free bar space (omarchy-mpris, BarGeometry.js) count it like another widget there.
+    Item {
+        readonly property var activeItem: this
+        readonly property string region: "right"
+        x: rightStatusRow.x + rightPlugins.width
+        y: 0
+        width: Math.max(0, rightStatusRow.width - rightPlugins.width)
+        height: 1
+    }
+
     // Omarchy's "centerEnd" section: plugins right after the clock
     OmarchyPluginSlot {
+        id: centerEndPlugins
         section: "centerEnd"
         anchors.left: omarchyClock.visible ? omarchyClock.right : centerClockArea.right
         anchors.leftMargin: 6
@@ -475,7 +493,22 @@ Item {
         spacing: Math.max(4, Math.round(6 * root.scaleRatio))
 
         OmarchyPluginSlot {
+            id: rightPlugins
             section: "right"
+            // Never over the clock or the widgets after it: whatever does not fit is clipped
+            // (BWM's own icons are summed directly so this does not depend on its own width)
+            readonly property real othersWidth: {
+                let w = 0;
+                for (const c of rightStatusRow.children)
+                    if (c !== rightPlugins && c.visible)
+                        w += c.implicitWidth + rightStatusRow.spacing;
+                return w;
+            }
+            readonly property real centerEnd: centerEndPlugins.visible ? centerEndPlugins.x + centerEndPlugins.width
+                : (omarchyClock.visible ? omarchyClock.x + omarchyClock.width : centerClockArea.x + centerClockArea.width)
+            readonly property real freeSpace: root.width - 10 - othersWidth - centerEnd - 12
+            Layout.maximumWidth: Math.max(0, freeSpace)
+            clip: true
             Layout.alignment: Qt.AlignVCenter
             foreground: root.dynamicFg
             background: root.dynamicBg

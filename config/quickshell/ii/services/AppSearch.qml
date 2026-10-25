@@ -53,6 +53,13 @@ Singleton {
         entry: a
     }))
 
+    // Generic name + keywords (all languages the .desktop lists), searched after the names, so
+    // e.g. "gestor de tareas" finds the Retro task manager in an English session too
+    readonly property var preppedKeywords: list.map(a => ({
+        name: Fuzzy.prepare(`${a.genericName ?? ""} ${(a.keywords ?? []).join(" ")} `),
+        entry: a
+    }))
+
     readonly property var preppedIcons: list.map(a => ({
         name: Fuzzy.prepare(`${a.icon} `),
         entry: a
@@ -69,12 +76,19 @@ Singleton {
                 .map(item => item.entry)
         }
 
-        return Fuzzy.go(search, preppedNames, {
+        const byName = Fuzzy.go(search, preppedNames, {
             all: true,
             key: "name"
         }).map(r => {
             return r.obj.entry
         });
+        if (search.trim().length < 3)
+            return byName;
+        const byKeyword = Fuzzy.go(search, preppedKeywords, {
+            key: "name",
+            threshold: 0.4
+        }).map(r => r.obj.entry).filter(e => !byName.includes(e));
+        return byName.concat(byKeyword);
     }
 
     function iconExists(iconName) {

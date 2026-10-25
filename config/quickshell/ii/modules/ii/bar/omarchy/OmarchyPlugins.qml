@@ -40,14 +40,21 @@ Singleton {
     // Changed in place: reassigning `layout` would rebuild every widget (and close the panel
     // the user is using); the reload the file write triggers then finds nothing new.
     function updateEntryInline(moduleName, settings) {
-        for (const entry of (root.layout.bar ?? [])) {
-            if (entry.id === moduleName)
-                entry.settings = JSON.parse(JSON.stringify(settings ?? {}));
-        }
+        const copy = JSON.parse(JSON.stringify(settings ?? {}));
+        const entries = root.layout.bar ?? (root.layout.bar = []);
+        const entry = entries.find(e => e.id === moduleName);
+        if (entry)
+            entry.settings = copy;
+        else // a built-in widget (the clock): kept so its choices survive restarts
+            entries.push({ id: moduleName, section: "builtin", settings: copy });
         layoutFile.setText(JSON.stringify(root.layout, null, 2) + "\n");
     }
 
     // ---- what the Retro bar asks ----------------------------------------------------------
+    // Saved settings of a built-in widget (see updateEntryInline)
+    function builtinSettings(id) {
+        return (root.layout.bar ?? []).find(e => e.id === id)?.settings ?? {};
+    }
     function pluginById(id) {
         return root.plugins.find(p => p.id === id) ?? null;
     }

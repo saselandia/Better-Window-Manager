@@ -1,0 +1,26 @@
+[Desktop Entry]
+# Retro theme only (bwm_omarchy.py installs it in ~/.local/share/applications when entering Retro
+# and removes it when leaving): the task manager is btop, as in Omarchy.
+Type=Application
+Name=Task Manager
+Name[es]=Gestor de tareas
+Name[ca]=Gestor de tasques
+Name[de]=Task-Manager
+Name[fr]=Gestionnaire des tâches
+Name[it]=Gestione attività
+Name[pt]=Gestor de tarefas
+Name[pt_BR]=Gerenciador de tarefas
+Name[nl]=Taakbeheer
+Name[pl]=Menedżer zadań
+Name[ru]=Диспетчер задач
+GenericName=System Monitor
+GenericName[es]=Monitor del sistema
+Comment=Processes, CPU, memory, disks and network (btop)
+Comment[es]=Procesos, CPU, memoria, discos y red (btop)
+Keywords=task manager;gestor de tareas;administrador de tareas;administrador de procesos;monitor del sistema;task;manager;taskmgr;process;processes;monitor;system;cpu;memory;btop;top;htop;gestor;tareas;procesos;sistema;memoria;
+Keywords[es]=gestor de tareas;administrador de tareas;monitor del sistema;gestor;tareas;administrador;procesos;monitor;sistema;cpu;memoria;btop;task;manager;
+Icon=utilities-system-monitor
+Exec=@HOME@/.config/hypr/scripts/omarchy-shims/omarchy-launch-or-focus-tui btop
+Terminal=false
+Categories=System;Monitor;ConsoleOnly;
+StartupWMClass=org.omarchy.btop
