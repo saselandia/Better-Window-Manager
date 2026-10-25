@@ -1,0 +1,24 @@
+{
+  "desc:LG Electronics LG ULTRAFINE 405NTVS2J655": {
+    "name": "DP-1",
+    "x": 1920,
+    "y": 0,
+    "width": 3840,
+    "height": 2160,
+    "refreshRate": 60.0,
+    "scale": 1.0,
+    "transform": 0,
+    "disabled": false
+  },
+  "desc:HP Inc. HP X24ih 1CR1420TD4": {
+    "name": "DP-2",
+    "x": 0,
+    "y": 1080,
+    "width": 1920,
+    "height": 1080,
+    "refreshRate": 144.0,
+    "scale": 1.0,
+    "transform": 0,
+    "disabled": false
+  }
+}
