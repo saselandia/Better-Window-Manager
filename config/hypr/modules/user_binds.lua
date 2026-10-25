@@ -79,6 +79,7 @@ hl.bind("ALT + 0", hl.dsp.focus({ workspace = 10 }), { description = "Espacios d
 hl.bind("ALT + SHIFT + 0", hl.dsp.window.move({ workspace = 10 }), { description = "Espacios de trabajo: Mover ventana al espacio de trabajo 10" })
 -- [Lanzadores]
 hl.bind("ALT + T", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/theme-picker.sh"), { description = "Lanzadores: Selector de temas (BWM)" })
+hl.bind("ALT + R", hl.dsp.exec_cmd("omarchy-theme-switcher"), { description = "Lanzadores: Galería 3D de temas Retro (Omarchy)" })
 -- [Ventanas]
 hl.bind((is_plasma and "CTRL + left" or "SUPER + left"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py left"), { description = "Ventanas: Ajustar ventana a la izquierda (Quick Tile Left)" })
 hl.bind((is_plasma and "CTRL + right" or "SUPER + right"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py right"), { description = "Ventanas: Ajustar ventana a la derecha (Quick Tile Right)" })
@@ -88,6 +89,9 @@ hl.bind((is_plasma and "CTRL + ALT + left" or "SUPER + ALT + left"), hl.dsp.exec
 hl.bind((is_plasma and "CTRL + ALT + right" or "SUPER + ALT + right"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top-right"), { description = "Ventanas: Ajustar esquina superior derecha (Quick Tile)" })
 hl.bind((is_plasma and "CTRL + ALT + down" or "SUPER + ALT + down"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-right"), { description = "Ventanas: Ajustar esquina inferior derecha (Quick Tile)" })
 hl.bind((is_plasma and "CTRL + ALT + up" or "SUPER + ALT + up"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-left"), { description = "Ventanas: Ajustar esquina inferior izquierda (Quick Tile)" })
+-- [Lanzadores]
+hl.bind("SUPER + V", hl.dsp.exec_cmd("omarchy-shell clipboard toggle"), { description = "Lanzadores: Historial del portapapeles" })
+hl.bind("SUPER + period", hl.dsp.exec_cmd("omarchy-shell emojis toggle"), { description = "Lanzadores: Selector de emojis" })
 
 -- Helper binds: allow Super+Alt for corner snaps in Plasma as well
 if is_plasma then

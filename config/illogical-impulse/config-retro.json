@@ -50,7 +50,9 @@
         "harmony": 0.6,
         "termFgBoost": 0.35
       }
-    }
+    },
+    "retroThemeMode": "dynamic",
+    "retroThemeName": "dynamic"
   },
   "apps": {
     "bluetooth": "blueman-manager",

@@ -9,6 +9,7 @@
 import "modules/common"
 import "services"
 import "panelFamilies"
+import qs.modules.ii.bar.omarchy
 
 import QtQuick
 import QtQuick.Window
@@ -30,6 +31,7 @@ ShellRoot {
         Cliphist.refresh()
         Wallpapers.load()
         Updates.load()
+        OmarchyPlugins.reload()
     }
 
 

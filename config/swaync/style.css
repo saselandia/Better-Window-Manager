@@ -1,9 +1,9 @@
-@define-color m3_primary #a859f8;
-@define-color m3_on_primary #16101c;
-@define-color m3_primary_container #302140;
-@define-color m3_surface #16101c;
-@define-color m3_on_surface #d1c9d9;
-@define-color m3_outline #574965;
+@define-color m3_primary #59c7f8;
+@define-color m3_on_primary #10181c;
+@define-color m3_primary_container #213640;
+@define-color m3_surface #10181c;
+@define-color m3_on_surface #c9d4d9;
+@define-color m3_outline #495c65;
 
 * {
     font-family: 'JetBrainsMono Nerd Font', 'Noto Sans', sans-serif;

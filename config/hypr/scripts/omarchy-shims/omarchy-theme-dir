@@ -1,0 +1,17 @@
+#!/bin/bash
+# omarchy-theme-dir for BWM Retro mode
+THEME="${1:-}"
+if [[ -z "$THEME" ]]; then
+  THEME="$(cat "$HOME/.local/state/omarchy/current/theme.name" 2>/dev/null || echo "dynamic")"
+fi
+
+if [[ "$THEME" == "dynamic" ]]; then
+  echo "$HOME/.local/state/bwm/omarchy"
+else
+  THEME_DIR="$HOME/.config/hypr/omarchy/themes/$THEME"
+  if [[ -d "$THEME_DIR" ]]; then
+    echo "$THEME_DIR"
+  else
+    echo "$HOME/.local/state/bwm/omarchy"
+  fi
+fi

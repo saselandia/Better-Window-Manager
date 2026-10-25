@@ -1047,6 +1047,23 @@
     "is_modified": false
   },
   {
+    "id": "omarchy_theme_carousel",
+    "category": "Lanzadores",
+    "description": "Galería 3D de temas Retro (Omarchy)",
+    "mods": [
+      "ALT"
+    ],
+    "key": "R",
+    "action_type": "exec",
+    "exec": "omarchy-theme-switcher",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "is_modified": false
+  },
+  {
     "id": "custom_1792430113_59",
     "category": "Ventanas",
     "description": "Ajustar ventana a la izquierda (Quick Tile Left)",
@@ -1179,6 +1196,40 @@
     "key": "up",
     "action_type": "exec",
     "exec": "/home/sasel/.config/hypr/scripts/quick-tile.py bottom-left",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "is_modified": false
+  },
+  {
+    "id": "custom_1792910399_68",
+    "category": "Lanzadores",
+    "description": "Historial del portapapeles",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "V",
+    "action_type": "exec",
+    "exec": "omarchy-shell clipboard toggle",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "is_modified": false
+  },
+  {
+    "id": "custom_1792910402_69",
+    "category": "Lanzadores",
+    "description": "Selector de emojis",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "period",
+    "action_type": "exec",
+    "exec": "omarchy-shell emojis toggle",
     "dispatcher": null,
     "dispatcher_arg": null,
     "options": {},

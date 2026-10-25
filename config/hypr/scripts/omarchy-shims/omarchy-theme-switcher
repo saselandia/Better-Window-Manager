@@ -1,0 +1,54 @@
+#!/bin/bash
+# Omarchy theme switcher for BWM:
+# With --print-rows: refreshes previews cache and prints TSV rows for ImagePicker
+# Without args: opens the ImagePicker overlay in Quickshell
+
+print_rows=false
+if [[ "${1:-}" == "--print-rows" ]]; then
+  print_rows=true
+  shift
+fi
+
+USER_THEMES_PATH="$HOME/.config/omarchy/themes"
+BWM_THEMES_PATH="$HOME/.config/hypr/omarchy/themes"
+CACHE_PATH="${XDG_CACHE_HOME:-$HOME/.cache}/omarchy/theme-selector"
+PREVIEW_DIR="$CACHE_PATH/previews"
+
+mkdir -p "$PREVIEW_DIR"
+
+# 1. Dynamic theme entry pointing to current wallpaper
+WP="$HOME/.cache/current_wallpaper"
+if [[ -f "$WP" && -s "$WP" ]]; then
+  WP_PATH="$(cat "$WP" | tr -d '\n')"
+  if [[ -f "$WP_PATH" ]]; then
+    ln -sf "$WP_PATH" "$PREVIEW_DIR/dynamic.png" 2>/dev/null || true
+  fi
+fi
+
+# 2. Curated theme entries
+for dir in "$USER_THEMES_PATH" "$BWM_THEMES_PATH"; do
+  [[ -d "$dir" ]] || continue
+  for t in "$dir"/*; do
+    [[ -d "$t" ]] || continue
+    tname="$(basename "$t")"
+    if [[ -f "$t/preview.png" ]]; then
+      ln -sf "$t/preview.png" "$PREVIEW_DIR/$tname.png" 2>/dev/null || true
+    fi
+  done
+done
+
+if [[ "$print_rows" == true ]]; then
+  # Print rows for ImagePicker: dynamic first, then alphabetically
+  if [[ -e "$PREVIEW_DIR/dynamic.png" ]]; then
+    printf '%s\t%s\n' "$PREVIEW_DIR/dynamic.png" "$PREVIEW_DIR/dynamic.png"
+  fi
+  for p in "$PREVIEW_DIR"/*.png; do
+    [[ -e "$p" ]] || continue
+    [[ "$(basename "$p")" == "dynamic.png" ]] && continue
+    printf '%s\t%s\n' "$p" "$p"
+  done
+  exit 0
+fi
+
+# Bare invocation: summon the 3D ImagePicker overlay
+exec omarchy-shell shell summon omarchy.image-picker '{"source":"themes"}'

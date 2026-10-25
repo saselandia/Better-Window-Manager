@@ -36,20 +36,36 @@ Singleton {
     }
     function summon(id, payloadJson) {
         const strId = String(id || "");
-        if (strId === "omarchy.speedtest") {
+        const normId = strId.startsWith("omarchy.") ? strId : ("omarchy." + strId);
+        if (normId === "omarchy.speedtest") {
             if (!speedtestLoader.item) speedtestLoader.active = true;
             if (speedtestLoader.item) speedtestLoader.item.open(payloadJson);
             else speedtestLoader.loaded.connect(function() { speedtestLoader.item.open(payloadJson); });
             return true;
-        } else if (strId === "omarchy.disk-speedtest") {
+        } else if (normId === "omarchy.disk-speedtest") {
             if (!diskSpeedtestLoader.item) diskSpeedtestLoader.active = true;
             if (diskSpeedtestLoader.item) diskSpeedtestLoader.item.open(payloadJson);
             else diskSpeedtestLoader.loaded.connect(function() { diskSpeedtestLoader.item.open(payloadJson); });
             return true;
-        } else if (strId === "omarchy.wifiqr") {
+        } else if (normId === "omarchy.wifiqr") {
             if (!wifiqrLoader.item) wifiqrLoader.active = true;
             if (wifiqrLoader.item) wifiqrLoader.item.open(payloadJson);
             else wifiqrLoader.loaded.connect(function() { wifiqrLoader.item.open(payloadJson); });
+            return true;
+        } else if (normId === "omarchy.clipboard") {
+            if (!clipboardLoader.item) clipboardLoader.active = true;
+            if (clipboardLoader.item) clipboardLoader.item.open(payloadJson);
+            else clipboardLoader.loaded.connect(function() { clipboardLoader.item.open(payloadJson); });
+            return true;
+        } else if (normId === "omarchy.emojis") {
+            if (!emojisLoader.item) emojisLoader.active = true;
+            if (emojisLoader.item) emojisLoader.item.open(payloadJson);
+            else emojisLoader.loaded.connect(function() { emojisLoader.item.open(payloadJson); });
+            return true;
+        } else if (normId === "omarchy.image-picker" || normId === "omarchy.image-selector") {
+            if (!imagePickerLoader.item) imagePickerLoader.active = true;
+            if (imagePickerLoader.item) imagePickerLoader.item.open(payloadJson);
+            else imagePickerLoader.loaded.connect(function() { imagePickerLoader.item.open(payloadJson); });
             return true;
         }
         console.info(`[OmarchyPlugins] ${id} is an unknown overlay`);
@@ -58,14 +74,55 @@ Singleton {
 
     function hide(id) {
         const strId = String(id || "");
-        if (strId === "omarchy.speedtest") {
+        const normId = strId.startsWith("omarchy.") ? strId : ("omarchy." + strId);
+        if (normId === "omarchy.speedtest") {
             speedtestLoader.item?.close();
             return true;
-        } else if (strId === "omarchy.disk-speedtest") {
+        } else if (normId === "omarchy.disk-speedtest") {
             diskSpeedtestLoader.item?.close();
             return true;
-        } else if (strId === "omarchy.wifiqr") {
+        } else if (normId === "omarchy.wifiqr") {
             wifiqrLoader.item?.close();
+            return true;
+        } else if (normId === "omarchy.clipboard") {
+            clipboardLoader.item?.close();
+            return true;
+        } else if (normId === "omarchy.emojis") {
+            emojisLoader.item?.close();
+            return true;
+        } else if (normId === "omarchy.image-picker" || normId === "omarchy.image-selector") {
+            imagePickerLoader.item?.close();
+            return true;
+        }
+        return false;
+    }
+
+    function toggle(id, payloadJson) {
+        const strId = String(id || "");
+        const normId = strId.startsWith("omarchy.") ? strId : ("omarchy." + strId);
+        if (normId === "omarchy.speedtest") {
+            if (speedtestLoader.item?.opened) root.hide(normId);
+            else root.summon(normId, payloadJson || "{}");
+            return true;
+        } else if (normId === "omarchy.disk-speedtest") {
+            if (diskSpeedtestLoader.item?.opened) root.hide(normId);
+            else root.summon(normId, payloadJson || "{}");
+            return true;
+        } else if (normId === "omarchy.wifiqr") {
+            if (wifiqrLoader.item?.opened) root.hide(normId);
+            else root.summon(normId, payloadJson || "{}");
+            return true;
+        } else if (normId === "omarchy.clipboard") {
+            if (clipboardLoader.item?.opened) root.hide(normId);
+            else root.summon(normId, payloadJson || "{}");
+            return true;
+        } else if (normId === "omarchy.emojis") {
+            if (emojisLoader.item?.opened) root.hide(normId);
+            else root.summon(normId, payloadJson || "{}");
+            return true;
+        } else if (normId === "omarchy.image-picker" || normId === "omarchy.image-selector") {
+            if (imagePickerLoader.item?.opened) root.hide(normId);
+            else root.summon(normId, payloadJson || "{}");
             return true;
         }
         return false;
@@ -128,6 +185,13 @@ Singleton {
     }
 
     function reload() {
+        if (clipboardLoader.active) {
+            clipboardLoader.active = false;
+            clipboardLoader.active = true;
+        }
+        if (emojisLoader.active) {
+            emojisLoader.active = false;
+        }
         catalogProc.running = false;
         catalogProc.running = true;
     }
@@ -226,51 +290,105 @@ Singleton {
         }
     }
 
+    Loader {
+        id: clipboardLoader
+        active: true
+        source: Qt.resolvedUrl("clipboard/Clipboard.qml")
+        onLoaded: {
+            item.shell = root;
+            item.manifest = { id: "omarchy.clipboard" };
+        }
+    }
+
+    Loader {
+        id: emojisLoader
+        active: false
+        source: Qt.resolvedUrl("emojis/Emojis.qml")
+        onLoaded: {
+            item.shell = root;
+            item.manifest = { id: "omarchy.emojis" };
+        }
+    }
+
+    Loader {
+        id: imagePickerLoader
+        active: false
+        source: Qt.resolvedUrl("image-picker/ImagePicker.qml")
+        onLoaded: {
+            item.shell = root;
+            item.manifest = { id: "omarchy.image-picker" };
+        }
+    }
+
     IpcHandler {
         target: "omarchy.speedtest"
         function open(): void { root.summon("omarchy.speedtest", "{}"); }
         function close(): void { root.hide("omarchy.speedtest"); }
-        function toggle(): void {
-            if (speedtestLoader.item?.opened) root.hide("omarchy.speedtest");
-            else root.summon("omarchy.speedtest", "{}");
-        }
+        function toggle(): void { root.toggle("omarchy.speedtest", "{}"); }
     }
 
     IpcHandler {
         target: "omarchy.disk-speedtest"
         function open(): void { root.summon("omarchy.disk-speedtest", "{}"); }
         function close(): void { root.hide("omarchy.disk-speedtest"); }
-        function toggle(): void {
-            if (diskSpeedtestLoader.item?.opened) root.hide("omarchy.disk-speedtest");
-            else root.summon("omarchy.disk-speedtest", "{}");
-        }
+        function toggle(): void { root.toggle("omarchy.disk-speedtest", "{}"); }
     }
 
     IpcHandler {
         target: "omarchy.wifiqr"
         function open(): void { root.summon("omarchy.wifiqr", "{}"); }
         function close(): void { root.hide("omarchy.wifiqr"); }
-        function toggle(): void {
-            if (wifiqrLoader.item?.opened) root.hide("omarchy.wifiqr");
-            else root.summon("omarchy.wifiqr", "{}");
-        }
+        function toggle(): void { root.toggle("omarchy.wifiqr", "{}"); }
+    }
+
+    IpcHandler {
+        target: "omarchy.clipboard"
+        function open(): void { root.summon("omarchy.clipboard", "{}"); }
+        function close(): void { root.hide("omarchy.clipboard"); }
+        function toggle(): void { root.toggle("omarchy.clipboard", "{}"); }
+    }
+
+    IpcHandler {
+        target: "clipboard"
+        function open(): void { root.summon("omarchy.clipboard", "{}"); }
+        function close(): void { root.hide("omarchy.clipboard"); }
+        function toggle(): void { root.toggle("omarchy.clipboard", "{}"); }
+    }
+
+    IpcHandler {
+        target: "omarchy.emojis"
+        function open(): void { root.summon("omarchy.emojis", "{}"); }
+        function close(): void { root.hide("omarchy.emojis"); }
+        function toggle(): void { root.toggle("omarchy.emojis", "{}"); }
+    }
+
+    IpcHandler {
+        target: "emojis"
+        function open(): void { root.summon("omarchy.emojis", "{}"); }
+        function close(): void { root.hide("omarchy.emojis"); }
+        function toggle(): void { root.toggle("omarchy.emojis", "{}"); }
+    }
+
+    IpcHandler {
+        target: "omarchy.image-picker"
+        function open(): void { root.summon("omarchy.image-picker", "{}"); }
+        function openPayload(payload: string): void { root.summon("omarchy.image-picker", payload); }
+        function close(): void { root.hide("omarchy.image-picker"); }
+        function toggle(): void { root.toggle("omarchy.image-picker", "{}"); }
+    }
+
+    IpcHandler {
+        target: "image-picker"
+        function open(): void { root.summon("omarchy.image-picker", "{}"); }
+        function openPayload(payload: string): void { root.summon("omarchy.image-picker", payload); }
+        function close(): void { root.hide("omarchy.image-picker"); }
+        function toggle(): void { root.toggle("omarchy.image-picker", "{}"); }
     }
 
     IpcHandler {
         target: "shell"
-        function summon(id: string): void { root.summon(id, "{}"); }
-        function toggle(id: string): void {
-            if (id === "omarchy.speedtest") {
-                if (speedtestLoader.item?.opened) root.hide("omarchy.speedtest");
-                else root.summon("omarchy.speedtest", "{}");
-            } else if (id === "omarchy.disk-speedtest") {
-                if (diskSpeedtestLoader.item?.opened) root.hide("omarchy.disk-speedtest");
-                else root.summon("omarchy.disk-speedtest", "{}");
-            } else if (id === "omarchy.wifiqr") {
-                if (wifiqrLoader.item?.opened) root.hide("omarchy.wifiqr");
-                else root.summon("omarchy.wifiqr", "{}");
-            }
-        }
+        function summon(id: string, payload: string): void { root.summon(id, payload ?? "{}"); }
+        function toggle(id: string, payload: string): void { root.toggle(id, payload ?? "{}"); }
         function hide(id: string): void { root.hide(id); }
     }
 

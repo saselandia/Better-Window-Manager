@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# omarchy:summary=Copy text to the clipboard and type or paste it
+# omarchy:group=clipboard
+# omarchy:args=[--shift-insert] [--copy-only] [--history-index <index>|<text>]
+# omarchy:examples=omarchy clipboard paste text "hello" | omarchy clipboard paste text --shift-insert "hello"
+# omarchy:hidden=true
+
+use_shift_insert=false
+copy_only=false
+history_index=""
+text=""
+
+while (( $# > 0 )); do
+  case "$1" in
+    --shift-insert)
+      use_shift_insert=true
+      shift
+      ;;
+    --copy-only)
+      copy_only=true
+      shift
+      ;;
+    --history-index)
+      history_index="${2:-}"
+      shift 2
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+copy_history_entry() {
+  local history_path="$HOME/.local/state/omarchy/clipboard-history.json"
+
+  [[ $history_index =~ ^[0-9]+$ ]] || exit 0
+  jq -e --argjson index "$history_index" '.[$index].type == "text" and (.[$index].text | type == "string")' "$history_path" >/dev/null || exit 0
+  jq -j --argjson index "$history_index" '.[$index].text' "$history_path" | wl-copy --type text/plain
+}
+
+if [[ -n $history_index ]]; then
+  copy_history_entry
+else
+  text=${1:-}
+  [[ -n $text ]] || exit 0
+  printf '%s' "$text" | wl-copy --type text/plain
+fi
+
+if [[ $copy_only == "true" ]]; then
+  exit 0
+fi
+
+# Give Hyprland time to dismiss the overlay and restore focus to the target window
+sleep 0.22
+
+# Detect whether the active window is a terminal or a GUI app
+active_class=$(hyprctl activewindow -j 2>/dev/null | jq -r '.class // empty')
+is_terminal=false
+if [[ "$active_class" =~ ^([kK]itty|[aA]lacritty|[fF]oot|[wW]ezterm|[gG]hostty|[uU]rxvt|[xX]term)$ ]]; then
+  is_terminal=true
+fi
+
+if [[ "$is_terminal" == "true" || ("$use_shift_insert" == "true" && -z "$active_class") ]]; then
+  if command -v wtype >/dev/null 2>&1; then
+    wtype -M shift -k Insert -m shift 2>/dev/null || true
+  elif command -v hyprctl >/dev/null 2>&1; then
+    hyprctl eval 'return hl.dispatch(hl.dsp.send_shortcut({ mods = "SHIFT", key = "Insert" }))' >/dev/null 2>&1 || true
+  fi
+else
+  if command -v wtype >/dev/null 2>&1; then
+    wtype -M ctrl -k v -m ctrl 2>/dev/null || true
+  elif command -v hyprctl >/dev/null 2>&1; then
+    hyprctl eval 'return hl.dispatch(hl.dsp.send_shortcut({ mods = "CTRL", key = "v" }))' >/dev/null 2>&1 || true
+  fi
+fi

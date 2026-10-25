@@ -1,0 +1,11 @@
+#!/bin/bash
+# omarchy-theme-list for BWM Retro mode
+echo "dynamic"
+THEMES_DIR="$HOME/.config/hypr/omarchy/themes"
+if [[ -d "$THEMES_DIR" ]]; then
+  for d in "$THEMES_DIR"/*; do
+    if [[ -d "$d" && -f "$d/colors.toml" ]]; then
+      basename "$d"
+    fi
+  done | sort
+fi

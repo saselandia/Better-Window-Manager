@@ -24,14 +24,19 @@ fi
 
 # `shell summon omarchy.menu <payload>`: the Retro menu, including its select / input modes
 # (omarchy-menu-select); other ids go to the plugin host's overlays
-if [[ "$target" == "shell" && ( "${1:-}" == "summon" || "${1:-}" == "hide" ) ]]; then
+if [[ "$target" == "shell" && ( "${1:-}" == "summon" || "${1:-}" == "hide" || "${1:-}" == "toggle" ) ]]; then
   verb=$1 id=${2:-} payload=${3:-}
   [[ -z $payload ]] && payload='{}'
   if [[ $id == omarchy.menu ]]; then
     [[ $verb == hide ]] && exec qs -c ii ipc call omarchyMenu close
+    [[ $verb == toggle ]] && exec qs -c ii ipc call omarchyMenu toggle
     exec qs -c ii ipc call omarchyMenu openPayload "$payload"
   fi
-  exec qs -c ii ipc call shell "$verb" "$id"
+  if [[ -n "$payload" ]]; then
+    exec qs -c ii ipc call shell "$verb" "$id" "$payload"
+  else
+    exec qs -c ii ipc call shell "$verb" "$id" "{}"
+  fi
 fi
 
 # BWM's indicators poll their state themselves (recording, night light, ...)
@@ -41,8 +46,11 @@ fi
 
 if [[ "$target" != *"."* ]]; then
   case "$target" in
-    monitor|power|agents|tailscale|clock|bluetooth|network|audio|wifiqr|speedtest|disk-speedtest)
+    monitor|power|agents|tailscale|clock|bluetooth|network|audio|wifiqr|speedtest|disk-speedtest|clipboard|emojis|image-picker|image-selector)
       target="omarchy.$target"
+      ;;
+    emoji)
+      target="omarchy.emojis"
       ;;
   esac
 fi

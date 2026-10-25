@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# omarchy:summary=Insert an emoji into the focused application or copy it
+# omarchy:group=menu
+# omarchy:args=[--copy-only] <emoji>
+# omarchy:hidden=true
+
+copy_only=false
+if [[ ${1:-} == "--copy-only" ]]; then
+  copy_only=true
+  shift
+fi
+
+emoji="${1:-}"
+[[ -n $emoji ]] || exit 0
+
+# Copy emoji to clipboard (daemonized so Wayland clients can request it)
+printf '%s' "$emoji" | wl-copy --type text/plain
+
+if [[ $copy_only == "true" ]]; then
+  exit 0
+fi
+
+# Give Hyprland time to dismiss the overlay and restore focus to the target window
+sleep 0.22
+
+# Detect whether the active window is a terminal or a GUI/chat app
+active_class=$(hyprctl activewindow -j 2>/dev/null | jq -r '.class // empty')
+
+if [[ "$active_class" =~ ^([kK]itty|[aA]lacritty|[fF]oot|[wW]ezterm|[gG]hostty|[uU]rxvt|[xX]term)$ ]]; then
+  # Terminal emulator: Shift+Insert is universal
+  if command -v wtype >/dev/null 2>&1; then
+    wtype -M shift -k Insert -m shift 2>/dev/null || true
+  elif command -v hyprctl >/dev/null 2>&1; then
+    hyprctl eval 'return hl.dispatch(hl.dsp.send_shortcut({ mods = "SHIFT", key = "Insert" }))' >/dev/null 2>&1 || true
+  fi
+else
+  # GUI / Chat / Browser / Editor: Ctrl+v is universal
+  if command -v wtype >/dev/null 2>&1; then
+    wtype -M ctrl -k v -m ctrl 2>/dev/null || true
+  elif command -v hyprctl >/dev/null 2>&1; then
+    hyprctl eval 'return hl.dispatch(hl.dsp.send_shortcut({ mods = "CTRL", key = "v" }))' >/dev/null 2>&1 || true
+  fi
+fi

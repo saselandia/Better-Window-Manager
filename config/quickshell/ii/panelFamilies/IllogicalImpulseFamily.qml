@@ -43,7 +43,7 @@ Scope {
     PanelLoader { extraCondition: Config.options.dock.enable; component: Dock {} }
     PanelLoader { component: Lock {} }
     PanelLoader { component: MediaControls {} }
-    PanelLoader { component: NotificationPopup {} }
+    PanelLoader { extraCondition: !Appearance.isRetro; component: NotificationPopup {} }
     PanelLoader { component: OnScreenDisplay {} }
     PanelLoader { component: OnScreenKeyboard {} }
     PanelLoader { component: Overlay {} }
@@ -70,5 +70,5 @@ Scope {
     PanelLoader { component: PlasmaAudio {} }
     PanelLoader { component: PlasmaThemePicker {} }
     PanelLoader { component: PlasmaCalendar {} }
-    PanelLoader { component: PlasmaNotifications {} }
+    PanelLoader { extraCondition: Appearance.isPlasma; component: PlasmaNotifications {} }
 }

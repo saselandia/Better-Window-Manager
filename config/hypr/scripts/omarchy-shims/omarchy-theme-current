@@ -1,0 +1,3 @@
+#!/bin/bash
+# omarchy-theme-current for BWM Retro mode
+cat "$HOME/.local/state/omarchy/current/theme.name" 2>/dev/null || echo "dynamic"

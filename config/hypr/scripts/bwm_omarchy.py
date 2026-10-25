@@ -29,13 +29,35 @@ import re
 import subprocess
 import sys
 import tomllib
+from collections import defaultdict
 from pathlib import Path
+from PIL import Image
 
 HOME = Path.home()
 CONFIG_DIR = HOME / ".config"
 ASSETS_DIR = CONFIG_DIR / "hypr" / "omarchy"
+THEMES_DIR = ASSETS_DIR / "themes"
 STATE_DIR = HOME / ".local" / "state" / "bwm" / "omarchy"
 COLORS_TOML = STATE_DIR / "colors.toml"
+THEME_MODE_FILE = STATE_DIR / "theme.mode"
+THEME_NAME_FILE = STATE_DIR / "theme.name"
+
+OMARCHY_STATE_DIR = HOME / ".local" / "state" / "omarchy"
+OMARCHY_CURRENT_DIR = OMARCHY_STATE_DIR / "current"
+OMARCHY_CURRENT_THEME_NAME = OMARCHY_CURRENT_DIR / "theme.name"
+OMARCHY_CURRENT_THEME_DIR = OMARCHY_CURRENT_DIR / "theme"
+OMARCHY_CURRENT_BG_LINK = OMARCHY_CURRENT_DIR / "background"
+
+RETRO_COLORS_JSON = HOME / ".local" / "state" / "quickshell" / "user" / "generated" / "retro-colors.json"
+HYPR_RETRO_COLORS_LUA = CONFIG_DIR / "hypr" / "modules" / "retro_colors.lua"
+ROFI_COLORS_RASI = CONFIG_DIR / "rofi" / "omarchy-colors.rasi"
+CONFIG_RETRO_JSON = CONFIG_DIR / "illogical-impulse" / "config-retro.json"
+WALLPAPERS_DIR = HOME / "Pictures" / "Wallpapers"
+
+REPO_DIR = Path("/home/sasel/Projects/hyprland-de") if Path("/home/sasel/Projects/hyprland-de").exists() else Path("/mnt/HDD1TB/Projects/hyprland-de")
+REPO_HYPR_RETRO_COLORS_LUA = REPO_DIR / "config" / "hypr" / "modules" / "retro_colors.lua"
+REPO_ROFI_COLORS_RASI = REPO_DIR / "config" / "rofi" / "omarchy-colors.rasi"
+REPO_CONFIG_RETRO_JSON = REPO_DIR / "config" / "illogical-impulse" / "config-retro.json"
 
 KITTY_COLORS_CONF = CONFIG_DIR / "kitty" / "kitty-colors.conf"
 BTOP_CONF = CONFIG_DIR / "btop" / "btop.conf"
@@ -94,6 +116,118 @@ def _toward(hue, target, amount):
     """Rotate `hue` towards `target` by `amount` (0..1) along the shortest arc."""
     d = ((target - hue + 0.5) % 1.0) - 0.5
     return (hue + d * amount) % 1.0
+
+def extract_vivid_palette(img_path: str):
+    """Extracts a vivid, high-saturation palette from a wallpaper for Retro mode."""
+    if not img_path or not os.path.exists(img_path):
+        return None
+    try:
+        if img_path.lower().endswith(".webp"):
+            import io
+            res = subprocess.run(["magick", img_path, "-resize", "120x120!", "ppm:-"],
+                                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            if res.returncode == 0 and res.stdout:
+                img = Image.open(io.BytesIO(res.stdout)).convert("RGB")
+            else:
+                img = Image.open(img_path).convert("RGB").resize((120, 120))
+        else:
+            try:
+                img = Image.open(img_path).convert("RGB").resize((120, 120))
+            except Exception:
+                import io
+                res = subprocess.run(["magick", img_path, "-resize", "120x120!", "ppm:-"],
+                                     stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                if res.returncode == 0 and res.stdout:
+                    img = Image.open(io.BytesIO(res.stdout)).convert("RGB")
+                else:
+                    raise
+        colors = img.getcolors(15000)
+        bins = defaultdict(lambda: {"weight": 0.0, "count": 0, "samples": []})
+
+        for count, (r, g, b) in colors:
+            h, l, s = colorsys.rgb_to_hls(r / 255.0, g / 255.0, b / 255.0)
+            if l < 0.18 and s < 0.25:
+                continue
+            if l < 0.06:
+                continue
+            if l > 0.85 and s < 0.16:
+                continue
+            if l > 0.96:
+                continue
+            if s < 0.10:
+                continue
+
+            l_factor = 1.0 - 0.45 * (abs(l - 0.52) ** 1.3)
+            w = count * (s ** 0.65) * l_factor
+            b_idx = int(h * 36) % 36
+            bins[b_idx]["weight"] += w
+            bins[b_idx]["count"] += count
+            bins[b_idx]["samples"].append((w, (r, g, b), h, l, s))
+
+        if not bins:
+            h, l, s = 0.58, 0.5, 0.8
+            accent = "#38bdf8"
+            s_vivid = 0.85
+        else:
+            smoothed_bins = {}
+            for i in range(36):
+                prev_i = (i - 1) % 36
+                next_i = (i + 1) % 36
+                sw = bins[i]["weight"] * 1.6 + bins[prev_i]["weight"] * 0.7 + bins[next_i]["weight"] * 0.7
+                smoothed_bins[i] = sw
+
+            best_bin = max(smoothed_bins.keys(), key=lambda k: smoothed_bins[k])
+            candidate_samples = bins[best_bin]["samples"] + bins[(best_bin - 1) % 36]["samples"] + bins[(best_bin + 1) % 36]["samples"]
+            if not candidate_samples:
+                candidate_samples = bins[best_bin]["samples"]
+
+            candidate_samples.sort(key=lambda x: x[0], reverse=True)
+            top_sample = candidate_samples[0]
+            r, g, b = top_sample[1]
+            h, l, s = top_sample[2], top_sample[3], top_sample[4]
+
+            s_vivid = min(1.0, max(0.85, s * 1.6))
+            l_vivid = min(0.62, max(0.48, l))
+            r_v, g_v, b_v = colorsys.hls_to_rgb(h, l_vivid, s_vivid)
+            accent = f"#{int(r_v * 255):02x}{int(g_v * 255):02x}{int(b_v * 255):02x}"
+
+        h_sec = (h + 0.12) % 1.0
+        r_sec, g_sec, b_sec = colorsys.hls_to_rgb(h_sec, min(0.68, max(0.50, l)), s_vivid)
+        secondary = f"#{int(r_sec * 255):02x}{int(g_sec * 255):02x}{int(b_sec * 255):02x}"
+
+        r_bg, g_bg, b_bg = colorsys.hls_to_rgb(h, 0.05, 0.25)
+        bg = f"#{int(r_bg * 255):02x}{int(g_bg * 255):02x}{int(b_bg * 255):02x}"
+
+        hues = [0.0, 0.33, 0.14, 0.58, 0.83, 0.50]
+        term = [bg]
+        for hu in hues:
+            cr, cg, cb = colorsys.hls_to_rgb(hu, 0.60, 0.90)
+            term.append(f"#{int(cr * 255):02x}{int(cg * 255):02x}{int(cb * 255):02x}")
+        term.append("#f8fafc")
+        term.append("#475569")
+        for hu in hues:
+            cr, cg, cb = colorsys.hls_to_rgb(hu, 0.70, 0.95)
+            term.append(f"#{int(cr * 255):02x}{int(cg * 255):02x}{int(cb * 255):02x}")
+        term.append("#ffffff")
+
+        return {
+            "accent": accent,
+            "secondary": secondary,
+            "bg": bg,
+            "fg": "#f8fafc",
+            "border": accent,
+            "colors": term
+        }
+    except Exception as e:
+        print(f"[Warning] Error extrayendo paleta viva: {e}", file=sys.stderr)
+        return {
+            "accent": "#38bdf8",
+            "secondary": "#818cf8",
+            "bg": "#0b1016",
+            "fg": "#f8fafc",
+            "border": "#38bdf8",
+            "colors": []
+        }
 
 def build_colors(palette: dict) -> dict:
     """Omarchy colors.toml keys from the wallpaper palette of extract_vivid_palette()."""
@@ -416,13 +550,179 @@ def restore_vscodium():
 
 
 # ------------------------------------------------------------------------------
-# Entry points
+# Entry points & Theming Engine (Dynamic vs Curated Static)
 # ------------------------------------------------------------------------------
-def apply_retro_apps(palette: dict, wallpaper: str = ""):
-    """Retro theme: Omarchy-style themes for every app, from the wallpaper palette."""
-    colors = build_colors(palette)
-    write_colors_toml(colors)
+def get_retro_mode() -> tuple[str, str]:
+    """Returns (mode, theme_name). Mode is 'dynamic' or 'static'."""
+    mode = "dynamic"
+    name = "dynamic"
+    try:
+        if THEME_MODE_FILE.is_file():
+            val = THEME_MODE_FILE.read_text(encoding="utf-8").strip()
+            if val in ("dynamic", "static"):
+                mode = val
+    except Exception:
+        pass
+    try:
+        if THEME_NAME_FILE.is_file():
+            val = THEME_NAME_FILE.read_text(encoding="utf-8").strip()
+            if val:
+                name = val
+    except Exception:
+        pass
+    if mode == "dynamic":
+        name = "dynamic"
+    return mode, name
 
+def set_retro_mode_state(mode: str, name: str):
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    OMARCHY_CURRENT_DIR.mkdir(parents=True, exist_ok=True)
+    _write_if_changed(THEME_MODE_FILE, mode + "\n")
+    _write_if_changed(THEME_NAME_FILE, name + "\n")
+    _write_if_changed(OMARCHY_CURRENT_THEME_NAME, name + "\n")
+
+    if mode == "static" and (THEMES_DIR / name).is_dir():
+        target = THEMES_DIR / name
+    else:
+        target = STATE_DIR
+
+    try:
+        if OMARCHY_CURRENT_THEME_DIR.is_symlink() or OMARCHY_CURRENT_THEME_DIR.exists():
+            OMARCHY_CURRENT_THEME_DIR.unlink()
+        OMARCHY_CURRENT_THEME_DIR.symlink_to(target)
+    except Exception as e:
+        print(f"[Warning] Error symlinking {OMARCHY_CURRENT_THEME_DIR}: {e}", file=sys.stderr)
+
+def list_omarchy_themes() -> list[dict]:
+    """Returns list of curated themes with their metadata."""
+    themes = []
+    if not THEMES_DIR.is_dir():
+        return themes
+    for entry in sorted(THEMES_DIR.iterdir()):
+        if entry.is_dir() and (entry / "colors.toml").is_file():
+            preview = entry / "preview.png"
+            bg_dir = entry / "backgrounds"
+            themes.append({
+                "id": entry.name,
+                "name": entry.name.replace("-", " ").title(),
+                "path": str(entry),
+                "preview": str(preview) if preview.is_file() else "",
+                "backgrounds_dir": str(bg_dir) if bg_dir.is_dir() else ""
+            })
+    return themes
+
+def complete_colors(raw: dict) -> dict:
+    """Ensure all required Omarchy and BWM keys exist in the colors dictionary."""
+    c = dict(raw)
+    mode = c.get("mode", "dark")
+    accent = c.get("accent", "#38bdf8")
+    bg = c.get("background", "#121820")
+    fg = c.get("foreground", "#f8fafc")
+
+    c.setdefault("dark_background", bg)
+    c.setdefault("darker_background", bg)
+    c.setdefault("lighter_background", bg)
+    c.setdefault("selection", "#292e42")
+    c.setdefault("selection_background", c.get("selection", "#292e42"))
+    c.setdefault("selection_foreground", c.get("bright_foreground", fg))
+    c.setdefault("muted", "#94a3b8")
+    c.setdefault("dark_foreground", "#565f89")
+    c.setdefault("light_foreground", fg)
+    c.setdefault("bright_foreground", "#ffffff")
+    c.setdefault("cursor", accent)
+
+    # ANSI colors fallback
+    for col in ("red", "orange", "yellow", "green", "cyan", "blue", "magenta", "brown"):
+        c.setdefault(col, accent)
+        c.setdefault("bright_" + col, c[col])
+
+    if "hyprland_active_border" not in c:
+        sec = c.get("bright_magenta", c.get("bright_blue", c.get("blue", accent)))
+        c["hyprland_active_border"] = (f"rgba({accent.lstrip('#')}ee) "
+                                       f"rgba({sec.lstrip('#')}ee) 45deg")
+    return c
+
+def update_retro_config_json(mode: str, name: str):
+    targets = [CONFIG_RETRO_JSON]
+    if REPO_CONFIG_RETRO_JSON.is_file() and REPO_CONFIG_RETRO_JSON != CONFIG_RETRO_JSON:
+        targets.append(REPO_CONFIG_RETRO_JSON)
+    for cfg_path in targets:
+        try:
+            if cfg_path.is_file():
+                data = json.loads(cfg_path.read_text(encoding="utf-8"))
+                app = data.setdefault("appearance", {})
+                app["retroThemeMode"] = mode
+                app["retroThemeName"] = name
+                _write_if_changed(cfg_path, json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+        except Exception as e:
+            print(f"[Warning] Error actualizando {cfg_path}: {e}", file=sys.stderr)
+
+def write_retro_sync_files(colors: dict):
+    """Write Quickshell retro-colors.json, Hyprland retro_colors.lua, and Rofi omarchy-colors.rasi."""
+    # 1. Quickshell retro-colors.json
+    try:
+        RETRO_COLORS_JSON.parent.mkdir(parents=True, exist_ok=True)
+        retro_data = {
+            "accent": colors["accent"],
+            "secondary": colors.get("bright_magenta", colors.get("bright_blue", colors["accent"])),
+            "bg": colors["background"],
+            "border": colors["accent"],
+            "fg": colors["foreground"],
+            "dim": colors.get("dark_foreground", "#475569"),
+            "muted": colors.get("muted", "#94a3b8")
+        }
+        _write_if_changed(RETRO_COLORS_JSON, json.dumps(retro_data, indent=2) + "\n")
+    except Exception as e:
+        print(f"[Warning] Error guardando {RETRO_COLORS_JSON}: {e}", file=sys.stderr)
+
+    # 2. Hyprland retro_colors.lua
+    hex_acc = colors["accent"].lstrip("#")
+    sec_color = colors.get("bright_magenta", colors.get("bright_blue", colors["accent"]))
+    hex_sec = sec_color.lstrip("#")
+    hex_bg = colors["background"].lstrip("#")
+    lua_content = f"""-- Generado automáticamente por bwm_omarchy.py
+local retro_colors = {{
+    accent = "rgba({hex_acc}ee)",
+    secondary = "rgba({hex_sec}ee)",
+    bg = "rgba({hex_bg}ee)",
+    border = "rgba({hex_acc}ee)",
+    border_inactive = "rgba(101520aa)",
+}}
+return retro_colors
+"""
+    targets = [HYPR_RETRO_COLORS_LUA]
+    if REPO_HYPR_RETRO_COLORS_LUA.parent.exists() and REPO_HYPR_RETRO_COLORS_LUA != HYPR_RETRO_COLORS_LUA:
+        targets.append(REPO_HYPR_RETRO_COLORS_LUA)
+    for target in targets:
+        try:
+            _write_if_changed(target, lua_content)
+        except Exception as e:
+            print(f"[Warning] Error guardando {target}: {e}", file=sys.stderr)
+
+    # 3. Rofi omarchy-colors.rasi
+    rofi_colors = f"""* {{
+    accent: {colors['accent']};
+    secondary: {sec_color};
+    bg: {colors['background']}f5;
+    bg-input: {colors.get('dark_background', '#121820')};
+    fg: {colors['foreground']};
+    muted: {colors.get('muted', '#94a3b8')};
+    dim: {colors.get('dark_foreground', '#475569')};
+    bg-selected-text: {colors.get('darker_background', '#090c0f')};
+}}
+"""
+    rofi_targets = [ROFI_COLORS_RASI]
+    if REPO_ROFI_COLORS_RASI.parent.exists() and REPO_ROFI_COLORS_RASI != ROFI_COLORS_RASI:
+        rofi_targets.append(REPO_ROFI_COLORS_RASI)
+    for target in rofi_targets:
+        try:
+            _write_if_changed(target, rofi_colors)
+        except Exception as e:
+            print(f"[Warning] Error guardando {target}: {e}", file=sys.stderr)
+
+def apply_retro_palette_colors(colors: dict, wallpaper: str = ""):
+    """Apply an Omarchy-format palette dictionary to all apps, configs, and reload UI."""
+    write_colors_toml(colors)
     apply_task_manager(True)
 
     for step in (apply_shell_toml, apply_kitty, apply_btop, apply_vscodium, apply_spotify):
@@ -433,19 +733,122 @@ def apply_retro_apps(palette: dict, wallpaper: str = ""):
 
     changed = apply_matugen_apps(colors, wallpaper)
 
-    # Icons follow the accent too (Papirus folders of the closest colour), see bwm_icons.py
     try:
         import bwm_icons
         bwm_icons.apply("retro", colors["accent"])
     except Exception as e:
         print(f"[Warning] iconos: {e}", file=sys.stderr)
 
+    write_retro_sync_files(colors)
+
     if "gtk3" in changed:
         for app in GTK_RELAUNCH_APPS:
             if _running(app):
                 subprocess.run(["pkill", "-f", f"(^|/){app}( |$)"], check=False)
                 _detached(f"sleep 0.5; exec {app}")
+
     run_hooks("retro")
+
+    try:
+        subprocess.run(["hyprctl", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+    try:
+        subprocess.run(["quickshell", "-c", "ii", "ipc", "call", "theme", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["quickshell", "-c", "ii", "ipc", "call", "retro", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+    _detached("python3 ~/.config/hypr/scripts/bwm_boot.py render")
+    return colors
+
+def apply_retro_static_theme(theme_name: str, set_wallpaper: bool = True) -> dict:
+    """Applies one of the curated static Omarchy themes."""
+    theme_dir = THEMES_DIR / theme_name
+    if not theme_dir.is_dir() or not (theme_dir / "colors.toml").is_file():
+        raise ValueError(f"Tema estático no encontrado: {theme_name}")
+
+    try:
+        with open(theme_dir / "colors.toml", "rb") as f:
+            raw_colors = tomllib.load(f)
+    except Exception as e:
+        raise RuntimeError(f"Error leyendo colors.toml para {theme_name}: {e}")
+
+    colors = complete_colors(raw_colors)
+    set_retro_mode_state("static", theme_name)
+    update_retro_config_json("static", theme_name)
+
+    wp = ""
+    if set_wallpaper:
+        bg_dir = theme_dir / "backgrounds"
+        if bg_dir.is_dir():
+            bgs = sorted([p for p in bg_dir.iterdir() if p.suffix.lower() in ('.jpg', '.jpeg', '.png', '.webp')])
+            if bgs:
+                wp = str(bgs[0])
+                subprocess.run(["swww", "img", wp, "--transition-type", "grow", "--transition-pos", "center", "--transition-step", "90", "--transition-duration", "2", "--transition-fps", "60"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                (HOME / ".cache").mkdir(parents=True, exist_ok=True)
+                (HOME / ".cache" / "current_wallpaper").write_text(wp + "\n", encoding="utf-8")
+                (HOME / ".cache" / "current_wallpaper_retro").write_text(wp + "\n", encoding="utf-8")
+
+    if not wp:
+        try:
+            cache_file = HOME / ".cache" / "current_wallpaper"
+            if cache_file.exists():
+                wp = cache_file.read_text(encoding="utf-8").strip()
+        except Exception:
+            wp = ""
+
+    if wp:
+        try:
+            if OMARCHY_CURRENT_BG_LINK.is_symlink() or OMARCHY_CURRENT_BG_LINK.exists():
+                OMARCHY_CURRENT_BG_LINK.unlink()
+            OMARCHY_CURRENT_BG_LINK.symlink_to(Path(wp))
+        except Exception:
+            pass
+
+    apply_retro_palette_colors(colors, wp)
+    display_name = theme_name.replace("-", " ").title()
+    _detached(f'notify-send -a "BWM Theme" -i preferences-desktop-theme "Tema Retro" "Se ha aplicado el tema estático: {display_name}"')
+    return colors
+
+def apply_retro_dynamic_theme(wallpaper: str = "") -> dict:
+    """Applies dynamic theme extracted from the wallpaper."""
+    set_retro_mode_state("dynamic", "dynamic")
+    update_retro_config_json("dynamic", "dynamic")
+
+    wp = wallpaper
+    if not wp:
+        try:
+            cache_file = HOME / ".cache" / "current_wallpaper"
+            if cache_file.exists():
+                wp = cache_file.read_text(encoding="utf-8").strip()
+        except Exception:
+            wp = ""
+    if not wp or not os.path.exists(wp):
+        wp = str(WALLPAPERS_DIR / "omarchy-frost.jpg")
+
+    palette = extract_vivid_palette(wp)
+    if not palette:
+        palette = {"accent": "#38bdf8", "secondary": "#818cf8", "bg": "#0b1016", "fg": "#f8fafc", "border": "#38bdf8"}
+
+    colors = build_colors(palette)
+
+    if wp:
+        try:
+            if OMARCHY_CURRENT_BG_LINK.is_symlink() or OMARCHY_CURRENT_BG_LINK.exists():
+                OMARCHY_CURRENT_BG_LINK.unlink()
+            OMARCHY_CURRENT_BG_LINK.symlink_to(Path(wp))
+        except Exception:
+            pass
+
+    apply_retro_palette_colors(colors, wp)
+    _detached('notify-send -a "BWM Theme" -i preferences-desktop-theme "Tema Retro" "Se ha activado la paleta dinámica desde el fondo de pantalla"')
+    return colors
+
+def apply_retro_apps(palette: dict, wallpaper: str = ""):
+    """Retro theme: Omarchy-style themes for every app, from the wallpaper palette (legacy wrapper)."""
+    colors = build_colors(palette)
+    apply_retro_palette_colors(colors, wallpaper)
     return colors
 
 HOOKS_DIR = CONFIG_DIR / "bwm" / "hooks"
@@ -575,10 +978,46 @@ def restart_firefox():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2 and sys.argv[1] == "hook":
-        run_hooks(sys.argv[2])
-        sys.exit(0)
-    if len(sys.argv) > 1 and sys.argv[1] == "restart-firefox":
-        restart_firefox()
-        sys.exit(0)
+    if len(sys.argv) > 1:
+        cmd = sys.argv[1]
+        if cmd == "hook" and len(sys.argv) > 2:
+            run_hooks(sys.argv[2])
+            sys.exit(0)
+        elif cmd == "restart-firefox":
+            restart_firefox()
+            sys.exit(0)
+        elif cmd == "get-mode":
+            mode, name = get_retro_mode()
+            print(f"{mode}\t{name}")
+            sys.exit(0)
+        elif cmd == "list-themes":
+            themes = list_omarchy_themes()
+            if "--json" in sys.argv:
+                print(json.dumps(themes, indent=2))
+            else:
+                for t in themes:
+                    print(f"{t['id']}\t{t['name']}\t{t['path']}")
+            sys.exit(0)
+        elif cmd == "static":
+            if len(sys.argv) < 3:
+                print("Usage: bwm_omarchy.py static <theme_name> [--no-wallpaper]", file=sys.stderr)
+                sys.exit(1)
+            set_wp = "--no-wallpaper" not in sys.argv
+            apply_retro_static_theme(sys.argv[2], set_wallpaper=set_wp)
+            sys.exit(0)
+        elif cmd == "dynamic":
+            wp = sys.argv[2] if len(sys.argv) > 2 and not sys.argv[2].startswith("--") else ""
+            apply_retro_dynamic_theme(wp)
+            sys.exit(0)
+        elif cmd == "set-theme":
+            if len(sys.argv) < 3:
+                print("Usage: bwm_omarchy.py set-theme <theme_name|dynamic>", file=sys.stderr)
+                sys.exit(1)
+            target = sys.argv[2]
+            if target == "dynamic":
+                apply_retro_dynamic_theme()
+            else:
+                apply_retro_static_theme(target)
+            sys.exit(0)
+
     print(json.dumps(build_colors({"accent": sys.argv[1] if len(sys.argv) > 1 else "#38bdf8"}), indent=2))

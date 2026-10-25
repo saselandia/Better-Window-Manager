@@ -22,13 +22,30 @@ ContentPage {
     property var fonts: []
     property string current: ""
 
+    property string retroMode: "dynamic"
+    property string retroThemeName: "dynamic"
+
     function refresh() {
         listProc.running = true;
         currentProc.running = true;
         glassProc.running = true;
+        retroModeProc.running = true;
     }
     Component.onCompleted: refresh()
 
+    Process {
+        id: retroModeProc
+        command: ["python3", page.scripts + "bwm_omarchy.py", "get-mode"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var parts = text.trim().split("\t");
+                if (parts.length >= 2) {
+                    page.retroMode = parts[0];
+                    page.retroThemeName = parts[1];
+                }
+            }
+        }
+    }
     Process {
         id: listProc
         command: [page.script, "list"]
@@ -174,6 +191,78 @@ ContentPage {
             wrapMode: Text.Wrap
             color: Appearance.colors.colSubtext
             text: ""
+        }
+    }
+
+    ContentSection {
+        icon: "palette"
+        title: "Paleta Retro (Omarchy)"
+        visible: Appearance.isRetro
+
+        StyledText {
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+            color: Appearance.colors.colSubtext
+            text: "Modo activo: " + (page.retroMode === "static" ? ("Tema estático oficial (" + page.retroThemeName + ")") : "Paleta dinámica desde el wallpaper") + ".\nPuedes alternar entre la paleta dinámica adaptada a tu wallpaper actual o uno de los 23 temas oficiales calibrados a mano de Omarchy."
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 12
+
+            RippleButtonWithIcon {
+                materialIcon: "view_carousel"
+                mainText: "Abrir galería visual 3D (Carrusel)"
+                onClicked: Quickshell.execDetached(["omarchy-shell", "shell", "summon", "omarchy.image-picker", "{\"source\":\"themes\"}"])
+            }
+
+            RippleButtonWithIcon {
+                materialIcon: "refresh"
+                mainText: "Paleta dinámica (desde wallpaper)"
+                onClicked: {
+                    Quickshell.execDetached(["omarchy-theme-set", "dynamic"]);
+                    page.refresh();
+                }
+            }
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            color: Appearance.colors.colSubtext
+            font.bold: true
+            text: "Temas oficiales destacados:"
+        }
+
+        Flow {
+            Layout.fillWidth: true
+            spacing: 8
+
+            Repeater {
+                model: [
+                    { name: "Tokyo Night", id: "tokyo-night" },
+                    { name: "Catppuccin Mocha", id: "catppuccin" },
+                    { name: "Catppuccin Latte", id: "catppuccin-latte" },
+                    { name: "Nord", id: "nord" },
+                    { name: "Gruvbox", id: "gruvbox" },
+                    { name: "Kanagawa", id: "kanagawa" },
+                    { name: "Rose Pine", id: "rose-pine" },
+                    { name: "Everforest", id: "everforest" },
+                    { name: "Osaka Jade", id: "osaka-jade" },
+                    { name: "Retro 82", id: "retro-82" },
+                    { name: "Starship", id: "starship" },
+                    { name: "Hackerman", id: "hackerman" },
+                    { name: "Lumon", id: "lumon" }
+                ]
+
+                delegate: RippleButtonWithIcon {
+                    materialIcon: "color_lens"
+                    mainText: modelData.name
+                    onClicked: {
+                        Quickshell.execDetached(["omarchy-theme-set", modelData.id]);
+                        page.refresh();
+                    }
+                }
+            }
         }
     }
 }

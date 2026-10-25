@@ -750,102 +750,14 @@ def apply_plasma_app_themes():
                          start_new_session=True)
 
 def apply_retro_wallpaper_colors(wallpaper_path: str = None):
-    """Applies a vivid, saturated Omarchy palette to Kitty, Quickshell retro-colors.json, and Hyprland."""
-    wp = wallpaper_path
-    if not wp:
-        try:
-            cache_file = Path.home() / ".cache" / "current_wallpaper"
-            if cache_file.exists():
-                with open(cache_file, "r") as f:
-                    wp = f.read().strip()
-        except Exception:
-            wp = None
-
-    if not wp or not os.path.exists(wp):
-        wp = str(WALLPAPERS_DIR / "omarchy-frost.jpg")
-
-    palette = extract_vivid_palette(wp)
-    if not palette:
-        return
-
-    # 1. Omarchy-style themes for every app (kitty, btop, GTK, Spotify, Vesktop, Firefox,
-    #    swaync, VSCodium, Quickshell...), see bwm_omarchy.py
+    """Applies Retro palette according to active mode (dynamic vs static Omarchy themes)."""
     import bwm_omarchy
-    bwm_omarchy.apply_retro_apps(palette, wp)
-
-    # 2. Quickshell retro-colors.json
-    try:
-        RETRO_COLORS_JSON.parent.mkdir(parents=True, exist_ok=True)
-        retro_data = {
-            "accent": palette["accent"],
-            "secondary": palette["secondary"],
-            "bg": palette["bg"],
-            "border": palette["border"],
-            "fg": palette["fg"],
-            "dim": "#475569",
-            "muted": "#94a3b8"
-        }
-        tmp_target = RETRO_COLORS_JSON.with_suffix(".tmp")
-        with open(tmp_target, "w", encoding="utf-8") as f:
-            json.dump(retro_data, f, indent=2)
-        os.replace(tmp_target, RETRO_COLORS_JSON)
-    except Exception as e:
-        print(f"[Warning] Error guardando {RETRO_COLORS_JSON}: {e}", file=sys.stderr)
-
-    # 3. Hyprland retro_colors.lua
-    hex_acc = palette["accent"].lstrip("#")
-    hex_sec = palette["secondary"].lstrip("#")
-    hex_bg = palette["bg"].lstrip("#")
-    lua_content = f"""-- Generado automáticamente por bwm-theme-manager.py a partir del wallpaper
-local retro_colors = {{
-    accent = "rgba({hex_acc}ee)",
-    secondary = "rgba({hex_sec}ee)",
-    bg = "rgba({hex_bg}ee)",
-    border = "rgba({hex_acc}ee)",
-    border_inactive = "rgba(101520aa)",
-}}
-return retro_colors
-"""
-    for target in [HYPR_RETRO_COLORS_LUA, REPO_HYPR_RETRO_COLORS_LUA]:
-        try:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            with open(target, "w", encoding="utf-8") as f:
-                f.write(lua_content)
-        except Exception as e:
-            print(f"[Warning] Error guardando {target}: {e}", file=sys.stderr)
-
-    # 4. Rofi Omarchy omarchy-colors.rasi
-    rofi_colors = f"""* {{
-    accent: {palette['accent']};
-    secondary: {palette['secondary']};
-    bg: {palette['bg']}f5;
-    bg-input: #121820;
-    fg: {palette['fg']};
-    muted: #94a3b8;
-    dim: #475569;
-    bg-selected-text: #090c0f;
-}}
-"""
-    rofi_colors_path = CONFIG_DIR / "rofi" / "omarchy-colors.rasi"
-    repo_rofi_colors_path = REPO_DIR / "config" / "rofi" / "omarchy-colors.rasi"
-    for target in [rofi_colors_path, repo_rofi_colors_path]:
-        try:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            with open(target, "w", encoding="utf-8") as f:
-                f.write(rofi_colors)
-        except Exception as e:
-            print(f"[Warning] Error guardando {target}: {e}", file=sys.stderr)
-
-    # 5. Trigger reload in Hyprland and Quickshell
-    try:
-        subprocess.run(["hyprctl", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
-    try:
-        subprocess.run(["quickshell", "-c", "ii", "ipc", "call", "theme", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        subprocess.run(["quickshell", "-c", "ii", "ipc", "call", "retro", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
+    mode, theme_name = bwm_omarchy.get_retro_mode()
+    if mode == "static" and theme_name and theme_name != "dynamic":
+        # Keep the curated static palette, update wallpaper if specified
+        bwm_omarchy.apply_retro_static_theme(theme_name, set_wallpaper=False)
+        return
+    bwm_omarchy.apply_retro_dynamic_theme(wallpaper_path or "")
 
 def sync_floating_windows(to_plasma: bool):
     """
@@ -1051,6 +963,10 @@ def main():
 
     subparsers.add_parser("apply-plasma-colors", help="Aplicar colores Breeze Dark estáticos (Plasma)")
 
+    retro_parser = subparsers.add_parser("retro-theme", help="Gestión de biblioteca de temas estáticos de Omarchy")
+    retro_parser.add_argument("subaction", choices=["list", "get", "set", "dynamic"], help="Acción de tema retro")
+    retro_parser.add_argument("theme_name", nargs="?", default="", help="Nombre del tema o 'dynamic'")
+
     args = parser.parse_args()
 
     if args.action == "get":
@@ -1073,6 +989,21 @@ def main():
         apply_retro_wallpaper_colors(args.wallpaper)
     elif args.action == "apply-plasma-colors":
         apply_plasma_colors()
+    elif args.action == "retro-theme":
+        import bwm_omarchy
+        if args.subaction == "list":
+            for t in bwm_omarchy.list_omarchy_themes():
+                print(f"{t['id']}\t{t['name']}\t{t['path']}")
+        elif args.subaction == "get":
+            mode, name = bwm_omarchy.get_retro_mode()
+            print(f"{mode}\t{name}")
+        elif args.subaction == "dynamic":
+            bwm_omarchy.apply_retro_dynamic_theme()
+        elif args.subaction == "set":
+            if not args.theme_name or args.theme_name == "dynamic":
+                bwm_omarchy.apply_retro_dynamic_theme()
+            else:
+                bwm_omarchy.apply_retro_static_theme(args.theme_name)
     else:
         parser.print_help()
 
