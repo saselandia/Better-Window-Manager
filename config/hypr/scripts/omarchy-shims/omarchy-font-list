@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# BWM stand-in: Omarchy font list through font-set.sh (used by the Retro menu's fonts provider)
+exec "$HOME/.config/hypr/scripts/font-set.sh" list

@@ -302,4 +302,11 @@ Singleton {
             }
         }
     }
+
+    // BWM: shell-readable Do Not Disturb for the Retro menu's ✓ (and anything scripted)
+    IpcHandler {
+        target: "bwmNotifications"
+        function toggleDnd(): void { root.silent = !root.silent; }
+        function isDnd(): string { return root.silent ? "true" : "false"; }
+    }
 }

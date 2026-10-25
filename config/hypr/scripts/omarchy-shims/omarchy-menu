@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# BWM stand-in for `omarchy menu [summon] <route>`: opens the Retro menu (Omarchy's menu, catalog
+# hypr/omarchy/bwm-menu.jsonc) at a route, e.g. `omarchy-menu system`, `omarchy-menu appearance.font`.
+[[ ${1:-} == summon ]] && shift
+if [[ -n ${1:-} ]]; then
+  exec qs -c ii ipc call omarchyMenu summon "$1"
+fi
+exec qs -c ii ipc call omarchyMenu toggle

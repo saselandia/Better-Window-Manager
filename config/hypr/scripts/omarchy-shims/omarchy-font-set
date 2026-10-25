@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# BWM stand-in: set the system monospace font through font-set.sh
+exec "$HOME/.config/hypr/scripts/font-set.sh" set "$1"

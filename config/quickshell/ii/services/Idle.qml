@@ -2,6 +2,7 @@ pragma Singleton
 import qs.modules.common
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 
 /**
@@ -51,5 +52,12 @@ Singleton {
                 item: null
             }
         }
+    }
+
+    // BWM: shell-readable state for the Retro menu's ✓ (and anything scripted)
+    IpcHandler {
+        target: "bwmIdle"
+        function toggle(): void { root.toggleInhibit(); }
+        function isInhibited(): string { return root.inhibit ? "true" : "false"; }
     }
 }
