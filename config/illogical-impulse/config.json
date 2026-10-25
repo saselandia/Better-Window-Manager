@@ -14,21 +14,21 @@
         "requires_key": true
       }
     ],
-    "systemPrompt": "## Style\n- Use casual tone, don't be formal!\n- Always be brief and to the point, unless asked otherwise\n- Don't repeat the user's question\n- Be approachable: Avoid using overly complicated, domain-specific terms and provide analogies when asked to explain a concept\n\n## Context (ignore when irrelevant)\n- You are a helpful and inspiring sidebar assistant on a {DISTRO} Linux system\n- Desktop environment: {DE}\n- Current date & time: {DATETIME}\n- Focused app: {WINDOWCLASS}\n\n## Presentation\n- Use Markdown features in your response: \n  - **Bold** text to **highlight keywords** in your response\n  - **Split long information into small sections** with h2 headers and a relevant emoji at the start of it (for example `## 🐧 Linux`). Bullet points are preferred over long paragraphs, unless you're offering writing support or instructed otherwise by the user.\n- Asked to compare different options? You should firstly use a table to compare the main aspects, then elaborate or include relevant comments from online forums *after* the table. Make sure to provide a final recommendation for the user's use case!\n- Use LaTeX formatting for mathematical and scientific notations whenever appropriate. Enclose all LaTeX '$$' delimiters. NEVER generate LaTeX code in a latex block unless the user explicitly asks for it. DO NOT use LaTeX for regular documents (resumes, letters, essays, CVs, etc.).\n\nThanks!\n",
+    "systemPrompt": "## Style\n- Use casual tone, don't be formal!\n- Always be brief and to the point, unless asked otherwise\n- Don't repeat the user's question\n- Be approachable: Avoid using overly complicated, domain-specific terms and provide analogies when asked to explain a concept\n\n## Context (ignore when irrelevant)\n- You are a helpful and inspiring sidebar assistant on a {DISTRO} Linux system\n- Desktop environment: {DE}\n- Current date & time: {DATETIME}\n- Focused app: {WINDOWCLASS}\n\n## Presentation\n- Use Markdown features in your response: \n  - **Bold** text to **highlight keywords** in your response\n  - **Split long information into small sections** with h2 headers and a relevant emoji at the start of it (for example `## \ud83d\udc27 Linux`). Bullet points are preferred over long paragraphs, unless you're offering writing support or instructed otherwise by the user.\n- Asked to compare different options? You should firstly use a table to compare the main aspects, then elaborate or include relevant comments from online forums *after* the table. Make sure to provide a final recommendation for the user's use case!\n- Use LaTeX formatting for mathematical and scientific notations whenever appropriate. Enclose all LaTeX '$$' delimiters. NEVER generate LaTeX code in a latex block unless the user explicitly asks for it. DO NOT use LaTeX for regular documents (resumes, letters, essays, CVs, etc.).\n\nThanks!\n",
     "tool": "functions"
   },
   "appearance": {
-    "bwmTheme": "default",
+    "bwmTheme": "retro",
     "extraBackgroundTint": true,
     "fakeScreenRounding": 0,
     "fonts": {
-      "expressive": "Space Grotesk",
+      "expressive": "JetBrains Mono NF",
       "iconNerd": "JetBrains Mono NF",
-      "main": "Rubik",
-      "monospace": "JetBrains Mono",
-      "numbers": "Google Sans Flex",
-      "reading": "Readex Pro",
-      "title": "Gabarito"
+      "main": "JetBrains Mono NF",
+      "monospace": "JetBrains Mono NF",
+      "numbers": "JetBrains Mono NF",
+      "reading": "JetBrains Mono NF",
+      "title": "JetBrains Mono NF"
     },
     "palette": {
       "accentColor": "",
@@ -58,7 +58,7 @@
     "manageUser": "kcmshell6 kcm_users",
     "network": "kcmshell6 kcm_networkmanagement",
     "networkEthernet": "kcmshell6 kcm_networkmanagement",
-    "taskManager": "plasma-systemmonitor --page-name Processes",
+    "taskManager": "/home/sasel/.config/hypr/scripts/bwm-terminal --class org.omarchy.btop -- btop",
     "terminal": "kitty -1",
     "update": "kitty -1 --hold=yes fish -i -c 'pkexec pacman -Syu'",
     "volumeMixer": "pavucontrol"
@@ -81,7 +81,7 @@
       "workspaceZoom": 1.07
     },
     "thumbnailPath": "",
-    "wallpaperPath": "/home/sasel/Pictures/goku-orange-3840x2160-23199.jpg",
+    "wallpaperPath": "/home/sasel/Pictures/9ub6vykxchzc1.png",
     "widgets": {
       "clock": {
         "cookie": {
@@ -145,11 +145,19 @@
     "bottom": false,
     "cornerStyle": 2,
     "floatStyleShadow": true,
-    "height": 40,
+    "height": 24,
     "indicators": {
       "notifications": {
         "showUnreadCount": false
       }
+    },
+    "plasma": {
+      "centerTasks": false,
+      "color": "#24292e",
+      "floating": false,
+      "floatingGap": 8,
+      "opacity": 0.91,
+      "style": "translucent"
     },
     "resources": {
       "alwaysShowCpu": true,
@@ -183,13 +191,13 @@
       "useUSCS": false
     },
     "workspaces": {
-      "alwaysShowNumbers": false,
+      "alwaysShowNumbers": true,
       "monochromeIcons": true,
       "numberMap": [
         "1",
         "2"
       ],
-      "showAppIcons": true,
+      "showAppIcons": false,
       "showNumberDelay": 300,
       "shown": 10,
       "useNerdFont": false
@@ -211,7 +219,7 @@
       "key": 12
     },
     "splitButtons": false,
-    "superKey": "",
+    "superKey": "\ue7e6",
     "useFnSymbol": false,
     "useMacSymbol": false,
     "useMouseSymbol": false
@@ -369,6 +377,10 @@
   },
   "screenSnip": {
     "savePath": ""
+  },
+  "screensaver": {
+    "enable": true,
+    "timeoutMinutes": 5
   },
   "search": {
     "engineBaseUrl": "https://www.google.com/search?q=",

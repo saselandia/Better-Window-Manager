@@ -98,21 +98,5 @@
             "title": "^Steam$"
         },
         "float": false
-    },
-    "antigravity": {
-        "name": "persist_antigravity",
-        "description": "antigravity",
-        "match": {
-            "class": "^antigravity$"
-        },
-        "float": true
-    },
-    "com_anthropic_claude": {
-        "name": "persist_com_anthropic_claude",
-        "description": "com.anthropic.Claude",
-        "match": {
-            "class": "^com\\.anthropic\\.Claude$"
-        },
-        "float": true
     }
 }

@@ -3,29 +3,11 @@
 -- Archivo gestionado automáticamente por toggle-float-persistent.py
 -- =============================================================================
 
--- antigravity
-hl.window_rule({
-    name  = "persist_antigravity",
-    match = {
-        class = "^antigravity$",
-    },
-    float = true,
-})
-
 -- antigravity-ide
 hl.window_rule({
     name  = "persist_antigravity_ide",
     match = {
         class = "^antigravity\\-ide$",
-    },
-    float = true,
-})
-
--- com.anthropic.Claude
-hl.window_rule({
-    name  = "persist_com_anthropic_claude",
-    match = {
-        class = "^com\\.anthropic\\.Claude$",
     },
     float = true,
 })
