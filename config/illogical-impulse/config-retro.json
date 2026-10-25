@@ -58,7 +58,7 @@
     "manageUser": "kcmshell6 kcm_users",
     "network": "kcmshell6 kcm_networkmanagement",
     "networkEthernet": "kcmshell6 kcm_networkmanagement",
-    "taskManager": "plasma-systemmonitor --page-name Processes",
+    "taskManager": "/home/sasel/.config/hypr/scripts/bwm-terminal --class org.omarchy.btop -- btop",
     "terminal": "kitty -1",
     "update": "kitty -1 --hold=yes fish -i -c 'pkexec pacman -Syu'",
     "volumeMixer": "pavucontrol"
@@ -377,6 +377,10 @@
   },
   "screenSnip": {
     "savePath": ""
+  },
+  "screensaver": {
+    "enable": true,
+    "timeoutMinutes": 5
   },
   "search": {
     "engineBaseUrl": "https://www.google.com/search?q=",

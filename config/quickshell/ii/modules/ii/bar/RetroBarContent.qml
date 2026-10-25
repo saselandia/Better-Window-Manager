@@ -749,7 +749,7 @@ Item {
             urgent: root.omarchyColors.urgent
             barSize: root.itemHeight
             spacing: 0
-            fixedEntries: ["bluetooth", "network", "audio"].map(n => ({
+            fixedEntries: ["agents", "tailscale", "bluetooth", "network", "audio", "monitor", "power"].map(n => ({
                 id: "omarchy." + n,
                 source: Qt.resolvedUrl("omarchy/" + n + "/Panel.qml"),
                 settings: OmarchyPlugins.builtinSettings("omarchy." + n)
@@ -896,9 +896,9 @@ Item {
             }
         }
 
-        // Battery Module (if available)
+        // Battery Module (fallback if omarchyStatus is not active)
         Item {
-            visible: Battery.available
+            visible: !omarchyStatus.visible && Battery.available
             Layout.alignment: Qt.AlignVCenter
             implicitWidth: batContent.implicitWidth + Math.round(8 * root.scaleRatio)
             implicitHeight: root.itemHeight

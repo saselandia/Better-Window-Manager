@@ -189,6 +189,24 @@ hl.config({
     },
 })
 
+-- Proporción de ventana única (Super + Enter / toggle-single-window-aspect.sh)
+local aspect_state = io.open(os.getenv("HOME") .. "/.local/state/bwm/single-window-aspect", "r")
+if aspect_state then
+    aspect_state:close()
+    hl.config({
+        layout = {
+            single_window_aspect_ratio = { 1, 1 },
+        },
+    })
+else
+    hl.config({
+        layout = {
+            single_window_aspect_ratio = { 0, 0 },
+        },
+    })
+end
+
+
 ----------------
 ----  MISC  ----
 ----------------

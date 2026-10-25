@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# omarchy:summary=Returns a list of all the available power profiles on the system.
+# omarchy:args=[--active-state]
+
+if [[ ${1:-} != "" && ${1:-} != "--active-state" ]]; then
+  echo "Usage: omarchy-powerprofiles-list [--active-state]" >&2
+  exit 1
+fi
+
+if command -v powerprofilesctl >/dev/null 2>&1; then
+  powerprofilesctl list 2>/dev/null |
+    awk -v with_state="${1:+1}" '/^\s*[* ]\s*[a-zA-Z0-9-]+:$/ {
+      active = ($1 == "*") ? 1 : 0
+      gsub(/^[*[:space:]]+|:$/, "")
+      print $0 (with_state ? "\t" active : "")
+    }' |
+    tac
+else
+  state_dir="${OMARCHY_POWERPROFILES_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/powerprofiles}"
+  current="performance"
+  [[ -r "$state_dir/ac" ]] && current=$(<"$state_dir/ac")
+  for p in power-saver balanced performance; do
+    if [[ ${1:-} == "--active-state" ]]; then
+      [[ "$p" == "$current" ]] && printf '%s\t1\n' "$p" || printf '%s\t0\n' "$p"
+    else
+      printf '%s\n' "$p"
+    fi
+  done
+fi

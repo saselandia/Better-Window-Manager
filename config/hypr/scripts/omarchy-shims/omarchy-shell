@@ -1,0 +1,31 @@
+#!/bin/bash
+# omarchy-shell shim for Quickshell ii
+if [[ "$#" -eq 0 || "$1" == "-h" || "$1" == "--help" ]]; then
+  echo "Usage: omarchy-shell [-q] <target> [method] [args...]"
+  exit 0
+fi
+
+if [[ "$1" == "-q" ]]; then
+  shift
+fi
+
+target="$1"
+shift
+
+if [[ -z "$target" ]]; then
+  exit 0
+fi
+
+if [[ "$target" != *"."* ]]; then
+  case "$target" in
+    monitor|power|agents|tailscale|clock|bluetooth|network|audio|wifiqr|speedtest|disk-speedtest)
+      target="omarchy.$target"
+      ;;
+  esac
+fi
+
+if [[ "$#" -eq 0 ]]; then
+  exec qs -c ii ipc call "$target" toggle
+else
+  exec qs -c ii ipc call "$target" "$@"
+fi

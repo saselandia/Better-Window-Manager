@@ -23,6 +23,7 @@ hl.bind("ALT + X", hl.dsp.window.close(), { description = "Ventanas: Cerrar vent
 hl.bind("ALT + Q", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/toggle-float-persistent.py"), { description = "Ventanas: Recordar regla flotante persistente" })
 hl.bind("ALT + J", hl.dsp.layout("togglesplit"), { description = "Ventanas: Alternar división horizontal/vertical (Split)" })
 hl.bind("ALT + RETURN", hl.dsp.window.fullscreen({ mode = fullscreen_mode, action = "toggle" }), { description = "Ventanas: Alternar pantalla completa" })
+hl.bind("SUPER + RETURN", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/toggle-single-window-aspect.sh"), { description = "Ventanas: Alternar proporción cuadrada para ventana única (Omarchy)" })
 hl.bind("ALT + TAB", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab next"), { description = "Ventanas: Selector visual de ventanas (Alt+Tab)", repeating = true })
 -- [Navegación]
 hl.bind("ALT + left", hl.dsp.focus({ direction = "left" }), { description = "Navegación: Mover foco a la izquierda" })
@@ -98,13 +99,13 @@ end
 
 -- Alt+Tab Helper Releases
 hl.bind("ALT + SHIFT + TAB", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab prev"), { repeating = true })
-hl.bind("ALT + grave", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab nextApp"), { description = "Ventanas: Alternar entre ventanas de la misma aplicación (Alt+`)", repeating = true })
-hl.bind("ALT + SHIFT + grave", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab prevApp"), { repeating = true })
 hl.bind("Alt_L", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab release"), { release = true })
 hl.bind("Alt_R", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab release"), { release = true })
 hl.bind("ALT + Alt_L", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab release"), { release = true })
 hl.bind("ALT + Alt_R", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab release"), { release = true })
 hl.bind("ALT + Escape", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab cancel"))
+hl.bind("ALT + grave", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab nextApp"), { description = "Ventanas: Alternar entre ventanas de la misma aplicación (Alt+`)", repeating = true })
+hl.bind("ALT + SHIFT + grave", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab prevApp"), { repeating = true })
 hl.bind("SUPER + BACKSPACE", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/window-transparency.sh toggle-window"), { description = "Ventanas: Alternar transparencia de la ventana activa (Omarchy)" })
 
 -- Mouse Window Gestures

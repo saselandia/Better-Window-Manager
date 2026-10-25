@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# omarchy:summary=Toggle nightlight screen temperature
+# omarchy:args=[--status]
+# omarchy:examples=omarchy toggle nightlight
+
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+NIGHTLIGHT_PY="$SCRIPT_DIR/../nightlight.py"
+
+if [[ ! -f "$NIGHTLIGHT_PY" ]]; then
+  NIGHTLIGHT_PY="/home/sasel/Projects/hyprland-de/config/hypr/scripts/nightlight.py"
+fi
+
+if [[ ${1:-} == "--status" ]]; then
+  python3 "$NIGHTLIGHT_PY" --status
+  exit 0
+fi
+
+if [[ -n ${1:-} && $1 =~ ^[0-9]+$ ]]; then
+  python3 "$NIGHTLIGHT_PY" --temperature "$1"
+  omarchy-shell -q nightlight refresh 2>/dev/null || true
+  exit 0
+fi
+
+python3 "$NIGHTLIGHT_PY" --toggle
+omarchy-shell -q nightlight refresh 2>/dev/null || true

@@ -172,6 +172,23 @@
     "is_modified": false
   },
   {
+    "id": "single_window_aspect",
+    "category": "Ventanas",
+    "description": "Alternar proporción cuadrada para ventana única (Omarchy)",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "RETURN",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/toggle-single-window-aspect.sh",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": true,
+    "enabled": true,
+    "is_modified": false
+  },
+  {
     "id": "alt_tab",
     "category": "Ventanas",
     "description": "Selector visual de ventanas (Alt+Tab)",

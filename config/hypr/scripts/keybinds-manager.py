@@ -165,6 +165,20 @@ DEFAULT_KEYBINDS: List[Dict[str, Any]] = [
         "enabled": True
     },
     {
+        "id": "single_window_aspect",
+        "category": "Ventanas",
+        "description": "Alternar proporción cuadrada para ventana única (Omarchy)",
+        "mods": ["SUPER"],
+        "key": "RETURN",
+        "action_type": "exec",
+        "exec": "/home/sasel/.config/hypr/scripts/toggle-single-window-aspect.sh",
+        "dispatcher": None,
+        "dispatcher_arg": None,
+        "options": {},
+        "is_default": True,
+        "enabled": True
+    },
+    {
         "id": "alt_tab",
         "category": "Ventanas",
         "description": "Selector visual de ventanas (Alt+Tab)",

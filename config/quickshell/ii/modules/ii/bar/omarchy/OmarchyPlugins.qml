@@ -34,9 +34,41 @@ Singleton {
     function firstPartyServiceFor(id) {
         return null; // BWM has its own equivalents of omarchy.* services
     }
-    // omarchy-shell opens its own overlays (speed test...) this way; BWM has none of them
-    function summon(id, args) {
-        console.info(`[OmarchyPlugins] ${id} is an omarchy-shell overlay, not available in BWM`);
+    function summon(id, payloadJson) {
+        const strId = String(id || "");
+        if (strId === "omarchy.speedtest") {
+            if (!speedtestLoader.item) speedtestLoader.active = true;
+            if (speedtestLoader.item) speedtestLoader.item.open(payloadJson);
+            else speedtestLoader.loaded.connect(function() { speedtestLoader.item.open(payloadJson); });
+            return true;
+        } else if (strId === "omarchy.disk-speedtest") {
+            if (!diskSpeedtestLoader.item) diskSpeedtestLoader.active = true;
+            if (diskSpeedtestLoader.item) diskSpeedtestLoader.item.open(payloadJson);
+            else diskSpeedtestLoader.loaded.connect(function() { diskSpeedtestLoader.item.open(payloadJson); });
+            return true;
+        } else if (strId === "omarchy.wifiqr") {
+            if (!wifiqrLoader.item) wifiqrLoader.active = true;
+            if (wifiqrLoader.item) wifiqrLoader.item.open(payloadJson);
+            else wifiqrLoader.loaded.connect(function() { wifiqrLoader.item.open(payloadJson); });
+            return true;
+        }
+        console.info(`[OmarchyPlugins] ${id} is an unknown overlay`);
+        return false;
+    }
+
+    function hide(id) {
+        const strId = String(id || "");
+        if (strId === "omarchy.speedtest") {
+            speedtestLoader.item?.close();
+            return true;
+        } else if (strId === "omarchy.disk-speedtest") {
+            diskSpeedtestLoader.item?.close();
+            return true;
+        } else if (strId === "omarchy.wifiqr") {
+            wifiqrLoader.item?.close();
+            return true;
+        }
+        return false;
     }
     function iconPath(name, fallback) {
         return Quickshell.iconPath(String(name || ""), fallback ?? true);
@@ -162,6 +194,84 @@ Singleton {
         function reload(): void {
             root.reload();
         }
+    }
+
+    Loader {
+        id: speedtestLoader
+        active: false
+        source: Qt.resolvedUrl("speedtest/Panel.qml")
+        onLoaded: {
+            item.shell = root;
+            item.manifest = { id: "omarchy.speedtest" };
+        }
+    }
+
+    Loader {
+        id: diskSpeedtestLoader
+        active: false
+        source: Qt.resolvedUrl("disk-speedtest/Panel.qml")
+        onLoaded: {
+            item.shell = root;
+            item.manifest = { id: "omarchy.disk-speedtest" };
+        }
+    }
+
+    Loader {
+        id: wifiqrLoader
+        active: false
+        source: Qt.resolvedUrl("wifiqr/Panel.qml")
+        onLoaded: {
+            item.shell = root;
+            item.manifest = { id: "omarchy.wifiqr" };
+        }
+    }
+
+    IpcHandler {
+        target: "omarchy.speedtest"
+        function open(): void { root.summon("omarchy.speedtest", "{}"); }
+        function close(): void { root.hide("omarchy.speedtest"); }
+        function toggle(): void {
+            if (speedtestLoader.item?.opened) root.hide("omarchy.speedtest");
+            else root.summon("omarchy.speedtest", "{}");
+        }
+    }
+
+    IpcHandler {
+        target: "omarchy.disk-speedtest"
+        function open(): void { root.summon("omarchy.disk-speedtest", "{}"); }
+        function close(): void { root.hide("omarchy.disk-speedtest"); }
+        function toggle(): void {
+            if (diskSpeedtestLoader.item?.opened) root.hide("omarchy.disk-speedtest");
+            else root.summon("omarchy.disk-speedtest", "{}");
+        }
+    }
+
+    IpcHandler {
+        target: "omarchy.wifiqr"
+        function open(): void { root.summon("omarchy.wifiqr", "{}"); }
+        function close(): void { root.hide("omarchy.wifiqr"); }
+        function toggle(): void {
+            if (wifiqrLoader.item?.opened) root.hide("omarchy.wifiqr");
+            else root.summon("omarchy.wifiqr", "{}");
+        }
+    }
+
+    IpcHandler {
+        target: "shell"
+        function summon(id: string): void { root.summon(id, "{}"); }
+        function toggle(id: string): void {
+            if (id === "omarchy.speedtest") {
+                if (speedtestLoader.item?.opened) root.hide("omarchy.speedtest");
+                else root.summon("omarchy.speedtest", "{}");
+            } else if (id === "omarchy.disk-speedtest") {
+                if (diskSpeedtestLoader.item?.opened) root.hide("omarchy.disk-speedtest");
+                else root.summon("omarchy.disk-speedtest", "{}");
+            } else if (id === "omarchy.wifiqr") {
+                if (wifiqrLoader.item?.opened) root.hide("omarchy.wifiqr");
+                else root.summon("omarchy.wifiqr", "{}");
+            }
+        }
+        function hide(id: string): void { root.hide(id); }
     }
 
     Component.onCompleted: reload()
