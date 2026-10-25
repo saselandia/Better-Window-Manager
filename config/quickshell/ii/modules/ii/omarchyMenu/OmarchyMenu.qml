@@ -52,5 +52,8 @@ Scope {
         function close(): void { menu.close(); }
         function summon(route: string): void { menu.open(JSON.stringify({ menu: route })); }
         function refresh(): void { menu.refresh(); }
+        function state(): string { return menu.opened ? menu.activeMenu : "closed"; }
+        // Same as Escape: back out of a submenu, close at the root
+        function back(): string { return menu.goBack() ? menu.activeMenu : (menu.close(), "closed"); }
     }
 }
