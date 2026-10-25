@@ -260,7 +260,7 @@ Panel {
     anchorItem: button
     owner: root
     bar: root.bar
-    open: root.opened
+    open: root.opened === true
     focusTarget: panel.loadedContent
     contentWidth: panel.fittedContentWidth(Style.space(420))
     contentHeight: panel.fittedContentHeight(panel.loadedContentHeight, Style.space(640))
@@ -373,7 +373,8 @@ Panel {
                   bordered: true
                   active: root.selectedMonitorName === modelData.name
 
-                  contentItem: Column {
+                  // qs.Ui Button has no contentItem (that is QtQuick.Controls): the label is a child
+                  Column {
                     spacing: Style.space(2)
                     anchors.centerIn: parent
 
@@ -713,6 +714,7 @@ Panel {
 
             // 3. Refresh Rate (Hz)
             Column {
+              id: rateSection
               width: parent.width
               spacing: Style.space(6)
               readonly property var curRes: root.selectedMonitor ? (root.selectedMonitor.width + "x" + root.selectedMonitor.height) : ""
@@ -720,7 +722,7 @@ Panel {
               visible: availableRates.length > 1
 
               Text {
-                text: "Tasa de refresco (" + curRes + ")"
+                text: "Tasa de refresco (" + rateSection.curRes + ")"
                 color: Qt.darker(root.bar.foreground, 1.4)
                 font.family: root.bar.fontFamily
                 font.pixelSize: Style.font.caption
@@ -732,7 +734,7 @@ Panel {
                 spacing: Style.space(6)
 
                 Repeater {
-                  model: availableRates
+                  model: rateSection.availableRates
 
                   Button {
                     required property var modelData
@@ -749,7 +751,7 @@ Panel {
 
                     onClicked: {
                       if (root.selectedMonitor) {
-                        root.setMonitorMode(root.selectedMonitor.name, curRes, modelData)
+                        root.setMonitorMode(root.selectedMonitor.name, rateSection.curRes, modelData)
                       }
                     }
                   }

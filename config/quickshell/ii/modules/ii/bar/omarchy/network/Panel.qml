@@ -211,6 +211,7 @@ Panel {
   }
 
   ShellIpc {
+
     target: "omarchy.network"
 
     function open() { root.open() }
@@ -1678,7 +1679,6 @@ Panel {
               text: sectionTitle
               foreground: root.bar.foreground
               fontFamily: root.bar.fontFamily
-              height: visible ? implicitHeight : 0
             }
 
             NetworkRow {
@@ -1972,7 +1972,6 @@ Panel {
           // so rows without status keep a tight one-line look.
           text: row.statusText
           visible: row.statusText !== ""
-          height: visible ? implicitHeight : 0
           color: row.statusColor
           font.family: root.bar.fontFamily
           font.pixelSize: Style.font.caption
