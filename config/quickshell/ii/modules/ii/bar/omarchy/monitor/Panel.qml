@@ -25,6 +25,13 @@ Panel {
     return monitors.length > 0 ? monitors[0] : null
   }
 
+  // Brightness per monitor name (a new object on every change so bindings see it)
+  property var brightness: ({})
+  property bool brightnessDragging: false
+  readonly property int selectedBrightness: selectedMonitor && brightness[selectedMonitor.name] !== undefined
+    ? brightness[selectedMonitor.name] : 100
+  readonly property string managerScript: Quickshell.env("HOME") + "/.config/hypr/scripts/monitor-manager.py"
+
   property bool nightlightEnabled: false
   property int nightlightTemp: 4000
 
@@ -55,6 +62,12 @@ Panel {
         try {
           var data = JSON.parse(text)
           root.monitors = data.monitors || []
+          if (!root.brightnessDragging && !brightnessApplyTimer.running && !brightnessActionProc.running) {
+            var b = {}
+            for (var i = 0; i < root.monitors.length; i++)
+              b[root.monitors[i].name] = root.monitors[i].brightness !== undefined ? root.monitors[i].brightness : 100
+            root.brightness = b
+          }
           root.focusedMonitor = data.focused || ""
           root.primaryMonitor = data.primary || ""
 
@@ -100,37 +113,35 @@ Panel {
     onRunningChanged: if (!running) root.refresh()
   }
 
+  // Only chooses which monitor the settings below apply to (no focus change)
   function selectMonitor(name) {
     root.selectedMonitorName = name
-    // Focus monitor in Hyprland without disturbing window state
-    monitorActionProc.command = ["hyprctl", "dispatch", "focusmonitor", name]
-    monitorActionProc.running = true
   }
 
   function setMonitorScale(name, scale) {
-    monitorActionProc.command = ["python3", "/home/sasel/Projects/hyprland-de/config/hypr/scripts/monitor-manager.py", "set-scale", name, String(scale)]
+    monitorActionProc.command = ["python3", root.managerScript, "set-scale", name, String(scale)]
     monitorActionProc.running = true
   }
 
   function setMonitorMode(name, res, hz) {
-    var cmd = ["python3", "/home/sasel/Projects/hyprland-de/config/hypr/scripts/monitor-manager.py", "set-mode", name, res]
+    var cmd = ["python3", root.managerScript, "set-mode", name, res]
     if (hz) cmd.push(String(hz))
     monitorActionProc.command = cmd
     monitorActionProc.running = true
   }
 
   function setMonitorTransform(name, tr) {
-    monitorActionProc.command = ["python3", "/home/sasel/Projects/hyprland-de/config/hypr/scripts/monitor-manager.py", "set-transform", name, String(tr)]
+    monitorActionProc.command = ["python3", root.managerScript, "set-transform", name, String(tr)]
     monitorActionProc.running = true
   }
 
   function setMonitorPrimary(name) {
-    monitorActionProc.command = ["python3", "/home/sasel/Projects/hyprland-de/config/hypr/scripts/monitor-manager.py", "set-primary", name]
+    monitorActionProc.command = ["python3", root.managerScript, "set-primary", name]
     monitorActionProc.running = true
   }
 
   function toggleMonitorEnable(name) {
-    monitorActionProc.command = ["python3", "/home/sasel/Projects/hyprland-de/config/hypr/scripts/monitor-manager.py", "toggle-enable", name]
+    monitorActionProc.command = ["python3", root.managerScript, "toggle-enable", name]
     monitorActionProc.running = true
   }
 
@@ -146,26 +157,29 @@ Panel {
     interval: 150
     repeat: false
     onTriggered: {
+      if (brightnessActionProc.running) { restart(); return }
+      // Every pending monitor in one go (one Process runs one command at a time)
+      var script = ""
+      var args = []
       for (var mon in root.pendingBrightness) {
-        var val = root.pendingBrightness[mon]
-        brightnessActionProc.command = ["omarchy-brightness-display", "--no-osd", "--monitor", mon, String(val) + "%"]
-        brightnessActionProc.running = true
+        args.push(mon, String(root.pendingBrightness[mon]))
+        script += 'omarchy-brightness-display --no-osd --monitor "$' + (args.length - 1) + '" "$' + args.length + '%";'
       }
       root.pendingBrightness = {}
+      if (args.length === 0) return
+      brightnessActionProc.command = ["bash", "-c", script, "bash"].concat(args)
+      brightnessActionProc.running = true
     }
   }
 
   function setBrightness(monName, val) {
+    if (!monName) return
     var percent = Math.max(1, Math.min(100, Math.round(val)))
-    // Update local UI immediately
-    for (var i = 0; i < root.monitors.length; i++) {
-      if (root.monitors[i].name === monName) {
-        root.monitors[i].brightness = percent
-        break
-      }
-    }
+    var next = Object.assign({}, root.brightness)
+    next[monName] = percent
+    root.brightness = next            // the UI follows at once
     root.pendingBrightness[monName] = percent
-    brightnessApplyTimer.restart()
+    brightnessApplyTimer.restart()    // DDC is slow: apply after a short pause
   }
 
   // Text size actions
@@ -247,11 +261,11 @@ Panel {
     bar: root.bar
     text: root.monitors.length > 1 ? "󰍺" : "󰍹"
     onPressed: function(b) { root.toggle() }
+    // Wheel over the icon: brightness of the monitor this bar is on
     onWheelMoved: function(delta) {
-      if (!root.selectedMonitor) return
-      var step = delta > 0 ? 5 : -5
-      var cur = root.selectedMonitor.brightness || 100
-      root.setBrightness(root.selectedMonitor.name, cur + step)
+      var name = root.QsWindow.window && root.QsWindow.window.screen ? root.QsWindow.window.screen.name : root.focusedMonitor
+      var cur = root.brightness[name] !== undefined ? root.brightness[name] : 100
+      root.setBrightness(name, cur + (delta > 0 ? 5 : -5))
     }
   }
 
@@ -362,231 +376,56 @@ Panel {
               Repeater {
                 model: root.monitors
 
-                Button {
+                // Own tab: qs.Ui Button only sizes itself from its `text`
+                Rectangle {
                   id: monTab
                   required property var modelData
                   required property int index
+                  readonly property bool active: root.selectedMonitorName === modelData.name
 
                   width: (parent.width - (root.monitors.length - 1) * Style.space(8)) / Math.max(1, root.monitors.length)
-                  verticalPadding: Style.space(8)
-                  horizontalPadding: Style.space(10)
-                  bordered: true
-                  active: root.selectedMonitorName === modelData.name
+                  height: tabColumn.implicitHeight + Style.space(16)
+                  color: active ? Qt.rgba(Commons.Color.accent.r, Commons.Color.accent.g, Commons.Color.accent.b, 0.16)
+                    : (tabMouse.containsMouse ? Qt.rgba(root.bar.foreground.r, root.bar.foreground.g, root.bar.foreground.b, 0.06) : "transparent")
+                  border.width: 1
+                  border.color: active ? Commons.Color.accent : Qt.rgba(root.bar.foreground.r, root.bar.foreground.g, root.bar.foreground.b, 0.35)
 
-                  // qs.Ui Button has no contentItem (that is QtQuick.Controls): the label is a child
                   Column {
-                    spacing: Style.space(2)
+                    id: tabColumn
                     anchors.centerIn: parent
-
-                    Row {
-                      spacing: Style.space(6)
-                      anchors.horizontalCenter: parent.horizontalCenter
-
-                      Text {
-                        text: "󰍹"
-                        color: monTab.active ? Commons.Color.accent : root.bar.foreground
-                        font.family: root.bar.fontFamily
-                        font.pixelSize: Style.font.body
-                        anchors.verticalCenter: parent.verticalCenter
-                      }
-
-                      Text {
-                        text: modelData.model || modelData.name
-                        color: monTab.active ? Commons.Color.accent : root.bar.foreground
-                        font.family: root.bar.fontFamily
-                        font.pixelSize: Style.font.caption
-                        font.bold: true
-                        elide: Text.ElideRight
-                        anchors.verticalCenter: parent.verticalCenter
-                      }
-                    }
+                    width: parent.width - Style.space(12)
+                    spacing: Style.space(3)
 
                     Text {
-                      text: (modelData.is_primary ? "★ Principal · " : "") + modelData.width + "x" + modelData.height + "@" + Math.round(modelData.refreshRate) + "Hz"
-                      color: Qt.darker(root.bar.foreground, 1.4)
-                      font.family: root.bar.fontFamily
-                      font.pixelSize: Style.space(10)
-                      anchors.horizontalCenter: parent.horizontalCenter
-                    }
-                  }
-
-                  onClicked: root.selectMonitor(modelData.name)
-                }
-              }
-            }
-          }
-
-          // ---------- Brightness (Sliders for each monitor) ----------
-          PanelSeparator {
-            foreground: root.bar.foreground
-          }
-
-          Column {
-            width: parent.width
-            spacing: Style.space(10)
-
-            PanelSectionHeader {
-              text: "Brillo de pantallas (DDC / Hardware)"
-              foreground: root.bar.foreground
-              fontFamily: root.bar.fontFamily
-            }
-
-            Repeater {
-              model: root.monitors
-
-              Column {
-                required property var modelData
-                required property int index
-                width: parent.width
-                spacing: Style.space(4)
-                visible: !modelData.disabled
-
-                Item {
-                  width: parent.width
-                  implicitHeight: Math.max(bLabel.implicitHeight, bPercent.implicitHeight)
-
-                  Row {
-                    id: bLabel
-                    spacing: Style.space(6)
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Text {
-                      text: "󰍹"
-                      color: root.selectedMonitorName === modelData.name ? Commons.Color.accent : root.bar.foreground
-                      font.family: root.bar.fontFamily
-                      font.pixelSize: Style.font.caption
-                    }
-
-                    Text {
-                      text: (modelData.model || modelData.name) + (modelData.name === root.focusedMonitor ? " (Activo)" : "")
-                      color: root.selectedMonitorName === modelData.name ? Commons.Color.accent : root.bar.foreground
+                      width: parent.width
+                      horizontalAlignment: Text.AlignHCenter
+                      text: "󰍹  " + (monTab.modelData.model || monTab.modelData.name)
+                      color: monTab.active ? Commons.Color.accent : root.bar.foreground
                       font.family: root.bar.fontFamily
                       font.pixelSize: Style.font.caption
                       font.bold: true
+                      elide: Text.ElideRight
+                    }
+                    Text {
+                      width: parent.width
+                      horizontalAlignment: Text.AlignHCenter
+                      text: (monTab.modelData.is_primary ? "★ " : "") + monTab.modelData.width + "x" + monTab.modelData.height
+                        + " @ " + Math.round(monTab.modelData.refreshRate) + " Hz"
+                      color: Qt.darker(root.bar.foreground, 1.4)
+                      font.family: root.bar.fontFamily
+                      font.pixelSize: Style.font.caption
+                      elide: Text.ElideRight
                     }
                   }
 
-                  Text {
-                    id: bPercent
-                    text: (modelData.brightness || 100) + "%"
-                    color: Qt.darker(root.bar.foreground, 1.4)
-                    font.family: root.bar.fontFamily
-                    font.pixelSize: Style.font.caption
-                    font.bold: true
-                    anchors.right: parent.right
-                    anchors.rightMargin: Style.space(6)
-                    anchors.verticalCenter: parent.verticalCenter
-                  }
-                }
-
-                CursorSurface {
-                  width: parent.width
-                  height: bSlider.implicitHeight + Style.spacing.controlGap
-                  foreground: root.bar.foreground
-                  outline: true
-
-                  PanelSlider {
-                    id: bSlider
-                    bar: root.bar
+                  MouseArea {
+                    id: tabMouse
                     anchors.fill: parent
-                    anchors.leftMargin: Style.space(6)
-                    anchors.rightMargin: Style.space(6)
-                    minimum: 1
-                    maximum: 100
-                    step: 1
-                    integer: true
-                    value: modelData.brightness || 100
-                    onMoved: function(v) { modelData.brightness = v }
-                    onReleased: function(v) { root.setBrightness(modelData.name, v) }
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.selectMonitor(monTab.modelData.name)
                   }
                 }
-              }
-            }
-          }
-
-          // ---------- Night Light ----------
-          PanelSeparator {
-            foreground: root.bar.foreground
-          }
-
-          Column {
-            width: parent.width
-            spacing: Style.space(6)
-
-            Item {
-              width: parent.width
-              implicitHeight: Math.max(nightlightHeader.implicitHeight, nightlightToggle.implicitHeight)
-
-              PanelSectionHeader {
-                id: nightlightHeader
-                text: "Luz nocturna (Filtro cálido)"
-                foreground: root.bar.foreground
-                fontFamily: root.bar.fontFamily
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-              }
-
-              ToggleSwitch {
-                id: nightlightToggle
-                anchors.right: parent.right
-                anchors.rightMargin: Style.space(6)
-                anchors.verticalCenter: parent.verticalCenter
-                checked: root.nightlightEnabled
-                onToggled: function(on) { root.toggleNightlight(on) }
-              }
-            }
-
-            Item {
-              visible: root.nightlightEnabled
-              width: parent.width
-              implicitHeight: Math.max(nightlightLabel.implicitHeight, nightlightTempText.implicitHeight)
-
-              Text {
-                id: nightlightLabel
-                text: "Temperatura de color"
-                color: Qt.darker(root.bar.foreground, 1.4)
-                font.family: root.bar.fontFamily
-                font.pixelSize: Style.font.caption
-                anchors.left: parent.left
-                anchors.leftMargin: Style.space(6)
-                anchors.verticalCenter: parent.verticalCenter
-              }
-
-              Text {
-                id: nightlightTempText
-                text: root.nightlightTemp + " K" + (root.nightlightTemp < 4000 ? " (Muy cálido)" : (root.nightlightTemp < 5500 ? " (Cálido)" : " (Neutro)"))
-                color: Qt.darker(root.bar.foreground, 1.4)
-                font.family: root.bar.fontFamily
-                font.pixelSize: Style.font.caption
-                font.bold: true
-                anchors.right: parent.right
-                anchors.rightMargin: Style.space(6)
-                anchors.verticalCenter: parent.verticalCenter
-              }
-            }
-
-            CursorSurface {
-              id: nightlightRow
-              visible: root.nightlightEnabled
-              width: parent.width
-              height: nightlightSlider.implicitHeight + Style.spacing.controlGap
-              foreground: root.bar.foreground
-              outline: true
-
-              PanelSlider {
-                id: nightlightSlider
-                bar: root.bar
-                anchors.fill: parent
-                anchors.leftMargin: Style.space(6)
-                anchors.rightMargin: Style.space(6)
-                minimum: 2700
-                maximum: 6500
-                step: 100
-                value: root.nightlightTemp
-                integer: true
-                onMoved: function(v) { root.nightlightTemp = v }
-                onReleased: function(v) { root.setNightlightTemperature(v) }
               }
             }
           }
@@ -606,7 +445,7 @@ Panel {
             Row {
               spacing: Style.space(6)
               PanelSectionHeader {
-                text: "Ajustes: " + (root.selectedMonitor ? root.selectedMonitor.model : "")
+                text: "Ajustes de " + (root.selectedMonitor ? (root.selectedMonitor.model || root.selectedMonitor.name) : "")
                 foreground: root.bar.foreground
                 fontFamily: root.bar.fontFamily
               }
@@ -616,6 +455,56 @@ Panel {
                 font.family: root.bar.fontFamily
                 font.pixelSize: Style.font.caption
                 anchors.verticalCenter: parent.verticalCenter
+              }
+            }
+
+            // 0. Brightness of this monitor (DDC/CI or backlight)
+            Column {
+              width: parent.width
+              spacing: Style.space(6)
+
+              Item {
+                width: parent.width
+                implicitHeight: brightnessLabel.implicitHeight
+                Text {
+                  id: brightnessLabel
+                  text: "Brillo"
+                  color: Qt.darker(root.bar.foreground, 1.4)
+                  font.family: root.bar.fontFamily
+                  font.pixelSize: Style.font.caption
+                  font.bold: true
+                }
+                Text {
+                  anchors.right: parent.right
+                  anchors.rightMargin: Style.space(6)
+                  text: Math.round(brightnessSlider.dragging ? brightnessSlider.liveValue : root.selectedBrightness) + "%"
+                  color: Qt.darker(root.bar.foreground, 1.4)
+                  font.family: root.bar.fontFamily
+                  font.pixelSize: Style.font.caption
+                  font.bold: true
+                }
+              }
+
+              CursorSurface {
+                width: parent.width
+                height: brightnessSlider.implicitHeight + Style.spacing.controlGap
+                foreground: root.bar.foreground
+                outline: true
+
+                PanelSlider {
+                  id: brightnessSlider
+                  bar: root.bar
+                  anchors.fill: parent
+                  anchors.leftMargin: Style.space(6)
+                  anchors.rightMargin: Style.space(6)
+                  minimum: 1
+                  maximum: 100
+                  step: 1
+                  integer: true
+                  value: root.selectedBrightness
+                  onDraggingChanged: root.brightnessDragging = dragging
+                  onReleased: function(v) { if (root.selectedMonitor) root.setBrightness(root.selectedMonitor.name, v) }
+                }
               }
             }
 
@@ -849,6 +738,92 @@ Panel {
             }
           }
 
+          // ---------- Night Light ----------
+          PanelSeparator {
+            foreground: root.bar.foreground
+          }
+
+          Column {
+            width: parent.width
+            spacing: Style.space(6)
+
+            Item {
+              width: parent.width
+              implicitHeight: Math.max(nightlightHeader.implicitHeight, nightlightToggle.implicitHeight)
+
+              PanelSectionHeader {
+                id: nightlightHeader
+                text: "Luz nocturna · todas las pantallas"
+                foreground: root.bar.foreground
+                fontFamily: root.bar.fontFamily
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+              }
+
+              ToggleSwitch {
+                id: nightlightToggle
+                anchors.right: parent.right
+                anchors.rightMargin: Style.space(6)
+                anchors.verticalCenter: parent.verticalCenter
+                checked: root.nightlightEnabled
+                onToggled: function(on) { root.toggleNightlight(on) }
+              }
+            }
+
+            Item {
+              visible: root.nightlightEnabled
+              width: parent.width
+              implicitHeight: Math.max(nightlightLabel.implicitHeight, nightlightTempText.implicitHeight)
+
+              Text {
+                id: nightlightLabel
+                text: "Temperatura de color"
+                color: Qt.darker(root.bar.foreground, 1.4)
+                font.family: root.bar.fontFamily
+                font.pixelSize: Style.font.caption
+                anchors.left: parent.left
+                anchors.leftMargin: Style.space(6)
+                anchors.verticalCenter: parent.verticalCenter
+              }
+
+              Text {
+                id: nightlightTempText
+                text: root.nightlightTemp + " K" + (root.nightlightTemp < 4000 ? " (Muy cálido)" : (root.nightlightTemp < 5500 ? " (Cálido)" : " (Neutro)"))
+                color: Qt.darker(root.bar.foreground, 1.4)
+                font.family: root.bar.fontFamily
+                font.pixelSize: Style.font.caption
+                font.bold: true
+                anchors.right: parent.right
+                anchors.rightMargin: Style.space(6)
+                anchors.verticalCenter: parent.verticalCenter
+              }
+            }
+
+            CursorSurface {
+              id: nightlightRow
+              visible: root.nightlightEnabled
+              width: parent.width
+              height: nightlightSlider.implicitHeight + Style.spacing.controlGap
+              foreground: root.bar.foreground
+              outline: true
+
+              PanelSlider {
+                id: nightlightSlider
+                bar: root.bar
+                anchors.fill: parent
+                anchors.leftMargin: Style.space(6)
+                anchors.rightMargin: Style.space(6)
+                minimum: 2700
+                maximum: 6500
+                step: 100
+                value: root.nightlightTemp
+                integer: true
+                onMoved: function(v) { root.nightlightTemp = v }
+                onReleased: function(v) { root.setNightlightTemperature(v) }
+              }
+            }
+          }
+
           // ---------- Text Size (UI Font Base Size) ----------
           PanelSeparator {
             foreground: root.bar.foreground
@@ -864,7 +839,7 @@ Panel {
 
               PanelSectionHeader {
                 id: textSizeHeader
-                text: Commons.I18n.t("monitor.textSize") || "Tamaño de texto de la interfaz"
+                text: "Tamaño de texto · todas las pantallas"
                 foreground: root.bar.foreground
                 fontFamily: root.bar.fontFamily
                 anchors.left: parent.left

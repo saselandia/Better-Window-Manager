@@ -16,15 +16,6 @@ if command -v powerprofilesctl >/dev/null 2>&1; then
       print $0 (with_state ? "\t" active : "")
     }' |
     tac
-else
-  state_dir="${OMARCHY_POWERPROFILES_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/powerprofiles}"
-  current="performance"
-  [[ -r "$state_dir/ac" ]] && current=$(<"$state_dir/ac")
-  for p in power-saver balanced performance; do
-    if [[ ${1:-} == "--active-state" ]]; then
-      [[ "$p" == "$current" ]] && printf '%s\t1\n' "$p" || printf '%s\t0\n' "$p"
-    else
-      printf '%s\n' "$p"
-    fi
-  done
 fi
+# BWM: without power-profiles-daemon there are no profiles to list (Omarchy listed three it
+# could not apply); the power panel hides its profile picker then

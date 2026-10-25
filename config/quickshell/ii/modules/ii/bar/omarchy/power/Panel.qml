@@ -361,7 +361,7 @@ Panel {
             spacing: Style.space(2)
 
             Text {
-              text: root.batteryPresent ? Commons.I18n.t("power.battery") : (Commons.I18n.t("power.power") || "POWER")
+              text: root.batteryPresent ? Commons.I18n.t("power.battery") : "Power"
               textFormat: Text.PlainText
               color: root.bar.foreground
               font.family: root.bar.fontFamily
@@ -513,12 +513,14 @@ Panel {
           }
         }
 
-        // ---------- Power profile picker ----------
+        // ---------- Power profile picker (only with power-profiles-daemon) ----------
         PanelSeparator {
+          visible: root.profiles.length > 0
           foreground: root.bar.foreground
         }
 
         Column {
+          visible: root.profiles.length > 0
           width: parent.width
           spacing: Style.space(10)
 

@@ -229,10 +229,15 @@ PanelWindow {
         stdout: StdioCollector {
             id: imageDimensionCollector
             onStreamFinished: {
-                imageRegions = RegionFunctions.filterImageRegions(
-                    JSON.parse(imageDimensionCollector.text),
-                    root.windowRegions
-                );
+                // The detector prints nothing (not JSON) when its Python venv is missing
+                try {
+                    imageRegions = RegionFunctions.filterImageRegions(
+                        JSON.parse(imageDimensionCollector.text),
+                        root.windowRegions
+                    );
+                } catch (e) {
+                    imageRegions = [];
+                }
             }
         }
     }
