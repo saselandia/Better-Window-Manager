@@ -1337,8 +1337,9 @@ Item {
             root.requestDeleteSelected()
             event.accepted = true
           } else if (event.key === Qt.Key_Escape) {
+            // BWM: Escape steps back out of a submenu; it only closes the menu at the root
             if (root.filterText) root.setFilter("")
-            else root.cancel()
+            else if (!root.goBack()) root.cancel()
             event.accepted = true
           } else if (Util.editsFilter(event, root.filterText)) {
             root.setFilter(Util.editedFilter(event, root.filterText))
