@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# BWM stand-in for Omarchy's omarchy-dns. Omarchy's version rewrites NetworkManager's global DNS
+# as root through its packaged /usr/bin/omarchy-dns; BWM does not change system DNS from the bar.
+# No argument: the provider in use (Cloudflare / Google / DHCP / Custom), as the network panel
+# expects. With one: says where to change it.
+if (( $# == 0 )); then
+  servers=$(nmcli -t -f IP4.DNS device show 2>/dev/null | cut -d: -f2 | grep -v '^$' | sort -u | tr '\n' ' ')
+  case "$servers" in
+    *1.1.1.1*|*1.0.0.1*) echo Cloudflare ;;
+    *8.8.8.8*|*8.8.4.4*) echo Google ;;
+    "") echo DHCP ;;
+    *) nmcli -t -f ipv4.ignore-auto-dns connection show --active 2>/dev/null | grep -q yes && echo Custom || echo DHCP ;;
+  esac
+  exit 0
+fi
+notify-send -a Network "DNS" "Change the DNS servers in the connection settings (nm-connection-editor)."
+exit 1

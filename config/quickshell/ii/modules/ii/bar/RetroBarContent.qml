@@ -561,11 +561,8 @@ Item {
                 }
 
                 onClicked: event => {
-                    if (event.button === Qt.RightButton) {
-                        Weather.getData();
-                    } else {
-                        GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
-                    }
+                    // Retro: quick settings only open from the launcher, not from bar buttons
+                    Weather.getData();
                 }
             }
         }
@@ -740,8 +737,28 @@ Item {
         }
 
         // Audio Volume Module
+        // Omarchy's Bluetooth, network and audio widgets (bar/omarchy/{bluetooth,network,audio},
+        // from Omarchy's panels, MIT): their icons and dropdown panels, in Omarchy's order.
+        // BWM's own buttons below are only the fallback if they fail to load.
+        OmarchyPluginSlot {
+            id: omarchyStatus
+            section: "status"
+            Layout.alignment: Qt.AlignVCenter
+            foreground: root.dynamicFg
+            background: root.dynamicBg
+            urgent: root.omarchyColors.urgent
+            barSize: root.itemHeight
+            spacing: 0
+            fixedEntries: ["bluetooth", "network", "audio"].map(n => ({
+                id: "omarchy." + n,
+                source: Qt.resolvedUrl("omarchy/" + n + "/Panel.qml"),
+                settings: OmarchyPlugins.builtinSettings("omarchy." + n)
+            }))
+        }
+
         MouseArea {
             id: volArea
+            visible: !omarchyStatus.visible // replaced by Omarchy's panel widget
             Layout.alignment: Qt.AlignVCenter
             implicitWidth: volContent.implicitWidth + Math.round(10 * root.scaleRatio)
             implicitHeight: root.itemHeight
@@ -798,6 +815,7 @@ Item {
         // Network Module
         MouseArea {
             id: netArea
+            visible: !omarchyStatus.visible // replaced by Omarchy's panel widget
             Layout.alignment: Qt.AlignVCenter
             implicitWidth: root.iconBoxWidth
             implicitHeight: root.itemHeight
@@ -839,7 +857,7 @@ Item {
         // Bluetooth Module
         MouseArea {
             id: btArea
-            visible: BluetoothStatus.available
+            visible: !omarchyStatus.visible && BluetoothStatus.available // replaced by Omarchy's panel widget
             Layout.alignment: Qt.AlignVCenter
             implicitWidth: root.iconBoxWidth
             implicitHeight: root.itemHeight
@@ -890,9 +908,8 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
-                }
+                // Retro: quick settings only open from the launcher, not from bar buttons
+                onClicked: Quickshell.execDetached(["bash", "-c", "powerprofilesctl get >/dev/null 2>&1 && notify-send -a Battery \"$(powerprofilesctl get)\" \"$(cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -1)%\""])
 
                 Rectangle {
                     anchors.fill: parent

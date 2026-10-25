@@ -1,0 +1,19 @@
+[Desktop Entry]
+# Retro theme only (installed and removed by bwm_omarchy.py like the task manager): opens the
+# centered quick settings window (Quickshell's right sidebar in Retro's centered mode).
+Type=Application
+Name=Quick Settings
+Name[es]=Ajustes rápidos
+Name[ca]=Configuració ràpida
+Name[de]=Schnelleinstellungen
+Name[fr]=Réglages rapides
+Name[it]=Impostazioni rapide
+Name[pt]=Definições rápidas
+Name[pt_BR]=Configurações rápidas
+Comment=Wi-Fi, Bluetooth, sound, night light, to-do and timer
+Comment[es]=Wi-Fi, Bluetooth, sonido, luz nocturna, tareas y temporizador
+Keywords=quick settings;settings;toggles;wifi;bluetooth;night light;ajustes rápidos;ajustes;configuración;interruptores;sonido;luz nocturna;
+Icon=preferences-system
+Exec=qs -c ii ipc call sidebarRight open
+Terminal=false
+Categories=Settings;

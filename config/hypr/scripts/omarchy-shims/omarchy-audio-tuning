@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# BWM stand-in: Omarchy's speaker tuning profiles do not exist here ("no fronted sink").
+exit 1

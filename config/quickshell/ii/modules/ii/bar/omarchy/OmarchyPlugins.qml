@@ -34,6 +34,10 @@ Singleton {
     function firstPartyServiceFor(id) {
         return null; // BWM has its own equivalents of omarchy.* services
     }
+    // omarchy-shell opens its own overlays (speed test...) this way; BWM has none of them
+    function summon(id, args) {
+        console.info(`[OmarchyPlugins] ${id} is an omarchy-shell overlay, not available in BWM`);
+    }
     function iconPath(name, fallback) {
         return Quickshell.iconPath(String(name || ""), fallback ?? true);
     }

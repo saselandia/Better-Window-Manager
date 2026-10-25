@@ -466,15 +466,20 @@ def run_hooks(theme: str):
 
 TASK_MANAGER_DESKTOP = HOME / ".local" / "share" / "applications" / "bwm-task-manager.desktop"
 
+RETRO_APPS = ("bwm-task-manager.desktop", "bwm-quick-settings.desktop")
+
 def apply_task_manager(present: bool):
-    """Retro's "Task Manager" / "Gestor de tareas" app: btop in a terminal, as in Omarchy
-    (assets: omarchy/applications/bwm-task-manager.desktop, translated names and keywords)."""
-    if present:
-        tpl = (ASSETS_DIR / "applications" / "bwm-task-manager.desktop").read_text(encoding="utf-8")
-        TASK_MANAGER_DESKTOP.parent.mkdir(parents=True, exist_ok=True)
-        _write_if_changed(TASK_MANAGER_DESKTOP, tpl.replace("@HOME@", str(HOME)))
-    else:
-        TASK_MANAGER_DESKTOP.unlink(missing_ok=True)
+    """Retro-only apps (omarchy/applications, translated names and keywords): "Task Manager" /
+    "Gestor de tareas" = btop in the default terminal, as in Omarchy, and "Quick Settings" /
+    "Ajustes rápidos" = the centered quick settings window."""
+    for name in RETRO_APPS:
+        dest = TASK_MANAGER_DESKTOP.parent / name
+        if present:
+            tpl = (ASSETS_DIR / "applications" / name).read_text(encoding="utf-8")
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            _write_if_changed(dest, tpl.replace("@HOME@", str(HOME)))
+        else:
+            dest.unlink(missing_ok=True)
 
 def restore_non_retro():
     """Leaving Retro: give back what the other themes do not regenerate by themselves."""

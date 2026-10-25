@@ -14,10 +14,12 @@ Rectangle {
     color: Appearance.colors.colLayer1
     clip: true
     implicitHeight: collapsed ? collapsedBottomWidgetGroupRow.implicitHeight : 350
-    property int selectedTab: Persistent.states.sidebar.bottomGroup.tab
+    property int selectedTab: Math.min(Persistent.states.sidebar.bottomGroup.tab, tabs.length - 1)
     property int previousIndex: -1
     property bool collapsed: Persistent.states.sidebar.bottomGroup.collapsed
-    property var tabs: [
+    // Retro's centered quick settings leave the calendar to the bar's clock
+    property var tabs: allTabs.filter(t => !(Appearance.isRetro && t.type === "calendar"))
+    property var allTabs: [
         {
             "type": "calendar",
             "name": Translation.tr("Calendar"),

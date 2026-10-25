@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# BWM stand-in for Omarchy's web-app launcher: open the URL in the default browser.
+exec xdg-open "$1"

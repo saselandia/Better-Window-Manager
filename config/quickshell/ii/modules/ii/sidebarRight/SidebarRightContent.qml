@@ -28,6 +28,8 @@ Item {
     property bool showNightLightDialog: false
     property bool showWifiDialog: false
     property bool editMode: false
+    // Height the content needs (Retro's centered quick settings window has no notifications)
+    readonly property real centeredHeight: contentColumn.implicitHeight + sidebarPadding * 2
 
     Connections {
         target: GlobalStates
@@ -52,13 +54,14 @@ Item {
 
         anchors.fill: parent
         implicitHeight: parent.height - Appearance.sizes.hyprlandGapsOut * 2
-        implicitWidth: sidebarWidth - Appearance.sizes.hyprlandGapsOut * 2
+        implicitWidth: parent.width > 0 ? parent.width : sidebarWidth - Appearance.sizes.hyprlandGapsOut * 2
         color: Appearance.colors.colLayer0
         border.width: Appearance.isRetro ? 2 : 1
         border.color: Appearance.colors.colLayer0Border
         radius: Math.max(0, Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1)
 
         ColumnLayout {
+            id: contentColumn
             anchors.fill: parent
             anchors.margins: sidebarPadding
             spacing: sidebarPadding
@@ -96,7 +99,9 @@ Item {
                 }
             }
 
+            // Notifications: not in Retro's centered quick settings
             CenterWidgetGroup {
+                visible: !Appearance.isRetro
                 Layout.alignment: Qt.AlignHCenter
                 Layout.fillHeight: true
                 Layout.fillWidth: true

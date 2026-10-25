@@ -128,6 +128,9 @@ if ! pidof quickshell >/dev/null 2>&1; then
     fi
 fi
 
+# 5.1 Gestor de tareas de Retro (btop): existe sólo en Retro, también si se arranca ya en Retro
+python3 -c "import sys; sys.path.insert(0, '$HOME/.config/hypr/scripts'); import bwm_omarchy as b; b.apply_task_manager('$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null)' == 'retro')" 2>/dev/null &
+
 # 6. Centro de notificaciones (swaync)
 if ! pidof swaync >/dev/null 2>&1; then
     if command -v swaync >/dev/null 2>&1; then

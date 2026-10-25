@@ -168,7 +168,11 @@ Scope {
         }
         close();
         if (row.kind === "app") {
-            if (row.entry && typeof row.entry.execute === "function") {
+            // Terminal apps (btop++, htop...) open in the default terminal (Settings → Default
+            // apps, bwm-terminal); DesktopEntry.execute() alone starts them with no terminal
+            if (row.entry && row.entry.runInTerminal && row.entry.command && row.entry.command.length > 0) {
+                Quickshell.execDetached([Quickshell.env("HOME") + "/.config/hypr/scripts/bwm-terminal", "--"].concat(Array.from(row.entry.command)));
+            } else if (row.entry && typeof row.entry.execute === "function") {
                 row.entry.execute();
             }
         } else if (menu[row.id] && menu[row.id].cmd) {

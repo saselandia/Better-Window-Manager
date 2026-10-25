@@ -10,6 +10,9 @@ import Quickshell.Hyprland
 Scope {
     id: root
     property int sidebarWidth: Appearance.sizes.sidebarWidth
+    // Retro: quick settings as a centered window, a bit larger than the launcher (opened from
+    // the Omarchy menu), instead of a sidebar
+    readonly property bool centered: Appearance.isRetro
 
     PanelWindow {
         id: panelWindow
@@ -20,6 +23,7 @@ Scope {
         }
 
         exclusiveZone: 0
+        exclusionMode: root.centered ? ExclusionMode.Ignore : ExclusionMode.Normal
         implicitWidth: sidebarWidth
         WlrLayershell.namespace: "quickshell:sidebarRight"
         WlrLayershell.keyboardFocus: GlobalStates.sidebarRightOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
@@ -29,6 +33,15 @@ Scope {
             top: true
             right: true
             bottom: true
+            left: root.centered
+        }
+
+        // Centered mode covers the screen: a click outside the card closes it
+        MouseArea {
+            anchors.fill: parent
+            enabled: root.centered
+            visible: root.centered
+            onClicked: panelWindow.hide()
         }
 
         onVisibleChanged: {
@@ -49,12 +62,14 @@ Scope {
             id: sidebarContentLoader
             active: GlobalStates.sidebarRightOpen || Config?.options.sidebar.keepRightSidebarLoaded
             anchors {
-                fill: parent
-                margins: Appearance.sizes.hyprlandGapsOut
-                leftMargin: Appearance.sizes.elevationMargin
+                fill: root.centered ? undefined : parent
+                centerIn: root.centered ? parent : undefined
+                margins: root.centered ? 0 : Appearance.sizes.hyprlandGapsOut
+                leftMargin: root.centered ? 0 : Appearance.sizes.elevationMargin
             }
-            width: sidebarWidth - Appearance.sizes.hyprlandGapsOut - Appearance.sizes.elevationMargin
-            height: parent.height - Appearance.sizes.hyprlandGapsOut * 2
+            width: root.centered ? sidebarWidth + 60 : sidebarWidth - Appearance.sizes.hyprlandGapsOut - Appearance.sizes.elevationMargin
+            height: root.centered ? Math.min(parent.height * 0.9, item?.centeredHeight ?? 700)
+                : parent.height - Appearance.sizes.hyprlandGapsOut * 2
 
             focus: GlobalStates.sidebarRightOpen
             Keys.onPressed: event => {
