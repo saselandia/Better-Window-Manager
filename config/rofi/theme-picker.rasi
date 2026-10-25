@@ -5,7 +5,7 @@ configuration {
 * {
     font: "JetBrainsMono Nerd Font 10";
     background-color: transparent;
-    text-color: #c9d4d9;
+    text-color: #ffcead;
 }
 
 window {
@@ -13,8 +13,8 @@ window {
     transparency: "real";
     border-radius: 8px;
     border: 2px solid;
-    border-color: #59c7f8;
-    background-color: #10181cF5;
+    border-color: #7d82d9;
+    background-color: #060B1EF5;
     padding: 16px;
 }
 
@@ -25,13 +25,13 @@ mainbox {
 
 inputbar {
     children: [ prompt ];
-    background-color: #10181c;
+    background-color: #060B1E;
     border-radius: 6px;
     padding: 10px 14px;
 }
 
 prompt {
-    text-color: #59c7f8;
+    text-color: #7d82d9;
     font: "JetBrainsMono Nerd Font Bold 11";
 }
 
@@ -51,17 +51,17 @@ element {
 }
 
 element selected {
-    background-color: #213640;
+    background-color: #252e56;
     border: 1px solid;
-    border-color: #59c7f8;
+    border-color: #7d82d9;
 }
 
 element-text {
     vertical-align: 0.5;
-    text-color: #c9d4d9;
+    text-color: #ffcead;
 }
 
 element-text selected {
-    text-color: #edf1f3;
+    text-color: #ffcead;
     font: "JetBrainsMono Nerd Font Bold 10";
 }
