@@ -51,7 +51,14 @@ BarWidget {
   readonly property int effectiveLabelWidth: calculateEffectiveLabelWidth()
 
   property bool settingsOpen: false
-  readonly property bool opened: settingsOpen
+  // BWM: left click opens the now-playing dropdown (NowPlayingPanel.qml)
+  property bool nowPlayingOpen: false
+  readonly property bool opened: settingsOpen || nowPlayingOpen
+  function toggleNowPlaying() {
+    settingsOpen = false
+    nowPlayingOpen = !nowPlayingOpen
+  }
+  function closeNowPlaying() { nowPlayingOpen = false }
 
   visible: hasMedia
   implicitWidth: {
@@ -161,6 +168,7 @@ BarWidget {
 
   function close() {
     settingsOpen = false
+    nowPlayingOpen = false
   }
 
   function open() {
@@ -168,6 +176,7 @@ BarWidget {
   }
 
   function toggle() {
+    nowPlayingOpen = false
     settingsOpen = !settingsOpen
   }
 
@@ -260,7 +269,7 @@ BarWidget {
         onClicked: function(mouse) {
           if (mouse.button === Qt.MiddleButton) root.previous()
           else if (mouse.button === Qt.RightButton) root.toggle()
-          else root.raisePlayer()
+          else root.toggleNowPlaying() // BWM: the now-playing dropdown
         }
         onWheel: function(wheel) { root.wheelAction(wheel) }
         onEntered: if (root.bar) root.bar.showTooltip(artContainer, root.tooltipText)
@@ -300,13 +309,27 @@ BarWidget {
         onClicked: function(mouse) {
           if (mouse.button === Qt.MiddleButton) root.previous()
           else if (mouse.button === Qt.RightButton) root.toggle()
-          else root.raisePlayer()
+          else root.toggleNowPlaying() // BWM: the now-playing dropdown
         }
         onWheel: function(wheel) { root.wheelAction(wheel) }
         onEntered: if (root.bar) root.bar.showTooltip(labelClip, root.tooltipText)
         onExited: if (root.bar) root.bar.hideTooltip(labelClip)
       }
     }
+  }
+
+  // BWM: qs -c ii ipc call bwm.nowPlaying toggle (e.g. for a keybind)
+  ShellIpc {
+    target: "bwm.nowPlaying"
+    function toggle(): void { root.toggleNowPlaying() }
+    function open(): void { root.nowPlayingOpen = true }
+    function close(): void { root.closeNowPlaying() }
+  }
+
+  NowPlayingPanel {
+    widget: root
+    open: root.nowPlayingOpen && root.hasMedia
+    onOpenChanged: if (!open) root.nowPlayingOpen = false
   }
 
   PopupCard {

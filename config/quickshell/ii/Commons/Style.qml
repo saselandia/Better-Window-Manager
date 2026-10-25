@@ -283,10 +283,13 @@ QtObject {
   property var fontOverrides: ({})
   property var barOverrides: ({})
   property bool barScaleWithFont: true
-  readonly property real fontScale: Math.max(1 / 12, fontBaseSize / 12)
+  // BWM: the Retro bar sets this from its height (bar height / 24) so every Omarchy widget,
+  // panel and spacing scales with the bar, as the rest of the Retro bar does
+  property real bwmScale: 1.0
+  readonly property real fontScale: Math.max(1 / 12, fontBaseSize * bwmScale / 12)
 
   function fontPx(mult) {
-    return Math.max(1, Math.round(fontBaseSize * mult))
+    return Math.max(1, Math.round(fontBaseSize * bwmScale * mult))
   }
 
   function fontToken(key, fallback) {

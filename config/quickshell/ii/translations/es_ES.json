@@ -860,5 +860,16 @@
   "Todos los atajos de teclado configurados están activos.": "Todos los atajos de teclado configurados están activos.",
   "Atajo '%1' restaurado a sus valores de fábrica": "Atajo '%1' restaurado a sus valores de fábrica",
   "Bar thickness (pixels)": "Grosor de la barra (píxeles)",
-  "Bar height (pixels)": "Altura de la barra (píxeles)"
+  "Bar height (pixels)": "Altura de la barra (píxeles)",
+  "Default apps": "Aplicaciones predeterminadas",
+  "Web browser": "Navegador web",
+  "File manager": "Gestor de archivos",
+  "Text editor": "Editor de texto",
+  "Task manager": "Gestor de tareas",
+  "Used by the task manager, Omarchy plugins and shell actions": "La usan el gestor de tareas, los plugins de Omarchy y las acciones de terminal",
+  "Terminal programs (btop, htop) open in the default terminal": "Los programas de terminal (btop, htop) se abren en la terminal predeterminada",
+  "None installed": "Ninguno instalado",
+  "Omarchy plugins": "Plugins de Omarchy",
+  "Widgets from Omarchy's shell in the Retro bar. More: ~/.config/hypr/scripts/bwm-plugin.sh add <git-url>": "Widgets del shell de Omarchy en la barra Retro. Más: ~/.config/hypr/scripts/bwm-plugin.sh add <url-git>",
+  "installed": "instalado"
 }

@@ -146,6 +146,16 @@ hl.window_rule({
     rounding = 0,
 })
 
+-- Terminal flotante de los plugins de Omarchy (omarchy-shims/omarchy-launch-floating-terminal-
+-- with-presentation), como su etiqueta "floating-window": flota centrada
+hl.window_rule({
+    name   = "omarchy-floating-terminal",
+    match  = { class = "^org\\.omarchy\\.terminal$" },
+    float  = true,
+    size   = "875 600",
+    center = true,
+})
+
 -- Salvapantallas de terminal (launch-screensaver.sh), como el de Omarchy:
 -- pantalla completa, sin barra de título y en su workspace especial si se reabre
 hl.window_rule({

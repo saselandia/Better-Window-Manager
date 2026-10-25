@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# bwm-terminal [--class <app-id>] [--title <title>] [--] [command args...]
+# Opens the default terminal (Settings → Default applications, ~/.config/bwm/default-apps.json)
+# with a window class and, optionally, a command. Used by the Retro task manager and by the
+# stand-ins for Omarchy's terminal launchers (omarchy-shims).
+# ==============================================================================
+class="" title=""
+while (($#)); do
+  case "$1" in
+    --class) class=$2; shift 2 ;;
+    --title) title=$2; shift 2 ;;
+    --) shift; break ;;
+    *) break ;;
+  esac
+done
+
+term=$(jq -r '.terminal // "kitty"' "$HOME/.config/bwm/default-apps.json" 2>/dev/null || echo kitty)
+command -v "$term" >/dev/null || term=kitty
+
+args=()
+case "$term" in
+  kitty)     [[ -n $class ]] && args+=(--class "$class"); [[ -n $title ]] && args+=(--title "$title"); (($#)) && args+=(--) ;;
+  foot)      [[ -n $class ]] && args+=(--app-id="$class"); [[ -n $title ]] && args+=(--title="$title") ;;
+  alacritty) [[ -n $class ]] && args+=(--class "$class"); [[ -n $title ]] && args+=(--title "$title"); (($#)) && args+=(-e) ;;
+  ghostty)   [[ -n $class ]] && args+=(--class="$class"); [[ -n $title ]] && args+=(--title="$title"); (($#)) && args+=(-e) ;;
+  wezterm)   args+=(start); [[ -n $class ]] && args+=(--class "$class"); (($#)) && args+=(--) ;;
+  konsole|gnome-terminal|xfce4-terminal|*) (($#)) && args+=(-e) ;;
+esac
+exec setsid "$term" "${args[@]}" "$@"

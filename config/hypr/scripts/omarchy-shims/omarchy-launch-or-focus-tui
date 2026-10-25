@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# BWM stand-in for Omarchy's command: focus the TUI's kitty window if it is open, else launch it.
+# BWM stand-in for Omarchy's command: focus the TUI's terminal window if it is open, else open it
+# in the default terminal (Settings → Default applications, via bwm-terminal).
 if [[ ${1:-} == --app-id=* ]]; then app_id="${1#--app-id=}"; shift; else app_id="org.omarchy.$(basename "$1")"; fi
 addr=$(hyprctl clients -j | jq -r --arg c "$app_id" '.[] | select(.class == $c) | .address' | head -n1)
 if [[ -n $addr ]]; then
   exec hyprctl dispatch "hl.dsp.focus({ window = \"address:$addr\" })"
 fi
-exec setsid kitty --class "$app_id" "$@"
+exec "$HOME/.config/hypr/scripts/bwm-terminal" --class "$app_id" -- "$@"

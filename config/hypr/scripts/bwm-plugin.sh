@@ -29,7 +29,7 @@ BUILTIN_DIR="${BWM_BUILTIN_PLUGINS:-$HOME/.config/quickshell/ii/omarchy-plugins}
 # ai-usagebar: el plugin preinstalado es sólo la interfaz; su binario sale de este commit
 AI_USAGEBAR_GIT="https://github.com/akitaonrails/ai-usagebar.git"
 AI_USAGEBAR_REV="d1af986fe4bf8d05316bc8d6e1506881b5f4d265"
-LAYOUT="${XDG_CONFIG_HOME:-$HOME/.config}/bwm/omarchy-plugins.json"
+LAYOUT="${BWM_OMARCHY_LAYOUT:-${XDG_CONFIG_HOME:-$HOME/.config}/bwm/omarchy-plugins.json}"
 export GIT_TERMINAL_PROMPT=0
 
 fail() { echo "bwm-plugin: $*" >&2; exit 1; }
@@ -77,6 +77,7 @@ enable_plugin() { # id [section]
   if [[ -z $section ]]; then
     # Como en el shell.json de Omarchy: Elsewhen y el tiempo justo después del reloj
     if [[ $id == omarchy.elsewhen || $id == omarchy.weather ]]; then section=centerEnd
+    elif [[ $id == crmne.mpris ]]; then section=center   # a la izquierda del reloj: a la derecha no cabe junto a omastats
     else section=$(section_for "$(jq -r '.barWidget.defaultSection // "right"' "$manifest")"); fi
   fi
   jq --arg id "$id" --arg s "$section" --argjson d "$(jq '.barWidget.defaults // {}' "$manifest")" '
@@ -180,7 +181,7 @@ cmd_catalog() {
     builtin=false; [[ $d == "$BUILTIN_DIR"/* ]] && builtin=true
     jq -c --arg dir "${d%/}" --argjson builtin "$builtin" '{
       builtin: $builtin,
-      defaultSection: (if (.id == "omarchy.elsewhen" or .id == "omarchy.weather") then "centerEnd" else (.barWidget.defaultSection // "right" | if . == "left" then "left" elif (. == "center" or . == "centerBegin") then "center" elif . == "centerEnd" then "centerEnd" else "right" end) end),
+      defaultSection: (if (.id == "omarchy.elsewhen" or .id == "omarchy.weather") then "centerEnd" elif .id == "crmne.mpris" then "center" else (.barWidget.defaultSection // "right" | if . == "left" then "left" elif (. == "center" or . == "centerBegin") then "center" elif . == "centerEnd" then "centerEnd" else "right" end) end),
       description: (.description // ""),
       id, name, version, kinds: (.kinds // []), dir: $dir,
       keepLoaded: (.keepLoaded // false),

@@ -24,6 +24,8 @@ function collectSlots(item, slots) {
 
 function widthBudget(widget, contentItem, edgeMargin, collisionGap) {
   var ownSlot = hostSlot(widget)
+  // BWM: the Retro bar knows the free space of its sections and hands it over directly
+  if (ownSlot && typeof ownSlot.bwmWidthBudget === "number" && ownSlot.bwmWidthBudget >= 0) return ownSlot.bwmWidthBudget
   if (!ownSlot || !contentItem || contentItem.width <= 0) return 0
 
   var region = ownSlot.region

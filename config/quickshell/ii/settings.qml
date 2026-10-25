@@ -75,6 +75,11 @@ ApplicationWindow {
             component: "modules/settings/WorkspaceConfig.qml"
         },
         {
+            name: Translation.tr("Default apps"),
+            icon: "apps",
+            component: "modules/settings/DefaultAppsConfig.qml"
+        },
+        {
             name: Translation.tr("Style"),
             icon: "font_download",
             component: "modules/settings/StyleConfig.qml"

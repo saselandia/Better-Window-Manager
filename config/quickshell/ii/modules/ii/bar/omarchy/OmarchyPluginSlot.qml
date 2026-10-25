@@ -15,6 +15,24 @@ Row {
     // Built-in Omarchy widgets of the Retro bar (the clock) are given here instead of coming
     // from the plugin catalog: [{ id, source, settings }]
     property var fixedEntries: null
+    // Free width for the section's widgets that size themselves (omarchy-mpris), -1 = let them measure
+    property real widthBudget: -1
+    // Room for the whole section (-1 = unlimited): widgets that do not fit whole are hidden,
+    // from the last one, instead of being cut in half
+    property real maxWidth: -1
+    readonly property int fittedCount: {
+        const n = repeater.count;
+        if (root.maxWidth < 0)
+            return n;
+        let used = 0;
+        for (let i = 0; i < n; i++) {
+            const w = repeater.itemAt(i)?.implicitWidth ?? 0;
+            if (used + w > root.maxWidth)
+                return i;
+            used += w + (w > 0 ? root.spacing : 0);
+        }
+        return n;
+    }
     property color foreground: "white"
     property color background: "black"
     property color urgent: "red"
@@ -31,10 +49,13 @@ Row {
         delegate: Item {
             id: slot
             required property var modelData
+            required property int index
+            visible: index < root.fittedCount
             // What omarchy-shell's bar slots expose: plugins such as omarchy-mpris measure the
             // free space between slots (BarGeometry.js) through these two
             readonly property var activeItem: loader.item
             readonly property string region: root.section === "left" ? "left" : (root.section === "right" ? "right" : "center")
+            readonly property real bwmWidthBudget: root.widthBudget
 
             implicitWidth: loader.item ? loader.item.implicitWidth : 0
             implicitHeight: root.barSize

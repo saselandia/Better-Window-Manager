@@ -36,6 +36,7 @@ ApplicationWindow {
         { id: "autostart", name: "Inicio automático", icon: "preferences-system-login", keywords: "autostart inicio arranque", component: "modules/settings/AutostartConfig.qml" },
         { id: "display", name: "Pantalla y monitor", icon: "preferences-desktop-display-randr", keywords: "display pantalla monitor resolucion", component: "modules/settings/DisplayConfig.qml" },
         { id: "workspaces", name: "Escritorios virtuales", icon: "preferences-desktop-virtual", keywords: "workspaces escritorios", component: "modules/settings/WorkspaceConfig.qml" },
+        { id: "defaultapps", name: "Aplicaciones predeterminadas", icon: "preferences-desktop-default-applications", keywords: "default apps aplicaciones predeterminadas terminal navegador browser archivos editor gestor de tareas task manager", component: "modules/settings/DefaultAppsConfig.qml" },
         { id: "style", name: "Estilo", icon: "preferences-desktop-font", keywords: "style estilo fonts fuentes tipografia glass translucido salvapantallas screensaver arranque plymouth sddm", component: "modules/settings/StyleConfig.qml" },
         { id: "cursor", name: "Cursores", icon: "preferences-desktop-cursors", keywords: "cursor raton", component: "modules/settings/CursorConfig.qml" },
         { id: "advanced", name: "Avanzado", icon: "preferences-other", keywords: "advanced avanzado", component: "modules/settings/AdvancedConfig.qml" },

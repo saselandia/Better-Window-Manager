@@ -18,6 +18,10 @@ More plugins: `bwm-plugin.sh add <git-url>` (installed under `~/.local/share/bwm
 Omarchy's clock and calendar (`omarchy.clock`) is not a plugin here: it is part of the Retro bar
 (`modules/ii/bar/omarchy/clock`, from basecamp/omarchy `shell/plugins/panels/clock` at 4fa93e9f).
 
+BWM changes to `omarchy-mpris`: `NowPlayingPanel.qml` (left click: now-playing dropdown with art,
+seekable progress, shuffle/repeat and player chips; IPC `bwm.nowPlaying toggle`) and a
+`bwmWidthBudget` hook in `BarGeometry.js` so the Retro bar can give it the free width.
+
 Left out from upstream: `.git`, tests, tools/scripts, preview images and agent notes.
 Omarchy commands some plugins run (`omarchy-launch-floating-terminal-with-presentation`, …) are
 provided by `hypr/scripts/omarchy-shims/`.

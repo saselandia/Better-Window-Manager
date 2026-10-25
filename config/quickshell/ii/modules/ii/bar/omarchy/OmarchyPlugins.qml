@@ -15,7 +15,8 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    readonly property string layoutPath: (Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/bwm/omarchy-plugins.json"
+    readonly property string layoutPath: Quickshell.env("BWM_OMARCHY_LAYOUT")
+        || ((Quickshell.env("XDG_CONFIG_HOME") || (Quickshell.env("HOME") + "/.config")) + "/bwm/omarchy-plugins.json")
     readonly property string pluginScript: Quickshell.env("HOME") + "/.config/hypr/scripts/bwm-plugin.sh"
 
     property var plugins: []          // catalog entries (see bwm-plugin.sh catalog)

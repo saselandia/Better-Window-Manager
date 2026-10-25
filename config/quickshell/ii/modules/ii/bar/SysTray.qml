@@ -16,6 +16,8 @@ Item {
     property bool trayOverflowOpen: false
     property bool showSeparator: true
     property bool showOverflowMenu: true
+    // Icon size; by default (-1) the icons fill the bar's thickness (the Retro bar sets one)
+    property real itemSize: -1
     property var activeMenu: null
 
     property list<var> pinnedItems: TrayService.pinnedItems
@@ -119,8 +121,10 @@ Item {
                         delegate: SysTrayItem {
                             required property SystemTrayItem modelData
                             item: modelData
-                            Layout.fillHeight: !root.vertical
-                            Layout.fillWidth: root.vertical
+                            Layout.fillHeight: !root.vertical && root.itemSize < 0
+                            Layout.fillWidth: root.vertical && root.itemSize < 0
+                            implicitWidth: root.itemSize > 0 ? root.itemSize : 20
+                            implicitHeight: root.itemSize > 0 ? root.itemSize : 20
                             onMenuClosed: root.releaseFocus();
                             onMenuOpened: (qsWindow) => root.setExtraWindowAndGrabFocus(qsWindow);
                         }
@@ -137,8 +141,11 @@ Item {
             delegate: SysTrayItem {
                 required property SystemTrayItem modelData
                 item: modelData
-                Layout.fillHeight: !root.vertical
-                Layout.fillWidth: root.vertical
+                Layout.fillHeight: !root.vertical && root.itemSize < 0
+                Layout.fillWidth: root.vertical && root.itemSize < 0
+                Layout.alignment: Qt.AlignCenter
+                implicitWidth: root.itemSize > 0 ? root.itemSize : 20
+                implicitHeight: root.itemSize > 0 ? root.itemSize : 20
                 onMenuClosed: root.releaseFocus();
                 onMenuOpened: (qsWindow) => {
                     root.setExtraWindowAndGrabFocus(qsWindow);

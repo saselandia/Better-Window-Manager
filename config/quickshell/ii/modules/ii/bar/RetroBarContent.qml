@@ -11,6 +11,7 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.models
 import qs.modules.ii.bar.omarchy
+import qs.Commons as O
 
 Item {
     id: root
@@ -371,6 +372,13 @@ Item {
         }
     }
 
+    // Omarchy's widgets (clock, plugins, their panels) scale with the bar like BWM's own items
+    Binding {
+        target: O.Style
+        property: "bwmScale"
+        value: Math.max(0.75, Math.min(2.5, root.barH / 24))
+    }
+
     WorkspaceModel {
         id: wsModel
         monitor: root.monitor
@@ -446,6 +454,8 @@ Item {
 
     OmarchyPluginSlot {
         section: "center"
+        // Between the left section (workspaces, active window) and the indicators
+        widthBudget: Math.max(0, omarchyIndicators.x - (leftSection.x + leftSection.width) - 24)
         anchors.right: omarchyIndicators.left
         anchors.rightMargin: 6
         anchors.verticalCenter: parent.verticalCenter
@@ -507,8 +517,7 @@ Item {
             readonly property real centerEnd: centerEndPlugins.visible ? centerEndPlugins.x + centerEndPlugins.width
                 : (omarchyClock.visible ? omarchyClock.x + omarchyClock.width : centerClockArea.x + centerClockArea.width)
             readonly property real freeSpace: root.width - 10 - othersWidth - centerEnd - 12
-            Layout.maximumWidth: Math.max(0, freeSpace)
-            clip: true
+            maxWidth: Math.max(0, freeSpace)
             Layout.alignment: Qt.AlignVCenter
             foreground: root.dynamicFg
             background: root.dynamicBg
@@ -720,6 +729,7 @@ Item {
         SysTray {
             Layout.alignment: Qt.AlignVCenter
             Layout.fillHeight: true
+            itemSize: Math.round(root.itemHeight * 0.62)
         }
 
         Rectangle {
