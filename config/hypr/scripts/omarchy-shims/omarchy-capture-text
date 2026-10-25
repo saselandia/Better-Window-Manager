@@ -1,5 +1,7 @@
 #!/bin/bash
 # From Omarchy (https://github.com/basecamp/omarchy, bin/omarchy-capture-text), MIT. Copied for BWM's Retro theme.
+# BWM: OCR languages = every installed current model (no osd/enm/*_old: they cost accuracy,
+# e.g. accents), unless OMARCHY_OCR_LANGS says otherwise.
 
 # omarchy:summary=Extract text from a screenshot region with OCR
 # omarchy:group=capture
@@ -19,7 +21,7 @@ SELECTION=$(slurp 2>/dev/null)
 
 [[ -z $SELECTION ]] && exit 0
 
-TEXT=$(grim -g "$SELECTION" - | tesseract stdin stdout --oem 1 --psm 6 -l "${OMARCHY_OCR_LANGS:-$(tesseract --list-langs 2>/dev/null | tail -n +2 | grep -vx osd | paste -sd+ | grep . || echo eng)}" --dpi 300 -c preserve_interword_spaces=1 2>/dev/null) || exit 1
+TEXT=$(grim -g "$SELECTION" - | tesseract stdin stdout --oem 1 --psm 6 -l "${OMARCHY_OCR_LANGS:-$(tesseract --list-langs 2>/dev/null | tail -n +2 | grep -vxE 'osd|enm|.*_old|.*_vert' | paste -sd+ | grep . || echo eng)}" --dpi 300 -c preserve_interword_spaces=1 2>/dev/null) || exit 1
 
 [[ -z $TEXT ]] && exit 1
 
