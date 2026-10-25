@@ -16,12 +16,22 @@ PREVIEW_DIR="$CACHE_PATH/previews"
 
 mkdir -p "$PREVIEW_DIR"
 
-# 1. Dynamic theme entry pointing to current wallpaper
+# 1. Dynamic theme entry: a PNG thumbnail of the current wallpaper (Quickshell's Qt has no
+#    WebP decoder, and a full-size 4K image is far more than a preview needs)
 WP="$HOME/.cache/current_wallpaper"
-if [[ -f "$WP" && -s "$WP" ]]; then
-  WP_PATH="$(cat "$WP" | tr -d '\n')"
+DYN="$PREVIEW_DIR/dynamic.png"
+if [[ -s "$WP" ]]; then
+  WP_PATH="$(tr -d '\n' < "$WP")"
   if [[ -f "$WP_PATH" ]]; then
-    ln -sf "$WP_PATH" "$PREVIEW_DIR/dynamic.png" 2>/dev/null || true
+    if [[ -L "$DYN" || ! -f "$DYN" || "$WP_PATH" -nt "$DYN" || "$(cat "$DYN.src" 2>/dev/null)" != "$WP_PATH" ]]; then
+      rm -f "$DYN"
+      if magick "$WP_PATH[0]" -resize 1280x800^ -gravity center -extent 1280x800 "$DYN.tmp.png" 2>/dev/null; then
+        mv -f "$DYN.tmp.png" "$DYN"
+        printf '%s' "$WP_PATH" > "$DYN.src"
+      else
+        rm -f "$DYN.tmp.png"
+      fi
+    fi
   fi
 fi
 

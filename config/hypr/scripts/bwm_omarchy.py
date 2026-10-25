@@ -657,6 +657,13 @@ def update_retro_config_json(mode: str, name: str):
         except Exception as e:
             print(f"[Warning] Error actualizando {cfg_path}: {e}", file=sys.stderr)
 
+def _secondary(colors: dict) -> str:
+    """Second colour of the Hyprland border gradient (the wallpaper's secondary in dynamic mode)."""
+    m = re.findall(r"rgba?\(([0-9a-fA-F]{6})", colors.get("hyprland_active_border", ""))
+    if len(m) > 1:
+        return "#" + m[1].lower()
+    return colors.get("bright_magenta", colors.get("bright_blue", colors["accent"]))
+
 def write_retro_sync_files(colors: dict):
     """Write Quickshell retro-colors.json, Hyprland retro_colors.lua, and Rofi omarchy-colors.rasi."""
     # 1. Quickshell retro-colors.json
@@ -664,7 +671,7 @@ def write_retro_sync_files(colors: dict):
         RETRO_COLORS_JSON.parent.mkdir(parents=True, exist_ok=True)
         retro_data = {
             "accent": colors["accent"],
-            "secondary": colors.get("bright_magenta", colors.get("bright_blue", colors["accent"])),
+            "secondary": _secondary(colors),
             "bg": colors["background"],
             "border": colors["accent"],
             "fg": colors["foreground"],
@@ -677,7 +684,7 @@ def write_retro_sync_files(colors: dict):
 
     # 2. Hyprland retro_colors.lua
     hex_acc = colors["accent"].lstrip("#")
-    sec_color = colors.get("bright_magenta", colors.get("bright_blue", colors["accent"]))
+    sec_color = _secondary(colors)
     hex_sec = sec_color.lstrip("#")
     hex_bg = colors["background"].lstrip("#")
     lua_content = f"""-- Generado automáticamente por bwm_omarchy.py
@@ -762,7 +769,28 @@ def apply_retro_palette_colors(colors: dict, wallpaper: str = ""):
     _detached("python3 ~/.config/hypr/scripts/bwm_boot.py render")
     return colors
 
-def apply_retro_static_theme(theme_name: str, set_wallpaper: bool = True) -> dict:
+def _theme_wallpaper(theme_dir: Path) -> str:
+    bg_dir = theme_dir / "backgrounds"
+    if not bg_dir.is_dir():
+        return ""
+    bgs = sorted(p for p in bg_dir.iterdir() if p.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"))
+    return str(bgs[0]) if bgs else ""
+
+def _link_background(wp: str):
+    if not wp:
+        return
+    try:
+        OMARCHY_CURRENT_DIR.mkdir(parents=True, exist_ok=True)
+        if OMARCHY_CURRENT_BG_LINK.is_symlink() or OMARCHY_CURRENT_BG_LINK.exists():
+            OMARCHY_CURRENT_BG_LINK.unlink()
+        OMARCHY_CURRENT_BG_LINK.symlink_to(Path(wp))
+    except Exception:
+        pass
+
+def _notify(body: str):
+    _detached(f'notify-send -a "BWM Theme" -i preferences-desktop-theme "Tema Retro" "{body}"')
+
+def apply_retro_static_theme(theme_name: str, set_wallpaper: bool = True, notify: bool = False) -> dict:
     """Applies one of the curated static Omarchy themes."""
     theme_dir = THEMES_DIR / theme_name
     if not theme_dir.is_dir() or not (theme_dir / "colors.toml").is_file():
@@ -777,41 +805,30 @@ def apply_retro_static_theme(theme_name: str, set_wallpaper: bool = True) -> dic
     colors = complete_colors(raw_colors)
     set_retro_mode_state("static", theme_name)
     update_retro_config_json("static", theme_name)
-
-    wp = ""
-    if set_wallpaper:
-        bg_dir = theme_dir / "backgrounds"
-        if bg_dir.is_dir():
-            bgs = sorted([p for p in bg_dir.iterdir() if p.suffix.lower() in ('.jpg', '.jpeg', '.png', '.webp')])
-            if bgs:
-                wp = str(bgs[0])
-                subprocess.run(["swww", "img", wp, "--transition-type", "grow", "--transition-pos", "center", "--transition-step", "90", "--transition-duration", "2", "--transition-fps", "60"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                (HOME / ".cache").mkdir(parents=True, exist_ok=True)
-                (HOME / ".cache" / "current_wallpaper").write_text(wp + "\n", encoding="utf-8")
-                (HOME / ".cache" / "current_wallpaper_retro").write_text(wp + "\n", encoding="utf-8")
-
-    if not wp:
-        try:
-            cache_file = HOME / ".cache" / "current_wallpaper"
-            if cache_file.exists():
-                wp = cache_file.read_text(encoding="utf-8").strip()
-        except Exception:
-            wp = ""
-
-    if wp:
-        try:
-            if OMARCHY_CURRENT_BG_LINK.is_symlink() or OMARCHY_CURRENT_BG_LINK.exists():
-                OMARCHY_CURRENT_BG_LINK.unlink()
-            OMARCHY_CURRENT_BG_LINK.symlink_to(Path(wp))
-        except Exception:
-            pass
-
-    apply_retro_palette_colors(colors, wp)
     display_name = theme_name.replace("-", " ").title()
-    _detached(f'notify-send -a "BWM Theme" -i preferences-desktop-theme "Tema Retro" "Se ha aplicado el tema estático: {display_name}"')
+
+    wp = _theme_wallpaper(theme_dir) if set_wallpaper else ""
+    if wp:
+        # set-wallpaper.sh also updates the lock screen and the Retro profile, and applies this
+        # palette itself (static mode keeps it): one pass instead of two
+        _link_background(wp)
+        subprocess.run([str(CONFIG_DIR / "hypr" / "scripts" / "set-wallpaper.sh"), wp], check=False,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if notify:
+            _notify(f"Tema estático: {display_name}")
+        return colors
+
+    try:
+        wp = (HOME / ".cache" / "current_wallpaper").read_text(encoding="utf-8").strip()
+    except Exception:
+        wp = ""
+    _link_background(wp)
+    apply_retro_palette_colors(colors, wp)
+    if notify:
+        _notify(f"Tema estático: {display_name}")
     return colors
 
-def apply_retro_dynamic_theme(wallpaper: str = "") -> dict:
+def apply_retro_dynamic_theme(wallpaper: str = "", notify: bool = False) -> dict:
     """Applies dynamic theme extracted from the wallpaper."""
     set_retro_mode_state("dynamic", "dynamic")
     update_retro_config_json("dynamic", "dynamic")
@@ -833,17 +850,40 @@ def apply_retro_dynamic_theme(wallpaper: str = "") -> dict:
 
     colors = build_colors(palette)
 
-    if wp:
-        try:
-            if OMARCHY_CURRENT_BG_LINK.is_symlink() or OMARCHY_CURRENT_BG_LINK.exists():
-                OMARCHY_CURRENT_BG_LINK.unlink()
-            OMARCHY_CURRENT_BG_LINK.symlink_to(Path(wp))
-        except Exception:
-            pass
+    _link_background(wp)
 
     apply_retro_palette_colors(colors, wp)
-    _detached('notify-send -a "BWM Theme" -i preferences-desktop-theme "Tema Retro" "Se ha activado la paleta dinámica desde el fondo de pantalla"')
+    if notify:
+        _notify("Paleta dinámica sacada del fondo")
     return colors
+
+def _bwm_theme() -> str:
+    try:
+        cfg = json.loads((CONFIG_DIR / "illogical-impulse" / "config.json").read_text(encoding="utf-8"))
+        return cfg.get("appearance", {}).get("bwmTheme", "")
+    except Exception:
+        return ""
+
+def set_theme(target: str):
+    """omarchy-theme-set: a curated theme or "dynamic". Outside Retro the Retro palette would
+    recolour every app of the active theme, so the choice is stored and BWM switches to Retro."""
+    if target != "dynamic" and not (THEMES_DIR / target / "colors.toml").is_file():
+        raise ValueError(f"Tema estático no encontrado: {target}")
+    if _bwm_theme() == "retro":
+        if target == "dynamic":
+            apply_retro_dynamic_theme(notify=True)
+        else:
+            apply_retro_static_theme(target, notify=True)
+        return
+    mode = "dynamic" if target == "dynamic" else "static"
+    set_retro_mode_state(mode, target)
+    update_retro_config_json(mode, target)
+    wp = _theme_wallpaper(THEMES_DIR / target) if mode == "static" else ""
+    if wp:
+        (HOME / ".cache").mkdir(parents=True, exist_ok=True)
+        (HOME / ".cache" / "current_wallpaper_retro").write_text(wp + "\n", encoding="utf-8")
+    subprocess.run([sys.executable, str(CONFIG_DIR / "hypr" / "scripts" / "bwm-theme-manager.py"), "set", "retro"],
+                   check=False)
 
 def apply_retro_apps(palette: dict, wallpaper: str = ""):
     """Retro theme: Omarchy-style themes for every app, from the wallpaper palette (legacy wrapper)."""
@@ -1003,21 +1043,21 @@ if __name__ == "__main__":
                 print("Usage: bwm_omarchy.py static <theme_name> [--no-wallpaper]", file=sys.stderr)
                 sys.exit(1)
             set_wp = "--no-wallpaper" not in sys.argv
-            apply_retro_static_theme(sys.argv[2], set_wallpaper=set_wp)
+            apply_retro_static_theme(sys.argv[2], set_wallpaper=set_wp, notify=True)
             sys.exit(0)
         elif cmd == "dynamic":
             wp = sys.argv[2] if len(sys.argv) > 2 and not sys.argv[2].startswith("--") else ""
-            apply_retro_dynamic_theme(wp)
+            apply_retro_dynamic_theme(wp, notify=True)
             sys.exit(0)
         elif cmd == "set-theme":
             if len(sys.argv) < 3:
                 print("Usage: bwm_omarchy.py set-theme <theme_name|dynamic>", file=sys.stderr)
                 sys.exit(1)
-            target = sys.argv[2]
-            if target == "dynamic":
-                apply_retro_dynamic_theme()
-            else:
-                apply_retro_static_theme(target)
+            try:
+                set_theme(sys.argv[2])
+            except ValueError as e:
+                print(e, file=sys.stderr)
+                sys.exit(1)
             sys.exit(0)
 
     print(json.dumps(build_colors({"accent": sys.argv[1] if len(sys.argv) > 1 else "#38bdf8"}), indent=2))

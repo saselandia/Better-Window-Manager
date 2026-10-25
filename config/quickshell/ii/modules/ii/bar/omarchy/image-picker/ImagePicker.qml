@@ -68,6 +68,45 @@ Item {
 
   onOpenedChanged: if (!opened) { layoutSettled = false; renderedFrames = 0; deleteConfirmOpen = false; pendingDeleteTheme = ""; deleteSelectionPath = ""; awaitingDeleteRefresh = false }
 
+  // Decides when the picker keeps its decoded previews (held while open and for
+  // `grace` after closing). Inline: Quickshell does not resolve types from a sibling
+  // file of a Loader-loaded component in a directory no module imports.
+  component PreviewHold: Item {
+    id: hold
+
+    property bool active: false
+    property int grace: 60000
+    // Set apart from the timer: restarting a running Timer stops it first, and
+    // a held that blinked off would unload every preview just to reload it.
+    property bool lingering: false
+    readonly property bool held: active || lingering
+
+    // Hold the previews for a grace period without opening, as a preload does.
+    function warm() {
+      if (!active) linger()
+    }
+
+    function linger() {
+      lingering = true
+      graceTimer.restart()
+    }
+
+    onActiveChanged: {
+      if (active) {
+        graceTimer.stop()
+        lingering = false
+      } else {
+        linger()
+      }
+    }
+
+    Timer {
+      id: graceTimer
+      interval: hold.grace
+      onTriggered: hold.lingering = false
+    }
+  }
+
   PreviewHold {
     id: previewHold
     active: root.opened
@@ -321,29 +360,7 @@ Item {
   property var imageArray: []
   readonly property var matchingImageIndices: ImagePickerModel.matchingIndices(imageArray, filterText)
   onMatchingImageIndicesChanged: updateVisibleItems()
-  onSelectedIndexChanged: {
-    updateVisibleItems()
-    introPrepareTimer.restart()
-  }
-  onThemeModeChanged: if (themeMode) introPrepareTimer.restart()
-
-  Timer {
-    id: introPrepareTimer
-    interval: 75
-    onTriggered: {
-      if (root.opened && root.themeMode && !introPrepare.running) {
-        introPrepare.theme = root.nameForPath(root.currentPath())
-        introPrepare.command = ["omarchy-theme-bg-boot-intro", "--prepare-theme", root.nameForPath(root.currentPath())]
-        introPrepare.running = true
-      }
-    }
-  }
-
-  Process {
-    id: introPrepare
-    property string theme: ""
-    onExited: if (root.opened && root.themeMode && theme !== root.nameForPath(root.currentPath())) introPrepareTimer.restart()
-  }
+  onSelectedIndexChanged: updateVisibleItems()
 
   function updateVisibleItems() {
     ImagePickerModel.syncWindow(visibleImages, ImagePickerModel.visibleWindow(matchingImageIndices, selectedIndex, previewRadius))
