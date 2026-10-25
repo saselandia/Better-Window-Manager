@@ -51,6 +51,8 @@ Scope {
         function open(): void { menu.open("{}"); }
         function close(): void { menu.close(); }
         function summon(route: string): void { menu.open(JSON.stringify({ menu: route })); }
+        // Omarchy's full payload: {"menu": ...} or the select / input modes of omarchy-menu-select
+        function openPayload(payload: string): void { menu.open(payload); }
         function refresh(): void { menu.refresh(); }
         function state(): string { return menu.opened ? menu.activeMenu : "closed"; }
         // Same as Escape: back out of a submenu, close at the root

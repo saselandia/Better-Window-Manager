@@ -74,6 +74,7 @@ This dotfiles repository keeps binary assets minimal to ensure portability and q
 | **`plymouth`** + **`dracut`** | Omarchy-style boot splash (optional, `install-boot-theme.sh --plymouth`) |
 | **`git`**, **`jq`** (+ **`cargo`** optional) | Omarchy bar plugins in the Retro theme (`bwm-plugin.sh`); `cargo` builds the `ai-usagebar` binary |
 | **`satty`** or **`swappy`** | Screenshot annotation ("edit" in the Retro screenshot preview) |
+| **`tesseract`**, **`zbar`**, **`gpu-screen-recorder`** or **`wf-recorder`**, **`hyprpicker`**, **`libv4l`** (optional) | Retro menu captures (Omarchy's): text (OCR), QR codes, screen recording with desktop/mic audio and webcam, colour picker. Gentoo: `app-text/tesseract media-gfx/zbar gui-apps/wf-recorder gui-apps/hyprpicker media-libs/libv4l` (`gpu-screen-recorder` is in GURU) |
 
 ### Required Flatpak Applications:
 | Application | Flatpak App ID | Role |

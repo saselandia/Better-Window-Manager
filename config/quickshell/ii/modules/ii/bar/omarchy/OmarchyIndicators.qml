@@ -27,7 +27,8 @@ Row {
     property bool recording: false
     Process {
         id: recordingProbe
-        command: ["pgrep", "-x", "wf-recorder"]
+        // BWM's recorder (wf-recorder) or Omarchy's capture (gpu-screen-recorder / wf-recorder)
+        command: ["bash", "-c", "pgrep -x wf-recorder >/dev/null || pgrep -f '^gpu-screen-recorder' >/dev/null"]
         onExited: code => root.recording = code === 0
     }
     Timer {
@@ -43,7 +44,7 @@ Row {
     Repeater {
         model: [
             { glyph: "󰻂", active: root.recording, urgent: true, tip: "Stop recording",
-              run: () => Quickshell.execDetached([Directories.recordScriptPath]) },
+              run: () => Quickshell.execDetached(["bash", "-c", "omarchy-capture-screenrecording --status && omarchy-capture-screenrecording --stop-recording || " + Directories.recordScriptPath]) },
             { glyph: "󰔎", active: Hyprsunset.temperatureActive, urgent: false, tip: "Night light",
               run: () => Hyprsunset.toggleTemperature() },
             { glyph: "󰂛", active: Notifications.silent, urgent: false, tip: "Do not disturb",

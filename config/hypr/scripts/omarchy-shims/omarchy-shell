@@ -1,11 +1,17 @@
 #!/bin/bash
-# omarchy-shell shim for Quickshell ii
+# omarchy-shell stand-in for BWM's Quickshell (ii): routes Omarchy's `omarchy-shell` calls to the
+# Retro theme's IPC targets.
+#   omarchy-shell [-q] shell summon <id> [payload-json]   open a shell overlay / the menu
+#   omarchy-shell [-q] shell hide <id>
+#   omarchy-shell [-q] <target> [method] [args...]        qs -c ii ipc call <target> <method> ...
 if [[ "$#" -eq 0 || "$1" == "-h" || "$1" == "--help" ]]; then
   echo "Usage: omarchy-shell [-q] <target> [method] [args...]"
   exit 0
 fi
 
+quiet=false
 if [[ "$1" == "-q" ]]; then
+  quiet=true
   shift
 fi
 
@@ -13,6 +19,23 @@ target="$1"
 shift
 
 if [[ -z "$target" ]]; then
+  exit 0
+fi
+
+# `shell summon omarchy.menu <payload>`: the Retro menu, including its select / input modes
+# (omarchy-menu-select); other ids go to the plugin host's overlays
+if [[ "$target" == "shell" && ( "${1:-}" == "summon" || "${1:-}" == "hide" ) ]]; then
+  verb=$1 id=${2:-} payload=${3:-}
+  [[ -z $payload ]] && payload='{}'
+  if [[ $id == omarchy.menu ]]; then
+    [[ $verb == hide ]] && exec qs -c ii ipc call omarchyMenu close
+    exec qs -c ii ipc call omarchyMenu openPayload "$payload"
+  fi
+  exec qs -c ii ipc call shell "$verb" "$id"
+fi
+
+# BWM's indicators poll their state themselves (recording, night light, ...)
+if [[ "$target" == "omarchy.indicators" ]]; then
   exit 0
 fi
 
@@ -25,7 +48,10 @@ if [[ "$target" != *"."* ]]; then
 fi
 
 if [[ "$#" -eq 0 ]]; then
-  exec qs -c ii ipc call "$target" toggle
+  set -- toggle
+fi
+if $quiet; then
+  qs -c ii ipc call "$target" "$@" >/dev/null 2>&1 || true
 else
   exec qs -c ii ipc call "$target" "$@"
 fi

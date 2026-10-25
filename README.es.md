@@ -74,6 +74,7 @@ Este entorno no incluye los binarios propietarios o pesados en el repositorio gi
 | **`plymouth`** + **`dracut`** | Pantalla de arranque estilo Omarchy (opcional, `install-boot-theme.sh --plymouth`) |
 | **`git`**, **`jq`** (+ **`cargo`** opcional) | Plugins de la barra de Omarchy en el tema Retro (`bwm-plugin.sh`); `cargo` compila el binario de `ai-usagebar` |
 | **`satty`** o **`swappy`** | Anotar capturas («edit» en la vista previa de captura de Retro) |
+| **`tesseract`**, **`zbar`**, **`gpu-screen-recorder`** o **`wf-recorder`**, **`hyprpicker`**, **`libv4l`** (opcionales) | Capturas del menú de Retro (las de Omarchy): texto (OCR), códigos QR, grabación de pantalla con audio del escritorio/micrófono y webcam, selector de color. Gentoo: `app-text/tesseract media-gfx/zbar gui-apps/wf-recorder gui-apps/hyprpicker media-libs/libv4l` (`gpu-screen-recorder` está en GURU) |
 
 ### Aplicaciones Flatpak Obligatorias:
 | Aplicación | ID Flatpak | Rol |
