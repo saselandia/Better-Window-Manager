@@ -224,22 +224,25 @@ QtObject {
     mergeShell()
   }
 
-  // Startup load only. Runtime theme switches push the payload explicitly
-  // through shell IPC.
+  // BWM: Omarchy pushes the palette through its shell IPC on a theme switch, but BWM's
+  // Retro rewrites these files whenever the wallpaper changes, so they are watched: the menu,
+  // panels and their borders follow the theme live (the neon active-border gradient too).
   property FileView colorsFile: FileView {
     id: colorsFile
     path: root.currentThemePath + "/colors.toml"
-    watchChanges: false
+    watchChanges: true
     printErrors: false
     onLoaded: root.loadColors(text())
+    onFileChanged: reload()
   }
   property FileView shellFile: FileView {
     id: shellFile
     path: root.currentThemePath + "/shell.toml"
-    watchChanges: false
+    watchChanges: true
     printErrors: false
     onLoaded: root.loadShell(text())
     onLoadFailed: root.loadShell("")
+    onFileChanged: reload()
   }
   // Machine-level override, layered on top of whatever theme is active. This
   // is where `omarchy display text size` writes `[font] base-size`. Watched so the

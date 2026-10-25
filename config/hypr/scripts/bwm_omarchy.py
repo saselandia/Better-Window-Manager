@@ -126,6 +126,11 @@ def build_colors(palette: dict) -> dict:
             continue
         c[name] = _hex(h, 0.66, 0.72)
         c["bright_" + name] = _hex(h, 0.75, 0.85)
+    # The Hyprland active border (neon accent -> secondary at 45deg, as in retro_colors.lua):
+    # Omarchy's shell.toml points menu, popup and panel borders at it via shell_gradient
+    if palette.get("accent") and palette.get("secondary"):
+        c["hyprland_active_border"] = (f"rgba({palette['accent'].lstrip('#')}ee) "
+                                       f"rgba({palette['secondary'].lstrip('#')}ee) 45deg")
     c["selection_background"] = c["selection"]
     c["selection_foreground"] = c["bright_foreground"]
     c["cursor"] = accent
