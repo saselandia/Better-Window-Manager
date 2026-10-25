@@ -72,6 +72,8 @@ Este entorno no incluye los binarios propietarios o pesados en el repositorio gi
 | **`qt6ct`, `papirus-icon-theme`, `socat`** | Paleta del tema en apps Qt, iconos por tema (Retro: carpetas del color del fondo) y salvapantallas de terminal |
 | **`sddm`** (Qt 6) | Pantalla de inicio de sesión estilo Omarchy con los colores del tema, en un Hyprland mínimo como el de Omarchy (opcional, la configura `install.sh`) |
 | **`plymouth`** + **`dracut`** | Pantalla de arranque estilo Omarchy (opcional, `install-boot-theme.sh --plymouth`) |
+| **`git`**, **`jq`** (+ **`cargo`** opcional) | Plugins de la barra de Omarchy en el tema Retro (`bwm-plugin.sh`); `cargo` compila el binario de `ai-usagebar` |
+| **`satty`** o **`swappy`** | Anotar capturas («edit» en la vista previa de captura de Retro) |
 
 ### Aplicaciones Flatpak Obligatorias:
 | Aplicación | ID Flatpak | Rol |
@@ -166,6 +168,18 @@ sudo ~/.config/hypr/scripts/install-boot-theme.sh --revert         # quitar la p
 ```
 
 La pantalla de arranque es opcional: rehace el initramfs con dracut (con los mismos drivers de GPU y descartándolo si crece más de un 50 %) y añade `splash` al `grub.cfg` existente sin regenerarlo. Guarda copias y `--revert` las restaura.
+
+### 5. Plugins de la barra de Omarchy (tema Retro)
+
+La barra Retro ejecuta **plugins del shell de Omarchy** sin cambios: las librerías `qs.Commons` / `qs.Ui` de Omarchy (MIT) van incluidas en `config/quickshell/ii/Commons` y `Ui` y leen la paleta Omarchy de BWM. Se instalan como con `omarchy plugin add`:
+
+```bash
+~/.config/hypr/scripts/bwm-plugin.sh defaults        # uso de IA, OmaStats, multimedia con carátula, ventana activa
+~/.config/hypr/scripts/bwm-plugin.sh add https://github.com/<usuario>/<plugin>.git [--section left|center|right]
+~/.config/hypr/scripts/bwm-plugin.sh list | update | disable <id> | remove <id>
+```
+
+Los plugins son código sin aislar que corre dentro de la barra (igual que en Omarchy): revísalos antes de instalarlos.
 
 ---
 

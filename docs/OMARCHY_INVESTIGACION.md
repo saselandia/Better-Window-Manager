@@ -204,3 +204,63 @@ y de compartir pantalla enviadas a un workspace especial silencioso.
 
 Limitaciones conocidas: la interfaz de Firefox solo lee `userChrome.css` al arrancar (se reinicia al entrar o salir
 de Retro; los colores sí cambian en vivo con Pywalfox), y GTK 3 solo lee `gtk.css` al abrir cada app.
+
+---
+
+## 10. Plugins del shell (Omarchy 4 «quattro»)
+
+Desde Omarchy 4 toda la interfaz es **un solo proceso Quickshell** (`omarchy-shell`, carpeta `shell/`) y casi todo
+son **plugins**: un repositorio git con un `manifest.json` (`id`, `kinds`: `bar-widget`, `service`, `panel`, `overlay`,
+`menu`; `entryPoints`; `barWidget.defaultSection` y `defaults`). Se instalan con `omarchy plugin add <git> --enable`
+en `~/.config/omarchy/plugins/` y su colocación en la barra vive en `~/.config/omarchy/shell.json`. Son código sin aislar.
+Los widgets importan `qs.Commons` (singletons `Color`, `Style`, `Util`, `I18n`…: colores de `colors.toml` + `shell.toml`)
+y `qs.Ui` (`BarWidget`, `PopupCard`, `Panel`, `PluginBarApi`…). El anfitrión les da `bar` (colores, tamaño, `run`,
+popouts) y `bar.shell` (`serviceFor`, `updateEntryInline`, `pluginRegistry`, `barConfig`).
+
+### Preinstalados (primera parte, `shell/plugins/`)
+
+Barra, selector de imágenes, emojis, portapapeles, recordatorios, menú de Omarchy, notificaciones, audio, Bluetooth,
+reloj, Elsewhen (zonas horarias), monitor, red, energía, Tailscale, agentes de IA, tiempo, multimedia, batería, inactividad,
+luz nocturna, sesión remota, bloqueo, OSD, polkit y dock. Grupo de **indicadores** junto al reloj: sudo sin contraseña,
+grabando pantalla, sesión remota, recordatorio, luz nocturna, no molestar y mantener despierto (glifos Nerd Font;
+solo se ven los activos y al pasar el ratón los inactivos al 45 %). Reloj `dddd HH:mm` (alternativo `d MMMM 'W'ww yyyy`).
+
+### Plugins de terceros más usados (estrellas en GitHub, 2026-10-25; todos MIT)
+
+| ★ | Plugin | Qué hace |
+| ---: | :--- | :--- |
+| 721 | akitaonrails/ai-usagebar | Uso y límites de Claude, Codex, GLM, OpenRouter (binario Rust + widget) |
+| 310 | huacnlee/omamail | Correo (Gmail, HEY, IMAP) |
+| 239 | stappmus/Omarchy-Spotify | Spotify dentro del shell |
+| 238 | thisisgm/omarchy-pods | Batería y modos de AirPods |
+| 216 | SirJul1337/omarchy-lock-explorer | Diseños de pantalla de bloqueo |
+| 171 | wesleygrimes/omastorm | Radar meteorológico NEXRAD (EE. UU.) |
+| 144 | jankeesvw/omarchy-time-machine | Copias con restic |
+| 136 | crmne/omarchy-hyprmoncfg | Perfiles de monitores |
+| 125 | nixfred/infomarchy | Fondo de pantalla con información en vivo |
+| 68 | brianblakely/omarchy-plugins | Tienda de plugins (Okomart) |
+| 62 | robzolkos/omarchy-github | GitHub en la barra |
+| 43 | crmne/omastats | Monitor del sistema estilo iStat Menus |
+| 20 | crmne/omarchy-mpris | Multimedia con carátula |
+| 10 | crmne/omarchy-active-window | Ventana activa con icono |
+
+Fuentes: [omarchy.deepakness.com/plugins](https://omarchy.deepakness.com/plugins), [manual de Omarchy](https://omarchy.org/manual/shell-plugins/), API de GitHub.
+El marketplace oficial (`plugins.omarchy.org`) carga la lista con JavaScript y no se pudo leer.
+
+### Reflejo en BWM (Retro)
+
+- `config/quickshell/ii/Commons` y `Ui`: copia de `shell/Commons` y `shell/Ui` (MIT). Cambios: `Color.qml` lee
+  `~/.local/state/bwm/omarchy/{colors,shell}.toml`; `I18n.qml` usa las cadenas incluidas en `Commons/omarchy/`.
+- `bwm_omarchy.py` renderiza `shell.toml` desde la plantilla de Omarchy (`{{ mix … }}`, `{{ shell_gradient … }}`).
+- `modules/ii/bar/omarchy/`: `OmarchyPlugins.qml` (el `bar.shell`), `OmarchyPluginSlot.qml` (`PluginBarApi` por widget,
+  secciones izquierda / junto al reloj / derecha) y `OmarchyIndicators.qml` (grabando, luz nocturna, no molestar,
+  mantener despierto).
+- `hypr/scripts/bwm-plugin.sh` = `omarchy plugin add/remove/update/list/enable/disable`; `defaults` instala ai-usagebar
+  (compila el binario con cargo), omastats, omarchy-mpris y omarchy-active-window. Con glibc < 2.44 omastats usa su
+  muestreador en Python.
+- No portados: los widgets de primera parte de Omarchy (dependen de los servicios de `omarchy-shell`); BWM tiene sus
+  equivalentes. Plugins que necesitan cuentas (correo, GitHub, Todoist) o hardware concreto (AirPods, MOZA) quedan
+  para instalarlos a mano.
+- Captura de pantalla: Omarchy usa **omasnap** (congela la pantalla, copia, vista previa flotante 10 s, fijar, editar,
+  guardar en `~/Pictures/Screenshots`). BWM usa su selector de región; en Retro con marcos de acento, guarda y copia,
+  y muestra la misma vista previa (`modules/ii/screenshotPreview/OmarchyScreenshotPreview.qml`).

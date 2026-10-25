@@ -43,9 +43,10 @@ PanelWindow {
     property color brightText: Appearance.m3colors.darkmode ? Appearance.colors.colOnLayer0 : Appearance.colors.colLayer0
     property color brightSecondary: Appearance.m3colors.darkmode ? Appearance.colors.colSecondary : Appearance.colors.colOnSecondary
     property color brightTertiary: Appearance.m3colors.darkmode ? Appearance.colors.colTertiary : Qt.lighter(Appearance.colors.colPrimary)
-    property color selectionBorderColor: ColorUtils.mix(brightText, brightSecondary, 0.5)
+    // Retro: Omarchy's flat accent frames (omasnap / slurp with the theme accent)
+    property color selectionBorderColor: Appearance.isRetro ? Appearance.m3colors.m3primary : ColorUtils.mix(brightText, brightSecondary, 0.5)
     property color selectionFillColor: "#33ffffff"
-    property color windowBorderColor: brightSecondary
+    property color windowBorderColor: Appearance.isRetro ? Appearance.m3colors.m3primary : brightSecondary
     property color windowFillColor: ColorUtils.transparentize(windowBorderColor, 0.85)
     property color imageBorderColor: brightTertiary
     property color imageFillColor: ColorUtils.transparentize(imageBorderColor, 0.85)
@@ -276,8 +277,10 @@ PanelWindow {
             root.action = root.mouseButton === Qt.RightButton ? RegionSelection.SnipAction.Edit : RegionSelection.SnipAction.Copy;
         }
         
+        // Retro copies and also saves under ~/Pictures/Screenshots, like Omarchy's omasnap,
+        // and shows its floating preview (modules/ii/screenshotPreview)
         const screenshotDir = Config.options.screenSnip.savePath !== "" ? //
-            Config.options.screenSnip.savePath : "";
+            Config.options.screenSnip.savePath : (Appearance.isRetro ? `${FileUtils.trimFileProtocol(Directories.pictures)}/Screenshots` : "");
         var screenshotAction = root.getScreenshotAction();
         const command = ScreenshotAction.getCommand(
             root.regionX * root.monitorScale, //
@@ -288,6 +291,8 @@ PanelWindow {
             screenshotAction, //
             screenshotDir
         )
+        if (Appearance.isRetro && screenshotAction === ScreenshotAction.Action.Copy && screenshotDir !== "")
+            command[2] += ` && qs -c ii ipc call omarchyScreenshot show "$savePath"`;
         Quickshell.execDetached(command);
         if (root.action == RegionSelection.SnipAction.Record || root.action == RegionSelection.SnipAction.RecordWithSound) {
             root.phase = RegionSelection.Phase.Post

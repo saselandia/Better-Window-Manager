@@ -72,6 +72,8 @@ This dotfiles repository keeps binary assets minimal to ensure portability and q
 | **`qt6ct`, `papirus-icon-theme`, `socat`** | Theme palette for Qt apps, per-theme icons (Retro: folders in the wallpaper colour) and the terminal screensaver |
 | **`sddm`** (Qt 6) | Omarchy-style login screen in the theme colours, running in a minimal Hyprland like Omarchy's (optional, set up by `install.sh`) |
 | **`plymouth`** + **`dracut`** | Omarchy-style boot splash (optional, `install-boot-theme.sh --plymouth`) |
+| **`git`**, **`jq`** (+ **`cargo`** optional) | Omarchy bar plugins in the Retro theme (`bwm-plugin.sh`); `cargo` builds the `ai-usagebar` binary |
+| **`satty`** or **`swappy`** | Screenshot annotation ("edit" in the Retro screenshot preview) |
 
 ### Required Flatpak Applications:
 | Application | Flatpak App ID | Role |
@@ -166,6 +168,18 @@ sudo ~/.config/hypr/scripts/install-boot-theme.sh --revert         # remove the 
 ```
 
 The boot splash is opt-in: it rebuilds the initramfs with dracut (keeping the same GPU drivers, refusing images that grow more than 50 %) and adds `splash` to the existing `grub.cfg` without regenerating it. Backups are kept and `--revert` restores them.
+
+### 5. Omarchy bar plugins (Retro theme)
+
+The Retro bar runs **Omarchy shell plugins** unchanged: Omarchy's `qs.Commons` / `qs.Ui` libraries (MIT) are vendored in `config/quickshell/ii/Commons` and `Ui`, and read BWM's Omarchy palette. Install them like `omarchy plugin add`:
+
+```bash
+~/.config/hypr/scripts/bwm-plugin.sh defaults        # AI usage, OmaStats, media + album art, active window
+~/.config/hypr/scripts/bwm-plugin.sh add https://github.com/<user>/<plugin>.git [--section left|center|right]
+~/.config/hypr/scripts/bwm-plugin.sh list | update | disable <id> | remove <id>
+```
+
+Plugins are unsandboxed code running inside the bar (as in Omarchy): review them before installing.
 
 ---
 

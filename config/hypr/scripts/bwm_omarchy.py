@@ -181,10 +181,25 @@ def _write_if_changed(path: Path, content: str) -> bool:
     os.replace(tmp, path)
     return True
 
+def _mix(a: str, b: str, amount: str) -> str:
+    """{{ mix a b N% }} as omarchy-theme-set-templates computes it (a towards b by N)."""
+    t = float(amount.rstrip("%"))
+    t = t / 100 if amount.endswith("%") or t > 1 else t
+    t = max(0.0, min(1.0, t))
+    ca, cb = (tuple(int(c.lstrip("#")[i:i + 2], 16) for i in (0, 2, 4)) for c in (a, b))
+    return "#%02x%02x%02x" % tuple(int(x * (1 - t) + y * t + 0.5) for x, y in zip(ca, cb))
+
 def render_omarchy(template: str, colors: dict) -> str:
-    """Omarchy template syntax: {{ key }}, {{ key_strip }} (no #), {{ key_rgb }} (r,g,b)."""
+    """Omarchy template syntax: {{ key }}, {{ key_strip }} (no #), {{ key_rgb }} (r,g,b),
+    {{ mix a b N% }} and {{ shell_gradient key fallback }} (the key's colour/gradient from
+    colors.toml, else the fallback colour)."""
     def fill(m):
         key = m.group(1).strip()
+        parts = key.split()
+        if len(parts) == 4 and parts[0] == "mix" and parts[1] in colors and parts[2] in colors:
+            return _mix(colors[parts[1]], colors[parts[2]], parts[3])
+        if len(parts) == 3 and parts[0] in ("shell_gradient", "gradient_start"):
+            return colors.get(parts[1]) or colors.get(parts[2], m.group(0))
         for suffix, fmt in (("_strip", lambda v: v.lstrip("#")),
                             ("_rgb", lambda v: ",".join(str(int(v.lstrip("#")[i:i + 2], 16)) for i in (0, 2, 4)))):
             if key.endswith(suffix) and key[: -len(suffix)] in colors:
@@ -216,6 +231,12 @@ def _running(name: str) -> bool:
 # ------------------------------------------------------------------------------
 # Apps
 # ------------------------------------------------------------------------------
+def apply_shell_toml(colors: dict):
+    """shell.toml next to colors.toml: the surface tokens Omarchy's shell libraries
+    (Quickshell qs.Commons, used by the Omarchy bar plugins in Retro) read."""
+    tpl = (ASSETS_DIR / "themed" / "shell.toml.tpl").read_text(encoding="utf-8")
+    _write_if_changed(STATE_DIR / "shell.toml", render_omarchy(tpl, colors))
+
 def apply_kitty(colors: dict):
     tpl = (ASSETS_DIR / "themed" / "kitty.conf.tpl").read_text(encoding="utf-8")
     content = render_omarchy(tpl, colors) + f"\ninactive_border_color {colors['muted']}\nurl_color {colors['accent']}\n"
@@ -397,7 +418,7 @@ def apply_retro_apps(palette: dict, wallpaper: str = ""):
     colors = build_colors(palette)
     write_colors_toml(colors)
 
-    for step in (apply_kitty, apply_btop, apply_vscodium, apply_spotify):
+    for step in (apply_shell_toml, apply_kitty, apply_btop, apply_vscodium, apply_spotify):
         try:
             step(colors)
         except Exception as e:

@@ -12,6 +12,7 @@ TARGET_CONFIG="$HOME/.config"
 BACKUP_DIR="$HOME/.config/hyprland-de-backup-$(date +%Y%m%d_%H%M%S)"
 INSTALL_MODE="symlink"
 LOGIN_SETUP="ask"   # ask | yes | no: pantalla de inicio de sesión SDDM estilo Omarchy
+PLUGINS_SETUP="ask" # ask | yes | no: plugins de la barra de Omarchy para el tema Retro
 
 # Colors for terminal output
 RED='[0;31m'
@@ -53,6 +54,8 @@ usage() {
     echo "  --check-deps     Solo comprueba las dependencias y flatpaks instalados"
     echo "  --login          Configura sin preguntar el inicio de sesión SDDM estilo Omarchy (pide sudo)"
     echo "  --no-login       No toca el inicio de sesión ni el arranque"
+    echo "  --plugins        Instala sin preguntar los plugins de Omarchy por defecto (tema Retro)"
+    echo "  --no-plugins     No instala plugins de Omarchy"
     echo "  -h, --help       Muestra esta ayuda"
     exit 0
 }
@@ -78,6 +81,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         --no-login)
             LOGIN_SETUP="no"
+            shift
+            ;;
+        --plugins)
+            PLUGINS_SETUP="yes"
+            shift
+            ;;
+        --no-plugins)
+            PLUGINS_SETUP="no"
             shift
             ;;
         -h|--help)
@@ -586,6 +597,25 @@ if [ "$LOGIN_SETUP" != "no" ] && command -v sddm >/dev/null 2>&1 && [ -x "$BOOT_
     fi
 elif [ "$LOGIN_SETUP" = "yes" ]; then
     print_warn "SDDM no está instalado: instálalo y ejecuta sudo $BOOT_SCRIPT --all"
+fi
+
+# ==============================================================================
+# 10. Plugins de la barra de Omarchy (tema Retro)
+# ==============================================================================
+# Los plugins de terceros más usados de Omarchy (uso de IA, monitor del sistema, multimedia,
+# ventana activa) desde sus repositorios git, como `omarchy plugin add`. Son código sin
+# aislar que corre dentro de la barra: por eso se pregunta.
+PLUGIN_SCRIPT="$TARGET_CONFIG/hypr/scripts/bwm-plugin.sh"
+if [ "$PLUGINS_SETUP" != "no" ] && [ -x "$PLUGIN_SCRIPT" ] && command -v git >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+    if [ "$PLUGINS_SETUP" = "ask" ] && [ -t 0 ]; then
+        echo ""
+        read -r -p "¿Instalar los plugins de Omarchy por defecto para el tema Retro? [s/N] " reply
+        case "$reply" in [sSyY]*) PLUGINS_SETUP="yes" ;; *) PLUGINS_SETUP="no" ;; esac
+    fi
+    if [ "$PLUGINS_SETUP" = "yes" ]; then
+        print_step "10. Instalando los plugins de Omarchy (bwm-plugin.sh defaults)..."
+        "$PLUGIN_SCRIPT" defaults || print_warn "Algún plugin no se pudo instalar; repítelo con: $PLUGIN_SCRIPT defaults"
+    fi
 fi
 
 if [ -d "$BACKUP_DIR" ]; then

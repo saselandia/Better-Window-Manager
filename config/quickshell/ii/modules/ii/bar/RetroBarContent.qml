@@ -10,6 +10,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.models
+import qs.modules.ii.bar.omarchy
 
 Item {
     id: root
@@ -152,7 +153,8 @@ Item {
             muted: root.dynamicMuted,
             dim: root.dynamicDim,
             border: root.dynamicBorder,
-            hoverBg: root.dynamicHoverBg
+            hoverBg: root.dynamicHoverBg,
+            urgent: (root.retroPalette && root.retroPalette.red) ? root.retroPalette.red : "#f7768e"
         };
     }
 
@@ -263,6 +265,8 @@ Item {
                 id: wsRow
                 anchors.centerIn: parent
                 spacing: Math.max(2, Math.round(3 * root.scaleRatio))
+                opacity: wsModel.specialWorkspaceActive ? 0.35 : 1
+                Behavior on opacity { NumberAnimation { duration: 160 } }
 
                 Repeater {
                     model: Math.max(1, Config.options?.bar?.workspaces?.shown ?? 10)
@@ -317,6 +321,59 @@ Item {
                 }
             }
         }
+
+        // Special workspace (Alt+S "magic"), like the default theme's pill over the
+        // workspaces but in Omarchy's terminal style: the numbers dim and a bracketed,
+        // accent-framed label takes the active workspace's place. Click hides it again.
+        MouseArea {
+            id: specialWsArea
+            Layout.alignment: Qt.AlignVCenter
+            readonly property bool shown: wsModel.specialWorkspaceActive
+            implicitWidth: shown ? specialWsLabel.implicitWidth + Math.round(12 * root.scaleRatio) : 0
+            implicitHeight: root.itemHeight
+            visible: implicitWidth > 0
+            clip: true
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: Hyprland.dispatch(`hl.dsp.workspace.toggle_special("${wsModel.specialWorkspaceName}")`)
+
+            Behavior on implicitWidth {
+                NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: Math.round(3 * root.scaleRatio)
+                color: Qt.rgba(root.dynamicAccent.r, root.dynamicAccent.g, root.dynamicAccent.b, specialWsArea.containsMouse ? 0.25 : 0.15)
+                border.width: 1
+                border.color: Qt.rgba(root.dynamicAccent.r, root.dynamicAccent.g, root.dynamicAccent.b, 0.5)
+            }
+
+            Text {
+                id: specialWsLabel
+                anchors.centerIn: parent
+                text: `[ 󰜗 ${wsModel.specialWorkspaceName} ]`
+                font.family: "JetBrains Mono NF"
+                font.pixelSize: root.fontSizeSmall
+                font.weight: Font.Bold
+                color: root.dynamicAccent
+            }
+        }
+
+        // Omarchy bar plugins (bwm-plugin.sh), as omarchy-shell places them
+        OmarchyPluginSlot {
+            section: "left"
+            Layout.alignment: Qt.AlignVCenter
+            foreground: root.dynamicFg
+            background: root.dynamicBg
+            urgent: root.omarchyColors.urgent
+            barSize: root.itemHeight
+        }
+    }
+
+    WorkspaceModel {
+        id: wsModel
+        monitor: root.monitor
     }
 
     // -----------------------------------------------------------------
@@ -344,7 +401,8 @@ Item {
         Text {
             id: centerClockText
             anchors.centerIn: parent
-            text: Qt.formatDateTime(DateTime.clock.date, "ddd d MMM  HH:mm")
+            // Omarchy's clock format ("dddd HH:mm"), the long date while hovered (its formatAlt)
+            text: Qt.formatDateTime(DateTime.clock.date, centerClockArea.containsMouse ? "d MMMM 'W'ww yyyy" : "dddd HH:mm")
             font.family: "JetBrains Mono NF"
             font.pixelSize: root.fontSizeSmall
             font.weight: Font.DemiBold
@@ -352,6 +410,29 @@ Item {
 
             Behavior on color { ColorAnimation { duration: 120 } }
         }
+    }
+
+    // Omarchy's indicators group, just before the clock (its "centerBegin" section)
+    OmarchyIndicators {
+        id: omarchyIndicators
+        anchors.right: centerClockArea.left
+        anchors.verticalCenter: parent.verticalCenter
+        foreground: root.dynamicFg
+        urgent: root.omarchyColors.urgent
+        itemHeight: root.itemHeight
+        fontSize: root.fontSizeRegular
+        revealHeld: centerClockArea.containsMouse
+    }
+
+    OmarchyPluginSlot {
+        section: "center"
+        anchors.right: omarchyIndicators.left
+        anchors.rightMargin: 6
+        anchors.verticalCenter: parent.verticalCenter
+        foreground: root.dynamicFg
+        background: root.dynamicBg
+        urgent: root.omarchyColors.urgent
+        barSize: root.itemHeight
     }
 
     // -----------------------------------------------------------------
@@ -366,6 +447,15 @@ Item {
             bottom: parent.bottom
         }
         spacing: Math.max(4, Math.round(6 * root.scaleRatio))
+
+        OmarchyPluginSlot {
+            section: "right"
+            Layout.alignment: Qt.AlignVCenter
+            foreground: root.dynamicFg
+            background: root.dynamicBg
+            urgent: root.omarchyColors.urgent
+            barSize: root.itemHeight
+        }
 
         // Optional Weather Indicator (controlled by Config.options.bar.weather.enable)
         Item {
