@@ -1,30 +1,60 @@
-## [x] 2. Paneles de la Barra Quickshell portados (COMPLETADO 2026-10-25)
-- [x] **Panel de Monitor / Pantallas (`monitor/Panel.qml`):** Brillo por pantalla (`ddcutil` / backlight), Night light (Kelvin slider 3000K-6500K e interruptor), conmutador de resolución, Hz, orientación y escalado.
-- [x] **Panel de Energía y Batería (`power/Panel.qml`):** Perfiles de rendimiento (`Performance`, `Balanced`, `Power Saver`), interruptor Stay Awake / Caffeine (`Idle.inhibit` + `omarchy-toggle-idle`), compatible con PC de escritorio y portátiles.
-- [x] **Panel de Test de Velocidad (`speedtest/`, `disk-speedtest/` y `SpeedTestOverlay.qml`):** Ventana overlay interactiva para ping, bajada y subida (fast.com) y benchmark de lectura y escritura en disco MB/s.
-- [x] **Panel Wi-Fi QR (`wifiqr/Panel.qml`):** Generador instantáneo de código QR para conectar móviles al Wi-Fi actual y botón para revelar contraseña.
-- [x] **Panel de Tailscale (`tailscale/Panel.qml`):** Estado de VPN, nodos, Exit Nodes y Taildrop (`omarchy-tailscale-send`). Visibilidad automática según esté instalado.
-- [x] **Panel de Agentes IA (`agents/Panel.qml`):** Límites de tokens, saldo de crédito, conmutación de cuentas Claude Code, Codex, Grok y starter prompts.
-3. Paleta de Comandos y Menú Completo (omarchy-menu.jsonc)
-Nuestro OmarchyMenu.qml actual tiene una lista simplificada y estática en el código.
-En Omarchy real:
-Es una paleta de comandos interactiva que parsea el archivo de catálogo jerárquico omarchy-menu.jsonc.
-Soporta condiciones dinámicas (when), marcas de verificación en vivo (checked, p. ej. ver qué formato de reloj o qué esquinas están activas actualmente con un ✓) y atajos rápidos tipo omarchy menu summon <ruta>.
-Agrupa aplicaciones, acciones del sistema, disparadores de estética, ajustes de hardware y ayuda.
-4. Herramientas de Extracción de Texto, QR y Grabación
-OCR en pantalla (omarchy-capture-text): Seleccionar un área con el ratón (slurp) y extraer el texto directamente al portapapeles mediante tesseract.
-Escaneo de códigos QR (omarchy-capture-qr): Seleccionar un código QR de cualquier parte de la pantalla y copiar su enlace o clave de forma silenciosa al portapapeles con zbarimg.
-Grabación de pantalla con Webcam (omarchy-capture-screenrecording): Grabación de monitor o región con gpu-screen-recorder / wf-recorder, captura simultánea de audio de sistema y micrófono, y opción de superponer la webcam en una esquina redonda (--with-webcam).
-## [x] 5. Portapapeles y Emojis gráficos en Quickshell (COMPLETADO 2026-10-25)
-- [x] **Historial de Portapapeles (`clipboard/Clipboard.qml`):** Ventana superpuesta en Quickshell con búsqueda en vivo, soporte completo de texto e imágenes pegadas con previsualización, y navegación completa por teclado (`Super + V`). Capturador en segundo plano sin dependencias de Rofi, persistido en `~/.local/state/omarchy/clipboard-history.json`.
-- [x] **Buscador de Emojis (`emojis/Emojis.qml`):** Selector gráfico de emojis y símbolos Unicode (`emojis.json`) que inserta o copia al pulsar Enter (`Super + .`). Integrado en `omarchy-shell` e IPC.
-- [x] **Pegado nativo en Wayland / Hyprland:** Shims (`omarchy-clipboard-paste-text`, `omarchy-clipboard-paste-file`, `omarchy-menu-emoji-insert`, `omarchy-clipboard-open`) con soporte para `hl.dsp.send_shortcut` nativo de Hyprland 0.55.4 Lua, eliminando dependencia de `wtype`.
-## [x] 6. Biblioteca de Temas Estáticos Curados (COMPLETADO 2026-10-25)
-- [x] **23 Temas Oficiales de Omarchy:** Vendoreados en `config/hypr/omarchy/themes/` (Tokyo Night, Catppuccin Mocha/Latte, Nord, Gruvbox, Kanagawa, Rose Pine, Everforest, Osaka Jade, Solitude, Starship, Lumon, Miasma, Retro-82, etc.) con sus `colors.toml`, fondos y estilos.
-- [x] **Doble modo en Retro (Dinámico vs Estático):** Soporte en `bwm_omarchy.py` y `bwm-theme-manager.py` para alternar entre «Paleta dinámica desde el wallpaper» y «Tema estático oficial de Omarchy». Al cambiar de wallpaper en modo estático se mantiene intacta la paleta elegida.
-- [x] **Aplicación completa a todas las aplicaciones:** Kitty, btop, VSCodium, Spotify, GTK 3/4, Vesktop, swaync, Firefox, Quickshell `qs.Commons`, Hyprland (`retro_colors.lua`) y Rofi (`omarchy-colors.rasi`).
-- [x] **Galería 3D / Carrusel (`image-picker`):** Portado de `shell/plugins/image-picker/` a Quickshell con carga rápida de previews y selección mediante Enter o clic.
-- [x] **Selectores accesibles:** Comandos CLI (`omarchy-theme-set`, `omarchy-theme-list`, `omarchy-theme-current`, `omarchy-theme-dir`, `omarchy-theme-switcher`), menú / paleta Retro (`bwm-menu.jsonc`) y panel de configuración de Quickshell (`StyleConfig.qml`).
-7. Ecosistema de Web Apps y TUIs
-Instalador de Web Apps (omarchy-webapp-install): Crea lanzadores de escritorio .desktop para Discord, WhatsApp, GitHub, HEY, Basecamp, Claude, etc., encapsuladas en ventanas web independientes sin barras de navegador.
-Lanzadores TUI (omarchy-tui-install): Empaquetado de utilidades de terminal (Lazygit, Herdr, etc.) lanzadas mediante bwm-terminal con geometrías y clases de ventana predeterminadas.
+# BWM — funciones portadas y pendientes
+
+Revisado el 2026-10-26. Estado actual y detalle técnico en `BWM_CONTEXT.md` §2;
+las reglas para asistentes están en `AGENTS.md` y `CLAUDE.md`.
+
+## Completado
+
+- [x] Paneles Retro de pantallas, energía, audio, red, Bluetooth, pruebas de velocidad,
+  Wi-Fi QR, Tailscale y agentes IA (`modules/ii/bar/omarchy/`).
+- [x] Menú / paleta de comandos jerárquico (`bwm-menu.jsonc`): condiciones `when`,
+  marcas `checked`, proveedores y extensiones del usuario (`BWM_CONTEXT.md` §3.24).
+  Quedan acciones concretas sin portar, enumeradas abajo.
+- [x] OCR, lectura de QR y grabación de pantalla con audio y webcam desde el menú
+  Retro, con comprobación de dependencias de Gentoo (§3.24).
+- [x] Portapapeles y emojis gráficos: búsqueda, imágenes, previsualización y pegado
+  en Wayland con los dispatchers Lua de Hyprland (§3.26).
+- [x] 23 temas Retro, paleta dinámica, carrusel 3D, Alt+R y selectores en menú/Ajustes
+  (§3.28–30). Los temas estáticos conservan la paleta al cambiar el fondo.
+- [x] Cuadrícula Apps (Super+Espacio), dock opcional apagado por defecto, OSD,
+  polkit, recordatorios, widgets de actualizaciones y selector de idioma del shell
+  (§3.38–39). Dock: ajustes mediante `omarchy-dock`/`dock.json`.
+- [x] Plantillas de apps de Omarchy, GTK 3 en vivo, Qt/Flatpak con paleta y
+  reinicios de apps conservando sus ventanas (§3.34–36).
+- [x] Stremio Web con CSS en vivo opcional; Steam con Adwaita-for-Steam y barra
+  Retro usando el fondo base (§3.40–42; alcance en `docs/STREMIO_THEMING.md`).
+
+## Pendiente de Omarchy
+
+- [ ] Completar el menú Estilo: barra opaca/transparente/glassy, ocultarla,
+  reloj de 12/24 h y fecha, porcentaje de batería, esquinas, huecos,
+  transparencia, animaciones y branding del salvapantallas. Varias piezas ya
+  existen como ajustes o scripts; falta reunir las acciones y sus estados.
+- [ ] Layout por workspace: dwindle, scrolling o flotante y ciclo con Super+L.
+- [ ] Atajos de ventanas pendientes: Super+Ctrl+F, Super+Alt+F, Super+O,
+  scratchpad Super+S, consola Quake Super+` y copiar/pegar universal.
+- [ ] Integrar posición y autoocultar del dock en el menú Estilo; la configuración
+  del dock por script ya existe.
+- [ ] Install / Remove adaptado a emerge y Flatpak: navegadores, editores,
+  juegos, IA, servicios, fuentes y terminales.
+- [ ] Instalador de Web Apps y lanzadores TUI (`omarchy-webapp-install`,
+  `omarchy-tui-install`) con terminal predeterminada de BWM.
+- [ ] Compartir portapapeles, archivos o carpetas entre equipos con LocalSend.
+- [ ] Setup: DNS, idioma, teclado, seguridad (huella/FIDO2) y apps de agentes.
+- [ ] Firmware, hora/zona horaria, contraseña e interruptores rápidos de bloqueo,
+  salvapantallas, notificaciones y captura de cuelgues desde los menús.
+
+## Mantenimiento de BWM
+
+- [ ] Completar el actualizador Gentoo: sincronización, noticias con sudo,
+  configuraciones y bibliotecas preservadas. `omarchy-update` ya ejecuta
+  Flatpak y `emerge @world`, pero no esos pasos. Sustituir el `apps.update`
+  heredado con `pacman` en Default/Plasma (§2.7).
+- [ ] Recarga de paleta Qt en apps abiertas: qt6ct no repinta de forma fiable.
+- [ ] Tema Chromium: la plantilla se genera, falta aplicar su política root.
+- [ ] Entorno de pruebas con Hyprland anidado, usuario separado y rama `dev`;
+  sustituir antes las rutas fijas `/home/sasel` por rutas configurables.
+
+Prioridad propuesta: menú Estilo, layouts y atajos de ventanas; después,
+Install/Remove y mantenimiento del actualizador. Actualizar esta lista cuando
+se complete una pieza para que no vuelva a aparecer como pendiente.

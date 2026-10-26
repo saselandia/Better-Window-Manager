@@ -23,7 +23,4 @@ Thumbs.db
 
 /config/gtk-3.0/bookmarks
 
-# Local AI Context & Notes
-BWM_CONTEXT.md
-
-CLAUDE.md
+# AGENTS.md, CLAUDE.md y BWM_CONTEXT.md se versionan como contexto del proyecto.

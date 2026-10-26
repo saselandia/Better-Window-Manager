@@ -81,3 +81,8 @@ proceso desligado que dé por terminado el trabajo antes de tiempo.
 Fuentes: [Stremio Linux](https://github.com/Stremio/stremio-linux-shell),
 [Stremio Web](https://github.com/Stremio/stremio-web),
 [limitaciones de Adwaita-for-Steam](https://github.com/tkashkin/Adwaita-for-Steam#limitations).
+
+En Retro, `omarchy/overlays/steam.css` hace que la barra superior use el fondo
+base del tema, como el escritorio. El template compartido conserva la superficie
+elevada para Default y Plasma. Esto corrige la diferencia entre `#131a3a` y
+`#060b1e` que se veía en Ethereal.

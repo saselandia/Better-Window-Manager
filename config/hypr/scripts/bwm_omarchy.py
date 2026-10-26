@@ -78,6 +78,7 @@ MATUGEN_OVERLAYS = {
     "swaync": "swaync.css",
     "firefox": "firefox.css",
     "stremio": "stremio.css",
+    "steam": "steam.css",
 }
 # Templates handled by their own Omarchy step instead (kitty template, BWM-Omarchy Spicetify
 # theme, the BWM Omarchy TUI theme for Vesktop)

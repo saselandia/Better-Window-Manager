@@ -1,0 +1,7 @@
+
+/* Retro uses the palette's base background for title bars, like the shell and
+ * GTK windows. The shared Material/Breeze template uses an elevated surface. */
+:root {
+    --adw-headerbar-bg: var(--adw-window-bg) !important;
+    --adw-headerbar-backdrop: var(--adw-window-bg) !important;
+}

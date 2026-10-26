@@ -143,7 +143,7 @@ end
 hl.window_rule({
     name = "electron-render-unfocused",
     match = {
-        class = "^(vesktop|discord|armcord|webcord|google-chrome.*|chromium.*|brave-browser|zen.*|firefox.*|code|Code|code-oss|vscodium|cursor|antigravity-ide|obsidian|spotify|claude|claude-desktop|com.anthropic.Claude)$",
+        class = "^(vesktop|discord|armcord|webcord|google-chrome.*|chromium.*|brave-browser|zen.*|firefox.*|code|Code|code-oss|vscodium|cursor|antigravity-ide|obsidian|spotify|claude|claude-desktop|com.anthropic.Claude|codex|codex-desktop|chatgpt|ChatGPT)$",
     },
     render_unfocused = true,
 })

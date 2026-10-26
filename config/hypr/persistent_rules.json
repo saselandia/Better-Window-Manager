@@ -66,14 +66,6 @@
         },
         "float": true
     },
-    "virt_manager": {
-        "name": "persist_virt_manager",
-        "description": "virt-manager",
-        "match": {
-            "class": "^virt\\-manager$"
-        },
-        "float": true
-    },
     "org_gnome_nautilus": {
         "name": "persist_org_gnome_nautilus",
         "description": "org.gnome.Nautilus",
@@ -96,6 +88,14 @@
         "match": {
             "class": "^steam$",
             "title": "^Steam$"
+        },
+        "float": false
+    },
+    "virt_manager": {
+        "name": "persist_virt_manager",
+        "description": "virt-manager",
+        "match": {
+            "class": "^virt\\-manager$"
         },
         "float": false
     }

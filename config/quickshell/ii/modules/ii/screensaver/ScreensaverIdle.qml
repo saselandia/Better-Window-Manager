@@ -4,13 +4,15 @@ import qs.modules.common
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.Mpris
 import Quickshell.Wayland
 
 /**
  * Terminal screensaver on idle, like Omarchy's (hypridle -> omarchy-launch-screensaver).
  * After `screensaver.timeoutMinutes` without input it runs launch-screensaver.sh, and as
  * soon as there is input again it closes it (the terminals only see keys, not the mouse).
- * Honours the "keep awake" toggle and apps that inhibit idle (video players...).
+ * Honours the "keep awake" toggle, apps that inhibit idle (video players...) and any
+ * MPRIS player that is playing.
  * IPC: quickshell -c ii ipc call screensaver start|stop
  */
 Scope {
@@ -19,6 +21,9 @@ Scope {
     readonly property string launcher: Quickshell.env("HOME") + "/.config/hypr/scripts/launch-screensaver.sh"
 
     property bool running: false
+
+    // Any MPRIS player playing (music, a video in the browser...): no screensaver then
+    readonly property bool mediaPlaying: Mpris.players.values.some(p => p.isPlaying)
 
     function start(force) {
         if (GlobalStates.screenLocked) return;
@@ -41,7 +46,7 @@ Scope {
     }
 
     IdleMonitor {
-        enabled: (Config.options?.screensaver?.enable ?? true) && !Idle.inhibit
+        enabled: (Config.options?.screensaver?.enable ?? true) && !Idle.inhibit && !root.mediaPlaying
         timeout: Math.max(1, Config.options?.screensaver?.timeoutMinutes ?? 5) * 60
         respectInhibitors: true
         onIsIdleChanged: {
