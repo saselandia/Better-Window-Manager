@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Boot splash (Plymouth) and login screen (SDDM) matching the active BWM theme, like
+Boot splash (Plymouth) and login screen (SDDM) matching the active BWM skin, like
 omarchy-plymouth-set-by-theme: Omarchy's terminal-style themes (MIT, vendored in
 config/hypr/omarchy/boot) with the BWM logo, recoloured with the theme's background
 and text colours. This only renders them into ~/.local/state/bwm/boot (no root);
@@ -38,7 +38,7 @@ def active_theme():
 
 
 def theme_colors():
-    """(background, text) of the active BWM theme."""
+    """(background, text) of the active BWM skin."""
     theme = active_theme()
     if theme == "plasma":
         return "#202326", "#fcfcfc"
@@ -78,7 +78,7 @@ def write_greeter_conf(dst: Path):
             return json.loads(out).get("str", "")
         except Exception:
             return ""
-    # theme: Retro logs in at SDDM (Omarchy); the other themes autologin into their own
+    # theme: Retro logs in at SDDM (Omarchy); the other skins autologin into their own
     # lock screen (install-boot-theme.sh switches SDDM's autologin to match)
     lines = [f"theme={active_theme()}", f"kb_layout={opt('kb_layout') or 'us'}", f"kb_variant={opt('kb_variant')}",
              f"kb_options={opt('kb_options')}"]

@@ -243,7 +243,7 @@ Singleton {
                 property bool showBackground: true
                 property bool verbose: true
                 property bool vertical: false
-                // KDE Plasma theme panel (PlasmaBarContent)
+                // KDE Plasma skin panel (PlasmaBarContent)
                 property JsonObject plasma: JsonObject {
                     property string style: "translucent" // "translucent" | "opaque" ("floating" = legacy, read as translucent + floating)
                     property bool floating: false // Floating panel; it docks while a window is maximized on its screen

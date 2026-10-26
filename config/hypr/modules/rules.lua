@@ -86,13 +86,28 @@ hl.window_rule({
 pcall(require, "modules.persistent_rules")
 
 
--- Forzar Fallout 3 y Gamescope al monitor principal (DP-2 / Workspace 1)
+-- Juegos (Steam/Proton, Wine, gamescope) al monitor principal, en todos los estilos.
+-- Va junto con scripts/xwayland-primary.py (autostart.sh), que marca ese mismo monitor como
+-- principal en XWayland: sin él Wine toma el LG 4K y el juego sale diminuto o fuera de pantalla.
+-- De Omarchy (misc.focus_on_activate, apps/steam.lua): el juego toma el foco y sube al frente
+-- cuando Wine activa su ventana (con focus_on_activate global en false se ignoraba y quedaba
+-- debajo de otras), y la pantalla no se apaga mientras está a pantalla completa.
+-- Las ventanas sin bordes del tamaño del monitor las pone a pantalla completa window-guard.py.
 hl.window_rule({
-    name      = "fallout3-main-monitor",
-    match     = {
-        class = "^(fallout3.exe|Fallout3.exe|steam_app_22370|gamescope)$",
+    name              = "games-main-monitor",
+    match             = {
+        class = "^(steam_app_[0-9]+|gamescope|.*\\.exe|.*\\.EXE)$",
     },
-    workspace = "1",
+    monitor           = "desc:HP Inc. HP X24ih 1CR1420TD4",
+    focus_on_activate = true,
+    idle_inhibit      = "fullscreen",
+})
+
+-- Steam (Big Picture) tampoco deja que se apague la pantalla a pantalla completa
+hl.window_rule({
+    name         = "steam-idle-inhibit",
+    match        = { class = "^steam$" },
+    idle_inhibit = "fullscreen",
 })
 
 --------------------------------
@@ -165,7 +180,7 @@ hl.window_rule({
     float      = true,
     animation  = "slide",
 })
--- Sin barra de título; el campo sólo existe con hyprbars cargado (tema Plasma)
+-- Sin barra de título; el campo sólo existe con hyprbars cargado (estilo Plasma)
 if hl.plugin and hl.plugin.hyprbars then
     hl.window_rule({
         name  = "bwm-screensaver-nobar",

@@ -9,7 +9,7 @@ import Quickshell.Io
 import Quickshell.Hyprland
 
 /**
- * Plasma "Global Theme" style picker for the BWM themes (Default, Retro, Plasma),
+ * Plasma "Global Theme" style picker for the BWM skins (Default, Retro, Plasma),
  * recreated in Breeze Dark: header + list of cards with a live-colored mini preview,
  * current theme marked with the accent border and a check.
  * - Opened from the palette button of the Plasma taskbar (left click) or Alt+T.
@@ -115,7 +115,7 @@ Scope {
             BreezeHeader {
                 Text {
                     Layout.fillWidth: true
-                    text: "Tema global"
+                    text: "Estilo global"
                     color: Breeze.text
                     font.family: Breeze.fontFamily
                     font.pixelSize: 14
@@ -269,7 +269,7 @@ Scope {
                 Layout.preferredHeight: 28
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter
-                text: "Clic derecho en el botón: alternar al siguiente tema"
+                text: "Clic derecho en el botón: alternar al siguiente estilo"
                 color: Breeze.textMuted
                 font.family: Breeze.fontFamily
                 font.pixelSize: 11

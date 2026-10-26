@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Script: open-settings.sh
-# Descripción: Abre la app de configuración del tema activo:
+# Descripción: Abre la app de configuración del estilo activo:
 #              - Plasma (KDE): plasmaSettings.qml (estilo Preferencias del sistema)
 #              - Default / Retro: settings.qml (Material You)
 #              Respeta SETTINGS_PAGE para abrir una página concreta (p. ej. Autostart).

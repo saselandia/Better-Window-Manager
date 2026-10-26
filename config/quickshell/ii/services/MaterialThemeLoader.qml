@@ -9,7 +9,7 @@ import Quickshell.Hyprland
 
 /**
  * Automatically reloads generated theme colors (Material You or Omarchy Retro).
- * Synchronizes colors across Quickshell based on the active BWM theme.
+ * Synchronizes colors across Quickshell based on the active BWM skin.
  */
 Singleton {
     id: root

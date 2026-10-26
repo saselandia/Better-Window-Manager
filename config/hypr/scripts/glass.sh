@@ -2,7 +2,7 @@
 # ==============================================================================
 # Script: glass.sh
 # Descripción: Modo glass (ventanas translúcidas con desenfoque), port del de Omarchy
-# (omarchy-theme-set-glass + toggles/window-glassy.lua, MIT). Global a los tres temas.
+# (omarchy-theme-set-glass + toggles/window-glassy.lua, MIT). Global a los tres estilos.
 #   - Hyprland: desenfoque esmerilado, apps GTK atenuadas y capas de Quickshell desenfocadas
 #     (modules/glass.lua lee el estado)
 #   - kitty: fondo al 65 % (glass.conf), el texto sigue nítido

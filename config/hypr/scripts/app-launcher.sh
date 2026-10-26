@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Script: app-launcher.sh
-# Descripción: Lanza el menú de aplicaciones según el tema activo:
+# Descripción: Lanza el menú de aplicaciones según el estilo activo:
 #              - Plasma (KDE): Rofi Kickoff launcher en esquina inferior izquierda.
 #              - Retro (Omarchy): Menú estilo Omarchy / Rofi en modo drun.
 #              - Default (Material You): Overview de Quickshell (Workspaces + Búsqueda).

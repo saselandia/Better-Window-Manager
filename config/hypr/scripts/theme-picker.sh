@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Script: theme-picker.sh
-# Descripción: Selector interactivo de temas para BWM (Default, Retro, KDE Plasma)
-#              Cambia dinámicamente de aspecto según el tema activo.
+# Descripción: Selector interactivo de estilos (skins) de BWM (Default, Retro, KDE Plasma)
+#              Cambia dinámicamente de aspecto según el estilo activo.
 # ==============================================================================
 
 set -euo pipefail
@@ -10,8 +10,13 @@ set -euo pipefail
 THEME_MANAGER="$HOME/.config/hypr/scripts/bwm-theme-manager.py"
 CURRENT_THEME="$("$THEME_MANAGER" get 2>/dev/null || echo "default")"
 
-# Tema Plasma: selector nativo de Quickshell (estilo "Tema global" de KDE)
+# Estilo Plasma: selector nativo de Quickshell (como el «Tema global» de KDE)
 if [[ "$CURRENT_THEME" == "plasma" ]] && qs -c ii ipc call plasmaThemePicker toggle >/dev/null 2>&1; then
+    exit 0
+fi
+
+# Retro: el carrusel 3D de los temas Retro, con los estilos (skin-switcher.sh)
+if [[ "$CURRENT_THEME" == "retro" ]] && "$HOME/.config/hypr/scripts/skin-switcher.sh" >/dev/null 2>&1; then
     exit 0
 fi
 
@@ -35,7 +40,7 @@ esac
 
 CHOICE=$(echo -e "$OPTIONS" | rofi -dmenu \
     -theme "$ROFI_THEME" \
-    -p "󰔎 Tema BWM" \
+    -p "󰔎 Estilo BWM" \
     -selected-row "$SELECTED_ROW" \
     -format "i" \
     -hover-select \

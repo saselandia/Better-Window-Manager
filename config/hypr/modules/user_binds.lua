@@ -78,7 +78,7 @@ hl.bind("ALT + SHIFT + 9", hl.dsp.window.move({ workspace = 9 }), { description 
 hl.bind("ALT + 0", hl.dsp.focus({ workspace = 10 }), { description = "Espacios de trabajo: Cambiar al espacio de trabajo 10" })
 hl.bind("ALT + SHIFT + 0", hl.dsp.window.move({ workspace = 10 }), { description = "Espacios de trabajo: Mover ventana al espacio de trabajo 10" })
 -- [Lanzadores]
-hl.bind("ALT + T", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/theme-picker.sh"), { description = "Lanzadores: Selector de temas (BWM)" })
+hl.bind("ALT + T", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/theme-picker.sh"), { description = "Lanzadores: Selector de estilos (BWM)" })
 hl.bind("ALT + R", hl.dsp.exec_cmd("omarchy-theme-switcher"), { description = "Lanzadores: Galería 3D de temas Retro (Omarchy)" })
 -- [Ventanas]
 hl.bind((is_plasma and "CTRL + left" or "SUPER + left"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py left"), { description = "Ventanas: Ajustar ventana a la izquierda (Quick Tile Left)" })

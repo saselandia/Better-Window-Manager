@@ -15,7 +15,7 @@ Item {
     property alias from: valueProgressBar.from
     property alias to: valueProgressBar.to
 
-    // KDE Plasma theme: Breeze-styled OSD (icon from assets/icons/breeze-dark/audio/<name>.svg)
+    // KDE Plasma skin: Breeze-styled OSD (icon from assets/icons/breeze-dark/audio/<name>.svg)
     readonly property bool plasma: Appearance.isPlasma
     property string breezeIcon: "video-display-brightness"
     property bool breezeMuted: false

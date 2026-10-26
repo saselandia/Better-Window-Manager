@@ -54,7 +54,7 @@ usage() {
     echo "  --check-deps     Solo comprueba las dependencias y flatpaks instalados"
     echo "  --login          Configura sin preguntar el inicio de sesión SDDM estilo Omarchy (pide sudo)"
     echo "  --no-login       No toca el inicio de sesión ni el arranque"
-    echo "  --no-plugins     No compila ai-usagebar (plugin de uso de IA del tema Retro)"
+    echo "  --no-plugins     No compila ai-usagebar (plugin de uso de IA del estilo Retro)"
     echo "  -h, --help       Muestra esta ayuda"
     exit 0
 }
@@ -133,7 +133,7 @@ DEPENDENCIES=(
     "nmcli:NetworkManager, backend del applet de redes de Quickshell"
     "nm-connection-editor:Editor de conexiones de red (botón Configurar del applet de redes)"
     "socat:Eventos de Hyprland para el salvapantallas de terminal"
-    "qt6ct:Paleta del tema BWM en las apps Qt (opcional)"
+    "qt6ct:Paleta del estilo BWM en las apps Qt (opcional)"
     "sddm:Pantalla de inicio de sesión estilo Omarchy con los colores del tema (opcional)"
     "plymouth:Pantalla de arranque estilo Omarchy (opcional, ver install-boot-theme.sh --plymouth)"
 )
@@ -599,7 +599,7 @@ elif [ "$LOGIN_SETUP" = "yes" ]; then
 fi
 
 # ==============================================================================
-# 10. Plugins de la barra de Omarchy (tema Retro)
+# 10. Plugins de la barra de Omarchy (estilo Retro)
 # ==============================================================================
 # Vienen preinstalados (config/quickshell/ii/omarchy-plugins) y activos; se desactivan uno a
 # uno en Ajustes → Barra. ai-usagebar es sólo la interfaz: su programa se compila aquí con

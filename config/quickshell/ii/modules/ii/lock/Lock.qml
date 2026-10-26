@@ -33,7 +33,7 @@ LockScreen {
         }
     }
 
-    // Retro: Omarchy's hyprlock look; the other themes keep the Material You one
+    // Retro: Omarchy's hyprlock look; the other skins keep the Material You one
     lockSurface: Appearance.isRetro ? omarchySurface : defaultSurface
     Component {
         id: defaultSurface

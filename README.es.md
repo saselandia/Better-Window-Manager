@@ -69,10 +69,10 @@ Este entorno no incluye los binarios propietarios o pesados en el repositorio gi
 | **`jq` & `python3`** | Procesamiento de configuraciones, backend de monitores y automatizaciones |
 | **`bluez` & `blueman`** | Pila Bluetooth (`bluetoothd`) para el applet Bluetooth estilo KDE Plasma y ajustes avanzados (`blueman-manager`) |
 | **`networkmanager`** | Backend (`nmcli`) del applet de redes estilo KDE Plasma; `nm-connection-editor` para el botón Configurar |
-| **`qt6ct`, `papirus-icon-theme`, `socat`** | Paleta del tema en apps Qt, iconos por tema (Retro: carpetas del color del fondo) y salvapantallas de terminal |
+| **`qt6ct`, `papirus-icon-theme`, `socat`** | Paleta del tema en apps Qt, iconos por estilo (Retro: carpetas del color del fondo) y salvapantallas de terminal |
 | **`sddm`** (Qt 6) | Pantalla de inicio de sesión estilo Omarchy con los colores del tema, en un Hyprland mínimo como el de Omarchy (opcional, la configura `install.sh`) |
 | **`plymouth`** + **`dracut`** | Pantalla de arranque estilo Omarchy (opcional, `install-boot-theme.sh --plymouth`) |
-| **`git`**, **`jq`** (+ **`cargo`** opcional) | Plugins de la barra de Omarchy en el tema Retro (`bwm-plugin.sh`); `cargo` compila el binario de `ai-usagebar` |
+| **`git`**, **`jq`** (+ **`cargo`** opcional) | Plugins de la barra de Omarchy en el estilo Retro (`bwm-plugin.sh`); `cargo` compila el binario de `ai-usagebar` |
 | **`satty`** o **`swappy`** | Anotar capturas («edit» en la vista previa de captura de Retro) |
 | **`tesseract`**, **`zbar`**, **`gpu-screen-recorder`** o **`wf-recorder`**, **`hyprpicker`**, **`libv4l`** (opcionales) | Capturas del menú de Retro (las de Omarchy): texto (OCR), códigos QR, grabación de pantalla con audio del escritorio/micrófono y webcam, selector de color. Gentoo: `app-text/tesseract media-gfx/zbar gui-apps/wf-recorder gui-apps/hyprpicker media-libs/libv4l` (`gpu-screen-recorder` está en GURU) |
 
@@ -158,7 +158,7 @@ Para aplicar tu fondo de pantalla favorito y generar la paleta de colores Materi
 
 ### 4. Inicio de sesión y pantalla de arranque (estilo Omarchy)
 
-`install.sh` ofrece configurarlo (o usa `--login` / `--no-login`). Hace lo mismo que el instalador de Omarchy: SDDM con el tema de inicio de sesión de Omarchy (logo de BWM, colores del tema activo) dentro de un Hyprland mínimo con tu teclado y tus monitores, recordando el último usuario y la última sesión. Después un servicio root actualiza los colores en cada cambio de fondo o de tema. A mano:
+`install.sh` ofrece configurarlo (o usa `--login` / `--no-login`). Hace lo mismo que el instalador de Omarchy: SDDM con el tema de inicio de sesión de Omarchy (logo de BWM, colores del estilo activo) dentro de un Hyprland mínimo con tu teclado y tus monitores, recordando el último usuario y la última sesión. Después un servicio root actualiza los colores en cada cambio de fondo o de tema. A mano:
 
 ```bash
 sudo ~/.config/hypr/scripts/install-boot-theme.sh --all            # SDDM + actualización automática
@@ -170,7 +170,7 @@ sudo ~/.config/hypr/scripts/install-boot-theme.sh --revert         # quitar la p
 
 La pantalla de arranque es opcional: rehace el initramfs con dracut (con los mismos drivers de GPU y descartándolo si crece más de un 50 %) y añade `splash` al `grub.cfg` existente sin regenerarlo. Guarda copias y `--revert` las restaura.
 
-### 5. Plugins de la barra de Omarchy (tema Retro)
+### 5. Plugins de la barra de Omarchy (estilo Retro)
 
 La barra Retro ejecuta **plugins del shell de Omarchy** sin cambios: las librerías `qs.Commons` / `qs.Ui` de Omarchy (MIT) van incluidas en `config/quickshell/ii/Commons` y `Ui` y leen la paleta Omarchy de BWM. El reloj de Omarchy con su calendario desplegable forma parte de la barra Retro. Estos plugins vienen **preinstalados y activos** (`config/quickshell/ii/omarchy-plugins`, todos MIT): el tiempo y Elsewhen (relojes del mundo) de Omarchy tras el reloj, uso de IA (`ai-usagebar`, cuyo programa compila `install.sh` con cargo), OmaStats, controles multimedia con carátula del disco y ventana activa. Cada uno se desactiva en **Ajustes → Barra** (Retro). Más plugins, como con `omarchy plugin add`:
 
@@ -258,7 +258,7 @@ Este proyecto se inspira y construye sobre el excelente trabajo de la comunidad:
 - **[Hyprland](https://hyprland.org)**: Compositor Wayland fluido, dinámico y extensible.
 - **[Quickshell](https://quickshell.outfoxxed.me)**: Framework flexible para widgets y barras de escritorio en Qt 6 / QML.
 - **[Matugen](https://github.com/InioX/matugen)**: Generador dinámico de paletas de color Material Design 3.
-- **[Omarchy](https://github.com/basecamp/omarchy)** (MIT): plantillas de apps del tema Retro, temas de Plymouth y SDDM, el saludo de SDDM en Hyprland, bloqueo estilo hyprlock, salvapantallas, modo glass y selector de fuente.
+- **[Omarchy](https://github.com/basecamp/omarchy)** (MIT): plantillas de apps del estilo Retro, temas de Plymouth y SDDM, el saludo de SDDM en Hyprland, bloqueo estilo hyprlock, salvapantallas, modo glass y selector de fuente.
 
 ---
 

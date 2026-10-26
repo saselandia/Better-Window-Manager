@@ -39,6 +39,10 @@ Item {
   // waiting on omarchy-theme-switcher; each open refreshes them behind it.
   property string themeRows: ""
   property bool themeMode: false
+  // BWM: the same carousel picks the skin (Default / Retro / KDE Plasma), from
+  // hypr/scripts/skin-switcher.sh rows; the file name is the label
+  property bool skinMode: false
+  readonly property var skinIds: ({ "Default": "default", "Retro": "retro", "KDE Plasma": "plasma" })
   property bool themeOpenPending: false
   property var extraThemeNames: []
   property var stockThemeNames: []
@@ -243,6 +247,15 @@ Item {
       return
     }
 
+    if (skinMode) {
+      skinMode = false
+      root.opened = false
+      var skin = skinIds[nameForPath(path)]
+      if (skin && skin !== currentSkin.trim())
+        Util.execArgv(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/bwm-theme-manager.py", "set", skin])
+      return
+    }
+
     if (!path || !selectionFile) {
       cancel()
       return
@@ -315,6 +328,7 @@ Item {
 
     requestSerial += 1
     themeMode = false
+    skinMode = false
     themeOpenPending = false
 
     imageDirs = nextImageDirs
@@ -470,6 +484,27 @@ Item {
     }
   }
 
+  property string currentSkin: ""
+
+  Process {
+    id: skinRowsProc
+    command: ["bash", "-c", "python3 \"$HOME/.config/hypr/scripts/bwm-theme-manager.py\" get; \"$HOME/.config/hypr/scripts/skin-switcher.sh\" --print-rows"]
+    stdout: StdioCollector {
+      onStreamFinished: {
+        var lines = String(text || "").split("\n")
+        root.currentSkin = lines.shift() || ""
+        var rows = lines.join("\n")
+        var selected = ""
+        var images = ImagePickerModel.loadRows(rows)
+        for (var i = 0; i < images.length; i++) {
+          if (root.skinIds[root.nameForPath(images[i].filePath)] === root.currentSkin.trim()) selected = images[i].filePath
+        }
+        root.openSelector("", rows, selected, "", "", true, false)
+        root.skinMode = true
+      }
+    }
+  }
+
   FileView {
     id: themeNameFile
     path: root.stateHome + "/omarchy/current/theme.name"
@@ -592,6 +627,10 @@ Item {
     }
     if (args.source === "themes") {
       openThemes()
+      return
+    }
+    if (args.source === "skins") {
+      skinRowsProc.running = true
       return
     }
     var dirs = String(args.imageDirs || imageDirs)

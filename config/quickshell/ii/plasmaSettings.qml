@@ -4,10 +4,10 @@
 //@ pragma Env QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
 //@ pragma Env QT_SCALE_FACTOR=1
 
-// KDE Plasma theme settings app, modelled on Plasma 6 "System Settings" (Breeze Dark).
+// KDE Plasma skin settings app, modelled on Plasma 6 "System Settings" (Breeze Dark).
 // It loads exactly the same pages as settings.qml (default / Omarchy themes), except the
 // taskbar page, which has the Plasma panel options. Options are stored in config.json:
-// aesthetic sections are kept per theme and the rest is shared between the three themes
+// aesthetic sections are kept per theme and the rest is shared between the three skins
 // by bwm-theme-manager.py. Launch: qs -p ~/.config/quickshell/ii/plasmaSettings.qml
 // (or open-settings.sh, which picks the right app for the active theme).
 
@@ -26,7 +26,7 @@ ApplicationWindow {
     id: root
     property string filterText: ""
     property var pages: [
-        { id: "quick", name: "Ajustes rápidos", icon: "preferences-desktop-theme-global", keywords: "quick rapido tema", component: "modules/settings/QuickConfig.qml" },
+        { id: "quick", name: "Ajustes rápidos", icon: "preferences-desktop-theme-global", keywords: "quick rapido tema estilo skin", component: "modules/settings/QuickConfig.qml" },
         { id: "general", name: "General", icon: "preferences-system", keywords: "general audio bateria idioma", component: "modules/settings/GeneralConfig.qml" },
         { id: "bar", name: "Barra de tareas", icon: "preferences-desktop-plasma", keywords: "bar panel barra flotante opaco transparente iconos centrados", component: "modules/settings/PlasmaBarConfig.qml" },
         { id: "background", name: "Fondo de escritorio", icon: "preferences-desktop-wallpaper", keywords: "background wallpaper fondo", component: "modules/settings/BackgroundConfig.qml" },

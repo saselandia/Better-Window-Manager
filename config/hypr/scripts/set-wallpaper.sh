@@ -43,7 +43,7 @@ swww img "$WALLPAPER" \
     --transition-duration 2 \
     --transition-fps 60
 
-# 2.1 Guardar en caché para recuperación instantánea y persistencia por tema
+# 2.1 Guardar en caché para recuperación instantánea y persistencia por estilo
 mkdir -p "$HOME/.cache"
 echo "$WALLPAPER" > "$HOME/.cache/current_wallpaper"
 
@@ -55,15 +55,15 @@ if [ -f "$HOME/.config/illogical-impulse/config.json" ] && command -v jq >/dev/n
     jq --arg path "$WALLPAPER" '.background.wallpaperPath = $path' "$HOME/.config/illogical-impulse/config.json" > "$HOME/.config/illogical-impulse/config.json.tmp" && mv "$HOME/.config/illogical-impulse/config.json.tmp" "$HOME/.config/illogical-impulse/config.json"
 fi
 
-# 2.3 Sincronizar con el perfil aislado del tema activo (config-retro.json / config-default.json)
+# 2.3 Sincronizar con el perfil aislado del estilo activo (config-retro.json / config-default.json)
 PROFILE_JSON="$HOME/.config/illogical-impulse/config-${CURRENT_THEME}.json"
 if [ -f "$PROFILE_JSON" ] && command -v jq >/dev/null 2>&1; then
     jq --arg path "$WALLPAPER" '.background.wallpaperPath = $path' "$PROFILE_JSON" > "$PROFILE_JSON.tmp" && mv "$PROFILE_JSON.tmp" "$PROFILE_JSON"
 fi
 
-# 3. Generar la paleta de colores según el tema
+# 3. Generar la paleta de colores según el estilo
 if [[ "$CURRENT_THEME" == "plasma" ]]; then
-    echo "Tema Plasma activo: manteniendo paleta estática Breeze Dark (sin Matugen ni recoloreo)."
+    echo "Estilo Plasma activo: manteniendo paleta estática Breeze Dark (sin Matugen ni recoloreo)."
     python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py apply-plasma-colors 2>/dev/null || true
 elif [[ "$CURRENT_THEME" == "retro" ]]; then
     # Sin matugen: bwm_omarchy.py genera desde el fondo una paleta estilo Omarchy y rellena

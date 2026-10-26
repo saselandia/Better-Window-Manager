@@ -6,7 +6,7 @@ import qs.modules.common
 import qs.modules.common.functions
 import qs.modules.common.panels.lock
 
-// Retro theme lock screen, a copy of Omarchy's hyprlock.conf (MIT): the wallpaper blurred,
+// Retro skin lock screen, a copy of Omarchy's hyprlock.conf (MIT): the wallpaper blurred,
 // and a single square password box in the middle with a thick border, monospace text and
 // the "Enter Password" placeholder; the border takes the accent colour while checking.
 // Colours come from the Omarchy palette (Appearance in Retro is rendered from it).

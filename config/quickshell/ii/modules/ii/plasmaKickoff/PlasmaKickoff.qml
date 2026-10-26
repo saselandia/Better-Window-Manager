@@ -184,7 +184,7 @@ Scope {
     ]
 
     // BWM's Plasma settings app (plasmaSettings.qml). It is not a .desktop file on purpose:
-    // it only exists inside this launcher, so rofi and the other themes' launchers never list it.
+    // it only exists inside this launcher, so rofi and the other skins' launchers never list it.
     readonly property var plasmaSettingsEntry: ({
         id: "bwm-plasma-settings",
         name: "Preferencias del sistema",

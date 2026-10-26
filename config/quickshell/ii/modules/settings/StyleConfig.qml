@@ -6,7 +6,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 
-// "Estilo" page: Omarchy features shared by the three themes
+// "Estilo" page: Omarchy features shared by the three skins
 //  * system monospace font (font-set.sh, port of omarchy-font-set): terminals, fontconfig's
 //    "monospace" (Qt, GTK, Quickshell), GNOME's monospace font, Retro's TUI overlays
 //  * glass mode (glass.sh, port of Omarchy's glassy windows)
@@ -87,7 +87,7 @@ ContentPage {
             Layout.fillWidth: true
             wrapMode: Text.Wrap
             color: Appearance.colors.colSubtext
-            text: "Fuente monoespaciada para los terminales, las apps que piden «monospace» y el aspecto TUI del tema Retro. Se comparte entre los tres temas."
+            text: "Fuente monoespaciada para los terminales, las apps que piden «monospace» y el aspecto TUI del estilo Retro. Se comparte entre los tres estilos."
         }
 
         ConfigSelectionArray {
@@ -138,7 +138,7 @@ ContentPage {
                 Quickshell.execDetached([page.scripts + "glass.sh", page.glass ? "on" : "off"]);
             }
             StyledToolTip {
-                text: "Como el modo glass de Omarchy: terminales al 65 %, apps GTK atenuadas y\nbarra y menús con desenfoque esmerilado detrás. Para los tres temas."
+                text: "Como el modo glass de Omarchy: terminales al 65 %, apps GTK atenuadas y\nbarra y menús con desenfoque esmerilado detrás. Para los tres estilos."
             }
         }
     }
@@ -178,11 +178,11 @@ ContentPage {
             Layout.fillWidth: true
             wrapMode: Text.Wrap
             color: Appearance.colors.colSubtext
-            text: "Pantalla de inicio de sesión (SDDM, en un Hyprland mínimo como en Omarchy) y de arranque (Plymouth) con el logo de BWM y los colores del tema activo. Se regeneran solas al cambiar de fondo o de tema. Instalarlas necesita root, una sola vez, en una terminal:\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --all            (SDDM + actualización automática)\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --plymouth       (pantalla de arranque)\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --disable-sddm   (volver al autologin)\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --revert         (quitar la pantalla de arranque)"
+            text: "Pantalla de inicio de sesión (SDDM, en un Hyprland mínimo como en Omarchy) y de arranque (Plymouth) con el logo de BWM y los colores del estilo activo. Se regeneran solas al cambiar de fondo, de estilo o de tema. Instalarlas necesita root, una sola vez, en una terminal:\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --all            (SDDM + actualización automática)\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --plymouth       (pantalla de arranque)\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --disable-sddm   (volver al autologin)\n  sudo ~/.config/hypr/scripts/install-boot-theme.sh --revert         (quitar la pantalla de arranque)"
         }
         RippleButtonWithIcon {
             materialIcon: "palette"
-            mainText: "Generar con los colores del tema actual"
+            mainText: "Generar con los colores actuales"
             onClicked: bootProc.running = true
         }
         StyledText {
@@ -196,7 +196,7 @@ ContentPage {
 
     ContentSection {
         icon: "palette"
-        title: "Paleta Retro (Omarchy)"
+        title: "Temas Retro (Omarchy)"
         visible: Appearance.isRetro
 
         StyledText {

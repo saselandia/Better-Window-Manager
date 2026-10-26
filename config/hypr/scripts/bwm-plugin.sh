@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Script: bwm-plugin.sh
-# Descripción: Plugins de la barra de Omarchy en el tema Retro de BWM. Equivalente a
+# Descripción: Plugins de la barra de Omarchy en el estilo Retro de BWM. Equivalente a
 # `omarchy plugin add/remove/update/list/enable/disable` (Omarchy, MIT): un plugin es un
 # repositorio git con un manifest.json en la raíz (https://omarchy.org/manual/shell-plugins/).
 # La barra Retro los carga con las librerías qs.Commons / qs.Ui de Omarchy

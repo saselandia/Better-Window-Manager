@@ -72,7 +72,7 @@ This dotfiles repository keeps binary assets minimal to ensure portability and q
 | **`qt6ct`, `papirus-icon-theme`, `socat`** | Theme palette for Qt apps, per-theme icons (Retro: folders in the wallpaper colour) and the terminal screensaver |
 | **`sddm`** (Qt 6) | Omarchy-style login screen in the theme colours, running in a minimal Hyprland like Omarchy's (optional, set up by `install.sh`) |
 | **`plymouth`** + **`dracut`** | Omarchy-style boot splash (optional, `install-boot-theme.sh --plymouth`) |
-| **`git`**, **`jq`** (+ **`cargo`** optional) | Omarchy bar plugins in the Retro theme (`bwm-plugin.sh`); `cargo` builds the `ai-usagebar` binary |
+| **`git`**, **`jq`** (+ **`cargo`** optional) | Omarchy bar plugins in the Retro skin (`bwm-plugin.sh`); `cargo` builds the `ai-usagebar` binary |
 | **`satty`** or **`swappy`** | Screenshot annotation ("edit" in the Retro screenshot preview) |
 | **`tesseract`**, **`zbar`**, **`gpu-screen-recorder`** or **`wf-recorder`**, **`hyprpicker`**, **`libv4l`** (optional) | Retro menu captures (Omarchy's): text (OCR), QR codes, screen recording with desktop/mic audio and webcam, colour picker. Gentoo: `app-text/tesseract media-gfx/zbar gui-apps/wf-recorder gui-apps/hyprpicker media-libs/libv4l` (`gpu-screen-recorder` is in GURU) |
 
@@ -170,7 +170,7 @@ sudo ~/.config/hypr/scripts/install-boot-theme.sh --revert         # remove the 
 
 The boot splash is opt-in: it rebuilds the initramfs with dracut (keeping the same GPU drivers, refusing images that grow more than 50 %) and adds `splash` to the existing `grub.cfg` without regenerating it. Backups are kept and `--revert` restores them.
 
-### 5. Omarchy bar plugins (Retro theme)
+### 5. Omarchy bar plugins (Retro skin)
 
 The Retro bar runs **Omarchy shell plugins** unchanged: Omarchy's `qs.Commons` / `qs.Ui` libraries (MIT) are vendored in `config/quickshell/ii/Commons` and `Ui`, and read BWM's Omarchy palette. Omarchy's clock and calendar dropdown are part of the Retro bar. These plugins come **preinstalled and enabled** (`config/quickshell/ii/omarchy-plugins`, all MIT): Omarchy's weather and Elsewhen (world clocks) after the clock, AI usage (`ai-usagebar`, its binary is built by `install.sh` with cargo), OmaStats, media controls with album art and active window. Turn each one off in **Settings → Bar** (Retro). More plugins, like `omarchy plugin add`:
 
@@ -258,7 +258,7 @@ This project is inspired by and builds upon the incredible work of the open-sour
 - **[Hyprland](https://hyprland.org)**: Dynamic, extensible, and GPU-driven Wayland compositor.
 - **[Quickshell](https://quickshell.outfoxxed.me)**: Modern and flexible desktop HUD & widget framework using Qt 6 and QML.
 - **[Matugen](https://github.com/InioX/matugen)**: Dynamic Material Design 3 color palette generator.
-- **[Omarchy](https://github.com/basecamp/omarchy)** (MIT): Retro theme app templates, Plymouth/SDDM login themes, the SDDM Hyprland greeter, hyprlock-style lock screen, screensaver, glass mode and font switcher.
+- **[Omarchy](https://github.com/basecamp/omarchy)** (MIT): Retro skin app templates, Plymouth/SDDM login themes, the SDDM Hyprland greeter, hyprlock-style lock screen, screensaver, glass mode and font switcher.
 
 ---
 

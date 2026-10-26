@@ -9,7 +9,7 @@ import Quickshell.Wayland
 import qs.modules.common
 import qs.Commons as O
 
-// Retro theme: the floating preview Omarchy's screenshot tool (omasnap) shows after a
+// Retro skin: the floating preview Omarchy's screenshot tool (omasnap) shows after a
 // capture: the shot is already copied (and saved under ~/Pictures/Screenshots), a small card
 // in the corner shows it and fades after 10 seconds unless it is pinned or hovered.
 // Square, accent border and monospace text from Omarchy's own shell tokens (qs.Commons).

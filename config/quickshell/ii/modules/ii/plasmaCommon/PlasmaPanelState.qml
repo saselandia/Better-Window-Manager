@@ -12,7 +12,7 @@ import Quickshell.Hyprland
  * floats again when there is none.
  *
  * "Maximized" covers Hyprland fullscreen modes and the KDE-style maximize used
- * by the Plasma theme (quick-tile.py / titlebar button), which is a floating
+ * by the Plasma skin (quick-tile.py / titlebar button), which is a floating
  * window filling the monitor's usable area.
  *
  * It also docks while "Show Desktop" (taskbar button, toggle-minimize.py

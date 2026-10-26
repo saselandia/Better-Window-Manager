@@ -1,4 +1,4 @@
--- Generado por bwm-theme-manager.py para el tema KDE Plasma (Breeze Dark estático)
+-- Generado por bwm-theme-manager.py para el estilo KDE Plasma (Breeze Dark estático)
 local plasma_colors = {
     accent = "rgba(3daee9ee)",
     secondary = "rgba(3daee9ee)",

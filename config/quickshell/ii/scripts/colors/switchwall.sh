@@ -55,7 +55,7 @@ post_process() {
     local screen_height="$2"
     local wallpaper_path="$3"
 
-    # Sincronizar con swww y caché para persistencia por tema
+    # Sincronizar con swww y caché para persistencia por estilo
     if [ -n "$wallpaper_path" ] && [ -f "$wallpaper_path" ]; then
         echo "$wallpaper_path" > "$HOME/.cache/current_wallpaper"
         local current_theme

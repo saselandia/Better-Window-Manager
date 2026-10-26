@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Icon theme per BWM theme, like Omarchy's icons.theme (each Omarchy theme picks a Yaru
+Icon theme per BWM skin, like Omarchy's icons.theme (each Omarchy theme picks a Yaru
 colour). Yaru is not packaged for Gentoo, so Retro uses Papirus-Dark (Papirus-Light with a
 light Omarchy theme) with the folder colour closest to the wallpaper accent (what papirus-folders does: a small user theme,
 BWM-Papirus, that points the folder icons at one of Papirus' colour variants).

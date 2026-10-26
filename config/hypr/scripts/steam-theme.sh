@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Script: steam-theme.sh
-# Descripción: Aplica a Steam los colores del tema BWM con Adwaita-for-Steam
+# Descripción: Aplica a Steam los colores del estilo BWM con Adwaita-for-Steam
 # (https://github.com/tkashkin/Adwaita-for-Steam, MIT), como el módulo de Steam de
 # omarchy-theme-hook. En Retro añade además esquinas rectas y la fuente monoespaciada
 # del sistema (aspecto TUI). Sin Adwaita-for-Steam en ~/.local/share/steam-adwaita no

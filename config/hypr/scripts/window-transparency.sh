@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Script: window-transparency.sh
-# Descripción: Transparencia de ventanas al estilo Omarchy (tema Retro).
+# Descripción: Transparencia de ventanas al estilo Omarchy (estilo Retro).
 #   Como en Omarchy (default/hypr/windows.lua + omarchy-hyprland-window-transparency*),
 #   las apps son opacas y sólo los terminales/TUIs (y Nautilus) llevan la etiqueta
 #   "transparent-window", que les da opacidad "0.985 0.96" (activa/inactiva).

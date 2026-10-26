@@ -26,8 +26,8 @@ local g_in = (ok_theme and active_theme.gaps_in) or 3
 local g_out = (ok_theme and active_theme.gaps_out) or 5
 
 -- Configuración de colores de bordes:
--- En tema Retro (Omarchy): se sincroniza dinámicamente con el wallpaper pero potenciando la saturación (colores vivos y chillones).
--- En tema Default (Material You): mantiene la paleta tonal pastel original de Matugen.
+-- En estilo Retro (Omarchy): se sincroniza dinámicamente con el wallpaper pero potenciando la saturación (colores vivos y chillones).
+-- En estilo Default (Material You): mantiene la paleta tonal pastel original de Matugen.
 local function boost_color(c_str, fallback)
     if not c_str then return fallback end
     local hex = string.match(c_str, "%x%x%x%x%x%x")
@@ -215,6 +215,9 @@ hl.config({
     misc = {
         force_default_wallpaper = -1,    -- Set to 0 or 1 to disable the anime mascot wallpapers
         disable_hyprland_logo   = false, -- If true disables the random hyprland logo / anime girl background. :(
+        -- Como Omarchy: una app que pide activarse (enlace abierto desde Discord, etc.) toma el foco
+        -- y te lleva a su workspace, en vez de quedar sólo marcada como urgente
+        focus_on_activate       = true,
     },
 })
 
@@ -235,7 +238,7 @@ hl.config({
     }
 })
 
--- plugin.hyprbars: habilitar en Plasma y deshabilitar limpiamente en otros temas
+-- plugin.hyprbars: habilitar en Plasma y deshabilitar limpiamente en otros estilos
 if hl.plugin and hl.plugin.hyprbars then
     if is_plasma then
         hl.config({
@@ -303,3 +306,11 @@ if hl.plugin and hl.plugin.hyprbars then
         })
     end
 end
+
+-- XWayland sin escalado (como Omarchy): los juegos y apps X11 dibujan a la resolución nativa
+-- del monitor en vez de reescalarse borrosos si algún monitor usa escala distinta de 1
+hl.config({
+    xwayland = {
+        force_zero_scaling = true,
+    },
+})

@@ -1,5 +1,5 @@
 {
-  // Menú / paleta de comandos del tema Retro de BWM, con el formato de omarchy-menu.jsonc de Omarchy
+  // Menú / paleta de comandos del estilo Retro de BWM, con el formato de omarchy-menu.jsonc de Omarchy
   // (MIT; motor en quickshell/ii/modules/ii/omarchyMenu/omarchy). Lo lee Quickshell al arrancar y
   // lo vigila: los cambios se ven sin reiniciar. Extensión del usuario (mismas claves = sustituir
   // campos, claves nuevas = añadir): ~/.config/bwm/extensions/menu.jsonc
@@ -40,12 +40,12 @@
   "learn.bash": {"icon":"󱆃","label":"Bash","action":"xdg-open https://devhints.io/bash"},
 
   // Estilo
-  "appearance.theme": {"icon":"󰸌","label":"Tema","aliases":["theme","tema"]},
+  "appearance.theme": {"icon":"󰸌","label":"Estilo","aliases":["skin","estilo","theme","tema"]},
   "appearance.theme.retro": {"icon":"󰊠","label":"Retro (Omarchy)","checked":"[[ $(python3 ~/.config/hypr/scripts/bwm-theme-manager.py get) == retro ]]","action":"python3 ~/.config/hypr/scripts/bwm-theme-manager.py set retro"},
   "appearance.theme.default": {"icon":"󰏘","label":"Default (Material You)","checked":"[[ $(python3 ~/.config/hypr/scripts/bwm-theme-manager.py get) == default ]]","action":"python3 ~/.config/hypr/scripts/bwm-theme-manager.py set default"},
   "appearance.theme.plasma": {"icon":"","label":"KDE Plasma","checked":"[[ $(python3 ~/.config/hypr/scripts/bwm-theme-manager.py get) == plasma ]]","action":"python3 ~/.config/hypr/scripts/bwm-theme-manager.py set plasma"},
-  "appearance.theme.picker": {"icon":"󰉼","label":"Selector de temas…","action":"~/.config/hypr/scripts/theme-picker.sh"},
-  "appearance.retro-palette": {"icon":"󰸌","label":"Paleta Retro (Omarchy)","when":"[[ $(python3 ~/.config/hypr/scripts/bwm-theme-manager.py get) == retro ]]"},
+  "appearance.theme.picker": {"icon":"󰉼","label":"Selector de estilos…","action":"~/.config/hypr/scripts/theme-picker.sh"},
+  "appearance.retro-palette": {"icon":"󰸌","label":"Temas Retro (Omarchy)","when":"[[ $(python3 ~/.config/hypr/scripts/bwm-theme-manager.py get) == retro ]]"},
   "appearance.retro-palette.gallery": {"icon":"󰋩","label":"Galería visual de temas (3D Carousel)","action":"omarchy-theme-switcher"},
   "appearance.retro-palette.dynamic": {"icon":"󰔎","label":"Paleta dinámica (desde fondo)","checked":"[[ $(omarchy-theme-current) == dynamic ]]","action":"omarchy-theme-set dynamic"},
   "appearance.retro-palette.tokyo-night": {"icon":"󰊠","label":"Tokyo Night","checked":"[[ $(omarchy-theme-current) == tokyo-night ]]","action":"omarchy-theme-set tokyo-night"},

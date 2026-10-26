@@ -2,7 +2,7 @@
 # ==============================================================================
 # Script: install-boot-theme.sh   (ejecutar con sudo)
 # Descripción: Instala en el sistema el tema de arranque (Plymouth) y/o el de inicio de
-# sesión (SDDM) que bwm_boot.py genera con los colores del tema BWM activo, los mantiene
+# sesión (SDDM) que bwm_boot.py genera con los colores del estilo BWM activo, los mantiene
 # al día solo, o deshace Plymouth. Port de omarchy-plymouth-set / omarchy-refresh-sddm
 # (Omarchy, MIT).
 #
@@ -20,13 +20,13 @@
 # "omarchy" (aquí "bwm", mismo Main.qml) dentro de un Hyprland mínimo (DisplayServer=wayland,
 # sin logo ni animaciones, con la distribución de teclado y los monitores del usuario),
 # recordando último usuario y sesión (sesión por defecto hyprland.desktop).
-# Inicio de sesión según el tema BWM activo: en Retro se entra con contraseña en SDDM (como
+# Inicio de sesión según el estilo BWM activo: en Retro se entra con contraseña en SDDM (como
 # Omarchy) y Quickshell no vuelve a bloquear; en Default y Plasma SDDM entra solo y el
 # bloqueo del propio tema (Quickshell, lock.launchOnStartup) hace de inicio de sesión. Al
-# cambiar de tema el servicio de --auto cambia el autologin de SDDM para el próximo arranque.
+# cambiar de estilo el servicio de --auto cambia el autologin de SDDM para el próximo arranque.
 # --enable-sddm lo activa al arrancar y aparca el autologin de getty en tty1 (si lo había);
 # --autologin: SDDM entra siempre solo, sea cual sea el tema (sin --autologin vuelve al modo
-# por tema). --disable-sddm lo desactiva y devuelve el autologin de getty.
+# por estilo). --disable-sddm lo desactiva y devuelve el autologin de getty.
 #
 # --auto: copia este script a /usr/local/sbin/bwm-boot-theme (de root: el del repo lo puede
 #   editar el usuario) y crea bwm-boot-theme.path/.service. bwm_boot.py render se ejecuta
@@ -182,7 +182,7 @@ hl.config({
 EOF
 }
 
-# Autologin de SDDM según el tema (ver la cabecera). El tema viene de greeter.conf.
+# Autologin de SDDM según el estilo (ver la cabecera). El tema viene de greeter.conf.
 apply_login_mode() {
   local theme
   theme=$(sed -n 's/^theme=\([a-z]*\)$/\1/p' "$SRC/sddm/greeter.conf" 2>/dev/null | head -n1)

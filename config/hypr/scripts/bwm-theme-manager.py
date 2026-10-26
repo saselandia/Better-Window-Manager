@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-BWM Theme Manager (Better Window Manager)
-Manages and switches themes between:
+BWM Theme Manager (Better Window Manager) - gestor de estilos (skins)
+Manages and switches skins ("estilos"; the themes inside a skin, like Retro's Omarchy
+themes, are "temas") between:
   1. Default (Material You)
   2. Retro (Omarchy)
   3. KDE Plasma (Breeze Dark)
@@ -245,7 +246,7 @@ def save_current_theme_config(theme_name: str):
     except Exception as e:
         print(f"[Warning] Error guardando config para {theme_name}: {e}", file=sys.stderr)
 
-# Secciones de config.json que son estéticas y por tanto propias de cada tema
+# Secciones de config.json que son estéticas y por tanto propias de cada estilo
 # (barra, fondo, apariencia, dock...). Todo lo demás (apps, audio, IA, idioma,
 # notificaciones, servicios, hora...) se comparte entre Default, Retro y Plasma.
 # El inicio automático y los atajos viven fuera de config.json y ya son comunes.
@@ -297,7 +298,7 @@ def load_theme_config(target_theme: str, cfg: dict):
             with open(II_CONFIG_JSON, "r", encoding="utf-8") as f:
                 merge_shared_sections(data, json.load(f))
         except Exception as e:
-            print(f"[Warning] No se pudieron compartir ajustes entre temas: {e}", file=sys.stderr)
+            print(f"[Warning] No se pudieron compartir ajustes entre estilos: {e}", file=sys.stderr)
 
     # Update theme tokens
     if "appearance" not in data:
@@ -604,7 +605,7 @@ inactive_border_color #31363b
         pass
 
     # 2. Hyprland plasma_colors.lua
-    lua_content = """-- Generado por bwm-theme-manager.py para el tema KDE Plasma (Breeze Dark estático)
+    lua_content = """-- Generado por bwm-theme-manager.py para el estilo KDE Plasma (Breeze Dark estático)
 local plasma_colors = {
     accent = "rgba(3daee9ee)",
     secondary = "rgba(3daee9ee)",
@@ -668,7 +669,7 @@ BREEZE_DARK_M3 = {
     "tertiary_fixed": "#1abc9c", "tertiary_fixed_dim": "#16a085", "on_tertiary_fixed": "#fcfcfc", "on_tertiary_fixed_variant": "#fcfcfc",
 }
 
-# matugen templates handled elsewhere in the Plasma theme: Hyprland reads plasma_colors.lua
+# matugen templates handled elsewhere in the Plasma skin: Hyprland reads plasma_colors.lua
 # and kitty gets the real Breeze/Konsole terminal palette from apply_plasma_colors()
 PLASMA_SKIPPED_TEMPLATES = {"hyprland_colors", "kitty"}
 
@@ -716,6 +717,8 @@ def apply_plasma_app_themes():
             continue
         try:
             rendered = re.sub(r"\{\{([^}]*)\}\}", fill, src.read_text(encoding="utf-8"))
+            if name.startswith("vesktop"):
+                rendered = rendered.replace("@name BWM Material You", "@name BWM Breeze Dark")
             # The palette is static: skip unchanged files so their reload hooks (Spotify
             # relaunch, Nautilus reload...) don't run on every wallpaper change
             if dst.is_file() and dst.read_text(encoding="utf-8") == rendered:
@@ -827,7 +830,7 @@ def sync_floating_windows(to_plasma: bool):
 def apply_theme(theme_name: str):
     """Applies theme across all subsystems, with complete isolation."""
     if theme_name not in THEMES:
-        print(f"Error: Tema '{theme_name}' no reconocido. Opciones: {list(THEMES.keys())}", file=sys.stderr)
+        print(f"Error: Estilo '{theme_name}' no reconocido. Opciones: {list(THEMES.keys())}", file=sys.stderr)
         sys.exit(1)
 
     import fcntl
@@ -842,7 +845,7 @@ def apply_theme(theme_name: str):
 
     curr_theme = get_current_theme()
     cfg = THEMES[theme_name]
-    print(f"Aplicando tema: {cfg['title']}...")
+    print(f"Aplicando estilo: {cfg['title']}...")
 
     # 1. Guardar la configuración del tema actual antes de cambiar
     save_current_theme_config(curr_theme)
@@ -884,7 +887,7 @@ def apply_theme(theme_name: str):
     elif cfg.get("is_retro"):
         apply_retro_wallpaper_colors(wp)
 
-    # Icon theme per BWM theme, like Omarchy's icons.theme (Retro sets it with its accent)
+    # Icon theme per BWM skin, like Omarchy's icons.theme (Retro sets it with its accent)
     if not cfg.get("is_retro"):
         try:
             import bwm_icons
@@ -902,11 +905,14 @@ def apply_theme(theme_name: str):
         subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_omarchy.py"), "hook", theme_name],
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
-    # Firefox only reads its chrome CSS (Retro's TUI overlay) at startup: entering or leaving
-    # Retro restarts it in the background, keeping the session and each window's workspace
-    if (theme_name == "retro") != (curr_theme == "retro"):
-        subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_omarchy.py"), "restart-firefox"],
-                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    # Firefox only reads its chrome CSS (Retro's TUI theme, Material You, Breeze) at startup:
+    # a skin change restarts it in the background if that CSS changed, keeping the session and
+    # each window's workspace. Vesktop reloads its theme live; vesktop-enable only switches it
+    # (once) to the shared bwm.theme.css, restarting it in place if it is open
+    if theme_name != curr_theme:
+        for action in ("restart-firefox", "vesktop-enable"):
+            subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_omarchy.py"), action],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
     # 5. Recargar Hyprland primero para aplicar las reglas del nuevo tema
     try:
@@ -918,7 +924,7 @@ def apply_theme(theme_name: str):
     sync_floating_windows(cfg.get("is_plasma", False))
 
     # 6.1 Demonio de notificaciones: en Retro el de Omarchy (dentro de Quickshell), así que swaync
-    #     se cierra para soltar org.freedesktop.Notifications; en los otros temas vuelve swaync
+    #     se cierra para soltar org.freedesktop.Notifications; en los otros estilos vuelve swaync
     try:
         if theme_name == "retro":
             subprocess.run(["pkill", "-x", "swaync"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -945,25 +951,25 @@ def apply_theme(theme_name: str):
     except Exception:
         pass
 
-    print(f"✓ Tema '{theme_name}' aplicado correctamente con configuración aislada.")
+    print(f"✓ Estilo '{theme_name}' aplicado correctamente con configuración aislada.")
 
 def main():
     parser = argparse.ArgumentParser(description="Gestor de temas de BWM")
     subparsers = parser.add_subparsers(dest="action")
 
-    subparsers.add_parser("get", help="Obtener tema actual")
-    subparsers.add_parser("list", help="Listar temas disponibles")
-    subparsers.add_parser("toggle", help="Alternar entre temas (Default -> Retro -> Plasma)")
+    subparsers.add_parser("get", help="Obtener el estilo (skin) actual")
+    subparsers.add_parser("list", help="Listar estilos disponibles")
+    subparsers.add_parser("toggle", help="Alternar entre estilos (Default -> Retro -> Plasma)")
 
-    set_parser = subparsers.add_parser("set", help="Activar un tema específico")
-    set_parser.add_argument("theme", choices=list(THEMES.keys()), help="Nombre del tema")
+    set_parser = subparsers.add_parser("set", help="Activar un estilo")
+    set_parser.add_argument("theme", choices=list(THEMES.keys()), help="Nombre del estilo")
 
     col_parser = subparsers.add_parser("apply-wallpaper-colors", help="Aplicar colores vivos a partir del wallpaper (Retro)")
     col_parser.add_argument("wallpaper", help="Ruta al wallpaper")
 
     subparsers.add_parser("apply-plasma-colors", help="Aplicar colores Breeze Dark estáticos (Plasma)")
 
-    retro_parser = subparsers.add_parser("retro-theme", help="Gestión de biblioteca de temas estáticos de Omarchy")
+    retro_parser = subparsers.add_parser("retro-theme", help="Temas del estilo Retro: biblioteca de temas estáticos de Omarchy")
     retro_parser.add_argument("subaction", choices=["list", "get", "set", "dynamic"], help="Acción de tema retro")
     retro_parser.add_argument("theme_name", nargs="?", default="", help="Nombre del tema o 'dynamic'")
 

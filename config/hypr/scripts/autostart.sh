@@ -133,7 +133,7 @@ python3 -c "import sys; sys.path.insert(0, '$HOME/.config/hypr/scripts'); import
 
 # 6. Centro de notificaciones (swaync). En Retro no: allí el demonio de notificaciones es el de
 #    Omarchy dentro de Quickshell (modules/ii/omarchyNotifications) y sólo uno puede tener
-#    org.freedesktop.Notifications. bwm-theme-manager.py lo cierra/arranca al cambiar de tema.
+#    org.freedesktop.Notifications. bwm-theme-manager.py lo cierra/arranca al cambiar de estilo.
 if [[ "$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null)" != "retro" ]] && ! pidof swaync >/dev/null 2>&1; then
     if command -v swaync >/dev/null 2>&1; then
         swaync >/dev/null 2>&1 &
@@ -167,6 +167,12 @@ fi
         hyprctl keyword windowrulev2 "plugin:hyprbars:nobar, class:^(steam|steamwebhelper|firefox|firefox-bin|google-chrome.*|chromium.*|brave-browser|zen.*|vesktop|discord|armcord|webcord|spotify|antigravity|antigravity-ide|code|Code|code-oss|vscodium|cursor|claude|claude-desktop|com.anthropic.Claude|org.gnome..*|nautilus|pavucontrol|easyeffects|gamescope|signal|telegram-desktop|org.telegram.desktop|baobab|evince|loupe)$" 2>/dev/null || true
     fi
 ) &
+
+# 9b. Vigilante de ventanas: monitor principal de XWayland = el del workspace 1, ventanas fuera
+#     de pantalla de vuelta a su monitor y juegos sin bordes del tamaño del monitor a pantalla completa
+if ! pgrep -f 'window-guard.py watch' >/dev/null 2>&1; then
+    python3 "$HOME/.config/hypr/scripts/window-guard.py" watch >/dev/null 2>&1 &
+fi
 
 # 10. Asegurar que las pantallas abran en Workspace 1 (Principal 1080p) y Workspace 10 (Secundario 4K)
 (

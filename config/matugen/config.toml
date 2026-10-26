@@ -23,7 +23,7 @@ post_hook = 'kill -SIGUSR1 $(pidof kitty) 2>/dev/null || true'
 
 [templates.vesktop]
 input_path = '~/.config/matugen/templates/vesktop.css'
-output_path = '~/.var/app/dev.vencord.Vesktop/config/vesktop/themes/material-you.theme.css'
+output_path = '~/.var/app/dev.vencord.Vesktop/config/vesktop/themes/bwm.theme.css'
 
 [templates.vesktop_quickcss]
 input_path = '~/.config/matugen/templates/vesktop.css'

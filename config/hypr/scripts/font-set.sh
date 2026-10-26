@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Script: font-set.sh
-# Descripción: Fuente monoespaciada del sistema, compartida por los tres temas.
+# Descripción: Fuente monoespaciada del sistema, compartida por los tres estilos.
 # Port de omarchy-font-set / omarchy-font-list / omarchy-font-current
 # (https://github.com/basecamp/omarchy, MIT, Copyright (c) David Heinemeier Hansson).
 # Uso: font-set.sh list | current | set "<familia>"
 # Aplica a: kitty, fontconfig (alias "monospace": Qt, GTK, Quickshell...), la fuente
-# monoespaciada de GNOME/GTK y la capa TUI del tema Retro (bwm_omarchy.py).
+# monoespaciada de GNOME/GTK y la capa TUI del estilo Retro (bwm_omarchy.py).
 # ==============================================================================
 
 STATE="$HOME/.local/state/bwm/font"

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-BWM Retro theme: Omarchy-style app theming that follows the wallpaper.
+BWM Retro skin: Omarchy-style app theming that follows the wallpaper.
 
 Omarchy (https://github.com/basecamp/omarchy, MIT) describes a theme with a
 colors.toml (16 ANSI colours plus background/foreground/accent variants) and
@@ -71,13 +71,19 @@ VSCODIUM_MARKER = "bwm.retroColorCustomizations"
 MATUGEN_OVERLAYS = {
     "gtk3": "gtk.css",
     "gtk4": "gtk.css",
-    "vesktop": "vesktop.css",
-    "vesktop_quickcss": "vesktop.css",
     "swaync": "swaync.css",
     "firefox": "firefox.css",
 }
-# Templates handled by their own Omarchy step instead (kitty template, BWM-Omarchy Spicetify theme)
-MATUGEN_SKIPPED = {"kitty", "spicetify"}
+# Templates handled by their own Omarchy step instead (kitty template, BWM-Omarchy Spicetify
+# theme, the BWM Omarchy TUI theme for Vesktop)
+MATUGEN_SKIPPED = {"kitty", "spicetify", "vesktop", "vesktop_quickcss"}
+
+# Vesktop (flatpak and native): one theme file for every skin, so a skin/theme change only
+# rewrites it and Vencord reloads it live; its @name says which style it is
+VESKTOP_DIRS = (HOME / ".var" / "app" / "dev.vencord.Vesktop" / "config" / "vesktop",
+                CONFIG_DIR / "vesktop")
+VESKTOP_THEME = "bwm.theme.css"
+VESKTOP_OLD_THEMES = ("material-you.theme.css",)
 
 # System monospace font (font-set.sh); the TUI overlays are written with this default
 FONT_STATE = HOME / ".local" / "state" / "bwm" / "font"
@@ -431,6 +437,67 @@ def apply_matugen_apps(colors: dict, wallpaper: str) -> set:
         _detached(hook)
     return changed
 
+def apply_vesktop(colors: dict):
+    """BWM Omarchy TUI theme for Vesktop (theme file + Quick CSS, both reloaded live)."""
+    content = render_omarchy(_asset("themed", "vesktop.theme.css.tpl"), colors)
+    for d in VESKTOP_DIRS:
+        if d.is_dir():
+            _write_if_changed(d / "themes" / VESKTOP_THEME, content)
+            _write_if_changed(d / "settings" / "quickCss.css", content)
+    vesktop_enable_theme()
+
+def _vesktop_settings_need(d: Path):
+    """The enabledThemes list Vencord should have in `d`, or None if it already has it."""
+    path = d / "settings" / "settings.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    themes = data.get("enabledThemes") or []
+    wanted = [VESKTOP_THEME] + [x for x in themes if x != VESKTOP_THEME and x not in VESKTOP_OLD_THEMES]
+    return None if themes == wanted else wanted
+
+def vesktop_enable_theme():
+    """Enable bwm.theme.css in Vencord (replacing the old material-you.theme.css). Vencord keeps
+    its settings in memory and rewrites them on exit, so a running Vesktop is closed, edited and
+    reopened in the same place (restart_app). Only happens once: afterwards the file name never
+    changes and theme changes are live."""
+    dirs = [d for d in VESKTOP_DIRS if d.is_dir() and _vesktop_settings_need(d) is not None]
+    if not dirs:
+        return
+
+    def edit():
+        for d in dirs:
+            wanted = _vesktop_settings_need(d)
+            if wanted is None:
+                continue
+            path = d / "settings" / "settings.json"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            data["enabledThemes"] = wanted
+            data["useQuickCss"] = True
+            _write_if_changed(path, json.dumps(data, indent=4, ensure_ascii=False))
+            for old in VESKTOP_OLD_THEMES:
+                (d / "themes" / old).unlink(missing_ok=True)
+
+    windows = [c for c in _hypr_clients() if c.get("class", "").lower() == "vesktop"]
+    if not windows:
+        if subprocess.run(["pgrep", "-f", "vesktop.bin"], stdout=subprocess.DEVNULL).returncode == 0:
+            return  # in the tray, no window: next time
+        edit()
+        return
+    pid = windows[0]["pid"]
+    try:
+        argv = [a.decode() for a in Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0") if a]
+    except Exception:
+        argv = []
+    if Path("/.flatpak-info").exists() or (VESKTOP_DIRS[0] in dirs):
+        flags = [a for a in argv[1:] if a.startswith("--") and not a.startswith(("--enable-speech", "--disable-gpu-sandbox", "--type="))]
+        cmd = ["flatpak", "run", "dev.vencord.Vesktop", *flags]
+    else:
+        cmd = argv or ["vesktop"]
+    restart_app(lambda c: c.get("class", "").lower() == "vesktop", cmd, before_start=edit,
+                wait_for="vesktop.bin")
+
 def apply_spotify(colors: dict):
     """BWM-Omarchy Spicetify theme; only re-applied (Spotify restart) when something changed."""
     if not subprocess.run(["sh", "-c", "command -v spicetify"], stdout=subprocess.DEVNULL).returncode == 0:
@@ -768,7 +835,7 @@ def apply_retro_palette_colors(colors: dict, wallpaper: str = ""):
     write_colors_toml(colors)
     apply_task_manager(True)
 
-    for step in (apply_shell_toml, apply_kitty, apply_btop, apply_vscodium, apply_spotify):
+    for step in (apply_shell_toml, apply_kitty, apply_btop, apply_vscodium, apply_spotify, apply_vesktop):
         try:
             step(colors)
         except Exception as e:
@@ -785,6 +852,10 @@ def apply_retro_palette_colors(colors: dict, wallpaper: str = ""):
         print(f"[Warning] iconos: {e}", file=sys.stderr)
 
     write_retro_sync_files(colors)
+
+    # Firefox only reads its chrome CSS at startup: restart it (session and windows kept)
+    if "firefox" in changed:
+        _detached(f"{sys.executable} {Path(__file__).resolve()} restart-firefox")
 
     if "gtk3" in changed:
         for app in GTK_RELAUNCH_APPS:
@@ -927,7 +998,7 @@ def set_theme(target: str):
                    check=False)
 
 def apply_retro_apps(palette: dict, wallpaper: str = ""):
-    """Retro theme: Omarchy-style themes for every app, from the wallpaper palette (legacy wrapper)."""
+    """Retro skin: Omarchy-style themes for every app, from the wallpaper palette (legacy wrapper)."""
     colors = build_colors(palette)
     apply_retro_palette_colors(colors, wallpaper)
     return colors
@@ -971,7 +1042,7 @@ def apply_task_manager(present: bool):
             dest.unlink(missing_ok=True)
 
 def restore_non_retro():
-    """Leaving Retro: give back what the other themes do not regenerate by themselves."""
+    """Leaving Retro: give back what the other skins do not regenerate by themselves."""
     apply_task_manager(False)
     if RETRO_LIGHT_MARK.exists():
         apply_color_scheme("dark")
@@ -993,71 +1064,140 @@ def _hypr_clients():
     except Exception:
         return []
 
-def restart_firefox():
-    """Quit Firefox cleanly (it saves the session), start it again with the same command and
-    put every restored window back on its workspace with its size. Session restore relies on
-    browser.startup.page = 3 ("open previous windows and tabs"), which is forced once if unset."""
+RESTART_LOCK = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "bwm-restart-app.lock"
+FIREFOX_CHROME_CSS = HOME / ".cache" / "material-you-firefox.css"
+
+def _proc_start(pid: int) -> float:
+    try:
+        return Path(f"/proc/{pid}").stat().st_ctime
+    except Exception:
+        return 0.0
+
+def _alive(pattern: str) -> bool:
+    return subprocess.run(["pgrep", "-f", pattern], stdout=subprocess.DEVNULL).returncode == 0
+
+def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None):
+    """Close an app gracefully (SIGTERM: Firefox/Electron save their session), optionally edit
+    its config, start it again with `cmd` and put every window back where it was: workspace
+    (special ones too), monitor and, if floating, position and size. Windows are matched by
+    title, then by order for those that still have another title after a while."""
     import signal
     import time
 
-    windows = [c for c in _hypr_clients() if "firefox" in c.get("class", "").lower()]
-    pids = {c["pid"] for c in windows}
-    if not pids:
-        return
-    pid = min(pids)
-    try:
-        cmdline = Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0")
-        cmd = [a.decode() for a in cmdline if a]
-    except Exception:
-        cmd = ["firefox"]
-    layout = [(c["title"], c["workspace"]["id"], c["at"], c["size"], c.get("floating", True)) for c in windows]
-
-    os.kill(pid, signal.SIGTERM)  # graceful quit: Firefox writes its session on SIGTERM
+    windows = [c for c in _hypr_clients() if match(c)]
+    if not windows:
+        return False
+    layout = [(c["title"], c["workspace"]["name"], c["at"], c["size"], c.get("floating", False))
+              for c in windows]
+    pids = set(quit_pids or {c["pid"] for c in windows})
+    for pid in pids:
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
     for _ in range(150):
-        if not Path(f"/proc/{pid}").exists():
+        if not any(Path(f"/proc/{p}").exists() for p in pids) and not (wait_for and _alive(wait_for)):
             break
         time.sleep(0.1)
     else:
-        return  # still running (dialog?): leave it alone
+        return False  # still running (a "quit?" dialog): leave it alone
 
-    # Restore the session even if "open previous windows" is off (one time only)
-    for prefs in (HOME / ".mozilla" / "firefox").glob("*/prefs.js"):
+    if before_start:
         try:
-            text = prefs.read_text(encoding="utf-8")
-            if 'browser.startup.page", 3' not in text and "resume_session_once" not in text:
-                prefs.write_text(text + 'user_pref("browser.sessionstore.resume_session_once", true);\n',
-                                 encoding="utf-8")
-        except Exception:
-            pass
+            before_start()
+        except Exception as e:
+            print(f"[Warning] {e}", file=sys.stderr)
 
     subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
-    # Windows come back with the titles of their selected tabs: match them to the old layout
-    # by title, and by order for any that still has another title after a while
     pending = list(layout)
     placed = set()
     start = time.time()
-    while pending and time.time() - start < 25:
+    while pending and time.time() - start < 40:
         time.sleep(0.5)
         for c in _hypr_clients():
-            if "firefox" not in c.get("class", "").lower() or c["address"] in placed or not pending:
+            if not pending:
+                break
+            # c["pid"] in pids: an old window not gone yet (Hyprland reuses addresses: compare PIDs)
+            if not match(c) or c["address"] in placed or c["pid"] in pids:
                 continue
-            match = next((l for l in pending if l[0] == c["title"]), None)
-            if not match and time.time() - start > 12:
-                match = pending[0]
-            if not match:
+            m = next((l for l in pending if l[0] == c["title"]), None)
+            if not m and time.time() - start > 12:
+                m = pending[0]
+            if not m:
                 continue
-            title, ws, at, size, floating = match
+            _title, ws, at, size, floating = m
             addr = c["address"]
+            target = ws if ws.lstrip("-").isdigit() else json.dumps(ws)
             lua = (f"(function() local w = hl.get_window('address:{addr}'); if w then "
-                   f"hl.dispatch(hl.dsp.window.move({{ workspace = {ws}, follow = false, window = w }})) ")
+                   f"hl.dispatch(hl.dsp.window.move({{ workspace = {target}, follow = false, window = w }})) ")
             if floating:
                 lua += (f"hl.dispatch(hl.dsp.window.resize({{ x = {size[0]}, y = {size[1]}, relative = false, window = w }})) "
                         f"hl.dispatch(hl.dsp.window.move({{ x = {at[0]}, y = {at[1]}, relative = false, window = w }})) ")
             lua += "end; return hl.dsp.no_op() end)()"
             subprocess.run(["hyprctl", "dispatch", lua], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             placed.add(addr)
-            pending.remove(match)
+            pending.remove(m)
+    return True
+
+def _firefox_cmd(pid: int) -> list:
+    """The command Firefox was started with, without the URLs it was opened with."""
+    try:
+        argv = [a.decode() for a in Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0") if a]
+    except Exception:
+        return ["firefox"]
+    cmd, keep_next = argv[:1], False
+    for a in argv[1:]:
+        if keep_next:
+            cmd.append(a)
+            keep_next = False
+        elif a.startswith("-"):
+            cmd.append(a)
+            keep_next = a in ("-P", "-p", "--profile", "-profile", "--class", "--name", "-name")
+    return cmd or ["firefox"]
+
+def restart_firefox(force: bool = False):
+    """Restart Firefox when its chrome CSS (the Retro TUI theme, or Material You/Breeze) is newer
+    than the running Firefox, which only reads it at startup. Session restore relies on
+    browser.startup.page = 3, forced once (resume_session_once) if unset. Waits for the CSS to
+    settle first (the skin switch and the palette step can both ask for it): one restart."""
+    import fcntl
+    import time
+
+    last, stable = None, 0
+    for _ in range(40):
+        try:
+            m = FIREFOX_CHROME_CSS.stat().st_mtime
+        except Exception:
+            m = 0
+        stable = stable + 1 if m == last else 0
+        last = m
+        if stable >= 4:
+            break
+        time.sleep(0.5)
+
+    with open(RESTART_LOCK, "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        windows = [c for c in _hypr_clients() if "firefox" in c.get("class", "").lower()]
+        if not windows:
+            return
+        pid = min(c["pid"] for c in windows)
+        if not force and _proc_start(pid) > (last or 0):
+            return  # already running with this CSS
+        cmd = _firefox_cmd(pid)
+
+        def resume_session():
+            for prefs in (HOME / ".mozilla" / "firefox").glob("*/prefs.js"):
+                try:
+                    text = prefs.read_text(encoding="utf-8")
+                    if 'browser.startup.page", 3' not in text and "resume_session_once" not in text:
+                        prefs.write_text(text + 'user_pref("browser.sessionstore.resume_session_once", true);\n',
+                                         encoding="utf-8")
+                except Exception:
+                    pass
+
+        restart_app(lambda c: "firefox" in c.get("class", "").lower(), cmd,
+                    before_start=resume_session, quit_pids={pid})
 
 
 if __name__ == "__main__":
@@ -1067,7 +1207,10 @@ if __name__ == "__main__":
             run_hooks(sys.argv[2])
             sys.exit(0)
         elif cmd == "restart-firefox":
-            restart_firefox()
+            restart_firefox(force="--force" in sys.argv)
+            sys.exit(0)
+        elif cmd == "vesktop-enable":
+            vesktop_enable_theme()
             sys.exit(0)
         elif cmd == "get-mode":
             mode, name = get_retro_mode()

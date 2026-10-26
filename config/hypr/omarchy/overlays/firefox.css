@@ -61,3 +61,29 @@
 
 /* Thin square scrollbars in the chrome */
 :root:root * { scrollbar-width: thin; }
+
+/* Like a tmux status line: the selected tab inverted (accent background, dark text) */
+:root:root .tabbrowser-tab[selected] .tab-background {
+    background: var(--mat-primary, AccentColor) !important;
+    border-bottom: 0 !important;
+}
+:root:root .tabbrowser-tab[selected] .tab-label,
+:root:root .tabbrowser-tab[selected] .tab-close-button,
+:root:root .tabbrowser-tab[selected] .tab-icon-image { color: var(--mat-surface, #000) !important; fill: var(--mat-surface, #000) !important; }
+:root:root .tabbrowser-tab:not([selected]) .tab-label { color: color-mix(in srgb, var(--mat-on-surface, CanvasText) 70%, transparent) !important; }
+:root:root #tabbrowser-tabs .tabbrowser-tab + .tabbrowser-tab .tab-background {
+    border-left: 1px solid var(--mat-outline, transparent) !important;
+}
+
+/* Toolbars as terminal panes: one background, a 1px line between them */
+:root:root #navigator-toolbox { border-bottom: 1px solid var(--mat-outline, transparent) !important; }
+:root:root #nav-bar, :root:root #PersonalToolbar, :root:root #TabsToolbar { background: var(--mat-surface, inherit) !important; }
+
+/* Address bar as a prompt */
+:root:root #urlbar-input-container::before {
+    content: "❯";
+    color: var(--mat-primary, AccentColor);
+    font-weight: 700;
+    padding-inline: 6px 2px;
+    align-self: center;
+}

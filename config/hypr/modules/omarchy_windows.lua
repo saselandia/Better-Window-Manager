@@ -1,5 +1,5 @@
 -- -----------------------------------------------------
--- Ventanas al estilo Omarchy (tema Retro), port de default/hypr/windows.lua,
+-- Ventanas al estilo Omarchy (estilo Retro), port de default/hypr/windows.lua,
 -- apps/terminals.lua y glass.lua (MIT):
 --   * las apps son opacas; los terminales y TUIs (y Nautilus) optan por la
 --     transparencia con la etiqueta "transparent-window" (opacidad 0.985 / 0.96)
