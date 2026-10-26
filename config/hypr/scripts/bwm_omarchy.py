@@ -1154,7 +1154,8 @@ def _proc_start(pid: int) -> float:
 def _alive(pattern: str) -> bool:
     return subprocess.run(["pgrep", "-f", pattern], stdout=subprocess.DEVNULL).returncode == 0
 
-def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None):
+def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None, quit_cmd=None,
+                wait_secs=15):
     """Close an app gracefully (SIGTERM: Firefox/Electron save their session), optionally edit
     its config, start it again with `cmd` and put every window back where it was: workspace
     (special ones too), monitor and, if floating, position and size. Windows are matched by
@@ -1168,12 +1169,15 @@ def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None):
     layout = [(c["title"], c["workspace"]["name"], c["at"], c["size"], c.get("floating", False))
               for c in windows]
     pids = set(quit_pids or {c["pid"] for c in windows})
-    for pid in pids:
-        try:
-            os.kill(pid, signal.SIGTERM)
-        except ProcessLookupError:
-            pass
-    for _ in range(150):
+    if quit_cmd:  # the app's own clean shutdown (steam -shutdown)
+        subprocess.run(quit_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
+    else:
+        for pid in pids:
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+    for _ in range(int(wait_secs * 10)):
         if not any(Path(f"/proc/{p}").exists() for p in pids) and not (wait_for and _alive(wait_for)):
             break
         time.sleep(0.1)
@@ -1217,6 +1221,35 @@ def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None):
             placed.add(addr)
             pending.remove(m)
     return True
+
+STEAM_MAIN = r"ubuntu12_32/steam( |$)"
+
+def restart_steam():
+    """Steam only loads its skin (Adwaita-for-Steam, steam-theme.sh) at startup: restart it so the
+    new colours show, unless a game is running (it would be closed). `steam -shutdown` is its clean
+    exit; the main window comes back in place, or Steam starts in the tray if it was there."""
+    import time
+    if not _alive(STEAM_MAIN):
+        return
+    clients = _hypr_clients()
+    if (any(c.get("class", "").startswith("steam_app_") or c.get("class") == "gamescope" for c in clients)
+            or _alive("SteamLaunch AppId")):
+        _detached('notify-send -a "BWM" "Steam" "El tema nuevo se aplicará cuando reinicies Steam '
+                  '(no se reinicia con un juego abierto)."')
+        return
+    match = lambda c: c.get("class", "") == "steam"
+    if any(match(c) for c in clients):
+        restart_app(match, ["steam"], quit_cmd=["steam", "-shutdown"], wait_for=STEAM_MAIN, wait_secs=60)
+        return
+    subprocess.run(["steam", "-shutdown"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
+    for _ in range(600):
+        if not _alive(STEAM_MAIN):
+            break
+        time.sleep(0.1)
+    else:
+        return
+    subprocess.Popen(["steam", "-silent"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     start_new_session=True)
 
 def _firefox_cmd(pid: int) -> list:
     """The command Firefox was started with, without the URLs it was opened with."""
@@ -1286,6 +1319,9 @@ if __name__ == "__main__":
             sys.exit(0)
         elif cmd == "restart-firefox":
             restart_firefox(force="--force" in sys.argv)
+            sys.exit(0)
+        elif cmd == "restart-steam":
+            restart_steam()
             sys.exit(0)
         elif cmd == "vesktop-enable":
             vesktop_enable_theme()

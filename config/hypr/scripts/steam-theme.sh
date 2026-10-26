@@ -5,7 +5,7 @@
 # (https://github.com/tkashkin/Adwaita-for-Steam, MIT), como el módulo de Steam de
 # omarchy-theme-hook. En Retro añade además esquinas rectas y la fuente monoespaciada
 # del sistema (aspecto TUI). Sin Adwaita-for-Steam en ~/.local/share/steam-adwaita no
-# hace nada. Steam aplica el cambio la próxima vez que se abra.
+# hace nada. Steam sólo lo carga al arrancar: se reinicia solo (salvo con un juego abierto).
 # ==============================================================================
 
 ADW="$HOME/.local/share/steam-adwaita"
@@ -33,6 +33,6 @@ fi
 
 cd "$ADW" && python3 install.py "${args[@]}" >"$HOME/.local/state/bwm/steam/install.log" 2>&1
 
-if pgrep -x steam >/dev/null; then
-  notify-send -a "BWM" "Steam" "El tema de Steam se aplicará al reiniciarlo." 2>/dev/null
-fi
+# Steam only loads the skin at startup (this runs when its colours changed): restart it in
+# place, unless a game is open (bwm_omarchy.restart_steam)
+setsid python3 "$HOME/.config/hypr/scripts/bwm_omarchy.py" restart-steam >/dev/null 2>&1 </dev/null &
