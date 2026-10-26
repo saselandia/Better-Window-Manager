@@ -1,0 +1,28 @@
+/* BWM: Stremio Web's public colour variables. Images and video keep their colours. */
+:root {
+    --primary-background-color: {{colors.surface.default.hex}} !important;
+    --secondary-background-color: {{colors.surface_container_low.default.hex}} !important;
+    --primary-foreground-color: {{colors.on_surface.default.hex}} !important;
+    --secondary-foreground-color: {{colors.on_primary.default.hex}} !important;
+    --primary-accent-color: {{colors.primary.default.hex}} !important;
+    --secondary-accent-color: {{colors.tertiary.default.hex}} !important;
+    --tertiary-accent-color: {{colors.secondary.default.hex}} !important;
+    --quaternary-accent-color: {{colors.primary.default.hex}} !important;
+    --overlay-color: color-mix(in srgb, {{colors.on_surface.default.hex}} 8%, transparent) !important;
+    --modal-background-color: {{colors.surface_container_high.default.hex}} !important;
+    --outer-glow: 0 0 0 1px {{colors.outline_variant.default.hex}} !important;
+    --warning-accent-color: {{colors.secondary.default.hex}} !important;
+    --danger-accent-color: {{colors.error.default.hex}} !important;
+    --color-placeholder-text: {{colors.on_surface_variant.default.hex}} !important;
+    --color-placeholder-background: {{colors.surface_container_high.default.hex}} !important;
+}
+
+/* Upstream uses these local class names with a generated hash suffix. */
+[class*="horizontal-nav-bar-container-"], [class*="vertical-nav-bar-container-"] {
+    background-color: {{colors.surface_container_low.default.hex}} !important;
+    color: {{colors.on_surface.default.hex}} !important;
+}
+[class*="search-bar-container-"] {
+    background-color: {{colors.surface_container_high.default.hex}} !important;
+    border: 1px solid {{colors.outline_variant.default.hex}} !important;
+}

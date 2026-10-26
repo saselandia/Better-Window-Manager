@@ -723,6 +723,8 @@ def apply_plasma_app_themes():
             # The palette is static: skip unchanged files so their reload hooks (Spotify
             # relaunch, Nautilus reload...) don't run on every wallpaper change
             if dst.is_file() and dst.read_text(encoding="utf-8") == rendered:
+                if name == "stremio" and tpl.get("post_hook"):
+                    hooks.append(tpl["post_hook"])
                 continue
             dst.parent.mkdir(parents=True, exist_ok=True)
             dst.write_text(rendered, encoding="utf-8")

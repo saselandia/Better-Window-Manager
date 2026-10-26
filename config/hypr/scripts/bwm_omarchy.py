@@ -77,6 +77,7 @@ MATUGEN_OVERLAYS = {
     "gtk4": "gtk.css",
     "swaync": "swaync.css",
     "firefox": "firefox.css",
+    "stremio": "stremio.css",
 }
 # Templates handled by their own Omarchy step instead (kitty template, BWM-Omarchy Spicetify
 # theme, the BWM Omarchy TUI theme for Vesktop)
@@ -442,6 +443,9 @@ def apply_matugen_apps(colors: dict, wallpaper: str) -> set:
                 changed.add(name)
                 if tpl.get("post_hook"):
                     hooks.append(tpl["post_hook"])
+            elif name == "stremio" and tpl.get("post_hook"):
+                # It may have been installed since this palette was last rendered.
+                hooks.append(tpl["post_hook"])
         except Exception as e:
             print(f"[Warning] Error escribiendo {dst}: {e}", file=sys.stderr)
     # The same reload hooks matugen would run (Quickshell, Pywalfox, Nautilus, swaync, Hyprland...)

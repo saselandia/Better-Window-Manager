@@ -71,3 +71,8 @@ post_hook = 'python3 ~/.config/hypr/scripts/bwm_icons.py qt-sync'
 input_path = '~/.config/matugen/templates/steam-adwaita.css'
 output_path = '~/.local/state/bwm/steam/bwm.css'
 post_hook = '~/.config/hypr/scripts/steam-theme.sh'
+
+[templates.stremio]
+input_path = '~/.config/matugen/templates/stremio.css'
+output_path = '~/.local/state/bwm/stremio/theme.css'
+post_hook = 'python3 ~/.config/hypr/scripts/stremio-theme.py'

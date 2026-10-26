@@ -572,6 +572,13 @@ if [ -n "$CURRENT_WALL" ] && [ -f "$CURRENT_WALL" ]; then
 fi
 
 # ==============================================================================
+# Stremio is optional: prepare the installed Flatpak without restarting it.
+# Its palette is generated above and follows later theme/wallpaper changes.
+if [ -f "$TARGET_CONFIG/hypr/scripts/stremio-theme.py" ]; then
+    python3 "$TARGET_CONFIG/hypr/scripts/stremio-theme.py" --setup-only ||
+        print_warn "No se pudo preparar el tema de Stremio. Se reintentará al cambiar de tema."
+fi
+
 # 9. Inicio de sesión estilo Omarchy (SDDM) con los colores del tema
 # ==============================================================================
 # Lo mismo que hace Omarchy al instalar: SDDM con su tema dentro de un Hyprland mínimo.

@@ -31,8 +31,14 @@ if [[ $theme == "retro" ]]; then
         --extras library/hide-whats-new general/no-rounded-corners --custom-css "$tui")
 fi
 
-cd "$ADW" && python3 install.py "${args[@]}" >"$HOME/.local/state/bwm/steam/install.log" 2>&1
+if ! (cd "$ADW" && python3 install.py "${args[@]}") >"$HOME/.local/state/bwm/steam/install.log" 2>&1; then
+  printf 'BWM: Steam theme installation failed; see %s\n' "$HOME/.local/state/bwm/steam/install.log" >&2
+  exit 1
+fi
 
 # Steam only loads the skin at startup (this runs when its colours changed): restart it in
 # place, unless a game is open (bwm_omarchy.restart_steam)
-setsid python3 "$HOME/.config/hypr/scripts/bwm_omarchy.py" restart-steam >/dev/null 2>&1 </dev/null &
+# The theme engine already runs this hook separately. Wait for the restart attempt
+# here instead of detaching a second job, and retain errors for diagnosis.
+exec python3 "$HOME/.config/hypr/scripts/bwm_omarchy.py" restart-steam \
+  >"$HOME/.local/state/bwm/steam/restart.log" 2>&1 </dev/null

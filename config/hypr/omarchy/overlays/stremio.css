@@ -1,0 +1,11 @@
+
+/* Retro's TUI treatment; keep poster images and the video player intact. */
+:root { --border-radius: 0 !important; }
+html, body, input, button, textarea, select {
+    font-family: "JetBrainsMono Nerd Font", monospace !important;
+}
+[class*="search-bar-container-"], [class*="modal-dialog-container-"],
+[class*="nav-tab-button-"], [class*="menu-container-"] {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
