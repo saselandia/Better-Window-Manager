@@ -611,10 +611,21 @@ def list_omarchy_themes() -> list[dict]:
             })
     return themes
 
+def theme_mode(c: dict) -> str:
+    """Light or dark, as omarchy-theme-color resolves it: the `mode` key, the legacy `theme_type`
+    key, then the background's brightness (sum of its channels over 382)."""
+    mode = str(c.get("mode") or c.get("theme_type") or "").lower()
+    if mode in ("light", "dark"):
+        return mode
+    bg = str(c.get("background", "")).lstrip("#")
+    if re.fullmatch(r"[0-9a-fA-F]{6}", bg):
+        return "light" if sum(int(bg[i:i + 2], 16) for i in (0, 2, 4)) > 382 else "dark"
+    return "dark"
+
 def complete_colors(raw: dict) -> dict:
     """Ensure all required Omarchy and BWM keys exist in the colors dictionary."""
     c = dict(raw)
-    mode = c.get("mode", "dark")
+    c["mode"] = mode = theme_mode(c)
     accent = c.get("accent", "#38bdf8")
     bg = c.get("background", "#121820")
     fg = c.get("foreground", "#f8fafc")
@@ -636,10 +647,8 @@ def complete_colors(raw: dict) -> dict:
         c.setdefault(col, accent)
         c.setdefault("bright_" + col, c[col])
 
-    if "hyprland_active_border" not in c:
-        sec = c.get("bright_magenta", c.get("bright_blue", c.get("blue", accent)))
-        c["hyprland_active_border"] = (f"rgba({accent.lstrip('#')}ee) "
-                                       f"rgba({sec.lstrip('#')}ee) 45deg")
+    # No hyprland_active_border invented here: like Omarchy, a theme without one gets a solid
+    # accent window border and foreground-coloured menu/launcher borders (shell.toml fallbacks)
     return c
 
 def update_retro_config_json(mode: str, name: str):
@@ -662,7 +671,8 @@ def _secondary(colors: dict) -> str:
     m = re.findall(r"rgba?\(([0-9a-fA-F]{6})", colors.get("hyprland_active_border", ""))
     if len(m) > 1:
         return "#" + m[1].lower()
-    return colors.get("bright_magenta", colors.get("bright_blue", colors["accent"]))
+    # A solid border (or none: Omarchy then uses the accent alone)
+    return "#" + m[0].lower() if m else colors["accent"]
 
 def write_retro_sync_files(colors: dict):
     """Write Quickshell retro-colors.json, Hyprland retro_colors.lua, and Rofi omarchy-colors.rasi."""
@@ -727,6 +737,32 @@ return retro_colors
         except Exception as e:
             print(f"[Warning] Error guardando {target}: {e}", file=sys.stderr)
 
+RETRO_LIGHT_MARK = STATE_DIR / "light-scheme"
+
+def _gsetting(key: str, value: str):
+    """gsettings set, only when it changes (every write makes GTK apps restyle)."""
+    cur = subprocess.run(["gsettings", "get", "org.gnome.desktop.interface", key],
+                         capture_output=True, text=True).stdout.strip().strip("'")
+    if cur != value:
+        subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", key, value],
+                       check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+def apply_color_scheme(mode: str):
+    """Light/dark for the apps, like omarchy-theme-set-gnome: GTK 3 (adw-gtk3[-dark]), libadwaita and
+    Qt through the portal's color-scheme, Electron/Chromium/Firefox through prefers-color-scheme.
+    The other themes are dark: leaving Retro after a light theme puts it back (restore_non_retro)."""
+    light = mode == "light"
+    _gsetting("gtk-theme", "adw-gtk3" if light else "adw-gtk3-dark")
+    _gsetting("color-scheme", "prefer-light" if light else "prefer-dark")
+    pywalfox = HOME / ".local" / "share" / "pywalfox-venv" / "bin" / "pywalfox"
+    if pywalfox.is_file():
+        _detached(f"{pywalfox} {'light' if light else 'dark'}")
+    if light:
+        RETRO_LIGHT_MARK.parent.mkdir(parents=True, exist_ok=True)
+        RETRO_LIGHT_MARK.touch()
+    else:
+        RETRO_LIGHT_MARK.unlink(missing_ok=True)
+
 def apply_retro_palette_colors(colors: dict, wallpaper: str = ""):
     """Apply an Omarchy-format palette dictionary to all apps, configs, and reload UI."""
     write_colors_toml(colors)
@@ -740,9 +776,11 @@ def apply_retro_palette_colors(colors: dict, wallpaper: str = ""):
 
     changed = apply_matugen_apps(colors, wallpaper)
 
+    apply_color_scheme(theme_mode(colors))
+
     try:
         import bwm_icons
-        bwm_icons.apply("retro", colors["accent"])
+        bwm_icons.apply("retro", colors["accent"], theme_mode(colors) == "light")
     except Exception as e:
         print(f"[Warning] iconos: {e}", file=sys.stderr)
 
@@ -802,6 +840,9 @@ def apply_retro_static_theme(theme_name: str, set_wallpaper: bool = True, notify
     except Exception as e:
         raise RuntimeError(f"Error leyendo colors.toml para {theme_name}: {e}")
 
+    # Legacy Omarchy marker for light themes, beside colors.toml
+    if (theme_dir / "light.mode").is_file() and "mode" not in raw_colors:
+        raw_colors["mode"] = "light"
     colors = complete_colors(raw_colors)
     set_retro_mode_state("static", theme_name)
     update_retro_config_json("static", theme_name)
@@ -932,6 +973,8 @@ def apply_task_manager(present: bool):
 def restore_non_retro():
     """Leaving Retro: give back what the other themes do not regenerate by themselves."""
     apply_task_manager(False)
+    if RETRO_LIGHT_MARK.exists():
+        apply_color_scheme("dark")
     set_btop_theme("matugen")
     restore_vscodium()
     try:

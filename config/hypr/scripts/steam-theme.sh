@@ -15,12 +15,19 @@ CSS="$HOME/.local/state/bwm/steam/bwm.css"
 mkdir -p "$ADW/adwaita/colorthemes/bwm"
 cp -f "$CSS" "$ADW/adwaita/colorthemes/bwm/bwm.css"
 
-args=(--color-theme bwm --color-scheme dark --accent-color theme --extras library/hide-whats-new)
-if [[ $(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null) == "retro" ]]; then
+# Retro follows the Omarchy palette's mode (light themes such as White or Catppuccin Latte)
+scheme=dark
+theme=$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null)
+if [[ $theme == "retro" ]] && grep -Eq '^mode *= *"light"' "$HOME/.local/state/bwm/omarchy/colors.toml" 2>/dev/null; then
+  scheme=light
+fi
+
+args=(--color-theme bwm --color-scheme "$scheme" --accent-color theme --extras library/hide-whats-new)
+if [[ $theme == "retro" ]]; then
   font=$("$HOME/.config/hypr/scripts/font-set.sh" current 2>/dev/null)
   tui="$HOME/.local/state/bwm/steam/tui.css"
   printf '* { font-family: "%s", monospace !important; }\n' "${font:-JetBrainsMono Nerd Font}" >"$tui"
-  args=(--color-theme bwm --color-scheme dark --accent-color theme
+  args=(--color-theme bwm --color-scheme "$scheme" --accent-color theme
         --extras library/hide-whats-new general/no-rounded-corners --custom-css "$tui")
 fi
 

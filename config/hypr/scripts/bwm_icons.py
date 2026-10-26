@@ -2,19 +2,19 @@
 # -*- coding: utf-8 -*-
 """
 Icon theme per BWM theme, like Omarchy's icons.theme (each Omarchy theme picks a Yaru
-colour). Yaru is not packaged for Gentoo, so Retro uses Papirus-Dark with the folder
-colour closest to the wallpaper accent (what papirus-folders does: a small user theme,
+colour). Yaru is not packaged for Gentoo, so Retro uses Papirus-Dark (Papirus-Light with a
+light Omarchy theme) with the folder colour closest to the wallpaper accent (what papirus-folders does: a small user theme,
 BWM-Papirus, that points the folder icons at one of Papirus' colour variants).
 
   Default -> Adwaita (as before)
   Plasma  -> breeze-dark
-  Retro   -> BWM-Papirus (Papirus-Dark + accent folders) if x11-themes/papirus-icon-theme
+  Retro   -> BWM-Papirus (Papirus-Dark/-Light + accent folders) if x11-themes/papirus-icon-theme
              is installed, Adwaita otherwise
 
 It also keeps qt6ct (Qt apps) on the same icon theme and on the palette that the colour
 templates render into ~/.config/qt6ct/colors/bwm.conf.
 
-  bwm_icons.py apply <default|plasma|retro> [accent]
+  bwm_icons.py apply <default|plasma|retro> [accent] [light]
 """
 
 import colorsys
@@ -28,6 +28,7 @@ HOME = Path.home()
 USER_ICONS = HOME / ".local" / "share" / "icons"
 VARIANT = "BWM-Papirus"
 QT6CT_CONF = HOME / ".config" / "qt6ct" / "qt6ct.conf"
+_rebuilt = False  # BWM-Papirus rewritten in this run
 
 # Papirus folder colours (papirus-folders names) with their representative colour
 PAPIRUS_FOLDERS = {
@@ -60,15 +61,19 @@ def closest_folder_color(accent: str) -> str:
     return min(PAPIRUS_FOLDERS, key=lambda name: dist(PAPIRUS_FOLDERS[name]))
 
 
-def build_papirus_variant(color: str):
-    """User icon theme inheriting Papirus-Dark whose folder icons are Papirus' `color` ones."""
+def build_papirus_variant(color: str, light: bool = False):
+    """User icon theme inheriting Papirus-Dark (Papirus-Light for light themes, dark symbolic
+    icons) whose folder icons are Papirus' `color` ones."""
     papirus = _papirus_root()
     if not papirus:
         return None
+    base = "Papirus-Light" if light else "Papirus-Dark"
     dest = USER_ICONS / VARIANT
     stamp = dest / ".bwm-folder-color"
-    if stamp.is_file() and stamp.read_text().strip() == color:
+    if stamp.is_file() and stamp.read_text().strip() == f"{color} {base}":
         return VARIANT
+    global _rebuilt
+    _rebuilt = True
     shutil.rmtree(dest, ignore_errors=True)
     dirs = []
     for size_dir in sorted(papirus.iterdir()):
@@ -91,8 +96,9 @@ def build_papirus_variant(color: str):
         dirs.append(f"{size_dir.name}/places")
     if not dirs:
         return None
-    lines = ["[Icon Theme]", f"Name={VARIANT}", f"Comment=Papirus-Dark with {color} folders (BWM Retro)",
-             "Inherits=Papirus-Dark,breeze-dark,Adwaita,hicolor", f"Directories={','.join(dirs)}", ""]
+    fallback = "breeze" if light else "breeze-dark"
+    lines = ["[Icon Theme]", f"Name={VARIANT}", f"Comment={base} with {color} folders (BWM Retro)",
+             f"Inherits={base},{fallback},Adwaita,hicolor", f"Directories={','.join(dirs)}", ""]
     for d in dirs:
         size = d.split("x")[0]
         scale = "@2" in d
@@ -101,16 +107,16 @@ def build_papirus_variant(color: str):
             lines.append("Scale=2")
         lines.append("")
     (dest / "index.theme").write_text("\n".join(lines), encoding="utf-8")
-    stamp.write_text(color)
+    stamp.write_text(f"{color} {base}")
     subprocess.run(["gtk-update-icon-cache", "-f", "-q", str(dest)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return VARIANT
 
 
-def icon_theme_for(theme: str, accent: str = "") -> str:
+def icon_theme_for(theme: str, accent: str = "", light: bool = False) -> str:
     if theme == "plasma":
         return "breeze-dark"
     if theme == "retro":
-        return build_papirus_variant(closest_folder_color(accent or "#7aa2f7")) or "Adwaita"
+        return build_papirus_variant(closest_folder_color(accent or "#7aa2f7"), light) or "Adwaita"
     return "Adwaita"
 
 
@@ -130,8 +136,12 @@ def write_qt6ct(icon_theme: str, mono_font: str = ""):
     QT6CT_CONF.write_text(text, encoding="utf-8")
 
 
-def apply(theme: str, accent: str = ""):
-    icons = icon_theme_for(theme, accent)
+def apply(theme: str, accent: str = "", light: bool = False):
+    icons = icon_theme_for(theme, accent, light)
+    if _rebuilt:
+        # Same theme name, new contents: running apps only reload icons when the name changes
+        subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "icon-theme", "Adwaita"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "icon-theme", icons],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     mono = ""
@@ -147,6 +157,7 @@ def apply(theme: str, accent: str = ""):
 
 if __name__ == "__main__":
     if len(sys.argv) >= 3 and sys.argv[1] == "apply":
-        print(apply(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else ""))
+        print(apply(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else "",
+                    len(sys.argv) > 4 and sys.argv[4] == "light"))
     else:
         print(__doc__)

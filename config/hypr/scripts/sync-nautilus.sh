@@ -57,7 +57,11 @@ except Exception:
 " 2>/dev/null || echo "blue")
 
     gsettings set org.gnome.desktop.interface accent-color "$ACCENT" 2>/dev/null || true
-    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+    # In Retro the light/dark scheme follows the Omarchy palette (bwm_omarchy.apply_color_scheme):
+    # never touch it here, a run left over from a previous theme would undo a light one
+    if [ "$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null)" != "retro" ]; then
+        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+    fi
 fi
 
 # 2. Si Nautilus está en ejecución con una ventana abierta, recargar de forma transparente
