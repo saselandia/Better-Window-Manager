@@ -19,15 +19,11 @@ output_path = '~/.config/rofi/wallpaper-picker.rasi'
 [templates.kitty]
 input_path = '~/.config/matugen/templates/kitty-colors.conf'
 output_path = '~/.config/kitty/kitty-colors.conf'
-post_hook = 'kill -SIGUSR1 $(pidof kitty) 2>/dev/null || true'
+post_hook = '~/.config/hypr/scripts/kitty-recolor.sh'
 
 [templates.vesktop]
 input_path = '~/.config/matugen/templates/vesktop.css'
 output_path = '~/.var/app/dev.vencord.Vesktop/config/vesktop/themes/bwm.theme.css'
-
-[templates.vesktop_quickcss]
-input_path = '~/.config/matugen/templates/vesktop.css'
-output_path = '~/.var/app/dev.vencord.Vesktop/config/vesktop/settings/quickCss.css'
 
 [templates.spicetify]
 input_path = '~/.config/matugen/templates/spicetify.ini'

@@ -28,7 +28,9 @@
     --bwm-blue: {{ blue }};
     --bwm-cyan: {{ cyan }};
     --bwm-magenta: {{ magenta }};
-    --bwm-font: "JetBrainsMono Nerd Font", monospace;
+    /* Fallbacks for symbols and kaomoji the monospace font lacks, then colour emoji */
+    --bwm-font: "JetBrainsMono Nerd Font", "Noto Sans Mono", "DejaVu Sans Mono", "Noto Sans",
+        "Noto Sans Symbols 2", "Noto Sans Symbols", "DejaVu Sans", "FreeSerif", "Noto Color Emoji", monospace;
 
     /* Fondos (variables actuales de Discord y las clásicas) */
     --bg-base-primary: var(--bwm-bg) !important;
@@ -195,6 +197,21 @@ section[class*="panels_"] {
     background: var(--bwm-bg-darker) !important;
     border-top: 1px solid var(--bwm-muted) !important;
 }
+/* The account box: flat, no nameplate/banner art behind it */
+section[class*="panels_"] *, section[class*="panels_"] *::before, section[class*="panels_"] *::after {
+    background-image: none !important;
+}
+section[class*="panels_"] > div, section[class*="panels_"] [class*="container_"],
+section[class*="panels_"] [class*="wrapper_"]:not([class*="avatar"]) {
+    background-color: var(--bwm-bg-darker) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+}
+section[class*="panels_"] video, section[class*="panels_"] img[class*="nameplate"],
+section[class*="panels_"] [class*="videoContainer"], section[class*="panels_"] [class*="backdrop"] {
+    display: none !important;
+}
 
 /* Cabeceras de categoría como títulos de panel de TUI: ── CANALES ── */
 [class*="containerDefault_"] h3, [class*="mainContent_"] h3[class*="name_"],
@@ -263,36 +280,74 @@ blockquote [class*="blockquoteDivider"] { background: var(--bwm-accent) !importa
 }
 [class*="channelTextArea_"] [class*="placeholder_"] { color: var(--bwm-fg-dim) !important; }
 
-/* ------------------------------------------------------------------ Botones, campos, ventanas emergentes */
-button[class*="button_"][class*="lookFilled_"], button[class*="colorBrand_"] {
+/* ------------------------------------------------------------------ Botones */
+/* Icon buttons (user panel mic/headphones/settings, toolbars, channel header): flat, tinted on hover */
+section[class*="panels_"] button, section[class*="panels_"] [role="button"],
+[class*="toolbar_"] [role="button"], [class*="toolbar_"] button, [class*="iconWrapper_"],
+[class*="actionButtons_"] button, [class*="buttons_"] > [class*="button_"]:not([class*="lookFilled_"]) {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+section[class*="panels_"] button:hover, section[class*="panels_"] [role="button"]:hover,
+[class*="toolbar_"] [role="button"]:hover, [class*="iconWrapper_"]:hover {
+    background: color-mix(in srgb, var(--bwm-accent) 12%, transparent) !important;
+}
+/* Muted mic / deafened: a red glyph, no red block */
+section[class*="panels_"] [class*="redIcon_"], section[class*="panels_"] [class*="strikethrough_"] {
+    color: var(--bwm-red) !important;
+}
+section[class*="panels_"] button[class*="redIcon_"], section[class*="panels_"] [class*="buttonRed"] {
+    background: color-mix(in srgb, var(--bwm-red) 14%, transparent) !important;
+}
+
+/* Text buttons in dialogs and forms: outlined in the accent, filled on hover (like a TUI button) */
+[role="dialog"] button[class*="lookFilled_"][class*="colorBrand"], [class*="form_"] button[class*="lookFilled_"],
+[class*="modal"] button[class*="lookFilled_"][class*="colorBrand"], button[class*="lookFilled_"][class*="colorBrand"][class*="sizeMedium"],
+button[class*="lookFilled_"][class*="colorBrand"][class*="sizeLarge"] {
     background: transparent !important;
     border: 1px solid var(--bwm-accent) !important;
     color: var(--bwm-accent) !important;
 }
-button[class*="button_"][class*="lookFilled_"]:hover, button[class*="colorBrand_"]:hover {
+[role="dialog"] button[class*="lookFilled_"][class*="colorBrand"]:hover, [class*="form_"] button[class*="lookFilled_"]:hover,
+[class*="modal"] button[class*="lookFilled_"][class*="colorBrand"]:hover, button[class*="lookFilled_"][class*="colorBrand"][class*="sizeMedium"]:hover,
+button[class*="lookFilled_"][class*="colorBrand"][class*="sizeLarge"]:hover {
     background: var(--bwm-accent) !important;
     color: var(--bwm-bg) !important;
 }
-button[class*="colorRed_"], button[class*="colorDanger"] {
-    border-color: var(--bwm-red) !important; color: var(--bwm-red) !important;
+button[class*="lookFilled_"][class*="colorRed"], button[class*="lookFilled_"][class*="colorDanger"] {
+    background: transparent !important;
+    border: 1px solid var(--bwm-red) !important;
+    color: var(--bwm-red) !important;
 }
-button[class*="colorRed_"]:hover, button[class*="colorDanger"]:hover { background: var(--bwm-red) !important; color: var(--bwm-bg) !important; }
-input, textarea, [class*="input_"], [class*="searchBar_"], [class*="search_"] [class*="searchBar"] {
+button[class*="lookFilled_"][class*="colorRed"]:hover, button[class*="lookFilled_"][class*="colorDanger"]:hover {
+    background: var(--bwm-red) !important;
+    color: var(--bwm-bg) !important;
+}
+button[class*="lookFilled_"][class*="colorGreen"] { background: var(--bwm-green) !important; color: var(--bwm-bg) !important; }
+
+/* ------------------------------------------------------------------ Campos y ventanas emergentes */
+input, textarea, [class*="inputDefault_"], [class*="searchBar_"] {
     background: var(--bwm-bg-darker) !important;
     border: 1px solid var(--bwm-muted) !important;
     color: var(--bwm-fg) !important;
 }
-input:focus, textarea:focus, [class*="input_"]:focus-within { border-color: var(--bwm-accent) !important; }
-[class*="menu_"], [class*="popout_"], [class*="tooltip_"], [class*="modal_"], [class*="root_"][role="dialog"],
-[class*="autocomplete_"], [class*="userPopoutOuter"], [class*="layer_"] [class*="container_"][role="dialog"] {
+input:focus, textarea:focus, [class*="inputDefault_"]:focus-within { border-color: var(--bwm-accent) !important; }
+[class*="searchBar_"] input, [class*="channelTextArea_"] textarea { border: 0 !important; background: transparent !important; }
+[class*="menu_"], [class*="tooltip_"]:not([class*="tooltipPointer"]), [class*="autocomplete_"],
+[class*="userPopoutOuter"], [role="dialog"][class*="root_"], [class*="quickswitcher_"] {
     background: var(--bwm-bg-dark) !important;
     border: 1px solid var(--bwm-accent) !important;
 }
+[class*="tooltipPointer"] { display: none !important; }
+[class*="menu_"] [class*="item_"] { margin: 0 !important; }
 [class*="menu_"] [class*="item_"][class*="focused_"], [class*="menu_"] [class*="item_"]:hover {
     background: var(--bwm-accent) !important;
     color: var(--bwm-bg) !important;
 }
 [class*="menu_"] [class*="item_"][class*="focused_"] *, [class*="menu_"] [class*="item_"]:hover * { color: var(--bwm-bg) !important; }
+[class*="menu_"] [class*="colorDanger_"] { color: var(--bwm-red) !important; }
+[class*="menu_"] [class*="separator_"] { background: var(--bwm-muted) !important; }
 [class*="checked_"] [class*="slider_"], [class*="control_"][class*="checked_"] { background: var(--bwm-accent) !important; }
 
 /* Barras de desplazamiento finas y cuadradas */

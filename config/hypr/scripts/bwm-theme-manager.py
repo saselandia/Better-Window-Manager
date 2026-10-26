@@ -542,7 +542,7 @@ inactive_border_color {cols[8]}
             print(f"[Warning] No se pudo escribir en {target}: {e}", file=sys.stderr)
 
     try:
-        subprocess.run(["pkill", "-SIGUSR1", "kitty"], check=False)
+        subprocess.run([str(Path(__file__).resolve().parent / "kitty-recolor.sh")], check=False)
     except Exception:
         pass
 
@@ -600,7 +600,7 @@ inactive_border_color #31363b
             print(f"[Warning] No se pudo escribir en {target}: {e}", file=sys.stderr)
 
     try:
-        subprocess.run(["pkill", "-SIGUSR1", "kitty"], check=False)
+        subprocess.run([str(Path(__file__).resolve().parent / "kitty-recolor.sh")], check=False)
     except Exception:
         pass
 

@@ -26,9 +26,13 @@ import colorsys
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tomllib
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import bwm_omarchy_apps  # noqa: E402
 from collections import defaultdict
 from pathlib import Path
 from PIL import Image
@@ -84,6 +88,7 @@ VESKTOP_DIRS = (HOME / ".var" / "app" / "dev.vencord.Vesktop" / "config" / "vesk
                 CONFIG_DIR / "vesktop")
 VESKTOP_THEME = "bwm.theme.css"
 VESKTOP_OLD_THEMES = ("material-you.theme.css",)
+VESKTOP_WATCH_STAMP = HOME / ".local" / "state" / "bwm" / "vesktop-watch-v2"
 
 # System monospace font (font-set.sh); the TUI overlays are written with this default
 FONT_STATE = HOME / ".local" / "state" / "bwm" / "font"
@@ -385,8 +390,9 @@ def apply_shell_toml(colors: dict):
 def apply_kitty(colors: dict):
     tpl = (ASSETS_DIR / "themed" / "kitty.conf.tpl").read_text(encoding="utf-8")
     content = render_omarchy(tpl, colors) + f"\ninactive_border_color {colors['muted']}\nurl_color {colors['accent']}\n"
-    if _write_if_changed(KITTY_COLORS_CONF, content):
-        subprocess.run(["pkill", "-SIGUSR1", "-x", "kitty"], check=False)
+    _write_if_changed(KITTY_COLORS_CONF, content)
+    # Always: a window whose colours a program changed keeps them across a config reload
+    subprocess.run([str(Path(__file__).resolve().parent / "kitty-recolor.sh")], check=False)
 
 def set_btop_theme(name: str):
     if not BTOP_CONF.is_file():
@@ -398,8 +404,13 @@ def set_btop_theme(name: str):
     _write_if_changed(BTOP_CONF, new)
 
 def apply_btop(colors: dict):
-    tpl = (ASSETS_DIR / "themed" / "btop.theme.tpl").read_text(encoding="utf-8")
-    _write_if_changed(BTOP_THEME, render_omarchy(tpl, colors))
+    # The theme's own btop.theme when it ships one (Omarchy's precedence), else the template
+    shipped = bwm_omarchy_apps.THEME_DIR / "btop.theme"
+    if shipped.is_file():
+        _write_if_changed(BTOP_THEME, shipped.read_text(encoding="utf-8"))
+    else:
+        tpl = (ASSETS_DIR / "themed" / "btop.theme.tpl").read_text(encoding="utf-8")
+        _write_if_changed(BTOP_THEME, render_omarchy(tpl, colors))
     set_btop_theme("omarchy")
 
 def apply_matugen_apps(colors: dict, wallpaper: str) -> set:
@@ -437,13 +448,40 @@ def apply_matugen_apps(colors: dict, wallpaper: str) -> set:
         _detached(hook)
     return changed
 
+VESKTOP_QUICKCSS = ("/* BWM: el estilo está en themes/bwm.theme.css (cambia con el estilo y el tema).\n"
+                    "   Escribe aquí tu CSS propio: BWM no lo toca. */\n")
+
+def _write_in_place(path: Path, content: str) -> bool:
+    """Vesktop watches its files by inode (fs.watch): an atomic rename would end the watch, and
+    it would keep the old colours for good. Same file, rewritten in place."""
+    try:
+        if path.read_text(encoding="utf-8") == content:
+            return False
+    except Exception:
+        pass
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
+    return True
+
+def vesktop_quickcss(d: Path):
+    """Quick CSS used to be a copy of the theme, loaded after it (it kept the old colours): back to
+    an empty one, unless the user wrote their own."""
+    q = d / "settings" / "quickCss.css"
+    try:
+        text = q.read_text(encoding="utf-8")
+    except Exception:
+        text = ""
+    if not text.strip() or "@name BWM" in text or "@name Material You" in text:
+        _write_in_place(q, VESKTOP_QUICKCSS)
+
 def apply_vesktop(colors: dict):
-    """BWM Omarchy TUI theme for Vesktop (theme file + Quick CSS, both reloaded live)."""
+    """BWM Omarchy TUI theme for Vesktop: themes/bwm.theme.css, reloaded live by Vencord."""
     content = render_omarchy(_asset("themed", "vesktop.theme.css.tpl"), colors)
     for d in VESKTOP_DIRS:
         if d.is_dir():
-            _write_if_changed(d / "themes" / VESKTOP_THEME, content)
-            _write_if_changed(d / "settings" / "quickCss.css", content)
+            _write_in_place(d / "themes" / VESKTOP_THEME, content)
+            vesktop_quickcss(d)
     vesktop_enable_theme()
 
 def _vesktop_settings_need(d: Path):
@@ -462,8 +500,14 @@ def vesktop_enable_theme():
     its settings in memory and rewrites them on exit, so a running Vesktop is closed, edited and
     reopened in the same place (restart_app). Only happens once: afterwards the file name never
     changes and theme changes are live."""
+    for d in VESKTOP_DIRS:
+        if d.is_dir():
+            vesktop_quickcss(d)
     dirs = [d for d in VESKTOP_DIRS if d.is_dir() and _vesktop_settings_need(d) is not None]
-    if not dirs:
+    # Before 2026-10-26 the theme files were replaced by rename, which ended Vesktop's file watch:
+    # one restart so it watches the files again (VESKTOP_WATCH_STAMP)
+    stale_watch = not VESKTOP_WATCH_STAMP.exists()
+    if not dirs and not stale_watch:
         return
 
     def edit():
@@ -484,19 +528,27 @@ def vesktop_enable_theme():
         if subprocess.run(["pgrep", "-f", "vesktop.bin"], stdout=subprocess.DEVNULL).returncode == 0:
             return  # in the tray, no window: next time
         edit()
+        VESKTOP_WATCH_STAMP.parent.mkdir(parents=True, exist_ok=True)
+        VESKTOP_WATCH_STAMP.touch()
         return
     pid = windows[0]["pid"]
     try:
-        argv = [a.decode() for a in Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0") if a]
+        # Electron may rewrite its argv as one space-separated string
+        argv = " ".join(a.decode() for a in Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0") if a).split()
     except Exception:
         argv = []
-    if Path("/.flatpak-info").exists() or (VESKTOP_DIRS[0] in dirs):
+    flatpak = (bool(argv) and argv[0].startswith("/app/")) or Path(f"/proc/{pid}/root/.flatpak-info").exists()
+    if flatpak:
         flags = [a for a in argv[1:] if a.startswith("--") and not a.startswith(("--enable-speech", "--disable-gpu-sandbox", "--type="))]
         cmd = ["flatpak", "run", "dev.vencord.Vesktop", *flags]
+    elif argv and shutil.which(argv[0]):
+        cmd = argv
     else:
-        cmd = argv or ["vesktop"]
-    restart_app(lambda c: c.get("class", "").lower() == "vesktop", cmd, before_start=edit,
-                wait_for="vesktop.bin")
+        cmd = ["vesktop"]
+    if restart_app(lambda c: c.get("class", "").lower() == "vesktop", cmd, before_start=edit,
+                   wait_for="vesktop.bin"):
+        VESKTOP_WATCH_STAMP.parent.mkdir(parents=True, exist_ok=True)
+        VESKTOP_WATCH_STAMP.touch()
 
 def apply_spotify(colors: dict):
     """BWM-Omarchy Spicetify theme; only re-applied (Spotify restart) when something changed."""
@@ -648,10 +700,9 @@ def set_retro_mode_state(mode: str, name: str):
     _write_if_changed(THEME_NAME_FILE, name + "\n")
     _write_if_changed(OMARCHY_CURRENT_THEME_NAME, name + "\n")
 
-    if mode == "static" and (THEMES_DIR / name).is_dir():
-        target = THEMES_DIR / name
-    else:
-        target = STATE_DIR
+    # The generated theme directory (bwm_omarchy_apps.render_theme_dir), as in Omarchy
+    target = bwm_omarchy_apps.THEME_DIR
+    target.mkdir(parents=True, exist_ok=True)
 
     try:
         if OMARCHY_CURRENT_THEME_DIR.is_symlink() or OMARCHY_CURRENT_THEME_DIR.exists():
@@ -709,10 +760,16 @@ def complete_colors(raw: dict) -> dict:
     c.setdefault("bright_foreground", "#ffffff")
     c.setdefault("cursor", accent)
 
-    # ANSI colors fallback
+    # ANSI colors fallback (purple and magenta are aliases, as in omarchy-theme-color)
+    for a, b in (("magenta", "purple"), ("bright_magenta", "bright_purple")):
+        if a not in c and b in c:
+            c[a] = c[b]
     for col in ("red", "orange", "yellow", "green", "cyan", "blue", "magenta", "brown"):
         c.setdefault(col, accent)
         c.setdefault("bright_" + col, c[col])
+    c.setdefault("purple", c["magenta"])
+    c.setdefault("bright_purple", c["bright_magenta"])
+    c["theme_type"] = mode  # legacy key some Omarchy templates read
 
     # No hyprland_active_border invented here: like Omarchy, a theme without one gets a solid
     # accent window border and foreground-coloured menu/launcher borders (shell.toml fallbacks)
@@ -832,10 +889,26 @@ def apply_color_scheme(mode: str):
 
 def apply_retro_palette_colors(colors: dict, wallpaper: str = ""):
     """Apply an Omarchy-format palette dictionary to all apps, configs, and reload UI."""
+    colors = complete_colors(colors)
     write_colors_toml(colors)
     apply_task_manager(True)
 
-    for step in (apply_shell_toml, apply_kitty, apply_btop, apply_vscodium, apply_spotify, apply_vesktop):
+    # Every Omarchy app template (default/themed) into the theme directory, a static theme's own
+    # files first; then each app's omarchy-theme-set-<app> step (bwm_omarchy_apps)
+    mode, name = get_retro_mode()
+    static_dir = THEMES_DIR / name if mode == "static" and (THEMES_DIR / name).is_dir() else None
+    try:
+        bwm_omarchy_apps.render_theme_dir(colors, render_omarchy, static_dir)
+        _write_if_changed(bwm_omarchy_apps.THEME_DIR / "shell.toml",
+                          render_omarchy((ASSETS_DIR / "themed" / "shell.toml.tpl").read_text(encoding="utf-8"), colors))
+    except Exception as e:
+        print(f"[Warning] tema de Omarchy: {e}", file=sys.stderr)
+
+    # VS Code-like editors now get Omarchy's full theme extension (bwm_omarchy_apps.apply_vscode)
+    # instead of BWM's old colorCustomizations, which would override it
+    restore_vscodium()
+    for step in (apply_shell_toml, apply_kitty, apply_btop, apply_spotify, apply_vesktop,
+                 bwm_omarchy_apps.apply_apps):
         try:
             step(colors)
         except Exception as e:
@@ -1048,6 +1121,7 @@ def restore_non_retro():
         apply_color_scheme("dark")
     set_btop_theme("matugen")
     restore_vscodium()
+    bwm_omarchy_apps.restore_apps()
     try:
         if _set_spicetify_theme("MaterialYou", "MaterialYou"):
             _detached("~/.config/hypr/scripts/reload-spotify.sh")
