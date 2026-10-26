@@ -39,10 +39,10 @@ pre_process() {
     # Set GNOME color-scheme if mode_flag is dark or light
     if [[ "$mode_flag" == "dark" ]]; then
         gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
+        python3 ~/.config/hypr/scripts/gtk-theme.py set dark
     elif [[ "$mode_flag" == "light" ]]; then
         gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
-        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3'
+        python3 ~/.config/hypr/scripts/gtk-theme.py set light
     fi
 
     if [ ! -d "$CACHE_DIR"/user/generated ]; then

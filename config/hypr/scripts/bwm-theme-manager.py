@@ -674,7 +674,8 @@ BREEZE_DARK_M3 = {
 PLASMA_SKIPPED_TEMPLATES = {"hyprland_colors", "kitty"}
 
 # Stateless GTK 3 windows reopened when the GTK palette changes (see apply_plasma_app_themes)
-GTK_RELAUNCH_APPS = ("blueman-manager", "pavucontrol", "nm-connection-editor")
+# GTK 4 windows that lose nothing on restart (GTK 3 recolours live: gtk-theme.py)
+GTK_RELAUNCH_APPS = ("pavucontrol",)
 
 def apply_plasma_app_themes():
     """Renders the matugen templates with the Breeze Dark palette (no wallpaper colors) and
@@ -732,14 +733,15 @@ def apply_plasma_app_themes():
         if tpl.get("post_hook"):
             hooks.append(tpl["post_hook"])
 
-    # GTK 3/4 (libadwaita) dark theme; Qt follows the same preference through the portal
-    for key, value in (("gtk-theme", "adw-gtk3-dark"), ("color-scheme", "prefer-dark")):
-        subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", key, value],
-                       check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # Dark: GTK 3 through BWM's live-reloading theme (gtk-theme.py), libadwaita and Qt through
+    # color-scheme (the portal)
+    subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "gtk-theme.py"), "set", "dark"], check=False,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "color-scheme", "prefer-dark"],
+                   check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    # GTK 3 only reads ~/.config/gtk-3.0/gtk.css at startup: reopen the open GTK utility
-    # windows that lose nothing on restart (Bluetooth devices, volume, connection editor)
-    if "gtk3" in changed:
+    # GTK 4 only reads ~/.config/gtk-4.0/gtk.css at startup: reopen the stateless windows
+    if "gtk4" in changed:
         for app in GTK_RELAUNCH_APPS:
             # pgrep -x only sees 15 characters of the name (nm-connection-editor)
             if subprocess.run(["pgrep", "-f", f"(^|/){app}( |$)"], stdout=subprocess.DEVNULL).returncode == 0:

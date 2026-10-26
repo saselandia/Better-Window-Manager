@@ -41,7 +41,8 @@ post_hook = '~/.local/share/pywalfox-venv/bin/pywalfox update 2>/dev/null || tru
 
 [templates.gtk3]
 input_path = '~/.config/matugen/templates/gtk.css'
-output_path = '~/.config/gtk-3.0/gtk.css'
+output_path = '~/.config/gtk-3.0/bwm-colors.css'
+post_hook = 'python3 ~/.config/hypr/scripts/gtk-theme.py reload'
 
 [templates.gtk4]
 input_path = '~/.config/matugen/templates/gtk.css'
@@ -64,6 +65,7 @@ output_path = '~/.config/rofi/theme-picker.rasi'
 [templates.qt6ct]
 input_path = '~/.config/matugen/templates/qt6ct-colors.conf'
 output_path = '~/.config/qt6ct/colors/bwm.conf'
+post_hook = 'python3 ~/.config/hypr/scripts/bwm_icons.py qt-sync'
 
 [templates.steam]
 input_path = '~/.config/matugen/templates/steam-adwaita.css'

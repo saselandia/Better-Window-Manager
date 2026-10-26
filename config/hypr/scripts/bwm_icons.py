@@ -152,11 +152,146 @@ def apply(theme: str, accent: str = "", light: bool = False):
         except Exception:
             mono = "JetBrainsMono Nerd Font"
     write_qt6ct(icons, mono)
+    write_kdeglobals()
     return icons
 
 
+# ------------------------------------------------------------------------------ KDE / Qt flatpaks
+QT6CT_COLORS = HOME / ".config" / "qt6ct" / "colors" / "bwm.conf"
+KDEGLOBALS = HOME / ".config" / "kdeglobals"
+# Order of the colours in a qt6ct scheme (QPalette roles)
+QT_ROLES = ("WindowText", "Button", "Light", "Midlight", "Dark", "Mid", "Text", "BrightText",
+            "ButtonText", "Base", "Window", "Shadow", "Highlight", "HighlightedText", "Link",
+            "LinkVisited", "AlternateBase", "NoRole", "ToolTipBase", "ToolTipText",
+            "PlaceholderText", "Accent")
+
+
+def _rgb(hex_color: str) -> str:
+    h = hex_color.strip().lstrip("#")[-6:]
+    return ",".join(str(int(h[i:i + 2], 16)) for i in (0, 2, 4))
+
+
+def write_kdeglobals():
+    """kdeglobals with the qt6ct palette (bwm.conf, the one of the active skin/theme): KDE apps and
+    Qt flatpaks on the KDE runtime (Kate, ProtonUp-Qt...) read their colours from it, as they do
+    not see qt6ct. Only BWM's own kdeglobals is rewritten (marked [BWM]); a real one is kept."""
+    try:
+        text = QT6CT_COLORS.read_text(encoding="utf-8")
+    except Exception:
+        return
+    rows = {}
+    for line in text.splitlines():
+        if "=" in line and line.split("=", 1)[0] in ("active_colors", "disabled_colors", "inactive_colors"):
+            key, val = line.split("=", 1)
+            rows[key] = dict(zip(QT_ROLES, (v.strip() for v in val.split(","))))
+    p = rows.get("active_colors")
+    if not p:
+        return
+    if KDEGLOBALS.is_file() and "[BWM]" not in KDEGLOBALS.read_text(encoding="utf-8", errors="replace"):
+        backup = KDEGLOBALS.with_name("kdeglobals.bwm-backup")
+        if not backup.exists():
+            shutil.copy2(KDEGLOBALS, backup)
+    d = rows.get("disabled_colors", p)
+    neg, neu, pos = "#da4453", "#f67400", "#27ae60"
+
+    def group(name, bg, alt, fg):
+        return (f"[Colors:{name}]\nBackgroundNormal={_rgb(bg)}\nBackgroundAlternate={_rgb(alt)}\n"
+                f"ForegroundNormal={_rgb(fg)}\nForegroundInactive={_rgb(p['PlaceholderText'])}\n"
+                f"ForegroundActive={_rgb(p['Highlight'])}\nForegroundLink={_rgb(p['Link'])}\n"
+                f"ForegroundVisited={_rgb(p['LinkVisited'])}\nForegroundNegative={_rgb(neg)}\n"
+                f"ForegroundNeutral={_rgb(neu)}\nForegroundPositive={_rgb(pos)}\n"
+                f"DecorationFocus={_rgb(p['Highlight'])}\nDecorationHover={_rgb(p['Highlight'])}\n\n")
+
+    out = ("[BWM]\nGenerated=bwm_icons.py write_kdeglobals (paleta de ~/.config/qt6ct/colors/bwm.conf)\n\n"
+           "[General]\nColorScheme=BWM\n\n"
+           + group("Window", p["Window"], p["AlternateBase"], p["WindowText"])
+           + group("View", p["Base"], p["AlternateBase"], p["Text"])
+           + group("Button", p["Button"], p["Mid"], p["ButtonText"])
+           + group("Selection", p["Highlight"], p["Highlight"], p["HighlightedText"])
+           + group("Tooltip", p["ToolTipBase"], p["ToolTipBase"], p["ToolTipText"])
+           + group("Complementary", p["Window"], p["AlternateBase"], p["WindowText"])
+           + group("Header", p["Window"], p["AlternateBase"], p["WindowText"])
+           + f"[Colors:Header][Inactive]\nBackgroundNormal={_rgb(p['Window'])}\nForegroundNormal={_rgb(d['WindowText'])}\n\n"
+           + f"[WM]\nactiveBackground={_rgb(p['Window'])}\nactiveForeground={_rgb(p['WindowText'])}\n"
+             f"inactiveBackground={_rgb(p['Window'])}\ninactiveForeground={_rgb(p['PlaceholderText'])}\n\n"
+           + _kde_fonts()
+           + "[KDE]\nwidgetStyle=Fusion\n\n"
+           + f"[Icons]\nTheme={_current_icons()}\n")
+    KDEGLOBALS.write_text(out, encoding="utf-8")
+
+
+def _kde_fonts() -> str:
+    """The qt6ct fonts (Retro: the system monospace font) as KDE font entries, in [General]."""
+    fonts = {}
+    try:
+        for line in QT6CT_CONF.read_text(encoding="utf-8").splitlines():
+            if line.startswith(("general=", "fixed=")):
+                key, val = line.split("=", 1)
+                family, _, size = val.strip('"').rpartition(",")
+                fonts[key] = f"{family},{size or 10},-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
+    except Exception:
+        pass
+    if not fonts:
+        return ""
+    out = "[General]\n"
+    if "general" in fonts:
+        out += f"font={fonts['general']}\nmenuFont={fonts['general']}\ntoolBarFont={fonts['general']}\n"
+    if "fixed" in fonts:
+        out += f"fixed={fonts['fixed']}\n"
+    return out + "\n"
+
+
+def _current_icons() -> str:
+    try:
+        for line in QT6CT_CONF.read_text(encoding="utf-8").splitlines():
+            if line.startswith("icon_theme="):
+                return line.split("=", 1)[1]
+    except Exception:
+        pass
+    return "breeze-dark"
+
+
+FLATPAK_FILESYSTEMS = ("xdg-config/gtk-3.0:ro", "xdg-config/gtk-4.0:ro", "xdg-config/kdeglobals:ro",
+                       "xdg-config/qt6ct:ro", "~/.local/share/themes:ro", "~/.local/share/icons:ro",
+                       "~/Projects/hyprland-de/config:ro")
+
+
+def flatpak_overrides():
+    """All flatpaks (also ones installed later) see the GTK theme/colours, kdeglobals and the icons,
+    and Qt apps on the KDE runtime use the KDE platform theme, which reads kdeglobals. The config
+    dirs are links into the repo, which is exposed read-only so the links resolve."""
+    if not shutil.which("flatpak"):
+        return
+    try:
+        current = subprocess.run(["flatpak", "override", "--user", "--show"], capture_output=True,
+                                 text=True).stdout
+    except Exception:
+        return
+    args = [f"--filesystem={fs}" for fs in FLATPAK_FILESYSTEMS if fs not in current]
+    if "QT_QPA_PLATFORMTHEME=kde" not in current:
+        args.append("--env=QT_QPA_PLATFORMTHEME=kde")
+    if args:
+        subprocess.run(["flatpak", "override", "--user", *args], stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL)
+    # GTK 3 in a flatpak looks for themes in ~/.themes
+    themes = HOME / ".themes"
+    if not themes.exists() and not themes.is_symlink():
+        themes.symlink_to(HOME / ".local" / "share" / "themes")
+    if "~/.themes:ro" not in current:
+        subprocess.run(["flatpak", "override", "--user", "--filesystem=~/.themes:ro"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def qt_sync():
+    """After bwm.conf changes (matugen/Breeze/Omarchy post_hook): kdeglobals and flatpak access."""
+    write_kdeglobals()
+    flatpak_overrides()
+
+
 if __name__ == "__main__":
-    if len(sys.argv) >= 3 and sys.argv[1] == "apply":
+    if len(sys.argv) >= 2 and sys.argv[1] == "qt-sync":
+        qt_sync()
+    elif len(sys.argv) >= 3 and sys.argv[1] == "apply":
         print(apply(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else "",
                     len(sys.argv) > 4 and sys.argv[4] == "light"))
     else:

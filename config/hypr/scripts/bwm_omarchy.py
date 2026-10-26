@@ -108,8 +108,9 @@ def _asset(*parts) -> str:
     text = ASSETS_DIR.joinpath(*parts).read_text(encoding="utf-8")
     return text.replace(f'"{DEFAULT_FONT}"', f'"{system_font()}"')
 
-# Stateless GTK 3 windows reopened when the GTK palette changes (GTK 3 reads gtk.css at startup)
-GTK_RELAUNCH_APPS = ("blueman-manager", "pavucontrol", "nm-connection-editor")
+# Stateless GTK 4 windows reopened when the GTK palette changes (GTK 4 reads gtk.css at startup;
+# GTK 3 recolours live through gtk-theme.py)
+GTK_RELAUNCH_APPS = ("pavucontrol",)
 
 
 # ------------------------------------------------------------------------------
@@ -876,7 +877,10 @@ def apply_color_scheme(mode: str):
     Qt through the portal's color-scheme, Electron/Chromium/Firefox through prefers-color-scheme.
     The other themes are dark: leaving Retro after a light theme puts it back (restore_non_retro)."""
     light = mode == "light"
-    _gsetting("gtk-theme", "adw-gtk3" if light else "adw-gtk3-dark")
+    # GTK 3: BWM's live-reloading theme around adw-gtk3[-dark] (gtk-theme.py)
+    subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "gtk-theme.py"), "set",
+                    "light" if light else "dark"], check=False, stdout=subprocess.DEVNULL,
+                   stderr=subprocess.DEVNULL)
     _gsetting("color-scheme", "prefer-light" if light else "prefer-dark")
     pywalfox = HOME / ".local" / "share" / "pywalfox-venv" / "bin" / "pywalfox"
     if pywalfox.is_file():
@@ -930,7 +934,7 @@ def apply_retro_palette_colors(colors: dict, wallpaper: str = ""):
     if "firefox" in changed:
         _detached(f"{sys.executable} {Path(__file__).resolve()} restart-firefox")
 
-    if "gtk3" in changed:
+    if "gtk4" in changed:
         for app in GTK_RELAUNCH_APPS:
             if _running(app):
                 subprocess.run(["pkill", "-f", f"(^|/){app}( |$)"], check=False)
