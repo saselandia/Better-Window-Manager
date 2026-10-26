@@ -1,0 +1,30 @@
+#!/bin/bash
+# BWM stand-in for Omarchy's omarchy-dock: the dock's settings in ~/.config/bwm/dock.json (the Retro dock,
+# modules/ii/omarchyDock, watches it). Without pins of its own the dock uses BWM's defaults
+# (OmarchyDock.qml), so pin/unpin start from those.
+#   omarchy-dock position [top|bottom|left|right] | autohide [on|off|toggle] | pinned [<id>...] | pin <id> | unpin <id>
+set -euo pipefail
+FILE="$HOME/.config/bwm/dock.json"
+DEFAULTS='["org.gnome.Nautilus","firefox-bin","kitty","dev.vencord.Vesktop","com.spotify.Client","steam"]'
+mkdir -p "${FILE%/*}"
+[[ -s $FILE ]] || echo '{}' >"$FILE"
+save() { local tmp; tmp=$(mktemp "$FILE.XXXXXX"); jq "$@" "$FILE" >"$tmp" && mv "$tmp" "$FILE"; }
+PINNED="(.pinned // $DEFAULTS)"
+case ${1:-} in
+  position)
+    if [[ -z ${2:-} ]]; then jq -r '.position // "bottom"' "$FILE"; exit; fi
+    [[ $2 =~ ^(top|bottom|left|right)$ ]] || { echo "position: top, bottom, left o right" >&2; exit 1; }
+    save --arg p "$2" '.position = $p' ;;
+  autohide)
+    cur=$(jq -r 'if .autohide == true then "on" else "off" end' "$FILE")
+    if [[ -z ${2:-} ]]; then echo "$cur"; exit; fi
+    v=$2; [[ $v == toggle ]] && { [[ $cur == on ]] && v=off || v=on; }
+    save --argjson a "$([[ $v == on ]] && echo true || echo false)" '.autohide = $a' ;;
+  pinned)
+    shift
+    if (( $# == 0 )); then jq -r "$PINNED[]" "$FILE"; exit; fi
+    tmp=$(mktemp "$FILE.XXXXXX"); jq '.pinned = $ARGS.positional' "$FILE" --args "$@" >"$tmp" && mv "$tmp" "$FILE" ;;
+  pin) save --arg id "${2:?id}" "if ($PINNED | index(\$id)) then . else .pinned = ($PINNED + [\$id]) end" ;;
+  unpin) save --arg id "${2:?id}" ".pinned = ($PINNED - [\$id])" ;;
+  *) sed -n '2,6p' "$0"; exit 1 ;;
+esac

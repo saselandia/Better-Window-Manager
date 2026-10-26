@@ -13,6 +13,8 @@ import qs.modules.ii.onScreenDisplay
 import qs.modules.ii.onScreenKeyboard
 import qs.modules.ii.overview
 import qs.modules.ii.polkit
+import qs.modules.ii.omarchyPolkit
+import qs.modules.ii.omarchyDock
 import qs.modules.ii.regionSelector
 import qs.modules.ii.screenCorners
 import qs.modules.ii.screenTranslator
@@ -40,7 +42,8 @@ Scope {
     PanelLoader { extraCondition: !Config.options.bar.vertical; component: Bar {} }
     PanelLoader { extraCondition: Boolean(Config.options.background?.enable); component: Background {} }
     PanelLoader { component: Cheatsheet {} }
-    PanelLoader { extraCondition: Config.options.dock.enable; component: Dock {} }
+    // BWM's dock; Retro has Omarchy's instead (dock.omarchy), never both
+    PanelLoader { extraCondition: Config.options.dock.enable && !Appearance.isRetro; component: Dock {} }
     PanelLoader { component: Lock {} }
     PanelLoader { component: MediaControls {} }
     PanelLoader { extraCondition: !Appearance.isRetro; component: NotificationPopup {} }
@@ -48,7 +51,12 @@ Scope {
     PanelLoader { component: OnScreenKeyboard {} }
     PanelLoader { component: Overlay {} }
     PanelLoader { component: Overview {} }
-    PanelLoader { component: Polkit {} }
+    PanelLoader { extraCondition: !Appearance.isRetro; component: Polkit {} }
+    // Retro: Omarchy's polkit dialog (BWM's agent in services/PolkitService.qml is off there)
+    PanelLoader { extraCondition: Config.ready && Appearance.isRetro; component: OmarchyPolkit {} }
+    // Retro: Omarchy's dock, on workspaces without tiled windows (modules/ii/omarchyDock); optional,
+    // Settings → Interface → Dock
+    PanelLoader { extraCondition: Config.ready && Appearance.isRetro && Config.options.dock.omarchy; component: OmarchyDock {} }
     PanelLoader { component: RegionSelector {} }
     PanelLoader { extraCondition: Appearance.isRetro; component: OmarchyScreenshotPreview {} }
     // Retro: Omarchy's notification daemon instead of BWM's (services/Notifications.qml)

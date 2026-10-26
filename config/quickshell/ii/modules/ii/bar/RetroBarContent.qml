@@ -287,15 +287,27 @@ Item {
             id: statusSlot
             section: "status"
             anchors.verticalCenter: parent.verticalCenter
-            fixedEntries: [{
+            // Each one can be hidden in Settings → Bar (`disabled` of omarchy-plugins.json)
+            // Off by default (shown only when listed in `shown`): media, as the mpris plugin is there
+            readonly property var defaultHidden: ["omarchy.media"]
+            fixedEntries: ["media", "system-update"].map(n => ({
+                id: "omarchy." + n,
+                source: Qt.resolvedUrl("omarchy/" + n + "/BarWidget.qml"),
+                settings: OmarchyPlugins.builtinSettings("omarchy." + n)
+            })).concat([{
                 id: "omarchy.tray",
                 source: Qt.resolvedUrl("omarchy/tray/BarWidget.qml"),
                 settings: OmarchyPlugins.builtinSettings("omarchy.tray")
-            }].concat(["agents", "tailscale", "bluetooth", "network", "audio", "monitor", "power"].map(n => ({
+            }, {
+                id: "omarchy.keyboard-layout",
+                source: Qt.resolvedUrl("omarchy/keyboard-layout/BarWidget.qml"),
+                settings: OmarchyPlugins.builtinSettings("omarchy.keyboard-layout")
+            }]).concat(["agents", "tailscale", "bluetooth", "network", "audio", "monitor", "power"].map(n => ({
                 id: "omarchy." + n,
                 source: Qt.resolvedUrl("omarchy/" + n + "/Panel.qml"),
                 settings: OmarchyPlugins.builtinSettings("omarchy." + n)
-            })))
+            }))).filter(e => !(OmarchyPlugins.layout.disabled ?? []).includes(e.id)
+                && (!defaultHidden.includes(e.id) || (OmarchyPlugins.layout.shown ?? []).includes(e.id)))
         }
     }
 }

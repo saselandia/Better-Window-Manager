@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import qs.services
+import "AppSearchModel.js" as AppSearchModel
 
 // The app library omarchy-shell gives its menu (shell.appLibrary), on top of BWM's AppSearch:
 // sorted desktop entries, names, subtitles, icons and launching. Terminal apps open in the
@@ -17,10 +18,9 @@ QtObject {
     function entryById(appId) {
         return AppSearch.list.find(e => e.id === appId) ?? null;
     }
+    // Omarchy's ranking (services/AppSearch.js, MIT): name, id, generic name, keywords, acronyms
     function sortedEntries(query) {
-        const list = Array.from(AppSearch.list);
-        list.sort((a, b) => String(a.name).localeCompare(String(b.name)));
-        return list.map(e => ({ entry: e }));
+        return AppSearchModel.sortedEntries(Array.from(AppSearch.list), query, null);
     }
     function entryName(entry) {
         return String(entry?.name ?? "");

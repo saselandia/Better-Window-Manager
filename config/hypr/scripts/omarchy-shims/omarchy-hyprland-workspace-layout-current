@@ -1,0 +1,11 @@
+#!/bin/bash
+# BWM stand-in for Omarchy's omarchy-hyprland-workspace-layout-current <workspace>: BWM has no
+# "floating workspace" mode, so a workspace counts as floating (Omarchy's dock shows there, Super+M
+# minimizes there) while it has no tiled windows; otherwise its tiled layout.
+ws=${1:-$(hyprctl activeworkspace -j | jq -r '.id')}
+tiled=$(hyprctl clients -j | jq --argjson ws "$ws" '[.[] | select(.workspace.id == $ws and .floating == false and .mapped)] | length')
+if [[ ${tiled:-0} -eq 0 ]]; then
+  echo floating
+else
+  hyprctl getoption general:layout 2>/dev/null | awk '/str:/ {print $2; exit}' | grep . || echo dwindle
+fi

@@ -62,8 +62,9 @@ if command -v dbus-update-activation-environment >/dev/null 2>&1; then
     dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP QT_QPA_PLATFORMTHEME 2>/dev/null || true
 fi
 
-# 2. Agente de autenticación Polkit (Gentoo en /usr/libexec o PATH)
-if ! pidof hyprpolkitagent >/dev/null 2>&1; then
+# 2. Agente de autenticación Polkit (Gentoo en /usr/libexec o PATH). En Retro no: allí es el de
+#    Omarchy dentro de Quickshell (modules/ii/omarchyPolkit) y polkit sólo admite un agente.
+if [[ "$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null)" != "retro" ]] && ! pidof hyprpolkitagent >/dev/null 2>&1; then
     if command -v hyprpolkitagent >/dev/null 2>&1; then
         hyprpolkitagent >/dev/null 2>&1 &
     elif [ -x /usr/libexec/hyprpolkitagent ]; then

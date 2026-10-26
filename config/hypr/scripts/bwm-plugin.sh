@@ -209,6 +209,10 @@ case "${1:-}" in
   update) shift; cmd_update "$@" ;;
   enable) shift; id=${1:?id}; shift; s=""; [[ ${1:-} == --section ]] && s=$(section_for "${2:?}"); enable_plugin "$id" "$s" ;;
   disable) shift; cmd_disable "$@" ;;
+  # Widgets fijos de la barra Retro (omarchy.tray, omarchy.audio…): sólo la lista `disabled`
+  # (`shown` turns on the ones that are off by default, such as omarchy.media)
+  hide) shift; jq --arg id "${1:?id}" '.disabled = (((.disabled // []) - [$id]) + [$id]) | .shown = ((.shown // []) - [$id])' "$LAYOUT" | save_layout ;;
+  show) shift; jq --arg id "${1:?id}" '.disabled = ((.disabled // []) - [$id]) | .shown = (((.shown // []) - [$id]) + [$id])' "$LAYOUT" | save_layout ;;
   list|ls) cmd_list ;;
   catalog) cmd_catalog ;;
   build) cmd_build ;;

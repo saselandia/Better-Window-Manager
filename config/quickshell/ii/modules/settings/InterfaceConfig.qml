@@ -103,7 +103,20 @@ ContentPage {
         icon: "call_to_action"
         title: Translation.tr("Dock")
 
+        // Retro: Omarchy's dock (apps pinned and open, on workspaces without tiled windows; Super+M
+        // minimizes to it). BWM's own dock is not loaded in Retro, so the two never show together.
         ConfigSwitch {
+            visible: Appearance.isRetro
+            buttonIcon: "check"
+            text: Translation.tr("Omarchy dock (on workspaces without tiled windows)")
+            checked: Config.options.dock.omarchy
+            onCheckedChanged: {
+                Config.options.dock.omarchy = checked;
+            }
+        }
+
+        ConfigSwitch {
+            visible: !Appearance.isRetro
             buttonIcon: "check"
             text: Translation.tr("Enable")
             checked: Config.options.dock.enable
@@ -113,6 +126,7 @@ ContentPage {
         }
 
         ConfigRow {
+            visible: !Appearance.isRetro
             uniform: true
             ConfigSwitch {
                 buttonIcon: "highlight_mouse_cursor"
@@ -132,6 +146,7 @@ ContentPage {
             }
         }
         ConfigSwitch {
+            visible: !Appearance.isRetro
             buttonIcon: "colors"
             text: Translation.tr("Tint app icons")
             checked: Config.options.dock.monochromeIcons

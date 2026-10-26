@@ -1,0 +1,19 @@
+#!/bin/bash
+# BWM (Gentoo) stand-in for Omarchy's omarchy-update, opened by the Retro bar's update widget in a
+# floating terminal: shows what is pending, updates flatpaks and then @world with emerge (asks for
+# confirmation and sudo). BWM's own repo is only reported: pull it yourself (it is a git checkout).
+echo "Actualizaciones pendientes:"
+omarchy-update-available || true
+echo
+if command -v flatpak >/dev/null 2>&1; then
+  echo "==> flatpak update"
+  flatpak update || true
+  echo
+fi
+if command -v emerge >/dev/null 2>&1; then
+  echo "==> sudo emerge --ask --verbose --update --deep --newuse @world"
+  sudo emerge --ask --verbose --update --deep --newuse @world || true
+fi
+qs -c ii ipc call omarchy.system-update refresh >/dev/null 2>&1 || true
+echo
+read -r -n 1 -s -p "Pulsa una tecla para cerrar…"

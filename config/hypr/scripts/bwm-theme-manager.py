@@ -936,6 +936,20 @@ def apply_theme(theme_name: str):
     except Exception:
         pass
 
+    # 6.2 Agente polkit: en Retro el de Omarchy (dentro de Quickshell, modules/ii/omarchyPolkit);
+    #     polkit sólo admite uno por sesión, así que hyprpolkitagent se para antes de reiniciar
+    #     Quickshell y vuelve en los otros estilos
+    try:
+        if theme_name == "retro":
+            subprocess.run(["pkill", "-x", "hyprpolkitagent"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        elif subprocess.run(["pidof", "hyprpolkitagent"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
+            agent = shutil.which("hyprpolkitagent") or ("/usr/libexec/hyprpolkitagent" if os.access("/usr/libexec/hyprpolkitagent", os.X_OK) else None)
+            if agent:
+                subprocess.Popen([agent], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True,
+                                 preexec_fn=lambda: signal.pthread_sigmask(signal.SIG_SETMASK, []))
+    except Exception:
+        pass
+
     # 7. Reiniciar Quickshell de forma atómica (sin duplicados ni bloqueo de SIGTERM)
     try:
         subprocess.run(["pkill", "-9", "-x", "quickshell"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

@@ -891,9 +891,24 @@ def apply_color_scheme(mode: str):
     else:
         RETRO_LIGHT_MARK.unlink(missing_ok=True)
 
+OMARCHY_LANGUAGE = CONFIG_DIR / "omarchy" / "language"
+# Languages of Omarchy's shell vendored in quickshell/ii/Commons/omarchy/default/i18n
+OMARCHY_LANGUAGES = ("en", "es-MX")
+
+def ensure_omarchy_language():
+    """Omarchy's shell (bar panels, menu, dock, OSD...) follows ~/.config/omarchy/language: when the
+    user has not picked one, the session's language (Spanish -> es-MX, Omarchy's Spanish)."""
+    if OMARCHY_LANGUAGE.exists():
+        return
+    lang = (os.environ.get("LC_MESSAGES") or os.environ.get("LANG") or "").lower()
+    code = "es-MX" if lang.startswith("es") else "en"
+    OMARCHY_LANGUAGE.parent.mkdir(parents=True, exist_ok=True)
+    OMARCHY_LANGUAGE.write_text(code + "\n", encoding="utf-8")
+
 def apply_retro_palette_colors(colors: dict, wallpaper: str = ""):
     """Apply an Omarchy-format palette dictionary to all apps, configs, and reload UI."""
     colors = complete_colors(colors)
+    ensure_omarchy_language()
     write_colors_toml(colors)
     apply_task_manager(True)
 

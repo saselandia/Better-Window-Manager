@@ -32,8 +32,35 @@ Scope {
     ]
 
     function triggerOsd() {
+        // Retro: Omarchy's OSD (modules/ii/omarchyOsd, from shell/plugins/osd, MIT); the gamma
+        // warning keeps BWM's
+        if (Appearance.isRetro && root.currentIndicator !== "gamma" && omarchyOsd.item) {
+            root.showOmarchyOsd();
+            return;
+        }
         GlobalStates.osdVolumeOpen = true;
         osdTimeout.restart();
+    }
+
+    function showOmarchyOsd() {
+        if (root.currentIndicator === "brightness") {
+            const mon = Brightness.getMonitorForScreen(root.focusedScreen);
+            omarchyOsd.item.show("brightness", "", String(Math.round((mon?.brightness ?? 0.5) * 100)), "100", "", "1200");
+            return;
+        }
+        const audio = Audio.sink?.audio;
+        const muted = audio?.muted ?? false;
+        const pct = Math.round((audio?.volume ?? 0) * 100);
+        if (root.protectionMessage !== "")
+            omarchyOsd.item.show("volume-high", root.protectionMessage, "", "100", "", "2000");
+        else
+            omarchyOsd.item.show(muted ? "volume-muted" : "", "", String(muted ? 0 : pct), "100", "", "1200");
+    }
+
+    Loader {
+        id: omarchyOsd
+        active: Appearance.isRetro
+        source: Qt.resolvedUrl("../omarchyOsd/Osd.qml")
     }
 
     Timer {

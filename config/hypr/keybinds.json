@@ -1236,5 +1236,39 @@
     "is_default": false,
     "enabled": true,
     "is_modified": false
+  },
+  {
+    "id": "custom_1792988610_71",
+    "category": "Lanzadores",
+    "description": "Aplicaciones (cuadrícula Apps de Omarchy en Retro)",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "SPACE",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/app-launcher.sh apps",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "is_modified": false
+  },
+  {
+    "id": "custom_1792989948_72",
+    "category": "Ventanas",
+    "description": "Minimizar al dock (Omarchy, en workspaces sin mosaico)",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "M",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/omarchy-shims/omarchy-hyprland-window-minimize",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "is_modified": false
   }
 ]

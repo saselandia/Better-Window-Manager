@@ -39,6 +39,89 @@ ContentPage {
         onExited: pluginCatalog.running = true
     }
 
+    // Retro: Omarchy's fixed widgets on the right of the bar, each one can be hidden
+    readonly property var retroRightWidgets: [
+        { id: "omarchy.media", name: "Multimedia (lo que suena, de Omarchy)", icon: "music_note", hiddenByDefault: true },
+        { id: "omarchy.system-update", name: "Actualizaciones (Portage, Flatpak y BWM; sólo si hay)", icon: "system_update" },
+        { id: "omarchy.tray", name: "Bandeja del sistema", icon: "apps" },
+        { id: "omarchy.keyboard-layout", name: "Distribución de teclado (sólo con varias)", icon: "keyboard" },
+        { id: "omarchy.agents", name: "Agentes de IA (uso de Claude, Codex…)", icon: "smart_toy" },
+        { id: "omarchy.tailscale", name: "Tailscale (sólo si está instalado)", icon: "vpn_lock" },
+        { id: "omarchy.bluetooth", name: "Bluetooth", icon: "bluetooth" },
+        { id: "omarchy.network", name: "Red", icon: "wifi" },
+        { id: "omarchy.audio", name: "Audio", icon: "volume_up" },
+        { id: "omarchy.monitor", name: "Pantallas", icon: "monitor" },
+        { id: "omarchy.power", name: "Energía", icon: "power_settings_new" }
+    ]
+    function rightWidgetShown(id) {
+        if ((omarchyLayout.disabled ?? []).includes(id))
+            return false;
+        const w = retroRightWidgets.find(x => x.id === id);
+        return !(w && w.hiddenByDefault) || (omarchyLayout.shown ?? []).includes(id);
+    }
+
+    // Retro: language of Omarchy's shell (~/.config/omarchy/language, watched by Commons/I18n.qml),
+    // English or Omarchy's Spanish (es-MX); vendored in Commons/omarchy/default/i18n
+    FileView {
+        id: omarchyLanguageFile
+        path: Quickshell.env("HOME") + "/.config/omarchy/language"
+        printErrors: false
+        watchChanges: true
+        onFileChanged: reload()
+    }
+    readonly property string omarchyLanguage: (omarchyLanguageFile.text() || "en").trim() || "en"
+
+    ContentSection {
+        visible: Appearance.isRetro
+        icon: "translate"
+        title: Translation.tr("Omarchy panels language")
+
+        StyledText {
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+            color: Appearance.colors.colSubtext
+            text: Translation.tr("Language of Omarchy's bar panels, menu, dock, OSD, polkit dialog and reminders.")
+        }
+
+        ConfigSelectionArray {
+            currentValue: omarchyLanguage
+            onSelected: newValue => {
+                omarchyLanguageFile.setText(newValue + "\n");
+            }
+            options: [
+                { displayName: "English", icon: "language", value: "en" },
+                { displayName: "Español (México)", icon: "language", value: "es-MX" }
+            ]
+        }
+    }
+
+    ContentSection {
+        visible: Appearance.isRetro
+        icon: "view_week"
+        title: Translation.tr("Right side of the bar")
+
+        StyledText {
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+            color: Appearance.colors.colSubtext
+            text: Translation.tr("Omarchy's widgets on the right of the Retro bar, in their order. Turn off the ones you do not want.")
+        }
+
+        Repeater {
+            model: retroRightWidgets
+            delegate: ConfigSwitch {
+                required property var modelData
+                buttonIcon: modelData.icon
+                text: modelData.name
+                checked: rightWidgetShown(modelData.id)
+                onClicked: {
+                    pluginToggle.command = [pluginScript, rightWidgetShown(modelData.id) ? "hide" : "show", modelData.id];
+                    pluginToggle.running = true;
+                }
+            }
+        }
+    }
+
     ContentSection {
         visible: Appearance.isRetro
         icon: "extension"

@@ -4,12 +4,15 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Services.Polkit
+import qs.modules.common
 
 Singleton {
     id: root
-    property alias agent: polkitAgent
-    property alias active: polkitAgent.isActive
-    property alias flow: polkitAgent.flow
+    // Not in Retro: there Omarchy's own agent (modules/ii/omarchyPolkit) is the session's one, and
+    // polkit only lets one agent register
+    readonly property var agent: agentLoader.item
+    readonly property bool active: agentLoader.item?.isActive ?? false
+    readonly property var flow: agentLoader.item?.flow ?? null
     property bool interactionAvailable: false
     property string cleanMessage: {
         if (!root.flow) return "";
@@ -40,10 +43,13 @@ Singleton {
         }
     }
 
-    PolkitAgent {
-        id: polkitAgent
-        onAuthenticationRequestStarted: {
-            root.interactionAvailable = true;
+    LazyLoader {
+        id: agentLoader
+        active: Config.ready && !Appearance.isRetro
+        PolkitAgent {
+            onAuthenticationRequestStarted: {
+                root.interactionAvailable = true;
+            }
         }
     }
 }

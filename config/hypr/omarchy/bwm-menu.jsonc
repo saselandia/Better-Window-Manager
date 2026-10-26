@@ -12,7 +12,7 @@
   // Sólo se admiten comentarios de línea completa con //.
 
   // Raíz
-  "apps": {"icon":"󰀻","label":"Apps","aliases":["app","applications","aplicaciones"],"provider":"apps"},
+  "apps": {"icon":"󰀻","label":"Apps","aliases":["app","applications","aplicaciones"],"provider":"apps","action":"qs -c ii ipc call omarchy.dock apps || qs -c ii ipc call omarchyApps open"},
   "learn": {"icon":"󰧑","label":"Aprender","aliases":["learn"]},
   "trigger": {"icon":"󱓞","label":"Acciones","aliases":["trigger"]},
   "appearance": {"icon":"󰏘","label":"Estilo","aliases":["style","appearance","estilo"]},
@@ -68,6 +68,10 @@
   "appearance.style": {"icon":"","label":"Más estilo (Ajustes)","description":"Fuente, glass, salvapantallas, arranque","action":"SETTINGS_PAGE=style ~/.config/hypr/scripts/open-settings.sh"},
 
   // Acciones
+  "trigger.reminder": {"icon":"󰢌","label":"Recordatorio","aliases":["reminder","recordatorio"]},
+  "trigger.reminder.set": {"icon":"󰢌","label":"Poner uno","aliases":["reminder-set","remind"],"action":"omarchy-reminder -i"},
+  "trigger.reminder.show": {"icon":"󰢌","label":"Ver todos","action":"omarchy-reminder show"},
+  "trigger.reminder.clear": {"icon":"󰢌","label":"Borrar todos","action":"omarchy-reminder clear"},
   "trigger.capture": {"icon":"","label":"Capturar","aliases":["capture","screenshot","screenrecord","screen-record","screenrecording"]},
   "trigger.capture.screenshot": {"icon":"","label":"Captura de pantalla","action":"sleep 0.2; qs -c ii ipc call region screenshot"},
   "trigger.capture.screenrecord.stop": {"icon":"","label":"Detener grabación","when":"omarchy-capture-screenrecording --status","action":"omarchy-capture-screenrecording --stop-recording"},

@@ -1,0 +1,15 @@
+#!/bin/bash
+# BWM stand-in for Omarchy's omarchy-hyprland-window-minimize [address] (Super+M): minimize to the dock,
+# only on workspaces where the dock shows (no tiled windows), with BWM's minimize (workspace 99,
+# geometry kept; the dock and the Plasma taskbar bring it back).
+if [[ -n ${1:-} ]]; then
+  address=$1
+  ws=$(hyprctl clients -j | jq -r --arg a "$address" 'first(.[] | select(.address == $a) | .workspace.id) // empty')
+else
+  read -r address ws < <(hyprctl activewindow -j | jq -r '"\(.address // "") \(.workspace.id // "")"')
+fi
+[[ -n $address && $ws =~ ^[0-9]+$ ]] || exit 1
+# Only with the dock on (Settings → Interface → Dock, Retro) and where it shows: it is how it comes back
+qs -c ii ipc show 2>/dev/null | grep -q '^target omarchy.dock$' || exit 0
+[[ $(omarchy-hyprland-workspace-layout-current "$ws") == floating ]] || exit 0
+exec "$HOME/.config/hypr/scripts/toggle-minimize.py" min "$address"

@@ -1,0 +1,31 @@
+#!/bin/bash
+# BWM (Gentoo) stand-in for Omarchy's omarchy-update-available: lists what can be updated and exits 0
+# when there is something. The Retro bar's update widget (bar/omarchy/system-update) runs it every 6 h.
+#   - Portage: packages of @world with a newer version in the synced tree (emerge --pretend, no root)
+#   - Flatpak: apps and runtimes with updates
+#   - BWM: commits on origin/main not yet in the repo
+updates=()
+
+if command -v emerge >/dev/null 2>&1; then
+  n=$(timeout 180 emerge --pretend --quiet --update --deep --newuse @world 2>/dev/null | grep -c '^\[ebuild')
+  (( n > 0 )) && updates+=("Portage: $n paquetes")
+fi
+
+if command -v flatpak >/dev/null 2>&1; then
+  n=$(timeout 60 flatpak remote-ls --updates 2>/dev/null | grep -c .)
+  (( n > 0 )) && updates+=("Flatpak: $n actualizaciones")
+fi
+
+repo="$(cd "$(dirname "$(readlink -f "$HOME/.config/hypr")")/.." 2>/dev/null && pwd)"
+if [[ -d $repo/.git ]]; then
+  GIT_TERMINAL_PROMPT=0 timeout 15 git -C "$repo" fetch --quiet origin 2>/dev/null || true
+  n=$(git -C "$repo" rev-list --count HEAD..origin/main 2>/dev/null || echo 0)
+  (( n > 0 )) && updates+=("BWM: $n commits nuevos en origin/main")
+fi
+
+if (( ${#updates[@]} > 0 )); then
+  printf '%s\n' "${updates[@]}"
+  exit 0
+fi
+echo "Todo está al día"
+exit 1

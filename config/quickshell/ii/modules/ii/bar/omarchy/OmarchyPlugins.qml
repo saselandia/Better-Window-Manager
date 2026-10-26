@@ -32,7 +32,10 @@ Singleton {
         return root.services[String(id || "")] ?? null;
     }
     function firstPartyServiceFor(id) {
-        return null; // BWM has its own equivalents of omarchy.* services
+        // omarchy.media (MPRIS, for the bar's media widget); BWM has its own equivalents of the rest
+        if (String(id) === "omarchy.media")
+            return mediaServiceLoader.item;
+        return null;
     }
     function summon(id, payloadJson) {
         const strId = String(id || "");
@@ -67,6 +70,11 @@ Singleton {
             if (imagePickerLoader.item) imagePickerLoader.item.open(payloadJson);
             else imagePickerLoader.loaded.connect(function() { imagePickerLoader.item.open(payloadJson); });
             return true;
+        } else if (normId === "omarchy.reminders") {
+            if (!remindersLoader.item) remindersLoader.active = true;
+            if (remindersLoader.item) remindersLoader.item.open(payloadJson);
+            else remindersLoader.loaded.connect(function() { remindersLoader.item.open(payloadJson); });
+            return true;
         }
         console.info(`[OmarchyPlugins] ${id} is an unknown overlay`);
         return false;
@@ -92,6 +100,9 @@ Singleton {
             return true;
         } else if (normId === "omarchy.image-picker" || normId === "omarchy.image-selector") {
             imagePickerLoader.item?.close();
+            return true;
+        } else if (normId === "omarchy.reminders") {
+            remindersLoader.item?.close();
             return true;
         }
         return false;
@@ -307,6 +318,27 @@ Singleton {
         onLoaded: {
             item.shell = root;
             item.manifest = { id: "omarchy.emojis" };
+        }
+    }
+
+    // Omarchy's media service (shell/plugins/services/media, MIT): players, active one, IPC `media`
+    Loader {
+        id: mediaServiceLoader
+        active: true
+        source: Qt.resolvedUrl("media/Service.qml")
+        onLoaded: {
+            item.shell = root;
+        }
+    }
+
+    // Omarchy's interactive reminder flow (omarchy-reminder -i), from shell/plugins/reminders (MIT)
+    Loader {
+        id: remindersLoader
+        active: false
+        source: Qt.resolvedUrl("reminders/ReminderFlow.qml")
+        onLoaded: {
+            item.shell = root;
+            item.manifest = { id: "omarchy.reminders" };
         }
     }
 

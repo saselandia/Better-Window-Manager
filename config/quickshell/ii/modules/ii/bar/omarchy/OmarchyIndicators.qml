@@ -39,6 +39,32 @@ Row {
         onTriggered: recordingProbe.running = true
     }
 
+    // Reminders (omarchy-reminder, Omarchy's bar/indicators/Reminder.qml): count of active timers
+    property int reminderCount: 0
+    property string reminderTip: ""
+    Process {
+        id: reminderProbe
+        command: ["omarchy-reminder", "show", "--json"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const d = JSON.parse(text);
+                    root.reminderCount = Number(d.count || 0);
+                    root.reminderTip = String(d.tooltip || "");
+                } catch (e) {
+                    root.reminderCount = 0;
+                }
+            }
+        }
+    }
+    Timer {
+        interval: 15000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: reminderProbe.running = true
+    }
+
     HoverHandler { id: hover }
 
     Repeater {
@@ -50,7 +76,9 @@ Row {
             { glyph: "󰂛", active: Notifications.silent, urgent: false, tip: "Do not disturb",
               run: () => { Notifications.silent = !Notifications.silent; } },
             { glyph: "", active: Idle.inhibit, urgent: false, tip: "Stay awake",
-              run: () => Idle.toggleInhibit() }
+              run: () => Idle.toggleInhibit() },
+            { glyph: "󰢌", active: root.reminderCount > 0, urgent: false, tip: root.reminderTip || "Reminder",
+              run: () => Quickshell.execDetached(["omarchy-reminder", root.reminderCount > 0 ? "show" : "-i"]) }
         ]
 
         delegate: MouseArea {

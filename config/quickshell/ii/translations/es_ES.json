@@ -871,5 +871,10 @@
   "None installed": "Ninguno instalado",
   "Omarchy plugins": "Plugins de Omarchy",
   "Widgets from Omarchy's shell in the Retro bar. More: ~/.config/hypr/scripts/bwm-plugin.sh add <git-url>": "Widgets del shell de Omarchy en la barra Retro. Más: ~/.config/hypr/scripts/bwm-plugin.sh add <url-git>",
-  "installed": "instalado"
+  "installed": "instalado",
+  "Right side of the bar": "Parte derecha de la barra",
+  "Omarchy's widgets on the right of the Retro bar, in their order. Turn off the ones you do not want.": "Los widgets de Omarchy a la derecha de la barra Retro, en su orden. Desactiva los que no quieras.",
+  "Omarchy dock (on workspaces without tiled windows)": "Dock de Omarchy (en workspaces sin ventanas en mosaico)",
+  "Omarchy panels language": "Idioma de los paneles de Omarchy",
+  "Language of Omarchy's bar panels, menu, dock, OSD, polkit dialog and reminders.": "Idioma de los paneles de la barra, el menú, el dock, el OSD, el diálogo de polkit y los recordatorios de Omarchy."
 }

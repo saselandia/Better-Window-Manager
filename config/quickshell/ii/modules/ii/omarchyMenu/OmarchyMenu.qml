@@ -40,6 +40,19 @@ Scope {
         shell: shellApi
     }
 
+    // Omarchy's "Apps" launcher (Super+Alt+Space, the menu's Apps entry): every app on a grid
+    OM.AppGrid {
+        id: appGrid
+        appLibrary: appLibrary
+    }
+
+    IpcHandler {
+        target: "omarchyApps"
+        function toggle(): void { appGrid.toggle(); }
+        function open(): void { appGrid.open(); }
+        function close(): void { appGrid.close(); }
+    }
+
     IpcHandler {
         target: "omarchyMenu"
         function toggle(): void {

@@ -26,7 +26,6 @@ ApplicationWindow {
     id: root
     property string filterText: ""
     property var pages: [
-        { id: "quick", name: "Ajustes rápidos", icon: "preferences-desktop-theme-global", keywords: "quick rapido tema estilo skin", component: "modules/settings/QuickConfig.qml" },
         { id: "general", name: "General", icon: "preferences-system", keywords: "general audio bateria idioma", component: "modules/settings/GeneralConfig.qml" },
         { id: "bar", name: "Barra de tareas", icon: "preferences-desktop-plasma", keywords: "bar panel barra flotante opaco transparente iconos centrados", component: "modules/settings/PlasmaBarConfig.qml" },
         { id: "background", name: "Fondo de escritorio", icon: "preferences-desktop-wallpaper", keywords: "background wallpaper fondo", component: "modules/settings/BackgroundConfig.qml" },

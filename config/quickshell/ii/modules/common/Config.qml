@@ -340,7 +340,8 @@ Singleton {
             }
 
             property JsonObject dock: JsonObject {
-                property bool enable: false
+                property bool enable: false // BWM's dock (Default/Plasma; not loaded in Retro)
+                property bool omarchy: false // Retro: Omarchy's dock (modules/ii/omarchyDock), off by default
                 property bool monochromeIcons: true
                 property real height: 60
                 property real hoverRegionHeight: 2
