@@ -18,7 +18,7 @@
   "appearance": {"icon":"󰏘","label":"Estilo","aliases":["style","appearance","estilo"]},
   "setup": {"icon":"","label":"Ajustes","aliases":["settings","setup","ajustes"]},
   "update": {"icon":"","label":"Actualizar","aliases":["update","restart","refresh"]},
-  "about": {"icon":"","label":"Acerca de","when":"command -v fastfetch >/dev/null","action":"~/.config/hypr/scripts/bwm-terminal --class org.omarchy.about -- bash -c 'fastfetch; read -rsn1'"},
+  "about": {"icon":"","label":"Acerca de","when":"command -v fastfetch >/dev/null","action":"~/.config/hypr/scripts/omarchy-shims/omarchy-launch-about"},
   "system": {"icon":"","label":"Sistema","aliases":["power-menu","system","power"]},
 
   // Sistema

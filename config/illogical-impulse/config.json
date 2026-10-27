@@ -238,6 +238,7 @@
     "hoverToReveal": true,
     "ignoredAppRegexes": [],
     "monochromeIcons": true,
+    "omarchy": false,
     "pinnedApps": [
       "org.kde.dolphin",
       "kitty"

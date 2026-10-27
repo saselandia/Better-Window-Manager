@@ -248,6 +248,10 @@ Item {
     Slot {
         id: centerEndPlugins
         section: "centerEnd"
+        // Multimedia follows the clock and shrinks before it reaches the status icons.
+        maxWidth: Math.max(0, root.width - root.edgeMargin - statusSlot.width
+            - (root.clockItem.x + root.clockItem.width) - 12)
+        widthBudget: maxWidth
         anchors.left: root.clockItem.right
         anchors.verticalCenter: parent.verticalCenter
     }

@@ -1,11 +1,11 @@
 #!/bin/bash
-# omarchy-theme-list for BWM Retro mode
-echo "dynamic"
-THEMES_DIR="$HOME/.config/hypr/omarchy/themes"
-if [[ -d "$THEMES_DIR" ]]; then
-  for d in "$THEMES_DIR"/*; do
-    if [[ -d "$d" && -f "$d/colors.toml" ]]; then
-      basename "$d"
-    fi
-  done | sort
-fi
+# Bundled and community themes from the same catalog as BWM's renderer.
+exec python3 - <<'PYTHON'
+from pathlib import Path
+import sys
+sys.path.insert(0, str(Path.home() / '.config/hypr/scripts'))
+import bwm_omarchy
+print('dynamic')
+for theme in bwm_omarchy.list_omarchy_themes():
+    print(theme['id'])
+PYTHON

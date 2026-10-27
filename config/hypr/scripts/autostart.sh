@@ -175,6 +175,9 @@ if ! pgrep -f 'window-guard.py watch' >/dev/null 2>&1; then
     python3 "$HOME/.config/hypr/scripts/window-guard.py" watch >/dev/null 2>&1 &
 fi
 
+# 9c. Luz nocturna: vuelve a aplicar el estado guardado (hyprsunset o shader, nightlight.py)
+python3 "$HOME/.config/hypr/scripts/nightlight.py" --apply >/dev/null 2>&1 &
+
 # 10. Asegurar que las pantallas abran en Workspace 1 (Principal 1080p) y Workspace 10 (Secundario 4K)
 (
     sleep 3.5

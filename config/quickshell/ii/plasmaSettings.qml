@@ -36,9 +36,10 @@ ApplicationWindow {
         { id: "display", name: "Pantalla y monitor", icon: "preferences-desktop-display-randr", keywords: "display pantalla monitor resolucion", component: "modules/settings/DisplayConfig.qml" },
         { id: "workspaces", name: "Escritorios virtuales", icon: "preferences-desktop-virtual", keywords: "workspaces escritorios", component: "modules/settings/WorkspaceConfig.qml" },
         { id: "defaultapps", name: "Aplicaciones predeterminadas", icon: "preferences-desktop-default-applications", keywords: "default apps aplicaciones predeterminadas terminal navegador browser archivos editor gestor de tareas task manager", component: "modules/settings/DefaultAppsConfig.qml" },
+        { id: "plugins", name: "Plugins", icon: "preferences-plugin", keywords: "plugins omarchy extensiones widgets instalar catalogo", component: "modules/settings/PluginsConfig.qml" },
+        { id: "themes", name: "Temas", icon: "preferences-desktop-theme", keywords: "temas themes omarchy paleta colores instalar catalogo", component: "modules/settings/ThemesConfig.qml" },
         { id: "style", name: "Estilo", icon: "preferences-desktop-font", keywords: "style estilo fonts fuentes tipografia glass translucido salvapantallas screensaver arranque plymouth sddm", component: "modules/settings/StyleConfig.qml" },
         { id: "cursor", name: "Cursores", icon: "preferences-desktop-cursors", keywords: "cursor raton", component: "modules/settings/CursorConfig.qml" },
-        { id: "advanced", name: "Avanzado", icon: "preferences-other", keywords: "advanced avanzado", component: "modules/settings/AdvancedConfig.qml" },
         { id: "about", name: "Acerca de este sistema", icon: "hwinfo", keywords: "about acerca info", component: "modules/settings/About.qml" }
     ]
     readonly property var visiblePages: {

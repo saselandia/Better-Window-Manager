@@ -75,6 +75,18 @@ ApplicationWindow {
             component: "modules/settings/DefaultAppsConfig.qml"
         },
         {
+            id: "plugins",
+            name: "Plugins",
+            icon: "extension",
+            component: "modules/settings/PluginsConfig.qml"
+        },
+        {
+            id: "themes",
+            name: "Temas",
+            icon: "palette",
+            component: "modules/settings/ThemesConfig.qml"
+        },
+        {
             name: Translation.tr("Style"),
             icon: "font_download",
             component: "modules/settings/StyleConfig.qml"
@@ -85,11 +97,7 @@ ApplicationWindow {
             component: "modules/settings/CursorConfig.qml"
         },
         {
-            name: Translation.tr("Advanced"),
-            icon: "construction",
-            component: "modules/settings/AdvancedConfig.qml"
-        },
-        {
+            id: "about",
             name: Translation.tr("About"),
             icon: "info",
             component: "modules/settings/About.qml"
@@ -198,7 +206,7 @@ ApplicationWindow {
                 id: navRailWrapper
                 Layout.fillHeight: true
                 Layout.margins: 5
-                implicitWidth: navRail.expanded ? 160 : fab.baseSize
+                implicitWidth: navRail.expanded ? 220 : fab.baseSize
                 Behavior on implicitWidth {
                     animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                 }

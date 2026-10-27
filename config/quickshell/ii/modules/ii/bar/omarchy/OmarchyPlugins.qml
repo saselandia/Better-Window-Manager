@@ -212,7 +212,8 @@ Singleton {
         const wanted = {};
         const disabled = root.layout.disabled ?? [];
         for (const p of root.plugins) {
-            if (p.service && !disabled.includes(p.id))
+            if (p.service && !disabled.includes(p.id)
+                    && (p.builtin || root.isEnabled(p.id)))
                 wanted[p.id] = p.service;
         }
         const next = {};

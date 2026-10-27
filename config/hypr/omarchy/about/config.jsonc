@@ -1,0 +1,167 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "type": "file",
+    "source": "~/.config/hypr/omarchy/about/icon.txt",
+    "color": {
+      "1": "green"
+    },
+    "padding": {
+      "top": 2,
+      "right": 6,
+      "left": 2
+    }
+  },
+  "display": {
+    "disableLinewrap": true
+  },
+  "modules": [
+    "break",
+    "break",
+    {
+      "type": "custom",
+      "format": "\u001b[90m┌──────────────────────Hardware──────────────────────┐"
+    },
+    {
+      "type": "command",
+      "key": " PC",
+      "keyColor": "green",
+      "text": "\"$HOME/.config/hypr/scripts/bwm-about-data.py\" host"
+    },
+    {
+      "type": "cpu",
+      "key": "│ ├",
+      "showPeCoreCount": true,
+      "keyColor": "green"
+    },
+    {
+      "type": "gpu",
+      "key": "│ ├",
+      "detectionMethod": "pci",
+      "format": "{name}",
+      "keyColor": "green"
+    },
+    {
+      "type": "display",
+      "key": "│ ├󱄄",
+      "keyColor": "green"
+    },
+    {
+      "type": "disk",
+      "key": "│ ├󰋊",
+      "keyColor": "green"
+    },
+    {
+      "type": "memory",
+      "key": "│ ├",
+      "keyColor": "green"
+    },
+    {
+      "type": "swap",
+      "key": "└ └󰓡",
+      "keyColor": "green"
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[90m└────────────────────────────────────────────────────┘"
+    },
+    "break",
+    {
+      "type": "custom",
+      "format": "\u001b[90m┌──────────────────────Software──────────────────────┐"
+    },
+    {
+      "type": "os",
+      "key": " OS",
+      "keyColor": "blue"
+    },
+    {
+      "type": "command",
+      "key": "│ ├󰘬",
+      "keyColor": "blue",
+      "text": "\"$HOME/.config/hypr/scripts/bwm-about-data.py\" revision"
+    },
+    {
+      "type": "command",
+      "key": "│ ├󰔫",
+      "keyColor": "blue",
+      "text": "\"$HOME/.config/hypr/scripts/bwm-about-data.py\" skin"
+    },
+    {
+      "type": "kernel",
+      "key": "│ ├",
+      "keyColor": "blue"
+    },
+    {
+      "type": "command",
+      "key": "│ ├",
+      "keyColor": "blue",
+      "text": "\"$HOME/.config/hypr/scripts/bwm-about-data.py\" wm"
+    },
+    {
+      "type": "command",
+      "key": " DE",
+      "keyColor": "blue",
+      "text": "printf BWM"
+    },
+    {
+      "type": "terminal",
+      "key": "│ ├",
+      "keyColor": "blue"
+    },
+    {
+      "type": "packages",
+      "key": "│ ├󰏖",
+      "keyColor": "blue"
+    },
+    {
+      "type": "command",
+      "key": "│ ├󰉼",
+      "keyColor": "blue",
+      "text": "\"$HOME/.config/hypr/scripts/bwm-about-data.py\" skin"
+    },
+    {
+      "type": "command",
+      "key": "│ ├󰸌",
+      "keyColor": "blue",
+      "text": "theme=$(\"$HOME/.config/hypr/scripts/bwm-about-data.py\" theme); printf \"%s \\033[38m●\\033[37m●\\033[36m●\\033[35m●\\033[34m●\\033[33m●\\033[32m●\\033[31m●\\033[0m\\n\" \"$theme\""
+    },
+    {
+      "type": "terminalfont",
+      "key": "└ └",
+      "keyColor": "blue"
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[90m└────────────────────────────────────────────────────┘"
+    },
+    "break",
+    {
+      "type": "custom",
+      "format": "\u001b[90m┌────────────────Age / Uptime / Update───────────────┐"
+    },
+    {
+      "type": "command",
+      "key": "󱦟 OS Age",
+      "keyColor": "magenta",
+      "text": "\"$HOME/.config/hypr/scripts/bwm-about-data.py\" age"
+    },
+    {
+      "type": "command",
+      "key": "󱫐 Uptime",
+      "keyColor": "magenta",
+      "text": "\"$HOME/.config/hypr/scripts/bwm-about-data.py\" uptime"
+    },
+    {
+      "type": "command",
+      "key": " Update",
+      "keyColor": "magenta",
+      "text": "\"$HOME/.config/hypr/scripts/bwm-about-data.py\" update"
+    },
+    {
+      "type": "custom",
+      "format": "\u001b[90m└────────────────────────────────────────────────────┘"
+    },
+    "break"
+  ]
+}

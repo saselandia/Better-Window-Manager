@@ -97,6 +97,6 @@
         "match": {
             "class": "^virt\\-manager$"
         },
-        "float": false
+        "float": true
     }
 }

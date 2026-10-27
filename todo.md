@@ -1,6 +1,6 @@
 # BWM — funciones portadas y pendientes
 
-Revisado el 2026-10-26. Estado actual y detalle técnico en `BWM_CONTEXT.md` §2;
+Revisado el 2026-10-27. Estado actual y detalle técnico en `BWM_CONTEXT.md` §2;
 las reglas para asistentes están en `AGENTS.md` y `CLAUDE.md`.
 
 ## Completado
@@ -23,6 +23,11 @@ las reglas para asistentes están en `AGENTS.md` y `CLAUDE.md`.
   reinicios de apps conservando sus ventanas (§3.34–36).
 - [x] Stremio Web con CSS en vivo opcional; Steam con Adwaita-for-Steam y barra
   Retro usando el fondo base (§3.40–42; alcance en `docs/STREMIO_THEMING.md`).
+
+- [x] Ajustes → Temas y Plugins en páginas separadas: miniaturas/paletas, activación
+  y posición, filtros, catálogos con paginación e instalación por Git (§3.45–46).
+- [x] About propio de BWM, distro autodetectada y enlaces del proyecto; Advanced
+  retirado de ambas apps de Ajustes (§3.46).
 
 ## Pendiente de Omarchy
 

@@ -93,9 +93,11 @@ Panel {
     onRunningChanged: if (!running) root.refresh()
   }
 
-  function toggleNightlight(on) {
+  // ToggleSwitch.toggled() carries no value: flip the shown state and ask for it explicitly
+  function toggleNightlight() {
+    const on = !root.nightlightEnabled
     root.nightlightEnabled = on
-    nightlightActionProc.command = ["omarchy-toggle-nightlight"]
+    nightlightActionProc.command = ["omarchy-toggle-nightlight", on ? "--on" : "--off"]
     nightlightActionProc.running = true
   }
 
@@ -766,7 +768,7 @@ Panel {
                 anchors.rightMargin: Style.space(6)
                 anchors.verticalCenter: parent.verticalCenter
                 checked: root.nightlightEnabled
-                onToggled: function(on) { root.toggleNightlight(on) }
+                onToggled: root.toggleNightlight()
               }
             }
 

@@ -1,0 +1,5 @@
+module qs.modules.settings.addons
+
+AddonManager 1.0 AddonManager.qml
+AddonBrowser 1.0 AddonBrowser.qml
+AddonPage 1.0 AddonPage.qml

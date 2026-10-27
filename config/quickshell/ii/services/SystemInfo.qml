@@ -4,15 +4,18 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "SystemInfoData.js" as OsRelease
 
 /**
  * Provides some system info: distro, username.
  */
 Singleton {
     id: root
-    property string distroName: "Unknown"
+    property string distroName: "Linux"
     property string distroId: "unknown"
     property string distroIcon: "linux-symbolic"
+    property string distroVersion: ""
+    property bool distroReady: false
     property string username: "user"
     property string homeUrl: ""
     property string documentationUrl: ""
@@ -23,72 +26,25 @@ Singleton {
     property string desktopEnvironment: ""
     property string windowingSystem: ""
 
-    Timer {
-        triggeredOnStart: true
-        interval: 1
-        running: true
-        repeat: false
-        onTriggered: {
-            getUsername.running = true
-            fileOsRelease.reload()
-            const textOsRelease = fileOsRelease.text()
-
-            // Extract the friendly name (PRETTY_NAME field, fallback to NAME)
-            const prettyNameMatch = textOsRelease.match(/^PRETTY_NAME="(.+?)"/m)
-            const nameMatch = textOsRelease.match(/^NAME="(.+?)"/m)
-            distroName = prettyNameMatch ? prettyNameMatch[1] : (nameMatch ? nameMatch[1].replace(/Linux/i, "").trim() : "Unknown")
-
-            // Extract the ID
-            const idMatch = textOsRelease.match(/^ID="?(.+?)"?$/m)
-            distroId = idMatch ? idMatch[1] : "unknown"
-
-            // Extract additional URLs and logo
-            const homeUrlMatch = textOsRelease.match(/^HOME_URL="(.+?)"/m)
-            homeUrl = homeUrlMatch ? homeUrlMatch[1] : ""
-            const documentationUrlMatch = textOsRelease.match(/^DOCUMENTATION_URL="(.+?)"/m)
-            documentationUrl = documentationUrlMatch ? documentationUrlMatch[1] : ""
-            const supportUrlMatch = textOsRelease.match(/^SUPPORT_URL="(.+?)"/m)
-            supportUrl = supportUrlMatch ? supportUrlMatch[1] : ""
-            const bugReportUrlMatch = textOsRelease.match(/^BUG_REPORT_URL="(.+?)"/m)
-            bugReportUrl = bugReportUrlMatch ? bugReportUrlMatch[1] : ""
-            const privacyPolicyUrlMatch = textOsRelease.match(/^PRIVACY_POLICY_URL="(.+?)"/m)
-            privacyPolicyUrl = privacyPolicyUrlMatch ? privacyPolicyUrlMatch[1] : ""
-            const logoFieldMatch = textOsRelease.match(/^LOGO="?(.+?)"?$/m)
-            logo = logoFieldMatch ? logoFieldMatch[1] : ""
-
-            // Update the distroIcon property based on distroId
-            switch (distroId) {
-                case "artix":
-                case "arch": distroIcon = "arch-symbolic"; break;
-                case "manjaro": distroIcon = "manjaro-symbolic"; break;
-                case "endeavouros": distroIcon = "endeavouros-symbolic"; break;
-                case "cachyos": distroIcon = "cachyos-symbolic"; break;
-                case "nixos": distroIcon = "nixos-symbolic"; break;
-                case "fedora": distroIcon = "fedora-symbolic"; break;
-                case "linuxmint":
-                case "ubuntu":
-                case "zorin":
-                case "popos": distroIcon = "ubuntu-symbolic"; break;
-                case "debian":
-                case "raspbian":
-                case "kali": distroIcon = "debian-symbolic"; break;
-                case "funtoo":
-                case "gentoo": distroIcon = "gentoo-symbolic"; break;
-                default: distroIcon = "linux-symbolic"; break;
-            }
-            if (textOsRelease.toLowerCase().includes("nyarch")) {
-                distroIcon = "nyarch-symbolic"
-            }
-
-            if (logo.trim().length === 0) {
-                logo = distroIcon
-            }
-
-        }
+    function applyOsRelease(text) {
+        const info = OsRelease.parse(text);
+        root.distroName = info.PRETTY_NAME || info.NAME || "Linux";
+        root.distroId = info.ID || "linux";
+        root.distroVersion = info.VERSION || info.VERSION_ID || "";
+        root.homeUrl = info.HOME_URL || "";
+        root.documentationUrl = info.DOCUMENTATION_URL || "";
+        root.supportUrl = info.SUPPORT_URL || "";
+        root.bugReportUrl = info.BUG_REPORT_URL || "";
+        root.privacyPolicyUrl = info.PRIVACY_POLICY_URL || "";
+        root.distroIcon = OsRelease.icon(root.distroId, info.ID_LIKE);
+        if (root.distroName.toLowerCase().includes("nyarch")) root.distroIcon = "nyarch-symbolic";
+        root.logo = info.LOGO || root.distroIcon;
+        root.distroReady = true;
     }
 
     Process {
         id: getUsername
+        running: true
         command: ["whoami"]
         stdout: SplitParser {
             onRead: data => {
@@ -114,5 +70,13 @@ Singleton {
     FileView {
         id: fileOsRelease
         path: "/etc/os-release"
+        watchChanges: true
+        printErrors: false
+        onLoaded: root.applyOsRelease(text())
+        onFileChanged: reload()
+        onLoadFailed: error => {
+            if (path !== "/usr/lib/os-release") path = "/usr/lib/os-release";
+            else root.applyOsRelease("");
+        }
     }
 }

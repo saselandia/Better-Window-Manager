@@ -112,7 +112,7 @@ hl.window_rule({
     match = {
         class = "^virt\\-manager$",
     },
-    float = false,
+    float = true,
 })
 
 return {}

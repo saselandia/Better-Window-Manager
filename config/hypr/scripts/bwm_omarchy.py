@@ -41,6 +41,8 @@ HOME = Path.home()
 CONFIG_DIR = HOME / ".config"
 ASSETS_DIR = CONFIG_DIR / "hypr" / "omarchy"
 THEMES_DIR = ASSETS_DIR / "themes"
+USER_THEMES_DIR = Path(os.environ.get("XDG_DATA_HOME", HOME / ".local" / "share")) / "bwm" / "omarchy-themes"
+LEGACY_THEMES_DIR = CONFIG_DIR / "omarchy" / "themes"
 STATE_DIR = HOME / ".local" / "state" / "bwm" / "omarchy"
 COLORS_TOML = STATE_DIR / "colors.toml"
 THEME_MODE_FILE = STATE_DIR / "theme.mode"
@@ -717,23 +719,50 @@ def set_retro_mode_state(mode: str, name: str):
     except Exception as e:
         print(f"[Warning] Error symlinking {OMARCHY_CURRENT_THEME_DIR}: {e}", file=sys.stderr)
 
+def theme_directory(name: str) -> Path:
+    """Resolve installed community themes and the bundled Omarchy themes alike."""
+    if not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._-]*", name) or name == "dynamic":
+        raise ValueError(f"Nombre de tema no válido: {name}")
+    for root in (USER_THEMES_DIR, LEGACY_THEMES_DIR, THEMES_DIR):
+        directory = root / name
+        if (directory / "colors.toml").is_file():
+            return directory
+    raise ValueError(f"Tema estático no encontrado: {name}")
+
+
 def list_omarchy_themes() -> list[dict]:
-    """Returns list of curated themes with their metadata."""
-    themes = []
-    if not THEMES_DIR.is_dir():
-        return themes
-    for entry in sorted(THEMES_DIR.iterdir()):
-        if entry.is_dir() and (entry / "colors.toml").is_file():
+    """Bundled and user-installed themes, with the same precedence as theme_directory."""
+    themes = {}
+    for root in (THEMES_DIR, LEGACY_THEMES_DIR, USER_THEMES_DIR):
+        # This installation's legacy path is a symlink to the bundled themes.
+        if root == LEGACY_THEMES_DIR and root.resolve() == THEMES_DIR.resolve():
+            continue
+        if not root.is_dir():
+            continue
+        for entry in sorted(root.iterdir()):
+            if entry.name.startswith(".") or not entry.is_dir() or not (entry / "colors.toml").is_file():
+                continue
             preview = entry / "preview.png"
             bg_dir = entry / "backgrounds"
-            themes.append({
+            try:
+                colors = tomllib.loads((entry / "colors.toml").read_text())
+            except (OSError, ValueError):
+                continue
+            try:
+                source = json.loads((entry / ".bwm-source.json").read_text()).get("url", "")
+            except (OSError, ValueError, AttributeError):
+                source = ""
+            themes[entry.name] = {
                 "id": entry.name,
                 "name": entry.name.replace("-", " ").title(),
                 "path": str(entry),
                 "preview": str(preview) if preview.is_file() else "",
-                "backgrounds_dir": str(bg_dir) if bg_dir.is_dir() else ""
-            })
-    return themes
+                "backgrounds_dir": str(bg_dir) if bg_dir.is_dir() else "",
+                "builtin": root.resolve() == THEMES_DIR.resolve(),
+                "url": source,
+                "colors": [colors.get(key, "#808080") for key in ("background", "foreground", "accent", "blue", "green", "red")]
+            }
+    return [themes[name] for name in sorted(themes)]
 
 def theme_mode(c: dict) -> str:
     """Light or dark, as omarchy-theme-color resolves it: the `mode` key, the legacy `theme_type`
@@ -920,7 +949,7 @@ def apply_retro_palette_colors(colors: dict, wallpaper: str = ""):
     # Every Omarchy app template (default/themed) into the theme directory, a static theme's own
     # files first; then each app's omarchy-theme-set-<app> step (bwm_omarchy_apps)
     mode, name = get_retro_mode()
-    static_dir = THEMES_DIR / name if mode == "static" and (THEMES_DIR / name).is_dir() else None
+    static_dir = theme_directory(name) if mode == "static" else None
     try:
         bwm_omarchy_apps.render_theme_dir(colors, render_omarchy, static_dir)
         _write_if_changed(bwm_omarchy_apps.THEME_DIR / "shell.toml",
@@ -998,9 +1027,7 @@ def _notify(body: str):
 
 def apply_retro_static_theme(theme_name: str, set_wallpaper: bool = True, notify: bool = False) -> dict:
     """Applies one of the curated static Omarchy themes."""
-    theme_dir = THEMES_DIR / theme_name
-    if not theme_dir.is_dir() or not (theme_dir / "colors.toml").is_file():
-        raise ValueError(f"Tema estático no encontrado: {theme_name}")
+    theme_dir = theme_directory(theme_name)
 
     try:
         with open(theme_dir / "colors.toml", "rb") as f:
@@ -1076,8 +1103,8 @@ def _bwm_theme() -> str:
 def set_theme(target: str):
     """omarchy-theme-set: a curated theme or "dynamic". Outside Retro the Retro palette would
     recolour every app of the active theme, so the choice is stored and BWM switches to Retro."""
-    if target != "dynamic" and not (THEMES_DIR / target / "colors.toml").is_file():
-        raise ValueError(f"Tema estático no encontrado: {target}")
+    if target != "dynamic":
+        theme_directory(target)
     if _bwm_theme() == "retro":
         if target == "dynamic":
             apply_retro_dynamic_theme(notify=True)
@@ -1087,7 +1114,7 @@ def set_theme(target: str):
     mode = "dynamic" if target == "dynamic" else "static"
     set_retro_mode_state(mode, target)
     update_retro_config_json(mode, target)
-    wp = _theme_wallpaper(THEMES_DIR / target) if mode == "static" else ""
+    wp = _theme_wallpaper(theme_directory(target)) if mode == "static" else ""
     if wp:
         (HOME / ".cache").mkdir(parents=True, exist_ok=True)
         (HOME / ".cache" / "current_wallpaper_retro").write_text(wp + "\n", encoding="utf-8")

@@ -77,11 +77,12 @@ enable_plugin() { # id [section]
   if [[ -z $section ]]; then
     # Como en el shell.json de Omarchy: Elsewhen y el tiempo justo después del reloj
     if [[ $id == omarchy.elsewhen || $id == omarchy.weather ]]; then section=centerEnd
-    elif [[ $id == crmne.mpris ]]; then section=center   # a la izquierda del reloj: a la derecha no cabe junto a omastats
+    elif [[ $id == crmne.mpris ]]; then section=centerEnd # a la derecha del reloj; la barra limita el ancho disponible
     else section=$(section_for "$(jq -r '.barWidget.defaultSection // "right"' "$manifest")"); fi
   fi
   jq --arg id "$id" --arg s "$section" --argjson d "$(jq '.barWidget.defaults // {}' "$manifest")" '
-    .bar |= ((map(select(.id != $id))) + [{id: $id, section: $s, settings: $d}])
+    (first(.bar[]? | select(.id == $id)) // {}) as $old
+    | .bar |= ((map(select(.id != $id))) + [{id: $id, section: $s, settings: ($d * ($old.settings // {}))}])
     | .disabled = ((.disabled // []) - [$id])' "$LAYOUT" | save_layout
   echo "Activado $id en la sección $section."
 }
@@ -102,18 +103,32 @@ cmd_add() {
   name=$(basename "${url%.git}")
   [[ $name =~ ^[A-Za-z0-9._-]+$ && $name != .* ]] || fail "nombre de repositorio no válido: $name"
   dest="$PLUGINS_DIR/$name"
-  if [[ -d $dest ]]; then
-    echo "Ya estaba instalado: $dest"
-  else
-    if ! $yes && [[ -t 0 ]]; then
-      read -r -p "Los plugins son código sin aislar dentro de la barra. ¿Instalar $url? [s/N] " reply
-      [[ $reply == [sSyY]* ]] || exit 1
-    fi
-    git clone -q --depth 1 "$url" "$dest"
+  [[ ! -e $dest ]] || fail "ya existe $dest; no se sobrescribe"
+  if ! $yes && [[ -t 0 ]]; then
+    read -r -p "Los plugins son código sin aislar dentro de la barra. ¿Instalar $url? [s/N] " reply
+    [[ $reply == [sSyY]* ]] || exit 1
   fi
-  [[ -f $dest/manifest.json ]] || { rm -rf "$dest"; fail "$url no tiene manifest.json en la raíz"; }
-  id=$(jq -r '.id // ""' "$dest/manifest.json")
-  [[ $id =~ ^[A-Za-z0-9._-]+$ && $id != omarchy.* ]] || { rm -rf "$dest"; fail "id de plugin no válido: $id"; }
+  # Stage and validate before exposing a plugin to the running shell. No install hooks.
+  local staging validation
+  staging=$(mktemp -d "$PLUGINS_DIR/.install.XXXXXX")
+  if ! git -c core.hooksPath=/dev/null clone -q --depth 1 -- "$url" "$staging/repo"; then
+    rm -rf -- "$staging"
+    fail "no se pudo descargar $url"
+  fi
+  if ! validation=$(python3 "$(dirname "$(readlink -f "$0")")/bwm-addons.py" validate-plugin "$staging/repo"); then
+    rm -rf -- "$staging"
+    fail "$(jq -r '.message // "plugin incompatible"' <<<"$validation")"
+  fi
+  id=$(jq -r '.id' "$staging/repo/manifest.json")
+  if plugin_dir "$id" >/dev/null; then
+    rm -rf -- "$staging"
+    fail "ya hay un plugin instalado con id $id"
+  fi
+  if ! mv -T -- "$staging/repo" "$dest"; then
+    rm -rf -- "$staging"
+    fail "no se pudo instalar $id"
+  fi
+  rmdir "$staging"
   echo "Instalado $id ($(jq -r '.name // ""' "$dest/manifest.json")) en $dest"
   if $enable; then enable_plugin "$id" "$section"; fi
 }
@@ -181,7 +196,7 @@ cmd_catalog() {
     builtin=false; [[ $d == "$BUILTIN_DIR"/* ]] && builtin=true
     jq -c --arg dir "${d%/}" --argjson builtin "$builtin" '{
       builtin: $builtin,
-      defaultSection: (if (.id == "omarchy.elsewhen" or .id == "omarchy.weather") then "centerEnd" elif .id == "crmne.mpris" then "center" else (.barWidget.defaultSection // "right" | if . == "left" then "left" elif (. == "center" or . == "centerBegin") then "center" elif . == "centerEnd" then "centerEnd" else "right" end) end),
+      defaultSection: (if (.id == "omarchy.elsewhen" or .id == "omarchy.weather") then "centerEnd" elif .id == "crmne.mpris" then "centerEnd" else (.barWidget.defaultSection // "right" | if . == "left" then "left" elif (. == "center" or . == "centerBegin") then "center" elif . == "centerEnd" then "centerEnd" else "right" end) end),
       description: (.description // ""),
       id, name, version, kinds: (.kinds // []), dir: $dir,
       keepLoaded: (.keepLoaded // false),

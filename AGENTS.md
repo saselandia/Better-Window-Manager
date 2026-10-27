@@ -15,7 +15,7 @@ archivos de contexto están versionados; no incluyas contraseñas, tokens ni vol
 ## 0. Vocabulario
 
 - **Estilo** (*skin*): Default (Material You), Retro (Omarchy), KDE Plasma (Breeze Dark).
-- **Tema**: lo de *dentro* de un estilo (los 23 temas de Omarchy en Retro o su paleta dinámica).
+- **Tema**: lo de *dentro* de un estilo (temas de Omarchy incluidos/instalados en Retro o su paleta dinámica).
 - Los nombres internos no cambian (`bwm-theme-manager.py get|set <estilo>`, `theme.lua`, `Appearance.isRetro`,
   `THEME_SPECIFIC_SECTIONS`…). En textos visibles, comentarios y documentación: «estilo/skin».
 
@@ -78,6 +78,9 @@ archivos de contexto están versionados; no incluyas contraseñas, tokens ni vol
 | Colores de apps en Default/Plasma | `config/matugen/config.toml` + `templates/` (Plasma los rellena con Breeze en `bwm-theme-manager.py`) |
 | GTK 3 / Qt / flatpaks | `scripts/gtk-theme.py`, `scripts/bwm_icons.py` (qt6ct, `kdeglobals`, overrides) |
 | Barra Retro y su derecha | `modules/ii/bar/RetroBarContent.qml`, `bar/omarchy/*`, Ajustes → Barra (`BarConfig.qml`) |
+| Instalar/elegir temas y plugins | `modules/settings/{PluginsConfig,ThemesConfig}.qml`, `modules/settings/addons/`, `scripts/bwm-addons.py`, `scripts/bwm-plugin.sh`; detalle en `docs/OMARCHY_ADDONS.md` |
+| About del menú Retro (Fastfetch) | `scripts/omarchy-shims/omarchy-launch-about`, `hypr/omarchy/about/`, `scripts/bwm-about-data.py`; no confundir con About de Settings |
+| About de Ajustes / detección de distro | `modules/settings/About.qml`, `services/SystemInfo.qml` y `SystemInfoData.js` (os-release sin ejecutar shell); enlaces propios de BWM |
 | Entrada del menú de Retro | `config/hypr/omarchy/bwm-menu.jsonc` (`when`/`checked` en bash) |
 | Un comando `omarchy-*` que falta | `config/hypr/scripts/omarchy-shims/` (+ enlace en `~/.local/bin`, `bwm-plugin.sh catalog`) |
 | Reglas de ventana / juegos | `hypr/modules/rules.lua`, `scripts/window-guard.py` |
@@ -108,7 +111,10 @@ archivos de contexto están versionados; no incluyas contraseñas, tokens ni vol
   - Menú (Super) `omarchyMenu` + `bwm-menu.jsonc`; cuadrícula Apps (Super+Espacio, `AppGrid.qml`); dock opcional
     (`omarchyDock`, `dock.omarchy`, apagado; Super+M); notificaciones, OSD, polkit, recordatorios, bloqueo
     hyprlock, captura omasnap, portapapeles (Super+V), emojis (Super+.), salvapantallas, glass, transparencia.
-  - Temas: 23 estáticos (`hypr/omarchy/themes`) o paleta dinámica del fondo; Alt+R carrusel; `omarchy-theme-set`.
+  - Temas: 23 incluidos (`hypr/omarchy/themes`), temas instalados en `~/.local/share/bwm/omarchy-themes`
+    o paleta dinámica del fondo; Alt+R carrusel; `omarchy-theme-set`. Ajustes → Plugins y Ajustes → Temas permiten
+    buscar en los catálogos de Omarchy, instalar por Git, aplicar temas y activar/colocar plugins.
+    Multimedia (`crmne.mpris`) va por defecto a la derecha de la hora (`centerEnd`).
   - Apps: todas las plantillas de Omarchy (`bwm_omarchy_apps.py`, también para apps sin instalar; LazyVim propio
     en `config/nvim`), Vesktop/Firefox con capa TUI propia, Spotify `BWM-Omarchy`, Steam con Adwaita-for-Steam.
 - **Todos los estilos**: GTK 3 en vivo (tema `BWM-1|BWM-2`), qt6ct + `kdeglobals`, flatpaks con overrides, kitty en
@@ -131,6 +137,22 @@ archivos de contexto están versionados; no incluyas contraseñas, tokens ni vol
 - **Steam/Stremio no son Qt** en esta instalación: Steam usa CEF (Adwaita no cambia Tienda/Comunidad web); Stremio Linux usa GTK4/WebKit, con puente propio `stremio-theme.py`/`.cjs` para la web y CSS en vivo, activado sólo si está instalado (también desde `install.sh`). No confundir tema del marco con tema del contenido. Detalle y desactivación: `docs/STREMIO_THEMING.md`.
 - **Steam en Retro:** `overlays/steam.css` hace que la barra superior use el fondo base del tema;
   Default/Plasma conservan la superficie elevada de la plantilla compartida.
+- **Ajustes:** Plugins y Temas son páginas independientes en ambas apps; Advanced se eliminó.
+  Tipos compartidos en `modules/settings/addons/` necesitan su `qmldir` explícito. About usa el logo
+  BWM del arranque, GitLab/GitHub del proyecto y `assets/bwm-star.gif`.
+- **About del menú Retro:** es Fastfetch con la configuración/logo/animación de Omarchy,
+  `omarchy-launch-about`; About de Settings conserva las tarjetas BWM. El lanzador ajusta una ventana
+  `org.omarchy.about` flotante y deshace su maximizado inicial antes de medir (si no, Hyprland rechaza
+  el resize). WM consulta `hyprctl version -j`, no el binario que puede haberse actualizado sin reiniciar.
+- **os-release:** puede usar comillas simples, dobles o valores sin comillas. Parsear como datos
+  (`SystemInfoData.js`), aplicar en `FileView.onLoaded` y recurrir a `/usr/lib/os-release` si falta `/etc`.
+  Los SVG simbólicos negros se tiñen con ColorOverlay; MultiEffect.colorization deja negro el negro.
+- **Temas de la comunidad:** `~/.config/omarchy/themes` es un enlace al repo en este equipo. No instalar
+  ahí: usar `~/.local/share/bwm/omarchy-themes` (respeta `XDG_DATA_HOME`). Listado, resolución y carrusel
+  comparten el catálogo; no volver a limitar las búsquedas a `THEMES_DIR`.
+- **Anchura de widgets:** `OmarchyPluginSlot` reserva cero si el widget está invisible. Los que no caben
+  se ocultan con opacidad/recorte, manteniendo su medida; `visible: false` en el padre produce un bucle
+  al medir `loader.item.visible`. Los servicios ajenos sólo cargan con el plugin activado.
 - **Salvapantallas:** el disparo automático respeta inhibidores, «mantener despierto» y cualquier reproductor
   MPRIS en reproducción; el inicio manual por IPC sigue disponible.
 - **Gentoo:** usa `sudo eselect news read`. Sin sudo puede listar los avisos pero fallar al guardar
@@ -143,6 +165,9 @@ archivos de contexto están versionados; no incluyas contraseñas, tokens ni vol
 - **Hyprland 0.55 Lua**: `hyprctl dispatch 'hl.dsp.…'`; inyectar atajos con
   `hyprctl eval 'return hl.dispatch(hl.dsp.send_shortcut({…}))'`.
 - `pkill -f <patrón>` mata tu propia shell si el patrón está en el comando: mata por PID.
+- Kitty recuerda también el estado maximizado: `remember_window_size no` evita restaurarlo. La regla global
+  `suppress-maximize-events` bloquea peticiones de maximizado de apps (también botones CSD); el compositor
+  conserva el control manual y las peticiones de fullscreen de juegos/vídeo siguen permitidas.
 - Omarchy usa `pacman`/AUR: al portar sus scripts, cámbialo por emerge/flatpak/`qlist` y avisa del paquete con
   `scripts/bwm-require.sh`.
 

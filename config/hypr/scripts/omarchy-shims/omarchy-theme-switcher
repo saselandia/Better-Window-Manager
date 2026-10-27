@@ -9,8 +9,6 @@ if [[ "${1:-}" == "--print-rows" ]]; then
   shift
 fi
 
-USER_THEMES_PATH="$HOME/.config/omarchy/themes"
-BWM_THEMES_PATH="$HOME/.config/hypr/omarchy/themes"
 CACHE_PATH="${XDG_CACHE_HOME:-$HOME/.cache}/omarchy/theme-selector"
 PREVIEW_DIR="$CACHE_PATH/previews"
 
@@ -35,17 +33,40 @@ if [[ -s "$WP" ]]; then
   fi
 fi
 
-# 2. Curated theme entries
-for dir in "$USER_THEMES_PATH" "$BWM_THEMES_PATH"; do
-  [[ -d "$dir" ]] || continue
-  for t in "$dir"/*; do
-    [[ -d "$t" ]] || continue
-    tname="$(basename "$t")"
-    if [[ -f "$t/preview.png" ]]; then
-      ln -sf "$t/preview.png" "$PREVIEW_DIR/$tname.png" 2>/dev/null || true
-    fi
-  done
+# 2. Use the same bundled/community catalog as the renderer. Themes without a preview
+# still appear: make a thumbnail from a background, or from the palette itself.
+# Remove stale thumbnails of themes that have been removed.
+for p in "$PREVIEW_DIR"/*.png; do
+  [[ ${p##*/} == dynamic.png ]] || rm -f -- "$p"
 done
+python3 - "$PREVIEW_DIR" <<'PYTHON'
+import json
+import re
+from pathlib import Path
+import subprocess
+import sys
+sys.path.insert(0, str(Path.home() / '.config/hypr/scripts'))
+import bwm_omarchy as bwm
+previews = Path(sys.argv[1])
+for theme in bwm.list_omarchy_themes():
+    target = previews / (theme['id'] + '.png')
+    if theme['preview']:
+        target.symlink_to(theme['preview'])
+        continue
+    backgrounds = Path(theme['backgrounds_dir']) if theme['backgrounds_dir'] else None
+    images = sorted(p for p in backgrounds.iterdir()
+                    if p.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp')) if backgrounds else []
+    if images:
+        command = ['magick', str(images[0]) + '[0]', '-resize', '1280x800^',
+                   '-gravity', 'center', '-extent', '1280x800', str(target)]
+    else:
+        colors = theme['colors']
+        bg = colors[0] if re.fullmatch(r'#[0-9a-fA-F]{6}', colors[0]) else '#181818'
+        accent = colors[2] if re.fullmatch(r'#[0-9a-fA-F]{6}', colors[2]) else '#888888'
+        command = ['magick', '-size', '1280x800', 'xc:' + bg, '-fill', accent,
+                   '-draw', 'rectangle 0,680 1280,800', str(target)]
+    subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+PYTHON
 
 if [[ "$print_rows" == true ]]; then
   # Print rows for ImagePicker: dynamic first, then alphabetically

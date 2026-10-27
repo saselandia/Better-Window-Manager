@@ -50,16 +50,23 @@ Row {
             id: slot
             required property var modelData
             required property int index
-            visible: index < root.fittedCount
+            // Keep the item measurable when it does not fit. Hiding its parent would
+            // also make loader.item.visible false and create a fit/visibility loop.
+            readonly property bool fits: index < root.fittedCount
+            opacity: fits ? 1 : 0
+            enabled: fits
+            clip: !fits
             // What omarchy-shell's bar slots expose: plugins such as omarchy-mpris measure the
             // free space between slots (BarGeometry.js) through these two
-            readonly property var activeItem: loader.item
+            readonly property var activeItem: slot.fits && loader.item?.visible ? loader.item : null
             readonly property string region: root.section === "left" ? "left" : (root.section === "right" ? "right" : "center")
             readonly property real bwmWidthBudget: root.widthBudget
 
-            implicitWidth: loader.item ? loader.item.implicitWidth : 0
+            // Invisible widgets (single keyboard layout, no updates/player...) must
+            // release their space just like entries removed from the layout.
+            implicitWidth: loader.item?.visible ? loader.item.implicitWidth : 0
             implicitHeight: root.barSize
-            width: implicitWidth
+            width: fits ? implicitWidth : 0
             height: root.barSize
 
             OmarchyUi.PluginBarApi {

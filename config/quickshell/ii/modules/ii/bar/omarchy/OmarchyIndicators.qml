@@ -65,14 +65,26 @@ Row {
         onTriggered: reminderProbe.running = true
     }
 
+    // Night light: same state as the displays panel and the menu (nightlight.py)
+    property bool nightlight: false
+    FileView {
+        path: Quickshell.env("HOME") + "/.local/state/bwm/nightlight.json"
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            try { root.nightlight = !!JSON.parse(text()).enabled; } catch (e) { root.nightlight = false; }
+        }
+        onLoadFailed: root.nightlight = false
+    }
+
     HoverHandler { id: hover }
 
     Repeater {
         model: [
             { glyph: "󰻂", active: root.recording, urgent: true, tip: "Stop recording",
               run: () => Quickshell.execDetached(["bash", "-c", "omarchy-capture-screenrecording --status && omarchy-capture-screenrecording --stop-recording || " + Directories.recordScriptPath]) },
-            { glyph: "󰔎", active: Hyprsunset.temperatureActive, urgent: false, tip: "Night light",
-              run: () => Hyprsunset.toggleTemperature() },
+            { glyph: "󰔎", active: root.nightlight, urgent: false, tip: "Night light",
+              run: () => Quickshell.execDetached(["omarchy-toggle-nightlight"]) },
             { glyph: "󰂛", active: Notifications.silent, urgent: false, tip: "Do not disturb",
               run: () => { Notifications.silent = !Notifications.silent; } },
             { glyph: "", active: Idle.inhibit, urgent: false, tip: "Stay awake",

@@ -23,16 +23,14 @@
 -- See https://wiki.hypr.land/Configuring/Basics/Window-Rules/
 -- and https://wiki.hypr.land/Configuring/Basics/Workspace-Rules/
 
--- Example window rules that are useful
-
--- local suppressMaximizeRule = hl.window_rule({
---     -- Ignore maximize requests from all apps. You'll probably like this.
---     name  = "suppress-maximize-events",
---     match = { class = ".*" },
--- 
---     suppress_event = "maximize",
--- })
--- -- suppressMaximizeRule:set_enabled(false)
+-- El compositor controla el maximizado, no el estado guardado por las apps.
+-- Afecta también a sus botones CSD; usar el atajo de BWM para maximizar.
+-- No suprime fullscreen (juegos/vídeo), ni los dispatchers manuales de Hyprland.
+hl.window_rule({
+    name  = "suppress-maximize-events",
+    match = { class = ".*" },
+    suppress_event = "maximize",
+})
 
 hl.window_rule({
     -- Fix some dragging issues with XWayland
@@ -168,6 +166,16 @@ hl.window_rule({
     match  = { class = "^org\\.omarchy\\.terminal$" },
     float  = true,
     size   = "875 600",
+    center = true,
+})
+
+-- Omarchy About: Fastfetch with its upstream ASCII layout, fitted by the launcher.
+hl.window_rule({
+    name   = "omarchy-about",
+    match  = { class = "^org\\.omarchy\\.about$" },
+    float  = true,
+    fullscreen = false,
+    size   = "1100 740",
     center = true,
 })
 

@@ -7,7 +7,7 @@
 >
 > **Cómo leerlo:** §2 es la verdad actual. El historial de §3 es cronológico y conserva lo que se
 > hizo en cada momento: cuando algo quedó superado lo indica con **⚠️ Superado en parte por §3.N**.
-> Fechas en formato AAAA-MM-DD. Última revisión: 2026-10-26. Estado de Git: consulta §6; no uses los hashes históricos como estado actual.
+> Fechas en formato AAAA-MM-DD. Última revisión: 2026-10-27. Estado de Git: consulta §6; no uses los hashes históricos como estado actual.
 > Registra las pruebas realizadas y sus límites; una instrucción dada al usuario no confirma su ejecución.
 
 **Vocabulario:** **estilo** (*skin*) = Default, Retro, KDE Plasma. **Tema** = lo que hay dentro de
@@ -49,7 +49,9 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 
 ### 2.1 Estilos y temas
 * Gestor: `config/hypr/scripts/bwm-theme-manager.py get|set|toggle|list <estilo>`. Al cambiar: perfil de Quickshell por estilo (`illogical-impulse/config-<estilo>.json`, secciones propias en `THEME_SPECIFIC_SECTIONS`), colores de Hyprland, plugins (hyprbars sólo en Plasma), iconos, GTK/Qt, apps, reinicio limpio de Quickshell (candado `/tmp/bwm-theme-manager.lock`), swaync fuera de Retro, `hyprpolkitagent` fuera de Retro, Firefox reiniciado si cambió su CSS.
-* Selector de estilos: Alt+T (Retro: carrusel 3D con capturas de lo que imita cada estilo, `skin-switcher.sh`; Default: rofi; Plasma: «Estilo global»). Temas de Retro: Alt+R (carrusel), menú → Estilo → Temas Retro, Ajustes → Estilo.
+* Selector de estilos: Alt+T (Retro: carrusel 3D con capturas de lo que imita cada estilo, `skin-switcher.sh`; Default: rofi; Plasma: «Estilo global»). Temas de Retro: Alt+R (carrusel), menú → Estilo → Temas Retro, Ajustes → Temas.
+* **Ajustes → Temas / Plugins** (dos páginas, en ambas apps): Temas muestra galería con miniaturas/paletas/tema elegido; Plugins muestra tarjetas, activación, posición y filtros Todos/Activados/Desactivados. Cada página tiene Instalados/Descubrir, búsqueda remota, Mostrar más, enlaces y Git/URL. `ThemesConfig.qml`, `PluginsConfig.qml` y módulo `addons/` con `qmldir`; backend `bwm-addons.py`, detalle en `docs/OMARCHY_ADDONS.md`.
+* Temas de comunidad en `~/.local/share/bwm/omarchy-themes` (`XDG_DATA_HOME`); también se reconoce `~/.config/omarchy/themes`, que aquí enlaza al repo y no se usa como destino de instalación. `theme_directory()` y `list_omarchy_themes()` comparten precedencia, igual que la CLI y el carrusel.
 * Retro estático/dinámico: `~/.local/state/bwm/omarchy/{theme.mode,theme.name,colors.toml,shell.toml}`; en estático cambiar el fondo no toca la paleta. Temas claros (White, Catppuccin Latte…) ponen las apps en claro.
 
 ### 2.2 Apps tematizadas
@@ -71,6 +73,8 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 
 ### 2.3 Retro = Omarchy (Quickshell)
 * **Barra** `modules/ii/bar/RetroBarContent.qml`: disposición y colores de Omarchy; menú, workspaces, reloj + indicadores (grabando, luz nocturna, no molestar, mantener despierto, recordatorios), plugins (`omarchy-plugins/`, `~/.config/bwm/omarchy-plugins.json`) y a la derecha actualizaciones, multimedia (apagado), bandeja, distribución de teclado, agentes, Tailscale, Bluetooth, red, audio, pantallas, energía — cada uno se oculta en Ajustes → Barra.
+* Los widgets invisibles liberan su anchura en `OmarchyPluginSlot`; los que no caben se recortan/atenúan sin anular su medida. La bandeja se desplaza al ocultar widgets. El plugin multimedia `crmne.mpris` vuelve a `centerEnd` (derecha de la hora), con presupuesto de ancho antes de los indicadores. Activación y posición de plugins pasan de Ajustes → Barra a Plugins; los widgets fijos y el idioma siguen en Barra.
+* **About del menú Retro:** `omarchy-launch-about` ejecuta Fastfetch con logo ASCII, marcos Hardware/Software/Age, autoajuste y brillo originales de Omarchy (`hypr/omarchy/about/`, MIT, `b8706a3f`). Datos de Gentoo/BWM mediante `bwm-about-data.py`; WM muestra la versión en ejecución de `hyprctl`, no la del binario recién actualizado. About de Settings no cambia.
 * **Menú** (Super): `modules/ii/omarchyMenu` + catálogo `config/hypr/omarchy/bwm-menu.jsonc`. **Apps** (Super+Espacio): cuadrícula `AppGrid.qml`.
 * **Dock** (opcional, Ajustes → Interfaz → Dock, apagado): `modules/ii/omarchyDock`, en workspaces sin ventanas en mosaico; Super+M minimiza a él.
 * **Notificaciones** (`omarchyNotifications`), **OSD** (`omarchyOsd`), **polkit** (`omarchyPolkit`), **recordatorios** (`omarchy-reminder`), bloqueo estilo hyprlock, captura omasnap, portapapeles (Super+V), emojis (Super+.), salvapantallas de terminal, glass, transparencia de ventanas (Super+Backspace).
@@ -83,8 +87,10 @@ Panel flotante/pegado, Kickoff, applets Bluetooth/red/audio/calendario/notificac
 ### 2.5 Ventanas, juegos y sistema
 * `window-guard.py watch` (autostart): primary de XWayland = monitor del workspace 1, ventanas fuera de pantalla de vuelta, juegos sin bordes a pantalla completa. Regla `games-main-monitor` (HP, foco al activarse, inhibir reposo).
 * `focus_on_activate = true`, `xwayland.force_zero_scaling = true`, `on_focus_under_fullscreen` por defecto (2).
+* Las apps no pueden solicitar maximizado (`suppress-maximize-events`, global); incluye botones CSD. El maximizado/pantalla completa se controla con Alt+Enter (Plasma: maximizado, otros estilos: fullscreen), y fullscreen solicitado por juegos/vídeo sigue permitido. Kitty tiene `remember_window_size no` para no restaurar tamaño/estado maximizado de su caché. Véase §3.48.
 * Atajos en `config/hypr/keybinds.json` → `keybinds-manager.py` → `modules/user_binds.lua`.
 * Salvapantallas: `ScreensaverIdle.qml` inhibe el disparo automático si cualquier reproductor MPRIS está reproduciendo, además de respetar `Idle.inhibit` y los inhibidores Wayland; el inicio manual por IPC sigue disponible.
+* Luz nocturna (panel de pantallas de Retro, menú, indicador junto al reloj): un solo estado `~/.local/state/bwm/nightlight.json` vía `nightlight.py`/`omarchy-toggle-nightlight [--on|--off|<K>]`. Usa hyprsunset si está instalado (como Omarchy; no tiñe capturas) y si no un `screen_shader` que `modules/nightlight.lua` conserva tras `hyprctl reload`; `autostart.sh` lo reaplica (`--apply`). Véase §3.49.
 * Regla `electron-render-unfocused`: incluye `codex`, `codex-desktop`, `chatgpt` y `ChatGPT`. Regla persistente de virt-manager: en mosaico (`float = false`).
 
 ### 2.6 Pendiente / ideas
@@ -114,6 +120,13 @@ flatpak update
 * `omarchy-update` actualiza Flatpak y ejecuta `sudo emerge -avuDN @world`, pero **no hace sync**, no gestiona los pasos posteriores ni actualiza el checkout de BWM. El indicador sólo consulta lo disponible en los repositorios locales y `origin/main` (intenta un `git fetch origin`, con límite de 15 s).
 * Si cambia Hyprland, revisar compatibilidad y recompilar los plugins antes de usarlos con la nueva versión (`-fno-gnu-unique`, `make install`, sin descarga/carga en caliente). Kernel/arranque: respetar §2 de `AGENTS.md`; nunca `grub-mkconfig`.
 * No se ha confirmado que la actualización del sistema haya terminado. Tampoco se ha confirmado en esta sesión la aceptación del cambio en `dispatch-conf`.
+
+
+### 2.8 Ajustes y About
+* **Dos About distintos:** el del menú Retro es Fastfetch con presentación Omarchy (§3.47). El de Settings mantiene las tarjetas y enlaces BWM; el usuario pidió expresamente cambiar sólo el primero.
+* Navegación: Plugins y Temas separados en ambas apps, Cursor conservado y Advanced eliminado (también su QML). Estilo conserva fuentes, glass, salvapantallas y arranque.
+* About: tarjeta Distro con nombre/versión/logo detectados de os-release y enlace de inicio; tarjeta WM con BWM, logo del arranque y accesos a GitLab/GitHub. Documentation abre README.es.md en GitLab; Issues abre los de GitHub; Star tiene un GIF local de 32 fotogramas y abre GitHub. Sin botones de ayuda/documentación/bugs/privacidad de la distro ni Donate. Discussions omitido: GitHub API `has_discussions=false`, comprobado el 2026-10-27.
+* `SystemInfoData.js` parsea comillas simples/dobles y valores sin comillas como datos, sin ejecutar shell. `SystemInfo.qml` aplica al cargar FileView, vigila cambios y recurre a `/usr/lib/os-release` si falta `/etc/os-release`. El lector anterior no reconocía el formato con comillas simples de Gentoo. Logo simbólico con fallback incluido y ColorOverlay para que sea visible sobre fondos oscuros.
 
 ---
 
@@ -329,7 +342,7 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
      - `get-state`: Devuelve JSON con todas las pantallas, brillo individual (DDC/backlight), modos disponibles (resoluciones y Hz), escalado, rotación y estado de luz nocturna.
      - `set-mode`, `set-scale`, `set-transform`, `set-primary`, `toggle-enable`, `set-brightness`, `get-brightness`.
      - Protección activa: Rechaza apagar la única pantalla activa si solo queda una encendida.
-  3. **Luz Nocturna Nativa (`config/hypr/scripts/nightlight.py`):**
+  3. **Luz Nocturna Nativa (`config/hypr/scripts/nightlight.py`):** ⚠️ Superado en parte por §3.49 (hyprsunset preferido, estado en `~/.local/state/bwm`).
      - Basada en `decoration:screen_shader` nativo de Hyprland con cálculo de coeficientes RGB por fórmula física de Kelvin (2700K - 6500K). Cero daemons externos, 144Hz fluidos, instantáneo. Enlazada a `omarchy-toggle-nightlight`.
   4. **Rediseño Completo de `monitor/Panel.qml`:**
      - **Pestañas de selección de pantalla:** Ahora hacer clic en una pantalla la **selecciona** para configuración y la enfoca en Hyprland, **NUNCA** la apaga.
@@ -510,6 +523,46 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 * `AGENTS.md` y `CLAUDE.md` sincronizados; ambos y `BWM_CONTEXT.md` pasan a Git por petición del usuario. Se actualizan estado actual, rutas, mantenimiento de Gentoo, limitaciones del actualizador y pendientes de `todo.md`. Los hashes del historial se conservan como referencias; para el estado actual se consulta Git.
 * Validación previa al commit: compilación Python de `bwm_omarchy.py`; sintaxis Lua de `rules.lua`, `persistent_rules.lua` y `retro_colors.lua`; parseo de las 5 configuraciones JSON; renderizado de la plantilla Steam + overlay con las 23 paletas, sin placeholders pendientes y sin escribir ni reiniciar apps; `hyprctl configerrors` vacío. El log de Quickshell contiene recarga y no muestra `ReferenceError`, `TypeError`, tipos desconocidos ni errores de `ScreensaverIdle`; sí avisos de imágenes WebP y otros servicios. `qmllint` pasa la comprobación de sintaxis con avisos de imports `qs.*` no resueltos y accesos sin cualificar (se permitió su recuento de warnings); no acredita la resolución completa de tipos del proyecto. No se realizó una nueva prueba visual o de reproducción MPRIS.
 
+
+### 45. Bandeja adaptable, multimedia tras la hora y gestor de temas/plugins (2026-10-27)
+* **Petición:** eliminar el hueco de la bandeja al ocultar widgets, devolver multimedia a la derecha de la hora y gestionar temas/plugins de Omarchy desde Ajustes con buscador e instalación.
+* **Barra:** `OmarchyPluginSlot` toma anchura cero cuando el widget está invisible (antes el teclado de una sola distribución, por ejemplo, mantenía su hueco). El ajuste por espacio disponible conserva las medidas y usa opacidad/recorte para no realimentar `item.visible` desde el padre. `centerEnd` limita el ancho de multimedia antes de los indicadores. `crmne.mpris` predeterminado y disposición del usuario migrados a `centerEnd`, conservando sus opciones; `enable --section` ya no las reinicia.
+* **Página única:** `PluginsThemesConfig.qml` en `settings.qml` y `plasmaSettings.qml` (`SETTINGS_PAGE=plugins`): temas instalados con paleta y elección actual, filtros, plugins con activación/posición y retirada de los añadidos, búsqueda remota con Ver/Instalar, catálogo web e instalación por URL. Las listas antiguas salen de Estilo/Barra; los widgets fijos y el idioma permanecen en Barra. Navegación de Ajustes ampliada para que quepa el nombre.
+* **Backend `bwm-addons.py`:** galería oficial de temas y JSON del marketplace, caché de una hora/fallback sin conexión, búsqueda por palabras y primeros 30 resultados. Instalación de temas en `~/.local/share/bwm/omarchy-themes`; plugins mediante `bwm-plugin.sh` con staging, validación de manifest/entradas/imports y detección de id duplicado. Formatos admitidos: temas con colors.toml y plugins de barra/servicios; no reemplazos de otras partes del shell. Sin hooks de instalación ni sudo. La validación no certifica cada dependencia o comportamiento de un plugin externo.
+* **Trampa encontrada:** `~/.config/omarchy/themes` es un symlink al repo. El catálogo lo deduplica, mantiene los incluidos como tales y reconoce las carpetas de usuario en `theme_directory()`, motor de colores, shims y carrusel. Los temas sin preview reciben miniatura del fondo o paleta. No se instaló ningún tema/plugin externo elegido al azar en la sesión real.
+* **Servicios:** `syncServices()` sólo carga servicios ajenos activados, además de los preinstalados no deshabilitados.
+* **Verificado:** 13 pruebas unitarias (formato, rutas, imports, caché, listado/resolución con symlink, instalación y posición sin perder opciones); compilación Python y sintaxis bash; carga real de la página en workspace 9 y prueba QML aislada sin ventana: búsqueda de temas «tokyo» = 2 resultados, plugins «mpris» = 46, posición de multimedia = centerEnd. Carrusel con 24 filas (23 incluidos + dinámica). Reinicio único de la barra mediante el gestor, captura recortada con bandeja compacta y multimedia tras la hora. No se inició otra instancia `qs -c ii`. Documentación en `docs/OMARCHY_ADDONS.md`.
+
+
+### 46. About de BWM, eliminación de Advanced y separación de Temas/Plugins (2026-10-27)
+* **Petición:** autodetectar distro y su imagen/nombre; quitar sus cuatro botones de ayuda; sustituir Dotfiles/illogical-impulse por WM/BWM, logo y remotos propios; enlazar documentación/issues/discusiones reales, retirar Donate, añadir Star con GIF; eliminar Advanced y separar/mejorar Plugins y Temas.
+* **About:** tarjetas Distro/WM, logo BWM existente (`hypr/omarchy/boot/logo.png`) y GIF local `assets/bwm-star.gif` (32 fotogramas, bucle). GitLab/GitHub coinciden con los remotos del repo. Documentation → GitLab README.es.md; Issues → GitHub /issues (API has_issues=true). Sin Discussions, comprobado has_discussions=false mediante API pública; no se activaron funciones remotas ni se dio ninguna estrella.
+* **Distro:** Gentoo usa NAME/ID/PRETTY_NAME entre comillas simples; el lector antiguo sólo reconocía comillas dobles. Nuevo `SystemInfoData.js` puro, sin evaluar shell, con parser de variantes y selección por ID/ID_LIKE. Servicio actualizado en FileView.onLoaded, fallback /usr/lib/os-release y icono incluido; `ColorOverlay` tiñe SVG negros (MultiEffect.colorization no los aclaraba). About muestra «Gentoo Linux», versión, Hyprland y Wayland.
+* **Navegación:** `AdvancedConfig.qml` retirado con todas sus entradas. `PluginsConfig.qml` y `ThemesConfig.qml` abren páginas independientes en las dos apps; el antiguo combinado deja de existir. `addons/AddonPage.qml` comparte estructura, `AddonManager.qml` el transporte/estado, `AddonBrowser.qml` la búsqueda. **Necesario:** un `qmldir` con exports explícitos para importar esta carpeta nueva; sin él Quickshell dice que el módulo no está instalado.
+* **Mejoras:** Temas con cuadrícula de miniaturas, paletas, elección activa y paleta del fondo; Plugins con tarjetas, versión/origen, interruptor, posición y filtros Todos/Activados/Desactivados; nombres/descripciones de los preinstalados en español, conservando el texto original en el catálogo. Ambas páginas con Instalados/Descubrir, instalación por URL y feedback. Backend discover añade --offset y nextOffset para Mostrar más, sin perder resultados tras los primeros 30.
+* **Verificado:** 14 tests Python incluidos límites de paginación 30/30/5; sintaxis Python/QML; prueba aislada Quickshell de parser (comillas simples/dobles, sin comillas e ID_LIKE), detección real Gentoo Linux/id=gentoo y 32 frames del GIF. Carga de las 3 páginas: 23 temas, 6 plugins/1 activo, 2 resultados «tokyo» y 46 «mpris», cargados de 30 a 46 sin duplicados; filtro de activos = 1. Carga de Temas en plasmaSettings con regla temporal al workspace 9. Revisión visual de About, Temas y Plugins; corregidos icono negro y contraste de selección. Se conservan avisos previos de WebP/portal/traducción y Revealer. Sin segunda instancia qs -c ii, sin cambios de estilo y sin aplicar temas/plugins durante estas pruebas.
+
+
+### 47. About de Omarchy con Fastfetch real, sólo en el menú Retro (2026-10-27)
+* **Petición y alcance aclarado:** About idéntico al de Omarchy, basado en Fastfetch. A la pregunta de si también en Settings, el usuario respondió «Solo en el menú Retro». No se modificó `modules/settings/About.qml` en esta tarea.
+* **Origen:** Omarchy `b8706a3f9eb185f56b61c6141561deba652beddf` (MIT): `icon.txt` y `bin/omarchy-branding-about-animation` copiados sin cambios; configuración de `/etc/fastfetch/config.jsonc` y lanzador portados a `hypr/omarchy/about/` y `omarchy-shims/omarchy-launch-about`. README y licencia incluidos. Conserva ASCII de 54×26, padding, cajas/orden/colores, glint animado, autoajuste por celdas y cierre con una tecla. La segunda invocación enfoca la ventana existente.
+* **Integración:** «Acerca de» de `bwm-menu.jsonc` usa el nuevo shim, enlazado en `~/.local/bin` por catalog. Nueva regla `omarchy-about` para `org.omarchy.about`, flotante y centrada. El tamaño ajustado se guarda en `~/.local/state/bwm/omarchy/about.fit`; configuración sólo en repo y `$XDG_RUNTIME_DIR/bwm`, sin tocar /etc/fastfetch ni la configuración personal de Fastfetch.
+* **Gentoo/BWM:** `bwm-about-data.py` da host (DMI o hostname), rama/revisión, estilo, tema, edad/uptime y fecha del último BUILD_TIME de Portage. El resto sale de Fastfetch. No inventa versión de Omarchy ni fecha de actualización completa. Fastfetch detectaba el binario instalado de Hyprland como 0.56.2, pero `hyprctl version -j` confirma sesión 0.55.4/a0136d8c: el campo WM se consulta por IPC para reflejar lo que corre realmente. No se reinició el compositor ni se tocaron plugins.
+* **Trampa de tamaño (causa identificada y corregida en §3.48: caché de Kitty):** el terminal de About se mapeaba maximizado (fullscreen=1); la regla fullscreen=false no bastaba y Hyprland rechazaba redimensionarlo. El lanzador deshace los modos 1/0 sólo de su ventana antes de medir y usa `relative=false` en resize. Eliminado fallback que habría centrado la ventana activa en vez de la dirección de About. Se comprobó el tamaño 877×640, fullscreen=0 y un solo PID tras reabrir.
+* **Verificado:** 6 tests de metadatos (duración, fecha desconocida, checkout ausente, WM en ejecución, host sin DMI, tema dinámico); Python compilado, bash -n de lanzador/animación, Lua y JSONC válidos, configerrors vacío. Fastfetch 2.65.2 procesa el diseño. Prueba gráfica con logo, las tres cajas y fuente Kitty; cierre por tecla y reapertura ajustada/enfoque sin duplicar. Capturas temporales recortadas a About y eliminadas después.
+
+---
+
+### 48. Terminales y otras apps sin maximizado automático (2026-10-27)
+* **Causa comprobada:** `~/.cache/kitty/main.json` guardaba `window-state: maximized`. Kitty recuerda por defecto tanto tamaño como estado de ventana. En la versión instalada, `--start-as normal` también consulta la caché; no basta como solución. Era maximizado (Hyprland `fullscreen=1`), no fullscreen real (`2`).
+* **Corrección:** `config/kitty/kitty.conf` establece `remember_window_size no`; `modules/rules.lua` activa la regla global recomendada `suppress_event = "maximize"`. Evita que cualquier app restaure/pida maximizado, incluidos sus botones CSD; se usan los dispatchers/atajos del compositor para maximizar. No suprime fullscreen, para conservar juegos/vídeo, ni bloquea maximizado manual del compositor. No se borró la caché ni se alteraron ventanas existentes.
+* **Aplicación y pruebas reales:** recarga de Hyprland sin errores. Tres Kitty nuevas en workspace 9 silent: inicio normal → 0, petición explícita maximizado → 0, fullscreen explícito → 2. Sobre la segunda, dispatcher manual mode=1 → 1. App Qt independiente con `showMaximized()` → 0. Ventanas identificadas por PID; procesos, archivo QML y reglas temporales eliminados. Configuración recargada también en Kitty existente. Sin reiniciar compositor/Quickshell ni tocar plugins.
+
+### 49. Luz nocturna del panel de pantallas que sí funciona (2026-10-27)
+* **Causa comprobada:** `ToggleSwitch` emite `toggled()` sin argumento; `toggleNightlight(on)` asignaba `undefined` a un `bool`, QML lanzaba «Cannot assign [undefined] to bool» (en `qs -c ii log`) y el comando nunca se ejecutaba. Además el indicador 󰔎 de la barra Retro miraba el servicio `Hyprsunset` de end-4 (hyprsunset no está instalado), el estado y el shader se escribían en `~/.config/hypr` (el repo) y cualquier `hyprctl reload` o inicio de sesión perdía el shader.
+* **Arreglo:** el panel invierte su estado y llama a `omarchy-toggle-nightlight --on|--off`. `nightlight.py`: estado en `~/.local/state/bwm/nightlight.json` (migra y borra el antiguo del repo), backend hyprsunset si existe (`hyprctl hyprsunset temperature N` / `identity`, arrancando el daemon, como Omarchy) y si no shader GLSL 300 es en `~/.local/state/bwm/nightlight.frag`, que sólo existe encendido; `--status` incluye `backend`; `--apply` en `autostart.sh`. `modules/nightlight.lua` pone el shader si existe el archivo. El indicador lee el JSON con `FileView` y usa el mismo shim, igual que el menú.
+* **Verificado:** con el backend shader (hyprsunset ausente), muestreo de 4×4 px con grim: encendido 4000 K y 3000 K reducen el azul, sigue tras `hyprctl reload`, apagado y apagado+reload vuelven al color sin tinte; `configerrors` vacío; reinicio de Quickshell con el gestor y sin errores del panel/indicador en el log. **No probado:** clic real en el interruptor/deslizador del panel ni el indicador a la vista; backend hyprsunset (instalable con `sudo emerge gui-apps/hyprsunset`, overlay hyproverlay). Default sigue con su servicio `Hyprsunset` propio.
+
 ---
 
 ## 4. 📂 Estructura del repositorio
@@ -537,6 +590,7 @@ hyprland-de/
 │   │   └── scripts/
 │   │       ├── bwm-theme-manager.py   # Gestor de estilos
 │   │       ├── bwm_omarchy.py         # Motor de Retro: paletas, apps, Vesktop, Firefox/Steam (restart_app)
+│   │       ├── bwm-addons.py          # Catálogos e instalación de temas/plugins de Omarchy
 │   │       ├── bwm_omarchy_apps.py    # Plantillas de apps de Omarchy y su aplicación/restauración
 │   │       ├── bwm_icons.py           # Iconos por estilo, qt6ct, kdeglobals, overrides de flatpak
 │   │       ├── gtk-theme.py           # Tema GTK 3 BWM-1/BWM-2 con recarga en vivo
