@@ -91,7 +91,7 @@ Panel flotante/pegado, Kickoff, applets Bluetooth/red/audio/calendario/notificac
 * Atajos en `config/hypr/keybinds.json` → `keybinds-manager.py` → `modules/user_binds.lua`.
 * Salvapantallas: `ScreensaverIdle.qml` inhibe el disparo automático si cualquier reproductor MPRIS está reproduciendo, además de respetar `Idle.inhibit` y los inhibidores Wayland; el inicio manual por IPC sigue disponible.
 * Luz nocturna (panel de pantallas de Retro, menú, indicador junto al reloj): un solo estado `~/.local/state/bwm/nightlight.json` vía `nightlight.py`/`omarchy-toggle-nightlight [--on|--off|<K>]`. Usa hyprsunset si está instalado (como Omarchy; no tiñe capturas) y si no un `screen_shader` que `modules/nightlight.lua` conserva tras `hyprctl reload`; `autostart.sh` lo reaplica (`--apply`). Véase §3.49.
-* Regla `electron-render-unfocused`: incluye `codex`, `codex-desktop`, `chatgpt` y `ChatGPT`. Regla persistente de virt-manager: en mosaico (`float = false`).
+* Regla `electron-render-unfocused`: incluye `codex`, `codex-desktop`, `chatgpt` y `ChatGPT`. Regla persistente de virt-manager: flotante (`float = true`), según el estado guardado actual.
 
 ### 2.6 Pendiente / ideas
 * De Omarchy sin portar: menú Estilo completo (barra opaca/transparente, reloj 12/24 h, esquinas, huecos, animaciones, branding), layouts de workspace (dwindle/scrolling/flotante, Super+L), atajos de ventanas (Super+Ctrl+F, Super+Alt+F, Super+O, scratchpad Super+S, consola Quake Super+`, copiar/pegar universal), Install/Remove adaptado a emerge/flatpak, web apps y TUIs, compartir (LocalSend), Setup (DNS, idioma, teclado, seguridad), interruptores rápidos y actualizaciones de firmware/hora.
@@ -565,6 +565,12 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 
 ---
 
+### 50. Consolidación de todos los cambios y publicación solicitada (2026-10-27)
+* El usuario pide commitear todo y subirlo a los remotos. Se incluyen deliberadamente cambios de esta conversación y concurrentes: About BWM/Fastfetch, separación de Temas/Plugins y catálogo, barra adaptable, maximizado, luz nocturna, perfiles generados y virt-manager flotante. No se descartan cambios ajenos.
+* Verificación previa: 20 pruebas de About/complementos correctas; sintaxis de 6 Python, 8 Bash y 4 Lua; 3 JSON válidos; AGENTS/CLAUDE idénticos, `git diff --check` y `hyprctl configerrors` sin errores. Esta tarea no repite pruebas gráficas ni prueba juegos reales. Publicación mediante `git push origin main` y comprobación de `refs/heads/main` de GitLab/GitHub; el resultado se informa tras ejecutarlo.
+
+---
+
 ## 4. 📂 Estructura del repositorio
 
 ```
@@ -647,7 +653,7 @@ hyprland-de/
 ## 6. 🔀 Git
 
 * Rama `main`; `git push origin main` sube a GitLab y GitHub. El estado del árbol de trabajo cambia solo (archivos generados): consúltalo con `git status`, no lo apuntes aquí.
-* Consultar `git status --short --branch` y `git log -1 --oneline` para saber el commit y los cambios actuales. El usuario pidió un commit local de todos los cambios; no se ha solicitado push.
+* Consultar `git status --short --branch` y `git log -1 --oneline` para saber el commit y los cambios actuales. El usuario pidió el 2026-10-27 commitear todos los cambios y subirlos a ambos remotos. Comprobar el resultado del push mediante los hashes remotos; no inferirlo de un commit local.
 * `AGENTS.md` y `CLAUDE.md` deben ser idénticos; ambos y este contexto están versionados. No añadir secretos ni volcados privados. Los archivos generados sólo se incluyen de forma deliberada (como en esta petición de «todo»).
 
 | Commit | Qué |
