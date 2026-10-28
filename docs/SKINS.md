@@ -24,6 +24,33 @@ trae; el resto de complejidad la puede añadir quien la quiera, pero BWM no la o
 **Un único compositor.** BWM porta a Hyprland escritorios que no corren sobre él —KDE Plasma está en
 curso— para tenerlo todo en un solo compositor. Cada escritorio porteado es una skin.
 
+## Mosaico y apiladas: dos familias de skins
+
+Toda skin es de una de dos familias, y lo declara en su manifiesto (`"windowing"`):
+
+* **Mosaico** (*tiling*: Default, Retro): las ventanas se reparten la pantalla sin solaparse.
+* **Apiladas** (*stacking*, el modelo de los escritorios tradicionales como KDE Plasma, Windows o
+  macOS): cada ventana flota con su barra de título y se solapan.
+
+El cambio entre familias lo resuelve `config/hypr/scripts/bwm_windows.py` para cualquier skin: al
+entrar en una apilada, cada ventana flota **en el mismo sitio** que tenía en mosaico, con la barra
+de título de la skin encima, un margen con los bordes del monitor y un hueco entre ventanas para que
+se note que ya no están en mosaico; al volver a una de mosaico, se rehace el mosaico en ese orden.
+Una skin apilada nueva sólo tiene que declarar su geometría:
+
+```json
+"windowing": {
+  "mode": "stacking",
+  "titlebar": 30,
+  "panel": { "edge": "bottom", "size": 44 },
+  "edgeMargin": 10,
+  "gap": 10
+}
+```
+
+Una de mosaico: `"windowing": { "mode": "tiling" }`. El gestor lo escribe también en
+`hypr/modules/theme.lua` (`windowing`), y `rules.lua` hace flotar todo en las apiladas.
+
 ## Skins incluidas
 
 | id | Skin | Imita | Tema por defecto | Ecosistema de temas |
@@ -100,6 +127,7 @@ de la comunidad se buscarán en `~/.local/share/bwm/skins/<id>.json`. El comprob
   "description": "Qué reproduce de su escritorio original.",
   "preview": "assets/skin-previews/kde-plasma-6.png",
   "defaultTheme": { "mode": "static", "name": "Breeze Dark", "description": "…" },
+  "windowing": { "mode": "stacking", "titlebar": 30, "panel": { "edge": "bottom", "size": 44 }, "edgeMargin": 10, "gap": 10 },
   "themes": { "builtIn": "Temas incluidos.", "compatibility": "Qué temas externos acepta." },
   "requires": ["hyprpolkitagent", "breeze-icons", "hyprbars-plasma"],
   "recommends": ["qt6ct", "networkmanager"],

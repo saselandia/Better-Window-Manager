@@ -10,10 +10,23 @@
     "name": "Paleta dinámica (formato Omarchy)",
     "description": "Dinámico por defecto: genera un colors.toml de Omarchy desde el fondo. Se puede fijar cualquiera de los 23 temas estáticos de Omarchy (Alt+R) y entonces el fondo no cambia la paleta."
   },
+  "windowing": {
+    "mode": "tiling"
+  },
   "themes": {
     "builtIn": "Paleta dinámica + 23 temas de Omarchy (Tokyo Night, Catppuccin, Nord, Gruvbox, Kanagawa, Rose Pine, Everforest, Ethereal, White…).",
     "compatibility": "Temas y plugins de la comunidad de Omarchy (colors.toml, plugins de barra) se instalan desde Ajustes → Temas / Plugins o por Git."
   },
-  "requires": ["imagemagick", "font-jetbrains-nerd"],
-  "recommends": ["btop", "fastfetch", "papirus", "git", "socat", "hyprsunset"]
+  "requires": [
+    "imagemagick",
+    "font-jetbrains-nerd"
+  ],
+  "recommends": [
+    "btop",
+    "fastfetch",
+    "papirus",
+    "git",
+    "socat",
+    "hyprsunset"
+  ]
 }

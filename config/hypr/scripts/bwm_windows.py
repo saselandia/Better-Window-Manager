@@ -2,20 +2,34 @@
 """Colocación de ventanas al cambiar de skin (común a todas; lo usan bwm-theme-manager.py,
 bwm_omarchy.restart_app y reload-spotify.py).
 
-En KDE Plasma todas las ventanas flotan. Una ventana que venía en mosaico (Default/Retro) se
-queda en el mismo sitio: el mismo rectángulo en pantalla, contando la barra de título Breeze que
-hyprbars le pone encima si la lleva, metido en el área útil de Plasma (encima del panel) con un
-margen sutil respecto a los bordes del monitor para que se note que ya no está en mosaico.
+Cada skin declara en su manifiesto (config/hypr/skins/<id>.json, "windowing") cómo gestiona las
+ventanas: "tiling" (mosaico: Default, Retro) o "stacking" (apiladas/flotantes, como un escritorio
+tradicional: KDE Plasma). Al pasar de una de mosaico a una apilada, cada ventana se queda en el mismo
+sitio: el mismo rectángulo, contando la barra de título que la skin le pone encima ("titlebar") si la
+lleva, dentro del área útil (sin el panel, "panel") con un margen sutil con los bordes ("edgeMargin")
+y un hueco entre ventanas ("gap"), para que se note que ya no están en mosaico.
 """
 import json
+import re
 import subprocess
 from pathlib import Path
 
-PLASMA_PANEL = 44     # panel inferior de Plasma (THEMES["plasma"]["bar_height"])
-PLASMA_TITLEBAR = 30  # barra de hyprbars, por encima de la ventana (plugin:hyprbars:bar_height)
-EDGE_MARGIN = 10      # separación de los bordes del monitor y del panel
 MIN_W, MIN_H = 320, 200
 THEME_MANAGER = Path(__file__).resolve().parent / "bwm-theme-manager.py"
+SKINS_DIR = Path(__file__).resolve().parents[1] / "skins"
+TILING = {"mode": "tiling"}
+
+
+def windowing(skin: str) -> dict:
+    """La gestión de ventanas de una skin según su manifiesto ("tiling" si no lo dice)."""
+    try:
+        return json.loads((SKINS_DIR / f"{skin}.json").read_text(encoding="utf-8")).get("windowing", TILING)
+    except (OSError, ValueError):
+        return TILING
+
+
+def is_stacking(skin: str) -> bool:
+    return windowing(skin).get("mode") == "stacking"
 
 
 def hypr_json(what: str):
@@ -65,15 +79,19 @@ def has_titlebar(client: dict, bars: set) -> bool:
     return (client.get("class", ""), client.get("title", "")[:40].strip()) in bars
 
 
-def plasma_box(at, size, mon: dict, titlebar: bool) -> tuple:
-    """Posición y tamaño (del contenido) de una ventana flotante de Plasma que ocupe el rectángulo
-    `at`/`size` que tenía (en mosaico), dentro del área útil con EDGE_MARGIN."""
+def stacking_box(at, size, mon: dict, titlebar: bool, win: dict) -> tuple:
+    """Posición y tamaño (del contenido) de una ventana flotante que ocupe el rectángulo `at`/`size`
+    que tenía en mosaico, separada de las vecinas (`gap`) y dentro del área útil de la skin apilada
+    `win` (su "windowing")."""
     mx, my, mw, mh = monitor_box(mon)
-    left, top = mx + EDGE_MARGIN, my + EDGE_MARGIN
-    right, bottom = mx + mw - EDGE_MARGIN, my + mh - PLASMA_PANEL - EDGE_MARGIN
-    x0, y0 = max(at[0], left), max(at[1], top)
-    x1, y1 = min(at[0] + size[0], right), min(at[1] + size[1], bottom)
-    bar = PLASMA_TITLEBAR if titlebar else 0
+    margin, half_gap = win.get("edgeMargin", 10), win.get("gap", 0) / 2
+    panel = win.get("panel", {})
+    reserve = {e: (panel.get("size", 0) if panel.get("edge") == e else 0) for e in ("top", "bottom", "left", "right")}
+    left, top = mx + reserve["left"] + margin, my + reserve["top"] + margin
+    right, bottom = mx + mw - reserve["right"] - margin, my + mh - reserve["bottom"] - margin
+    x0, y0 = max(at[0] + half_gap, left), max(at[1] + half_gap, top)
+    x1, y1 = min(at[0] + size[0] - half_gap, right), min(at[1] + size[1] - half_gap, bottom)
+    bar = win.get("titlebar", 0) if titlebar else 0
     w, h = max(MIN_W, x1 - x0), max(MIN_H, y1 - y0 - bar)
     x = min(x0, right - w)
     y = min(y0 + bar, bottom - h)
@@ -103,8 +121,10 @@ def dispatch(lua_blocks: list):
     subprocess.run(["hyprctl", "dispatch", code], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-def float_for_plasma(clients: list = None):
-    """Todas las ventanas en mosaico pasan a flotar en su mismo sitio (con su barra y margen)."""
+def float_in_place(skin: str, clients: list = None):
+    """Al entrar en una skin apilada, las ventanas en mosaico pasan a flotar en su mismo sitio
+    (con su barra de título, el margen y el hueco de la skin)."""
+    win = windowing(skin)
     clients = clients if clients is not None else hypr_json("clients")
     monitors = hypr_json("monitors")
     bars = titlebars()
@@ -116,7 +136,7 @@ def float_for_plasma(clients: list = None):
             or monitor_for(c["at"], c["size"], monitors)
         if not mon:
             continue
-        box = plasma_box(c["at"], c["size"], mon, has_titlebar(c, bars))
+        box = stacking_box(c["at"], c["size"], mon, has_titlebar(c, bars), win)
         blocks.append(place_lua(c["address"], box=box, make_floating=True))
     dispatch(blocks)
     return len(blocks)
@@ -124,16 +144,34 @@ def float_for_plasma(clients: list = None):
 
 def restored_box(record: dict, client: dict):
     """Geometría para una ventana que vuelve tras reiniciar su app: la que tenía si flotaba; si
-    estaba en mosaico y ahora flota (en Plasma), la de float_for_plasma; si no, ninguna."""
+    estaba en mosaico y ahora flota (skin apilada), la de float_in_place; si no, ninguna."""
     if not client.get("floating"):
         return None
     if record.get("floating"):
         return (*record["at"], *record["size"])
-    if current_skin() != "plasma":
+    skin = current_skin()
+    if not is_stacking(skin):
         return None
     monitors = hypr_json("monitors")
     mon = monitor_for(record["at"], record["size"], monitors)
-    return plasma_box(record["at"], record["size"], mon, has_titlebar(client, titlebars())) if mon else None
+    return stacking_box(record["at"], record["size"], mon, has_titlebar(client, titlebars()),
+                        windowing(skin)) if mon else None
+
+
+def hold_new_windows(name: str, classes: list, workspace):
+    """Regla temporal: las ventanas nuevas de esas clases (la de carga de Steam, diálogos de una
+    app que se reinicia) se abren directamente en `workspace`, sin robar el foco ni aparecer en el
+    workspace que estás mirando. release_new_windows la retira."""
+    pattern = "^(" + "|".join(re.escape(c) for c in classes if c) + ")$"
+    ws = str(workspace)
+    subprocess.run(["hyprctl", "eval", f"hl.window_rule({{ name = {json.dumps(name)}, match = {{ class = {json.dumps(pattern)} }}, "
+                    f"workspace = {json.dumps(ws + ' silent')} }})"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def release_new_windows(name: str):
+    """Quita la regla de hold_new_windows: redefinida con el mismo nombre no casa con nada."""
+    subprocess.run(["hyprctl", "eval", f"hl.window_rule({{ name = {json.dumps(name)}, match = {{ class = \"^$BWM-none^\" }}, "
+                    "workspace = \"1 silent\" })"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def _active_workspace_id(mon: dict):
@@ -201,8 +239,8 @@ def restore_focus(snap: dict):
 
 if __name__ == "__main__":
     import sys
-    if sys.argv[1:] == ["float-for-plasma"]:
-        print(float_for_plasma())
+    if len(sys.argv) == 3 and sys.argv[1] == "float-in-place":
+        print(float_in_place(sys.argv[2]))
     else:
-        print("Uso: bwm_windows.py float-for-plasma", file=sys.stderr)
+        print("Uso: bwm_windows.py float-in-place <skin>", file=sys.stderr)
         sys.exit(2)

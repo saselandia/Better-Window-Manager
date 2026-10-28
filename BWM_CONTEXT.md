@@ -624,6 +624,13 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 * **Verificado:** con Stremio reproduciendo, Retro→Plasma→Retro: workspaces (10 y 1), ventana con foco y reproducción idénticos antes y después, mismo PID de Hyprland. No se pudo comprobar el fallo original en el estado anterior.
 * **README:** mención «Diseñado con tarjetas NVIDIA en mente» (texto, bajo la introducción) y nota pequeña de que AMD e Intel también sirven pero están menos probados. **Sin logo de NVIDIA**: sus normas exigen permiso escrito para usarlo y dicen que implica patrocinio; sólo se usa el nombre, con aviso de marca y de que no hay relación con NVIDIA. Equipo: RTX 4070 Ti SUPER, driver oficial (módulo abierto).
 
+### 55. Cambio de skin más cómodo; familias mosaico/apiladas (2026-10-28)
+* **Petición:** que cambiar de skin sea rápido y, sobre todo, cómodo: la ventana de carga de Steam salía en medio del workspace que estabas mirando; más hueco entre ventanas al flotar en Plasma; distinguir skins de mosaico y de ventanas apiladas (escritorio tradicional) para reutilizarlo en skins futuras.
+* **Medido:** el gestor tarda ~1,7–2,2 s (0,5 s es la espera a hyprbars) y la barra de Quickshell vuelve a los ~2,2 s. Lo lento/incómodo eran los reinicios de apps (Steam, Firefox) y sus ventanas emergentes.
+* **Hecho:** `bwm_windows.hold_new_windows()/release_new_windows()`: mientras `restart_app` reinicia una app, una regla temporal (`bwm-restart-<clase>`, `workspace = "<ws> silent"`) manda sus ventanas nuevas a su workspace sin foco; se retira redefiniéndola con el mismo nombre y un patrón que no casa (comprobado que redefinir sustituye). Manifiestos con `"windowing"`: Default/Retro `tiling`, Plasma `stacking` con `titlebar` 30, `panel` abajo 44, `edgeMargin` 10 y `gap` 10. `float_for_plasma`/`plasma_box` → `float_in_place(skin)`/`stacking_box(…, windowing)`; `sync_floating_windows(skin)` decide por el manifiesto (hyprbars sólo en Plasma); `theme.lua` lleva `windowing` y `rules.lua` hace flotar todo si es `stacking`.
+* **Verificado (Stremio sonando todo el rato):** Retro→Plasma→Retro. «Sign in to Steam» (su ventana de carga) apareció en el workspace 4 de Steam en las dos idas, la principal volvió a su sitio, workspaces visibles (10 y 1) sin cambios, Stremio «Playing». En Plasma, 10 px entre ventanas vecinas. `Hyprland --verify-config` ok, `configerrors` vacío. La ventana con foco al final de la vuelta a Retro era kitty y no Claude: no se pudo distinguir si fue un clic del usuario o la restauración.
+* **No hecho:** acelerar el reinicio de Quickshell o evitar el de Steam/Firefox (ambos sólo cargan su tema al arrancar).
+
 ---
 
 ## 4. 📂 Estructura del repositorio

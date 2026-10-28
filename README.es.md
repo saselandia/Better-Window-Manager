@@ -31,11 +31,11 @@ Default (end-4 / illogical-impulse), Retro (Omarchy) y KDE Plasma sobre Hyprland
 
 ### Skins incluidas
 
-| Skin | Imita | Tema por defecto | Otros temas | Compatibilidad buscada |
-| :--- | :--- | :--- | :--- | :--- |
-| **Default** | [end-4 / illogical-impulse](https://github.com/end-4/dots-hyprland) (Material You) | **Dinámico**: matugen saca la paleta del fondo cada vez que lo cambias | — (claro u oscuro según el fondo) | Plantillas y fondos de matugen / end-4 |
-| **Retro** | [Omarchy 4](https://github.com/basecamp/omarchy) (rama `quattro`) | **Dinámico**: paleta con el formato de Omarchy sacada del fondo | 23 temas estáticos de Omarchy (Tokyo Night, Catppuccin, Nord, Gruvbox…) con `Alt + R`; al fijar uno, el fondo ya no cambia los colores | Temas y plugins de la comunidad de Omarchy (Ajustes → Temas / Plugins) |
-| **KDE Plasma** | KDE Plasma 6 (Breeze Dark) | **Estático**: Breeze Dark, no cambia con el fondo | — | Esquemas de color y temas globales de Plasma de la KDE Store (pendiente) |
+| Skin | Imita | Ventanas | Tema por defecto | Otros temas | Compatibilidad buscada |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Default** | [end-4 / illogical-impulse](https://github.com/end-4/dots-hyprland) (Material You) | Mosaico | **Dinámico**: matugen saca la paleta del fondo cada vez que lo cambias | — (claro u oscuro según el fondo) | Plantillas y fondos de matugen / end-4 |
+| **Retro** | [Omarchy 4](https://github.com/basecamp/omarchy) (rama `quattro`) | Mosaico | **Dinámico**: paleta con el formato de Omarchy sacada del fondo | 23 temas estáticos de Omarchy (Tokyo Night, Catppuccin, Nord, Gruvbox…) con `Alt + R`; al fijar uno, el fondo ya no cambia los colores | Temas y plugins de la comunidad de Omarchy (Ajustes → Temas / Plugins) |
+| **KDE Plasma** | KDE Plasma 6 (Breeze Dark) | Apiladas (flotantes) | **Estático**: Breeze Dark, no cambia con el fondo | — | Esquemas de color y temas globales de Plasma de la KDE Store (pendiente) |
 
 ### Pocas skins, lo esencial y lo mismo en todas
 
@@ -56,6 +56,8 @@ Es la finalidad del proyecto, así que la medimos. Son estimaciones del porcenta
 ### Hacia un único compositor: Hyprland
 
 Uno de los proyectos más ambiciosos de BWM es **portar a Hyprland escritorios que no corren sobre él**, empezando por KDE Plasma (en curso: panel, Kickoff, applets, Alt+Tab de KWin, OSD y barras de título Breeze ya funcionan sobre Hyprland), para tenerlo todo con un solo compositor. Otros escritorios y gestores de ventanas podrán seguir el mismo camino como skins nuevas.
+
+Al cambiar entre una skin en mosaico y una de ventanas apiladas, cada ventana se queda donde estaba, y las apps que se reinician para cambiar de tema vuelven a su sitio sin aparecer en el workspace que estás mirando.
 
 Más skins: [docs/SKINS.md](docs/SKINS.md) explica qué es una skin y cómo se añade.
 

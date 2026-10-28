@@ -1242,6 +1242,10 @@ def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None, qu
         except Exception as e:
             print(f"[Warning] {e}", file=sys.stderr)
 
+    # Lo que la app abra mientras arranca (la ventana de carga de Steam…) va directamente a su
+    # workspace, en silencio: no aparece en medio del que estás mirando ni te cambia de workspace
+    hold = "bwm-restart-" + re.sub(r"[^A-Za-z0-9]+", "-", windows[0].get("class", "app")).strip("-").lower()
+    bwm_windows.hold_new_windows(hold, sorted({c.get("class", "") for c in windows}), layout[0]["ws"])
     subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
     pending = list(layout)
@@ -1271,7 +1275,8 @@ def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None, qu
             placed[c["address"]] = m
             pending.remove(m)
             last_place = time.time()
-    # La app reabierta tomó el foco y cambió de workspace: todo como estaba (y lo que sonaba, sonando)
+    bwm_windows.release_new_windows(hold)
+    # Por si algo tomó el foco o cambió de workspace: todo como estaba (y lo que sonaba, sonando)
     bwm_windows.restore_focus(focus)
     return True
 

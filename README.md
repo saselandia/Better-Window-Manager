@@ -31,11 +31,11 @@ Default (end-4 / illogical-impulse), Retro (Omarchy) and KDE Plasma on top of Hy
 
 ### Bundled skins
 
-| Skin | Imitates | Default theme | Other themes | Compatibility target |
-| :--- | :--- | :--- | :--- | :--- |
-| **Default** | [end-4 / illogical-impulse](https://github.com/end-4/dots-hyprland) (Material You) | **Dynamic**: matugen builds the palette from your wallpaper every time it changes | — (light or dark from the wallpaper) | matugen / end-4 templates and wallpapers |
-| **Retro** | [Omarchy 4](https://github.com/basecamp/omarchy) (`quattro` branch) | **Dynamic**: an Omarchy-format palette from the wallpaper | 23 static Omarchy themes (Tokyo Night, Catppuccin, Nord, Gruvbox…) with `Alt + R`; once one is pinned, the wallpaper no longer changes the colours | Omarchy community themes and plugins (Settings → Themes / Plugins) |
-| **KDE Plasma** | KDE Plasma 6 (Breeze Dark) | **Static**: Breeze Dark, unaffected by the wallpaper | — | Plasma colour schemes and global themes from the KDE Store (planned) |
+| Skin | Imitates | Windows | Default theme | Other themes | Compatibility target |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Default** | [end-4 / illogical-impulse](https://github.com/end-4/dots-hyprland) (Material You) | Tiling | **Dynamic**: matugen builds the palette from your wallpaper every time it changes | — (light or dark from the wallpaper) | matugen / end-4 templates and wallpapers |
+| **Retro** | [Omarchy 4](https://github.com/basecamp/omarchy) (`quattro` branch) | Tiling | **Dynamic**: an Omarchy-format palette from the wallpaper | 23 static Omarchy themes (Tokyo Night, Catppuccin, Nord, Gruvbox…) with `Alt + R`; once one is pinned, the wallpaper no longer changes the colours | Omarchy community themes and plugins (Settings → Themes / Plugins) |
+| **KDE Plasma** | KDE Plasma 6 (Breeze Dark) | Stacking (floating) | **Static**: Breeze Dark, unaffected by the wallpaper | — | Plasma colour schemes and global themes from the KDE Store (planned) |
 
 ### Few skins, the essentials, the same in all of them
 
@@ -56,6 +56,8 @@ This is the point of the project, so we measure it. Estimated share of the origi
 ### Towards a single compositor: Hyprland
 
 One of BWM's most ambitious goals is **porting desktops that do not run on Hyprland to Hyprland**, starting with KDE Plasma (in progress: its panel, Kickoff, applets, KWin's Alt+Tab, OSD and Breeze title bars already run on Hyprland), so everything lives on one compositor. Other desktops and window managers can follow the same path as new skins.
+
+Switching between a tiling skin and a stacking one keeps every window where it was, and apps restarted to pick up the new theme come back in place without popping up on the workspace you are looking at.
 
 More skins: [docs/SKINS.md](docs/SKINS.md) explains what a skin is and how one is added.
 

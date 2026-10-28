@@ -10,10 +10,20 @@
     "name": "Material You desde el fondo",
     "description": "Dinámico: matugen genera la paleta del fondo cada vez que lo cambias (Alt+W)."
   },
+  "windowing": {
+    "mode": "tiling"
+  },
   "themes": {
     "builtIn": "Paleta dinámica de matugen (claro u oscuro según el fondo).",
     "compatibility": "Objetivo: plantillas y fondos de la comunidad de matugen / end-4 funcionan tal cual."
   },
-  "requires": ["matugen", "rofi", "hyprpolkitagent"],
-  "recommends": ["swaync", "hyprsunset"]
+  "requires": [
+    "matugen",
+    "rofi",
+    "hyprpolkitagent"
+  ],
+  "recommends": [
+    "swaync",
+    "hyprsunset"
+  ]
 }

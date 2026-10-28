@@ -369,6 +369,8 @@ def update_hypr_theme_lua(theme_name: str, cfg: dict):
     else:
         gaps_out_str = str(gaps_out_val)
 
+    import bwm_windows
+    windowing_mode = bwm_windows.windowing(theme_name).get("mode", "tiling")
     content = f"""-- =============================================================================
 -- Better Window Manager (BWM) - Configuración del Tema Activo
 -- Archivo gestionado automáticamente por bwm-theme-manager.py
@@ -381,6 +383,8 @@ local theme = {{
     border_size = {cfg['border_size']},
     gaps_in = {cfg['gaps_in']},
     gaps_out = {gaps_out_str},
+    -- "tiling" (mosaico) o "stacking" (ventanas apiladas/flotantes): config/hypr/skins/{theme_name}.json
+    windowing = "{windowing_mode}",
 }}
 
 return theme
@@ -782,12 +786,15 @@ def apply_retro_wallpaper_colors(wallpaper_path: str = None):
         return
     bwm_omarchy.apply_retro_dynamic_theme(wallpaper_path or "")
 
-def sync_floating_windows(to_plasma: bool):
+def sync_floating_windows(skin: str):
     """
-    Transitions window tiling/floating mode between themes:
-    - to_plasma=True: Makes all open windows floating (non-tiling layout) and adds top draggable groupbars.
-    - to_plasma=False: Ungroups windows and restores tiled layout for windows that aren't marked as persistent float in persistent_rules.json.
+    Pasa las ventanas abiertas a la gestión de la skin destino ("windowing" de su manifiesto):
+    - apilada ("stacking", KDE Plasma): todas flotan en su mismo sitio (bwm_windows.float_in_place);
+      en Plasma además se activan las barras de título de hyprbars.
+    - mosaico ("tiling"): vuelven al mosaico salvo las flotantes persistentes de persistent_rules.json.
     """
+    import bwm_windows
+    to_stacking = bwm_windows.is_stacking(skin)
     try:
         res = subprocess.run(["hyprctl", "clients", "-j"], capture_output=True, text=True, timeout=2)
         clients = json.loads(res.stdout)
@@ -796,7 +803,7 @@ def sync_floating_windows(to_plasma: bool):
         return
 
     plugin_path = str(CONFIG_DIR / "hypr" / "plugins" / "hyprbars-plasma.so")
-    if to_plasma:
+    if skin == "plasma":
         plist = subprocess.run(["hyprctl", "plugin", "list"], capture_output=True, text=True, check=False)
         if "Plugin hyprbars" not in plist.stdout:
             subprocess.run(["hyprctl", "plugin", "load", plugin_path], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -831,8 +838,8 @@ def sync_floating_windows(to_plasma: bool):
         if not addr:
             continue
 
-        if to_plasma:
-            continue  # bwm_windows.float_for_plasma, abajo
+        if to_stacking:
+            continue  # bwm_windows.float_in_place, abajo
         else:
             # Al salir de plasma: limpiar tags de snap y restaurar mosaico si no es flotante persistente
             lua_cmds.append(f'do local win = hl.get_window("address:{addr}"); if win then hl.dispatch(hl.dsp.window.clear_tags({{ window = win }})) end end')
@@ -849,7 +856,7 @@ def sync_floating_windows(to_plasma: bool):
         # Mientras se rehace el mosaico, cada ventana se añade a la derecha/abajo de la anterior
         # (no según el ratón), para que el orden izquierda→derecha se conserve
         split = None
-        if not to_plasma:
+        if not to_stacking:
             out = subprocess.run(["hyprctl", "getoption", "dwindle:force_split", "-j"], capture_output=True, text=True).stdout
             try:
                 split = json.loads(out).get("int", 0)
@@ -860,14 +867,13 @@ def sync_floating_windows(to_plasma: bool):
         if split is not None:
             subprocess.run(["hyprctl", "keyword", "dwindle:force_split", str(split)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    if to_plasma:
+    if to_stacking:
         # Las ventanas en mosaico flotan en el mismo sitio (con su barra de título y un margen
         # sutil con los bordes), no donde Hyprland pone una ventana flotante nueva. Se espera un
         # momento a que hyprbars decida qué ventanas llevan barra (hyprctl hyprbars-csd).
         import time
-        import bwm_windows
         time.sleep(0.5)
-        bwm_windows.float_for_plasma(clients)
+        bwm_windows.float_in_place(skin, clients)
 
 def apply_theme(theme_name: str):
     """Applies theme across all subsystems, with complete isolation."""
@@ -965,7 +971,7 @@ def apply_theme(theme_name: str):
         pass
 
     # 6. Sincronizar el estado flotante / mosaico de las ventanas abiertas tras la recarga
-    sync_floating_windows(cfg.get("is_plasma", False))
+    sync_floating_windows(theme_name)
     bwm_windows.restore_focus(focus)
 
     # 6.1 Demonio de notificaciones: en Retro el de Omarchy (dentro de Quickshell), así que swaync

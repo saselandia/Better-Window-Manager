@@ -10,6 +10,16 @@
     "name": "Breeze Dark",
     "description": "Estático: la paleta Breeze Dark no cambia con el fondo."
   },
+  "windowing": {
+    "mode": "stacking",
+    "titlebar": 30,
+    "panel": {
+      "edge": "bottom",
+      "size": 44
+    },
+    "edgeMargin": 10,
+    "gap": 10
+  },
   "themes": {
     "builtIn": "Breeze Dark (escritorio, GTK, Qt, kitty y apps).",
     "compatibility": "Objetivo: esquemas de color y temas globales de Plasma de la KDE Store aplicados al panel, applets y apps (pendiente)."
