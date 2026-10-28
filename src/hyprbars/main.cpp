@@ -13,6 +13,11 @@
 #undef protected
 
 #include <any>
+#include <hyprland/src/desktop/state/WindowState.hpp>
+#include <hyprland/src/desktop/state/ViewState.hpp>
+#include <hyprland/src/desktop/state/ViewHitTester.hpp>
+#include <hyprland/src/state/MonitorState.hpp>
+#include <hyprland/src/managers/fullscreen/FullscreenController.hpp>
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/desktop/view/Window.hpp>
 #include <hyprland/src/config/ConfigManager.hpp>
@@ -49,7 +54,7 @@ APICALL EXPORT std::string PLUGIN_API_VERSION() {
 }
 
 static void onNewWindow(PHLWINDOW window) {
-    if (!g_pGlobalState || !validMapped(window))
+    if (!g_pGlobalState || !Desktop::View::validMapped(window))
         return;
 
     if (std::ranges::any_of(window->m_windowDecorations, [](const auto& d) { return d->getDisplayName() == "Hyprbar"; }))
@@ -64,7 +69,7 @@ static void onNewWindow(PHLWINDOW window) {
 // hyprctl hyprbars-csd: qué ha detectado el plugin para cada ventana y por qué
 static std::string csdReport(eHyprCtlOutputFormat, std::string) {
     std::string out;
-    for (auto& w : g_pCompositor->m_windows) {
+    for (auto& w : Desktop::windowState()->windows()) {
         if (!w->m_isMapped)
             continue;
         const auto det = detectDecorations(w);
@@ -269,7 +274,7 @@ static void onGlobalMouseMove(const Vector2D& coords) {
         }
     }
 
-    if (validMapped(draggedWin)) {
+    if (Desktop::View::validMapped(draggedWin)) {
         if (s_bHasLastDraggedBox)
             g_pHyprRenderer->damageBox(s_lastDraggedBox);
 
@@ -298,24 +303,24 @@ static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEve
     if (e.button == BTN_LEFT) {
         if (e.state == WL_POINTER_BUTTON_STATE_PRESSED) {
             if ((MODS & ALTMASK) != 0 || (MODS & SUPERMASK) != 0) {
-                auto pWindow = g_pCompositor->vectorToWindowUnified(
+                auto pWindow = Desktop::CViewHitTester{*Desktop::viewState()}.windowAt(
                     g_pInputManager->getMouseCoordsInternal(),
                     Desktop::View::RESERVED_EXTENTS | Desktop::View::INPUT_EXTENTS | Desktop::View::ALLOW_FLOATING);
                 if (!pWindow)
                     pWindow = Desktop::focusState()->window();
 
-                if (validMapped(pWindow)) {
+                if (Desktop::View::validMapped(pWindow)) {
                     s_bAltDragging = true;
                     s_pAltDraggedWindow = pWindow;
 
                     CBox curBox = pWindow->layoutTarget()->position();
-                    bool wasFullscreen = pWindow->isFullscreen();
+                    bool wasFullscreen = Fullscreen::controller()->isFullscreen(pWindow);
                     bool wasSnapped = pWindow->m_ruleApplicator && pWindow->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
 
                     g_pHyprRenderer->damageWindow(pWindow, true);
 
                     if (wasFullscreen)
-                        g_pCompositor->setWindowFullscreenInternal(pWindow, FSMODE_NONE);
+                        Fullscreen::controller()->setFullscreenMode(pWindow, Fullscreen::FSMODE_NONE);
 
                     Config::Actions::clearTags(pWindow);
                     pWindow->updateWindowData();
@@ -356,7 +361,7 @@ static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEve
                 s_pNativeDraggedWindow.reset();
                 if (g_layoutManager && g_layoutManager->dragController() && g_layoutManager->dragController()->mode() == MBIND_MOVE)
                     g_pKeybindManager->changeMouseBindMode(MBIND_INVALID);
-                if (validMapped(pWin)) {
+                if (Desktop::View::validMapped(pWin)) {
                     checkAndTriggerEdgeSnap(pWin, g_pInputManager->getMouseCoordsInternal());
                 }
             } else if (auto pNativeWin = s_pNativeDraggedWindow.lock()) {
@@ -370,7 +375,7 @@ static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEve
                         }
                     }
                 }
-                if (!anyBarDragging && validMapped(pNativeWin)) {
+                if (!anyBarDragging && Desktop::View::validMapped(pNativeWin)) {
                     if (g_layoutManager && g_layoutManager->dragController() && g_layoutManager->dragController()->mode() == MBIND_MOVE)
                         g_pKeybindManager->changeMouseBindMode(MBIND_INVALID);
                     checkAndTriggerEdgeSnap(pNativeWin, g_pInputManager->getMouseCoordsInternal());
@@ -379,13 +384,13 @@ static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEve
         }
     } else if (e.button == BTN_RIGHT) {
         if (e.state == WL_POINTER_BUTTON_STATE_PRESSED && (MODS & ALTMASK) != 0) {
-            auto pWindow = g_pCompositor->vectorToWindowUnified(
+            auto pWindow = Desktop::CViewHitTester{*Desktop::viewState()}.windowAt(
                 g_pInputManager->getMouseCoordsInternal(),
                 Desktop::View::RESERVED_EXTENTS | Desktop::View::INPUT_EXTENTS | Desktop::View::ALLOW_FLOATING);
             if (!pWindow)
                 pWindow = Desktop::focusState()->window();
 
-            if (validMapped(pWindow)) {
+            if (Desktop::View::validMapped(pWindow)) {
                 Config::Actions::clearTags(pWindow);
                 pWindow->updateWindowData();
             }
@@ -530,7 +535,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g_pGlobalState->pReloadedListener  = Event::bus()->m_events.config.reloaded.listen([] { onConfigReloaded(); });
 
     // add deco to existing windows
-    for (auto& w : g_pCompositor->m_windows) {
+    for (auto& w : Desktop::windowState()->windows()) {
         if (w->isHidden() || !w->m_isMapped)
             continue;
 
@@ -545,7 +550,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 APICALL EXPORT void PLUGIN_EXIT() {
     hideSnapPreview();
     closeDecorationDetection();
-    for (auto& m : g_pCompositor->m_monitors)
+    for (auto& m : State::monitorState()->monitors())
         m->m_scheduledRecalc = true;
 
     g_pHyprRenderer->m_renderPass.removeAllOfType("CBarPassElement");

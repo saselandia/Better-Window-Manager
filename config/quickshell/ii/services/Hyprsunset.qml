@@ -165,6 +165,9 @@ Singleton {
     Connections {
         target: Config.options.light.night
         function onColorTemperatureChanged() {
+            // La misma temperatura en todas las skins: la luz nocturna de Retro (nightlight.py) la guarda
+            Quickshell.execDetached(["python3", `${Quickshell.env("HOME")}/.config/hypr/scripts/nightlight.py`,
+                "--remember", `${Config.options.light.night.colorTemperature}`]);
             if (!root.temperatureActive) return;
             Quickshell.execDetached(["hyprctl", "hyprsunset", "temperature", `${Config.options.light.night.colorTemperature}`]);
         }

@@ -69,12 +69,11 @@
       "packages": {"gentoo": "app-misc/jq", "arch": "jq", "fedora": "jq", "opensuse": "jq", "debian": "jq"}
     },
     "swww": {
-      "label": "swww",
-      "why": "Pinta el fondo de pantalla con transiciones",
-      "check": {"type": "cmd", "all": ["swww", "swww-daemon"]},
+      "label": "swww o awww",
+      "why": "Pinta el fondo de pantalla con transiciones (awww es el nombre nuevo de swww; vale cualquiera)",
+      "check": {"type": "cmd", "groups": [["swww", "swww-daemon"], ["awww", "awww-daemon"]]},
       "packages": {"gentoo": "guru:gui-apps/awww", "arch": "swww", "fedora": null, "opensuse": "swww", "debian": null},
-      "notes": {"gentoo": "GURU lo publica con su nombre nuevo, awww. BWM llama a swww: crea los enlaces con «ln -s /usr/bin/awww ~/.local/bin/swww && ln -s /usr/bin/awww-daemon ~/.local/bin/swww-daemon»."},
-      "manual": "https://github.com/LGFae/swww"
+      "manual": "https://codeberg.org/LGFae/awww"
     },
     "wl-clipboard": {
       "label": "wl-clipboard",

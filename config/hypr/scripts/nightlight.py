@@ -24,6 +24,9 @@ LEGACY_STATE = os.path.expanduser("~/.config/hypr/nightlight.json")
 LEGACY_SHADER = os.path.expanduser("~/.config/hypr/nightlight.frag")
 
 MIN_TEMP, MAX_TEMP = 2500, 6500
+# La temperatura es de todas las skins: también la usa el servicio Hyprsunset de Default/Plasma
+# (light.night.colorTemperature, sección compartida de illogical-impulse/config.json)
+II_CONFIG = os.path.expanduser("~/.config/illogical-impulse/config.json")
 
 DEFAULT_STATE = {
     "enabled": False,
@@ -67,6 +70,23 @@ def save_state(state):
         os.replace(tmp, STATE_PATH)
     except OSError as e:
         print(f"Error saving nightlight state: {e}", file=sys.stderr)
+
+
+def share_temperature(temp):
+    """Copia la temperatura a light.night.colorTemperature para las otras skins."""
+    try:
+        with open(II_CONFIG, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        night = data.setdefault("light", {}).setdefault("night", {})
+        if night.get("colorTemperature") == temp:
+            return
+        night["colorTemperature"] = temp
+        tmp = II_CONFIG + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        os.replace(tmp, II_CONFIG)
+    except (OSError, ValueError, AttributeError):
+        pass
 
 
 def backend():
@@ -161,6 +181,8 @@ def main():
     parser.add_argument("--off", action="store_true", help="Apaga la luz nocturna")
     parser.add_argument("--apply", action="store_true", help="Vuelve a aplicar el estado guardado (inicio de sesión)")
     parser.add_argument("--temperature", type=int, help="Establece la temperatura en Kelvin (ej. 4000)")
+    parser.add_argument("--remember", type=int, metavar="K",
+                        help="Sólo guarda la temperatura (la cambió otra skin), sin encender ni apagar nada")
 
     args = parser.parse_args()
     migrate_legacy()
@@ -168,6 +190,11 @@ def main():
 
     if args.status:
         print(json.dumps({**state, "backend": backend()}))
+        return
+
+    if args.remember is not None:
+        state["temperature"] = max(MIN_TEMP, min(MAX_TEMP, args.remember))
+        save_state(state)
         return
 
     changed = args.apply
@@ -188,6 +215,8 @@ def main():
     if changed:
         save_state(state)
         apply_nightlight(state["enabled"], state["temperature"])
+        if args.temperature is not None:
+            share_temperature(state["temperature"])
 
     print(json.dumps({**state, "backend": backend()}))
 

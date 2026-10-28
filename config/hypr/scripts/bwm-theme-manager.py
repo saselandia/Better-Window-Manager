@@ -250,16 +250,32 @@ def save_current_theme_config(theme_name: str):
 # (barra, fondo, apariencia, dock...). Todo lo demás (apps, audio, IA, idioma,
 # notificaciones, servicios, hora...) se comparte entre Default, Retro y Plasma.
 # El inicio automático y los atajos viven fuera de config.json y ya son comunes.
+# Interfaz (vista general, OSD, bloqueo, ventanas, selector de fondos) se comparte desde 2026-10-28;
+# el dock no: Retro usa el de Omarchy y las otras el de BWM, con apps ancladas distintas.
 THEME_SPECIFIC_SECTIONS = {
-    "appearance", "background", "bar", "dock", "lock", "osd", "overview",
-    "panelFamily", "waffles", "wallpaperSelector", "windows",
+    "appearance", "background", "bar", "dock", "panelFamily", "waffles",
 }
 
+# Claves de esas secciones que, aun así, son de todas las skins (docs/SKINS.md, «Qué se conserva
+# entre skins»): cuántos workspaces hay, el tiempo (Ajustes → Servicios) y el logo de la barra.
+SHARED_KEYS_IN_SKIN_SECTIONS = ("bar.workspaces.shown", "bar.weather", "bar.topLeftIcon")
+
 def merge_shared_sections(target: dict, source: dict) -> dict:
-    """Copies the non-aesthetic (shared) sections of `source` into `target`."""
+    """Copies the non-aesthetic (shared) sections of `source` into `target`, plus the shared keys
+    that live inside a skin's own sections."""
     for key, value in source.items():
         if key not in THEME_SPECIFIC_SECTIONS:
             target[key] = value
+    for path in SHARED_KEYS_IN_SKIN_SECTIONS:
+        *parents, leaf = path.split(".")
+        src, dst = source, target
+        for part in parents:
+            src = src.get(part) if isinstance(src, dict) else None
+            if not isinstance(dst.get(part), dict):
+                dst[part] = {}
+            dst = dst[part]
+        if isinstance(src, dict) and leaf in src:
+            dst[leaf] = src[leaf]
     return target
 
 def load_theme_config(target_theme: str, cfg: dict):

@@ -33,6 +33,26 @@ Default (end-4 / illogical-impulse), Retro (Omarchy) and KDE Plasma on top of Hy
 | **Retro** | [Omarchy 4](https://github.com/basecamp/omarchy) (`quattro` branch) | **Dynamic**: an Omarchy-format palette from the wallpaper | 23 static Omarchy themes (Tokyo Night, Catppuccin, Nord, Gruvbox…) with `Alt + R`; once one is pinned, the wallpaper no longer changes the colours | Omarchy community themes and plugins (Settings → Themes / Plugins) |
 | **KDE Plasma** | KDE Plasma 6 (Breeze Dark) | **Static**: Breeze Dark, unaffected by the wallpaper | — | Plasma colour schemes and global themes from the KDE Store (planned) |
 
+### Few skins, the essentials, the same in all of them
+
+BWM does not want to be complicated. It offers **very few skins** —the current three— that do the essentials and are quick to learn. They all share almost the same basic features (launcher, settings, network, Bluetooth, audio, displays, screenshots, clipboard, notifications, lock screen…), so moving between them means relearning nothing. When a desktop has something very important of its own (Omarchy's dock and menu, Plasma's Kickoff and title bars), that skin brings it. Anyone who wants more complexity can add it; BWM does not ship it.
+
+**Kept when you switch skins:** network and Bluetooth, the cursor, the night-light temperature (Kelvin), default apps, workspaces (the same 1–10 on the same monitors), displays (resolution, refresh rate, position and scale: change it in one, it stays changed in all), autostart apps, services (weather, AI, search…), the interface (logo, overview, OSD, lock screen) and general settings (language, time, battery). **Each skin's own:** its look and fonts (the skin's and its theme's), wallpaper, bar and dock.
+
+### Compatibility with each desktop's themes (estimate)
+
+This is the point of the project, so we measure it. Estimated share of the original desktop's themes or plugins that work today without changes:
+
+| Skin | Original themes | Original plugins / extensions | Basis of the estimate |
+| :--- | :---: | :---: | :--- |
+| **Retro** (Omarchy) | **~90 %** | **~80 %** | Themes: `colors.toml`, wallpapers and app files (Neovim, VS Code, btop…) are applied; not the theme's `hyprland.lua`, `icons.theme` (Retro uses Papirus with the accent) or the Chromium theme (needs root). Plugins: bar widgets and services work unchanged; not those replacing the bar, lock screen, overlays or panels |
+| **Default** (end-4) | **~90 %** | — | Any wallpaper builds its palette (100 %); third-party matugen templates are added to `matugen/config.toml`. end-4 has no plugin catalogue |
+| **KDE Plasma** | **~5 %** | **0 %** | Breeze Dark only. From the KDE Store, cursors work (shared by every skin); colour schemes, global themes, Plasma styles, Aurorae and plasmoids not yet |
+
+### Towards a single compositor: Hyprland
+
+One of BWM's most ambitious goals is **porting desktops that do not run on Hyprland to Hyprland**, starting with KDE Plasma (in progress: its panel, Kickoff, applets, KWin's Alt+Tab, OSD and Breeze title bars already run on Hyprland), so everything lives on one compositor. Other desktops and window managers can follow the same path as new skins.
+
 More skins: [docs/SKINS.md](docs/SKINS.md) explains what a skin is and how one is added.
 
 ## 👋 Welcome window and the `bwm` command
@@ -86,7 +106,7 @@ The full list with each distribution's package names is in [docs/REQUIREMENTS.md
 
 | | Needs |
 | :--- | :--- |
-| **Core** (every skin) | Hyprland ≥ 0.55 (Lua config), Quickshell (tested with 0.3.1), Qt ≥ 6.10 with 5Compat and SVG, Python ≥ 3.11 with Pillow, jq, swww, wl-clipboard, cliphist, kitty, grim, slurp, libnotify, GLib, fontconfig, PipeWire/WirePlumber, adw-gtk3. Fonts (Material Symbols, Google Sans Flex, JetBrainsMono Nerd Font) are installed by BWM |
+| **Core** (every skin) | Hyprland ≥ 0.55 (Lua config), Quickshell (tested with 0.3.1), Qt ≥ 6.10 with 5Compat and SVG, Python ≥ 3.11 with Pillow, jq, swww (or awww), wl-clipboard, cliphist, kitty, grim, slurp, libnotify, GLib, fontconfig, PipeWire/WirePlumber, adw-gtk3. Fonts (Material Symbols, Google Sans Flex, JetBrainsMono Nerd Font) are installed by BWM |
 | **Default** | matugen, rofi (Wayland), hyprpolkitagent |
 | **Retro** | ImageMagick 7 (`magick`). Polkit, notifications and OSD are drawn by Quickshell |
 | **KDE Plasma** | hyprpolkitagent, Breeze icons and BWM's hyprbars plugin **built for your Hyprland version** (the installer builds it if you have the Hyprland headers, `make` and a C++ compiler) |

@@ -3,6 +3,11 @@
 #include "CSDDetect.hpp"
 #include "SnapHelper.hpp"
 
+#include <hyprland/src/desktop/state/WindowState.hpp>
+#include <hyprland/src/desktop/state/ViewState.hpp>
+#include <hyprland/src/desktop/state/ViewHitTester.hpp>
+#include <hyprland/src/state/MonitorState.hpp>
+#include <hyprland/src/managers/fullscreen/FullscreenController.hpp>
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/desktop/state/FocusState.hpp>
 #include <hyprland/src/desktop/view/Window.hpp>
@@ -15,13 +20,13 @@
 #include <hyprland/src/config/shared/parserUtils/ParserUtils.hpp>
 #include <hyprland/src/config/supplementary/executor/Executor.hpp>
 #include <hyprland/src/config/shared/actions/ConfigActions.hpp>
-#include <hyprland/src/managers/animation/AnimationManager.hpp>
+#include <hyprland/src/animation/AnimationManager.hpp>
 #include <hyprland/src/protocols/LayerShell.hpp>
 #include <hyprland/src/event/EventBus.hpp>
 #include <hyprland/src/layout/LayoutManager.hpp>
 #include <hyprland/src/layout/space/Space.hpp>
 #include <hyprland/src/layout/target/Target.hpp>
-#include <hyprland/src/managers/cursor/CursorShapeOverrideController.hpp>
+#include <hyprland/src/pointer/cursor/CursorShapeOverrideController.hpp>
 #include <hyprland/src/render/OpenGL.hpp>
 
 #include "globals.hpp"
@@ -114,7 +119,7 @@ CHyprBar::CHyprBar(PHLWINDOW pWindow) : IHyprWindowDecoration(pWindow) {
     m_pTouchMoveCallback = Event::bus()->m_events.input.touch.motion.listen([&](ITouch::SMotionEvent e, Event::SCallbackInfo& info) { onTouchMove(info, e); });
     m_pMouseMoveCallback = Event::bus()->m_events.input.mouse.move.listen([&](Vector2D c, Event::SCallbackInfo& info) { onMouseMove(c); });
 
-    g_pAnimationManager->createAnimation(configColor(g_pGlobalState->config.barColor->value()), m_cRealBarColor, Config::animationTree()->getAnimationPropertyConfig("border"),
+    Animation::mgr()->createAnimation(configColor(g_pGlobalState->config.barColor->value()), m_cRealBarColor, Config::animationTree()->getAnimationPropertyConfig("border"),
                                          pWindow, AVARDAMAGE_NONE);
     m_cRealBarColor->setUpdateCallback([&](auto) { damageEntire(); });
 
@@ -143,7 +148,7 @@ CHyprBar::CHyprBar(PHLWINDOW pWindow) : IHyprWindowDecoration(pWindow) {
 
 CHyprBar::~CHyprBar() {
     if (m_bDraggingCSD && m_bDragInitiated) {
-        Cursor::overrideController->unsetOverride(Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
+        Pointer::Cursor::overrideController->unsetOverride(Pointer::Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
     }
     if (g_pGlobalState)
         std::erase(g_pGlobalState->bars, m_self);
@@ -182,7 +187,7 @@ bool CHyprBar::inputIsValid() {
         (g_pSeatManager->m_seatGrab && (!m_pWindow->wlSurface() || !g_pSeatManager->m_seatGrab->accepts(m_pWindow->wlSurface()->resource()))))
         return false;
 
-    const auto WINDOWATCURSOR = g_pCompositor->vectorToWindowUnified(g_pInputManager->getMouseCoordsInternal(),
+    const auto WINDOWATCURSOR = Desktop::CViewHitTester{*Desktop::viewState()}.windowAt(g_pInputManager->getMouseCoordsInternal(),
                                                                      Desktop::View::RESERVED_EXTENTS | Desktop::View::INPUT_EXTENTS | Desktop::View::ALLOW_FLOATING);
 
     auto       focusState = Desktop::focusState();
@@ -207,12 +212,12 @@ bool CHyprBar::inputIsValid() {
     Vector2D surfaceCoords;
 
     // check top layer
-    g_pCompositor->vectorToLayerSurface(g_pInputManager->getMouseCoordsInternal(), &PMONITOR->m_layerSurfaceLayers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &surfaceCoords, &foundSurface);
+    Desktop::CViewHitTester{*Desktop::viewState()}.layerSurfaceAt(g_pInputManager->getMouseCoordsInternal(), &PMONITOR->m_layerSurfaceLayers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &surfaceCoords, &foundSurface);
 
     if (foundSurface)
         return false;
     // check overlay layer
-    g_pCompositor->vectorToLayerSurface(g_pInputManager->getMouseCoordsInternal(), &PMONITOR->m_layerSurfaceLayers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &surfaceCoords,
+    Desktop::CViewHitTester{*Desktop::viewState()}.layerSurfaceAt(g_pInputManager->getMouseCoordsInternal(), &PMONITOR->m_layerSurfaceLayers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &surfaceCoords,
                                         &foundSurface);
 
     if (foundSurface)
@@ -231,7 +236,7 @@ void CHyprBar::onMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent 
     if (e.state != WL_POINTER_BUTTON_STATE_PRESSED) {
         if (m_hidden) {
             if (m_bDraggingCSD) {
-                if (validMapped(PW)) {
+                if (Desktop::View::validMapped(PW)) {
                     g_layoutManager->setTargetGeom(PW->layoutTarget()->position(), PW->layoutTarget());
                     PW->updateWindowData();
                     Desktop::focusState()->fullWindowFocus(PW, Desktop::FOCUS_REASON_CLICK);
@@ -239,7 +244,7 @@ void CHyprBar::onMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent 
                 if (m_bDragInitiated) {
                     if (g_layoutManager && g_layoutManager->dragController() && g_layoutManager->dragController()->mode() == MBIND_MOVE)
                         g_pKeybindManager->changeMouseBindMode(MBIND_INVALID);
-                    Cursor::overrideController->unsetOverride(Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
+                    Pointer::Cursor::overrideController->unsetOverride(Pointer::Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
                     hideSnapPreview();
                     // Do NOT set info.cancelled = true!
                     // Removing info.cancelled allows pointer button UP to reach Electron/GTK,
@@ -287,9 +292,9 @@ void CHyprBar::onMouseMove(Vector2D coords) {
             return;
 
         auto PWINDOW = m_pWindow.lock();
-        if (!validMapped(PWINDOW)) {
+        if (!Desktop::View::validMapped(PWINDOW)) {
             if (m_bDragInitiated)
-                Cursor::overrideController->unsetOverride(Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
+                Pointer::Cursor::overrideController->unsetOverride(Pointer::Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
             m_bDraggingCSD   = false;
             m_bDragInitiated = false;
             return;
@@ -303,16 +308,16 @@ void CHyprBar::onMouseMove(Vector2D coords) {
                 return;
 
             m_bDragInitiated = true;
-            Cursor::overrideController->setOverride("grabbing", Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
+            Pointer::Cursor::overrideController->setOverride("grabbing", Pointer::Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
 
-            bool wasFullscreen = PWINDOW->isFullscreen();
+            bool wasFullscreen = Fullscreen::controller()->isFullscreen(PWINDOW);
             bool wasSnapped = PWINDOW->m_ruleApplicator && PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
             float curW = PWINDOW->layoutTarget()->position().w;
 
             g_pHyprRenderer->damageWindow(PWINDOW, true);
 
             if (wasFullscreen) {
-                g_pCompositor->setWindowFullscreenInternal(PWINDOW, FSMODE_NONE);
+                Fullscreen::controller()->setFullscreenMode(PWINDOW, Fullscreen::FSMODE_NONE);
             }
             Config::Actions::clearTags(PWINDOW);
             PWINDOW->updateWindowData();
@@ -343,8 +348,8 @@ void CHyprBar::onMouseMove(Vector2D coords) {
         if (!PWINDOW->m_isFloating) {
             g_layoutManager->changeFloatingMode(PWINDOW->layoutTarget());
         }
-        if (PWINDOW->isFullscreen()) {
-            g_pCompositor->setWindowFullscreenInternal(PWINDOW, FSMODE_NONE);
+        if (Fullscreen::controller()->isFullscreen(PWINDOW)) {
+            Fullscreen::controller()->setFullscreenMode(PWINDOW, Fullscreen::FSMODE_NONE);
         }
 
         // Exact window tracking: window top-left is positioned so m_vGrabOffset stays under the cursor
@@ -359,7 +364,7 @@ void CHyprBar::onMouseMove(Vector2D coords) {
         g_pHyprRenderer->damageWindow(PWINDOW, true);
 
         Vector2D middle = newBox.middle();
-        const auto PMONITOR = g_pCompositor->getMonitorFromVector(middle);
+        const auto PMONITOR = State::monitorState()->query().vec(middle).run();
         if (PMONITOR && PMONITOR->m_activeWorkspace && PWINDOW->m_isFloating) {
             const auto WS = PMONITOR->m_activeSpecialWorkspace ? PMONITOR->m_activeSpecialWorkspace : PMONITOR->m_activeWorkspace;
             if (PWINDOW->m_workspace != WS) {
@@ -381,7 +386,7 @@ void CHyprBar::onMouseMove(Vector2D coords) {
     if (!m_hidden && g_pGlobalState->config.iconOnHover->value())
         damageOnButtonHover();
 
-    if (!m_bDragPending || m_bTouchEv || !validMapped(m_pWindow) || m_touchId != 0)
+    if (!m_bDragPending || m_bTouchEv || !Desktop::View::validMapped(m_pWindow) || m_touchId != 0)
         return;
 
     m_bDragPending = false;
@@ -390,7 +395,7 @@ void CHyprBar::onMouseMove(Vector2D coords) {
 }
 
 void CHyprBar::onTouchMove(Event::SCallbackInfo& info, ITouch::SMotionEvent e) {
-    if (!m_bDragPending || !m_bTouchEv || !validMapped(m_pWindow) || e.touchID != m_touchId)
+    if (!m_bDragPending || !m_bTouchEv || !Desktop::View::validMapped(m_pWindow) || e.touchID != m_touchId)
         return;
 
     auto PMONITOR     = m_pWindow->m_monitor.lock();
@@ -452,16 +457,16 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
             Desktop::focusState()->fullWindowFocus(PWINDOW, Desktop::FOCUS_REASON_CLICK);
 
         if (PWINDOW->m_isFloating)
-            g_pCompositor->changeWindowZOrder(PWINDOW, true);
+            Desktop::windowState()->raise(PWINDOW);
 
         // Double click: maximize / restore
         auto now = Time::steadyNow();
         auto diffMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - m_lastMouseDown).count();
         if (diffMs < 350) {
-            if (PWINDOW->isFullscreen()) {
-                g_pCompositor->setWindowFullscreenInternal(PWINDOW, FSMODE_NONE);
+            if (Fullscreen::controller()->isFullscreen(PWINDOW)) {
+                Fullscreen::controller()->setFullscreenMode(PWINDOW, Fullscreen::FSMODE_NONE);
             } else {
-                g_pCompositor->setWindowFullscreenInternal(PWINDOW, FSMODE_MAXIMIZED);
+                Fullscreen::controller()->setFullscreenMode(PWINDOW, Fullscreen::FSMODE_MAXIMIZED);
             }
             m_bDraggingCSD   = false;
             m_bDragInitiated = false;
@@ -482,7 +487,7 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
     auto COORDS = cursorRelativeToBar();
     if (m_bTouchEv) {
         ITouch::SDownEvent e        = touchEvent.value();
-        auto               PMONITOR = g_pCompositor->getMonitorFromName(!e.device->m_boundOutput.empty() ? e.device->m_boundOutput : "");
+        auto               PMONITOR = State::monitorState()->query().name(!e.device->m_boundOutput.empty() ? e.device->m_boundOutput : "").run();
         PMONITOR                    = PMONITOR ? PMONITOR : Desktop::focusState()->monitor();
         COORDS = Vector2D(PMONITOR->m_position.x + e.pos.x * PMONITOR->m_size.x, PMONITOR->m_position.y + e.pos.y * PMONITOR->m_size.y) - assignedBoxGlobal().pos();
     }
@@ -506,7 +511,7 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
         Desktop::focusState()->fullWindowFocus(PWINDOW, Desktop::FOCUS_REASON_CLICK);
 
     if (PWINDOW->m_isFloating)
-        g_pCompositor->changeWindowZOrder(PWINDOW, true);
+        Desktop::windowState()->raise(PWINDOW);
 
     info.cancelled   = true;
     m_bCancelledDown = true;
@@ -517,8 +522,8 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
     if (!ON_DOUBLE_CLICK.empty() &&
         std::chrono::duration_cast<std::chrono::milliseconds>(Time::steadyNow() - m_lastMouseDown).count() < 400 /* Arbitrary delay I found suitable */) {
         if (ON_DOUBLE_CLICK == "fullscreen 1" || ON_DOUBLE_CLICK.find("window.fullscreen") != std::string::npos) {
-            if (validMapped(PWINDOW))
-                g_pCompositor->setWindowFullscreenInternal(PWINDOW, PWINDOW->isFullscreen() ? FSMODE_NONE : FSMODE_MAXIMIZED);
+            if (Desktop::View::validMapped(PWINDOW))
+                Fullscreen::controller()->setFullscreenMode(PWINDOW, Fullscreen::controller()->isFullscreen(PWINDOW) ? Fullscreen::FSMODE_NONE : Fullscreen::FSMODE_MAXIMIZED);
         } else {
             Config::Supplementary::executor()->spawn(ON_DOUBLE_CLICK);
         }
@@ -559,16 +564,16 @@ bool CHyprBar::isDragging() const {
 
 void CHyprBar::handleMovement() {
     auto PWINDOW = m_pWindow.lock();
-    if (validMapped(PWINDOW)) {
+    if (Desktop::View::validMapped(PWINDOW)) {
         CBox curBox = PWINDOW->layoutTarget()->position();
-        bool wasFullscreen = PWINDOW->isFullscreen();
+        bool wasFullscreen = Fullscreen::controller()->isFullscreen(PWINDOW);
         bool wasSnapped = PWINDOW->m_ruleApplicator && PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
 
         damageEntire();
         g_pHyprRenderer->damageWindow(PWINDOW, true);
 
         if (wasFullscreen)
-            g_pCompositor->setWindowFullscreenInternal(PWINDOW, FSMODE_NONE);
+            Fullscreen::controller()->setFullscreenMode(PWINDOW, Fullscreen::FSMODE_NONE);
 
         Config::Actions::clearTags(PWINDOW);
         PWINDOW->updateWindowData();
@@ -612,9 +617,9 @@ bool CHyprBar::doButtonPress(Config::INTEGER barPadding, Config::INTEGER barButt
             // hit on button
             std::string cmd = b.cmd;
             auto PW = m_pWindow.lock();
-            if (validMapped(PW)) {
+            if (Desktop::View::validMapped(PW)) {
                 if (cmd == "hyprctl dispatch fullscreen 1" || cmd.find("window.fullscreen") != std::string::npos) {
-                    g_pCompositor->setWindowFullscreenInternal(PW, PW->isFullscreen() ? FSMODE_NONE : FSMODE_MAXIMIZED);
+                    Fullscreen::controller()->setFullscreenMode(PW, Fullscreen::controller()->isFullscreen(PW) ? Fullscreen::FSMODE_NONE : Fullscreen::FSMODE_MAXIMIZED);
                     return true;
                 }
                 if (cmd == "hyprctl dispatch killactive" || cmd.find("window.close") != std::string::npos) {
@@ -759,7 +764,7 @@ void CHyprBar::renderBarButtonsText(CBox* barBox, const float scale, const float
             // con hover el icono toma el color de la barra sobre el círculo, como en Breeze
             const auto fg  = hovered ? m_cRealBarColor->value() : (button.userfg && m_bWindowHasFocus ? button.fgcol : currentTextColor());
             const int  px  = std::round(scaledButtonSize);
-            auto       tex = breezeIcon(button, m_pWindow->isFullscreen(), CHyprColor(fg.r, fg.g, fg.b, 1.F), px);
+            auto       tex = breezeIcon(button, Fullscreen::controller()->isFullscreen(m_pWindow.lock()), CHyprColor(fg.r, fg.g, fg.b, 1.F), px);
             if (tex && tex->m_texID != 0) {
                 CBox pos = {barBox->x + (BUTTONSRIGHT ? barBox->width - offset - scaledButtonSize : offset), barBox->y + (barBox->height - scaledButtonSize) / 2.0,
                             scaledButtonSize, scaledButtonSize};
@@ -810,7 +815,7 @@ void CHyprBar::draw(PHLMONITOR pMonitor, const float& a) {
         g_pDecorationPositioner->repositionDeco(this);
     }
 
-    if (m_hidden || !validMapped(m_pWindow) || !ENABLED)
+    if (m_hidden || !Desktop::View::validMapped(m_pWindow) || !ENABLED)
         return;
 
     const auto PWINDOW = m_pWindow.lock();
@@ -884,9 +889,9 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
     g_pHyprOpenGL->scissor(titleBarBox);
 
     if (ROUNDING) {
-        CBox windowBox = {PWINDOW->m_realPosition->value().x + PWINDOW->m_floatingOffset.x - pMonitor->m_position.x,
-                          PWINDOW->m_realPosition->value().y + PWINDOW->m_floatingOffset.y - pMonitor->m_position.y + 1, PWINDOW->m_realSize->value().x,
-                          PWINDOW->m_realSize->value().y - 1};
+        CBox windowBox = {PWINDOW->position(Desktop::View::IGeometric::GEOMETRIC_CURRENT).x + PWINDOW->m_floatingOffset.x - pMonitor->m_position.x,
+                          PWINDOW->position(Desktop::View::IGeometric::GEOMETRIC_CURRENT).y + PWINDOW->m_floatingOffset.y - pMonitor->m_position.y + 1, PWINDOW->size(Desktop::View::IGeometric::GEOMETRIC_CURRENT).x,
+                          PWINDOW->size(Desktop::View::IGeometric::GEOMETRIC_CURRENT).y - 1};
 
         if (windowBox.w < 1 || windowBox.h < 1)
             return;
@@ -1002,7 +1007,7 @@ uint64_t CHyprBar::getDecorationFlags() {
 }
 
 CBox CHyprBar::assignedBoxGlobal() {
-    if (!validMapped(m_pWindow))
+    if (!Desktop::View::validMapped(m_pWindow))
         return {};
 
     CBox box = m_bAssignedBox;

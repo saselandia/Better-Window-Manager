@@ -22,13 +22,16 @@ if [ ! -f "$WALLPAPER" ]; then
 fi
 
 # 1. Asegurar que el demonio swww-daemon esté en ejecución
-if ! pgrep -x "swww-daemon" > /dev/null 2>&1; then
-    echo "Iniciando swww-daemon..."
-    swww-daemon &
+# swww cambió de nombre a awww (mismo uso y opciones): vale cualquiera de los dos
+WALL_BIN="$(command -v swww || command -v awww || echo swww)"
+WALL_DAEMON="$(basename "$WALL_BIN")-daemon"
+if ! pgrep -x "$WALL_DAEMON" > /dev/null 2>&1; then
+    echo "Iniciando $WALL_DAEMON..."
+    "$WALL_DAEMON" &
     # Esperar hasta que el demonio responda
     TIMEOUT=20
     COUNT=0
-    until swww query > /dev/null 2>&1 || [ "$COUNT" -ge "$TIMEOUT" ]; do
+    until "$WALL_BIN" query > /dev/null 2>&1 || [ "$COUNT" -ge "$TIMEOUT" ]; do
         sleep 0.1
         COUNT=$((COUNT + 1))
     done
@@ -36,7 +39,7 @@ fi
 
 # 2. Cambiar fondo con animación fluida estilo End_4 ('grow')
 echo "Aplicando wallpaper: $WALLPAPER"
-swww img "$WALLPAPER" \
+"$WALL_BIN" img "$WALLPAPER" \
     --transition-type grow \
     --transition-pos center \
     --transition-step 90 \

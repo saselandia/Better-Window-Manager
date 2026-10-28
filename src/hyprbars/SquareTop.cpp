@@ -37,7 +37,7 @@
 #include <hyprland/src/render/pass/SurfacePassElement.hpp>
 #include <hyprland/src/render/Renderer.hpp>
 #include <hyprland/src/desktop/view/Window.hpp>
-#include <hyprland/src/helpers/Monitor.hpp>
+#include <hyprland/src/output/Monitor.hpp>
 
 #include "barDeco.hpp"
 #include "SquareTop.hpp"

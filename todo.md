@@ -1,6 +1,6 @@
 # BWM — funciones portadas y pendientes
 
-Revisado el 2026-10-27. Estado actual y detalle técnico en `BWM_CONTEXT.md` §2;
+Revisado el 2026-10-28. Estado actual y detalle técnico en `BWM_CONTEXT.md` §2;
 las reglas para asistentes están en `AGENTS.md` y `CLAUDE.md`.
 
 ## Completado
@@ -28,6 +28,26 @@ las reglas para asistentes están en `AGENTS.md` y `CLAUDE.md`.
   y posición, filtros, catálogos con paginación e instalación por Git (§3.45–46).
 - [x] About propio de BWM, distro autodetectada y enlaces del proyecto; Advanced
   retirado de ambas apps de Ajustes (§3.46).
+
+- [x] Instalador con requisitos por skin, comando `bwm` y bienvenida tipo Calamares
+  (`config/hypr/skins/`, `docs/REQUIREMENTS.md`, §3.51). Plugin hyprbars porteado a
+  Hyprland 0.56, swww/awww, Kelvin y ajustes de interfaz comunes a todas las skins (§3.52).
+
+## Skins y compatibilidad (finalidad del proyecto)
+
+- [ ] KDE Plasma (~5 % de temas): esquemas de color `.colors`, temas globales,
+  estilos de Plasma y Aurorae de la KDE Store aplicados al panel, applets y apps.
+- [ ] Plasmoides o equivalente para la skin Plasma.
+- [ ] Retro (~90 % temas, ~80 % plugins): `icons.theme` y `hyprland.lua` de los temas;
+  plugins que sustituyen barra, bloqueo, overlays o paneles.
+- [ ] Default: cargar plantillas de matugen de terceros sin editar `config.toml`.
+- [ ] Gestor de archivos por skin (posible): Dolphin en KDE Plasma, el resto de
+  apps predeterminadas sigue siendo común. Decidir antes de implementarlo.
+- [ ] Portar a Hyprland más escritorios que no corren sobre él, como skins nuevas.
+- [ ] Skins de la comunidad: formato de paquete e instalación sin tocar el repo
+  (el comprobador ya lee `~/.local/share/bwm/skins/*.json`).
+- [ ] Separar en carpetas por skin lo que aún comparte carpeta (p. ej. barras de
+  varias skins en `modules/ii/bar/`), según `docs/SKINS.md` «Estructura modular».
 
 ## Pendiente de Omarchy
 

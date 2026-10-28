@@ -70,8 +70,11 @@ post_process() {
         if [ "$current_theme" == "retro" ]; then
             python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py apply-wallpaper-colors "$wallpaper_path" 2>/dev/null || true
         fi
-        if command -v swww >/dev/null 2>&1 && pgrep -x swww-daemon >/dev/null 2>&1; then
-            swww img "$wallpaper_path" --transition-type grow --transition-pos center --transition-step 90 --transition-duration 2 --transition-fps 60 2>/dev/null || true
+        # swww cambió de nombre a awww (mismo uso): vale cualquiera de los dos
+        local wall_bin
+        wall_bin="$(command -v swww || command -v awww || true)"
+        if [ -n "$wall_bin" ] && pgrep -x "$(basename "$wall_bin")-daemon" >/dev/null 2>&1; then
+            "$wall_bin" img "$wallpaper_path" --transition-type grow --transition-pos center --transition-step 90 --transition-duration 2 --transition-fps 60 2>/dev/null || true
         fi
     fi
 

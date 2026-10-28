@@ -5,11 +5,12 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import qs.Commons
 import qs.Ui
+import qs.modules.common as Bwm
 
 // Omarchy's omarchy.workspaces widget (shell/plugins/bar/widgets/Workspaces.qml, MIT), with BWM's
-// numbering: Omarchy gives each monitor a block of ten (1-10, 11-20…), BWM's workspaces are global,
-// so every bar shows 1-5 and the other workspaces that exist on its own monitor, as Omarchy does
-// inside its block (the 4K's workspace 10 does not show on the HP's bar).
+// numbering: Omarchy gives each monitor a block of ten (1-10, 11-20…), BWM's workspaces are global
+// and the same in every skin, so every bar shows 1..bar.workspaces.shown (shared by all skins, Settings
+// → Bar) and any other workspace that exists on its own monitor.
 // The one this monitor shows carries its layout glyph (a square tiles, a circle scrolls). BWM has
 // no per-workspace layout switcher, so clicking it does nothing, as in Omarchy without one.
 BarWidget {
@@ -38,9 +39,12 @@ BarWidget {
     return null
   }
 
-  // The first five, and any of the rest that exist on this monitor.
+  // The shared count (as in the other skins), and any of the rest that exist on this monitor.
+  readonly property int shownCount: Math.max(1, Bwm.Config.options?.bar?.workspaces?.shown ?? 10)
+
   function workspaceIds() {
-    var ids = [1, 2, 3, 4, 5]
+    var ids = []
+    for (var n = 1; n <= root.shownCount; n++) ids.push(n)
     var values = Hyprland.workspaces.values
     var monitorName = root.monitor ? root.monitor.name : ""
 

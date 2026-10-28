@@ -2,6 +2,11 @@
 
 #include "globals.hpp"
 #include "BarPassElement.hpp"
+#include <hyprland/src/desktop/state/WindowState.hpp>
+#include <hyprland/src/desktop/state/ViewState.hpp>
+#include <hyprland/src/desktop/state/ViewHitTester.hpp>
+#include <hyprland/src/state/MonitorState.hpp>
+#include <hyprland/src/managers/fullscreen/FullscreenController.hpp>
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/render/Renderer.hpp>
 #include <hyprland/src/render/OpenGL.hpp>
@@ -96,7 +101,7 @@ inline std::optional<Vector2D> readPresnapFromFile(const std::string& addr) {
 }
 
 inline void recordPreSnapSize(PHLWINDOW pWindow) {
-    if (!validMapped(pWindow))
+    if (!Desktop::View::validMapped(pWindow))
         return;
 
     bool isSnapped = pWindow->m_ruleApplicator && pWindow->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
@@ -141,9 +146,9 @@ struct SSnapTarget {
 };
 
 inline std::optional<SSnapTarget> getSnapTarget(const Vector2D& mousePos) {
-    auto pMonitor = g_pCompositor->getMonitorFromVector(mousePos);
+    auto pMonitor = State::monitorState()->query().vec(mousePos).run();
     if (!pMonitor)
-        pMonitor = g_pCompositor->getMonitorFromCursor();
+        pMonitor = State::monitorState()->query().vec(g_pInputManager->getMouseCoordsInternal()).run();
     if (!pMonitor)
         return std::nullopt;
 
@@ -274,7 +279,7 @@ inline void updateSnapPreview(const Vector2D& mousePos) {
 }
 
 inline void checkAndTriggerEdgeSnap(PHLWINDOW pWindow, const Vector2D& mousePos) {
-    if (!validMapped(pWindow)) {
+    if (!Desktop::View::validMapped(pWindow)) {
         hideSnapPreview();
         return;
     }

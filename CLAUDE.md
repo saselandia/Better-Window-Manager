@@ -20,7 +20,11 @@ temas) sobre Hyprland + Quickshell, y el sistema entero la sigue. **Finalidad: c
 las mejoras de aspecto de cada original**: en la skin KDE Plasma un tema de Plasma bajado de
 internet debe aplicarse y funcionar; en Retro, un tema o plugin de Omarchy. BWM tiene pocas
 interfaces propias (la bienvenida, Ajustes); casi todo es la interfaz del escritorio original.
-Detalle: `docs/SKINS.md`.
+**Pocas skins, fáciles y con lo mismo**: las tres actuales hacen lo esencial, se aprenden enseguida y
+comparten casi las mismas funciones básicas; lo muy importante y propio de un escritorio se incluye en
+su skin, la complejidad extra no se ofrece. **Un único compositor**: portar a Hyprland escritorios que no
+corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conserva entre skins: README y
+`docs/SKINS.md`.
 
 ## 0. Vocabulario
 
@@ -86,6 +90,16 @@ Detalle: `docs/SKINS.md`.
     `requires`/`recommends` de la skin; regenera la tabla de `docs/REQUIREMENTS.md`. El instalador, `bwm check` y
     la bienvenida salen de ahí.
 
+13. **Configuración modular**: cada skin en sus carpetas/módulos propios y lo común en lo común, sin mezclar
+    (tabla en `docs/SKINS.md`, «Estructura modular»). Código nuevo de una skin nace en su carpeta; no metas
+    condiciones de una skin dentro de un módulo de otra si puede ser un módulo aparte.
+14. **Se conserva entre skins** (no lo hagas propio de una skin): red/Bluetooth, cursor, Kelvin de la luz
+    nocturna, apps predeterminadas (quizá salvo el gestor de archivos en el futuro), workspaces (los mismos
+    1–N y `bar.workspaces.shown`), pantallas y escala, inicio automático, servicios (`bar.weather`…),
+    interfaz (logo, vista general, OSD, bloqueo) y General. **Propio de cada skin**: aspecto y fuentes (de la
+    skin y su tema), fondo, barra y dock. Mecanismo: `THEME_SPECIFIC_SECTIONS` y
+    `SHARED_KEYS_IN_SKIN_SECTIONS` de `bwm-theme-manager.py`. La protección de volumen («earbang») se quitó.
+
 ## 3. Dónde tocar para…
 
 | Quiero… | Dónde |
@@ -114,8 +128,8 @@ Detalle: `docs/SKINS.md`.
 ## 4. Estilos y piezas clave
 
 - **Gestor**: `bwm-theme-manager.py get|set|toggle|list`. Perfil de Quickshell por estilo en
-  `illogical-impulse/config-<estilo>.json` (secciones propias: appearance, background, bar, dock, lock, osd,
-  overview, panelFamily, waffles, wallpaperSelector, windows); el resto se comparte.
+  `illogical-impulse/config-<estilo>.json` (secciones propias: appearance, background, bar, dock, panelFamily,
+  waffles; dentro de `bar` se comparten `workspaces.shown`, `weather` y `topLeftIcon`); el resto se comparte.
 - **Default**: Material You con matugen desde el fondo (`scripts/set-wallpaper.sh`).
 - **Plasma** (`quickshell/ii/modules/ii/plasma*`, comunes en `plasmaCommon/`: `Breeze.qml`, `BreezePopupWindow` —se
   desliza con un offset y respeta `bar.bottom`, `passBarClicks`—, `BreezeSlider`…): panel flotante, Kickoff
@@ -187,7 +201,13 @@ Detalle: `docs/SKINS.md`.
   `z` (descartar) o `m` (fusionar); no aceptes cambios de configuración en bloque.
 - **Plugin hyprbars y versión de Hyprland**: el `.so` guarda el commit de Hyprland para el que se compiló;
   `bwm-requirements.py` lo compara con el que corre. Tras actualizar Hyprland, Plasma sale en rojo hasta
-  recompilar (`make && make install`, nunca `cp`). GURU publica swww como `awww`: BWM sigue llamando a `swww`.
+  recompilar (`make && make install`, nunca `cp`). Si la API cambió (0.55→0.56: `State::monitorState()`,
+  `Desktop::windowState()`, `CViewHitTester`, `Fullscreen::controller()`, `Animation::mgr()`), portéalo con el
+  diff del hyprbars oficial entre los commits que fija `hyprpm.toml` de hyprwm/hyprland-plugins.
+- **swww/awww**: GURU publica swww con su nombre nuevo, `awww` (mismo uso). Los scripts usan el que exista.
+- **Luz nocturna**: dos motores (servicio `Hyprsunset.qml` en Default/Plasma, `nightlight.py` en Retro) con un
+  solo Kelvin: `nightlight.py --temperature` lo copia a `light.night.colorTemperature` y el servicio llama a
+  `nightlight.py --remember K` (sólo guarda; no enciende ni apaga).
 - **XWayland**: Hyprland no fija primary (Wine usa el primer monitor); coordenadas X distintas de las de Hyprland.
 - **Quickshell**: un archivo con el mismo nombre que un tipo que usa dentro (p. ej. `PolkitAgent.qml`) lo ensombrece;
   tipos de una carpeta hermana cargada por `Loader` no se resuelven (usa `component` en línea o importa la carpeta).

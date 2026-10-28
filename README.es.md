@@ -33,6 +33,26 @@ Default (end-4 / illogical-impulse), Retro (Omarchy) y KDE Plasma sobre Hyprland
 | **Retro** | [Omarchy 4](https://github.com/basecamp/omarchy) (rama `quattro`) | **Dinámico**: paleta con el formato de Omarchy sacada del fondo | 23 temas estáticos de Omarchy (Tokyo Night, Catppuccin, Nord, Gruvbox…) con `Alt + R`; al fijar uno, el fondo ya no cambia los colores | Temas y plugins de la comunidad de Omarchy (Ajustes → Temas / Plugins) |
 | **KDE Plasma** | KDE Plasma 6 (Breeze Dark) | **Estático**: Breeze Dark, no cambia con el fondo | — | Esquemas de color y temas globales de Plasma de la KDE Store (pendiente) |
 
+### Pocas skins, lo esencial y lo mismo en todas
+
+BWM no quiere ser complicado. Ofrece **muy pocas skins** —las tres actuales— que hacen lo esencial y se aprenden enseguida. Todas comparten casi las mismas funciones básicas (lanzador, ajustes, red, Bluetooth, audio, pantallas, capturas, portapapeles, notificaciones, bloqueo…), así que pasar de una a otra no obliga a reaprender nada. Si un escritorio tiene algo muy importante y propio (el dock y el menú de Omarchy, Kickoff y las barras de título de Plasma), esa skin lo trae. Quien quiera más complejidad puede añadirla; BWM no la ofrece de serie.
+
+**Lo que se conserva al cambiar de skin:** red y Bluetooth, el cursor, la temperatura de la luz nocturna (Kelvin), las aplicaciones predeterminadas, los workspaces (los mismos 1–10 y en los mismos monitores), las pantallas (resolución, Hz, posición y escala: si la cambias en una, queda cambiada en todas), el inicio automático, los servicios (el tiempo, la IA, la búsqueda…), la interfaz (logo, vista general, OSD, bloqueo) y lo general (idioma, hora, batería). **Lo propio de cada skin:** su aspecto y sus fuentes (las de la skin y su tema), el fondo, la barra y el dock.
+
+### Compatibilidad con los temas de cada escritorio (estimación)
+
+Es la finalidad del proyecto, así que la medimos. Son estimaciones del porcentaje de temas o plugins del original que hoy funcionan sin tocarlos:
+
+| Skin | Temas del original | Plugins / extensiones del original | En qué se basa la estimación |
+| :--- | :---: | :---: | :--- |
+| **Retro** (Omarchy) | **~90 %** | **~80 %** | Temas: se aplican `colors.toml`, fondos y los archivos de apps (Neovim, VS Code, btop…); no `hyprland.lua` del tema, `icons.theme` (Retro usa Papirus con el acento) ni el tema de Chromium (necesita root). Plugins: los de barra y servicios funcionan sin cambios; no los que sustituyen la barra, el bloqueo, overlays o paneles |
+| **Default** (end-4) | **~90 %** | — | Cualquier fondo genera su paleta (100 %); plantillas de matugen de terceros se añaden a `matugen/config.toml`. end-4 no tiene catálogo de plugins |
+| **KDE Plasma** | **~5 %** | **0 %** | Sólo Breeze Dark. De la KDE Store funcionan los cursores (compartidos por todas las skins); esquemas de color, temas globales, estilos de Plasma, Aurorae y plasmoides todavía no |
+
+### Hacia un único compositor: Hyprland
+
+Uno de los proyectos más ambiciosos de BWM es **portar a Hyprland escritorios que no corren sobre él**, empezando por KDE Plasma (en curso: panel, Kickoff, applets, Alt+Tab de KWin, OSD y barras de título Breeze ya funcionan sobre Hyprland), para tenerlo todo con un solo compositor. Otros escritorios y gestores de ventanas podrán seguir el mismo camino como skins nuevas.
+
 Más skins: [docs/SKINS.md](docs/SKINS.md) explica qué es una skin y cómo se añade.
 
 ## 👋 Bienvenida y comando `bwm`
@@ -86,7 +106,7 @@ La lista completa, con los paquetes de cada distribución, está en [docs/REQUIR
 
 | | Necesita |
 | :--- | :--- |
-| **Núcleo** (todas las skins) | Hyprland ≥ 0.55 (configuración en Lua), Quickshell (probado con 0.3.1), Qt ≥ 6.10 con 5Compat y SVG, Python ≥ 3.11 con Pillow, jq, swww, wl-clipboard, cliphist, kitty, grim, slurp, libnotify, GLib, fontconfig, PipeWire/WirePlumber, adw-gtk3. Las fuentes (Material Symbols, Google Sans Flex, JetBrainsMono Nerd Font) las instala BWM |
+| **Núcleo** (todas las skins) | Hyprland ≥ 0.55 (configuración en Lua), Quickshell (probado con 0.3.1), Qt ≥ 6.10 con 5Compat y SVG, Python ≥ 3.11 con Pillow, jq, swww (o awww), wl-clipboard, cliphist, kitty, grim, slurp, libnotify, GLib, fontconfig, PipeWire/WirePlumber, adw-gtk3. Las fuentes (Material Symbols, Google Sans Flex, JetBrainsMono Nerd Font) las instala BWM |
 | **Default** | matugen, rofi (Wayland), hyprpolkitagent |
 | **Retro** | ImageMagick 7 (`magick`). Polkit, notificaciones y OSD los dibuja Quickshell |
 | **KDE Plasma** | hyprpolkitagent, iconos Breeze y el plugin hyprbars de BWM **compilado para tu versión de Hyprland** (el instalador lo compila si tienes las cabeceras de Hyprland, `make` y un compilador de C++) |

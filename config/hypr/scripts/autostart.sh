@@ -73,15 +73,18 @@ if [[ "$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/nu
 fi
 
 # 3. Demonio de wallpapers (swww)
-if ! pidof swww-daemon >/dev/null 2>&1; then
-    swww-daemon >/dev/null 2>&1 &
+# swww cambió de nombre a awww (mismo uso y opciones): vale cualquiera de los dos
+WALL_BIN="$(command -v swww || command -v awww || echo swww)"
+WALL_DAEMON="$(basename "$WALL_BIN")-daemon"
+if ! pidof "$WALL_DAEMON" >/dev/null 2>&1; then
+    "$WALL_DAEMON" >/dev/null 2>&1 &
 fi
 
 # 4. Restaurar el wallpaper guardado
 (
     COUNT=0
     TIMEOUT=40
-    until swww query >/dev/null 2>&1 || [ "$COUNT" -ge "$TIMEOUT" ]; do
+    until "$WALL_BIN" query >/dev/null 2>&1 || [ "$COUNT" -ge "$TIMEOUT" ]; do
         sleep 0.1
         COUNT=$((COUNT + 1))
     done
@@ -113,9 +116,9 @@ fi
         # SDDM, con la GPU recién liberada por el saludo): reintentar hasta que todos
         # muestren la imagen, o quedan en negro.
         for _ in $(seq 1 30); do
-            swww img "$WALLPAPER" --transition-type none 2>/dev/null || true
+            "$WALL_BIN" img "$WALLPAPER" --transition-type none 2>/dev/null || true
             sleep 0.5
-            if swww query 2>/dev/null | grep -q . && ! swww query 2>/dev/null | grep -q "currently displaying: color"; then
+            if "$WALL_BIN" query 2>/dev/null | grep -q . && ! "$WALL_BIN" query 2>/dev/null | grep -q "currently displaying: color"; then
                 break
             fi
         done

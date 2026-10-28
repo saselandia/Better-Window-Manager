@@ -7,6 +7,7 @@ bienvenida (bwmWelcome.qml, con --json).
 
   bwm-requirements.py check [--skin ID]... [--json] [--pre-install] [--distro FAMILIA]
   bwm-requirements.py skins [--json]
+  bwm-requirements.py docs > docs/REQUIREMENTS.md   (tabla de requisitos por distro)
 
 --pre-install: lo que instala o compila el propio instalador (fuentes, plugin hyprbars)
 no cuenta como fallo. --distro fuerza la familia para los comandos (gentoo, arch, fedora,
@@ -131,6 +132,11 @@ def check_requirement(spec: dict, catalog: dict) -> tuple[str, str]:
     """(estado, detalle) de un requisito."""
     check = spec.get("check", {})
     kind = check.get("type")
+    if kind == "cmd" and check.get("groups"):  # vale cualquier grupo completo (p. ej. swww o awww)
+        for group in check["groups"]:
+            if all(which(n) for n in group):
+                return OK, ""
+        return MISSING, "no está " + " ni ".join(g[0] for g in check["groups"])
     if kind == "cmd":
         names = check.get("all") or check.get("any") or []
         found = [n for n in names if which(n)]
@@ -352,6 +358,82 @@ def report(selected: list[str] | None, pre_install: bool, family: str | None) ->
     return data
 
 
+# ── docs/REQUIREMENTS.md ─────────────────────────────────────────────────────
+
+DOC_FAMILIES = [("gentoo", "Gentoo"), ("arch", "Arch / CachyOS"), ("fedora", "Fedora"),
+                ("opensuse", "openSUSE"), ("debian", "Debian / Ubuntu")]
+
+DOC_HEADER = """# Requisitos de BWM
+
+> Generado con `config/hypr/scripts/bwm-requirements.py docs > docs/REQUIREMENTS.md` a partir de
+> `config/hypr/skins/requirements.json` y de los manifiestos de cada skin. Esos archivos son la
+> fuente de verdad: los leen `install.sh`, `bwm check` y la bienvenida. Cambia los requisitos allí.
+
+Comprueba tu equipo con `./install.sh --check` o, ya instalado, `bwm check`: dice qué falta y te
+da los comandos exactos para tu distribución. Notación de paquetes:
+
+* **Gentoo:** `repo:categoría/paquete` = paquete de un overlay que hay que activar
+  (`sudo eselect repository enable guru hyproverlay && sudo emaint sync -r guru -r hyproverlay`).
+  Hyprland y sus herramientas están en [hyproverlay](https://codeberg.org/hyproverlay/hyproverlay);
+  Quickshell, matugen, adw-gtk3, cliphist, awww… en [GURU](https://wiki.gentoo.org/wiki/Project:GURU).
+* **Arch:** `aur:paquete` = AUR (`paru` o `yay`).
+* **Fedora:** `copr:usuario/proyecto:paquete` = repositorio COPR (`sudo dnf copr enable usuario/proyecto`).
+* **—** = la distribución no lo empaqueta: `bwm check` muestra cómo instalarlo a mano o la guía
+  ([Hyprland](https://wiki.hypr.land/Getting-Started/Installation/),
+  [Quickshell](https://quickshell.outfoxxed.me/docs/guide/install-setup/)).
+
+Debian/Ubuntu no empaquetan un Hyprland con configuración en Lua (≥ 0.55) ni Quickshell: hay que
+compilarlos o usar sus repositorios de terceros.
+"""
+
+DOC_FOOTER = """
+## Plugin hyprbars (skin KDE Plasma)
+
+Los plugins de Hyprland sólo cargan en la versión exacta para la que se compilaron (el `.so`
+guarda el commit de Hyprland). `bwm check` compara ese commit con el del Hyprland que usas; si
+no coinciden, `install.sh` lo recompila (`cd src/hyprbars && make && make install`, que instala con
+un renombrado atómico). El plugin nuevo se carga al volver a iniciar sesión. Nunca copies el `.so`
+a mano encima del cargado ni lo descargues/cargues en caliente: Hyprland cae (SIGBUS). Cuando
+cambia la API interna de Hyprland hay que portearlo (referencia: el hyprbars oficial de
+hyprwm/hyprland-plugins fijado a esa versión en su `hyprpm.toml`).
+"""
+
+
+def requirements_markdown() -> str:
+    base, skins = load_data()
+    catalog = base["catalog"]
+
+    def package(rid, family):
+        spec = catalog[rid]
+        if spec.get("provider") == "bwm":
+            return "*lo trae BWM*"
+        if spec.get("check", {}).get("type") == "hyprland-plugin":
+            return "*se compila*"
+        value = spec.get("packages", {}).get(family)
+        return " ".join(f"`{t}`" for t in value.split()) if value else "—"
+
+    def table(ids):
+        rows = ["| Requisito | Para qué | " + " | ".join(n for _, n in DOC_FAMILIES) + " |",
+                "| :--- | :--- |" + " :--- |" * len(DOC_FAMILIES)]
+        for rid in ids:
+            spec = catalog[rid]
+            rows.append(f"| {spec['label']} | {spec['why']} | " + " | ".join(package(rid, f) for f, _ in DOC_FAMILIES) + " |")
+        return "\n".join(rows)
+
+    out = [DOC_HEADER, "## Núcleo: lo que necesita cualquier skin para pintar la pantalla\n",
+           table(base["core"]["requires"]), "\n### Recomendado (opcional)\n", table(base["core"]["recommends"])]
+    for skin in skins:
+        mode = "dinámico" if skin["defaultTheme"]["mode"] == "dynamic" else "estático"
+        out += [f"\n## Skin {skin['name']}\n", f"Imita **{skin['imitates']}**. {skin['description']}\n",
+                f"* **Tema por defecto:** {skin['defaultTheme']['name']} ({mode}). {skin['defaultTheme']['description']}",
+                f"* **Temas:** {skin['themes']['builtIn']}",
+                f"* **Compatibilidad:** {skin['themes']['compatibility']}\n", table(skin.get("requires", []))]
+        if skin.get("recommends"):
+            out += ["\n**Recomendado:**\n", table(skin["recommends"])]
+    out.append(DOC_FOOTER)
+    return "\n".join(out)
+
+
 # ── Salida de texto ──────────────────────────────────────────────────────────
 
 def colours() -> dict:
@@ -419,13 +501,16 @@ def print_report(data: dict, pre_install: bool):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Requisitos de BWM y sus skins")
-    parser.add_argument("action", nargs="?", default="check", choices=["check", "skins"])
+    parser.add_argument("action", nargs="?", default="check", choices=["check", "skins", "docs"])
     parser.add_argument("--skin", action="append", help="sólo esta skin (repetible)")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--pre-install", action="store_true", help="no cuenta lo que hace el instalador")
     parser.add_argument("--distro", choices=sorted(set(FAMILIES.values()) | {"unknown"}))
     args = parser.parse_args()
 
+    if args.action == "docs":
+        print(requirements_markdown(), end="")
+        return 0
     data = report(args.skin, args.pre_install, args.distro)
     if args.skin:
         unknown = set(args.skin) - {s["id"] for s in data["skins"]}

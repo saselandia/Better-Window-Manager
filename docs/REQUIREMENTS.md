@@ -1,8 +1,8 @@
 # Requisitos de BWM
 
-> Generado a partir de `config/hypr/skins/requirements.json` y de los manifiestos de cada skin
-> (`default.json`, `retro.json`, `plasma.json`). Esos archivos son la fuente de verdad: los lee
-> `install.sh`, `bwm check` y la bienvenida. Si cambias un requisito, cámbialo allí.
+> Generado con `config/hypr/scripts/bwm-requirements.py docs > docs/REQUIREMENTS.md` a partir de
+> `config/hypr/skins/requirements.json` y de los manifiestos de cada skin. Esos archivos son la
+> fuente de verdad: los leen `install.sh`, `bwm check` y la bienvenida. Cambia los requisitos allí.
 
 Comprueba tu equipo con `./install.sh --check` o, ya instalado, `bwm check`: dice qué falta y te
 da los comandos exactos para tu distribución. Notación de paquetes:
@@ -10,7 +10,7 @@ da los comandos exactos para tu distribución. Notación de paquetes:
 * **Gentoo:** `repo:categoría/paquete` = paquete de un overlay que hay que activar
   (`sudo eselect repository enable guru hyproverlay && sudo emaint sync -r guru -r hyproverlay`).
   Hyprland y sus herramientas están en [hyproverlay](https://codeberg.org/hyproverlay/hyproverlay);
-  Quickshell, matugen, adw-gtk3, cliphist… en [GURU](https://wiki.gentoo.org/wiki/Project:GURU).
+  Quickshell, matugen, adw-gtk3, cliphist, awww… en [GURU](https://wiki.gentoo.org/wiki/Project:GURU).
 * **Arch:** `aur:paquete` = AUR (`paru` o `yay`).
 * **Fedora:** `copr:usuario/proyecto:paquete` = repositorio COPR (`sudo dnf copr enable usuario/proyecto`).
 * **—** = la distribución no lo empaqueta: `bwm check` muestra cómo instalarlo a mano o la guía
@@ -32,7 +32,7 @@ compilarlos o usar sus repositorios de terceros.
 | Python ≥ 3.11 | Gestor de skins, motor de temas y scripts (usa tomllib) | `dev-lang/python` | `python` | `python3` | `python3` | `python3` |
 | Pillow (Python) | Lee el fondo para sacar paletas y miniaturas | `dev-python/pillow` | `python-pillow` | `python3-pillow` | `python3-Pillow` | `python3-pil` |
 | jq | Perfiles JSON de cada skin y scripts | `app-misc/jq` | `jq` | `jq` | `jq` | `jq` |
-| swww | Pinta el fondo de pantalla con transiciones | `guru:gui-apps/awww` | `swww` | — | `swww` | — |
+| swww o awww | Pinta el fondo de pantalla con transiciones (awww es el nombre nuevo de swww; vale cualquiera) | `guru:gui-apps/awww` | `swww` | — | `swww` | — |
 | wl-clipboard | Portapapeles de Wayland (copiar, pegar, capturas) | `gui-apps/wl-clipboard` | `wl-clipboard` | `wl-clipboard` | `wl-clipboard` | `wl-clipboard` |
 | cliphist | Historial del portapapeles | `guru:app-misc/cliphist` | `cliphist` | `cliphist` | `cliphist` | `cliphist` |
 | kitty | Terminal por defecto; se recolorea en vivo con cada skin y tema | `x11-terms/kitty` | `kitty` | `kitty` | `kitty` | `kitty` |
@@ -137,5 +137,6 @@ Los plugins de Hyprland sólo cargan en la versión exacta para la que se compil
 guarda el commit de Hyprland). `bwm check` compara ese commit con el del Hyprland que usas; si
 no coinciden, `install.sh` lo recompila (`cd src/hyprbars && make && make install`, que instala con
 un renombrado atómico). El plugin nuevo se carga al volver a iniciar sesión. Nunca copies el `.so`
-a mano encima del cargado ni lo descargues/cargues en caliente: Hyprland cae (SIGBUS).
-
+a mano encima del cargado ni lo descargues/cargues en caliente: Hyprland cae (SIGBUS). Cuando
+cambia la API interna de Hyprland hay que portearlo (referencia: el hyprbars oficial de
+hyprwm/hyprland-plugins fijado a esa versión en su `hyprpm.toml`).

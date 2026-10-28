@@ -82,37 +82,8 @@ Singleton {
         objects: [sink, source]
     }
 
-    Connections { // Protection against sudden volume changes
-        target: sink?.audio ?? null
-        property bool lastReady: false
-        property real lastVolume: 0
-        function onVolumeChanged() {
-            if (!Config.options.audio.protection.enable) return;
-            const newVolume = sink.audio.volume;
-            // when resuming from suspend, we should not write volume to avoid pipewire volume reset issues
-            if (isNaN(newVolume) || newVolume === undefined || newVolume === null) {
-                lastReady = false;
-                lastVolume = 0;
-                return;
-            }
-            if (!lastReady) {
-                lastVolume = newVolume;
-                lastReady = true;
-                return;
-            }
-            const maxAllowedIncrease = Config.options.audio.protection.maxAllowedIncrease / 100; 
-            const maxAllowed = Config.options.audio.protection.maxAllowed / 100;
-
-            if (newVolume - lastVolume > maxAllowedIncrease) {
-                sink.audio.volume = lastVolume;
-                root.sinkProtectionTriggered(Translation.tr("Illegal increment"));
-            } else if (newVolume > maxAllowed || newVolume > root.hardMaxValue) {
-                root.sinkProtectionTriggered(Translation.tr("Exceeded max allowed"));
-                sink.audio.volume = Math.min(lastVolume, maxAllowed);
-            }
-            lastVolume = sink.audio.volume;
-        }
-    }
+    // BWM no ofrece la protección de volumen de illogical-impulse («earbang protection»): se quitó
+    // de Ajustes y de aquí en todas las skins (sinkProtectionTriggered ya no se emite).
 
     function playSystemSound(soundName) {
         const ogaPath = `/usr/share/sounds/${root.audioTheme}/stereo/${soundName}.oga`;
