@@ -12,6 +12,16 @@ archivos de contexto están versionados; no incluyas contraseñas, tokens ni vol
 
 ---
 
+## Propósito (lo más importante)
+
+**BWM es un gestor de ventanas que trata de encapsular todos los gestores de ventanas y escritorios
+como skins.** Cada skin reproduce otro escritorio (barra, menús, paneles, atajos, decoraciones y
+temas) sobre Hyprland + Quickshell, y el sistema entero la sigue. **Finalidad: compatibilidad con
+las mejoras de aspecto de cada original**: en la skin KDE Plasma un tema de Plasma bajado de
+internet debe aplicarse y funcionar; en Retro, un tema o plugin de Omarchy. BWM tiene pocas
+interfaces propias (la bienvenida, Ajustes); casi todo es la interfaz del escritorio original.
+Detalle: `docs/SKINS.md`.
+
 ## 0. Vocabulario
 
 - **Estilo** (*skin*): Default (Material You), Retro (Omarchy), KDE Plasma (Breeze Dark).
@@ -21,7 +31,7 @@ archivos de contexto están versionados; no incluyas contraseñas, tokens ni vol
 
 ## 1. Qué es y dónde está
 
-- Escritorio sobre **Hyprland 0.55.4 configurado en Lua** + **Quickshell** (QML, config `ii`, derivada de
+- Escritorio sobre **Hyprland ≥ 0.55 configurado en Lua** (sesión del 2026-10-28: 0.56.2; mira `hyprctl version -j`) + **Quickshell** (QML, config `ii`, derivada de
   end-4/illogical-impulse) en **Gentoo** (systemd), kernel cachyos, GPU **NVIDIA** + iGPU AMD (Ryzen 9 7900).
 - Repo: `/mnt/HDD1TB/Projects/hyprland-de` (enlace `~/Projects/hyprland-de`). `~/.config/{hypr,quickshell,
   illogical-impulse,rofi,kitty,matugen,swaync,gtk-3.0,gtk-4.0,xdg-desktop-portal,nvim}` son **enlaces al repo**:
@@ -67,11 +77,22 @@ archivos de contexto están versionados; no incluyas contraseñas, tokens ni vol
     Mantén `AGENTS.md` y `CLAUDE.md` iguales. Separa lo comprobado de lo pendiente; no afirmes que se
     completó una actualización, reinicio, prueba visual o push sin haberlo verificado. Si el usuario pide
     «commitear todo», incluye también los cambios ajenos y generados tras revisarlos; no los descartes.
+11. **Compatibilidad con los temas del original**: al tocar una skin, hazlo de forma que siga aceptando los
+    temas/plugins de su escritorio original (formato de Omarchy en Retro, de Plasma en KDE Plasma, de
+    matugen/end-4 en Default). Ante la duda, se adapta BWM al formato del original, no al revés. No
+    introduzcas formatos de tema propios donde el original ya tiene uno.
+12. **Requisitos declarados**: si una skin o el núcleo empieza a usar un programa, módulo QML/Qt, fuente o
+    biblioteca nuevos, añádelo a `config/hypr/skins/requirements.json` (catálogo con paquetes por distro) y al
+    `requires`/`recommends` de la skin; regenera la tabla de `docs/REQUIREMENTS.md`. El instalador, `bwm check` y
+    la bienvenida salen de ahí.
 
 ## 3. Dónde tocar para…
 
 | Quiero… | Dónde |
 | :--- | :--- |
+| Requisitos (instalador, `bwm check`, bienvenida) | `config/hypr/skins/*.json`, `scripts/bwm-requirements.py`; tabla en `docs/REQUIREMENTS.md` |
+| Instalador | `install.sh` (sale con los comandos de la distro si falta un requisito) |
+| Bienvenida / comando `bwm` | `quickshell/ii/bwmWelcome.qml` (qs -p aparte), `scripts/bwm`, `~/.config/bwm/welcome.json`, `autostart.sh` |
 | Cambiar de estilo / ver qué hace al cambiar | `config/hypr/scripts/bwm-theme-manager.py` (`apply_theme`) |
 | Algo que sólo cargue en un estilo | `quickshell/ii/panelFamilies/IllogicalImpulseFamily.qml` (`extraCondition`) |
 | Colores/temas de Retro y sus apps | `scripts/bwm_omarchy.py` (`apply_retro_palette_colors`), `scripts/bwm_omarchy_apps.py`, `hypr/omarchy/themed/*.tpl` |
@@ -117,6 +138,11 @@ archivos de contexto están versionados; no incluyas contraseñas, tokens ni vol
     Multimedia (`crmne.mpris`) va por defecto a la derecha de la hora (`centerEnd`).
   - Apps: todas las plantillas de Omarchy (`bwm_omarchy_apps.py`, también para apps sin instalar; LazyVim propio
     en `config/nvim`), Vesktop/Firefox con capa TUI propia, Spotify `BWM-Omarchy`, Steam con Adwaita-for-Steam.
+- **Temas por defecto**: Default = Material You **dinámico** (matugen desde el fondo); Retro = paleta **dinámica**
+  en formato Omarchy (o uno de los 23 temas **estáticos** con Alt+R); Plasma = Breeze Dark **estático**.
+- **Bienvenida** (`bwm`): asistente tipo Calamares que se abre en cada inicio de sesión hasta desactivarlo
+  (`bwm startup off`): gracias, skins instaladas en verde si tienen sus requisitos (desplegables, con comandos y
+  «Activar»), «Añadir skins» → `docs/SKINS.md`. Ventana `qs -p` aparte: `pkill -x quickshell` no la cierra.
 - **Todos los estilos**: GTK 3 en vivo (tema `BWM-1|BWM-2`), qt6ct + `kdeglobals`, flatpaks con overrides, kitty en
   vivo, Vesktop (`themes/bwm.theme.css`), Firefox/Spotify/Steam se reinician solos en su sitio, iconos por estilo,
   SDDM/Plymouth que siguen los colores, `window-guard.py` para juegos, aplicaciones predeterminadas
@@ -159,6 +185,9 @@ archivos de contexto están versionados; no incluyas contraseñas, tokens ni vol
   `news-gentoo.unread/skip` (root:portage) con «Cannot update list of news items». No cambies permisos.
   En `dispatch-conf`, compara el archivo actual con `._cfgNNNN_*` antes de recomendar `u` (aceptar),
   `z` (descartar) o `m` (fusionar); no aceptes cambios de configuración en bloque.
+- **Plugin hyprbars y versión de Hyprland**: el `.so` guarda el commit de Hyprland para el que se compiló;
+  `bwm-requirements.py` lo compara con el que corre. Tras actualizar Hyprland, Plasma sale en rojo hasta
+  recompilar (`make && make install`, nunca `cp`). GURU publica swww como `awww`: BWM sigue llamando a `swww`.
 - **XWayland**: Hyprland no fija primary (Wine usa el primer monitor); coordenadas X distintas de las de Hyprland.
 - **Quickshell**: un archivo con el mismo nombre que un tipo que usa dentro (p. ej. `PolkitAgent.qml`) lo ensombrece;
   tipos de una carpeta hermana cargada por `Loader` no se resuelven (usa `component` en línea o importa la carpeta).
@@ -181,6 +210,9 @@ archivos de contexto están versionados; no incluyas contraseñas, tokens ni vol
   con la regla temporal al workspace 9, y mira su salida.
 - Capas visibles: `hyprctl layers -j` (namespaces `omarchy-*`). Capturas: `grim -g "x,y wxh"` (HP en `0,1080 1920x1080`).
 - Python/bash: `python3 -m py_compile`, `bash -n`.
+- Requisitos: `./install.sh --check` o `bwm check [--skin id] [--distro arch|fedora|…]` (sólo lee; `--distro`
+  enseña los comandos de otra distribución). La bienvenida no se renderiza con `QT_QPA_PLATFORM=offscreen`
+  (Quickshell necesita Wayland): para verla, ábrela flotando en un workspace visible y captura su recuadro.
 
 ## 7. Pendiente
 

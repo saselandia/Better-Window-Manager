@@ -7,7 +7,7 @@
 >
 > **Cómo leerlo:** §2 es la verdad actual. El historial de §3 es cronológico y conserva lo que se
 > hizo en cada momento: cuando algo quedó superado lo indica con **⚠️ Superado en parte por §3.N**.
-> Fechas en formato AAAA-MM-DD. Última revisión: 2026-10-27. Estado de Git: consulta §6; no uses los hashes históricos como estado actual.
+> Fechas en formato AAAA-MM-DD. Última revisión: 2026-10-28. Estado de Git: consulta §6; no uses los hashes históricos como estado actual.
 > Registra las pruebas realizadas y sus límites; una instrucción dada al usuario no confirma su ejecución.
 
 **Vocabulario:** **estilo** (*skin*) = Default, Retro, KDE Plasma. **Tema** = lo que hay dentro de
@@ -18,8 +18,14 @@ un estilo (los 23 temas de Omarchy en Retro o su paleta dinámica). Los nombres 
 
 ## 1. 🖥️ Qué es, máquina y rutas
 
-**BWM** es un entorno de escritorio para Wayland sobre **Hyprland 0.55.4 configurado en Lua**
-(tag `v0.55.4`, commit `a0136d8c`) y **Quickshell** (Qt 6/QML; config `ii`, derivada de
+**BWM** es un gestor de ventanas que trata de encapsular todos los gestores de ventanas y escritorios
+como **skins**: cada una reproduce otro escritorio (barra, menús, paneles, atajos, decoraciones y temas)
+y todo el sistema la sigue. **Finalidad: compatibilidad con las mejoras de aspecto de cada original**
+(un tema de Plasma de internet debe funcionar en la skin KDE Plasma; uno de Omarchy, en Retro). Pocas
+interfaces propias (bienvenida, Ajustes); el resto es la del original. Detalle: `docs/SKINS.md`.
+
+Corre sobre **Hyprland ≥ 0.55 configurado en Lua** (desarrollado en `v0.55.4`/`a0136d8c`; la sesión
+del 2026-10-28 ya corre `v0.56.2`/`efb50993`, comprobado con `hyprctl version -j`) y **Quickshell** (Qt 6/QML; config `ii`, derivada de
 end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las apps.
 
 | | |
@@ -52,6 +58,7 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 * Selector de estilos: Alt+T (Retro: carrusel 3D con capturas de lo que imita cada estilo, `skin-switcher.sh`; Default: rofi; Plasma: «Estilo global»). Temas de Retro: Alt+R (carrusel), menú → Estilo → Temas Retro, Ajustes → Temas.
 * **Ajustes → Temas / Plugins** (dos páginas, en ambas apps): Temas muestra galería con miniaturas/paletas/tema elegido; Plugins muestra tarjetas, activación, posición y filtros Todos/Activados/Desactivados. Cada página tiene Instalados/Descubrir, búsqueda remota, Mostrar más, enlaces y Git/URL. `ThemesConfig.qml`, `PluginsConfig.qml` y módulo `addons/` con `qmldir`; backend `bwm-addons.py`, detalle en `docs/OMARCHY_ADDONS.md`.
 * Temas de comunidad en `~/.local/share/bwm/omarchy-themes` (`XDG_DATA_HOME`); también se reconoce `~/.config/omarchy/themes`, que aquí enlaza al repo y no se usa como destino de instalación. `theme_directory()` y `list_omarchy_themes()` comparten precedencia, igual que la CLI y el carrusel.
+* **Tema por defecto de cada skin:** Default = Material You **dinámico** (matugen desde el fondo); Retro = paleta **dinámica** en formato Omarchy (23 temas **estáticos** con Alt+R); Plasma = Breeze Dark **estático**. Manifiestos en `config/hypr/skins/<id>.json` (§2.9).
 * Retro estático/dinámico: `~/.local/state/bwm/omarchy/{theme.mode,theme.name,colors.toml,shell.toml}`; en estático cambiar el fondo no toca la paleta. Temas claros (White, Catppuccin Latte…) ponen las apps en claro.
 
 ### 2.2 Apps tematizadas
@@ -98,6 +105,10 @@ Panel flotante/pegado, Kickoff, applets Bluetooth/red/audio/calendario/notificac
 * Qt sin recarga en vivo (qt6ct no repinta apps abiertas); Chromium sin tema (necesita política root).
 * Entorno de pruebas aparte (Hyprland anidado + usuario + rama `dev`), antes cambiar `/home/sasel` fijos por `$HOME`.
 * El actualizador Retro no sincroniza los repositorios ni gestiona noticias, `dispatch-conf` o `@preserved-rebuild`; los perfiles Default/Plasma aún conservan un `apps.update` heredado con `pacman`. Adaptar ese acceso a Gentoo.
+* Compatibilidad con temas del original (finalidad del proyecto): Plasma aún sólo tiene Breeze Dark; falta aplicar esquemas de color (`.colors`) y temas globales de la KDE Store. Default: plantillas de matugen de terceros sin probar.
+* Skins de la comunidad: el comprobador ya lee `~/.local/share/bwm/skins/*.json`, pero falta definir paquete, instalación y cómo cargan su QML/Lua sin tocar el repo.
+* GURU publica swww como `awww`; los scripts llaman a `swww` (el instalador indica crear enlaces). Aceptar `awww` en `autostart.sh`, `set-wallpaper.sh` y `switchwall.sh`.
+* La sesión corre Hyprland 0.56.2 y `hyprbars-plasma.so` está compilado para 0.55.4 (`a0136d8c`): Plasma sale en rojo hasta recompilar (`cd src/hyprbars && make && make install`, cargará al reiniciar sesión). Comprobado el 2026-10-28; no recompilado.
 * `QuickConfig.qml` ya no está en Ajustes (fondo aleatorio de Konachan y claro/oscuro de Default sólo estaban ahí).
 
 
@@ -127,6 +138,13 @@ flatpak update
 * Navegación: Plugins y Temas separados en ambas apps, Cursor conservado y Advanced eliminado (también su QML). Estilo conserva fuentes, glass, salvapantallas y arranque.
 * About: tarjeta Distro con nombre/versión/logo detectados de os-release y enlace de inicio; tarjeta WM con BWM, logo del arranque y accesos a GitLab/GitHub. Documentation abre README.es.md en GitLab; Issues abre los de GitHub; Star tiene un GIF local de 32 fotogramas y abre GitHub. Sin botones de ayuda/documentación/bugs/privacidad de la distro ni Donate. Discussions omitido: GitHub API `has_discussions=false`, comprobado el 2026-10-27.
 * `SystemInfoData.js` parsea comillas simples/dobles y valores sin comillas como datos, sin ejecutar shell. `SystemInfo.qml` aplica al cargar FileView, vigila cambios y recurre a `/usr/lib/os-release` si falta `/etc/os-release`. El lector anterior no reconocía el formato con comillas simples de Gentoo. Logo simbólico con fallback incluido y ColorOverlay para que sea visible sobre fondos oscuros.
+
+### 2.9 Instalador, requisitos y bienvenida
+* **Requisitos declarados** en `config/hypr/skins/`: `requirements.json` (núcleo `requires`/`recommends` + catálogo: etiqueta, para qué, comprobación y paquete por familia de distro, con `guru:`/`hyproverlay:` en Gentoo, `aur:` en Arch, `copr:` en Fedora) y un manifiesto por skin (`default.json`, `retro.json`, `plasma.json`: imita, descripción, `defaultTheme` dinámico/estático, temas, compatibilidad, captura, requisitos). Tabla generada en `docs/REQUIREMENTS.md`; qué es una skin y cómo se añade en `docs/SKINS.md` (la «wiki»).
+* **`scripts/bwm-requirements.py check [--skin] [--json] [--pre-install] [--distro]` / `skins`**: sólo lee el sistema (comandos, versiones mínimas de Hyprland/Quickshell, módulos QML y plugins de Qt, Python/Pillow, fuentes, pkg-config, commit de Hyprland embebido en `hyprbars-plasma.so`) y genera los comandos de instalación de la distro detectada por os-release. `--pre-install` no cuenta lo que pone el instalador (fuentes) ni el plugin si se puede compilar.
+* **`install.sh`**: paso 1 = comprobación; si falta algo imprime los comandos y sale con 1 **sin tocar nada**. `--check`, `--skins default,retro`, `--spicetify/--no-spicetify` (antes descargaba Spicetify sin preguntar; ahora sólo si Spotify está y con confirmación). Enlaza `~/.local/bin/bwm` al repo, enlaza los shims de Omarchy (`bwm-plugin.sh catalog`), activa la bienvenida, compila hyprbars si no coincide con el Hyprland en uso y activa `bwm.theme.css` en Vesktop con `bwm_omarchy.vesktop_enable_theme()` (antes copiaba `material-you.theme.css` y lo ponía en Quick CSS, contrario a §3.35).
+* **Comando `bwm`** (`config/hypr/scripts/bwm`): sin argumentos abre la bienvenida (o, sin Wayland/Quickshell, los requisitos en texto); `check`, `skins`, `skin [id]` (se niega si faltan requisitos), `startup on|off|status`, `welcome --startup`.
+* **Bienvenida** `quickshell/ii/bwmWelcome.qml`: ventana `qs -p` aparte con pasos a la izquierda (Bienvenida, Skins, Añadir skins, Listo) como Calamares. Agradece, explica el propósito, muestra sistema/Hyprland/skin activa; tarjetas desplegables por skin con punto/etiqueta verde si tiene sus requisitos, tema por defecto, requisitos con ✓/✗, comandos copiables (`wl-copy`), «Activar esta skin» (`bwm-theme-manager.py set`, relee a los 14 s) y enlace al original; «Añadir skins» con la wiki. Interruptor «Mostrar al iniciar sesión» → `~/.config/bwm/welcome.json` (`showAtStartup`; sin archivo = activada). `autostart.sh` la lanza 4 s después de Quickshell. `FirstRunExperience.qml` ya no abre la bienvenida de illogical-impulse ni pone su fondo por defecto.
 
 ---
 
@@ -569,6 +587,13 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 * El usuario pide commitear todo y subirlo a los remotos. Se incluyen deliberadamente cambios de esta conversación y concurrentes: About BWM/Fastfetch, separación de Temas/Plugins y catálogo, barra adaptable, maximizado, luz nocturna, perfiles generados y virt-manager flotante. No se descartan cambios ajenos.
 * Verificación previa: 20 pruebas de About/complementos correctas; sintaxis de 6 Python, 8 Bash y 4 Lua; 3 JSON válidos; AGENTS/CLAUDE idénticos, `git diff --check` y `hyprctl configerrors` sin errores. Esta tarea no repite pruebas gráficas ni prueba juegos reales. Publicación mediante `git push origin main` y comprobación de `refs/heads/main` de GitLab/GitHub; el resultado se informa tras ejecutarlo.
 
+### 51. Instalador con requisitos por skin, bienvenida y propósito del proyecto (2026-10-28)
+* **Petición:** instalador que analice el equipo y, si falta un requisito, lo diga, dé los comandos para la distro y salga; requisitos basados en lo que necesita BWM para pintar y en las tres skins; bienvenida al iniciar sesión (agradecer, skins en verde con requisitos, añadir skins con la wiki, desactivable, tipo Calamares) que se abra también con `bwm`; documentar el propósito (gestor de ventanas que encapsula a los demás como skins) y la norma de compatibilidad con los temas de cada original; temas por defecto de cada skin.
+* **Hecho:** §2.9. Requisitos deducidos del código (imports QML, comandos de scripts, `qfile` de los binarios instalados en Gentoo y ebuilds de GURU/hyproverlay). Propósito y reglas 11-12 en `AGENTS.md`/`CLAUDE.md`, README en/es reescritos en cabecera, requisitos e instalador, `docs/SKINS.md`, `docs/REQUIREMENTS.md`.
+* **Encontrado:** la sesión corre Hyprland 0.56.2 (`efb50993`) y `hyprbars-plasma.so` es de 0.55.4 (`a0136d8c`): el comprobador marca Plasma «faltan requisitos» con el comando de recompilación. No se recompiló. `xdg-desktop-portal-gtk` (FileChooser=gtk de §3.22) no está instalado aquí: sale como recomendado.
+* **Verificado:** `py_compile`, `bash -n` de `install.sh`/`bwm`/`autostart.sh`, JSON válidos; `./install.sh --check` (sale 1 por el plugin), `--skins default,retro` (0), skin desconocida (2); planes de instalación simulados para Gentoo, Arch, Fedora, openSUSE, Debian y desconocida; `bwm help|startup status|skins|skin`, `bwm skin plasma` rechazado. Bienvenida cargada con `qs -p` sin errores de QML (sólo avisos WebP/portal) y revisada visualmente en las cuatro páginas (ventana flotante unos segundos en el workspace 10, capturas recortadas y borradas); corregido el botón «Activar» invisible cuando falta algo. La barra real recargó `FirstRunExperience.qml` sin errores.
+* **No probado:** una instalación completa en un `$HOME` limpio u otra distro (se ejecutó sólo `--check`), el autoarranque real de la bienvenida en un inicio de sesión, «Activar esta skin» desde la ventana y la compilación del plugin por el instalador.
+
 ---
 
 ## 4. 📂 Estructura del repositorio
@@ -581,6 +606,7 @@ hyprland-de/
 ├── config/                            # Enlazado desde ~/.config
 │   ├── hypr/
 │   │   ├── hyprland.lua               # Raíz: importa modules/*
+│   │   ├── skins/                     # requirements.json (núcleo + catálogo) y <skin>.json (requisitos, tema por defecto)
 │   │   ├── keybinds.json              # Atajos (fuente de verdad) → keybinds-manager.py → modules/user_binds.lua
 │   │   ├── modules/                   # appearance, autostart, binds, colors (generado), monitors (desc:),
 │   │   │                              # omarchy_windows, plasma_colors/retro_colors (generados), rules,
@@ -594,6 +620,8 @@ hyprland-de/
 │   │   │   └── boot/                  # Temas Plymouth/SDDM de Omarchy con logo BWM
 │   │   ├── plugins/                   # hyprbars(-plasma).so — desplegar SÓLO con make install
 │   │   └── scripts/
+│   │       ├── bwm                    # Comando bwm (bienvenida, check, skins, skin, startup)
+│   │       ├── bwm-requirements.py    # Comprobador de requisitos + comandos por distro
 │   │       ├── bwm-theme-manager.py   # Gestor de estilos
 │   │       ├── bwm_omarchy.py         # Motor de Retro: paletas, apps, Vesktop, Firefox/Steam (restart_app)
 │   │       ├── bwm-addons.py          # Catálogos e instalación de temas/plugins de Omarchy
@@ -612,7 +640,7 @@ hyprland-de/
 │   │       │   bwm_boot.py, bwm-plugin.sh, default-apps.py, bwm-terminal, font-set.sh, glass.sh…
 │   │       └── omarchy-shims/         # Sustitutos de comandos omarchy-* (→ ~/.local/bin)
 │   ├── quickshell/ii/
-│   │   ├── shell.qml, settings.qml, plasmaSettings.qml
+│   │   ├── shell.qml, settings.qml, plasmaSettings.qml, bwmWelcome.qml (bienvenida)
 │   │   ├── Commons/ Ui/               # Librerías de Omarchy (qs.Commons, qs.Ui), i18n en/es-MX
 │   │   ├── omarchy-plugins/           # Plugins de barra de Omarchy preinstalados
 │   │   ├── panelFamilies/IllogicalImpulseFamily.qml   # Qué se carga en cada estilo
@@ -628,7 +656,7 @@ hyprland-de/
 │   ├── gtk-3.0/ gtk-4.0/ kitty/ rofi/ swaync/ btop/ firefox/ spicetify/ xdg-desktop-portal/
 │   └── illogical-impulse/             # config.json activo + perfiles por estilo
 ├── src/hyprbars/ src/csd-minimize/    # Plugins C++ (-fno-gnu-unique, make install)
-├── docs/OMARCHY_INVESTIGACION.md      # Investigación de Omarchy
+├── docs/                            # SKINS.md (wiki de skins), REQUIREMENTS.md, OMARCHY_*.md, STREMIO_THEMING.md
 ├── install.sh, README.md, README.es.md
 └── AGENTS.md, CLAUDE.md, BWM_CONTEXT.md # Reglas sincronizadas y contexto versionados
 ```

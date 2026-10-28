@@ -1,0 +1,19 @@
+{
+  "id": "default",
+  "name": "Default",
+  "imitates": "end-4 / illogical-impulse (Material You)",
+  "upstream": "https://github.com/end-4/dots-hyprland",
+  "description": "Material Design 3: barra, panel lateral, vista general y Alt+Tab de illogical-impulse. Todo el escritorio y las apps toman los colores del fondo de pantalla.",
+  "preview": "assets/skin-previews/end4-illogical-impulse.png",
+  "defaultTheme": {
+    "mode": "dynamic",
+    "name": "Material You desde el fondo",
+    "description": "Dinámico: matugen genera la paleta del fondo cada vez que lo cambias (Alt+W)."
+  },
+  "themes": {
+    "builtIn": "Paleta dinámica de matugen (claro u oscuro según el fondo).",
+    "compatibility": "Objetivo: plantillas y fondos de la comunidad de matugen / end-4 funcionan tal cual."
+  },
+  "requires": ["matugen", "rofi", "hyprpolkitagent"],
+  "recommends": ["swaync", "hyprsunset"]
+}

@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# bwm: punto de entrada de BWM en la terminal (install.sh lo enlaza en ~/.local/bin).
+#
+#   bwm                      abre la bienvenida (skins instaladas y sus requisitos)
+#   bwm welcome [--startup]  igual; --startup sólo si está activada al iniciar sesión
+#   bwm startup on|off|status  bienvenida al iniciar sesión
+#   bwm check [--skin ID]    requisitos del núcleo y de las skins, con comandos para tu distro
+#   bwm skins                skins instaladas (verde = requisitos completos)
+#   bwm skin [ID]            skin activa, o cambia a otra
+#
+# Funciona desde el checkout aunque la instalación no haya terminado.
+# ==============================================================================
+set -uo pipefail
+
+REPO="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../../.." && pwd)"
+SCRIPTS="$REPO/config/hypr/scripts"
+WELCOME_QML="$REPO/config/quickshell/ii/bwmWelcome.qml"
+STATE="${XDG_CONFIG_HOME:-$HOME/.config}/bwm/welcome.json"
+
+startup_enabled() {  # sin archivo = activada (la bienvenida sale hasta que la desactives)
+    [[ -f "$STATE" ]] || return 0
+    python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1])).get("showAtStartup", True) else 1)' "$STATE" 2>/dev/null
+}
+
+set_startup() {  # true|false
+    mkdir -p "$(dirname "$STATE")"
+    python3 - "$STATE" "$1" <<'EOF'
+import json, os, sys
+path, value = sys.argv[1], sys.argv[2] == "true"
+try:
+    data = json.load(open(path))
+except (OSError, ValueError):
+    data = {}
+data["showAtStartup"] = value
+tmp = path + ".tmp"
+with open(tmp, "w") as f:
+    json.dump(data, f, indent=2)
+os.replace(tmp, path)
+EOF
+}
+
+open_welcome() {
+    if [[ -n "${WAYLAND_DISPLAY:-}" ]] && command -v qs >/dev/null 2>&1 && [[ -f "$WELCOME_QML" ]]; then
+        # Una sola ventana: si ya está abierta no se abre otra
+        if pgrep -f "qs -p $WELCOME_QML" >/dev/null 2>&1; then
+            return 0
+        fi
+        setsid -f qs -p "$WELCOME_QML" >/dev/null 2>&1
+    else
+        echo "Sin sesión Wayland o sin Quickshell: muestro los requisitos en la terminal."
+        exec python3 "$SCRIPTS/bwm-requirements.py" check
+    fi
+}
+
+cmd="${1:-welcome}"
+[[ $# -gt 0 ]] && shift
+case "$cmd" in
+    welcome)
+        if [[ "${1:-}" == "--startup" ]]; then
+            startup_enabled || exit 0
+        fi
+        open_welcome
+        ;;
+    startup)
+        case "${1:-status}" in
+            on) set_startup true; echo "La bienvenida se abrirá al iniciar sesión." ;;
+            off) set_startup false; echo "La bienvenida ya no se abrirá al iniciar sesión (ábrela con: bwm)." ;;
+            status) startup_enabled && echo on || echo off ;;
+            *) echo "Uso: bwm startup on|off|status" >&2; exit 2 ;;
+        esac
+        ;;
+    check) exec python3 "$SCRIPTS/bwm-requirements.py" check "$@" ;;
+    skins) exec python3 "$SCRIPTS/bwm-requirements.py" skins "$@" ;;
+    skin)
+        if [[ $# -eq 0 ]]; then
+            exec python3 "$SCRIPTS/bwm-theme-manager.py" get
+        fi
+        if ! python3 "$SCRIPTS/bwm-requirements.py" check --skin "$1" >/dev/null; then
+            python3 "$SCRIPTS/bwm-requirements.py" check --skin "$1"
+            echo "" >&2
+            echo "La skin $1 no tiene todos sus requisitos. Instálalos antes de activarla." >&2
+            exit 1
+        fi
+        exec python3 "$SCRIPTS/bwm-theme-manager.py" set "$1"
+        ;;
+    -h|--help|help)
+        sed -n '3,12p' "$(readlink -f "${BASH_SOURCE[0]}")" | sed 's/^# \{0,1\}//'
+        ;;
+    *)
+        echo "Orden desconocida: $cmd (bwm help)" >&2
+        exit 2
+        ;;
+esac

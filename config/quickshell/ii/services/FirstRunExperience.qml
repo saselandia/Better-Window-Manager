@@ -26,8 +26,8 @@ Singleton {
     }
 
     function handleFirstRun() {
-        Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, root.defaultWallpaperPath])
-        Quickshell.execDetached(["bash", "-c", `qs -p '${root.welcomeQmlPath}'`])
+        // BWM: el fondo inicial lo pone install.sh y la bienvenida (bwmWelcome.qml) la abre
+        // autostart.sh en cada inicio de sesión; la de illogical-impulse ya no se lanza sola.
     }
 
     FileView {

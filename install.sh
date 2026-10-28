@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # ==============================================================================
-#  Material You Hyprland Desktop Environment - Installer & Setup Script
+#  BWM (Better Window Manager) - instalador
+#
+#  BWM es un gestor de ventanas que reúne a los demás como skins (Default = end-4 /
+#  illogical-impulse, Retro = Omarchy, KDE Plasma). Lo primero que hace este instalador es
+#  comprobar que el equipo tiene todo lo que necesitan el núcleo y cada skin para pintar la
+#  pantalla (config/hypr/skins/*.json, scripts/bwm-requirements.py). Si falta algo, lo dice,
+#  da los comandos para tu distribución y sale sin tocar nada.
 # ==============================================================================
 
 set -euo pipefail
@@ -8,353 +14,178 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_SOURCE="$SCRIPT_DIR/config"
 ASSETS_DIR="$SCRIPT_DIR/assets"
+SCRIPTS_SOURCE="$CONFIG_SOURCE/hypr/scripts"
+REQUIREMENTS="$SCRIPTS_SOURCE/bwm-requirements.py"
 TARGET_CONFIG="$HOME/.config"
 BACKUP_DIR="$HOME/.config/hyprland-de-backup-$(date +%Y%m%d_%H%M%S)"
 INSTALL_MODE="symlink"
-LOGIN_SETUP="ask"   # ask | yes | no: pantalla de inicio de sesión SDDM estilo Omarchy
-PLUGINS_SETUP="yes" # yes | no: compilar ai-usagebar para el plugin preinstalado de uso de IA
+LOGIN_SETUP="ask"    # ask | yes | no: pantalla de inicio de sesión SDDM estilo Omarchy
+PLUGINS_SETUP="yes"  # yes | no: compilar ai-usagebar para el plugin preinstalado de uso de IA
+SPICETIFY_SETUP="ask" # ask | yes | no: descargar Spicetify si Spotify está instalado
+SKINS=()             # vacío = las tres skins de la release
 
-# Colors for terminal output
-RED='[0;31m'
-GREEN='[0;32m'
-BLUE='[0;34m'
-YELLOW='[1;33m'
-CYAN='[0;36m'
-MAGENTA='[0;35m'
-BOLD='[1m'
-NC='[0m' # No Color
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m'
 
-print_step() {
-    echo -e "
-${BLUE}${BOLD}==>${NC} ${BOLD}$1${NC}"
-}
-
-print_success() {
-    echo -e "  ${GREEN}${BOLD}✓${NC} $1"
-}
-
-print_warn() {
-    echo -e "  ${YELLOW}${BOLD}!${NC} $1"
-}
-
-print_error() {
-    echo -e "  ${RED}${BOLD}✗${NC} $1"
-}
-
-print_info() {
-    echo -e "  ${CYAN}ℹ${NC} $1"
-}
+print_step() { echo -e "\n${BLUE}${BOLD}==>${NC} ${BOLD}$1${NC}"; }
+print_success() { echo -e "  ${GREEN}${BOLD}✓${NC} $1"; }
+print_warn() { echo -e "  ${YELLOW}${BOLD}!${NC} $1"; }
+print_error() { echo -e "  ${RED}${BOLD}✗${NC} $1"; }
+print_info() { echo -e "  ${CYAN}ℹ${NC} $1"; }
 
 usage() {
-    echo "Uso: $0 [OPCIONES]"
-    echo ""
-    echo "Opciones:"
-    echo "  --symlink        Crea enlaces simbólicos a ~/.config (Recomendado: actualizaciones automáticas vía git pull)"
-    echo "  --copy           Copia los archivos a ~/.config de forma independiente"
-    echo "  --check-deps     Solo comprueba las dependencias y flatpaks instalados"
-    echo "  --login          Configura sin preguntar el inicio de sesión SDDM estilo Omarchy (pide sudo)"
-    echo "  --no-login       No toca el inicio de sesión ni el arranque"
-    echo "  --no-plugins     No compila ai-usagebar (plugin de uso de IA del estilo Retro)"
-    echo "  -h, --help       Muestra esta ayuda"
+    cat <<EOF
+Uso: $0 [OPCIONES]
+
+Opciones:
+  --symlink          Enlaza ~/.config al repositorio (recomendado: git pull actualiza BWM)
+  --copy             Copia los archivos a ~/.config
+  --check            Sólo comprueba los requisitos y dice cómo instalar lo que falta
+  --skins A,B        Instala sólo estas skins (default, retro, plasma). Por defecto, las tres
+  --login            Configura sin preguntar el inicio de sesión SDDM estilo Omarchy (pide sudo)
+  --no-login         No toca el inicio de sesión ni el arranque
+  --no-plugins       No compila ai-usagebar (plugin de uso de IA de la skin Retro)
+  --spicetify        Descarga Spicetify sin preguntar si Spotify está instalado
+  --no-spicetify     No descarga Spicetify
+  -h, --help         Muestra esta ayuda
+
+Después de instalar, \`bwm\` abre la bienvenida (skins y sus requisitos) y \`bwm check\`
+vuelve a comprobar los requisitos.
+EOF
     exit 0
 }
 
-# Parse options
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --symlink)
-            INSTALL_MODE="symlink"
-            shift
-            ;;
-        --copy)
-            INSTALL_MODE="copy"
-            shift
-            ;;
-        --check-deps)
-            INSTALL_MODE="check"
-            shift
-            ;;
-        --login)
-            LOGIN_SETUP="yes"
-            shift
-            ;;
-        --no-login)
-            LOGIN_SETUP="no"
-            shift
-            ;;
-        --plugins)
-            PLUGINS_SETUP="yes"
-            shift
-            ;;
-        --no-plugins)
-            PLUGINS_SETUP="no"
-            shift
-            ;;
-        -h|--help)
-            usage
-            ;;
-        *)
-            print_error "Opción no reconocida: $1"
-            usage
-            ;;
+        --symlink) INSTALL_MODE="symlink" ;;
+        --copy) INSTALL_MODE="copy" ;;
+        --check|--check-deps) INSTALL_MODE="check" ;;
+        --skins) shift; IFS=',' read -r -a SKINS <<< "${1:-}" ;;
+        --skins=*) IFS=',' read -r -a SKINS <<< "${1#--skins=}" ;;
+        --login) LOGIN_SETUP="yes" ;;
+        --no-login) LOGIN_SETUP="no" ;;
+        --plugins) PLUGINS_SETUP="yes" ;;
+        --no-plugins) PLUGINS_SETUP="no" ;;
+        --spicetify) SPICETIFY_SETUP="yes" ;;
+        --no-spicetify) SPICETIFY_SETUP="no" ;;
+        -h|--help) usage ;;
+        *) print_error "Opción no reconocida: $1"; usage ;;
     esac
+    shift
 done
 
 echo -e "${CYAN}${BOLD}"
 echo "╔═══════════════════════════════════════════════════════════════════╗"
-echo "║       Material You Hyprland Desktop Environment Installer        ║"
-echo "║                 Nautilus • Firefox • Vesktop • Spotify            ║"
+echo "║                 BWM · Better Window Manager                       ║"
+echo "║   Un gestor de ventanas que reúne a los demás como skins          ║"
+echo "║          Default (end-4) · Retro (Omarchy) · KDE Plasma           ║"
 echo "╚═══════════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
 # ==============================================================================
-# 1. Verificación de Dependencias Nativas del Sistema
+# 1. Requisitos del núcleo y de cada skin (sale si falta alguno)
 # ==============================================================================
-print_step "1. Comprobando componentes y dependencias del sistema..."
+print_step "1. Comprobando los requisitos de BWM y de sus skins..."
 
-DEPENDENCIES=(
-    "hyprland:Compositor Wayland principal"
-    "hyprcursor-util:Utilidad y biblioteca de cursores nativos para Hyprland (hyprcursor)"
-    "quickshell:Entorno de widgets, HUD y barra (Qt/QML)"
-    "matugen:Generador de paletas Material You a partir del fondo de pantalla"
-    "swww:Demonio de fondos de pantalla dinámicos para Wayland"
-    "swaync:Centro de notificaciones gráfico"
-    "rofi:Lanzador / selector de fondos (versión Wayland)"
-    "kitty:Emulador de terminal GPU-accelerated"
-    "playerctl:Controlador multimedia MPRIS"
-    "wl-copy:Herramientas de portapapeles de Wayland (wl-clipboard)"
-    "jq:Procesador JSON por línea de comandos"
-    "python3:Intérprete Python para automatizaciones y persistencia"
-    "nautilus:Gestor de archivos gráfico GNOME Files (tematizado con Material You)"
-    "firefox:Navegador web principal nativo (tematizado con Material You)"
-    "flatpak:Gestor de paquetes Flatpak (requerido para Vesktop y Spotify)"
-    "bluetoothctl:Pila Bluetooth BlueZ (bluetoothd), usada por el applet Bluetooth de Quickshell"
-    "blueman-manager:Ajustes avanzados de Bluetooth (botón Configurar del applet Plasma)"
-    "nmcli:NetworkManager, backend del applet de redes de Quickshell"
-    "nm-connection-editor:Editor de conexiones de red (botón Configurar del applet de redes)"
-    "socat:Eventos de Hyprland para el salvapantallas de terminal"
-    "qt6ct:Paleta del estilo BWM en las apps Qt (opcional)"
-    "sddm:Pantalla de inicio de sesión estilo Omarchy con los colores del tema (opcional)"
-    "plymouth:Pantalla de arranque estilo Omarchy (opcional, ver install-boot-theme.sh --plymouth)"
-)
+if ! command -v python3 >/dev/null 2>&1; then
+    print_error "Falta Python 3 (≥ 3.11): lo necesita el propio comprobador de requisitos."
+    echo "  Gentoo: sudo emerge --ask dev-lang/python    Arch: sudo pacman -S python"
+    echo "  Fedora: sudo dnf install python3             Debian/Ubuntu: sudo apt install python3"
+    exit 1
+fi
 
-MISSING_DEPS=()
-
-for item in "${DEPENDENCIES[@]}"; do
-    bin="${item%%:*}"
-    desc="${item#*:}"
-    if [ "$bin" = "hyprcursor-util" ]; then
-        if command -v hyprcursor-util >/dev/null 2>&1 || command -v hyprcursor >/dev/null 2>&1 || pkg-config --exists hyprcursor 2>/dev/null || (command -v hyprctl >/dev/null 2>&1 && hyprctl version 2>&1 | grep -iq "hyprcursor"); then
-            echo -e "  ${GREEN}✓${NC} ${BOLD}hyprcursor${NC} - ${desc}"
-        else
-            echo -e "  ${YELLOW}✗${NC} ${YELLOW}[$bin]${NC} ${BOLD}[Falta]${NC} - ${desc}"
-            MISSING_DEPS+=("hyprcursor")
-        fi
-        continue
-    fi
-
-    if [ "$bin" = "firefox" ]; then
-        if command -v firefox >/dev/null 2>&1 || command -v firefox-bin >/dev/null 2>&1; then
-            echo -e "  ${GREEN}✓${NC} ${BOLD}firefox${NC} - ${desc}"
-        else
-            echo -e "  ${YELLOW}✗${NC} ${YELLOW}[$bin]${NC} ${BOLD}[Falta]${NC} - ${desc}"
-            MISSING_DEPS+=("$bin")
-        fi
-        continue
-    fi
-
-    if command -v "$bin" >/dev/null 2>&1; then
-        echo -e "  ${GREEN}✓${NC} ${BOLD}${bin}${NC} - ${desc}"
-    else
-        echo -e "  ${YELLOW}✗${NC} ${YELLOW}[$bin]${NC} ${BOLD}[Falta]${NC} - ${desc}"
-        MISSING_DEPS+=("$bin")
-    fi
+SKIN_ARGS=()
+for skin in "${SKINS[@]}"; do
+    [[ -n "$skin" ]] && SKIN_ARGS+=(--skin "$skin")
 done
 
-# Comprobar módulo Pillow de Python para previsualizaciones gráficas de cursores
-if python3 -c "import PIL" >/dev/null 2>&1; then
-    echo -e "  ${GREEN}✓${NC} ${BOLD}python-pillow${NC} - Biblioteca Python para previsualización gráfica de cursores"
-else
-    echo -e "  ${YELLOW}•${NC} ${YELLOW}[python-pillow]${NC} - Recomendado para generar vistas previas de cursores XCursor"
-fi
+CHECK_ARGS=(check "${SKIN_ARGS[@]}")
+[[ "$INSTALL_MODE" == "check" ]] || CHECK_ARGS+=(--pre-install)
+set +e
+python3 "$REQUIREMENTS" "${CHECK_ARGS[@]}"
+CHECK_STATUS=$?
+set -e
 
-if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
+if [[ "$INSTALL_MODE" == "check" ]]; then
+    exit "$CHECK_STATUS"
+fi
+if [[ $CHECK_STATUS -eq 2 ]]; then
+    exit 2
+fi
+if [[ $CHECK_STATUS -ne 0 ]]; then
     echo ""
-    print_warn "Hay componentes del sistema no encontrados: ${MISSING_DEPS[*]}"
-    echo "  Recomendamos instalarlos para que todas las funciones visuales y atajos operen al 100%."
-    echo ""
-    echo "  Comandos de instalación según tu distribución:"
-    echo "   • Arch / CachyOS: paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman networkmanager network-manager-applet socat qt6ct papirus-icon-theme sddm plymouth"
-    echo "   • Gentoo: emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman net-misc/networkmanager gnome-extra/nm-applet net-misc/socat gui-apps/qt6ct x11-themes/papirus-icon-theme x11-misc/sddm sys-boot/plymouth"
-    echo "   • Fedora: sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman NetworkManager nm-connection-editor socat qt6ct papirus-icon-theme sddm plymouth"
-    echo ""
+    print_error "Faltan requisitos: instala lo de arriba y vuelve a ejecutar ./install.sh"
+    print_info "Si sólo quieres algunas skins: ./install.sh --skins default,retro"
+    exit 1
 fi
+print_success "Requisitos completos (lo marcado como opcional se puede instalar después)."
 
 # ==============================================================================
-# 2. Verificación de Flatpaks Obligatorios (Vesktop & Spotify)
+# 2. Permisos ejecutables en scripts
 # ==============================================================================
-print_step "2. Comprobando aplicaciones Flatpak obligatorias..."
-
-FLATPAK_APPS=(
-    "dev.vencord.Vesktop:Vesktop (Discord optimizado con Vencord y tema Material You)"
-    "com.spotify.Client:Spotify Desktop (reproductor de música oficial)"
-)
-
-MISSING_FLATPAKS=()
-
-if command -v flatpak >/dev/null 2>&1; then
-    INSTALLED_FLATPAKS="$(flatpak list --app 2>/dev/null || true)"
-    for app in "${FLATPAK_APPS[@]}"; do
-        app_id="${app%%:*}"
-        app_desc="${app#*:}"
-        if echo "$INSTALLED_FLATPAKS" | grep -q "$app_id"; then
-            echo -e "  ${GREEN}✓${NC} ${BOLD}${app_id}${NC} - ${app_desc}"
-        else
-            echo -e "  ${YELLOW}✗${NC} ${YELLOW}[$app_id]${NC} ${BOLD}[No instalado]${NC} - ${app_desc}"
-            MISSING_FLATPAKS+=("$app_id")
-        fi
-    done
-
-    if [ ${#MISSING_FLATPAKS[@]} -gt 0 ]; then
-        echo ""
-        print_warn "Puedes instalar los Flatpaks obligatorios con:"
-        for m_app in "${MISSING_FLATPAKS[@]}"; do
-            echo "  $ flatpak install -y flathub $m_app"
-        done
-        echo ""
-    fi
-else
-    print_warn "Flatpak no está disponible. Instálalo para usar Vesktop y Spotify con temas Material You."
-fi
+print_step "2. Permisos de ejecución de los scripts..."
+find "$SCRIPTS_SOURCE" "$CONFIG_SOURCE/quickshell" -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod +x {} + 2>/dev/null || true
+chmod +x "$SCRIPTS_SOURCE/bwm" "$SCRIPTS_SOURCE/bwm-terminal" "$SCRIPTS_SOURCE"/omarchy-shims/* 2>/dev/null || true
+print_success "Listo."
 
 # ==============================================================================
-# 3. Verificación e Instalación de Spicetify
+# 3. Carpetas del usuario, cursores, fuentes y fondos
 # ==============================================================================
-print_step "3. Comprobando Spicetify (CLI para tematizar Spotify)..."
+print_step "3. Carpetas del usuario, cursores, fuentes y fondos..."
+mkdir -p "$TARGET_CONFIG" "$HOME/Pictures/Wallpapers" "$HOME/.cache" "$HOME/.local/bin" \
+    "$HOME/.local/state/quickshell/user/generated" "$HOME/.config/bwm"
 
-SPICETIFY_CMD=""
-if command -v spicetify >/dev/null 2>&1; then
-    SPICETIFY_CMD="spicetify"
-elif [ -x "$HOME/.spicetify/spicetify" ]; then
-    SPICETIFY_CMD="$HOME/.spicetify/spicetify"
-fi
-
-if [ -n "$SPICETIFY_CMD" ]; then
-    SPICE_VER="$($SPICETIFY_CMD -v 2>/dev/null || echo 'instalado')"
-    print_success "Spicetify detectado ($SPICE_VER)."
-else
-    print_warn "Spicetify no está instalado en el sistema."
-    echo -e "  Instalando Spicetify automáticamente desde el repositorio oficial..."
-    if curl -fsSL https://raw.githubusercontent.com/spicetify/cli/main/install.sh | sh; then
-        SPICETIFY_CMD="$HOME/.spicetify/spicetify"
-        export PATH="$HOME/.spicetify:$PATH"
-        print_success "Spicetify instalado con éxito en ~/.spicetify/spicetify"
-    else
-        print_error "No se pudo descargar Spicetify automáticamente. Puedes instalarlo con:"
-        echo "  curl -fsSL https://raw.githubusercontent.com/spicetify/cli/main/install.sh | sh"
-    fi
-fi
-
-if [ "$INSTALL_MODE" = "check" ]; then
-    echo ""
-    print_info "Comprobación de dependencias completada."
-    exit 0
-fi
-
-# ==============================================================================
-# 4. Permisos ejecutables en scripts
-# ==============================================================================
-print_step "4. Verificando permisos ejecutables en scripts..."
-find "$CONFIG_SOURCE/hypr/scripts" "$CONFIG_SOURCE/quickshell" -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod +x {} + 2>/dev/null || true
-print_success "Permisos de ejecución verificados en todos los scripts."
-
-# ==============================================================================
-# 5. Preparación de carpetas de destino y Caché
-# ==============================================================================
-print_step "5. Preparando carpetas del usuario y cachés..."
-mkdir -p "$TARGET_CONFIG"
-mkdir -p "$HOME/Pictures/Wallpapers"
-mkdir -p "$HOME/.cache"
-mkdir -p "$HOME/.local/state/quickshell/user/generated"
-mkdir -p "$HOME/.var/app/dev.vencord.Vesktop/config/vesktop/themes"
-mkdir -p "$HOME/.var/app/dev.vencord.Vesktop/config/vesktop/settings"
-mkdir -p "$HOME/.config/spicetify/Themes/MaterialYou"
-
-# Copiar e instalar temas de cursor (Hyprcursor & XCursor)
 ICONS_DIR="$HOME/.local/share/icons"
 mkdir -p "$ICONS_DIR" "$HOME/.icons"
 if [ -d "$ASSETS_DIR/cursors" ]; then
-    echo -e "  ${BOLD}• Instalando temas de cursor (Hyprcursor & XCursor)...${NC}"
     cp -r "$ASSETS_DIR/cursors/"* "$ICONS_DIR/" 2>/dev/null || true
     cp -r "$ASSETS_DIR/cursors/"* "$HOME/.icons/" 2>/dev/null || true
     if command -v flatpak >/dev/null 2>&1; then
         flatpak override --filesystem=~/.icons:ro --filesystem=~/.local/share/icons:ro --user 2>/dev/null || true
     fi
-    print_success "Temas de cursor instalados (Bibata-Modern-Classic, Bibata-Modern-Ice)."
+    print_success "Cursores instalados (Bibata-Modern-Classic, Bibata-Modern-Ice)."
 fi
 
-# Copiar e instalar fuentes requeridas
 FONTS_DIR="$HOME/.local/share/fonts"
 mkdir -p "$FONTS_DIR"
 if [ -d "$ASSETS_DIR/fonts" ]; then
-    echo -e "  ${BOLD}• Instalando tipografías en ~/.local/share/fonts...${NC}"
-    cp -u "$ASSETS_DIR/fonts/"*.ttf "$FONTS_DIR/" 2>/dev/null || cp "$ASSETS_DIR/fonts/"*.ttf "$FONTS_DIR/" 2>/dev/null || true
-    if command -v fc-cache >/dev/null 2>&1; then
-        fc-cache -f "$FONTS_DIR" >/dev/null 2>&1 || true
-    fi
-    print_success "Fuentes requeridas instaladas y caché actualizada."
+    cp -u "$ASSETS_DIR/fonts/"*.ttf "$FONTS_DIR/" 2>/dev/null || true
+    fc-cache -f "$FONTS_DIR" >/dev/null 2>&1 || true
+    print_success "Fuentes de BWM instaladas (Material Symbols, Google Sans Flex, JetBrainsMono Nerd Font)."
 fi
 
-# Copiar fondos incluidos si la carpeta Wallpapers está vacía
 if [ -d "$ASSETS_DIR/wallpapers" ]; then
     cp -n "$ASSETS_DIR/wallpapers/"* "$HOME/Pictures/Wallpapers/" 2>/dev/null || true
     if [ ! -f "$HOME/.cache/current_wallpaper" ]; then
         FIRST_WALLPAPER="$(find "$HOME/Pictures/Wallpapers" -type f \( -name "*.jpg" -o -name "*.png" \) | head -n 1 || true)"
         if [ -n "$FIRST_WALLPAPER" ]; then
             echo "$FIRST_WALLPAPER" > "$HOME/.cache/current_wallpaper"
-            print_success "Fondo inicial configurado: $FIRST_WALLPAPER"
+            print_success "Fondo inicial: $FIRST_WALLPAPER"
         fi
     fi
 fi
 
 # ==============================================================================
-# 6. Instalación de Configuraciones (Symlink o Copy)
+# 4. Configuraciones (enlaces o copia)
 # ==============================================================================
-CONFIG_DIRS=(
-    "hypr"
-    "quickshell"
-    "illogical-impulse"
-    "matugen"
-    "kitty"
-    "rofi"
-    "swaync"
-    "xdg-desktop-portal"
-    "gtk-3.0"
-    "gtk-4.0"
-    "btop"
-)
+CONFIG_DIRS=(hypr quickshell illogical-impulse matugen kitty rofi swaync xdg-desktop-portal gtk-3.0 gtk-4.0 btop)
 
-print_step "6. Instalando configuraciones principales (Modo: ${INSTALL_MODE})..."
-
+print_step "4. Instalando las configuraciones (modo: ${INSTALL_MODE})..."
 for cfg in "${CONFIG_DIRS[@]}"; do
     SRC="$CONFIG_SOURCE/$cfg"
     DEST="$TARGET_CONFIG/$cfg"
+    [ -e "$SRC" ] || continue
 
-    if [ ! -e "$SRC" ]; then
-        continue
-    fi
-
-    # Si el destino ya existe y NO es un symlink apuntando al origen
     if [ -e "$DEST" ] || [ -L "$DEST" ]; then
-        CURRENT_LINK="$(readlink -f "$DEST" 2>/dev/null || true)"
-        ACTUAL_SRC="$(readlink -f "$SRC" 2>/dev/null || true)"
-
-        if [ "$CURRENT_LINK" = "$ACTUAL_SRC" ]; then
-            echo -e "  ${GREEN}✓${NC} $cfg ya está enlazado correctamente."
+        if [ "$(readlink -f "$DEST" 2>/dev/null || true)" = "$(readlink -f "$SRC" 2>/dev/null || true)" ]; then
+            echo -e "  ${GREEN}✓${NC} $cfg ya está enlazado."
             continue
         fi
-
-        # Crear respaldo
         mkdir -p "$BACKUP_DIR"
         echo -e "  ${YELLOW}→${NC} Respaldando $DEST en $BACKUP_DIR/$cfg..."
         mv "$DEST" "$BACKUP_DIR/$cfg"
@@ -362,174 +193,136 @@ for cfg in "${CONFIG_DIRS[@]}"; do
 
     if [ "$INSTALL_MODE" = "symlink" ]; then
         ln -s "$SRC" "$DEST"
-        print_success "Enlazado simbólicamente: ~/.config/$cfg -> $SRC"
+        print_success "~/.config/$cfg -> $SRC"
     else
         cp -r "$SRC" "$DEST"
         print_success "Copiado: ~/.config/$cfg"
     fi
 done
 
-# Corregir enlace de autostart en illogical-impulse
 mkdir -p "$TARGET_CONFIG/illogical-impulse/actions"
 ln -sf "$TARGET_CONFIG/hypr/scripts/open-autostart.sh" "$TARGET_CONFIG/illogical-impulse/actions/autostart"
 
 # ==============================================================================
-# 7. Configuración y Tematización Automatizada de Aplicaciones
+# 5. Comando bwm, comandos de Omarchy y bienvenida
 # ==============================================================================
-print_step "7. Aplicando temas Material You en aplicaciones..."
+print_step "5. Comando bwm y bienvenida..."
+# El comando apunta al repositorio: así funciona también con --copy y con la instalación a medias
+ln -sfn "$SCRIPTS_SOURCE/bwm" "$HOME/.local/bin/bwm"
+print_success "Comando bwm en ~/.local/bin (abre la bienvenida; bwm help para más)."
+case ":$PATH:" in
+    *":$HOME/.local/bin:"*) ;;
+    *) print_warn "~/.local/bin no está en tu PATH: añádelo para poder escribir bwm en la terminal." ;;
+esac
 
-# ------------------------------------------------------------------------------
-# 7.1 Nautilus y Entorno GTK 3/4
-# ------------------------------------------------------------------------------
-echo -e "
-  ${BOLD}• Nautilus (GNOME Files) y Libadwaita / GTK:${NC}"
-if command -v gsettings >/dev/null 2>&1; then
-    gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark' 2>/dev/null || true
-    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+# Sustitutos de los comandos omarchy-* que usan los paneles y plugins de Retro (enlaces en ~/.local/bin)
+"$SCRIPTS_SOURCE/bwm-plugin.sh" catalog >/dev/null 2>&1 \
+    && print_success "Comandos omarchy-* de la skin Retro enlazados." \
+    || print_warn "No se pudieron enlazar los comandos omarchy-* (repítelo con: bwm-plugin.sh catalog)."
+
+# La bienvenida sale en cada inicio de sesión hasta que se desactive desde ella (o bwm startup off)
+if [ ! -f "$HOME/.config/bwm/welcome.json" ]; then
+    "$SCRIPTS_SOURCE/bwm" startup on >/dev/null
 fi
-if [ -x "$CONFIG_SOURCE/hypr/scripts/sync-nautilus.sh" ]; then
-    "$CONFIG_SOURCE/hypr/scripts/sync-nautilus.sh" 2>/dev/null || true
-fi
-print_success "Nautilus configurado con acento dinámico y tema oscuro."
+print_success "Bienvenida activada al iniciar sesión."
 
-# ------------------------------------------------------------------------------
-# 7.2 Vesktop (Discord con Vencord)
-# ------------------------------------------------------------------------------
-echo -e "
-  ${BOLD}• Vesktop (Discord con Vencord):${NC}"
-VESKTOP_DIR="$HOME/.var/app/dev.vencord.Vesktop/config/vesktop"
-mkdir -p "$VESKTOP_DIR/themes" "$VESKTOP_DIR/settings"
-
-# Copiar plantilla inicial de tema
-if [ -f "$CONFIG_SOURCE/matugen/templates/vesktop.css" ]; then
-    cp "$CONFIG_SOURCE/matugen/templates/vesktop.css" "$VESKTOP_DIR/themes/material-you.theme.css"
-    cp "$CONFIG_SOURCE/matugen/templates/vesktop.css" "$VESKTOP_DIR/settings/quickCss.css"
-fi
-
-# Configurar automáticamente settings.json de Vesktop para activar el tema
-python3 -c "
-import json, os
-
-settings_path = os.path.expanduser('~/.var/app/dev.vencord.Vesktop/config/vesktop/settings/settings.json')
-data = {}
-if os.path.isfile(settings_path):
-    try:
-        with open(settings_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-    except Exception:
-        data = {}
-
-data['useQuickCss'] = True
-themes = data.get('enabledThemes', [])
-if 'material-you.theme.css' not in themes:
-    themes.append('material-you.theme.css')
-data['enabledThemes'] = themes
-
-os.makedirs(os.path.dirname(settings_path), exist_ok=True)
-with open(settings_path, 'w', encoding='utf-8') as f:
-    json.dump(data, f, indent=4)
-" 2>/dev/null || true
-print_success "Tema Material You y QuickCSS activados automáticamente en Vesktop."
-
-# ------------------------------------------------------------------------------
-# 7.3 Spotify y Spicetify
-# ------------------------------------------------------------------------------
-echo -e "
-  ${BOLD}• Spotify y Spicetify:${NC}"
-mkdir -p "$HOME/.config/spicetify/Themes/MaterialYou"
-if [ -d "$CONFIG_SOURCE/spicetify/Themes/MaterialYou" ]; then
-    cp -r "$CONFIG_SOURCE/spicetify/Themes/MaterialYou/"* "$HOME/.config/spicetify/Themes/MaterialYou/" 2>/dev/null || true
-    print_success "Tema MaterialYou instalado en ~/.config/spicetify/Themes/MaterialYou"
+# ==============================================================================
+# 6. Plugin hyprbars de la skin KDE Plasma (compilado para tu Hyprland)
+# ==============================================================================
+if [[ ${#SKINS[@]} -eq 0 || " ${SKINS[*]} " == *" plasma "* ]]; then
+    PLUGIN_STATE="$(python3 "$REQUIREMENTS" check --skin plasma --json 2>/dev/null \
+        | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next((r["status"] for s in d["skins"] for r in s["requires"] if r["id"]=="hyprbars-plasma"), ""))' 2>/dev/null || true)"
+    if [[ "$PLUGIN_STATE" == "build" ]]; then
+        print_step "6. Compilando el plugin hyprbars para tu versión de Hyprland..."
+        # make install instala con un renombrado atómico: nunca sobrescribe el .so cargado
+        if (cd "$SCRIPT_DIR/src/hyprbars" && make clean >/dev/null && make >/dev/null && make install >/dev/null); then
+            print_success "Plugin compilado. Se carga al volver a iniciar sesión en la skin KDE Plasma."
+        else
+            print_warn "No se pudo compilar. Repítelo con: cd $SCRIPT_DIR/src/hyprbars && make && make install"
+        fi
+    fi
 fi
 
-# Detectar ruta de Spotify Flatpak
+# ==============================================================================
+# 7. Temas de las aplicaciones
+# ==============================================================================
+print_step "7. Temas de las aplicaciones..."
+
+# GTK / Nautilus: el tema BWM-1/BWM-2 sigue a la skin activa (gtk-theme.py)
+python3 "$SCRIPTS_SOURCE/gtk-theme.py" set dark >/dev/null 2>&1 || true
+gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+"$SCRIPTS_SOURCE/sync-nautilus.sh" >/dev/null 2>&1 || true
+print_success "GTK y Nautilus siguen a la skin."
+
+# Vesktop: activa bwm.theme.css (lo escribe la paleta de cada skin y Vencord lo recarga en vivo)
+if [ -d "$HOME/.var/app/dev.vencord.Vesktop" ] || [ -d "$HOME/.config/vesktop" ]; then
+    (cd "$SCRIPTS_SOURCE" && python3 -c 'import bwm_omarchy; bwm_omarchy.vesktop_enable_theme()') >/dev/null 2>&1 \
+        && print_success "Vesktop: tema BWM activado." \
+        || print_warn "Vesktop: no se pudo activar el tema BWM."
+fi
+
+# Spotify + Spicetify (sólo si Spotify está instalado)
 SPOTIFY_USER_PATH="$HOME/.local/share/flatpak/app/com.spotify.Client/x86_64/stable/active/files/extra/share/spotify"
 SPOTIFY_SYS_PATH="/var/lib/flatpak/app/com.spotify.Client/x86_64/stable/active/files/extra/share/spotify"
 SPOTIFY_PREFS="$HOME/.var/app/com.spotify.Client/config/spotify/prefs"
-
-ACTUAL_SPOTIFY_PATH=""
-if [ -d "$SPOTIFY_USER_PATH" ]; then
-    ACTUAL_SPOTIFY_PATH="$SPOTIFY_USER_PATH"
-    chmod a+wr "$SPOTIFY_USER_PATH" "$SPOTIFY_USER_PATH/Apps" -R 2>/dev/null || true
-elif [ -d "$SPOTIFY_SYS_PATH" ]; then
-    ACTUAL_SPOTIFY_PATH="$SPOTIFY_SYS_PATH"
-fi
-
-if [ -n "$SPICETIFY_CMD" ]; then
-    "$SPICETIFY_CMD" config current_theme MaterialYou color_scheme MaterialYou inject_css 1 replace_colors 1 2>/dev/null || true
-    if [ -n "$ACTUAL_SPOTIFY_PATH" ]; then
-        "$SPICETIFY_CMD" config spotify_path "$ACTUAL_SPOTIFY_PATH" prefs_path "$SPOTIFY_PREFS" 2>/dev/null || true
-        # Intentar aplicar spicetify si los archivos tienen permisos
-        "$SPICETIFY_CMD" backup apply 2>/dev/null || "$SPICETIFY_CMD" apply 2>/dev/null || true
+SPOTIFY_PATH=""
+[ -d "$SPOTIFY_USER_PATH" ] && SPOTIFY_PATH="$SPOTIFY_USER_PATH"
+[ -z "$SPOTIFY_PATH" ] && [ -d "$SPOTIFY_SYS_PATH" ] && SPOTIFY_PATH="$SPOTIFY_SYS_PATH"
+if [ -n "$SPOTIFY_PATH" ]; then
+    SPICETIFY_CMD="$(command -v spicetify || true)"
+    [ -z "$SPICETIFY_CMD" ] && [ -x "$HOME/.spicetify/spicetify" ] && SPICETIFY_CMD="$HOME/.spicetify/spicetify"
+    if [ -z "$SPICETIFY_CMD" ] && [ "$SPICETIFY_SETUP" = "ask" ] && [ -t 0 ]; then
+        read -r -p "  Spotify está instalado. ¿Descargar Spicetify (github.com/spicetify) para tematizarlo? [s/N] " reply
+        case "$reply" in [sSyY]*) SPICETIFY_SETUP="yes" ;; *) SPICETIFY_SETUP="no" ;; esac
     fi
-    print_success "Spicetify configurado con el tema MaterialYou."
-else
-    print_warn "Spicetify no configurado completamente. Ejecuta 'spicetify apply' una vez instalado Spotify."
+    if [ -z "$SPICETIFY_CMD" ] && [ "$SPICETIFY_SETUP" = "yes" ]; then
+        if curl -fsSL https://raw.githubusercontent.com/spicetify/cli/main/install.sh | sh; then
+            SPICETIFY_CMD="$HOME/.spicetify/spicetify"
+        else
+            print_warn "No se pudo descargar Spicetify."
+        fi
+    fi
+    if [ -n "$SPICETIFY_CMD" ]; then
+        mkdir -p "$HOME/.config/spicetify/Themes"
+        cp -r "$CONFIG_SOURCE/spicetify/Themes/"* "$HOME/.config/spicetify/Themes/" 2>/dev/null || true
+        [ "$SPOTIFY_PATH" = "$SPOTIFY_USER_PATH" ] && chmod a+wr "$SPOTIFY_PATH" "$SPOTIFY_PATH/Apps" -R 2>/dev/null || true
+        "$SPICETIFY_CMD" config current_theme MaterialYou color_scheme MaterialYou inject_css 1 replace_colors 1 \
+            spotify_path "$SPOTIFY_PATH" prefs_path "$SPOTIFY_PREFS" >/dev/null 2>&1 || true
+        "$SPICETIFY_CMD" backup apply >/dev/null 2>&1 || "$SPICETIFY_CMD" apply >/dev/null 2>&1 || true
+        print_success "Spotify: tema de Spicetify configurado (cambia con la skin)."
+    else
+        print_info "Spotify sin Spicetify: no seguirá a la skin. Instálalo cuando quieras y repite ./install.sh"
+    fi
 fi
 
-# ------------------------------------------------------------------------------
-# 7.4 Firefox (Binario Nativo)
-# ------------------------------------------------------------------------------
-echo -e "
-  ${BOLD}• Firefox (userChrome.css y paleta dinámica):${NC}"
-mkdir -p "$HOME/.cache"
-touch "$HOME/.cache/material-you-firefox.css"
-
-FF_PROFILES_DIR="$HOME/.mozilla/firefox"
+# Firefox: userChrome.css con la paleta + Pywalfox
 FOUND_FF_PROFILES=0
-
-if [ -d "$FF_PROFILES_DIR" ]; then
-    for prof in "$FF_PROFILES_DIR"/*; do
-        if [ -d "$prof" ] && [ -f "$prof/prefs.js" -o -f "$prof/user.js" -o "${prof##*.}" = "default-release" -o "${prof##*.}" = "default" ]; then
+touch "$HOME/.cache/material-you-firefox.css"
+if [ -d "$HOME/.mozilla/firefox" ]; then
+    for prof in "$HOME/.mozilla/firefox"/*; do
+        [ -d "$prof" ] || continue
+        if [ -f "$prof/prefs.js" ] || [ -f "$prof/user.js" ]; then
             FOUND_FF_PROFILES=$((FOUND_FF_PROFILES + 1))
-            CHROME_DIR="$prof/chrome"
-            mkdir -p "$CHROME_DIR"
-            
-            # Copiar userChrome.css
-            cp "$CONFIG_SOURCE/firefox/userChrome.css" "$CHROME_DIR/userChrome.css"
-            
-            # Enlazar material-you.css dinámico a la caché de matugen
-            ln -sf "$HOME/.cache/material-you-firefox.css" "$CHROME_DIR/material-you.css"
-
-            # Instalar extensión Pywalfox en el perfil
-            EXT_DIR="$prof/extensions"
-            mkdir -p "$EXT_DIR"
+            mkdir -p "$prof/chrome" "$prof/extensions"
+            cp "$CONFIG_SOURCE/firefox/userChrome.css" "$prof/chrome/userChrome.css"
+            ln -sf "$HOME/.cache/material-you-firefox.css" "$prof/chrome/material-you.css"
             if [ -f "$CONFIG_SOURCE/firefox/extensions/pywalfox@frewacom.org.xpi" ]; then
-                cp "$CONFIG_SOURCE/firefox/extensions/pywalfox@frewacom.org.xpi" "$EXT_DIR/pywalfox@frewacom.org.xpi"
+                cp "$CONFIG_SOURCE/firefox/extensions/pywalfox@frewacom.org.xpi" "$prof/extensions/"
             fi
-
-            # Inyectar preferencia para activar hojas de estilo personalizadas
-            USER_JS="$prof/user.js"
-            if [ ! -f "$USER_JS" ] || ! grep -q "toolkit.legacyUserProfileCustomizations.stylesheets" "$USER_JS"; then
-                echo 'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);' >> "$USER_JS"
-                echo 'user_pref("browser.zoom.full", true);' >> "$USER_JS"
+            if ! grep -q "toolkit.legacyUserProfileCustomizations.stylesheets" "$prof/user.js" 2>/dev/null; then
+                echo 'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);' >> "$prof/user.js"
             fi
-            print_success "Perfil configurado: $(basename "$prof")"
         fi
     done
 fi
-
-# Configuración del host nativo de Pywalfox
-mkdir -p "$HOME/.mozilla/native-messaging-hosts"
-PYWALFOX_HOST_JSON="$HOME/.mozilla/native-messaging-hosts/pywalfox.json"
-PYWALFOX_BIN="$HOME/.local/share/pywalfox-venv/bin/pywalfox"
-
-if [ ! -x "$PYWALFOX_BIN" ] && ! command -v pywalfox >/dev/null 2>&1; then
-    if command -v python3 >/dev/null 2>&1; then
-        echo -e "    Instalando host nativo de Pywalfox en entorno virtual..."
-        python3 -m venv "$HOME/.local/share/pywalfox-venv" 2>/dev/null || true
-        if [ -x "$HOME/.local/share/pywalfox-venv/bin/pip" ]; then
-            "$HOME/.local/share/pywalfox-venv/bin/pip" install --quiet pywalfox 2>/dev/null || true
-        fi
-    fi
+PYWALFOX_BIN="$(command -v pywalfox || echo "$HOME/.local/share/pywalfox-venv/bin/pywalfox")"
+if [ "$FOUND_FF_PROFILES" -gt 0 ] && [ ! -x "$PYWALFOX_BIN" ]; then
+    python3 -m venv "$HOME/.local/share/pywalfox-venv" 2>/dev/null \
+        && "$HOME/.local/share/pywalfox-venv/bin/pip" install --quiet pywalfox 2>/dev/null || true
 fi
-
-if command -v pywalfox >/dev/null 2>&1; then
-    PYWALFOX_BIN="$(command -v pywalfox)"
-fi
-
 if [ -x "$PYWALFOX_BIN" ]; then
-    cat > "$PYWALFOX_HOST_JSON" <<EOF
+    mkdir -p "$HOME/.mozilla/native-messaging-hosts"
+    cat > "$HOME/.mozilla/native-messaging-hosts/pywalfox.json" <<EOF
 {
   "name": "pywalfox",
   "description": "Automatically theme your browser using the colors generated by Pywal",
@@ -538,54 +331,37 @@ if [ -x "$PYWALFOX_BIN" ]; then
   "allowed_extensions": [ "pywalfox@frewacom.org" ]
 }
 EOF
-    print_success "Host nativo de Pywalfox configurado en ~/.mozilla/native-messaging-hosts/pywalfox.json"
+fi
+if [ "$FOUND_FF_PROFILES" -gt 0 ]; then
+    print_success "Firefox: $FOUND_FF_PROFILES perfil(es) con userChrome.css y Pywalfox."
+elif command -v firefox >/dev/null 2>&1 || command -v firefox-bin >/dev/null 2>&1; then
+    print_info "Firefox no tiene perfil todavía: ábrelo una vez y repite ./install.sh para tematizarlo."
 fi
 
-if [ "$FOUND_FF_PROFILES" -eq 0 ]; then
-    print_warn "No se encontraron perfiles de Firefox en ~/.mozilla/firefox/."
-    echo "  Abre Firefox por primera vez y vuelve a ejecutar './install.sh' para tematizarlo."
-else
-    print_success "Firefox configurado con éxito con userChrome.css y soporte de estilos heredados."
-fi
-
-# Aplicar cursor por defecto si no está configurado
-if [ -x "$CONFIG_SOURCE/hypr/scripts/cursor-manager.py" ]; then
-    "$CONFIG_SOURCE/hypr/scripts/cursor-manager.py" apply Bibata-Modern-Classic 24 >/dev/null 2>&1 || true
-    print_success "Cursor predeterminado configurado (Bibata-Modern-Classic 24px)."
+if [ -x "$SCRIPTS_SOURCE/cursor-manager.py" ]; then
+    "$SCRIPTS_SOURCE/cursor-manager.py" apply Bibata-Modern-Classic 24 >/dev/null 2>&1 || true
 fi
 
 # ==============================================================================
-# 8. Sincronización Inicial con Wallpaper Actual
+# 8. Paleta inicial
 # ==============================================================================
 CURRENT_WALL="$(cat "$HOME/.cache/current_wallpaper" 2>/dev/null || true)"
 if [ -n "$CURRENT_WALL" ] && [ -f "$CURRENT_WALL" ]; then
-    print_step "8. Generando paleta inicial de colores Material You..."
-    if [ -x "$TARGET_CONFIG/hypr/scripts/set-wallpaper.sh" ]; then
-        "$TARGET_CONFIG/hypr/scripts/set-wallpaper.sh" "$CURRENT_WALL" >/dev/null 2>&1 || true
-    elif command -v matugen >/dev/null 2>&1; then
-        matugen image --source-color-index 0 "$CURRENT_WALL" 2>/dev/null || true
-        if [ -x "$TARGET_CONFIG/hypr/scripts/sync-nautilus.sh" ]; then
-            "$TARGET_CONFIG/hypr/scripts/sync-nautilus.sh" 2>/dev/null || true
-        fi
-    fi
-    print_success "Esquema de colores Material You generado para todas las aplicaciones."
+    print_step "8. Generando la paleta de la skin activa..."
+    "$TARGET_CONFIG/hypr/scripts/set-wallpaper.sh" "$CURRENT_WALL" >/dev/null 2>&1 || true
+    print_success "Colores generados para el escritorio y las apps."
 fi
 
-# ==============================================================================
-# Stremio is optional: prepare the installed Flatpak without restarting it.
-# Its palette is generated above and follows later theme/wallpaper changes.
-if [ -f "$TARGET_CONFIG/hypr/scripts/stremio-theme.py" ]; then
-    python3 "$TARGET_CONFIG/hypr/scripts/stremio-theme.py" --setup-only ||
-        print_warn "No se pudo preparar el tema de Stremio. Se reintentará al cambiar de tema."
-fi
+# Stremio es opcional: prepara el Flatpak instalado sin reiniciarlo
+python3 "$SCRIPTS_SOURCE/stremio-theme.py" --setup-only 2>/dev/null ||
+    print_warn "No se pudo preparar el tema de Stremio. Se reintentará al cambiar de skin."
 
-# 9. Inicio de sesión estilo Omarchy (SDDM) con los colores del tema
 # ==============================================================================
-# Lo mismo que hace Omarchy al instalar: SDDM con su tema dentro de un Hyprland mínimo.
-# install-boot-theme.sh --all lo instala, lo activa (aparcando el autologin de getty si lo
-# hay) y deja un servicio que actualiza los colores del tema tras cada cambio de fondo/tema.
-# Plymouth (pantalla de arranque) no se activa solo: toca el initramfs y el grub.cfg.
-BOOT_SCRIPT="$TARGET_CONFIG/hypr/scripts/install-boot-theme.sh"
+# 9. Inicio de sesión estilo Omarchy (SDDM) con los colores de la skin
+# ==============================================================================
+# SDDM con su tema dentro de un Hyprland mínimo, como el instalador de Omarchy. Plymouth (pantalla
+# de arranque) no se activa solo: toca el initramfs y el grub.cfg.
+BOOT_SCRIPT="$SCRIPTS_SOURCE/install-boot-theme.sh"
 if [ "$LOGIN_SETUP" != "no" ] && command -v sddm >/dev/null 2>&1 && [ -x "$BOOT_SCRIPT" ]; then
     if [ "$LOGIN_SETUP" = "ask" ] && [ -t 0 ]; then
         echo ""
@@ -593,12 +369,12 @@ if [ "$LOGIN_SETUP" != "no" ] && command -v sddm >/dev/null 2>&1 && [ -x "$BOOT_
         case "$reply" in [nN]*) LOGIN_SETUP="no" ;; *) LOGIN_SETUP="yes" ;; esac
     fi
     if [ "$LOGIN_SETUP" = "yes" ]; then
-        print_step "9. Configurando el inicio de sesión (SDDM estilo Omarchy)..."
-        python3 "$TARGET_CONFIG/hypr/scripts/bwm_boot.py" render >/dev/null 2>&1 || true
+        print_step "9. Inicio de sesión (SDDM estilo Omarchy)..."
+        python3 "$SCRIPTS_SOURCE/bwm_boot.py" render >/dev/null 2>&1 || true
         if sudo "$BOOT_SCRIPT" --all; then
-            print_success "SDDM listo: se verá en el próximo arranque y seguirá los colores del tema."
+            print_success "SDDM listo: se verá en el próximo arranque y seguirá los colores de la skin."
         else
-            print_warn "No se pudo configurar SDDM. Puedes repetirlo con: sudo $BOOT_SCRIPT --all"
+            print_warn "No se pudo configurar SDDM. Repítelo con: sudo $BOOT_SCRIPT --all"
         fi
     fi
 elif [ "$LOGIN_SETUP" = "yes" ]; then
@@ -606,50 +382,39 @@ elif [ "$LOGIN_SETUP" = "yes" ]; then
 fi
 
 # ==============================================================================
-# 10. Plugins de la barra de Omarchy (estilo Retro)
+# 10. Plugin de uso de IA de la barra Retro (ai-usagebar, se compila con cargo)
 # ==============================================================================
-# Vienen preinstalados (config/quickshell/ii/omarchy-plugins) y activos; se desactivan uno a
-# uno en Ajustes → Barra. ai-usagebar es sólo la interfaz: su programa se compila aquí con
-# cargo (fijado a una versión concreta) si no está ya instalado.
-PLUGIN_SCRIPT="$TARGET_CONFIG/hypr/scripts/bwm-plugin.sh"
-if [ "$PLUGINS_SETUP" != "no" ] && [ -x "$PLUGIN_SCRIPT" ] && ! command -v ai-usagebar >/dev/null 2>&1; then
+PLUGIN_SCRIPT="$SCRIPTS_SOURCE/bwm-plugin.sh"
+if [ "$PLUGINS_SETUP" != "no" ] && ! command -v ai-usagebar >/dev/null 2>&1; then
     if command -v cargo >/dev/null 2>&1; then
-        print_step "10. Compilando ai-usagebar para el plugin de uso de IA (cargo)..."
+        print_step "10. Compilando ai-usagebar (plugin de uso de IA de Retro)..."
         "$PLUGIN_SCRIPT" build >/dev/null 2>&1 \
             && print_success "ai-usagebar instalado en ~/.local/bin." \
             || print_warn "No se pudo compilar ai-usagebar; repítelo con: $PLUGIN_SCRIPT build"
     else
-        print_warn "Sin cargo no se compila ai-usagebar (plugin de uso de IA). Instala rust y ejecuta: $PLUGIN_SCRIPT build"
+        print_info "Sin cargo no se compila ai-usagebar (opcional). Instala Rust y ejecuta: $PLUGIN_SCRIPT build"
     fi
 fi
 
 if [ -d "$BACKUP_DIR" ]; then
     echo ""
-    print_warn "Tus configuraciones previas se han respaldado de forma segura en:"
-    echo "  $BACKUP_DIR"
+    print_warn "Tus configuraciones anteriores están en: $BACKUP_DIR"
 fi
 
+# ==============================================================================
+# Resumen
+# ==============================================================================
 echo ""
 echo -e "${GREEN}${BOLD}═══════════════════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}${BOLD} ¡Instalación y tematización completadas con éxito!${NC}"
+echo -e "${GREEN}${BOLD} BWM instalado. ¡Gracias!${NC}"
 echo -e "${GREEN}${BOLD}═══════════════════════════════════════════════════════════════════${NC}"
-echo ""
-echo "Acciones siguientes:"
-echo " 1. Si estás dentro de Hyprland, recarga la configuración:"
-echo "    $ hyprctl reload"
-echo " 2. Para generar la paleta de colores Material You con cualquier fondo:"
-echo "    $ ~/.config/hypr/scripts/set-wallpaper.sh <ruta-al-fondo>"
-echo "    O pulsa [ALT + W] para abrir el selector visual interactivo."
-echo " 3. Aplicaciones tematizadas:"
-echo "    • Nautilus:    Gestor de archivos (Super + E) con colores GTK 3/4 dinámicos."
-echo "    • Firefox:     userChrome.css activo. (Reinicia Firefox si estaba abierto)."
-echo "    • Vesktop:     Vencord + QuickCSS con variables Material You sincronizadas."
-echo "    • Spotify:     Tema MaterialYou inyectado mediante Spicetify."
-echo " 4. Atajos principales:"
-echo "    • Super / Win: Menú de aplicaciones / Búsqueda Quickshell"
-echo "    • Alt + Tab:   Selector de ventanas con vista previa visual"
-echo "    • Super + E:   Explorador de archivos Nautilus"
-echo "    • Super + A:   Panel lateral y ajustes rápidos de Quickshell"
-echo "    • Ctrl + Enter: Terminal Kitty con colores dinámicos"
-echo "    • Super + L:   Pantalla de bloqueo Material You"
-echo ""
+python3 "$REQUIREMENTS" skins "${SKIN_ARGS[@]}" || true
+cat <<EOF
+
+Siguientes pasos:
+  • Inicia sesión en Hyprland (o, si ya estás dentro: hyprctl reload).
+  • Al entrar se abre la bienvenida: skins instaladas, sus requisitos y la wiki para añadir más.
+    Ábrela cuando quieras con:  bwm
+  • Alt+T cambia de skin · Alt+R temas de Retro · Alt+W fondo · Super+I ajustes
+  • bwm check vuelve a comprobar los requisitos.
+EOF

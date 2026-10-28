@@ -1,0 +1,30 @@
+{
+  "id": "plasma",
+  "name": "KDE Plasma",
+  "imitates": "KDE Plasma 6 (Breeze Dark)",
+  "upstream": "https://kde.org/plasma-desktop/",
+  "description": "Panel flotante, Kickoff, applets de red/Bluetooth/audio/calendario/notificaciones, Alt+Tab de KWin, OSD Breeze y barras de título Breeze con snapping.",
+  "preview": "assets/skin-previews/kde-plasma-6.png",
+  "defaultTheme": {
+    "mode": "static",
+    "name": "Breeze Dark",
+    "description": "Estático: la paleta Breeze Dark no cambia con el fondo."
+  },
+  "themes": {
+    "builtIn": "Breeze Dark (escritorio, GTK, Qt, kitty y apps).",
+    "compatibility": "Objetivo: esquemas de color y temas globales de Plasma de la KDE Store aplicados al panel, applets y apps (pendiente)."
+  },
+  "requires": [
+    "hyprpolkitagent",
+    "breeze-icons",
+    "hyprbars-plasma"
+  ],
+  "recommends": [
+    "qt6ct",
+    "networkmanager",
+    "nm-connection-editor",
+    "bluez",
+    "blueman",
+    "swaync"
+  ]
+}

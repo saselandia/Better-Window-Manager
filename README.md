@@ -1,8 +1,9 @@
-# 🎨 Better Window Manager (BWM) - Material You Desktop Environment
+# 🪟 Better Window Manager (BWM)
 
 <div align="center">
 
-**A modern, fluid, and fully reactive Wayland desktop environment powered by Hyprland, Quickshell (Qt 6 / QML), and dynamic Material Design 3 (Material You) theming.**
+**A window manager that wraps every other window manager as a _skin_.**
+Default (end-4 / illogical-impulse), Retro (Omarchy) and KDE Plasma on top of Hyprland and Quickshell: switch between them without closing anything, and your apps follow.
 
 <p align="center">
   <b>English</b> • <a href="README.es.md">Español</a>
@@ -17,6 +18,34 @@
 </div>
 
 ---
+
+## 🧭 What BWM is
+
+**BWM (Better Window Manager) is a window manager that aims to encapsulate every existing window manager and desktop as a _skin_.** Each skin recreates another desktop —its bar, menus, panels, shortcuts and themes— on the same compositor (Hyprland) and shell (Quickshell), and the whole system follows it: GTK, Qt, terminals, Firefox, Vesktop, Spotify, Steam, the lock screen and the login screen. Switch skins live with **`Alt + T`**.
+
+**The goal is compatibility.** Each skin should accept the themes and look-and-feel add-ons of the desktop it imitates: if you are on the KDE Plasma skin and download a Plasma theme, it should apply and work; on Retro, the same for Omarchy themes and plugins. BWM has few interfaces of its own; almost everything is the original desktop's interface.
+
+### Bundled skins
+
+| Skin | Imitates | Default theme | Other themes | Compatibility target |
+| :--- | :--- | :--- | :--- | :--- |
+| **Default** | [end-4 / illogical-impulse](https://github.com/end-4/dots-hyprland) (Material You) | **Dynamic**: matugen builds the palette from your wallpaper every time it changes | — (light or dark from the wallpaper) | matugen / end-4 templates and wallpapers |
+| **Retro** | [Omarchy 4](https://github.com/basecamp/omarchy) (`quattro` branch) | **Dynamic**: an Omarchy-format palette from the wallpaper | 23 static Omarchy themes (Tokyo Night, Catppuccin, Nord, Gruvbox…) with `Alt + R`; once one is pinned, the wallpaper no longer changes the colours | Omarchy community themes and plugins (Settings → Themes / Plugins) |
+| **KDE Plasma** | KDE Plasma 6 (Breeze Dark) | **Static**: Breeze Dark, unaffected by the wallpaper | — | Plasma colour schemes and global themes from the KDE Store (planned) |
+
+More skins: [docs/SKINS.md](docs/SKINS.md) explains what a skin is and how one is added.
+
+## 👋 Welcome window and the `bwm` command
+
+After installing, every login opens a Calamares-style welcome wizard that thanks you, lists the installed skins —**green** when all their requirements are met—, expands each one's requirements with the commands to install what is missing, lets you activate them and links the wiki for adding skins. Turn it off with the "Show at login" switch.
+
+```bash
+bwm                 # open the welcome window (works before the install is finished too)
+bwm check           # core and per-skin requirements, with the commands for your distro
+bwm skins           # installed skins
+bwm skin retro      # switch skin (checks its requirements first)
+bwm startup off     # don't open the welcome window at login
+```
 
 ## ✨ Key Features
 
@@ -45,73 +74,24 @@
 
 ---
 
-## 🛠️ Requirements & Dependencies
+## 🛠️ Requirements
 
-This dotfiles repository keeps binary assets minimal to ensure portability and quick cloning across distributions.
+The installer **checks everything before touching anything**: if something is missing it tells you what, what it is for, and gives you the commands for your distribution (Gentoo, Arch/CachyOS, Fedora, openSUSE, Debian/Ubuntu; elsewhere, the guide), then exits. Check any time with:
 
-### Core System Packages:
-| Package | Role |
+```bash
+./install.sh --check       # or, once installed: bwm check
+```
+
+The full list with each distribution's package names is in [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) and comes from `config/hypr/skins/*.json`. In short:
+
+| | Needs |
 | :--- | :--- |
-| **`hyprland`** | Dynamic Wayland compositor |
-| **`hyprcursor`** | Native cursor library and theme utility for Hyprland (`hyprcursor-util`) |
-| **`python-pillow`** | Python imaging library used for XCursor preview extraction |
-| **`quickshell`** | Desktop widget and HUD framework built on Qt 6 / QML |
-| **`matugen`** | Material Design 3 color palette generator from wallpapers |
-| **`swww`** | High-performance animated wallpaper daemon for Wayland |
-| **`swaync`** | Graphic notification daemon and control panel |
-| **`rofi-wayland`** | Application launcher and visual menu (Wayland branch) |
-| **`kitty`** | GPU-accelerated terminal emulator |
-| **`nautilus`** | GNOME Files manager with live Material You GTK theme integration |
-| **`firefox`** | Primary native web browser with `userChrome.css` and Pywalfox styling |
-| **`flatpak`** | Flatpak package manager (required for Vesktop and Spotify) |
-| **`playerctl`** | MPRIS media controller and media key integration |
-| **`wl-clipboard`** | Wayland clipboard utilities (`wl-copy` / `wl-paste`) |
-| **`jq` & `python3`** | JSON processing, display arrangement backend, and automations |
-| **`bluez` & `blueman`** | Bluetooth stack (`bluetoothd`) for the KDE Plasma-style Bluetooth applet, plus advanced settings (`blueman-manager`) |
-| **`networkmanager`** | Backend (`nmcli`) for the KDE Plasma-style Networks applet; `nm-connection-editor` for its Configure button |
-| **`qt6ct`, `papirus-icon-theme`, `socat`** | Theme palette for Qt apps, per-theme icons (Retro: folders in the wallpaper colour) and the terminal screensaver |
-| **`sddm`** (Qt 6) | Omarchy-style login screen in the theme colours, running in a minimal Hyprland like Omarchy's (optional, set up by `install.sh`) |
-| **`plymouth`** + **`dracut`** | Omarchy-style boot splash (optional, `install-boot-theme.sh --plymouth`) |
-| **`git`**, **`jq`** (+ **`cargo`** optional) | Omarchy bar plugins in the Retro skin (`bwm-plugin.sh`); `cargo` builds the `ai-usagebar` binary |
-| **`satty`** or **`swappy`** | Screenshot annotation ("edit" in the Retro screenshot preview) |
-| **`tesseract`**, **`zbar`**, **`gpu-screen-recorder`** or **`wf-recorder`**, **`hyprpicker`**, **`libv4l`** (optional) | Retro menu captures (Omarchy's): text (OCR), QR codes, screen recording with desktop/mic audio and webcam, colour picker. Gentoo: `app-text/tesseract media-gfx/zbar gui-apps/wf-recorder gui-apps/hyprpicker media-libs/libv4l` (`gpu-screen-recorder` is in GURU) |
+| **Core** (every skin) | Hyprland ≥ 0.55 (Lua config), Quickshell (tested with 0.3.1), Qt ≥ 6.10 with 5Compat and SVG, Python ≥ 3.11 with Pillow, jq, swww, wl-clipboard, cliphist, kitty, grim, slurp, libnotify, GLib, fontconfig, PipeWire/WirePlumber, adw-gtk3. Fonts (Material Symbols, Google Sans Flex, JetBrainsMono Nerd Font) are installed by BWM |
+| **Default** | matugen, rofi (Wayland), hyprpolkitagent |
+| **Retro** | ImageMagick 7 (`magick`). Polkit, notifications and OSD are drawn by Quickshell |
+| **KDE Plasma** | hyprpolkitagent, Breeze icons and BWM's hyprbars plugin **built for your Hyprland version** (the installer builds it if you have the Hyprland headers, `make` and a C++ compiler) |
 
-### Required Flatpak Applications:
-| Application | Flatpak App ID | Role |
-| :--- | :--- | :--- |
-| **Vesktop** | `dev.vencord.Vesktop` | Discord client with built-in Vencord and dynamic CSS theming |
-| **Spotify** | `com.spotify.Client` | Official Spotify Desktop client (themed via Spicetify) |
-
----
-
-### Installing Dependencies by Distribution:
-
-#### Arch Linux / CachyOS:
-```bash
-# System dependencies:
-paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman networkmanager network-manager-applet socat qt6ct papirus-icon-theme sddm plymouth
-
-# Required Flatpaks:
-flatpak install flathub dev.vencord.Vesktop com.spotify.Client
-```
-
-#### Gentoo Linux:
-```bash
-# System dependencies:
-emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman net-misc/networkmanager gnome-extra/nm-applet net-misc/socat gui-apps/qt6ct x11-themes/papirus-icon-theme x11-misc/sddm sys-boot/plymouth
-
-# Required Flatpaks:
-flatpak install flathub dev.vencord.Vesktop com.spotify.Client
-```
-
-#### Fedora:
-```bash
-# System dependencies:
-sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman NetworkManager nm-connection-editor socat qt6ct papirus-icon-theme sddm plymouth
-
-# Required Flatpaks:
-flatpak install flathub dev.vencord.Vesktop com.spotify.Client
-```
+Optional: desktop portals (hyprland, gtk), NetworkManager, BlueZ, qt6ct, socat, git, Nautilus, Firefox, Flatpak (Vesktop, Spotify, Stremio), btop, fastfetch, Papirus, hyprsunset, SDDM and Plymouth.
 
 ---
 
@@ -131,17 +111,16 @@ git clone https://gitlab.com/saselandia/bwm.git ~/dotfiles/bwm
 cd ~/dotfiles/bwm
 ```
 
-### 2. Run the automated installer
+### 2. Run the installer
 
 ```bash
-# Symlink Mode (Recommended: automatically tracks git pull updates):
-./install.sh --symlink
-
-# Or Standalone Copy Mode:
-./install.sh --copy
+./install.sh            # checks requirements, links ~/.config to the repo and applies the themes
+./install.sh --check    # only check the requirements
+./install.sh --skins default,retro   # only some skins
+./install.sh --copy     # copy instead of linking
 ```
 
-*(Note: In either mode, the installer automatically creates a safe timestamped backup of existing configs in `~/.config/`)*.
+If a requirement is missing, the installer stops **without changing anything** and prints the commands to install it. Otherwise it backs up your previous `~/.config`, links the configs, installs fonts and cursors, creates the `bwm` command, builds the Plasma plugin if your Hyprland is a different version, themes the apps you have and enables the welcome window.
 
 ### 3. Launch or reload the desktop
 
@@ -198,7 +177,7 @@ The `./install.sh` script automatically configures and links themes for all supp
   - *(Optional check)*: If custom styles do not appear, go to `about:config` and verify that `toolkit.legacyUserProfileCustomizations.stylesheets` is set to **`true`**.
 
 ### 3. 💬 Vesktop (Discord)
-- **Theme check:** In Vesktop, navigate to **User Settings** → **Vencord** → **Themes** and confirm that **Material You** is enabled.
+- **Theme check:** In Vesktop, navigate to **User Settings** → **Vencord** → **Themes** and confirm that the **bwm.theme.css** theme is enabled (its colours follow the skin).
 
 ### 4. 🎵 Spotify Desktop & Spicetify
 - **Flatpak write permissions:** If Spicetify requires write permissions to inject the theme into the Spotify Flatpak, run:

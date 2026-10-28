@@ -1,8 +1,9 @@
-# 🎨 Better Window Manager (BWM) - Material You Desktop Environment
+# 🪟 Better Window Manager (BWM)
 
 <div align="center">
 
-**Un entorno de escritorio moderno, fluido y completamente reactivo para Wayland basado en Hyprland, Quickshell (Qt 6 / QML) y tematización dinámica Material Design 3 (Material You).**
+**Un gestor de ventanas que reúne a todos los demás como _skins_.**
+Default (end-4 / illogical-impulse), Retro (Omarchy) y KDE Plasma sobre Hyprland y Quickshell: cambia de uno a otro sin cerrar nada y las aplicaciones cambian con él.
 
 <p align="center">
   <a href="README.md">English</a> • <b>Español</b>
@@ -17,6 +18,34 @@
 </div>
 
 ---
+
+## 🧭 Qué es BWM
+
+**BWM (Better Window Manager) es un gestor de ventanas que trata de encapsular todos los gestores de ventanas y escritorios que existen como _skins_.** Cada skin reproduce otro escritorio —su barra, sus menús, sus paneles, sus atajos y sus temas— sobre el mismo compositor (Hyprland) y el mismo shell (Quickshell), y todo el sistema le sigue: GTK, Qt, terminales, Firefox, Vesktop, Spotify, Steam, la pantalla de bloqueo y la de inicio de sesión. Se cambia de skin en caliente con **`Alt + T`**.
+
+**La meta es la compatibilidad.** Cada skin debe aceptar los temas y mejoras de aspecto de su escritorio original: si estás en la skin KDE Plasma y te bajas un tema de Plasma de internet, debe aplicarse y funcionar; si estás en Retro y añades un tema o un plugin de Omarchy, igual. BWM tiene pocas interfaces propias; casi todo es la interfaz de cada escritorio original.
+
+### Skins incluidas
+
+| Skin | Imita | Tema por defecto | Otros temas | Compatibilidad buscada |
+| :--- | :--- | :--- | :--- | :--- |
+| **Default** | [end-4 / illogical-impulse](https://github.com/end-4/dots-hyprland) (Material You) | **Dinámico**: matugen saca la paleta del fondo cada vez que lo cambias | — (claro u oscuro según el fondo) | Plantillas y fondos de matugen / end-4 |
+| **Retro** | [Omarchy 4](https://github.com/basecamp/omarchy) (rama `quattro`) | **Dinámico**: paleta con el formato de Omarchy sacada del fondo | 23 temas estáticos de Omarchy (Tokyo Night, Catppuccin, Nord, Gruvbox…) con `Alt + R`; al fijar uno, el fondo ya no cambia los colores | Temas y plugins de la comunidad de Omarchy (Ajustes → Temas / Plugins) |
+| **KDE Plasma** | KDE Plasma 6 (Breeze Dark) | **Estático**: Breeze Dark, no cambia con el fondo | — | Esquemas de color y temas globales de Plasma de la KDE Store (pendiente) |
+
+Más skins: [docs/SKINS.md](docs/SKINS.md) explica qué es una skin y cómo se añade.
+
+## 👋 Bienvenida y comando `bwm`
+
+Tras instalar, cada inicio de sesión abre una ventana de bienvenida estilo asistente (como Calamares) que te da las gracias, enseña las skins instaladas —**en verde** las que tienen todos sus requisitos—, despliega los requisitos de cada una con los comandos para instalar lo que falte, permite activarlas y enlaza la wiki para añadir skins. Se desactiva con el interruptor «Mostrar al iniciar sesión».
+
+```bash
+bwm                 # abre la bienvenida (también sin haber terminado de instalar)
+bwm check           # requisitos del núcleo y de cada skin, con los comandos para tu distro
+bwm skins           # skins instaladas
+bwm skin retro      # cambia de skin (comprueba antes sus requisitos)
+bwm startup off     # que la bienvenida no se abra al iniciar sesión
+```
 
 ## ✨ Características Principales
 
@@ -45,73 +74,24 @@
 
 ---
 
-## 🛠️ Requisitos y Dependencias
+## 🛠️ Requisitos
 
-Este entorno no incluye los binarios propietarios o pesados en el repositorio git para garantizar máxima ligereza y portabilidad entre distribuciones.
+El instalador **comprueba todo antes de tocar nada**: si falta algo, te dice qué, para qué sirve y te da los comandos de tu distribución (Gentoo, Arch/CachyOS, Fedora, openSUSE, Debian/Ubuntu; en las demás, la guía), y sale. Puedes comprobarlo cuando quieras:
 
-### Componentes Clave del Sistema:
-| Paquete | Rol |
+```bash
+./install.sh --check       # o, ya instalado: bwm check
+```
+
+La lista completa, con los paquetes de cada distribución, está en [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) y sale de `config/hypr/skins/*.json`. En resumen:
+
+| | Necesita |
 | :--- | :--- |
-| **`hyprland`** | Compositor Wayland dinámico |
-| **`hyprcursor`** | Biblioteca y utilidad de temas de cursor nativos de Hyprland (`hyprcursor-util`) |
-| **`python-pillow`** | Biblioteca de imágenes en Python para previsualización gráfica de cursores |
-| **`quickshell`** | Framework de widgets y HUD de escritorio en QML (Qt 6) |
-| **`matugen`** | Generador de paletas Material You a partir de imágenes |
-| **`swww`** | Demonio de fondos de pantalla de alto rendimiento con transiciones |
-| **`swaync`** | Demonio y panel gráfico de notificaciones |
-| **`rofi-wayland`** | Lanzador de aplicaciones y menú dinámico |
-| **`kitty`** | Terminal acelerada por GPU |
-| **`nautilus`** | Explorador de archivos (GNOME Files) con tema Material You dinámico |
-| **`firefox`** | Navegador web principal con soporte de `userChrome.css` y Pywalfox |
-| **`flatpak`** | Gestor de aplicaciones Flatpak (necesario para Vesktop y Spotify) |
-| **`playerctl`** | Integración y control multimedia MPRIS |
-| **`wl-clipboard`** | Gestión de portapapeles (`wl-copy` / `wl-paste`) |
-| **`jq` & `python3`** | Procesamiento de configuraciones, backend de monitores y automatizaciones |
-| **`bluez` & `blueman`** | Pila Bluetooth (`bluetoothd`) para el applet Bluetooth estilo KDE Plasma y ajustes avanzados (`blueman-manager`) |
-| **`networkmanager`** | Backend (`nmcli`) del applet de redes estilo KDE Plasma; `nm-connection-editor` para el botón Configurar |
-| **`qt6ct`, `papirus-icon-theme`, `socat`** | Paleta del tema en apps Qt, iconos por estilo (Retro: carpetas del color del fondo) y salvapantallas de terminal |
-| **`sddm`** (Qt 6) | Pantalla de inicio de sesión estilo Omarchy con los colores del tema, en un Hyprland mínimo como el de Omarchy (opcional, la configura `install.sh`) |
-| **`plymouth`** + **`dracut`** | Pantalla de arranque estilo Omarchy (opcional, `install-boot-theme.sh --plymouth`) |
-| **`git`**, **`jq`** (+ **`cargo`** opcional) | Plugins de la barra de Omarchy en el estilo Retro (`bwm-plugin.sh`); `cargo` compila el binario de `ai-usagebar` |
-| **`satty`** o **`swappy`** | Anotar capturas («edit» en la vista previa de captura de Retro) |
-| **`tesseract`**, **`zbar`**, **`gpu-screen-recorder`** o **`wf-recorder`**, **`hyprpicker`**, **`libv4l`** (opcionales) | Capturas del menú de Retro (las de Omarchy): texto (OCR), códigos QR, grabación de pantalla con audio del escritorio/micrófono y webcam, selector de color. Gentoo: `app-text/tesseract media-gfx/zbar gui-apps/wf-recorder gui-apps/hyprpicker media-libs/libv4l` (`gpu-screen-recorder` está en GURU) |
+| **Núcleo** (todas las skins) | Hyprland ≥ 0.55 (configuración en Lua), Quickshell (probado con 0.3.1), Qt ≥ 6.10 con 5Compat y SVG, Python ≥ 3.11 con Pillow, jq, swww, wl-clipboard, cliphist, kitty, grim, slurp, libnotify, GLib, fontconfig, PipeWire/WirePlumber, adw-gtk3. Las fuentes (Material Symbols, Google Sans Flex, JetBrainsMono Nerd Font) las instala BWM |
+| **Default** | matugen, rofi (Wayland), hyprpolkitagent |
+| **Retro** | ImageMagick 7 (`magick`). Polkit, notificaciones y OSD los dibuja Quickshell |
+| **KDE Plasma** | hyprpolkitagent, iconos Breeze y el plugin hyprbars de BWM **compilado para tu versión de Hyprland** (el instalador lo compila si tienes las cabeceras de Hyprland, `make` y un compilador de C++) |
 
-### Aplicaciones Flatpak Obligatorias:
-| Aplicación | ID Flatpak | Rol |
-| :--- | :--- | :--- |
-| **Vesktop** | `dev.vencord.Vesktop` | Cliente de Discord con Vencord integrado y soporte de CSS |
-| **Spotify** | `com.spotify.Client` | Reproductor oficial de música Spotify Desktop (tematizado con Spicetify) |
-
----
-
-### Instalación de dependencias según tu distribución:
-
-#### Arch Linux / CachyOS:
-```bash
-# Dependencias del sistema:
-paru -S hyprland hyprcursor python-pillow quickshell-git matugen-bin swww swaync rofi-wayland kitty playerctl wl-clipboard jq python nautilus firefox flatpak bluez bluez-utils blueman networkmanager network-manager-applet socat qt6ct papirus-icon-theme sddm plymouth
-
-# Flatpaks obligatorios:
-flatpak install flathub dev.vencord.Vesktop com.spotify.Client
-```
-
-#### Gentoo Linux:
-```bash
-# Dependencias del sistema:
-emerge --ask gui-wm/hyprland gui-libs/hyprcursor dev-python/pillow gui-apps/quickshell gui-apps/swww gui-apps/swaync gui-apps/rofi-wayland x11-terms/kitty media-sound/playerctl gui-apps/wl-clipboard app-misc/jq gnome-base/nautilus www-client/firefox sys-apps/flatpak net-wireless/bluez net-wireless/blueman net-misc/networkmanager gnome-extra/nm-applet net-misc/socat gui-apps/qt6ct x11-themes/papirus-icon-theme x11-misc/sddm sys-boot/plymouth
-
-# Flatpaks obligatorios:
-flatpak install flathub dev.vencord.Vesktop com.spotify.Client
-```
-
-#### Fedora:
-```bash
-# Dependencias del sistema:
-sudo dnf install hyprland hyprcursor python3-pillow kitty playerctl wl-clipboard jq python3 nautilus firefox flatpak bluez blueman NetworkManager nm-connection-editor socat qt6ct papirus-icon-theme sddm plymouth
-
-# Flatpaks obligatorios:
-flatpak install flathub dev.vencord.Vesktop com.spotify.Client
-```
+Opcional: portales de escritorio (hyprland, gtk), NetworkManager, BlueZ, qt6ct, socat, git, Nautilus, Firefox, Flatpak (Vesktop, Spotify, Stremio), btop, fastfetch, Papirus, hyprsunset, SDDM y Plymouth.
 
 ---
 
@@ -134,14 +114,13 @@ cd ~/dotfiles/bwm
 ### 2. Ejecutar el instalador
 
 ```bash
-# Modo Enlace Simbólico (Recomendado para recibir actualizaciones continuas vía git pull):
-./install.sh --symlink
-
-# O Modo Copia Directa:
-./install.sh --copy
+./install.sh            # comprueba requisitos, enlaza ~/.config al repo y aplica los temas
+./install.sh --check    # sólo comprueba los requisitos
+./install.sh --skins default,retro   # sólo algunas skins
+./install.sh --copy     # copia en vez de enlazar
 ```
 
-*(Nota: En ambos modos, el instalador creará una copia de seguridad automática de cualquier configuración previa en `~/.config/`)*.
+Si falta un requisito, el instalador se detiene **sin cambiar nada** y te da los comandos para instalarlo. Si todo está, respalda tu configuración previa de `~/.config`, enlaza las configuraciones, instala fuentes y cursores, crea el comando `bwm`, compila el plugin de Plasma si tu Hyprland es otra versión, tematiza las apps que tengas y activa la bienvenida.
 
 ### 3. Iniciar o recargar el entorno
 
@@ -198,7 +177,7 @@ El instalador `./install.sh` se encarga de configurar y vincular los temas de to
   - *(Comprobación opcional)*: Si por algún motivo los estilos personalizados no cargan, entra en `about:config` y confirma que `toolkit.legacyUserProfileCustomizations.stylesheets` esté en **`true`**.
 
 ### 3. 💬 Vesktop (Discord)
-- **Verificación de tema:** En Vesktop, abre **Ajustes de usuario** → **Vencord** → **Temas** y confirma que **Material You** está habilitado.
+- **Verificación de tema:** En Vesktop, abre **Ajustes de usuario** → **Vencord** → **Temas** y confirma que el tema **bwm.theme.css** está habilitado (cambia de nombre y colores con la skin).
 
 ### 4. 🎵 Spotify Desktop y Spicetify
 - **Permisos de escritura para Flatpak:** Si Spicetify solicita permisos para inyectar el tema en el Flatpak de Spotify, ejecuta:
