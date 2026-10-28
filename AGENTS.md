@@ -123,7 +123,8 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
 | Temas web de Stremio / barra de Steam | `scripts/stremio-theme.py`, `scripts/stremio-theme.cjs`, `scripts/steam-theme.sh`, `hypr/omarchy/overlays/steam.css`; alcance en `docs/STREMIO_THEMING.md` |
 | Salvapantallas e inhibición por multimedia | `modules/ii/screensaver/ScreensaverIdle.qml`, `scripts/launch-screensaver.sh` |
 | Actualizaciones de Gentoo / Flatpak | `BWM_CONTEXT.md` §2.7; shims `omarchy-update` y `omarchy-update-available` |
-| Reiniciar una app conservando sus ventanas | `bwm_omarchy.restart_app()` (Firefox, Vesktop, Steam lo usan) |
+| Reiniciar una app conservando sus ventanas | `bwm_omarchy.restart_app()` (Firefox, Vesktop, Steam, Stremio) + `scripts/bwm_windows.py` |
+| Dónde quedan las ventanas al cambiar de skin | `scripts/bwm_windows.py` (`float_for_plasma`, `plasma_box`, `restored_box`), `sync_floating_windows` |
 
 ## 4. Estilos y piezas clave
 
@@ -213,7 +214,8 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
   tipos de una carpeta hermana cargada por `Loader` no se resuelven (usa `component` en línea o importa la carpeta).
 - **Hyprland 0.55 Lua**: `hyprctl dispatch 'hl.dsp.…'`; inyectar atajos con
   `hyprctl eval 'return hl.dispatch(hl.dsp.send_shortcut({…}))'`.
-- `pkill -f <patrón>` mata tu propia shell si el patrón está en el comando: mata por PID.
+- `pkill -f <patrón>` mata tu propia shell si el patrón está en el comando: mata por PID. Lo mismo `pgrep -f` en un
+  bucle de espera (no termina nunca): usa `ps -eo args | grep "[b]wm_omarchy.py restart"`.
 - Kitty recuerda también el estado maximizado: `remember_window_size no` evita restaurarlo. La regla global
   `suppress-maximize-events` bloquea peticiones de maximizado de apps (también botones CSD); el compositor
   conserva el control manual y las peticiones de fullscreen de juegos/vídeo siguen permitidas.

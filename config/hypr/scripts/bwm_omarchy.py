@@ -1202,19 +1202,24 @@ def _alive(pattern: str) -> bool:
     return subprocess.run(["pgrep", "-f", pattern], stdout=subprocess.DEVNULL).returncode == 0
 
 def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None, quit_cmd=None,
-                wait_secs=15):
+                wait_secs=15, place_secs=60):
     """Close an app gracefully (SIGTERM: Firefox/Electron save their session), optionally edit
     its config, start it again with `cmd` and put every window back where it was: workspace
     (special ones too), monitor and, if floating, position and size. Windows are matched by
-    title, then by order for those that still have another title after a while."""
+    title, then by order for those that still have another title after a while. A window that
+    goes away soon after being placed (Steam's loading window) gives its slot back, so the real
+    one is placed too; windows that come back floating where they were tiled (KDE Plasma) keep
+    their place via bwm_windows.restored_box."""
     import signal
     import time
 
     windows = [c for c in _hypr_clients() if match(c)]
     if not windows:
         return False
-    layout = [(c["title"], c["workspace"]["name"], c["at"], c["size"], c.get("floating", False))
-              for c in windows]
+    import bwm_windows
+    focus = bwm_windows.snapshot_focus()
+    layout = [{"title": c["title"], "ws": c["workspace"]["name"], "at": c["at"], "size": c["size"],
+               "floating": c.get("floating", False)} for c in windows]
     pids = set(quit_pids or {c["pid"] for c in windows})
     if quit_cmd:  # the app's own clean shutdown (steam -shutdown)
         subprocess.run(quit_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
@@ -1240,33 +1245,34 @@ def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None, qu
     subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
     pending = list(layout)
-    placed = set()
-    start = time.time()
-    while pending and time.time() - start < 40:
+    placed = {}            # address -> layout entry
+    start = last_place = time.time()
+    # Sigue hasta colocarlas todas y unos segundos más, por si una ventana colocada era la de
+    # carga y se cierra (vuelve su hueco a pending y se coloca la definitiva)
+    while time.time() - start < place_secs and (pending or time.time() - last_place < 8):
         time.sleep(0.5)
-        for c in _hypr_clients():
+        clients = _hypr_clients()
+        alive = {c["address"] for c in clients}
+        for addr in [a for a in placed if a not in alive]:
+            pending.append(placed.pop(addr))
+        for c in clients:
             if not pending:
                 break
             # c["pid"] in pids: an old window not gone yet (Hyprland reuses addresses: compare PIDs)
             if not match(c) or c["address"] in placed or c["pid"] in pids:
                 continue
-            m = next((l for l in pending if l[0] == c["title"]), None)
+            m = next((l for l in pending if l["title"] == c["title"]), None)
             if not m and time.time() - start > 12:
                 m = pending[0]
             if not m:
                 continue
-            _title, ws, at, size, floating = m
-            addr = c["address"]
-            target = ws if ws.lstrip("-").isdigit() else json.dumps(ws)
-            lua = (f"(function() local w = hl.get_window('address:{addr}'); if w then "
-                   f"hl.dispatch(hl.dsp.window.move({{ workspace = {target}, follow = false, window = w }})) ")
-            if floating:
-                lua += (f"hl.dispatch(hl.dsp.window.resize({{ x = {size[0]}, y = {size[1]}, relative = false, window = w }})) "
-                        f"hl.dispatch(hl.dsp.window.move({{ x = {at[0]}, y = {at[1]}, relative = false, window = w }})) ")
-            lua += "end; return hl.dsp.no_op() end)()"
-            subprocess.run(["hyprctl", "dispatch", lua], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            placed.add(addr)
+            box = bwm_windows.restored_box(m, c)
+            bwm_windows.dispatch([bwm_windows.place_lua(c["address"], workspace=m["ws"], box=box)])
+            placed[c["address"]] = m
             pending.remove(m)
+            last_place = time.time()
+    # La app reabierta tomó el foco y cambió de workspace: todo como estaba (y lo que sonaba, sonando)
+    bwm_windows.restore_focus(focus)
     return True
 
 STEAM_MAIN = r"ubuntu12_32/steam( |$)"
@@ -1286,7 +1292,9 @@ def restart_steam():
         return
     match = lambda c: c.get("class", "") == "steam"
     if any(match(c) for c in clients):
-        restart_app(match, ["steam"], quit_cmd=["steam", "-shutdown"], wait_for=STEAM_MAIN, wait_secs=60)
+        # Steam puede tardar en volver (actualizaciones, ventana de carga): más margen para colocarla
+        restart_app(match, ["steam"], quit_cmd=["steam", "-shutdown"], wait_for=STEAM_MAIN, wait_secs=60,
+                    place_secs=180)
         return
     subprocess.run(["steam", "-shutdown"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
     for _ in range(600):

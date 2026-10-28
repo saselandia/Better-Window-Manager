@@ -821,6 +821,9 @@ def sync_floating_windows(to_plasma: bool):
             pass
 
     lua_cmds = []
+    # Al volver al mosaico, cada workspace se rehace de izquierda a derecha y de arriba abajo:
+    # el orden en que se colocaron, así las ventanas quedan cerca de donde estaban
+    clients = sorted(clients, key=lambda c: (c.get("workspace", {}).get("id", 0), *c.get("at", [0, 0])))
     for client in clients:
         addr = client.get("address")
         cls = client.get("class", "")
@@ -829,9 +832,7 @@ def sync_floating_windows(to_plasma: bool):
             continue
 
         if to_plasma:
-            # Todas las ventanas en modo flotante individual
-            if not is_floating:
-                lua_cmds.append(f'do local win = hl.get_window("address:{addr}"); if win then hl.dispatch(hl.dsp.window.float({{ window = win }})) end end')
+            continue  # bwm_windows.float_for_plasma, abajo
         else:
             # Al salir de plasma: limpiar tags de snap y restaurar mosaico si no es flotante persistente
             lua_cmds.append(f'do local win = hl.get_window("address:{addr}"); if win then hl.dispatch(hl.dsp.window.clear_tags({{ window = win }})) end end')
@@ -845,7 +846,28 @@ def sync_floating_windows(to_plasma: bool):
 
     if lua_cmds:
         full_lua = "(function() " + " ".join(lua_cmds) + " return hl.dsp.no_op() end)()"
+        # Mientras se rehace el mosaico, cada ventana se añade a la derecha/abajo de la anterior
+        # (no según el ratón), para que el orden izquierda→derecha se conserve
+        split = None
+        if not to_plasma:
+            out = subprocess.run(["hyprctl", "getoption", "dwindle:force_split", "-j"], capture_output=True, text=True).stdout
+            try:
+                split = json.loads(out).get("int", 0)
+            except ValueError:
+                split = 0
+            subprocess.run(["hyprctl", "keyword", "dwindle:force_split", "2"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run(["hyprctl", "dispatch", full_lua], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if split is not None:
+            subprocess.run(["hyprctl", "keyword", "dwindle:force_split", str(split)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    if to_plasma:
+        # Las ventanas en mosaico flotan en el mismo sitio (con su barra de título y un margen
+        # sutil con los bordes), no donde Hyprland pone una ventana flotante nueva. Se espera un
+        # momento a que hyprbars decida qué ventanas llevan barra (hyprctl hyprbars-csd).
+        import time
+        import bwm_windows
+        time.sleep(0.5)
+        bwm_windows.float_for_plasma(clients)
 
 def apply_theme(theme_name: str):
     """Applies theme across all subsystems, with complete isolation."""
@@ -866,6 +888,8 @@ def apply_theme(theme_name: str):
     curr_theme = get_current_theme()
     cfg = THEMES[theme_name]
     print(f"Aplicando estilo: {cfg['title']}...")
+    import bwm_windows
+    focus = bwm_windows.snapshot_focus()  # workspace, foco y reproducción: se restauran tras recolocar ventanas
 
     # 1. Guardar la configuración del tema actual antes de cambiar
     save_current_theme_config(curr_theme)
@@ -942,6 +966,7 @@ def apply_theme(theme_name: str):
 
     # 6. Sincronizar el estado flotante / mosaico de las ventanas abiertas tras la recarga
     sync_floating_windows(cfg.get("is_plasma", False))
+    bwm_windows.restore_focus(focus)
 
     # 6.1 Demonio de notificaciones: en Retro el de Omarchy (dentro de Quickshell), así que swaync
     #     se cierra para soltar org.freedesktop.Notifications; en los otros estilos vuelve swaync

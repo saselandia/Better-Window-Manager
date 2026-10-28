@@ -25,6 +25,10 @@ Default (end-4 / illogical-impulse), Retro (Omarchy) y KDE Plasma sobre Hyprland
 
 **La meta es la compatibilidad.** Cada skin debe aceptar los temas y mejoras de aspecto de su escritorio original: si estás en la skin KDE Plasma y te bajas un tema de Plasma de internet, debe aplicarse y funcionar; si estás en Retro y añades un tema o un plugin de Omarchy, igual. BWM tiene pocas interfaces propias; casi todo es la interfaz de cada escritorio original.
 
+> ### 🟩 Diseñado con tarjetas NVIDIA en mente
+> BWM se desarrolla y se prueba sobre una **GPU NVIDIA** (con Wayland, Hyprland y el driver oficial de NVIDIA), y sus decisiones —arranque, monitores, capturas, juegos— están pensadas para ese hardware.
+> <sub>También se puede usar con tarjetas AMD e Intel (Hyprland las soporta), pero están menos probadas. NVIDIA es una marca registrada de NVIDIA Corporation; BWM es un proyecto independiente, sin relación ni respaldo de NVIDIA.</sub>
+
 ### Skins incluidas
 
 | Skin | Imita | Tema por defecto | Otros temas | Compatibilidad buscada |

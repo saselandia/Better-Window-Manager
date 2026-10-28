@@ -47,22 +47,12 @@ def snapshot(win: dict) -> dict:
     }
 
 
-def workspace_arg(ws: dict) -> str:
-    # special:magic and named workspaces are strings, numbered ones are numbers
-    name = ws["workspace"]
-    return json.dumps(name) if (ws["special"] or not name.lstrip("-").isdigit()) else name
-
-
-def restore(address: str, ws: dict):
-    w = f'hl.get_window("address:{address}")'
-    code = (f"(function() local w = {w}; if w then "
-            f"hl.dispatch(hl.dsp.window.move({{ workspace = {workspace_arg(ws)}, follow = false, window = w }})) ")
-    if ws["floating"] and ws.get("at") and ws.get("size"):
-        (x, y), (width, height) = ws["at"], ws["size"]
-        code += (f"hl.dispatch(hl.dsp.window.resize({{ x = {int(width)}, y = {int(height)}, relative = false, window = w }})) "
-                 f"hl.dispatch(hl.dsp.window.move({{ x = {int(x)}, y = {int(y)}, relative = false, window = w }})) ")
-    code += "end; return hl.dsp.no_op() end)()"
-    lua(code)
+def restore(window: dict, ws: dict):
+    # bwm_windows.restored_box: its old geometry if it floated, or its tiled place as a floating
+    # window if it comes back floating (KDE Plasma)
+    import bwm_windows
+    box = bwm_windows.restored_box(ws, window) if ws.get("at") and ws.get("size") else None
+    bwm_windows.dispatch([bwm_windows.place_lua(window["address"], workspace=ws["workspace"], box=box)])
 
 
 def main():
@@ -96,12 +86,13 @@ def main():
         for w in spotify_windows():
             if w["pid"] in old_pids or w["address"] in placed:
                 continue
-            restore(w["address"], saved)
+            restore(w, saved)
             placed.add(w["address"])
             deadline = min(deadline, time.time() + 6)  # a few more seconds for a second window
-    for address in placed:
-        time.sleep(1.5)
-        restore(address, saved)
+    for w in spotify_windows():
+        if w["address"] in placed:
+            time.sleep(1.5)
+            restore(w, saved)
 
 
 if __name__ == "__main__":

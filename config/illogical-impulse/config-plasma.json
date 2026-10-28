@@ -278,7 +278,7 @@
     },
     "night": {
       "automatic": true,
-      "colorTemperature": 5000,
+      "colorTemperature": 3350,
       "from": "19:00",
       "to": "06:30"
     }
@@ -310,6 +310,10 @@
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
   },
   "notifications": {
+    "forceMonitor": {
+      "enable": false,
+      "name": ""
+    },
     "monitor": {
       "enable": false,
       "name": ""

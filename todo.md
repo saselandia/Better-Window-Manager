@@ -41,6 +41,8 @@ las reglas para asistentes están en `AGENTS.md` y `CLAUDE.md`.
 - [ ] Retro (~90 % temas, ~80 % plugins): `icons.theme` y `hyprland.lua` de los temas;
   plugins que sustituyen barra, bloqueo, overlays o paneles.
 - [ ] Default: cargar plantillas de matugen de terceros sin editar `config.toml`.
+- [ ] Al volver de Plasma a una skin en mosaico, reconstruir el árbol de dwindle de cada
+  workspace tal como estaba (hoy se conserva el workspace y, con 1–2 ventanas, el reparto).
 - [ ] Gestor de archivos por skin (posible): Dolphin en KDE Plasma, el resto de
   apps predeterminadas sigue siendo común. Decidir antes de implementarlo.
 - [ ] Portar a Hyprland más escritorios que no corren sobre él, como skins nuevas.
