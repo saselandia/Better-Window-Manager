@@ -1,0 +1,238 @@
+#!/usr/bin/env python3
+"""Tu configuración en texto: archivos tuyos que BWM carga DESPUÉS de lo suyo y que, por tanto,
+mandan sobre lo que viene por defecto. Viven fuera del repositorio (~/.config/bwm/user y los de
+Omarchy), así que una actualización de BWM nunca los pisa.
+
+  bwm-user-config list               qué archivos hay y dónde
+  bwm-user-config edit <nombre>      lo crea con su plantilla si falta, lo abre en tu editor
+                                     (terminal flotante) y lo aplica al cerrar el editor
+  bwm-user-config apply <nombre>     lo aplica sin editar
+  bwm-user-config path <nombre>      su ruta
+
+Nombres: hyprland (reglas de ventana, atajos, opciones de Hyprland), shell (cualquier opción de
+Ajustes/Quickshell, también por skin), omarchy (aspecto de los paneles de Omarchy) y menu
+(entradas propias del menú de Retro).
+"""
+import json
+import os
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+HOME = Path.home()
+CONFIG = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config"))
+USER_DIR = CONFIG / "bwm" / "user"
+SCRIPTS = Path(__file__).resolve().parent
+
+HEADER = """{c} ============================================================================
+{c}  EN ESTA ZONA PUEDES ESCRIBIR TÚ
+{c}  {what}
+{c}  BWM lo carga DESPUÉS de su configuración: lo que pongas aquí manda sobre lo
+{c}  que viene por defecto. Es tuyo: las actualizaciones de BWM no lo tocan.
+{c}  Se aplica al guardar y cerrar el editor (o con: bwm-user-config apply {name}).
+{c} ============================================================================
+"""
+
+TEMPLATES = {
+    "hyprland": {
+        "path": USER_DIR / "hyprland.lua",
+        "what": "Hyprland: reglas de ventana, atajos y cualquier opción (Lua de Hyprland 0.55+).",
+        "comment": "--",
+        "body": """
+-- Ejemplos (quita los «--» del principio para activarlos):
+
+-- Una opción cualquiera, sobrescribe la de BWM:
+-- hl.config({ general = { gaps_in = 6, gaps_out = 12 } })
+
+-- Una regla de ventana (flotante y centrada):
+-- hl.window_rule({ name = "mi-calculadora", match = { class = "^(org\\\\.gnome\\\\.Calculator)$" }, float = true, center = true })
+
+-- Una regla de workspace:
+-- hl.window_rule({ name = "mi-discord", match = { class = "^(vesktop)$" }, workspace = "4 silent" })
+
+-- Un atajo (mejor desde Ajustes → Atajos si quieres verlo en la chuleta):
+-- hl.bind("SUPER + SHIFT + T", hl.dsp.exec_cmd("kitty"))
+
+-- Las reglas con el mismo «name» que una de BWM la sustituyen.
+""",
+    },
+    "shell": {
+        "path": USER_DIR / "shell.jsonc",
+        "what": "Opciones de Ajustes/Quickshell (las mismas claves que illogical-impulse/config.json).",
+        "comment": "//",
+        "body": """
+// Formato: JSON con comentarios. Lo de "all" vale para todas las skins; lo de "skins",
+// sólo para esa skin y manda sobre "all". Sólo pon lo que quieras cambiar.
+{
+  "all": {
+    // "time": { "format": "HH:mm" },
+    // "bar": { "workspaces": { "shown": 8 } },
+    // "notifications": { "timeout": 5000 }
+  },
+  "skins": {
+    "default": {},
+    "retro": {
+      // "bar": { "height": 26 }
+    },
+    "plasma": {}
+  }
+}
+""",
+    },
+    "omarchy": {
+        "path": CONFIG / "omarchy" / "shell.toml",
+        "what": "Paneles de Omarchy (skin Retro): colores y tamaños de barra, menú, popups…",
+        "comment": "#",
+        "body": """
+# Mismo formato que el shell.toml de los temas de Omarchy; tus claves mandan sobre las del tema.
+# Se aplica en vivo al guardar.
+
+# [font]
+# base-size = 13
+
+# [menu]
+# background-alpha = 0.95
+
+# [bar]
+# background-alpha = 0.0
+""",
+    },
+    "menu": {
+        "path": CONFIG / "bwm" / "extensions" / "menu.jsonc",
+        "what": "Entradas propias del menú de Retro (mismo formato que hypr/omarchy/bwm-menu.jsonc).",
+        "comment": "//",
+        "body": """
+{
+  // "mis": {"icon":"","label":"Mis cosas"},
+  // "mis.notas": {"icon":"","label":"Notas","action":"xdg-open ~/Notas"}
+}
+""",
+    },
+}
+
+
+def strip_jsonc(text: str) -> str:
+    """JSON con comentarios // y comas finales → JSON."""
+    out, i, in_str = [], 0, False
+    while i < len(text):
+        ch = text[i]
+        if in_str:
+            out.append(ch)
+            if ch == "\\" and i + 1 < len(text):
+                out.append(text[i + 1])
+                i += 2
+                continue
+            if ch == '"':
+                in_str = False
+        elif ch == '"':
+            in_str = True
+            out.append(ch)
+        elif text.startswith("//", i):
+            while i < len(text) and text[i] != "\n":
+                i += 1
+            continue
+        else:
+            out.append(ch)
+        i += 1
+    return re.sub(r",(\s*[}\]])", r"\1", "".join(out))
+
+
+def load_shell_overrides(path: Path = None) -> dict:
+    """Las sobrescrituras de opciones ({"all": {...}, "skins": {...}}); {} si no hay archivo."""
+    path = path or TEMPLATES["shell"]["path"]
+    if not path.exists():
+        return {}
+    data = json.loads(strip_jsonc(path.read_text(encoding="utf-8")) or "{}")
+    return data if isinstance(data, dict) else {}
+
+
+def deep_merge(base: dict, extra: dict) -> dict:
+    for key, value in extra.items():
+        if isinstance(value, dict) and isinstance(base.get(key), dict):
+            deep_merge(base[key], value)
+        else:
+            base[key] = value
+    return base
+
+
+def apply_shell(data: dict, skin: str, overrides: dict = None) -> dict:
+    """Aplica tus opciones (all y luego las de la skin) sobre una config de Quickshell."""
+    overrides = load_shell_overrides() if overrides is None else overrides
+    deep_merge(data, overrides.get("all", {}) or {})
+    deep_merge(data, (overrides.get("skins", {}) or {}).get(skin, {}) or {})
+    return data
+
+
+def ensure(name: str) -> Path:
+    spec = TEMPLATES[name]
+    path = spec["path"]
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        header = HEADER.format(c=spec["comment"], what=spec["what"], name=name)
+        path.write_text(header + spec["body"], encoding="utf-8")
+    return path
+
+
+def notify(title: str, body: str, urgent: bool = False):
+    if shutil.which("notify-send"):
+        subprocess.run(["notify-send", "-a", "BWM", *(["-u", "critical"] if urgent else []), title, body],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print(f"{title}: {body}")
+
+
+def apply(name: str) -> int:
+    if name == "hyprland":
+        subprocess.run(["hyprctl", "reload"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        errors = subprocess.run(["hyprctl", "configerrors"], capture_output=True, text=True).stdout.strip()
+        if errors:
+            notify("Tu configuración de Hyprland tiene errores", errors[:400], urgent=True)
+            return 1
+        notify("Hyprland", "Tu configuración se ha aplicado.")
+    elif name == "shell":
+        try:
+            load_shell_overrides()
+        except ValueError as e:
+            notify("Tus opciones (shell.jsonc) no son JSON válido", str(e), urgent=True)
+            return 1
+        subprocess.run([sys.executable, str(SCRIPTS / "bwm-theme-manager.py"), "apply-user"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        notify("Opciones", "Tus opciones se han aplicado.")
+    else:
+        notify("BWM", "Guardado: se aplica en vivo.")
+    return 0
+
+
+def edit(name: str) -> int:
+    path = ensure(name)
+    editor = os.environ.get("VISUAL") or os.environ.get("EDITOR") or ("nvim" if shutil.which("nvim") else "nano")
+    after = f"{shlex.quote(str(Path(__file__).resolve()))} apply {name}"
+    inner = f"{editor} {shlex.quote(str(path))}; {after}"
+    if os.environ.get("WAYLAND_DISPLAY"):
+        subprocess.Popen([str(SCRIPTS / "bwm-terminal"), "--class", "org.omarchy.terminal",
+                          "--title", f"Configuración en texto · {name}", "--", "bash", "-c", inner],
+                         start_new_session=True)
+        return 0
+    return subprocess.call(["bash", "-c", inner])
+
+
+def main() -> int:
+    args = sys.argv[1:]
+    if args == ["list"]:
+        for name, spec in TEMPLATES.items():
+            state = "existe" if spec["path"].exists() else "sin crear"
+            print(f"{name:<9} {spec['path']}  ({state})\n          {spec['what']}")
+        return 0
+    if len(args) == 2 and args[1] in TEMPLATES and args[0] in ("edit", "apply", "path"):
+        if args[0] == "path":
+            print(ensure(args[1]))
+            return 0
+        return edit(args[1]) if args[0] == "edit" else apply(args[1])
+    print(__doc__.strip(), file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

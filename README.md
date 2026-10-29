@@ -73,6 +73,19 @@ bwm skin retro      # switch skin (checks its requirements first)
 bwm startup off     # don't open the welcome window at login
 ```
 
+## ✍️ Your text configuration
+
+If you prefer writing to clicking, BWM gives you your own zone, loaded **after** BWM's and therefore **overriding the defaults**. It lives outside the repository, so updates never touch it. Open it from the Retro menu (**Setup → Configuración → Editar en texto**) or with `bwm-user-config edit <name>`. Each file is created with a "you can write in this zone" header and examples, and is applied when you save and close the editor.
+
+| Name | File | For |
+| :--- | :--- | :--- |
+| `hyprland` | `~/.config/bwm/user/hyprland.lua` | Window rules, keybindings and any Hyprland option (Lua). An error is reported and BWM's configuration keeps working |
+| `shell` | `~/.config/bwm/user/shell.jsonc` | Any Settings option, same keys as `config.json`: under `"all"` for every skin, under `"skins"` for one (wins over `"all"`) |
+| `omarchy` | `~/.config/omarchy/shell.toml` | Colours and sizes of Omarchy's panels in Retro (Omarchy's own file) |
+| `menu` | `~/.config/bwm/extensions/menu.jsonc` | Your own entries in the Retro menu |
+
+`bwm-user-config list` shows which ones you have. A value overridden in `shell.jsonc` is stored in your configuration: after deleting the line, change it again in Settings to get BWM's value back.
+
 ## ✨ Key Features
 
 - 🎨 **Real-Time Dynamic Theming:** Change your wallpaper and the entire desktop (windows, panels, terminal, and applications) instantly adapts its palette using Material You.

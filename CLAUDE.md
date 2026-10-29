@@ -118,6 +118,9 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
     Área útil en unidades lógicas con `reserved` real, sin restar un panel fijo de 44 px; incluir la
     barra hyprbars dentro del marco. En Hyprland 0.56 `window.float` usa `enable/disable`, mientras
     `window.fullscreen` usa `set/unset`: las cadenas desconocidas alternan flotación silenciosamente.
+18. **La configuración en texto del usuario manda**: `~/.config/bwm/user/*`, `~/.config/omarchy/shell.toml` y
+    `~/.config/bwm/extensions/menu.jsonc` son del usuario: no los edites ni los crees por él (sólo `bwm-user-config`
+    con su plantilla, si no existen). Todo lo nuevo de BWM debe cargarse antes que ellos para que puedan sobrescribirlo.
 
 ## 3. Dónde tocar para…
 
@@ -137,6 +140,8 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
 | About del menú Retro (Fastfetch) | `scripts/omarchy-shims/omarchy-launch-about`, `hypr/omarchy/about/`, `scripts/bwm-about-data.py`; no confundir con About de Settings |
 | About de Ajustes / detección de distro | `modules/settings/About.qml`, `services/SystemInfo.qml` y `SystemInfoData.js` (os-release sin ejecutar shell); enlaces propios de BWM |
 | Entrada del menú de Retro | `config/hypr/omarchy/bwm-menu.jsonc` (`when`/`checked` en bash) |
+| Configuración del usuario en texto (manda sobre BWM) | `scripts/bwm-user-config` (`list/edit/apply/path`), `~/.config/bwm/user/{hyprland.lua,shell.jsonc}`, `~/.config/omarchy/shell.toml`, `~/.config/bwm/extensions/menu.jsonc`; `hyprland.lua` la carga al final con `pcall`; `bwm-theme-manager.py apply-user` y al cambiar de skin |
+| Ajustes de Retro (aspecto Omarchy) | `quickshell/ii/retroSettings.qml` (mismas páginas que `settings.qml`), `open-settings.sh [página]`, menú `setup.settings.*`, reglas `omarchy-settings*` en `hypr/modules/omarchy_windows.lua` |
 | Un comando `omarchy-*` que falta | `config/hypr/scripts/omarchy-shims/` (+ enlace en `~/.local/bin`, `bwm-plugin.sh catalog`) |
 | Reglas de ventana / juegos | `hypr/modules/rules.lua`, `scripts/window-guard.py` |
 | Atajos | `keybinds.json` vía `keybinds-manager.py` |

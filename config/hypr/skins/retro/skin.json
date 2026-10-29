@@ -52,7 +52,8 @@
       "config/quickshell/ii/modules/ii/omarchyPolkit",
       "config/quickshell/ii/Commons",
       "config/quickshell/ii/Ui",
-      "config/quickshell/ii/omarchy-plugins"
+      "config/quickshell/ii/omarchy-plugins",
+      "config/quickshell/ii/retroSettings.qml"
     ],
     "hyprland": [
       "config/hypr/modules/retro_colors.lua",

@@ -18,6 +18,23 @@ hl.window_rule({
     tag   = "+terminal",
 })
 
+-- Ajustes de Retro (retroSettings.qml) como ventanas flotantes de Omarchy: una página suelta es una
+-- ventanita centrada; la ventana completa (Super+I), un poco mayor. Marco: el borde de acento de Retro.
+hl.window_rule({
+    name   = "omarchy-settings-page",
+    match  = { class = "^org\\.quickshell$", title = "^Configuración · .+$" },
+    float  = true,
+    size   = "1000 680",
+    center = true,
+})
+hl.window_rule({
+    name   = "omarchy-settings",
+    match  = { class = "^org\\.quickshell$", title = "^Configuración$" },
+    float  = true,
+    size   = "1150 760",
+    center = true,
+})
+
 local opaque = io.open(os.getenv("HOME") .. "/.local/state/bwm/windows-opaque", "r")
 if opaque then
     opaque:close()

@@ -73,6 +73,19 @@ bwm skin retro      # cambia de skin (comprueba antes sus requisitos)
 bwm startup off     # que la bienvenida no se abra al iniciar sesión
 ```
 
+## ✍️ Tu configuración en texto
+
+Si prefieres escribir a usar una interfaz, BWM te deja una zona propia que se carga **después** de la suya y, por tanto, **manda sobre lo que viene por defecto**. Vive fuera del repositorio, así que ninguna actualización la pisa. Se abre desde el menú de Retro (**Ajustes → Configuración → Editar en texto**) o con `bwm-user-config edit <nombre>`. Se crea con una cabecera «En esta zona puedes escribir tú» y ejemplos, y se aplica al guardar y cerrar el editor.
+
+| Nombre | Archivo | Para qué |
+| :--- | :--- | :--- |
+| `hyprland` | `~/.config/bwm/user/hyprland.lua` | Reglas de ventana, atajos y cualquier opción de Hyprland (Lua). Si tiene un error, se avisa y la configuración de BWM sigue funcionando |
+| `shell` | `~/.config/bwm/user/shell.jsonc` | Cualquier opción de Ajustes, con las mismas claves que `config.json`: en `"all"` para todas las skins y en `"skins"` sólo para una (manda sobre `"all"`) |
+| `omarchy` | `~/.config/omarchy/shell.toml` | Colores y tamaños de los paneles de Omarchy en Retro (el mismo archivo que usa Omarchy) |
+| `menu` | `~/.config/bwm/extensions/menu.jsonc` | Tus entradas en el menú de Retro |
+
+`bwm-user-config list` enseña cuáles tienes. Un valor que sobrescribes en `shell.jsonc` queda guardado en tu configuración: si borras la línea, cámbialo otra vez en Ajustes para volver al de BWM.
+
 ## ✨ Características Principales
 
 - 🎨 **Tematización Dinámica en Tiempo Real:** Cambia tu fondo de pantalla y todo el escritorio (ventanas, paneles, terminal y aplicaciones) adapta sus colores al instante.

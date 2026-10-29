@@ -39,3 +39,19 @@ require("modules.glass")
 require("modules.nightlight")
 
 require("modules.cursor")
+
+-- Tu configuración en texto (~/.config/bwm/user/hyprland.lua): se carga la última, así que manda
+-- sobre todo lo anterior. Un error en ella se avisa sin romper la de BWM. Se edita desde el menú
+-- de Retro → Ajustes → Configuración → Configuración en texto, o con: bwm-user-config edit hyprland
+do
+    local user_file = os.getenv("HOME") .. "/.config/bwm/user/hyprland.lua"
+    local f = io.open(user_file, "r")
+    if f then
+        f:close()
+        local ok, err = pcall(dofile, user_file)
+        if not ok then
+            local msg = tostring(err):gsub("[^%w%s%.,:_/%-%(%)]", "")
+            os.execute("notify-send -a BWM -u critical 'Tu hyprland.lua tiene un error' '" .. msg .. "' &")
+        end
+    end
+end

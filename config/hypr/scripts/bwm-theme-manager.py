@@ -200,6 +200,30 @@ def merge_shared_sections(target: dict, source: dict) -> dict:
             dst[leaf] = src[leaf]
     return target
 
+def user_config():
+    """El módulo bwm-user-config (tu configuración en texto, que manda sobre la de BWM)."""
+    import importlib.machinery
+    import importlib.util
+    loader = importlib.machinery.SourceFileLoader("bwm_user_config", str(Path(__file__).resolve().parent / "bwm-user-config"))
+    spec = importlib.util.spec_from_loader("bwm_user_config", loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+def apply_user_options():
+    """Aplica ~/.config/bwm/user/shell.jsonc a la config activa (Quickshell la recarga sola)."""
+    import tempfile
+    data = json.loads(II_CONFIG_JSON.read_text(encoding="utf-8"))
+    user_config().apply_shell(data, get_current_theme())
+    target = II_CONFIG_JSON.resolve()
+    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=target.parent,
+                                     prefix=".bwm-config-", delete=False) as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+        tmp = Path(f.name)
+    os.replace(tmp, target)
+
+
 def load_theme_config(target_theme: str, cfg: dict):
     """
     Restores the isolated config for the target theme, ensuring settings
@@ -265,6 +289,12 @@ def load_theme_config(target_theme: str, cfg: dict):
     if "background" not in data:
         data["background"] = {}
     data["background"]["wallpaperPath"] = wp
+
+    # Tus opciones en texto (~/.config/bwm/user/shell.jsonc, bwm-user-config) mandan sobre lo de la skin
+    try:
+        user_config().apply_shell(data, target_theme)
+    except Exception as e:
+        print(f"[Warning] Tus opciones (shell.jsonc) no se pudieron aplicar: {e}", file=sys.stderr)
 
     # Guardar en config.json activo y en el perfil
     # Ambas rutas suelen apuntar al mismo archivo. Publicar una sola vez y completo para
@@ -983,6 +1013,7 @@ def main():
     col_parser.add_argument("wallpaper", help="Ruta al wallpaper")
 
     subparsers.add_parser("apply-plasma-colors", help="Aplicar colores Breeze Dark estáticos (Plasma)")
+    subparsers.add_parser("apply-user", help="Aplicar tus opciones en texto (~/.config/bwm/user/shell.jsonc)")
 
     retro_parser = subparsers.add_parser("retro-theme", help="Temas del estilo Retro: biblioteca de temas estáticos de Omarchy")
     retro_parser.add_argument("subaction", choices=["list", "get", "set", "dynamic"], help="Acción de tema retro")
@@ -1008,6 +1039,8 @@ def main():
         apply_theme(args.theme, restart_shell=args.restart_shell)
     elif args.action == "apply-wallpaper-colors":
         apply_retro_wallpaper_colors(args.wallpaper)
+    elif args.action == "apply-user":
+        apply_user_options()
     elif args.action == "apply-plasma-colors":
         apply_plasma_colors()
     elif args.action == "retro-theme":
