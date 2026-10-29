@@ -50,7 +50,7 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
 1. **Plugins C++ de Hyprland** (`src/hyprbars`, `src/csd-minimize`): compilar con `-fno-gnu-unique` y desplegar
    SOLO con `make install` (copia temporal + `mv` atómico). Nunca `cp` sobre un `.so` cargado ni
    `hyprctl plugin unload/load` en caliente → SIGBUS, crash, safe mode.
-2. **Nunca arrancar Quickshell (`qs -c ii`) dos veces.** Reinicios con `bwm-theme-manager.py set <estilo-actual>`
+2. **Nunca arrancar Quickshell (`qs -c ii`) dos veces.** Reinicios de mantenimiento con `bwm-theme-manager.py set <estilo-actual> --restart-shell`
    (~10 s, las barras parpadean). Editar un QML del repo recarga en caliente la barra real del usuario: no metas
    cambios temporales de prueba en archivos que esté usando; prueba en un archivo aparte
    (`qs -p ~/.config/quickshell/ii/zz_prueba.qml`) y bórralo. **No se recargan en caliente** (hay que reiniciar):
@@ -100,6 +100,25 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
     skin y su tema), fondo, barra y dock. Mecanismo: `THEME_SPECIFIC_SECTIONS` y
     `SHARED_KEYS_IN_SKIN_SECTIONS` de `bwm-theme-manager.py`. La protección de volumen («earbang») se quitó.
 
+15. **Licencias y procedencia**: conserva los avisos y textos de cada componente de terceros; BWM
+    incluye GPL, BSD, MIT, MPL, OFL y otros términos, no se presenta todo como MIT. Documenta origen,
+    versión, modificaciones y fuente correspondiente en `THIRD_PARTY_NOTICES.md`; revisa las imágenes,
+    marcas y binarios pendientes antes de una release. El instalador conserva los avisos al copiar recursos.
+
+16. **Cambio de skin sin interrupciones**: `bwm_transition.skin_change()` propaga `BWM_SKIN_SWITCH=1`
+    a los hooks: no cerrar apps, no recargar Hyprland desde cada hook ni restaurar focos antiguos desde
+    tareas separadas. Capturar geometría antes de modificar reglas; usar acciones de flotación explícitas
+    (`enable`/`disable`), respetar fullscreen, minimizadas y especiales. Quickshell se actualiza con `bwmSkin.reload`;
+    `set <skin> --restart-shell` fuerza sólo su reinicio para mantenimiento. No propagar la variable de
+    transición al proceso duradero de Quickshell.
+
+17. **Snapping de Plasma**: el monitor al soltar es el de la previsualización/puntero, no el que
+    tenga asignado la ventana al cruzar una unión. Pasarlo por `--monitor desc:… --edge --pid …` a
+    `quick-tile.py`; el workspace se asigna antes de fijar geometría (hacerlo después la desplaza).
+    Área útil en unidades lógicas con `reserved` real, sin restar un panel fijo de 44 px; incluir la
+    barra hyprbars dentro del marco. En Hyprland 0.56 `window.float` usa `enable/disable`, mientras
+    `window.fullscreen` usa `set/unset`: las cadenas desconocidas alternan flotación silenciosamente.
+
 ## 3. Dónde tocar para…
 
 | Quiero… | Dónde |
@@ -124,7 +143,7 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
 | Salvapantallas e inhibición por multimedia | `modules/ii/screensaver/ScreensaverIdle.qml`, `scripts/launch-screensaver.sh` |
 | Actualizaciones de Gentoo / Flatpak | `BWM_CONTEXT.md` §2.7; shims `omarchy-update` y `omarchy-update-available` |
 | Reiniciar una app conservando sus ventanas | `bwm_omarchy.restart_app()` (Firefox, Vesktop, Steam, Stremio) + `scripts/bwm_windows.py` |
-| Dónde quedan las ventanas al cambiar de skin | `scripts/bwm_windows.py` (`float_in_place`, `stacking_box`, `restored_box`, `hold_new_windows`), `sync_floating_windows`; familia de la skin en `skins/<id>.json` → `windowing` (`tiling`/`stacking`) |
+| Dónde quedan las ventanas al cambiar de skin | `scripts/bwm_windows.py` (`float_in_place`, `stacking_box`, `restored_box`, `hold_new_windows`), `bwm_transition.py`, `sync_floating_windows`; familia de la skin en `skins/<id>.json` → `windowing` (`tiling`/`stacking`) |
 
 ## 4. Estilos y piezas clave
 
@@ -162,7 +181,8 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
   (`bwm startup off`): gracias, skins instaladas en verde si tienen sus requisitos (desplegables, con comandos y
   «Activar»), «Añadir skins» → `docs/SKINS.md`. Ventana `qs -p` aparte: `pkill -x quickshell` no la cierra.
 - **Todos los estilos**: GTK 3 en vivo (tema `BWM-1|BWM-2`), qt6ct + `kdeglobals`, flatpaks con overrides, kitty en
-  vivo, Vesktop (`themes/bwm.theme.css`), Firefox/Spotify/Steam se reinician solos en su sitio, iconos por estilo,
+  vivo, Vesktop (`themes/bwm.theme.css`), iconos por estilo. Al cambiar de skin no se reinician apps: se conserva
+  reproducción y workspaces; los colores que requieren reinicio quedan pendientes (Spotify puede requerir Spicetify).
   SDDM/Plymouth que siguen los colores, `window-guard.py` para juegos, aplicaciones predeterminadas
   (`default-apps.py`, `bwm-terminal`), hooks del usuario en `~/.config/bwm/hooks/theme-set[.d]`.
 

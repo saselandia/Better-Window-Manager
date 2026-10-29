@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
 Quick Tile / Window Snapping script for Hyprland (KDE Plasma Style).
-Usage: quick-tile.py <direction> [window_address]
+Usage: quick-tile.py <direction> [window_address] [--monitor desc:...] [--edge]
 Directions: left, right, top, bottom, top-left, top-right, bottom-left, bottom-right, center, maximize
 """
 
 import sys
+import argparse
 import os
 import json
 import subprocess
@@ -105,76 +106,100 @@ def is_plasma_active() -> bool:
     except Exception:
         return False
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: quick-tile.py <direction> [window_address]")
-        sys.exit(1)
+def usable_geometry(mon):
+    """Área de trabajo global en píxeles lógicos; reserved ya viene en unidades lógicas."""
+    from bwm_windows import monitor_box
+    x, y, width, height = monitor_box(mon)
+    left, top, right, bottom = (list(mon.get("reserved", [])) + [0, 0, 0, 0])[:4]
+    return (int(x + left), int(y + top), max(1, int(width - left - right)),
+            max(1, int(height - top - bottom)))
 
-    direction = sys.argv[1].lower().strip()
-    target_addr = sys.argv[2].strip() if len(sys.argv) > 2 else None
 
-    # Fetch clients to locate window
-    clients = []
+def drag_monitor(monitors, point, direction):
+    """Usar el borde mostrado, aunque la ventana o el puntero hayan cruzado ligeramente la unión."""
+    from bwm_windows import monitor_box
+    x, y = point["x"], point["y"]
+    candidates = []
+    for mon in monitors:
+        mx, my, mw, mh = monitor_box(mon)
+        if not (mx - 40 <= x <= mx + mw + 40 and my - 40 <= y <= my + mh + 40):
+            continue
+        dx = abs(x - mx) if "left" in direction else abs(x - mx - mw) if "right" in direction else 0
+        dy = abs(y - my) if "top" in direction or direction in ("up", "maximize") else abs(y - my - mh) if "bottom" in direction or direction == "down" else 0
+        if max(dx, dy) <= 40:
+            candidates.append((dx + dy, mon))
+    if candidates:
+        return min(candidates, key=lambda c: c[0])[1]
+    return next((m for m in monitors if (lambda b: b[0] <= x < b[0] + b[2]
+                 and b[1] <= y < b[1] + b[3])(monitor_box(m))), None)
+
+
+def content_geometry(x, y, width, height, titlebar):
+    """La previsualización mide el marco completo; Hyprland mueve/redimensiona el contenido."""
+    return int(x), int(y + titlebar), int(width), max(1, int(height - titlebar))
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("direction", choices=["left", "right", "top", "bottom", "top-left", "top-right",
+        "bottom-left", "bottom-right", "up", "down", "up-left", "up-right", "down-left", "down-right",
+        "center", "maximize"])
+    parser.add_argument("window_address", nargs="?")
+    parser.add_argument("--monitor", help="Monitor del destino de la previsualización (desc:descripción)")
+    parser.add_argument("--pid", type=int, help="PID de la ventana al comenzar el snap")
+    parser.add_argument("--edge", action="store_true", help="Arrastre: destino exacto, sin alternar/restaurar")
+    args = parser.parse_args(argv)
+    direction = args.direction
+    target_addr = args.window_address
+    # El plugin antiguo sólo pasaba una dirección y la dirección de ventana: también es arrastre.
+    edge = args.edge or target_addr is not None
     try:
-        clients_str = subprocess.check_output(["hyprctl", "clients", "-j"]).decode("utf-8")
-        clients = json.loads(clients_str)
-    except Exception:
-        pass
-
-    target_win = None
-    if target_addr:
-        target_win = next((c for c in clients if c.get("address") == target_addr), None)
-
-    if not target_win:
-        try:
-            active_str = subprocess.check_output(["hyprctl", "activewindow", "-j"]).decode("utf-8")
-            target_win = json.loads(active_str)
-        except Exception:
-            target_win = None
-
+        clients = json.loads(subprocess.check_output(["hyprctl", "clients", "-j"]))
+        if target_addr:
+            target_win = next((c for c in clients if c.get("address") == target_addr), None)
+        else:
+            target_win = json.loads(subprocess.check_output(["hyprctl", "activewindow", "-j"]))
+        monitors = json.loads(subprocess.check_output(["hyprctl", "monitors", "-j"]))
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return
     if not target_win or not target_win.get("address"):
-        sys.exit(0)
-
-    addr = target_win.get("address")
-    mon_id = target_win.get("monitor", 0)
-
-    # Fetch monitors
-    try:
-        mon_str = subprocess.check_output(["hyprctl", "monitors", "-j"]).decode("utf-8")
-        monitors = json.loads(mon_str)
-    except Exception:
-        monitors = []
-
-    target_mon = next((m for m in monitors if m.get("id") == mon_id), None)
-    if not target_mon and monitors:
-        target_mon = monitors[0]
-
+        return  # no sustituir una ventana explícita desaparecida por la ventana con foco
+    if args.pid is not None and target_win.get("pid") != args.pid:
+        return
+    addr = target_win["address"]
+    mon_id = target_win.get("monitor")
+    target_mon = None
+    if args.monitor:
+        target_mon = next((m for m in monitors if "desc:" + m.get("description", "") == args.monitor), None)
+        if target_mon is None:
+            parser.error("El monitor de la previsualización ya no está conectado")
+    elif edge:
+        try:
+            point = json.loads(subprocess.check_output(["hyprctl", "cursorpos", "-j"]))
+            target_mon = drag_monitor(monitors, point, direction)
+        except (OSError, ValueError, subprocess.SubprocessError, KeyError):
+            pass
+    target_mon = target_mon or next((m for m in monitors if m.get("id") == mon_id), None)
     if not target_mon:
-        sys.exit(0)
-
-    mx = target_mon.get("x", 0)
-    my = target_mon.get("y", 0)
-    mw = target_mon.get("width", 1920)
-    mh = target_mon.get("height", 1080)
-
-    # Reserved space from bars (e.g. Quickshell bottom bar)
-    res = target_mon.get("reserved", [0, 0, 0, 44])
-    res_l = res[0] if len(res) > 0 else 0
-    res_t = res[1] if len(res) > 1 else 0
-    res_r = res[2] if len(res) > 2 else 0
-    res_b = res[3] if len(res) > 3 else 44
-    if res_b == 0:
-        res_b = 44  # Guarantee 44px panel space
-
-    usable_x = mx + res_l
-    usable_y = my + res_t
-    usable_w = mw - res_l - res_r
-    usable_h = mh - res_t - res_b
+        return
+    usable_x, usable_y, usable_w, usable_h = usable_geometry(target_mon)
+    # El workspace queda fijado antes de redimensionar: el centro puede cruzar otro monitor.
+    same_monitor = target_mon["id"] == mon_id
+    workspace = target_win["workspace"]["id"] if same_monitor else target_mon["activeWorkspace"]["id"]
+    place_workspace = f"hl.dispatch(hl.dsp.window.move({{ workspace = {workspace}, follow = false, window = win }}))"
+    titlebar = 0
+    if is_plasma_active():
+        try:
+            from bwm_windows import titlebars, has_titlebar
+            if has_titlebar(target_win, titlebars()):
+                opt = json.loads(subprocess.check_output(["hyprctl", "getoption", "plugin:hyprbars:bar_height", "-j"]))
+                titlebar = max(0, opt.get("int", 30))
+        except (OSError, ValueError, subprocess.SubprocessError):
+            titlebar = 30
 
     tags = target_win.get("tags", [])
     is_snapped = "snapped" in tags
     is_fullscreen = target_win.get("fullscreen", 0) > 0 or target_win.get("fullscreenClient", 0) > 0
-    is_floating = target_win.get("floating", True)
 
     if not is_snapped and not is_fullscreen:
         cur_sz = target_win.get("size", [900, 600])
@@ -207,7 +232,9 @@ def main():
             if not win then return hl.dsp.no_op() end
             hl.dispatch(hl.dsp.window.fullscreen({{ mode = 1, action = 'unset', window = win }}))
             hl.dispatch(hl.dsp.window.fullscreen({{ mode = 0, action = 'unset', window = win }}))
+            {place_workspace}
             hl.dispatch(hl.dsp.window.clear_tags({{ window = win }}))
+            hl.dispatch(hl.dsp.window.float({{ action = 'enable', window = win }}))
             hl.dispatch(hl.dsp.window.resize({{ x = {int(target_w)}, y = {int(target_h)}, relative = false, window = win }}))
             hl.dispatch(hl.dsp.window.move({{ x = {int(target_x)}, y = {int(target_y)}, relative = false, window = win }}))
             return hl.dsp.no_op()
@@ -215,16 +242,15 @@ def main():
         run_lua(lua)
 
     def apply_snap(dir_name: str, x: int, y: int, w: int, h: int):
-        float_cmd = ""
-        if not is_floating:
-            float_cmd = "hl.dispatch(hl.dsp.window.float({ window = win }))"
-
+        x, y, w, h = content_geometry(x, y, w, h, titlebar)
+        float_cmd = "hl.dispatch(hl.dsp.window.float({ action = 'enable', window = win }))"
         lua = f"""(function()
             local win = hl.get_window("address:{addr}")
             if not win then return hl.dsp.no_op() end
             {float_cmd}
             hl.dispatch(hl.dsp.window.fullscreen({{ mode = 1, action = 'unset', window = win }}))
             hl.dispatch(hl.dsp.window.fullscreen({{ mode = 0, action = 'unset', window = win }}))
+            {place_workspace}
             hl.dispatch(hl.dsp.window.clear_tags({{ window = win }}))
             hl.dispatch(hl.dsp.window.tag({{ tag = "snapped", window = win }}))
             hl.dispatch(hl.dsp.window.tag({{ tag = "snapped_{dir_name}", window = win }}))
@@ -240,10 +266,29 @@ def main():
     rem_w  = usable_w - half_w
     rem_h  = usable_h - half_h
 
+    if edge:
+        # Un arrastre siempre aplica exactamente el destino mostrado, incluso si ya estaba encajada.
+        boxes = {
+            "left": (usable_x, usable_y, half_w, usable_h),
+            "right": (usable_x + half_w, usable_y, rem_w, usable_h),
+            "top": (usable_x, usable_y, usable_w, usable_h),
+            "maximize": (usable_x, usable_y, usable_w, usable_h),
+            "bottom": (usable_x, usable_y + half_h, usable_w, rem_h),
+            "top-left": (usable_x, usable_y, half_w, half_h),
+            "top-right": (usable_x + half_w, usable_y, rem_w, half_h),
+            "bottom-left": (usable_x, usable_y + half_h, half_w, rem_h),
+            "bottom-right": (usable_x + half_w, usable_y + half_h, rem_w, rem_h),
+        }
+        canonical = direction.replace("up", "top").replace("down", "bottom")
+        if canonical in boxes:
+            apply_snap(canonical, *boxes[canonical])
+            return
+
     cur_at = target_win.get("at", [0, 0])
     cur_sz = target_win.get("size", [0, 0])
     cur_x, cur_y = cur_at[0], cur_at[1]
-    cur_w, cur_h = cur_sz[0], cur_sz[1]
+    cur_w, cur_h = cur_sz[0], cur_sz[1] + titlebar
+    cur_y -= titlebar
 
     # Precise detection of current snapped position (via tags or geometry)
     is_top_left = "snapped_top-left" in tags or "snapped_up-left" in tags or (abs(cur_x - usable_x) <= 25 and abs(cur_y - usable_y) <= 25 and cur_w <= half_w + 35 and cur_h <= half_h + 35)

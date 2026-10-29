@@ -39,12 +39,13 @@ fi
 
 # 2. Cambiar fondo con animación fluida estilo End_4 ('grow')
 echo "Aplicando wallpaper: $WALLPAPER"
-"$WALL_BIN" img "$WALLPAPER" \
-    --transition-type grow \
-    --transition-pos center \
-    --transition-step 90 \
-    --transition-duration 2 \
-    --transition-fps 60
+if [[ "${BWM_SKIN_SWITCH:-0}" == "1" ]]; then
+    "$WALL_BIN" img "$WALLPAPER" --transition-type none
+else
+    "$WALL_BIN" img "$WALLPAPER" \
+        --transition-type grow --transition-pos center --transition-step 90 \
+        --transition-duration 2 --transition-fps 60
+fi
 
 # 2.1 Guardar en caché para recuperación instantánea y persistencia por estilo
 mkdir -p "$HOME/.cache"
@@ -76,6 +77,12 @@ elif [[ "$CURRENT_THEME" == "retro" ]]; then
 else
     echo "Extrayendo colores del wallpaper..."
     timeout 10 matugen image --source-color-index 0 "$WALLPAPER" || true
+fi
+
+# El gestor hace una sola recarga después de generar la paleta y ajustar las ventanas.
+# Sus hooks heredan esta política aunque terminen en segundo plano.
+if [[ "${BWM_SKIN_SWITCH:-0}" == "1" ]]; then
+    exit 0
 fi
 
 # 3.1 Forzar recarga de colores en Quickshell (barra y widgets)

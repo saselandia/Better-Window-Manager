@@ -11,7 +11,7 @@ Default (end-4 / illogical-impulse), Retro (Omarchy) and KDE Plasma on top of Hy
 
 [![GitLab](https://img.shields.io/badge/GitLab-bwm-orange?logo=gitlab)](https://gitlab.com/saselandia/bwm)
 [![GitHub](https://img.shields.io/badge/GitHub-Better--Window--Manager-blue?logo=github)](https://github.com/saselandia/Better-Window-Manager)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Licenses: multiple](https://img.shields.io/badge/licenses-multiple-blue.svg)](THIRD_PARTY_NOTICES.md)
 [![Hyprland](https://img.shields.io/badge/Hyprland-Wayland-brightgreen)](https://hyprland.org)
 [![Quickshell](https://img.shields.io/badge/Quickshell-Qt%206%20%2F%20QML-purple)](https://quickshell.outfoxxed.me)
 
@@ -57,7 +57,7 @@ This is the point of the project, so we measure it. Estimated share of the origi
 
 One of BWM's most ambitious goals is **porting desktops that do not run on Hyprland to Hyprland**, starting with KDE Plasma (in progress: its panel, Kickoff, applets, KWin's Alt+Tab, OSD and Breeze title bars already run on Hyprland), so everything lives on one compositor. Other desktops and window managers can follow the same path as new skins.
 
-Switching between a tiling skin and a stacking one keeps every window where it was, and apps restarted to pick up the new theme come back in place without popping up on the workspace you are looking at.
+Switching skins preserves each display’s workspace and keeps applications open, including playing video. BWM generates one palette and rebuilds panels without restarting Quickshell. Switching between tiling and stacking preserves placement; fullscreen, minimized and special-workspace windows are excluded from repositioning. Styles an app only reads at startup are prepared for its next launch; Spotify may require applying Spicetify manually. Skin changes do not close apps to force their colours.
 
 More skins: [docs/SKINS.md](docs/SKINS.md) explains what a skin is and how one is added.
 
@@ -252,6 +252,12 @@ hyprctl reload
 | **`SUPER + L`** | Lock screen with Quickshell Lock |
 | **`SUPER + SHIFT + S`** / **`Print`** | Interactive area screenshot |
 | **`ALT + A`** | Toggle on-screen interactive keybinding cheatsheet |
+
+---
+
+## 📜 Licensing
+
+BWM includes third-party code and assets under multiple licenses, including GPL-3.0, BSD-3-Clause, MIT, MPL-2.0 and OFL-1.1. The shell derived from end-4 is subject to GPL-3.0; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for component licenses and attribution. Some assets still need provenance checks before a verified release.
 
 ---
 

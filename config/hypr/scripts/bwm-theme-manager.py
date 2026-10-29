@@ -345,11 +345,17 @@ def load_theme_config(target_theme: str, cfg: dict):
     data["background"]["wallpaperPath"] = wp
 
     # Guardar en config.json activo y en el perfil
-    for target in [II_CONFIG_JSON, REPO_II_CONFIG_JSON]:
+    # Ambas rutas suelen apuntar al mismo archivo. Publicar una sola vez y completo para
+    # que FileView no lea un JSON a medio escribir ni reconstruya dos veces los paneles.
+    for target in {p.resolve() for p in (II_CONFIG_JSON, REPO_II_CONFIG_JSON)}:
         if target.parent.exists():
             try:
-                with open(target, "w", encoding="utf-8") as f:
+                import tempfile
+                with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=target.parent,
+                                                 prefix=".bwm-config-", delete=False) as f:
                     json.dump(data, f, indent=2, ensure_ascii=False)
+                    tmp = Path(f.name)
+                os.replace(tmp, target)
             except Exception as e:
                 print(f"[Warning] No se pudo escribir en {target}: {e}", file=sys.stderr)
 
@@ -763,7 +769,8 @@ def apply_plasma_app_themes():
                    check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # GTK 4 only reads ~/.config/gtk-4.0/gtk.css at startup: reopen the stateless windows
-    if "gtk4" in changed:
+    import bwm_transition
+    if "gtk4" in changed and not bwm_transition.switching():
         for app in GTK_RELAUNCH_APPS:
             # pgrep -x only sees 15 characters of the name (nm-connection-editor)
             if subprocess.run(["pgrep", "-f", f"(^|/){app}( |$)"], stdout=subprocess.DEVNULL).returncode == 0:
@@ -786,7 +793,7 @@ def apply_retro_wallpaper_colors(wallpaper_path: str = None):
         return
     bwm_omarchy.apply_retro_dynamic_theme(wallpaper_path or "")
 
-def sync_floating_windows(skin: str):
+def sync_floating_windows(skin: str, previous_skin=None, original_clients=None):
     """
     Pasa las ventanas abiertas a la gestión de la skin destino ("windowing" de su manifiesto):
     - apilada ("stacking", KDE Plasma): todas flotan en su mismo sitio (bwm_windows.float_in_place);
@@ -798,19 +805,25 @@ def sync_floating_windows(skin: str):
     try:
         res = subprocess.run(["hyprctl", "clients", "-j"], capture_output=True, text=True, timeout=2)
         clients = json.loads(res.stdout)
+        if original_clients is not None:
+            live = {(c["address"], c.get("pid")) for c in clients}
+            clients = [c for c in original_clients if (c["address"], c.get("pid")) in live]
     except Exception as e:
         print(f"[Warning] Error consultando clientes de Hyprland: {e}", file=sys.stderr)
         return
 
-    plugin_path = str(CONFIG_DIR / "hypr" / "plugins" / "hyprbars-plasma.so")
     if skin == "plasma":
         plist = subprocess.run(["hyprctl", "plugin", "list"], capture_output=True, text=True, check=False)
         if "Plugin hyprbars" not in plist.stdout:
-            subprocess.run(["hyprctl", "plugin", "load", plugin_path], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print("[BWM] Las barras hyprbars se cargarán en el próximo inicio de sesión en Plasma.", file=sys.stderr)
         subprocess.run(["hyprctl", "keyword", "plugin:hyprbars:enabled", "true"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     else:
         # DO NOT unload plugins dynamically at runtime to prevent compositor segfaults
         subprocess.run(["hyprctl", "keyword", "plugin:hyprbars:enabled", "false"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # Cambiar colores dentro de la misma familia no reorganiza ninguna ventana.
+    if previous_skin is not None and bwm_windows.is_stacking(previous_skin) == to_stacking:
+        return
 
     persistent_float_classes = set()
     persist_json = CONFIG_DIR / "hypr" / "persistent_rules.json"
@@ -835,7 +848,9 @@ def sync_floating_windows(skin: str):
         addr = client.get("address")
         cls = client.get("class", "")
         is_floating = client.get("floating", False)
-        if not addr:
+        if (not addr or not client.get("mapped", True) or client.get("fullscreen", 0) or client.get("pinned")
+                or client.get("workspace", {}).get("id", 0) <= 0
+                or client.get("workspace", {}).get("id") == 99):
             continue
 
         if to_stacking:
@@ -849,7 +864,7 @@ def sync_floating_windows(skin: str):
                     is_persistent = True
                     break
             if not is_persistent and is_floating:
-                lua_cmds.append(f'do local win = hl.get_window("address:{addr}"); if win then hl.dispatch(hl.dsp.window.float({{ window = win }})) end end')
+                lua_cmds.append(f'do local win = hl.get_window("address:{addr}"); if win then hl.dispatch(hl.dsp.window.float({{ action = "disable", window = win }})) end end')
 
     if lua_cmds:
         full_lua = "(function() " + " ".join(lua_cmds) + " return hl.dsp.no_op() end)()"
@@ -869,13 +884,11 @@ def sync_floating_windows(skin: str):
 
     if to_stacking:
         # Las ventanas en mosaico flotan en el mismo sitio (con su barra de título y un margen
-        # sutil con los bordes), no donde Hyprland pone una ventana flotante nueva. Se espera un
-        # momento a que hyprbars decida qué ventanas llevan barra (hyprctl hyprbars-csd).
-        import time
-        time.sleep(0.5)
+        # sutil con los bordes). La geometría procede de la captura anterior a la recarga de reglas,
+        # no de la geometría flotante por defecto que el compositor pudiera haber aplicado.
         bwm_windows.float_in_place(skin, clients)
 
-def apply_theme(theme_name: str):
+def apply_theme(theme_name: str, restart_shell: bool = False):
     """Applies theme across all subsystems, with complete isolation."""
     if theme_name not in THEMES:
         print(f"Error: Estilo '{theme_name}' no reconocido. Opciones: {list(THEMES.keys())}", file=sys.stderr)
@@ -891,132 +904,145 @@ def apply_theme(theme_name: str):
     except BlockingIOError:
         return
 
-    curr_theme = get_current_theme()
-    cfg = THEMES[theme_name]
-    print(f"Aplicando estilo: {cfg['title']}...")
-    import bwm_windows
-    focus = bwm_windows.snapshot_focus()  # workspace, foco y reproducción: se restauran tras recolocar ventanas
+    import bwm_transition
+    with bwm_transition.skin_change():
+        curr_theme = get_current_theme()
+        cfg = THEMES[theme_name]
+        print(f"Aplicando estilo: {cfg['title']}...")
+        import bwm_windows
+        focus = bwm_windows.snapshot_focus()
+        original_clients = bwm_windows.hypr_json("clients")  # antes de que las reglas cambien floating/geometría
 
-    # 1. Guardar la configuración del tema actual antes de cambiar
-    save_current_theme_config(curr_theme)
+        # 1. Guardar la configuración del tema actual antes de cambiar
+        save_current_theme_config(curr_theme)
 
-    # Al salir de Retro: devolver Spicetify, btop y VSCodium a su tema (lo demás lo regenera
-    # matugen en Default o la paleta Breeze en Plasma)
-    if not cfg.get("is_retro"):
+        # Al salir de Retro: devolver Spicetify, btop y VSCodium a su tema (lo demás lo regenera
+        # matugen en Default o la paleta Breeze en Plasma)
+        if curr_theme == "retro" and not cfg.get("is_retro"):
+            try:
+                import bwm_omarchy
+                bwm_omarchy.restore_non_retro()
+            except Exception as e:
+                print(f"[Warning] No se pudo restaurar el tema de apps de Retro: {e}", file=sys.stderr)
+
+        # 2. Cargar el perfil de configuración aislado del tema seleccionado
+        load_theme_config(theme_name, cfg)
+
+        # 3. Actualizar configuraciones de Hyprland y btop
+        update_hypr_theme_lua(theme_name, cfg)
+        update_btop_conf(theme_name, cfg)
+
+        # 4. Aplicar Wallpaper Persistente y Esquema de Colores
+        wp = get_theme_wallpaper(theme_name)
+        set_wp_script = CONFIG_DIR / "hypr" / "scripts" / "set-wallpaper.sh"
+
+        # Actualizar cachés con el wallpaper persistente
         try:
-            import bwm_omarchy
-            bwm_omarchy.restore_non_retro()
-        except Exception as e:
-            print(f"[Warning] No se pudo restaurar el tema de apps de Retro: {e}", file=sys.stderr)
+            with open(Path.home() / ".cache" / "current_wallpaper", "w", encoding="utf-8") as f:
+                f.write(wp)
+            with open(Path.home() / ".cache" / f"current_wallpaper_{theme_name}", "w", encoding="utf-8") as f:
+                f.write(wp)
+        except Exception:
+            pass
 
-    # 2. Cargar el perfil de configuración aislado del tema seleccionado
-    load_theme_config(theme_name, cfg)
+        palette_applied = False
+        if wp and os.path.exists(wp) and set_wp_script.exists():
+            palette_applied = subprocess.run([str(set_wp_script), wp], check=False).returncode == 0
 
-    # 3. Actualizar configuraciones de Hyprland y btop
-    update_hypr_theme_lua(theme_name, cfg)
-    update_btop_conf(theme_name, cfg)
+        if not palette_applied:
+            if cfg.get("is_plasma"):
+                apply_plasma_colors()
+            elif cfg.get("is_retro"):
+                apply_retro_wallpaper_colors(wp)
 
-    # 4. Aplicar Wallpaper Persistente y Esquema de Colores
-    wp = get_theme_wallpaper(theme_name)
-    set_wp_script = CONFIG_DIR / "hypr" / "scripts" / "set-wallpaper.sh"
+        # Icon theme per BWM skin, like Omarchy's icons.theme (Retro sets it with its accent)
+        if not cfg.get("is_retro"):
+            try:
+                import bwm_icons
+                bwm_icons.apply(theme_name)
+            except Exception as e:
+                print(f"[Warning] No se pudo aplicar el tema de iconos: {e}", file=sys.stderr)
 
-    # Actualizar cachés con el wallpaper persistente
-    try:
-        with open(Path.home() / ".cache" / "current_wallpaper", "w", encoding="utf-8") as f:
-            f.write(wp)
-        with open(Path.home() / ".cache" / f"current_wallpaper_{theme_name}", "w", encoding="utf-8") as f:
-            f.write(wp)
-    except Exception:
-        pass
-
-    if wp and os.path.exists(wp) and set_wp_script.exists():
-        subprocess.run([str(set_wp_script), wp], check=False)
-
-    if cfg.get("is_plasma"):
-        apply_plasma_colors()
-    elif cfg.get("is_retro"):
-        apply_retro_wallpaper_colors(wp)
-
-    # Icon theme per BWM skin, like Omarchy's icons.theme (Retro sets it with its accent)
-    if not cfg.get("is_retro"):
-        try:
-            import bwm_icons
-            bwm_icons.apply(theme_name)
-        except Exception as e:
-            print(f"[Warning] No se pudo aplicar el tema de iconos: {e}", file=sys.stderr)
-
-    # Boot splash / login screen in the new colours (installed by the root service, if set up)
-    subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_boot.py"), "render"],
-                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-
-    # User hooks (~/.config/bwm/hooks/theme-set[.d]) for extra apps; Retro runs them itself
-    # after its palette is written
-    if theme_name != "retro":
-        subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_omarchy.py"), "hook", theme_name],
+        # Boot splash / login screen in the new colours (installed by the root service, if set up)
+        subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_boot.py"), "render"],
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
-    # Firefox only reads its chrome CSS (Retro's TUI theme, Material You, Breeze) at startup:
-    # a skin change restarts it in the background if that CSS changed, keeping the session and
-    # each window's workspace. Vesktop reloads its theme live; vesktop-enable only switches it
-    # (once) to the shared bwm.theme.css, restarting it in place if it is open
-    if theme_name != curr_theme:
-        for action in ("restart-firefox", "vesktop-enable"):
-            subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_omarchy.py"), action],
+        # User hooks (~/.config/bwm/hooks/theme-set[.d]) for extra apps; Retro runs them itself
+        # after its palette is written
+        if theme_name != "retro":
+            subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_omarchy.py"), "hook", theme_name],
                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
-    # 5. Recargar Hyprland primero para aplicar las reglas del nuevo tema
-    try:
-        subprocess.run(["hyprctl", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
+        # Aplicar en vivo cuando sea posible; los estilos que necesitan reiniciar una app quedan
+        # preparados para su próximo inicio. Un cambio de skin nunca cierra el navegador o el vídeo.
+        if theme_name != curr_theme:
+            for action in ("vesktop-enable",):
+                subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_omarchy.py"), action],
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
-    # 6. Sincronizar el estado flotante / mosaico de las ventanas abiertas tras la recarga
-    sync_floating_windows(theme_name)
-    bwm_windows.restore_focus(focus)
+        # 5. Recargar Hyprland primero para aplicar las reglas del nuevo tema
+        try:
+            subprocess.run(["hyprctl", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
 
-    # 6.1 Demonio de notificaciones: en Retro el de Omarchy (dentro de Quickshell), así que swaync
-    #     se cierra para soltar org.freedesktop.Notifications; en los otros estilos vuelve swaync
-    try:
-        if theme_name == "retro":
-            subprocess.run(["pkill", "-x", "swaync"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        elif shutil.which("swaync") and subprocess.run(["pidof", "swaync"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
-            subprocess.Popen(["swaync"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True,
-                             preexec_fn=lambda: signal.pthread_sigmask(signal.SIG_SETMASK, []))
-    except Exception:
-        pass
+        # 6. Sincronizar el estado flotante / mosaico de las ventanas abiertas tras la recarga
+        sync_floating_windows(theme_name, curr_theme, original_clients)
 
-    # 6.2 Agente polkit: en Retro el de Omarchy (dentro de Quickshell, modules/ii/omarchyPolkit);
-    #     polkit sólo admite uno por sesión, así que hyprpolkitagent se para antes de reiniciar
-    #     Quickshell y vuelve en los otros estilos
-    try:
-        if theme_name == "retro":
-            subprocess.run(["pkill", "-x", "hyprpolkitagent"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        elif subprocess.run(["pidof", "hyprpolkitagent"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
-            agent = shutil.which("hyprpolkitagent") or ("/usr/libexec/hyprpolkitagent" if os.access("/usr/libexec/hyprpolkitagent", os.X_OK) else None)
-            if agent:
-                subprocess.Popen([agent], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True,
+        # 6.1 Demonio de notificaciones: en Retro el de Omarchy (dentro de Quickshell), así que swaync
+        #     se cierra para soltar org.freedesktop.Notifications; en los otros estilos vuelve swaync
+        try:
+            if theme_name == "retro":
+                subprocess.run(["pkill", "-x", "swaync"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            elif shutil.which("swaync") and subprocess.run(["pidof", "swaync"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
+                subprocess.Popen(["swaync"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True,
                                  preexec_fn=lambda: signal.pthread_sigmask(signal.SIG_SETMASK, []))
-    except Exception:
-        pass
+        except Exception:
+            pass
 
-    # 7. Reiniciar Quickshell de forma atómica (sin duplicados ni bloqueo de SIGTERM)
-    try:
-        subprocess.run(["pkill", "-9", "-x", "quickshell"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        for _ in range(25):
-            if subprocess.run(["pidof", "quickshell"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
-                break
-            time.sleep(0.05)
-        subprocess.Popen(
-            ["quickshell", "-c", "ii"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True,
-            preexec_fn=lambda: signal.pthread_sigmask(signal.SIG_SETMASK, []),
-        )
-    except Exception:
-        pass
+        # 6.2 Agente polkit: en Retro el de Omarchy (dentro de Quickshell, modules/ii/omarchyPolkit);
+        #     polkit sólo admite uno por sesión, así que hyprpolkitagent se para antes de reiniciar
+        #     Quickshell y vuelve en los otros estilos
+        try:
+            if theme_name == "retro":
+                subprocess.run(["pkill", "-x", "hyprpolkitagent"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            elif subprocess.run(["pidof", "hyprpolkitagent"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
+                agent = shutil.which("hyprpolkitagent") or ("/usr/libexec/hyprpolkitagent" if os.access("/usr/libexec/hyprpolkitagent", os.X_OK) else None)
+                if agent:
+                    subprocess.Popen([agent], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True,
+                                     preexec_fn=lambda: signal.pthread_sigmask(signal.SIG_SETMASK, []))
+        except Exception:
+            pass
 
-    print(f"✓ Estilo '{theme_name}' aplicado correctamente con configuración aislada.")
+        # Reconstruir sólo los paneles: conservar el proceso, servicios y cachés del shell.
+        # Instancias antiguas sin este IPC tienen una única recarga de compatibilidad.
+        refreshed = not restart_shell and subprocess.run(
+            ["quickshell", "-c", "ii", "ipc", "call", "bwmSkin", "reload"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=4,
+        ).returncode == 0
+        if not refreshed:
+            instances = subprocess.run(["quickshell", "-c", "ii", "list", "-j"],
+                                       capture_output=True, text=True, timeout=3)
+            for instance in json.loads(instances.stdout or "[]"):
+                pid = instance.get("pid")
+                if pid:
+                    os.kill(pid, signal.SIGTERM)
+            for _ in range(40):
+                if not any(Path(f"/proc/{i['pid']}").exists() for i in json.loads(instances.stdout or "[]")):
+                    break
+                time.sleep(0.05)
+            else:
+                raise RuntimeError("El shell anterior sigue activo; no se inicia una segunda instancia")
+            env = os.environ.copy()
+            env.pop("BWM_SKIN_SWITCH", None)
+            subprocess.Popen(["quickshell", "-n", "-c", "ii"], env=env,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True,
+                             preexec_fn=lambda: signal.pthread_sigmask(signal.SIG_SETMASK, []))
+
+        # Una sola restauración, después de la geometría; los hooks no reinician apps ni restauran focos antiguos.
+        bwm_windows.restore_focus(focus)
+
+        print(f"✓ Estilo '{theme_name}' aplicado correctamente con configuración aislada.")
 
 def main():
     parser = argparse.ArgumentParser(description="Gestor de temas de BWM")
@@ -1028,6 +1054,8 @@ def main():
 
     set_parser = subparsers.add_parser("set", help="Activar un estilo")
     set_parser.add_argument("theme", choices=list(THEMES.keys()), help="Nombre del estilo")
+    set_parser.add_argument("--restart-shell", action="store_true",
+                            help="Reiniciar sólo el shell (mantenimiento de módulos QML)")
 
     col_parser = subparsers.add_parser("apply-wallpaper-colors", help="Aplicar colores vivos a partir del wallpaper (Retro)")
     col_parser.add_argument("wallpaper", help="Ruta al wallpaper")
@@ -1055,7 +1083,7 @@ def main():
             nxt = "default"
         apply_theme(nxt)
     elif args.action == "set":
-        apply_theme(args.theme)
+        apply_theme(args.theme, restart_shell=args.restart_shell)
     elif args.action == "apply-wallpaper-colors":
         apply_retro_wallpaper_colors(args.wallpaper)
     elif args.action == "apply-plasma-colors":

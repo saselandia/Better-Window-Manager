@@ -21,6 +21,7 @@
 #include <cmath>
 #include <algorithm>
 #include <optional>
+#include <cstdlib>
 
 // In-memory store of pre-snap floating window sizes
 #define g_preSnapSizes g_plasmaPreSnapSizes
@@ -152,9 +153,11 @@ inline std::optional<SSnapTarget> getSnapTarget(const Vector2D& mousePos) {
     if (!pMonitor)
         return std::nullopt;
 
-    const int EDGE_THRESHOLD    = 40;
-    const int CORNER_THRESHOLD  = 150;
-    const int BOTTOM_BAR_HEIGHT = 44;
+    // Unidades lógicas, también con escala fraccionaria. El panel puede cambiar de lado/tamaño.
+    const int EDGE_THRESHOLD   = 16;
+    const int CORNER_THRESHOLD = 64;
+    const auto usable = pMonitor->m_reservedArea.apply(CBox{pMonitor->m_position, pMonitor->m_size});
+    const double bottomReserved = pMonitor->m_reservedArea.bottom();
 
     float relX = mousePos.x - pMonitor->m_position.x;
     float relY = mousePos.y - pMonitor->m_position.y;
@@ -162,17 +165,17 @@ inline std::optional<SSnapTarget> getSnapTarget(const Vector2D& mousePos) {
     float monH = pMonitor->m_size.y;
 
     bool atTop    = (relY <= EDGE_THRESHOLD);
-    bool atBottom = (relY >= monH - BOTTOM_BAR_HEIGHT - EDGE_THRESHOLD);
+    bool atBottom = (relY >= monH - bottomReserved - EDGE_THRESHOLD);
     bool atLeft   = (relX <= EDGE_THRESHOLD);
     bool atRight  = (relX >= monW - EDGE_THRESHOLD);
 
     if (!atTop && !atBottom && !atLeft && !atRight)
         return std::nullopt;
 
-    double usableX = pMonitor->m_position.x;
-    double usableY = pMonitor->m_position.y;
-    double usableW = monW;
-    double usableH = monH - BOTTOM_BAR_HEIGHT;
+    double usableX = usable.x;
+    double usableY = usable.y;
+    double usableW = usable.w;
+    double usableH = usable.h;
 
     double halfW = std::floor(usableW / 2.0);
     double halfH = std::floor(usableH / 2.0);
@@ -205,7 +208,7 @@ inline std::optional<SSnapTarget> getSnapTarget(const Vector2D& mousePos) {
             box = CBox{usableX, usableY + halfH, usableW, remH};
         }
     } else if (atLeft) {
-        if (relY >= monH - BOTTOM_BAR_HEIGHT - CORNER_THRESHOLD) {
+        if (relY >= monH - bottomReserved - CORNER_THRESHOLD) {
             dir = "bottom-left";
             box = CBox{usableX, usableY + halfH, halfW, remH};
         } else if (relY <= CORNER_THRESHOLD) {
@@ -216,7 +219,7 @@ inline std::optional<SSnapTarget> getSnapTarget(const Vector2D& mousePos) {
             box = CBox{usableX, usableY, halfW, usableH};
         }
     } else if (atRight) {
-        if (relY >= monH - BOTTOM_BAR_HEIGHT - CORNER_THRESHOLD) {
+        if (relY >= monH - bottomReserved - CORNER_THRESHOLD) {
             dir = "bottom-right";
             box = CBox{usableX + halfW, usableY + halfH, remW, remH};
         } else if (relY <= CORNER_THRESHOLD) {
@@ -293,7 +296,24 @@ inline void checkAndTriggerEdgeSnap(PHLWINDOW pWindow, const Vector2D& mousePos)
     if (target.has_value() && !target->direction.empty()) {
         recordPreSnapSize(pWindow);
         std::string addr = std::format("0x{:x}", (uintptr_t)pWindow.get());
-        std::string cmd  = std::format("/home/sasel/.config/hypr/scripts/quick-tile.py {} {}", target->direction, addr);
+        // La ventana puede pertenecer ya al monitor vecino por su centro. El destino es el
+        // monitor de la previsualización, no el que Python encuentre unos milisegundos después.
+        auto quote = [](const std::string& text) {
+            std::string out = "'";
+            for (char c : text)
+                out += c == '\'' ? "'\\''" : std::string(1, c);
+            return out + "'";
+        };
+        const char* home = std::getenv("HOME");
+        if (!home) {
+            hideSnapPreview();
+            return;
+        }
+        std::string cmd = quote(std::string(home) + "/.config/hypr/scripts/quick-tile.py") + " "
+            + target->direction + " " + addr + " --edge --monitor "
+            + quote("desc:" + target->monitor->m_description);
+        if (pWindow->getPID() > 0)
+            cmd += " --pid " + std::to_string(pWindow->getPID());
         Config::Supplementary::executor()->spawn(cmd);
     }
     hideSnapPreview();

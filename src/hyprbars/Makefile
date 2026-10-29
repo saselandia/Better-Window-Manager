@@ -6,12 +6,13 @@ INCLUDES = `pkg-config --cflags pixman-1 libdrm hyprland libinput libudev waylan
 LIBS = -lxcb
 
 SRC = main.cpp barDeco.cpp BarPassElement.cpp CSDDetect.cpp SquareTop.cpp
+HEADERS = $(wildcard *.hpp)
 TARGET = hyprbars.so
 
 all: $(TARGET)
 
-$(TARGET): $(SRC)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(EXTRA_FLAGS) $(INCLUDES) $^ $> -o $@ $(LIBS)
+$(TARGET): $(SRC) $(HEADERS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(EXTRA_FLAGS) $(INCLUDES) $(SRC) -o $@ $(LIBS)
 
 # Despliegue atómico: NUNCA usar `cp` sobre un .so cargado por Hyprland.
 # `cp` trunca el inodo que Hyprland tiene mapeado en memoria -> SIGBUS y crash.

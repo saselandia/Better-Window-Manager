@@ -30,6 +30,7 @@ import shutil
 import subprocess
 import sys
 import tomllib
+import bwm_transition
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bwm_omarchy_apps  # noqa: E402
@@ -980,10 +981,10 @@ def apply_retro_palette_colors(colors: dict, wallpaper: str = ""):
     write_retro_sync_files(colors)
 
     # Firefox only reads its chrome CSS at startup: restart it (session and windows kept)
-    if "firefox" in changed:
+    if "firefox" in changed and not bwm_transition.switching():
         _detached(f"{sys.executable} {Path(__file__).resolve()} restart-firefox")
 
-    if "gtk4" in changed:
+    if "gtk4" in changed and not bwm_transition.switching():
         for app in GTK_RELAUNCH_APPS:
             if _running(app):
                 subprocess.run(["pkill", "-f", f"(^|/){app}( |$)"], check=False)
@@ -991,17 +992,14 @@ def apply_retro_palette_colors(colors: dict, wallpaper: str = ""):
 
     run_hooks("retro")
 
-    try:
-        subprocess.run(["hyprctl", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
-    try:
-        subprocess.run(["quickshell", "-c", "ii", "ipc", "call", "theme", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        subprocess.run(["quickshell", "-c", "ii", "ipc", "call", "retro", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
-
-    _detached("python3 ~/.config/hypr/scripts/bwm_boot.py render")
+    if not bwm_transition.switching():
+        try:
+            subprocess.run(["hyprctl", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(["quickshell", "-c", "ii", "ipc", "call", "theme", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(["quickshell", "-c", "ii", "ipc", "call", "retro", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+        _detached("python3 ~/.config/hypr/scripts/bwm_boot.py render")
     return colors
 
 def _theme_wallpaper(theme_dir: Path) -> str:
@@ -1213,6 +1211,8 @@ def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None, qu
     import signal
     import time
 
+    if bwm_transition.switching():
+        return False  # un cambio cosmético no cierra apps ni restaura focos antiguos
     windows = [c for c in _hypr_clients() if match(c)]
     if not windows:
         return False
@@ -1287,6 +1287,8 @@ def restart_steam():
     new colours show, unless a game is running (it would be closed). `steam -shutdown` is its clean
     exit; the main window comes back in place, or Steam starts in the tray if it was there."""
     import time
+    if bwm_transition.switching():
+        return
     if not _alive(STEAM_MAIN):
         return
     clients = _hypr_clients()
@@ -1335,6 +1337,8 @@ def restart_firefox(force: bool = False):
     import fcntl
     import time
 
+    if bwm_transition.switching():
+        return
     last, stable = None, 0
     for _ in range(40):
         try:

@@ -1,0 +1,4 @@
+module qs.modules.ii.bar.omarchy
+singleton OmarchyPlugins 1.0 OmarchyPlugins.qml
+OmarchyIndicators 1.0 OmarchyIndicators.qml
+OmarchyPluginSlot 1.0 OmarchyPluginSlot.qml

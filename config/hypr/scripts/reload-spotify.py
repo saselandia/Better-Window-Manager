@@ -56,6 +56,9 @@ def restore(window: dict, ws: dict):
 
 
 def main():
+    import bwm_transition
+    if bwm_transition.switching():
+        return  # Spicetify puede cerrar Spotify; conservar reproducción durante el cambio de skin.
     if not running():
         # Not running: just regenerate the theme in the background
         subprocess.Popen(["sh", "-c", "spicetify -n apply >/dev/null 2>&1 || true"],

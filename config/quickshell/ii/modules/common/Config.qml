@@ -13,6 +13,11 @@ Singleton {
     property int readWriteDelay: 50 // milliseconds
     property bool blockWrites: false
 
+    function reload() {
+        fileReloadTimer.stop()
+        configFileView.reload()
+    }
+
     function setNestedValue(nestedKey, value) {
         let keys = nestedKey.split(".");
         let obj = root.options;

@@ -45,7 +45,8 @@ def main():
     with (STATE / 'setup.lock').open('w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         configure()
-        if args.setup_only:
+        import bwm_transition
+        if args.setup_only or bwm_transition.switching():
             return
         # One initial restart attaches the bridge. Subsequent changes are read live.
         from bwm_omarchy import _hypr_clients, restart_app

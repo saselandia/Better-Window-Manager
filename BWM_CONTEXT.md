@@ -54,7 +54,7 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 ## 2. 🧭 Estado actual (resumen por áreas)
 
 ### 2.1 Estilos y temas
-* Gestor: `config/hypr/scripts/bwm-theme-manager.py get|set|toggle|list <estilo>`. Al cambiar: perfil de Quickshell por estilo (`illogical-impulse/config-<estilo>.json`, secciones propias en `THEME_SPECIFIC_SECTIONS`), colores de Hyprland, plugins (hyprbars sólo en Plasma), iconos, GTK/Qt, apps, reinicio limpio de Quickshell (candado `/tmp/bwm-theme-manager.lock`), swaync fuera de Retro, `hyprpolkitagent` fuera de Retro, Firefox reiniciado si cambió su CSS.
+* Gestor: `config/hypr/scripts/bwm-theme-manager.py get|set|toggle|list <estilo>`. Al cambiar: perfil de Quickshell por estilo (`illogical-impulse/config-<estilo>.json`, secciones propias en `THEME_SPECIFIC_SECTIONS`), colores de Hyprland, plugins (hyprbars sólo en Plasma), iconos, GTK/Qt, apps, recarga de paneles por IPC `bwmSkin.reload` conservando Quickshell (candado `/tmp/bwm-theme-manager.lock`), swaync fuera de Retro, `hyprpolkitagent` fuera de Retro, las apps permanecen abiertas durante el cambio de skin (§3.57).
 * Selector de estilos: Alt+T (Retro: carrusel 3D con capturas de lo que imita cada estilo, `skin-switcher.sh`; Default: rofi; Plasma: «Estilo global»). Temas de Retro: Alt+R (carrusel), menú → Estilo → Temas Retro, Ajustes → Temas.
 * **Ajustes → Temas / Plugins** (dos páginas, en ambas apps): Temas muestra galería con miniaturas/paletas/tema elegido; Plugins muestra tarjetas, activación, posición y filtros Todos/Activados/Desactivados. Cada página tiene Instalados/Descubrir, búsqueda remota, Mostrar más, enlaces y Git/URL. `ThemesConfig.qml`, `PluginsConfig.qml` y módulo `addons/` con `qmldir`; backend `bwm-addons.py`, detalle en `docs/OMARCHY_ADDONS.md`.
 * Temas de comunidad en `~/.local/share/bwm/omarchy-themes` (`XDG_DATA_HOME`); también se reconoce `~/.config/omarchy/themes`, que aquí enlaza al repo y no se usa como destino de instalación. `theme_directory()` y `list_omarchy_themes()` comparten precedencia, igual que la CLI y el carrusel.
@@ -91,6 +91,13 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 ### 2.4 Plasma (Quickshell + hyprbars)
 Panel flotante/pegado, Kickoff, applets Bluetooth/red/audio/calendario/notificaciones, menú de tareas con miniaturas y «peek», Alt+Tab de KWin, OSD Breeze, «Mostrar escritorio», snapping con Ctrl+flechas y cuartos de pantalla, barras de título Breeze sólo donde la app no trae las suyas (`hyprctl hyprbars-csd`).
 
+* **Snapping (§3.58):** `quick-tile.py` recibe monitor de previsualización (`--monitor desc:…`), `--edge`
+  y PID. Con el plugin antiguo (sólo dirección+address) usa el borde bajo el cursor para evitar elegir
+  el monitor al que ya pasó el centro de la ventana. Transferir workspace antes de mover/redimensionar.
+  Escala/rotación y reserved reales; la barra hyprbars forma parte del marco. No alternar/restaurar al
+  repetir un arrastre al mismo borde. Python activo; nuevo plugin instalado atómicamente, pendiente de
+  volver a iniciar sesión: preview 12 % opacidad, borde de 1 px al 65 %, radio 2 px, inset 1 px.
+
 ### 2.5 Ventanas, juegos y sistema
 * `window-guard.py watch` (autostart): primary de XWayland = monitor del workspace 1, ventanas fuera de pantalla de vuelta, juegos sin bordes a pantalla completa. Regla `games-main-monitor` (HP, foco al activarse, inhibir reposo).
 * `focus_on_activate = true`, `xwayland.force_zero_scaling = true`, `on_focus_under_fullscreen` por defecto (2).
@@ -101,6 +108,13 @@ Panel flotante/pegado, Kickoff, applets Bluetooth/red/audio/calendario/notificac
 * Luz nocturna (panel de pantallas de Retro, menú, indicador junto al reloj): un solo estado `~/.local/state/bwm/nightlight.json` vía `nightlight.py`/`omarchy-toggle-nightlight [--on|--off|<K>]`. Usa hyprsunset si está instalado (como Omarchy; no tiñe capturas) y si no un `screen_shader` que `modules/nightlight.lua` conserva tras `hyprctl reload`; `autostart.sh` lo reaplica (`--apply`). Véase §3.49.
 * Regla `electron-render-unfocused`: incluye `codex`, `codex-desktop`, `chatgpt` y `ChatGPT`. Regla persistente de virt-manager: flotante (`float = true`), según el estado guardado actual.
 
+* **Cambio de skin sin interrumpir apps (§3.57):** una sola generación de paleta/recarga de Hyprland;
+  `bwm_transition.py` propaga política a hooks separados. No reinicia Firefox, Steam, Spotify, Nautilus,
+  Stremio ni Vesktop durante el cambio. Recarga paneles con `bwmSkin.reload` sin matar Quickshell;
+  `set <skin> --restart-shell` conserva el reinicio de mantenimiento. La geometría se captura antes de
+  cambiar reglas, flotación explícita enable/disable; fullscreen/minimizadas/especiales/pinned no se recolocan.
+  Los colores que no recargan en vivo esperan al siguiente inicio/aplicador (Spotify: Spicetify).
+
 ### 2.6 Pendiente / ideas
 * De Omarchy sin portar: menú Estilo completo (barra opaca/transparente, reloj 12/24 h, esquinas, huecos, animaciones, branding), layouts de workspace (dwindle/scrolling/flotante, Super+L), atajos de ventanas (Super+Ctrl+F, Super+Alt+F, Super+O, scratchpad Super+S, consola Quake Super+`, copiar/pegar universal), Install/Remove adaptado a emerge/flatpak, web apps y TUIs, compartir (LocalSend), Setup (DNS, idioma, teclado, seguridad), interruptores rápidos y actualizaciones de firmware/hora.
 * Qt sin recarga en vivo (qt6ct no repinta apps abiertas); Chromium sin tema (necesita política root).
@@ -108,7 +122,7 @@ Panel flotante/pegado, Kickoff, applets Bluetooth/red/audio/calendario/notificac
 * El actualizador Retro no sincroniza los repositorios ni gestiona noticias, `dispatch-conf` o `@preserved-rebuild`; los perfiles Default/Plasma aún conservan un `apps.update` heredado con `pacman`. Adaptar ese acceso a Gentoo.
 * Compatibilidad con temas del original (finalidad del proyecto): Plasma aún sólo tiene Breeze Dark; falta aplicar esquemas de color (`.colors`) y temas globales de la KDE Store. Default: plantillas de matugen de terceros sin probar.
 * Skins de la comunidad: el comprobador ya lee `~/.local/share/bwm/skins/*.json`, pero falta definir paquete, instalación y cómo cargan su QML/Lua sin tocar el repo.
-* `hyprbars-plasma.so` porteado y compilado para Hyprland 0.56.2 (§3.52), pero **sin cargar todavía**: se carga en el próximo inicio de sesión en Plasma. Comprobar ahí barras, botones, snapping y arrastre.
+* `hyprbars-plasma.so` porteado y compilado para Hyprland 0.56.2, cargado y probado en sesión real (§3.52). Pendientes pruebas de botones, snapping y arrastre con ratón.
 * Al volver de Plasma, los workspaces con 3+ ventanas pueden cambiar el reparto del mosaico (§3.53).
 * Gestor de archivos por skin (posible Dolphin en Plasma); el resto de apps predeterminadas sigue común. Sin decidir.
 * `xdg-desktop-portal-gtk` no está instalado (FileChooser=gtk): `sudo emerge --ask sys-apps/xdg-desktop-portal-gtk` (lo ejecuta el usuario).
@@ -141,6 +155,15 @@ flatpak update
 * Navegación: Plugins y Temas separados en ambas apps, Cursor conservado y Advanced eliminado (también su QML). Estilo conserva fuentes, glass, salvapantallas y arranque.
 * About: tarjeta Distro con nombre/versión/logo detectados de os-release y enlace de inicio; tarjeta WM con BWM, logo del arranque y accesos a GitLab/GitHub. Documentation abre README.es.md en GitLab; Issues abre los de GitHub; Star tiene un GIF local de 32 fotogramas y abre GitHub. Sin botones de ayuda/documentación/bugs/privacidad de la distro ni Donate. Discussions omitido: GitHub API `has_discussions=false`, comprobado el 2026-10-27.
 * `SystemInfoData.js` parsea comillas simples/dobles y valores sin comillas como datos, sin ejecutar shell. `SystemInfo.qml` aplica al cargar FileView, vigila cambios y recurre a `/usr/lib/os-release` si falta `/etc/os-release`. El lector anterior no reconocía el formato con comillas simples de Gentoo. Logo simbólico con fallback incluido y ColorOverlay para que sea visible sobre fondos oscuros.
+
+### Licencias y avisos de terceros
+* `THIRD_PARTY_NOTICES.md` identifica componentes, fuentes y cuestiones pendientes; textos en `licenses/`,
+  fuentes en `assets/fonts/licenses/`, Bibata en cada carpeta, GPL del shell en `config/quickshell/ii/COPYING`
+  y BSD de hyprbars en `src/hyprbars/LICENSE`. El instalador copia avisos a `~/.local/share/doc/bwm`
+  (o `$XDG_DATA_HOME/doc/bwm`) y los de fuentes a `~/.local/share/fonts/bwm-licenses`.
+* No anunciar todo el repo como MIT: shell derivado de end-4 GPL-3.0, hyprbars BSD-3-Clause,
+  Omarchy MIT, Pywalfox MPL-2.0, fuentes OFL y otros. La procedencia exacta de imágenes, iconos,
+  fuentes correspondientes a algunos binarios y licencia de código independiente siguen pendientes.
 
 ### 2.9 Instalador, requisitos y bienvenida
 * **Requisitos declarados** en `config/hypr/skins/`: `requirements.json` (núcleo `requires`/`recommends` + catálogo: etiqueta, para qué, comprobación y paquete por familia de distro, con `guru:`/`hyproverlay:` en Gentoo, `aur:` en Arch, `copr:` en Fedora) y un manifiesto por skin (`default.json`, `retro.json`, `plasma.json`: imita, descripción, `defaultTheme` dinámico/estático, temas, compatibilidad, captura, requisitos). Tabla generada en `docs/REQUIREMENTS.md`; qué es una skin y cómo se añade en `docs/SKINS.md` (la «wiki»).
@@ -633,6 +656,77 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 
 ---
 
+### 56. Auditoría y correcciones iniciales de licencias (2026-10-28)
+* El usuario pidió revisar licencias y aplicar correcciones. Los README ya no afirman que todo BWM sea MIT.
+  Se incorporaron avisos y textos originales GPL, BSD, MIT, MPL, LGPL y OFL para componentes identificados,
+  inventario `THIRD_PARTY_NOTICES.md` y copia de avisos para recursos instalados. No se eligió una licencia
+  para el código propio no identificado ni se afirmó que las capturas, fondos o binarios sean conformes.
+* Pendiente: procedencia y permisos de recursos gráficos, reproducción de fuentes correspondientes de los
+  binarios y alcance preciso de los derivados. Consulte el inventario y `todo.md` antes de una release.
+
+---
+
+### 57. Cambios de skin ligeros, sin saltos de workspace ni reinicios de apps (2026-10-28)
+* Petición: Default→Plasma provocaba múltiples cambios de workspace y desplazaba el vídeo.
+* Causas observadas en el código: paleta de Plasma/Retro aplicada dos veces (set-wallpaper + gestor),
+  recargas repetidas de Hyprland y hooks que cerraban Firefox, Steam, Spotify y Nautilus. Cada reinicio
+  separado restauraba posteriormente su propio snapshot de foco. La geometría se consultaba después de
+  modificar reglas, y `window.float` alternaba el estado en lugar de fijarlo.
+* Hecho: política común `bwm_transition.py` heredada por hooks; mantiene apps y reproducción. Una sola
+  generación y recarga del compositor. IPC `bwmSkin.reload` reconstruye sólo paneles, conservando servicios,
+  PID y cachés; fallback de compatibilidad reinicia sólo la instancia ii, sin `pkill -9` global. Flag
+  `--restart-shell` para mantenimiento, sin heredar BWM_SKIN_SWITCH. Config activa escrita atómicamente y una
+  sola vez aunque las rutas de repo y ~/.config coincidan. Captura previa de clientes, flotación idempotente,
+  exclusión de fullscreen/pinned/minimizadas/especiales, una restauración final sin volver a enfocar monitores
+  que no cambiaron y validando PID. No se carga un plugin que falta en caliente.
+* QML: `Config.reload`, `bwmSkin` en shell, Breeze reactivo a `Appearance.isPlasma`, qmldir explícito de
+  `bar/omarchy` para corregir un fallo de resolución al recargar módulos.
+* Verificado en la sesión real con socket2 de Hyprland y Stremio reproduciendo: Plasma→Default (1,14 s)
+  →Plasma (0,68 s), y Plasma→Retro (0,88 s)→Default (1,18 s)→Plasma (0,74 s). Cero eventos de workspace o
+  monitor enfocado en ambas secuencias; mismos PID de apps y shell, workspaces visibles e individuales
+  conservados, Stremio Playing. Conteo flotantes 1 en mosaico y 12 en Plasma; sin nuevos errores QML en la
+  segunda secuencia y configerrors vacío. Se dejó Plasma, la skin inicial.
+* Cuatro regresiones automatizadas en `tests/test_skin_switch.py`: hooks no reinician durante transición,
+  sesión sin cambios no vuelve a enfocar monitores, dirección reutilizada no roba foco y fullscreen/espacios
+  ocultos no se recolocan; además py_compile, bash -n, TOML y diff --check. Fallback de shell antiguo y
+  --restart-shell no ejercitados en sesión real.
+* Límite deliberado: apps sin recarga de estilos en vivo no reciben el marco completo instantáneamente;
+  los archivos quedan preparados para su próximo inicio, y Spotify puede necesitar `spicetify apply`.
+  No se ha afirmado una comprobación visual de cada panel ni de todos los servicios al cambiar de dueño.
+
+---
+
+### 58. Snapping al monitor correcto y previsualización más discreta de Plasma (2026-10-28)
+* Petición: soltar una ventana en la derecha del monitor principal la llevaba a la derecha del monitor
+  vecino; vista previa demasiado redondeada y opaca.
+* Causas: el plugin calcula el monitor del puntero, pero Python volvía a elegir el monitor de la ventana
+  (su centro puede cruzar la unión antes que el cursor). Se ignoraba escala/rotación y se restaban 44 px
+  incluso sin panel abajo. También se detectó que asignar workspace después de fijar el rectángulo lo
+  desplaza de nuevo al transferir entre monitores.
+* Se corrigió además la implementación anterior de flotación (§3.57): `window.float` exige
+  `enable/disable`; `set/unset` desconocidos se interpretaban como toggle. En ventanas de prueba, repetir
+  snap alternaba mosaico y tamaño de pantalla completa. Corregido en quick-tile, bwm_windows y gestor.
+* Hecho: `quick-tile.py --monitor desc:… --edge --pid …`; modo arrastre sin ciclos/restauración; compatibilidad
+  con plugin cargado antiguo eligiendo borde bajo el cursor; no actuar sobre ventana activa si desaparece
+  la explícita; validar PID si se suministra. Geometría lógica, reserved real, barra de título incluida,
+  workspace primero y dimensiones/posición después. Teclado mantiene sus ciclos y el monitor de la ventana.
+* C++: `SnapHelper.hpp` pasa monitor de previsualización, modo edge y PID, usa HOME sin ruta de usuario fija,
+  área reservada real y umbral de borde 16 px/corner 64 px. `BarPassElement.cpp`: relleno 0,12 (antes 0,35),
+  borde 1 px/0,65 (antes 3 px/0,95), radio 2 px (antes 8), inset 1 px (antes 6). Aproximación propia de
+  Breeze; se consultó el outline de KWin como referencia, no se copió su QML.
+* Makefile depende también de headers y compila sólo fuentes .cpp. Compilado para Hyprland 0.56.2 e
+  instalado sólo mediante make install (rename atómico). Aviso de compilación preexistente por
+  addConfigKeyword deprecado; sin errores. NO unload/load en caliente: el preview nuevo requiere otra sesión.
+* Verificado: diez regresiones en tests/test_quick_tile.py y las cuatro de cambio de skin; py_compile y
+  diff --check. Ocho snaps reales (right dos veces, top-right, bottom-left) en dos terminales invisibles
+  de prueba en workspaces temporales: geometría exacta, flotación true, monitor/workspace correctos y
+  workspaces visibles conservados. Caso cruzado: ventana real de prueba en LG + lectura del puntero
+  simulada en (1919,1500) -> HP, contenido (960,1110,960,1006), sin cambio de workspaces visibles.
+* Límite: sin arrastre manual de ratón ni revisión visual del plugin nuevo cargado. El plugin anterior sigue
+  cargado hasta reiniciar sesión; el script compatible ya corrige el destino con ese plugin.
+
+---
+
 ## 4. 📂 Estructura del repositorio
 
 ```
@@ -753,7 +847,7 @@ concreta, busca su sección en §3.
 ```bash
 hyprctl reload; hyprctl configerrors                       # Hyprland
 python3 ~/.config/hypr/scripts/bwm-theme-manager.py get    # estilo activo
-python3 ~/.config/hypr/scripts/bwm-theme-manager.py set retro   # reinicia Quickshell (~10 s)
+python3 ~/.config/hypr/scripts/bwm-theme-manager.py set retro   # cambia de skin sin reiniciar apps
 qs -c ii log | tail -50                                    # log de la instancia real
 qs -c ii ipc show                                          # objetivos IPC (un panel que no carga desaparece)
 omarchy-theme-list; omarchy-theme-set tokyo-night; omarchy-theme-current   # temas de Retro
@@ -766,7 +860,7 @@ git status; git log --oneline -5; git push origin main
 
 **Puntos críticos:**
 * Plugins C++: `-fno-gnu-unique` y sólo `make install`; nunca `cp` sobre un `.so` cargado ni `hyprctl plugin unload/load` (SIGBUS, safe mode).
-* Quickshell una sola vez (`qs -c ii`); reinicios con `bwm-theme-manager.py set <estilo>`. Los widgets cargados por `Loader` desde `bar/omarchy/*`, overlays y archivos nuevos de un módulo no se recargan en caliente: reinicia.
+* Quickshell una sola vez (`qs -c ii`); reinicios de mantenimiento con `bwm-theme-manager.py set <estilo> --restart-shell`. Los widgets cargados por `Loader` desde `bar/omarchy/*`, overlays y archivos nuevos de un módulo no se recargan en caliente: reinicia.
 * Hyprland 0.55 en Lua: `hyprctl dispatch 'hl.dsp.…'`; para inyectar atajos `hyprctl eval 'return hl.dispatch(hl.dsp.send_shortcut({…}))'`.
 * Archivos que otras apps vigilan por inodo (Vesktop) se escriben en el sitio; los que se vigilan por carpeta (qt6ct) o se reemplazan (resto) con `os.replace`.
 * Polkit y `org.freedesktop.Notifications` admiten un solo dueño: en Retro los tiene Quickshell (Omarchy), fuera `hyprpolkitagent`/swaync o BWM.

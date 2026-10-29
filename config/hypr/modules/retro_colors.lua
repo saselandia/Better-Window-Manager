@@ -1,9 +1,9 @@
 -- Generado automáticamente por bwm_omarchy.py
 local retro_colors = {
-    accent = "rgba(7d82d9ee)",
-    secondary = "rgba(7d82d9ee)",
-    bg = "rgba(060B1Eee)",
-    border = "rgba(7d82d9ee)",
+    accent = "rgba(7daea3ee)",
+    secondary = "rgba(7daea3ee)",
+    bg = "rgba(282828ee)",
+    border = "rgba(7daea3ee)",
     border_inactive = "rgba(101520aa)",
 }
 return retro_colors

@@ -19,6 +19,27 @@ import Quickshell.Hyprland
 
 ShellRoot {
     id: root
+    property bool panelsEnabled: true
+
+    // Cambiar de skin conserva el proceso, los servicios y sus cachés. Sólo se recrean paneles.
+    Timer {
+        id: skinReloadTimer
+        interval: 120
+        onTriggered: {
+            MaterialThemeLoader.reapplyTheme()
+            OmarchyPlugins.reload()
+            root.panelsEnabled = true
+        }
+    }
+
+    IpcHandler {
+        target: "bwmSkin"
+        function reload(): void {
+            root.panelsEnabled = false
+            Config.reload()
+            skinReloadTimer.restart()
+        }
+    }
 
     // Stuff for every panel family
     ReloadPopup {}
@@ -46,7 +67,7 @@ ShellRoot {
     component PanelFamilyLoader: LazyLoader {
         required property string identifier
         property bool extraCondition: true
-        active: Config.ready && Config.options.panelFamily === identifier && extraCondition
+        active: root.panelsEnabled && Config.ready && Config.options.panelFamily === identifier && extraCondition
     }
     
     PanelFamilyLoader {

@@ -155,9 +155,18 @@ FONTS_DIR="$HOME/.local/share/fonts"
 mkdir -p "$FONTS_DIR"
 if [ -d "$ASSETS_DIR/fonts" ]; then
     cp -u "$ASSETS_DIR/fonts/"*.ttf "$FONTS_DIR/" 2>/dev/null || true
+    # Conservar los avisos de las fuentes también en la instalación del usuario.
+    mkdir -p "$FONTS_DIR/bwm-licenses"
+    cp "$ASSETS_DIR/fonts/licenses/"*.txt "$FONTS_DIR/bwm-licenses/"
     fc-cache -f "$FONTS_DIR" >/dev/null 2>&1 || true
     print_success "Fuentes de BWM instaladas (Material Symbols, Google Sans Flex, JetBrainsMono Nerd Font)."
 fi
+
+# Avisos y licencias de los componentes, incluidos los binarios instalados por BWM.
+DOC_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/doc/bwm"
+mkdir -p "$DOC_DIR/licenses"
+cp "$SCRIPT_DIR/THIRD_PARTY_NOTICES.md" "$DOC_DIR/"
+cp "$SCRIPT_DIR/licenses/"*.txt "$DOC_DIR/licenses/"
 
 if [ -d "$ASSETS_DIR/wallpapers" ]; then
     cp -n "$ASSETS_DIR/wallpapers/"* "$HOME/Pictures/Wallpapers/" 2>/dev/null || true

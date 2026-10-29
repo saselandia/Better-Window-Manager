@@ -65,7 +65,7 @@ except Exception:
 fi
 
 # 2. Si Nautilus está en ejecución con una ventana abierta, recargar de forma transparente
-if pgrep -x "nautilus" > /dev/null 2>&1; then
+if [[ "${BWM_SKIN_SWITCH:-0}" != "1" ]] && pgrep -x "nautilus" > /dev/null 2>&1; then
     nautilus -q > /dev/null 2>&1 || true
     sleep 0.12
     hyprctl dispatch 'hl.dsp.exec_cmd("nautilus")' > /dev/null 2>&1 || true

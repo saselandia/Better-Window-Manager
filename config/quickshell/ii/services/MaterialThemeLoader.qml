@@ -47,7 +47,9 @@ Singleton {
     }
 
     function reapplyTheme() {
-        if (Appearance.isRetro) {
+        if (root.forceBreeze || Appearance.isPlasma) {
+            applyBreezeColors()
+        } else if (Appearance.isRetro) {
             retroThemeFileView.reload()
             delayedRetroFileRead.start()
         } else {
@@ -115,7 +117,7 @@ Singleton {
     }
 
     function applyColors(fileContent) {
-        if (root.forceBreeze) {
+        if (root.forceBreeze || Appearance.isPlasma) {
             applyBreezeColors();
             return;
         }
@@ -143,6 +145,9 @@ Singleton {
     Connections {
         target: Appearance
         function onIsRetroChanged() {
+            root.reapplyTheme();
+        }
+        function onIsPlasmaChanged() {
             root.reapplyTheme();
         }
     }

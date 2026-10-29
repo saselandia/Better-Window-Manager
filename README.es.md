@@ -11,7 +11,7 @@ Default (end-4 / illogical-impulse), Retro (Omarchy) y KDE Plasma sobre Hyprland
 
 [![GitLab](https://img.shields.io/badge/GitLab-bwm-orange?logo=gitlab)](https://gitlab.com/saselandia/bwm)
 [![GitHub](https://img.shields.io/badge/GitHub-Better--Window--Manager-blue?logo=github)](https://github.com/saselandia/Better-Window-Manager)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Licenses: multiple](https://img.shields.io/badge/licenses-multiple-blue.svg)](THIRD_PARTY_NOTICES.md)
 [![Hyprland](https://img.shields.io/badge/Hyprland-Wayland-brightgreen)](https://hyprland.org)
 [![Quickshell](https://img.shields.io/badge/Quickshell-Qt%206%20%2F%20QML-purple)](https://quickshell.outfoxxed.me)
 
@@ -57,7 +57,7 @@ Es la finalidad del proyecto, así que la medimos. Son estimaciones del porcenta
 
 Uno de los proyectos más ambiciosos de BWM es **portar a Hyprland escritorios que no corren sobre él**, empezando por KDE Plasma (en curso: panel, Kickoff, applets, Alt+Tab de KWin, OSD y barras de título Breeze ya funcionan sobre Hyprland), para tenerlo todo con un solo compositor. Otros escritorios y gestores de ventanas podrán seguir el mismo camino como skins nuevas.
 
-Al cambiar entre una skin en mosaico y una de ventanas apiladas, cada ventana se queda donde estaba, y las apps que se reinician para cambiar de tema vuelven a su sitio sin aparecer en el workspace que estás mirando.
+Al cambiar de skin se conservan los workspaces de cada pantalla y las aplicaciones abiertas, incluido el vídeo en reproducción. Se genera una sola paleta y se reconstruyen los paneles sin reiniciar Quickshell. Entre mosaico y ventanas apiladas se conserva la colocación; las ventanas a pantalla completa, minimizadas y especiales quedan fuera de esa recolocación. Los estilos que una app sólo lee al arrancar quedan preparados para su siguiente inicio; Spotify puede requerir aplicar Spicetify manualmente. El cambio de skin no cierra apps para forzar sus colores.
 
 Más skins: [docs/SKINS.md](docs/SKINS.md) explica qué es una skin y cómo se añade.
 
@@ -252,6 +252,12 @@ hyprctl reload
 | **`SUPER + L`** | Bloquear pantalla con Quickshell Lock |
 | **`SUPER + SHIFT + S`** / **`Print`** | Captura de pantalla por región |
 | **`ALT + A`** | Mostrar guía interactiva de atajos en pantalla (Cheatsheet) |
+
+---
+
+## 📜 Licencias
+
+BWM incluye código y recursos de terceros bajo varias licencias, entre ellas GPL-3.0, BSD-3-Clause, MIT, MPL-2.0 y OFL-1.1. El shell heredado de end-4 está sujeto a GPL-3.0; las licencias y los créditos aplicables por componente se describen en [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Algunos recursos aún requieren comprobar su procedencia antes de distribuir una release verificada.
 
 ---
 

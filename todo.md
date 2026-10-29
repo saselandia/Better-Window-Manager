@@ -33,6 +33,10 @@ las reglas para asistentes están en `AGENTS.md` y `CLAUDE.md`.
   (`config/hypr/skins/`, `docs/REQUIREMENTS.md`, §3.51). Plugin hyprbars porteado a
   Hyprland 0.56, swww/awww, Kelvin y ajustes de interfaz comunes a todas las skins (§3.52).
 
+- [x] Cambio de skin sin reiniciar apps ni Quickshell, una sola paleta y sin saltos de workspace:
+  probado con Stremio reproduciendo en Plasma→Default→Plasma y Plasma→Retro→Default→Plasma (§3.57).
+  Los estilos que necesitan reiniciar una app quedan pendientes para no interrumpir la sesión.
+
 ## Skins y compatibilidad (finalidad del proyecto)
 
 - [ ] KDE Plasma (~5 % de temas): esquemas de color `.colors`, temas globales,
@@ -70,6 +74,17 @@ las reglas para asistentes están en `AGENTS.md` y `CLAUDE.md`.
 - [ ] Setup: DNS, idioma, teclado, seguridad (huella/FIDO2) y apps de agentes.
 - [ ] Firmware, hora/zona horaria, contraseña e interruptores rápidos de bloqueo,
   salvapantallas, notificaciones y captura de cuelgues desde los menús.
+
+## Licencias y procedencia
+
+- [ ] Identificar revisión exacta de end-4 y el ámbito de cada derivado; verificar los avisos de
+  modificación y los términos del código propio de BWM con sus titulares.
+- [ ] Acreditar procedencia y licencia de fondos, capturas, iconos Breeze y fondos de temas de Omarchy;
+  sustituir o retirar de la distribución los recursos sin autorización verificable.
+- [ ] Verificar la fuente correspondiente y reproducibilidad de los cursores Bibata/Hyprcursor,
+  el XPI Pywalfox y los `.so` antiguos; revisar licencias de glifos Nerd Fonts y avisos de dependencias.
+- [ ] Auditar licencias y atribuciones de todos los archivos vendorizados, recursos y releases.
+  Ver inventario, textos incluidos y limitaciones en `THIRD_PARTY_NOTICES.md`.
 
 ## Mantenimiento de BWM
 

@@ -106,7 +106,7 @@ def place_lua(addr: str, workspace=None, box=None, make_floating=False) -> str:
         target = workspace if str(workspace).lstrip("-").isdigit() else json.dumps(str(workspace))
         lua += f"hl.dispatch(hl.dsp.window.move({{ workspace = {target}, follow = false, window = w }})) "
     if make_floating:
-        lua += "hl.dispatch(hl.dsp.window.float({ window = w })) "
+        lua += "hl.dispatch(hl.dsp.window.float({ action = 'enable', window = w })) "
     if box:
         x, y, bw, bh = box
         lua += (f"hl.dispatch(hl.dsp.window.resize({{ x = {bw}, y = {bh}, relative = false, window = w }})) "
@@ -130,7 +130,9 @@ def float_in_place(skin: str, clients: list = None):
     bars = titlebars()
     blocks = []
     for c in clients:
-        if c.get("floating") or c.get("fullscreen", 0) or not c.get("address") or not c.get("mapped", True):
+        if (c.get("floating") or c.get("fullscreen", 0) or c.get("pinned") or not c.get("address")
+                or not c.get("mapped", True) or c.get("workspace", {}).get("id", 0) <= 0
+                or c.get("workspace", {}).get("id") == 99):
             continue
         mon = next((m for m in monitors if m.get("id") == c.get("monitor")), None) \
             or monitor_for(c["at"], c["size"], monitors)
@@ -165,7 +167,8 @@ def hold_new_windows(name: str, classes: list, workspace):
     pattern = "^(" + "|".join(re.escape(c) for c in classes if c) + ")$"
     ws = str(workspace)
     subprocess.run(["hyprctl", "eval", f"hl.window_rule({{ name = {json.dumps(name)}, match = {{ class = {json.dumps(pattern)} }}, "
-                    f"workspace = {json.dumps(ws + ' silent')} }})"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    f"workspace = {json.dumps(ws + ' silent')}, no_initial_focus = true, focus_on_activate = false }})"],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def release_new_windows(name: str):
@@ -211,7 +214,7 @@ def snapshot_focus() -> dict:
         win = {}
     return {"workspaces": {m["name"]: _active_workspace_id(m) for m in monitors},
             "focused_monitor": next((m["name"] for m in monitors if m.get("focused")), None),
-            "window": win.get("address"), "playing": mpris_playing()}
+            "window": win.get("address"), "window_pid": win.get("pid"), "playing": mpris_playing()}
 
 
 def restore_focus(snap: dict):
@@ -222,12 +225,21 @@ def restore_focus(snap: dict):
     for name, ws in snap["workspaces"].items():
         mon = monitors.get(name)
         if ws and mon and _active_workspace_id(mon) != ws:
-            blocks.append(f"hl.dispatch(hl.dsp.focus({{ monitor = '{name}' }})) "
+            selector = "desc:" + mon["description"] if mon.get("description") else name
+            blocks.append(f"hl.dispatch(hl.dsp.focus({{ monitor = {json.dumps(selector)} }})) "
                           f"hl.dispatch(hl.dsp.focus({{ workspace = {ws} }}))")
-    if snap.get("focused_monitor") in monitors:
-        blocks.append(f"hl.dispatch(hl.dsp.focus({{ monitor = '{snap['focused_monitor']}' }}))")
-    if snap.get("window") and any(c["address"] == snap["window"] for c in hypr_json("clients")):
-        blocks.append(f"hl.dispatch(hl.dsp.focus({{ window = 'address:{snap['window']}' }}))")
+    focused = next((m["name"] for m in monitors.values() if m.get("focused")), None)
+    wanted = monitors.get(snap.get("focused_monitor"))
+    if wanted and (blocks or focused != snap["focused_monitor"]):
+        selector = "desc:" + wanted["description"] if wanted.get("description") else wanted["name"]
+        blocks.append(f"hl.dispatch(hl.dsp.focus({{ monitor = {json.dumps(selector)} }}))")
+    # Hyprland reutiliza direcciones; una ventana distinta no debe llevarnos a otro workspace.
+    win = next((c for c in hypr_json("clients") if c["address"] == snap.get("window")
+                and c.get("pid") == snap.get("window_pid")), None)
+    active = hypr_json("activewindow")
+    if (win and isinstance(active, dict) and active.get("address") != win["address"]
+            and win.get("workspace", {}).get("id") in snap["workspaces"].values()):
+        blocks.append(f"hl.dispatch(hl.dsp.focus({{ window = 'address:{win['address']}' }}))")
     dispatch(blocks)
     now = set(mpris_playing())
     for name in snap.get("playing", []):
