@@ -1,0 +1,85 @@
+{
+  "id": "retro",
+  "name": "Retro",
+  "imitates": "Omarchy 4 (basecamp/omarchy, rama quattro)",
+  "upstream": "https://github.com/basecamp/omarchy",
+  "description": "El shell de Omarchy: su barra con plugins, menú, cuadrícula de apps, notificaciones, OSD, polkit, bloqueo y el tema de todas sus apps con capa TUI.",
+  "preview": "config/hypr/omarchy/themes/tokyo-night/preview.png",
+  "windows": "tiling",
+  "palette": "omarchy",
+  "defaultTheme": {
+    "mode": "dynamic",
+    "name": "Paleta dinámica (formato Omarchy)",
+    "description": "Dinámico por defecto: genera un colors.toml de Omarchy desde el fondo. Se puede fijar cualquiera de los 23 temas estáticos de Omarchy (Alt+R) y entonces el fondo no cambia la paleta."
+  },
+  "themes": {
+    "builtIn": "Paleta dinámica + 23 temas de Omarchy (Tokyo Night, Catppuccin, Nord, Gruvbox, Kanagawa, Rose Pine, Everforest, Ethereal, White…).",
+    "compatibility": "Temas y plugins de la comunidad de Omarchy (colors.toml, plugins de barra) se instalan desde Ajustes → Temas / Plugins o por Git."
+  },
+  "look": {
+    "wallpaper": "omarchy-frost.jpg",
+    "rounding": 0,
+    "roundingPower": 2,
+    "borderSize": 2,
+    "gapsIn": 3,
+    "gapsOut": 5,
+    "btopRounded": false
+  },
+  "bar": {
+    "height": 24,
+    "bottom": false,
+    "cornerStyle": 2,
+    "showAppIcons": false,
+    "alwaysShowNumbers": true
+  },
+  "fonts": {
+    "main": "JetBrains Mono NF",
+    "numbers": "JetBrains Mono NF",
+    "title": "JetBrains Mono NF",
+    "monospace": "JetBrains Mono NF",
+    "reading": "JetBrains Mono NF",
+    "expressive": "JetBrains Mono NF",
+    "iconNerd": "JetBrains Mono NF"
+  },
+  "parts": {
+    "quickshell": [
+      "config/quickshell/ii/modules/ii/bar/RetroBarContent.qml",
+      "config/quickshell/ii/modules/ii/bar/omarchy",
+      "config/quickshell/ii/modules/ii/omarchyMenu",
+      "config/quickshell/ii/modules/ii/omarchyDock",
+      "config/quickshell/ii/modules/ii/omarchyNotifications",
+      "config/quickshell/ii/modules/ii/omarchyOsd",
+      "config/quickshell/ii/modules/ii/omarchyPolkit",
+      "config/quickshell/ii/Commons",
+      "config/quickshell/ii/Ui",
+      "config/quickshell/ii/omarchy-plugins"
+    ],
+    "hyprland": [
+      "config/hypr/modules/retro_colors.lua",
+      "config/hypr/modules/omarchy_windows.lua"
+    ],
+    "colors": [
+      "config/hypr/omarchy/themes",
+      "config/hypr/omarchy/themed",
+      "config/hypr/omarchy/overlays"
+    ],
+    "scripts": [
+      "config/hypr/scripts/bwm_omarchy.py",
+      "config/hypr/scripts/bwm_omarchy_apps.py",
+      "config/hypr/scripts/omarchy-shims",
+      "config/hypr/omarchy/bwm-menu.jsonc"
+    ]
+  },
+  "requires": [
+    "imagemagick",
+    "font-jetbrains-nerd"
+  ],
+  "recommends": [
+    "btop",
+    "fastfetch",
+    "papirus",
+    "git",
+    "socat",
+    "hyprsunset"
+  ]
+}

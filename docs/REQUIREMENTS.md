@@ -65,6 +65,7 @@ compilarlos o usar sus repositorios de terceros.
 
 Imita **end-4 / illogical-impulse (Material You)**. Material Design 3: barra, panel lateral, vista general y Alt+Tab de illogical-impulse. Todo el escritorio y las apps toman los colores del fondo de pantalla.
 
+* **Ventanas:** mosaico (*tiling*)
 * **Tema por defecto:** Material You desde el fondo (dinámico). Dinámico: matugen genera la paleta del fondo cada vez que lo cambias (Alt+W).
 * **Temas:** Paleta dinámica de matugen (claro u oscuro según el fondo).
 * **Compatibilidad:** Objetivo: plantillas y fondos de la comunidad de matugen / end-4 funcionan tal cual.
@@ -86,6 +87,7 @@ Imita **end-4 / illogical-impulse (Material You)**. Material Design 3: barra, pa
 
 Imita **Omarchy 4 (basecamp/omarchy, rama quattro)**. El shell de Omarchy: su barra con plugins, menú, cuadrícula de apps, notificaciones, OSD, polkit, bloqueo y el tema de todas sus apps con capa TUI.
 
+* **Ventanas:** mosaico (*tiling*)
 * **Tema por defecto:** Paleta dinámica (formato Omarchy) (dinámico). Dinámico por defecto: genera un colors.toml de Omarchy desde el fondo. Se puede fijar cualquiera de los 23 temas estáticos de Omarchy (Alt+R) y entonces el fondo no cambia la paleta.
 * **Temas:** Paleta dinámica + 23 temas de Omarchy (Tokyo Night, Catppuccin, Nord, Gruvbox, Kanagawa, Rose Pine, Everforest, Ethereal, White…).
 * **Compatibilidad:** Temas y plugins de la comunidad de Omarchy (colors.toml, plugins de barra) se instalan desde Ajustes → Temas / Plugins o por Git.
@@ -110,6 +112,7 @@ Imita **Omarchy 4 (basecamp/omarchy, rama quattro)**. El shell de Omarchy: su ba
 
 Imita **KDE Plasma 6 (Breeze Dark)**. Panel flotante, Kickoff, applets de red/Bluetooth/audio/calendario/notificaciones, Alt+Tab de KWin, OSD Breeze y barras de título Breeze con snapping.
 
+* **Ventanas:** WM tradicional (ventanas flotantes)
 * **Tema por defecto:** Breeze Dark (estático). Estático: la paleta Breeze Dark no cambia con el fondo.
 * **Temas:** Breeze Dark (escritorio, GTK, Qt, kitty y apps).
 * **Compatibilidad:** Objetivo: esquemas de color y temas globales de Plasma de la KDE Store aplicados al panel, applets y apps (pendiente).

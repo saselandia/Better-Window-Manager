@@ -1,0 +1,94 @@
+{
+  "id": "plasma",
+  "name": "KDE Plasma",
+  "imitates": "KDE Plasma 6 (Breeze Dark)",
+  "upstream": "https://kde.org/plasma-desktop/",
+  "description": "Panel flotante, Kickoff, applets de red/Bluetooth/audio/calendario/notificaciones, Alt+Tab de KWin, OSD Breeze y barras de título Breeze con snapping.",
+  "preview": "assets/skin-previews/kde-plasma-6.png",
+  "windows": "traditional",
+  "traditional": {
+    "titlebar": 30,
+    "panel": {
+      "edge": "bottom",
+      "size": 44
+    },
+    "edgeMargin": 10,
+    "gap": 10
+  },
+  "palette": "breeze",
+  "defaultTheme": {
+    "mode": "static",
+    "name": "Breeze Dark",
+    "description": "Estático: la paleta Breeze Dark no cambia con el fondo."
+  },
+  "themes": {
+    "builtIn": "Breeze Dark (escritorio, GTK, Qt, kitty y apps).",
+    "compatibility": "Objetivo: esquemas de color y temas globales de Plasma de la KDE Store aplicados al panel, applets y apps (pendiente)."
+  },
+  "look": {
+    "wallpaper": "plasma.png",
+    "rounding": 12,
+    "roundingPower": 2,
+    "borderSize": 0,
+    "gapsIn": 0,
+    "gapsOut": 0,
+    "btopRounded": true
+  },
+  "bar": {
+    "height": 44,
+    "bottom": true,
+    "cornerStyle": 2,
+    "showAppIcons": true,
+    "alwaysShowNumbers": true
+  },
+  "fonts": {
+    "main": "Google Sans Flex",
+    "numbers": "Google Sans Flex",
+    "title": "Google Sans Flex",
+    "monospace": "JetBrains Mono NF",
+    "reading": "Readex Pro",
+    "expressive": "Space Grotesk",
+    "iconNerd": "JetBrains Mono NF"
+  },
+  "parts": {
+    "quickshell": [
+      "config/quickshell/ii/modules/ii/bar/PlasmaBarContent.qml",
+      "config/quickshell/ii/modules/ii/plasmaCommon",
+      "config/quickshell/ii/modules/ii/plasmaKickoff",
+      "config/quickshell/ii/modules/ii/plasmaAudio",
+      "config/quickshell/ii/modules/ii/plasmaBluetooth",
+      "config/quickshell/ii/modules/ii/plasmaNetwork",
+      "config/quickshell/ii/modules/ii/plasmaCalendar",
+      "config/quickshell/ii/modules/ii/plasmaNotifications",
+      "config/quickshell/ii/modules/ii/plasmaTaskMenu",
+      "config/quickshell/ii/modules/ii/plasmaThemePicker",
+      "config/quickshell/ii/modules/ii/altTab/PlasmaSwitcher.qml",
+      "config/quickshell/ii/plasmaSettings.qml"
+    ],
+    "hyprland": [
+      "config/hypr/modules/plasma_colors.lua",
+      "config/hypr/plugins/hyprbars-plasma.so"
+    ],
+    "colors": [
+      "config/matugen/templates"
+    ],
+    "scripts": [
+      "config/hypr/scripts/quick-tile.py",
+      "config/hypr/scripts/toggle-minimize.py",
+      "src/hyprbars"
+    ]
+  },
+  "requires": [
+    "hyprpolkitagent",
+    "breeze-icons",
+    "hyprbars-plasma"
+  ],
+  "recommends": [
+    "qt6ct",
+    "networkmanager",
+    "nm-connection-editor",
+    "bluez",
+    "blueman",
+    "swaync"
+  ]
+}

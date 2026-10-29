@@ -35,7 +35,7 @@ Default (end-4 / illogical-impulse), Retro (Omarchy) and KDE Plasma on top of Hy
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Default** | [end-4 / illogical-impulse](https://github.com/end-4/dots-hyprland) (Material You) | Tiling | **Dynamic**: matugen builds the palette from your wallpaper every time it changes | — (light or dark from the wallpaper) | matugen / end-4 templates and wallpapers |
 | **Retro** | [Omarchy 4](https://github.com/basecamp/omarchy) (`quattro` branch) | Tiling | **Dynamic**: an Omarchy-format palette from the wallpaper | 23 static Omarchy themes (Tokyo Night, Catppuccin, Nord, Gruvbox…) with `Alt + R`; once one is pinned, the wallpaper no longer changes the colours | Omarchy community themes and plugins (Settings → Themes / Plugins) |
-| **KDE Plasma** | KDE Plasma 6 (Breeze Dark) | Stacking (floating) | **Static**: Breeze Dark, unaffected by the wallpaper | — | Plasma colour schemes and global themes from the KDE Store (planned) |
+| **KDE Plasma** | KDE Plasma 6 (Breeze Dark) | Traditional WM (floating) | **Static**: Breeze Dark, unaffected by the wallpaper | — | Plasma colour schemes and global themes from the KDE Store (planned) |
 
 ### Few skins, the essentials, the same in all of them
 
@@ -57,9 +57,9 @@ This is the point of the project, so we measure it. Estimated share of the origi
 
 One of BWM's most ambitious goals is **porting desktops that do not run on Hyprland to Hyprland**, starting with KDE Plasma (in progress: its panel, Kickoff, applets, KWin's Alt+Tab, OSD and Breeze title bars already run on Hyprland), so everything lives on one compositor. Other desktops and window managers can follow the same path as new skins.
 
-Switching skins preserves each display’s workspace and keeps applications open, including playing video. BWM generates one palette and rebuilds panels without restarting Quickshell. Switching between tiling and stacking preserves placement; fullscreen, minimized and special-workspace windows are excluded from repositioning. Styles an app only reads at startup are prepared for its next launch; Spotify may require applying Spicetify manually. Skin changes do not close apps to force their colours.
+Switching skins preserves each display’s workspace and keeps applications open, including playing video. BWM generates one palette and rebuilds panels without restarting Quickshell. Switching between tiling and traditional (floating) skins preserves placement; fullscreen, minimized and special-workspace windows are excluded from repositioning. Styles an app only reads at startup are prepared for its next launch; Spotify may require applying Spicetify manually. Skin changes do not close apps to force their colours.
 
-More skins: [docs/SKINS.md](docs/SKINS.md) explains what a skin is and how one is added.
+More skins: each skin is a folder with a `skin.json` (window variable `"windows": "tiling"` or `"traditional"`, look, colours and requirements). [config/hypr/skins/README.md](config/hypr/skins/README.md) explains how to create one from the template (in Spanish), and [docs/SKINS.md](docs/SKINS.md) what a skin is and what is kept between skins.
 
 ## 👋 Welcome window and the `bwm` command
 

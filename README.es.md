@@ -35,7 +35,7 @@ Default (end-4 / illogical-impulse), Retro (Omarchy) y KDE Plasma sobre Hyprland
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Default** | [end-4 / illogical-impulse](https://github.com/end-4/dots-hyprland) (Material You) | Mosaico | **Dinámico**: matugen saca la paleta del fondo cada vez que lo cambias | — (claro u oscuro según el fondo) | Plantillas y fondos de matugen / end-4 |
 | **Retro** | [Omarchy 4](https://github.com/basecamp/omarchy) (rama `quattro`) | Mosaico | **Dinámico**: paleta con el formato de Omarchy sacada del fondo | 23 temas estáticos de Omarchy (Tokyo Night, Catppuccin, Nord, Gruvbox…) con `Alt + R`; al fijar uno, el fondo ya no cambia los colores | Temas y plugins de la comunidad de Omarchy (Ajustes → Temas / Plugins) |
-| **KDE Plasma** | KDE Plasma 6 (Breeze Dark) | Apiladas (flotantes) | **Estático**: Breeze Dark, no cambia con el fondo | — | Esquemas de color y temas globales de Plasma de la KDE Store (pendiente) |
+| **KDE Plasma** | KDE Plasma 6 (Breeze Dark) | WM tradicional (flotantes) | **Estático**: Breeze Dark, no cambia con el fondo | — | Esquemas de color y temas globales de Plasma de la KDE Store (pendiente) |
 
 ### Pocas skins, lo esencial y lo mismo en todas
 
@@ -59,7 +59,7 @@ Uno de los proyectos más ambiciosos de BWM es **portar a Hyprland escritorios q
 
 Al cambiar de skin se conservan los workspaces de cada pantalla y las aplicaciones abiertas, incluido el vídeo en reproducción. Se genera una sola paleta y se reconstruyen los paneles sin reiniciar Quickshell. Entre mosaico y ventanas apiladas se conserva la colocación; las ventanas a pantalla completa, minimizadas y especiales quedan fuera de esa recolocación. Los estilos que una app sólo lee al arrancar quedan preparados para su siguiente inicio; Spotify puede requerir aplicar Spicetify manualmente. El cambio de skin no cierra apps para forzar sus colores.
 
-Más skins: [docs/SKINS.md](docs/SKINS.md) explica qué es una skin y cómo se añade.
+Más skins: cada skin es una carpeta con un `skin.json` (variable de ventanas `"windows": "tiling"` o `"traditional"`, aspecto, colores y requisitos). [config/hypr/skins/README.md](config/hypr/skins/README.md) explica cómo crear una a partir de la plantilla, y [docs/SKINS.md](docs/SKINS.md) qué es una skin y qué se conserva entre ellas.
 
 ## 👋 Bienvenida y comando `bwm`
 

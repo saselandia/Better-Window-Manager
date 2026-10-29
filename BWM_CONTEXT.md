@@ -58,7 +58,7 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 * Selector de estilos: Alt+T (Retro: carrusel 3D con capturas de lo que imita cada estilo, `skin-switcher.sh`; Default: rofi; Plasma: «Estilo global»). Temas de Retro: Alt+R (carrusel), menú → Estilo → Temas Retro, Ajustes → Temas.
 * **Ajustes → Temas / Plugins** (dos páginas, en ambas apps): Temas muestra galería con miniaturas/paletas/tema elegido; Plugins muestra tarjetas, activación, posición y filtros Todos/Activados/Desactivados. Cada página tiene Instalados/Descubrir, búsqueda remota, Mostrar más, enlaces y Git/URL. `ThemesConfig.qml`, `PluginsConfig.qml` y módulo `addons/` con `qmldir`; backend `bwm-addons.py`, detalle en `docs/OMARCHY_ADDONS.md`.
 * Temas de comunidad en `~/.local/share/bwm/omarchy-themes` (`XDG_DATA_HOME`); también se reconoce `~/.config/omarchy/themes`, que aquí enlaza al repo y no se usa como destino de instalación. `theme_directory()` y `list_omarchy_themes()` comparten precedencia, igual que la CLI y el carrusel.
-* **Tema por defecto de cada skin:** Default = Material You **dinámico** (matugen desde el fondo); Retro = paleta **dinámica** en formato Omarchy (23 temas **estáticos** con Alt+R); Plasma = Breeze Dark **estático**. Manifiestos en `config/hypr/skins/<id>.json` (§2.9).
+* **Tema por defecto de cada skin:** Default = Material You **dinámico** (matugen desde el fondo); Retro = paleta **dinámica** en formato Omarchy (23 temas **estáticos** con Alt+R); Plasma = Breeze Dark **estático**. Cada skin en su carpeta `config/hypr/skins/<id>/skin.json` (§2.9, §3.59).
 * Retro estático/dinámico: `~/.local/state/bwm/omarchy/{theme.mode,theme.name,colors.toml,shell.toml}`; en estático cambiar el fondo no toca la paleta. Temas claros (White, Catppuccin Latte…) ponen las apps en claro.
 
 ### 2.2 Apps tematizadas
@@ -166,7 +166,7 @@ flatpak update
   fuentes correspondientes a algunos binarios y licencia de código independiente siguen pendientes.
 
 ### 2.9 Instalador, requisitos y bienvenida
-* **Requisitos declarados** en `config/hypr/skins/`: `requirements.json` (núcleo `requires`/`recommends` + catálogo: etiqueta, para qué, comprobación y paquete por familia de distro, con `guru:`/`hyproverlay:` en Gentoo, `aur:` en Arch, `copr:` en Fedora) y un manifiesto por skin (`default.json`, `retro.json`, `plasma.json`: imita, descripción, `defaultTheme` dinámico/estático, temas, compatibilidad, captura, requisitos). Tabla generada en `docs/REQUIREMENTS.md`; qué es una skin y cómo se añade en `docs/SKINS.md` (la «wiki»).
+* **Skins = carpetas** en `config/hypr/skins/`: `requirements.json` (núcleo `requires`/`recommends` + catálogo: etiqueta, para qué, comprobación y paquete por familia de distro, con `guru:`/`hyproverlay:` en Gentoo, `aur:` en Arch, `copr:` en Fedora) y una carpeta por skin con su `skin.json` (`default/`, `retro/`, `plasma/`: identidad, variable de ventanas `windows` = `tiling`/`traditional` + bloque `traditional`, `palette` matugen/omarchy/breeze, `defaultTheme`, temas, `look`, `bar`, `fonts`, mapa de archivos `parts`, requisitos). Plantilla `_template/skin.json` y guía `skins/README.md`. `scripts/bwm_skins.py` los carga para el gestor (que ya no tiene datos de skin en Python), `bwm_windows.py`, el comprobador y la bienvenida. Tabla generada en `docs/REQUIREMENTS.md`; qué es una skin y cómo se añade en `docs/SKINS.md` (la «wiki»).
 * **`scripts/bwm-requirements.py check [--skin] [--json] [--pre-install] [--distro]` / `skins`**: sólo lee el sistema (comandos, versiones mínimas de Hyprland/Quickshell, módulos QML y plugins de Qt, Python/Pillow, fuentes, pkg-config, commit de Hyprland embebido en `hyprbars-plasma.so`) y genera los comandos de instalación de la distro detectada por os-release. `--pre-install` no cuenta lo que pone el instalador (fuentes) ni el plugin si se puede compilar.
 * **`install.sh`**: paso 1 = comprobación; si falta algo imprime los comandos y sale con 1 **sin tocar nada**. `--check`, `--skins default,retro`, `--spicetify/--no-spicetify` (antes descargaba Spicetify sin preguntar; ahora sólo si Spotify está y con confirmación). Enlaza `~/.local/bin/bwm` al repo, enlaza los shims de Omarchy (`bwm-plugin.sh catalog`), activa la bienvenida, compila hyprbars si no coincide con el Hyprland en uso y activa `bwm.theme.css` en Vesktop con `bwm_omarchy.vesktop_enable_theme()` (antes copiaba `material-you.theme.css` y lo ponía en Quick CSS, contrario a §3.35).
 * **Comando `bwm`** (`config/hypr/scripts/bwm`): sin argumentos abre la bienvenida (o, sin Wayland/Quickshell, los requisitos en texto); `check`, `skins`, `skin [id]` (se niega si faltan requisitos), `startup on|off|status`, `welcome --startup`.
@@ -725,6 +725,12 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 * Límite: sin arrastre manual de ratón ni revisión visual del plugin nuevo cargado. El plugin anterior sigue
   cargado hasta reiniciar sesión; el script compatible ya corrige el destino con ese plugin.
 
+### 59. Skins en carpetas y variable de ventanas `windows` (2026-10-29)
+* **Petición:** reestructurar para que sea más compacto y entendible, con las skins bien seccionadas para que quien quiera crear una lo entienda, y una variable de ventanas tiling o WM tradicional.
+* **Hecho:** cada skin es `config/hypr/skins/<id>/skin.json` y reúne lo que antes estaba repartido entre el manifiesto plano (`skins/<id>.json`, borrado) y el diccionario `THEMES` de `bwm-theme-manager.py` (redondeo, borde, huecos, barra, fuentes, fondo, btop). Nuevo `scripts/bwm_skins.py` (`all_skins`, `skin`, `windows`, `is_traditional`, `traditional`, `theme_table`), del que salen `THEMES`, `bwm_windows.windowing/is_traditional`, `bwm-requirements.load_data` y, vía `--json`, la bienvenida. Variable **`"windows": "tiling" | "traditional"`** (sustituye a `windowing.mode` `tiling`/`stacking`); `traditional` lleva titlebar, panel, edgeMargin y gap. `theme.lua` escribe `windows = "…"` y `rules.lua` hace flotar todo si es `traditional` (o Plasma). `palette` (`matugen`/`omarchy`/`breeze`) sustituye a `is_retro`/`is_plasma` como dato (las claves se derivan para el código existente). `parts` enumera los QML/Lua/colores/scripts de cada skin. Plantilla `_template/` (excluida al listar) y guía `skins/README.md`; `docs/SKINS.md` resume y enlaza. El comprobador, la tabla de `docs/REQUIREMENTS.md` y la bienvenida muestran el tipo de ventanas.
+* **No movido:** QML, Lua y scripts de cada skin siguen donde estaban (enlazados a la sesión en vivo y con rutas fijas); `parts` documenta dónde está cada pieza. Una skin nueva aún necesita condiciones de carga en `IllogicalImpulseFamily.qml`.
+* **Verificado:** `THEMES` derivado de los manifiestos coincide con el anterior en todos los valores (sólo cambian título y descripción); 7 tests nuevos en `tests/test_skins.py` (campos, carpeta = id, variable `windows` y bloque, rutas de `parts`, requisitos en el catálogo, tabla del gestor, plantilla) + los 14 de cambio de skin y snapping: 21 OK. Retro→Plasma→Retro real: `theme.lua` con `windows = "traditional"`/`"tiling"`, 9/9 ventanas flotan en Plasma, mismos PID y workspaces visibles, `configerrors` vacío; al volver, Steam sigue flotando por su regla persistente `float=true` (comportamiento esperado).
+
 ---
 
 ## 4. 📂 Estructura del repositorio
@@ -737,7 +743,8 @@ hyprland-de/
 ├── config/                            # Enlazado desde ~/.config
 │   ├── hypr/
 │   │   ├── hyprland.lua               # Raíz: importa modules/*
-│   │   ├── skins/                     # requirements.json (núcleo + catálogo) y <skin>.json (requisitos, tema por defecto)
+│   │   ├── skins/                     # Una carpeta por skin: <id>/skin.json (windows, aspecto, colores, parts, requisitos),
+│   │   │                              # _template/, README.md (crear una skin), requirements.json (núcleo + catálogo)
 │   │   ├── keybinds.json              # Atajos (fuente de verdad) → keybinds-manager.py → modules/user_binds.lua
 │   │   ├── modules/                   # appearance, autostart, binds, colors (generado), monitors (desc:),
 │   │   │                              # omarchy_windows, plasma_colors/retro_colors (generados), rules,
@@ -753,6 +760,7 @@ hyprland-de/
 │   │   └── scripts/
 │   │       ├── bwm                    # Comando bwm (bienvenida, check, skins, skin, startup)
 │   │       ├── bwm-requirements.py    # Comprobador de requisitos + comandos por distro
+│   │       ├── bwm_skins.py           # Carga las skins (skins/<id>/skin.json) para todo lo demás
 │   │       ├── bwm-theme-manager.py   # Gestor de estilos
 │   │       ├── bwm_omarchy.py         # Motor de Retro: paletas, apps, Vesktop, Firefox/Steam (restart_app)
 │   │       ├── bwm-addons.py          # Catálogos e instalación de temas/plugins de Omarchy

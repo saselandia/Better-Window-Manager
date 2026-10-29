@@ -1,0 +1,69 @@
+{
+  "_ayuda": "Plantilla de skin de BWM. Copia esta carpeta a config/hypr/skins/<tu-id>/ (o a ~/.local/share/bwm/skins/<tu-id>/), cambia los valores y borra las claves _ayuda. Guía completa: config/hypr/skins/README.md.",
+  "id": "mi-skin",
+  "name": "Mi skin",
+  "imitates": "El escritorio o WM que reproduce",
+  "upstream": "https://enlace-al-proyecto-original",
+  "description": "Qué reproduce de su escritorio original, en una frase.",
+  "preview": "assets/skin-previews/mi-skin.png",
+
+  "_ayuda_windows": "La variable de ventanas: \"tiling\" = mosaico (como Default y Retro) o \"traditional\" = WM tradicional, todas las ventanas flotan con barra de título (como KDE Plasma). Con \"traditional\" rellena el bloque \"traditional\"; con \"tiling\" bórralo.",
+  "windows": "tiling",
+  "traditional": {
+    "titlebar": 30,
+    "panel": { "edge": "bottom", "size": 44 },
+    "edgeMargin": 10,
+    "gap": 10
+  },
+
+  "_ayuda_palette": "Motor de colores: \"matugen\" (dinámico desde el fondo), \"omarchy\" (formato colors.toml de Omarchy) o \"breeze\" (paleta fija de KDE). Elige el que use el ecosistema de temas de tu escritorio original.",
+  "palette": "matugen",
+  "defaultTheme": {
+    "mode": "dynamic",
+    "name": "Nombre del tema por defecto",
+    "description": "Dinámico (cambia con el fondo) o estático (colores fijos)."
+  },
+  "themes": {
+    "builtIn": "Temas que trae la skin.",
+    "compatibility": "Qué temas/plugins del escritorio original acepta (o aspira a aceptar)."
+  },
+
+  "look": {
+    "wallpaper": "default.jpg",
+    "rounding": 10,
+    "roundingPower": 2,
+    "borderSize": 2,
+    "gapsIn": 4,
+    "gapsOut": 8,
+    "btopRounded": true
+  },
+  "bar": {
+    "height": 40,
+    "bottom": false,
+    "cornerStyle": 2,
+    "showAppIcons": true,
+    "alwaysShowNumbers": true
+  },
+  "fonts": {
+    "main": "Google Sans Flex",
+    "numbers": "Google Sans Flex",
+    "title": "Google Sans Flex",
+    "monospace": "JetBrains Mono NF",
+    "reading": "Readex Pro",
+    "expressive": "Space Grotesk",
+    "iconNerd": "JetBrains Mono NF"
+  },
+
+  "_ayuda_parts": "Dónde vive cada pieza de la skin (rutas desde la raíz del repo). Un test comprueba que existen.",
+  "parts": {
+    "quickshell": [],
+    "hyprland": [],
+    "colors": [],
+    "scripts": []
+  },
+
+  "_ayuda_requires": "Ids del catálogo de config/hypr/skins/requirements.json. Para un requisito nuevo, añádelo en \"catalog\" aquí o en ese catálogo.",
+  "requires": [],
+  "recommends": [],
+  "catalog": {}
+}

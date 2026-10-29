@@ -288,6 +288,10 @@ ApplicationWindow {
                         }
                         Subtle { text: "Imita: " + card.modelData.imitates }
                         Subtle {
+                            text: "Ventanas: " + (card.modelData.windows === "traditional"
+                                ? "WM tradicional (flotantes, con barra de título)" : "mosaico (tiling)")
+                        }
+                        Subtle {
                             text: "Tema por defecto: " + card.modelData.defaultTheme.name + " · "
                                 + (card.modelData.defaultTheme.mode === "dynamic" ? "dinámico (cambia con el fondo)" : "estático")
                         }

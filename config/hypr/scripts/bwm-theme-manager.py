@@ -48,89 +48,11 @@ REPO_HYPR_PLASMA_COLORS_LUA = REPO_DIR / "config" / "hypr" / "modules" / "plasma
 
 WALLPAPERS_DIR = Path.home() / "Pictures" / "Wallpapers"
 
-THEMES = {
-    "default": {
-        "title": "Default (Material You)",
-        "description": "Estilo Material 3 / End_4 con esquinas redondeadas y paleta tonal dinámica",
-        "wallpaper": str(WALLPAPERS_DIR / "default.jpg"),
-        "rounding": 14,
-        "rounding_power": 2,
-        "border_size": 2,
-        "gaps_in": 4,
-        "gaps_out": 8,
-        "bar_corner_style": 2,
-        "bar_height": 40,
-        "bar_bottom": False,
-        "show_app_icons": True,
-        "always_show_numbers": False,
-        "is_retro": False,
-        "is_plasma": False,
-        "fonts": {
-            "main": "Google Sans Flex",
-            "numbers": "Google Sans Flex",
-            "title": "Google Sans Flex",
-            "monospace": "JetBrains Mono NF",
-            "reading": "Readex Pro",
-            "expressive": "Space Grotesk",
-            "iconNerd": "JetBrains Mono NF"
-        },
-        "btop_rounded": True
-    },
-    "retro": {
-        "title": "Retro (Omarchy)",
-        "description": "Estilo minimalista Omarchy con barra compacta, bordes vivos y paleta adaptativa",
-        "wallpaper": str(WALLPAPERS_DIR / "omarchy-frost.jpg"),
-        "rounding": 0,
-        "rounding_power": 2,
-        "border_size": 2,
-        "gaps_in": 3,
-        "gaps_out": 5,
-        "bar_corner_style": 2,
-        "bar_height": 24,
-        "bar_bottom": False,
-        "show_app_icons": False,
-        "always_show_numbers": True,
-        "is_retro": True,
-        "is_plasma": False,
-        "fonts": {
-            "main": "JetBrains Mono NF",
-            "numbers": "JetBrains Mono NF",
-            "title": "JetBrains Mono NF",
-            "monospace": "JetBrains Mono NF",
-            "reading": "JetBrains Mono NF",
-            "expressive": "JetBrains Mono NF",
-            "iconNerd": "JetBrains Mono NF"
-        },
-        "btop_rounded": False
-    },
-    "plasma": {
-        "title": "KDE Plasma (Breeze Dark)",
-        "description": "Estilo KDE Plasma 6 con barra inferior Breeze Dark, ventanas flotantes con barra superior y paleta estática",
-        "wallpaper": str(WALLPAPERS_DIR / "plasma.png"),
-        "rounding": 12,
-        "rounding_power": 2,
-        "border_size": 0,
-        "gaps_in": 0,
-        "gaps_out": 0,
-        "bar_corner_style": 2,
-        "bar_height": 44,
-        "bar_bottom": True,
-        "show_app_icons": True,
-        "always_show_numbers": True,
-        "is_retro": False,
-        "is_plasma": True,
-        "fonts": {
-            "main": "Google Sans Flex",
-            "numbers": "Google Sans Flex",
-            "title": "Google Sans Flex",
-            "monospace": "JetBrains Mono NF",
-            "reading": "Readex Pro",
-            "expressive": "Space Grotesk",
-            "iconNerd": "JetBrains Mono NF"
-        },
-        "btop_rounded": True
-    }
-}
+# Las skins y su aspecto salen de config/hypr/skins/<id>/skin.json (bwm_skins.py): para crear una
+# skin no hay que tocar este archivo.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import bwm_skins  # noqa: E402
+THEMES = bwm_skins.theme_table(WALLPAPERS_DIR)
 
 def get_current_theme() -> str:
     """Reads current theme name from II config or Hyprland theme.lua."""
@@ -375,8 +297,6 @@ def update_hypr_theme_lua(theme_name: str, cfg: dict):
     else:
         gaps_out_str = str(gaps_out_val)
 
-    import bwm_windows
-    windowing_mode = bwm_windows.windowing(theme_name).get("mode", "tiling")
     content = f"""-- =============================================================================
 -- Better Window Manager (BWM) - Configuración del Tema Activo
 -- Archivo gestionado automáticamente por bwm-theme-manager.py
@@ -389,8 +309,9 @@ local theme = {{
     border_size = {cfg['border_size']},
     gaps_in = {cfg['gaps_in']},
     gaps_out = {gaps_out_str},
-    -- "tiling" (mosaico) o "stacking" (ventanas apiladas/flotantes): config/hypr/skins/{theme_name}.json
-    windowing = "{windowing_mode}",
+    -- Ventanas: "tiling" (mosaico) o "traditional" (WM tradicional, todas flotantes con barra de
+    -- título). Sale de config/hypr/skins/{theme_name}/skin.json → "windows"
+    windows = "{cfg['windows']}",
 }}
 
 return theme
@@ -795,13 +716,14 @@ def apply_retro_wallpaper_colors(wallpaper_path: str = None):
 
 def sync_floating_windows(skin: str, previous_skin=None, original_clients=None):
     """
-    Pasa las ventanas abiertas a la gestión de la skin destino ("windowing" de su manifiesto):
-    - apilada ("stacking", KDE Plasma): todas flotan en su mismo sitio (bwm_windows.float_in_place);
+    Pasa las ventanas abiertas a la gestión de la skin destino ("windows" de su skin.json):
+    - tradicional ("windows": "traditional", KDE Plasma): todas flotan en su mismo sitio
+      (bwm_windows.float_in_place);
       en Plasma además se activan las barras de título de hyprbars.
     - mosaico ("tiling"): vuelven al mosaico salvo las flotantes persistentes de persistent_rules.json.
     """
     import bwm_windows
-    to_stacking = bwm_windows.is_stacking(skin)
+    to_traditional = bwm_windows.is_traditional(skin)
     try:
         res = subprocess.run(["hyprctl", "clients", "-j"], capture_output=True, text=True, timeout=2)
         clients = json.loads(res.stdout)
@@ -822,7 +744,7 @@ def sync_floating_windows(skin: str, previous_skin=None, original_clients=None):
         subprocess.run(["hyprctl", "keyword", "plugin:hyprbars:enabled", "false"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # Cambiar colores dentro de la misma familia no reorganiza ninguna ventana.
-    if previous_skin is not None and bwm_windows.is_stacking(previous_skin) == to_stacking:
+    if previous_skin is not None and bwm_windows.is_traditional(previous_skin) == to_traditional:
         return
 
     persistent_float_classes = set()
@@ -853,7 +775,7 @@ def sync_floating_windows(skin: str, previous_skin=None, original_clients=None):
                 or client.get("workspace", {}).get("id") == 99):
             continue
 
-        if to_stacking:
+        if to_traditional:
             continue  # bwm_windows.float_in_place, abajo
         else:
             # Al salir de plasma: limpiar tags de snap y restaurar mosaico si no es flotante persistente
@@ -871,7 +793,7 @@ def sync_floating_windows(skin: str, previous_skin=None, original_clients=None):
         # Mientras se rehace el mosaico, cada ventana se añade a la derecha/abajo de la anterior
         # (no según el ratón), para que el orden izquierda→derecha se conserve
         split = None
-        if not to_stacking:
+        if not to_traditional:
             out = subprocess.run(["hyprctl", "getoption", "dwindle:force_split", "-j"], capture_output=True, text=True).stdout
             try:
                 split = json.loads(out).get("int", 0)
@@ -882,7 +804,7 @@ def sync_floating_windows(skin: str, previous_skin=None, original_clients=None):
         if split is not None:
             subprocess.run(["hyprctl", "keyword", "dwindle:force_split", str(split)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    if to_stacking:
+    if to_traditional:
         # Las ventanas en mosaico flotan en el mismo sitio (con su barra de título y un margen
         # sutil con los bordes). La geometría procede de la captura anterior a la recarga de reglas,
         # no de la geometría flotante por defecto que el compositor pudiera haber aplicado.

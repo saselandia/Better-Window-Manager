@@ -2,12 +2,13 @@
 """Colocación de ventanas al cambiar de skin (común a todas; lo usan bwm-theme-manager.py,
 bwm_omarchy.restart_app y reload-spotify.py).
 
-Cada skin declara en su manifiesto (config/hypr/skins/<id>.json, "windowing") cómo gestiona las
-ventanas: "tiling" (mosaico: Default, Retro) o "stacking" (apiladas/flotantes, como un escritorio
-tradicional: KDE Plasma). Al pasar de una de mosaico a una apilada, cada ventana se queda en el mismo
-sitio: el mismo rectángulo, contando la barra de título que la skin le pone encima ("titlebar") si la
-lleva, dentro del área útil (sin el panel, "panel") con un margen sutil con los bordes ("edgeMargin")
-y un hueco entre ventanas ("gap"), para que se note que ya no están en mosaico.
+Cada skin dice en su skin.json (config/hypr/skins/<id>/skin.json) cómo gestiona las ventanas con la
+variable "windows": "tiling" (mosaico: Default, Retro) o "traditional" (WM tradicional, ventanas
+flotantes con barra de título: KDE Plasma). Al pasar de una de mosaico a una tradicional, cada ventana
+se queda en el mismo sitio: el mismo rectángulo, contando la barra de título que la skin le pone encima
+("traditional.titlebar") si la lleva, dentro del área útil (sin el panel, "panel") con un margen sutil
+con los bordes ("edgeMargin") y un hueco entre ventanas ("gap"), para que se note que ya no están en
+mosaico. Los datos los da bwm_skins.py.
 """
 import json
 import re
@@ -16,20 +17,17 @@ from pathlib import Path
 
 MIN_W, MIN_H = 320, 200
 THEME_MANAGER = Path(__file__).resolve().parent / "bwm-theme-manager.py"
-SKINS_DIR = Path(__file__).resolve().parents[1] / "skins"
-TILING = {"mode": "tiling"}
+import bwm_skins  # noqa: E402  (mismo directorio)
 
 
 def windowing(skin: str) -> dict:
-    """La gestión de ventanas de una skin según su manifiesto ("tiling" si no lo dice)."""
-    try:
-        return json.loads((SKINS_DIR / f"{skin}.json").read_text(encoding="utf-8")).get("windowing", TILING)
-    except (OSError, ValueError):
-        return TILING
+    """Geometría de ventanas de una skin tradicional ({} en las de mosaico)."""
+    return bwm_skins.traditional(skin)
 
 
-def is_stacking(skin: str) -> bool:
-    return windowing(skin).get("mode") == "stacking"
+def is_traditional(skin: str) -> bool:
+    """¿La skin es de WM tradicional (ventanas flotantes) en vez de mosaico?"""
+    return bwm_skins.is_traditional(skin)
 
 
 def hypr_json(what: str):
@@ -79,10 +77,10 @@ def has_titlebar(client: dict, bars: set) -> bool:
     return (client.get("class", ""), client.get("title", "")[:40].strip()) in bars
 
 
-def stacking_box(at, size, mon: dict, titlebar: bool, win: dict) -> tuple:
+def traditional_box(at, size, mon: dict, titlebar: bool, win: dict) -> tuple:
     """Posición y tamaño (del contenido) de una ventana flotante que ocupe el rectángulo `at`/`size`
-    que tenía en mosaico, separada de las vecinas (`gap`) y dentro del área útil de la skin apilada
-    `win` (su "windowing")."""
+    que tenía en mosaico, separada de las vecinas (`gap`) y dentro del área útil de la skin
+    tradicional `win` (su bloque "traditional")."""
     mx, my, mw, mh = monitor_box(mon)
     margin, half_gap = win.get("edgeMargin", 10), win.get("gap", 0) / 2
     panel = win.get("panel", {})
@@ -122,7 +120,7 @@ def dispatch(lua_blocks: list):
 
 
 def float_in_place(skin: str, clients: list = None):
-    """Al entrar en una skin apilada, las ventanas en mosaico pasan a flotar en su mismo sitio
+    """Al entrar en una skin tradicional, las ventanas en mosaico pasan a flotar en su mismo sitio
     (con su barra de título, el margen y el hueco de la skin)."""
     win = windowing(skin)
     clients = clients if clients is not None else hypr_json("clients")
@@ -138,7 +136,7 @@ def float_in_place(skin: str, clients: list = None):
             or monitor_for(c["at"], c["size"], monitors)
         if not mon:
             continue
-        box = stacking_box(c["at"], c["size"], mon, has_titlebar(c, bars), win)
+        box = traditional_box(c["at"], c["size"], mon, has_titlebar(c, bars), win)
         blocks.append(place_lua(c["address"], box=box, make_floating=True))
     dispatch(blocks)
     return len(blocks)
@@ -146,17 +144,17 @@ def float_in_place(skin: str, clients: list = None):
 
 def restored_box(record: dict, client: dict):
     """Geometría para una ventana que vuelve tras reiniciar su app: la que tenía si flotaba; si
-    estaba en mosaico y ahora flota (skin apilada), la de float_in_place; si no, ninguna."""
+    estaba en mosaico y ahora flota (skin tradicional), la de float_in_place; si no, ninguna."""
     if not client.get("floating"):
         return None
     if record.get("floating"):
         return (*record["at"], *record["size"])
     skin = current_skin()
-    if not is_stacking(skin):
+    if not is_traditional(skin):
         return None
     monitors = hypr_json("monitors")
     mon = monitor_for(record["at"], record["size"], monitors)
-    return stacking_box(record["at"], record["size"], mon, has_titlebar(client, titlebars()),
+    return traditional_box(record["at"], record["size"], mon, has_titlebar(client, titlebars()),
                         windowing(skin)) if mon else None
 
 

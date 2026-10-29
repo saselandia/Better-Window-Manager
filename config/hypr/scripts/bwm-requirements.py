@@ -26,9 +26,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 SKINS_DIR = REPO / "config" / "hypr" / "skins"
-USER_SKINS_DIR = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share")) / "bwm" / "skins"
 THEME_MANAGER = REPO / "config" / "hypr" / "scripts" / "bwm-theme-manager.py"
-SKIN_ORDER = ["default", "retro", "plasma"]
 EXTRA_PATH = [str(Path.home() / ".local" / "bin"), "/usr/local/bin", "/usr/libexec"]
 
 FAMILIES = {
@@ -303,23 +301,15 @@ def install_plan(results: list[dict], catalog: dict, family: str, links: dict) -
 # ── Skins ────────────────────────────────────────────────────────────────────
 
 def load_data() -> tuple[dict, list[dict]]:
+    """Núcleo/catálogo (skins/requirements.json) y las skins (skins/<id>/skin.json, bwm_skins.py).
+    Una skin puede añadir requisitos propios al catálogo con su clave "catalog"."""
     base = json.loads((SKINS_DIR / "requirements.json").read_text(encoding="utf-8"))
-    skins = {}
-    for folder in (SKINS_DIR, USER_SKINS_DIR):
-        for path in sorted(folder.glob("*.json")) if folder.is_dir() else []:
-            if path.name == "requirements.json":
-                continue
-            try:
-                skin = json.loads(path.read_text(encoding="utf-8"))
-            except (OSError, ValueError):
-                continue
-            if not isinstance(skin, dict) or not skin.get("id"):
-                continue
-            base["catalog"] = {**skin.get("catalog", {}), **base["catalog"]}
-            skin["builtin"] = folder == SKINS_DIR
-            skins.setdefault(skin["id"], skin)
-    ordered = sorted(skins.values(), key=lambda s: (SKIN_ORDER.index(s["id"]) if s["id"] in SKIN_ORDER else 99, s["id"]))
-    return base, ordered
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import bwm_skins
+    skins = bwm_skins.all_skins()
+    for skin in skins:
+        base["catalog"] = {**skin.get("catalog", {}), **base["catalog"]}
+    return base, skins
 
 
 def current_skin() -> str:
@@ -349,6 +339,7 @@ def report(selected: list[str] | None, pre_install: bool, family: str | None) ->
         preview = skin.get("preview", "")
         data["skins"].append({
             **{k: skin.get(k) for k in ("id", "name", "imitates", "upstream", "description", "defaultTheme", "themes", "builtin")},
+            "windows": skin.get("windows", "tiling"),
             "preview": str(REPO / preview) if preview and not preview.startswith("/") else preview,
             "ready": ready, "requires": req, "recommends": rec,
             "plan": install_plan(req, catalog, distro["family"], links),
@@ -424,7 +415,9 @@ def requirements_markdown() -> str:
            table(base["core"]["requires"]), "\n### Recomendado (opcional)\n", table(base["core"]["recommends"])]
     for skin in skins:
         mode = "dinámico" if skin["defaultTheme"]["mode"] == "dynamic" else "estático"
+        kind = "mosaico (*tiling*)" if skin.get("windows", "tiling") == "tiling" else "WM tradicional (ventanas flotantes)"
         out += [f"\n## Skin {skin['name']}\n", f"Imita **{skin['imitates']}**. {skin['description']}\n",
+                f"* **Ventanas:** {kind}",
                 f"* **Tema por defecto:** {skin['defaultTheme']['name']} ({mode}). {skin['defaultTheme']['description']}",
                 f"* **Temas:** {skin['themes']['builtIn']}",
                 f"* **Compatibilidad:** {skin['themes']['compatibility']}\n", table(skin.get("requires", []))]
@@ -525,7 +518,8 @@ def main() -> int:
         for skin in data["skins"]:
             mark = f"{c['g']}●" if skin["ready"] else f"{c['r']}●"
             active = " (activa)" if skin["id"] == data["current"] else ""
-            print(f"{mark}{c['n']} {skin['id']:<8} {skin['name']} — imita {skin['imitates']}{active}")
+            kind = "mosaico" if skin["windows"] == "tiling" else "WM tradicional"
+            print(f"{mark}{c['n']} {skin['id']:<8} {skin['name']} — imita {skin['imitates']} · {kind}{active}")
     else:
         print_report(data, args.pre_install)
     return 0 if data["ok"] or args.action == "skins" else 1

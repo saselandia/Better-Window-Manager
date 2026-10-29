@@ -1,0 +1,74 @@
+{
+  "id": "default",
+  "name": "Default",
+  "imitates": "end-4 / illogical-impulse (Material You)",
+  "upstream": "https://github.com/end-4/dots-hyprland",
+  "description": "Material Design 3: barra, panel lateral, vista general y Alt+Tab de illogical-impulse. Todo el escritorio y las apps toman los colores del fondo de pantalla.",
+  "preview": "assets/skin-previews/end4-illogical-impulse.png",
+  "windows": "tiling",
+  "palette": "matugen",
+  "defaultTheme": {
+    "mode": "dynamic",
+    "name": "Material You desde el fondo",
+    "description": "Dinámico: matugen genera la paleta del fondo cada vez que lo cambias (Alt+W)."
+  },
+  "themes": {
+    "builtIn": "Paleta dinámica de matugen (claro u oscuro según el fondo).",
+    "compatibility": "Objetivo: plantillas y fondos de la comunidad de matugen / end-4 funcionan tal cual."
+  },
+  "look": {
+    "wallpaper": "default.jpg",
+    "rounding": 14,
+    "roundingPower": 2,
+    "borderSize": 2,
+    "gapsIn": 4,
+    "gapsOut": 8,
+    "btopRounded": true
+  },
+  "bar": {
+    "height": 40,
+    "bottom": false,
+    "cornerStyle": 2,
+    "showAppIcons": true,
+    "alwaysShowNumbers": false
+  },
+  "fonts": {
+    "main": "Google Sans Flex",
+    "numbers": "Google Sans Flex",
+    "title": "Google Sans Flex",
+    "monospace": "JetBrains Mono NF",
+    "reading": "Readex Pro",
+    "expressive": "Space Grotesk",
+    "iconNerd": "JetBrains Mono NF"
+  },
+  "parts": {
+    "quickshell": [
+      "config/quickshell/ii/modules/ii/bar/BarContent.qml",
+      "config/quickshell/ii/modules/ii/sidebarLeft",
+      "config/quickshell/ii/modules/ii/sidebarRight",
+      "config/quickshell/ii/modules/ii/overview",
+      "config/quickshell/ii/modules/ii/altTab/AltTab.qml",
+      "config/quickshell/ii/modules/ii/lock"
+    ],
+    "hyprland": [
+      "config/hypr/modules/colors.lua"
+    ],
+    "colors": [
+      "config/matugen/config.toml",
+      "config/matugen/templates"
+    ],
+    "scripts": [
+      "config/hypr/scripts/set-wallpaper.sh",
+      "config/hypr/scripts/theme-picker.sh"
+    ]
+  },
+  "requires": [
+    "matugen",
+    "rofi",
+    "hyprpolkitagent"
+  ],
+  "recommends": [
+    "swaync",
+    "hyprsunset"
+  ]
+}

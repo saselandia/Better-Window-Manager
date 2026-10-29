@@ -24,32 +24,19 @@ trae; el resto de complejidad la puede añadir quien la quiera, pero BWM no la o
 **Un único compositor.** BWM porta a Hyprland escritorios que no corren sobre él —KDE Plasma está en
 curso— para tenerlo todo en un solo compositor. Cada escritorio porteado es una skin.
 
-## Mosaico y apiladas: dos familias de skins
+## Mosaico o WM tradicional: la variable `windows`
 
-Toda skin es de una de dos familias, y lo declara en su manifiesto (`"windowing"`):
+Toda skin declara en su `skin.json` cómo gestiona las ventanas:
 
-* **Mosaico** (*tiling*: Default, Retro): las ventanas se reparten la pantalla sin solaparse.
-* **Apiladas** (*stacking*, el modelo de los escritorios tradicionales como KDE Plasma, Windows o
-  macOS): cada ventana flota con su barra de título y se solapan.
+* `"windows": "tiling"` — **mosaico** (Default, Retro): las ventanas se reparten la pantalla sin solaparse.
+* `"windows": "traditional"` — **WM tradicional** (KDE Plasma; el modelo de Windows, macOS o GNOME):
+  cada ventana flota con su barra de título y se solapan. Añade un bloque `"traditional"` con la barra
+  de título, el panel, el margen con los bordes y el hueco entre ventanas.
 
-El cambio entre familias lo resuelve `config/hypr/scripts/bwm_windows.py` para cualquier skin: al
-entrar en una apilada, cada ventana flota **en el mismo sitio** que tenía en mosaico, con la barra
-de título de la skin encima, un margen con los bordes del monitor y un hueco entre ventanas para que
-se note que ya no están en mosaico; al volver a una de mosaico, se rehace el mosaico en ese orden.
-Una skin apilada nueva sólo tiene que declarar su geometría:
-
-```json
-"windowing": {
-  "mode": "stacking",
-  "titlebar": 30,
-  "panel": { "edge": "bottom", "size": 44 },
-  "edgeMargin": 10,
-  "gap": 10
-}
-```
-
-Una de mosaico: `"windowing": { "mode": "tiling" }`. El gestor lo escribe también en
-`hypr/modules/theme.lua` (`windowing`), y `rules.lua` hace flotar todo en las apiladas.
+El paso entre las dos familias lo resuelve BWM para cualquier skin (`scripts/bwm_windows.py`): al
+entrar en una tradicional, cada ventana flota **en el mismo sitio** que tenía en mosaico; al volver a
+una de mosaico, se rehace el mosaico. Detalle y ejemplo en
+[`config/hypr/skins/README.md`](../config/hypr/skins/README.md).
 
 ## Skins incluidas
 
@@ -102,7 +89,7 @@ sin mezclar. Así una skin nueva o un cambio en una no rompe las demás.
 
 | | Común a todas | De una skin |
 | :--- | :--- | :--- |
-| Manifiesto y requisitos | `hypr/skins/requirements.json` | `hypr/skins/<id>.json` |
+| Manifiesto, aspecto y requisitos | `hypr/skins/requirements.json` | `hypr/skins/<id>/skin.json` |
 | Ajustes de Quickshell | Secciones comunes de `config.json` | `illogical-impulse/config-<id>.json` (secciones propias) |
 | Interfaz QML | `quickshell/ii/modules/common`, `services`, `modules/settings` | Default: `modules/ii/*` de illogical-impulse; Retro: `modules/ii/omarchy*`, `modules/ii/bar/omarchy`, `Commons`, `Ui`, `omarchy-plugins`; Plasma: `modules/ii/plasma*`, `plasmaCommon` |
 | Qué se carga en cada skin | `panelFamilies/IllogicalImpulseFamily.qml` (`extraCondition`) | — |
@@ -112,48 +99,21 @@ sin mezclar. Así una skin nueva o un cambio en una no rompe las demás.
 Lo que aún está mezclado (por ejemplo, barras de varias skins bajo `modules/ii/bar/`) se irá
 separando cuando se toque; el código nuevo ya debe nacer en la carpeta de su skin.
 
-## Qué declara una skin
+## Crear una skin
 
-Cada skin tiene un manifiesto JSON. Las de la release viven en `config/hypr/skins/<id>.json`; las
-de la comunidad se buscarán en `~/.local/share/bwm/skins/<id>.json`. El comprobador
-(`config/hypr/scripts/bwm-requirements.py`), el instalador y la bienvenida los leen:
+Cada skin es una carpeta `config/hypr/skins/<id>/` con un único `skin.json` (identidad, variable
+`windows`, motor de colores, aspecto, barra, fuentes, mapa de archivos `parts` y requisitos). Las de
+la comunidad irán en `~/.local/share/bwm/skins/<id>/skin.json`. La guía paso a paso, la tabla de
+campos y la plantilla (`_template/skin.json`) están en
+[`config/hypr/skins/README.md`](../config/hypr/skins/README.md).
 
-```json
-{
-  "id": "plasma",
-  "name": "KDE Plasma",
-  "imitates": "KDE Plasma 6 (Breeze Dark)",
-  "upstream": "https://kde.org/plasma-desktop/",
-  "description": "Qué reproduce de su escritorio original.",
-  "preview": "assets/skin-previews/kde-plasma-6.png",
-  "defaultTheme": { "mode": "static", "name": "Breeze Dark", "description": "…" },
-  "windowing": { "mode": "stacking", "titlebar": 30, "panel": { "edge": "bottom", "size": 44 }, "edgeMargin": 10, "gap": 10 },
-  "themes": { "builtIn": "Temas incluidos.", "compatibility": "Qué temas externos acepta." },
-  "requires": ["hyprpolkitagent", "breeze-icons", "hyprbars-plasma"],
-  "recommends": ["qt6ct", "networkmanager"],
-  "catalog": { }
-}
-```
-
-* `requires` / `recommends`: ids del catálogo de `config/hypr/skins/requirements.json` (paquetes por
-  distribución y cómo se comprueba cada uno). Una skin puede añadir los suyos en `catalog`.
 * La skin aparece **en verde** en la bienvenida cuando el núcleo y todos sus `requires` están.
   `bwm skin <id>` se niega a activarla si falta algo.
-* Tipos de comprobación: `cmd` (`any`/`all`), `version` (`cmd`, `regex`, `min`, `tested`), `qml`,
-  `qtplugin`, `python`, `pymodule`, `path`, `font`, `pkgconfig`, `hyprland-plugin`.
-
-## Cómo se construye una skin hoy
-
-Una skin toca varias piezas; las tres actuales sirven de ejemplo:
-
-1. **Gestor de skins:** `config/hypr/scripts/bwm-theme-manager.py` (`THEMES`, `apply_theme`), perfil
-   de Quickshell `config/illogical-impulse/config-<id>.json`.
-2. **Qué carga Quickshell en esa skin:** `config/quickshell/ii/panelFamilies/IllogicalImpulseFamily.qml`
-   (`extraCondition`).
-3. **Colores de Hyprland y de las apps:** `config/hypr/modules/theme.lua`, plantillas de
-   `config/matugen/templates/` (o las de Omarchy en Retro).
-4. **Atajos propios:** `config/hypr/keybinds.json` vía `keybinds-manager.py`.
-5. **Manifiesto** en `config/hypr/skins/<id>.json` y captura en `assets/skin-previews/`.
+* Requisitos: ids del catálogo de `config/hypr/skins/requirements.json` (paquetes por distribución y
+  cómo se comprueba cada uno: `cmd`, `version`, `qml`, `qtplugin`, `python`, `pymodule`, `path`,
+  `font`, `pkgconfig`, `hyprland-plugin`). Una skin puede añadir los suyos en `catalog`.
+* `tests/test_skins.py` comprueba que cada `skin.json` está completo, que su variable `windows` es
+  válida y que las rutas de `parts` existen.
 
 Instalar skins de terceros sin tocar el repositorio (formato de paquete, firma, sandbox) está por
 diseñar; cuando exista se documentará aquí y la bienvenida podrá activarlas.

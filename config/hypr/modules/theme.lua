@@ -10,8 +10,9 @@ local theme = {
     border_size = 2,
     gaps_in = 3,
     gaps_out = 5,
-    -- "tiling" (mosaico) o "stacking" (ventanas apiladas/flotantes): config/hypr/skins/retro.json
-    windowing = "tiling",
+    -- Ventanas: "tiling" (mosaico) o "traditional" (WM tradicional, todas flotantes con barra de
+    -- título). Sale de config/hypr/skins/retro/skin.json → "windows"
+    windows = "tiling",
 }
 
 return theme

@@ -123,7 +123,8 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
 
 | Quiero… | Dónde |
 | :--- | :--- |
-| Requisitos (instalador, `bwm check`, bienvenida) | `config/hypr/skins/*.json`, `scripts/bwm-requirements.py`; tabla en `docs/REQUIREMENTS.md` |
+| Crear o cambiar una skin (datos, aspecto, ventanas) | `config/hypr/skins/<id>/skin.json` (plantilla `_template/`, guía `skins/README.md`), cargado por `scripts/bwm_skins.py`; nada de datos de skin en el Python del gestor |
+| Requisitos (instalador, `bwm check`, bienvenida) | `config/hypr/skins/requirements.json` + `requires` de cada `skin.json`, `scripts/bwm-requirements.py`; tabla en `docs/REQUIREMENTS.md` |
 | Instalador | `install.sh` (sale con los comandos de la distro si falta un requisito) |
 | Bienvenida / comando `bwm` | `quickshell/ii/bwmWelcome.qml` (qs -p aparte), `scripts/bwm`, `~/.config/bwm/welcome.json`, `autostart.sh` |
 | Cambiar de estilo / ver qué hace al cambiar | `config/hypr/scripts/bwm-theme-manager.py` (`apply_theme`) |
@@ -143,7 +144,7 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
 | Salvapantallas e inhibición por multimedia | `modules/ii/screensaver/ScreensaverIdle.qml`, `scripts/launch-screensaver.sh` |
 | Actualizaciones de Gentoo / Flatpak | `BWM_CONTEXT.md` §2.7; shims `omarchy-update` y `omarchy-update-available` |
 | Reiniciar una app conservando sus ventanas | `bwm_omarchy.restart_app()` (Firefox, Vesktop, Steam, Stremio) + `scripts/bwm_windows.py` |
-| Dónde quedan las ventanas al cambiar de skin | `scripts/bwm_windows.py` (`float_in_place`, `stacking_box`, `restored_box`, `hold_new_windows`), `bwm_transition.py`, `sync_floating_windows`; familia de la skin en `skins/<id>.json` → `windowing` (`tiling`/`stacking`) |
+| Dónde quedan las ventanas al cambiar de skin | `scripts/bwm_windows.py` (`float_in_place`, `traditional_box`, `restored_box`, `hold_new_windows`), `bwm_transition.py`, `sync_floating_windows`; familia de la skin en `skins/<id>.json` → `windowing` (`tiling`/`stacking`) |
 
 ## 4. Estilos y piezas clave
 
@@ -172,9 +173,12 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
     Multimedia (`crmne.mpris`) va por defecto a la derecha de la hora (`centerEnd`).
   - Apps: todas las plantillas de Omarchy (`bwm_omarchy_apps.py`, también para apps sin instalar; LazyVim propio
     en `config/nvim`), Vesktop/Firefox con capa TUI propia, Spotify `BWM-Omarchy`, Steam con Adwaita-for-Steam.
-- **Familias de skins**: mosaico (*tiling*: Default, Retro) y apiladas (*stacking*, escritorio tradicional: Plasma),
-  en `skins/<id>.json` → `windowing`. Una skin apilada nueva declara barra de título, panel, margen y hueco; el
-  paso entre familias (`bwm_windows.py`) sirve para todas. `theme.lua` lleva `windowing` y `rules.lua` lo usa.
+- **Skins = carpetas**: `config/hypr/skins/<id>/skin.json` es la única fuente de datos de una skin (identidad,
+  `windows`, `palette`, `look`, `bar`, `fonts`, mapa `parts`, requisitos); `bwm_skins.py` lo carga y
+  `bwm-theme-manager.py` construye `THEMES` desde ahí. Variable de ventanas **`"windows"`**: `"tiling"`
+  (mosaico: Default, Retro) o `"traditional"` (WM tradicional, todo flota con barra: Plasma) + bloque
+  `traditional` (titlebar, panel, edgeMargin, gap). `theme.lua` lleva `windows` y `rules.lua` lo usa.
+  `tests/test_skins.py` valida los manifiestos y que existan las rutas de `parts`.
 - **Temas por defecto**: Default = Material You **dinámico** (matugen desde el fondo); Retro = paleta **dinámica**
   en formato Omarchy (o uno de los 23 temas **estáticos** con Alt+R); Plasma = Breeze Dark **estático**.
 - **Bienvenida** (`bwm`): asistente tipo Calamares que se abre en cada inicio de sesión hasta desactivarlo

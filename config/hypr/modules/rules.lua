@@ -114,10 +114,10 @@ hl.window_rule({
 
 local ok_theme, active_theme = pcall(require, "modules.theme")
 local is_plasma = ok_theme and (active_theme.name == "plasma" or (active_theme.name and string.find(active_theme.name, "plasma") ~= nil))
--- Skins apiladas ("stacking" en config/hypr/skins/<id>.json, como un escritorio tradicional): todo flota
-local is_stacking = ok_theme and (active_theme.windowing == "stacking" or is_plasma)
+-- Skins de WM tradicional ("windows": "traditional" en config/hypr/skins/<id>/skin.json): todo flota
+local is_traditional = ok_theme and (active_theme.windows == "traditional" or is_plasma)
 
-if is_stacking then
+if is_traditional then
     -- 1. Todas las ventanas en modo flotante individual (sin mosaico ni estela gris)
     hl.window_rule({
         name        = "plasma-float-all",
