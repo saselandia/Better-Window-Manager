@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import Quickshell
 import Quickshell.Wayland
 import qs.Commons
@@ -13,6 +14,7 @@ Item {
 
   property var appLibrary: null
   property var dock: null
+  signal settingsRequested()
 
   property bool opened: false
   // While an app is dragged out toward the dock, the grid steps aside so the
@@ -26,19 +28,22 @@ Item {
   property var uninstallEntry: null
   // The app whose menu is open, and where it opened.
   property var menuEntry: null
+  property int menuIndex: 0
   property point menuPoint
   property string filterText: ""
+  onFilterTextChanged: if (searchInput.text !== filterText) searchInput.text = filterText
   property int selectedIndex: 0
   property var apps: []
 
-  readonly property int iconSize: Math.round(56 * Style.fontScale)
+  readonly property int iconSize: Math.round(44 * Style.fontScale)
   readonly property int labelHeight: Math.ceil(labelMetrics.height) * 2
   readonly property int cellGutter: Style.spacing.sm
   readonly property int cellPadding: Style.spacing.lg
-  readonly property int cellWidth: Math.round(iconSize * 2.2)
+  readonly property int cellWidth: Math.round(128 * Style.fontScale)
   readonly property int cellHeight: cellPadding * 2 + iconSize + Style.spacing.md + labelHeight
-  readonly property int maxColumns: 7
-  readonly property int visibleRows: 4
+  readonly property int maxColumns: 6
+  readonly property int visibleRows: Math.max(1, Math.min(3, Math.floor((panel.height - screenMargin * 2 - inset * 2 - headerHeight - titleHeight - headerSpacing * 2) / cellHeight)))
+  readonly property int titleHeight: Style.space(26)
   readonly property int borderWidth: Math.max(1, Style.space(2))
   readonly property int contentMargin: Style.spacing.panelPadding
   readonly property int inset: contentMargin + borderWidth
@@ -51,7 +56,13 @@ Item {
   readonly property int cardWidth: Math.min(panel.width - screenMargin * 2, maxColumns * cellWidth + inset * 2)
   readonly property int columns: Math.max(1, Math.floor((cardWidth - inset * 2) / cellWidth))
   readonly property int gridWidth: columns * cellWidth
-  readonly property int cardHeight: Math.min(panel.height - screenMargin * 2, inset * 2 + headerHeight + headerSpacing + visibleRows * cellHeight)
+  readonly property int cardHeight: Math.min(panel.height - screenMargin * 2, inset * 2 + titleHeight + headerHeight + headerSpacing * 2 + visibleRows * cellHeight)
+
+  function inspect() {
+    return JSON.stringify({opened: opened, count: apps.length, visible: panel.visible,
+      ready: panel.contentRevealed, x: panel.screen ? panel.screen.x + card.x : 0,
+      y: panel.screen ? panel.screen.y + card.y : 0, width: card.width, height: card.height})
+  }
 
   function open() {
     root.selectedIndex = 0
@@ -65,7 +76,7 @@ Item {
       grid.positionViewAtBeginning()
     }
     root.opened = true
-    Qt.callLater(function() { keyCatcher.forceActiveFocus() })
+    Qt.callLater(function() { searchInput.forceActiveFocus() })
   }
 
   function close() {
@@ -102,7 +113,7 @@ Item {
 
   function cancelUninstall() {
     root.uninstallEntry = null
-    Qt.callLater(function() { keyCatcher.forceActiveFocus() })
+    Qt.callLater(function() { searchInput.forceActiveFocus() })
   }
 
   function confirmUninstall() {
@@ -114,7 +125,21 @@ Item {
 
   function openMenu(entry, point) {
     root.menuEntry = entry
+    root.menuIndex = 0
     root.menuPoint = point
+  }
+
+  function activateMenu() {
+    var entry = root.menuEntry
+    if (!entry) return
+    if (root.menuIndex === 0) {
+      root.close()
+      if (root.dock) root.dock.launchEntry(entry)
+      else if (root.appLibrary) root.appLibrary.launch(entry.id, root.appLibrary.entryName(entry))
+    } else if (root.dock && root.menuIndex === 1) {
+      root.dock.setPinned(String(entry.id || ""), !root.dock.isPinned(String(entry.id || "")))
+      root.menuEntry = null
+    } else root.requestUninstall(entry)
   }
 
   function toggle() {
@@ -236,34 +261,53 @@ Item {
       Item {
         id: keyCatcher
         anchors.fill: parent
-        focus: true
-
-        Keys.priority: Keys.BeforeItem
         Keys.onPressed: function(event) {
           if (root.uninstallEntry) {
-            if (uninstallConfirm.handleKey(event)) event.accepted = true
+            uninstallConfirm.handleKey(event)
+            event.accepted = true
             return
           }
-          if (event.key === Qt.Key_Delete) {
-            root.requestUninstall(root.apps[root.selectedIndex])
-          } else if (event.key === Qt.Key_Escape) {
+          // Qt owns text, selections, clipboard shortcuts and input-method composition.
+          if (searchInput.preeditText.length || searchInput.inputMethodComposing) return
+          var control = event.modifiers & Qt.ControlModifier
+          var shift = event.modifiers & Qt.ShiftModifier
+          if (control && event.key === Qt.Key_Comma) { root.settingsRequested(); event.accepted = true; return }
+          if (root.menuEntry) {
+            if (event.key === Qt.Key_Escape || event.key === Qt.Key_Left) root.menuEntry = null
+            else if (event.key === Qt.Key_Up || event.key === Qt.Key_Backtab) root.menuIndex = Math.max(0, root.menuIndex - 1)
+            else if (event.key === Qt.Key_Down || event.key === Qt.Key_Tab) root.menuIndex = Math.min(root.dock ? 2 : 1, root.menuIndex + 1)
+            else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) root.activateMenu()
+            else return
+            event.accepted = true
+            return
+          }
+          if (event.key === Qt.Key_Escape) {
             if (root.menuEntry) root.menuEntry = null
             else if (root.filterText) root.setFilter("")
             else root.close()
-          } else if (Util.editsFilter(event, root.filterText)) {
-            root.setFilter(Util.editedFilter(event, root.filterText))
-          } else if (Util.readingKey(event) === Qt.Key_Left) {
+          } else if (control && shift && event.key === Qt.Key_Delete) {
+            root.requestUninstall(root.apps[root.selectedIndex])
+          } else if (event.key === Qt.Key_Menu || (shift && event.key === Qt.Key_F10)) {
+            var cell = grid.itemAtIndex(root.selectedIndex)
+            if (cell) root.openMenu(root.apps[root.selectedIndex], cell.mapToItem(panel.contentItem, cell.width / 2, cell.height / 2))
+          } else if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) {
+            root.select(event.key === Qt.Key_Backtab || shift ? -1 : 1)
+          } else if (!root.filterText && event.modifiers === Qt.NoModifier && event.key === Qt.Key_Left) {
             root.select(-1)
-          } else if (Util.readingKey(event) === Qt.Key_Right) {
+          } else if (!root.filterText && event.modifiers === Qt.NoModifier && event.key === Qt.Key_Right) {
             root.select(1)
           } else if (event.key === Qt.Key_Up) {
             root.select(-root.columns)
           } else if (event.key === Qt.Key_Down) {
             root.select(root.columns)
+          } else if (event.key === Qt.Key_PageUp || event.key === Qt.Key_PageDown) {
+            root.select((event.key === Qt.Key_PageUp ? -1 : 1) * root.columns * root.visibleRows)
+          } else if (!root.filterText && event.key === Qt.Key_Home) {
+            root.select(-root.apps.length)
+          } else if (!root.filterText && event.key === Qt.Key_End) {
+            root.select(root.apps.length)
           } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
             root.launch(root.selectedIndex)
-          } else if (event.text && event.text.length === 1 && event.text.charCodeAt(0) >= 32 && event.text.charCodeAt(0) !== 127) {
-            root.setFilter(root.filterText + event.text)
           } else {
             return
           }
@@ -280,6 +324,40 @@ Item {
         anchors.bottomMargin: card.contentBottomInset
         spacing: root.headerSpacing
 
+        Item {
+          width: parent.width
+          height: root.titleHeight
+          Text {
+            anchors.left: parent.left
+            anchors.leftMargin: root.cellGutter
+            anchors.verticalCenter: parent.verticalCenter
+            text: Commons.I18n.t("bwm.apps", Commons.I18n.language.startsWith("es") ? "Aplicaciones" : "Applications")
+            color: Commons.Color.menu.text
+            font.family: Style.font.menuFamily
+            font.pixelSize: Style.font.body
+          }
+          Text {
+            anchors.right: settingsButton.left
+            anchors.rightMargin: root.cellGutter
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.apps.length
+            color: Commons.Color.menu.text
+            opacity: 0.55
+            font.family: Style.font.menuFamily
+            font.pixelSize: Style.font.caption
+          }
+          Button {
+            id: settingsButton
+            anchors.right: parent.right
+            anchors.rightMargin: root.cellGutter
+            anchors.verticalCenter: parent.verticalCenter
+            text: "󰒓"
+            tooltipText: "Configuración · Ctrl+,"
+            focusable: true
+            onClicked: root.settingsRequested()
+          }
+        }
+
         Rectangle {
           x: root.cellGutter
           width: parent.width - root.cellGutter * 2
@@ -287,25 +365,43 @@ Item {
           radius: Style.cornerRadius
           color: Util.alpha(Commons.Color.menu.text, 0.06)
 
-          Text {
+          border.width: 1
+          border.color: searchInput.activeFocus ? Commons.Color.accent : Util.alpha(Commons.Color.menu.text, 0.2)
+
+          TextInput {
+            id: searchInput
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.leftMargin: Style.spacing.controlPaddingX
             anchors.rightMargin: Style.spacing.controlPaddingX
             anchors.verticalCenter: parent.verticalCenter
-            textFormat: Text.PlainText
-            text: root.filterText || Commons.I18n.t("dock.searchApps")
+            focus: true
             color: Commons.Color.menu.text
-            opacity: root.filterText ? 1 : 0.58
+            selectionColor: Commons.Color.menu.selectedBackground
+            selectedTextColor: Commons.Color.menu.selectedText
             font.family: Style.font.menuFamily
             font.pixelSize: Style.font.heading
+            clip: true
+            selectByMouse: true
+            readOnly: !!root.uninstallEntry
+            Keys.priority: Keys.BeforeItem
+            Keys.forwardTo: [keyCatcher]
+            onTextChanged: if (text !== root.filterText) root.setFilter(text)
+          }
+          Text {
+            anchors.fill: searchInput
+            visible: !searchInput.text && !searchInput.preeditText
+            text: Commons.I18n.t("dock.searchApps")
+            color: Commons.Color.menu.text
+            opacity: 0.5
+            font: searchInput.font
             elide: Text.ElideRight
           }
         }
 
         Item {
           width: parent.width
-          height: parent.height - root.headerHeight - parent.spacing
+          height: parent.height - root.titleHeight - root.headerHeight - parent.spacing * 2
 
           GridView {
             id: grid
@@ -315,6 +411,14 @@ Item {
             cellWidth: root.cellWidth
             cellHeight: root.cellHeight
             boundsBehavior: Flickable.StopAtBounds
+            Controls.ScrollBar.vertical: Controls.ScrollBar {
+              policy: Controls.ScrollBar.AsNeeded
+              contentItem: Rectangle {
+                implicitWidth: Style.space(4)
+                color: Util.alpha(Commons.Color.menu.text, 0.4)
+                radius: Style.cornerRadius
+              }
+            }
 
             delegate: Item {
               id: cell
@@ -329,6 +433,14 @@ Item {
               width: root.cellWidth
               height: root.cellHeight
 
+              Rectangle {
+                anchors.fill: parent
+                anchors.margins: root.cellGutter / 2
+                radius: Style.cornerRadius
+                color: cell.selected ? Util.alpha(Commons.Color.accent, 0.1) : "transparent"
+                border.width: cell.selected ? 1 : 0
+                border.color: Util.alpha(Commons.Color.accent, 0.6)
+              }
               Image {
                 id: icon
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -345,24 +457,15 @@ Item {
                 mipmap: true
               }
 
-              // The selection marks the app's name, not the whole cell.
-              Rectangle {
-                anchors.centerIn: label
-                width: Math.min(cell.width - root.cellGutter * 2, label.contentWidth + Style.spacing.md * 2)
-                height: label.contentHeight + Style.spacing.xs * 2
-                radius: Style.cornerRadius
-                color: cell.selected ? Commons.Color.menu.selectedBackground : "transparent"
-              }
-
               Text {
                 id: label
                 anchors.top: icon.bottom
                 anchors.topMargin: Style.spacing.md
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: parent.width - (root.cellGutter + Style.spacing.md) * 2
+                width: parent.width - root.cellGutter * 2
                 textFormat: Text.PlainText
                 text: root.appLibrary ? root.appLibrary.entryName(cell.modelData) : ""
-                color: cell.selected ? Commons.Color.menu.selectedText : Commons.Color.menu.text
+                color: Commons.Color.menu.text
                 font.family: Style.font.menuFamily
                 font.pixelSize: Style.font.body
                 horizontalAlignment: Text.AlignHCenter
@@ -379,12 +482,12 @@ Item {
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                 // The grid would otherwise take a dragging press for a scroll.
                 preventStealing: true
-                onContainsMouseChanged: if (containsMouse && !root.dragging) root.selectedIndex = cell.index
                 onPressed: function(event) {
                   cell.moved = false
                   cell.pressPoint = Qt.point(event.x, event.y)
                 }
                 onPositionChanged: function(event) {
+                  if (!pressedButtons && containsMouse && !root.dragging) root.selectedIndex = cell.index
                   if (!(pressedButtons & Qt.LeftButton)) return
                   if (!cell.moved && Math.hypot(event.x - cell.pressPoint.x, event.y - cell.pressPoint.y) > Style.space(4)) cell.moved = true
                   if (cell.moved) root.dragTo(cell.modelData, cell.mapToItem(panel.contentItem, event.x, event.y))
@@ -408,6 +511,7 @@ Item {
 
           Text {
             anchors.centerIn: parent
+            width: parent.width - Style.spacing.lg * 2
             visible: root.apps.length === 0
             textFormat: Text.PlainText
             text: Commons.I18n.t("dock.noAppsMatch").arg(root.filterText)
@@ -415,8 +519,13 @@ Item {
             opacity: 0.7
             font.family: Style.font.menuFamily
             font.pixelSize: Style.font.title
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.Wrap
+            maximumLineCount: 3
+            elide: Text.ElideRight
           }
         }
+
       }
     }
     // The dragged app's icon, under the pointer.
@@ -460,6 +569,7 @@ Item {
         width: menu.width - menu.contentLeftInset - menu.contentRightInset
 
         MenuRow {
+          menuIndex: 0
           text: Commons.I18n.t("dock.open")
           onTriggered: {
             var entry = menu.entry
@@ -470,6 +580,7 @@ Item {
         }
 
         MenuRow {
+          menuIndex: 1
           visible: !!root.dock
           text: menu.pinned ? Commons.I18n.t("dock.removeFromDock") : Commons.I18n.t("dock.keepInDock")
           onTriggered: {
@@ -479,6 +590,7 @@ Item {
         }
 
         MenuRow {
+          menuIndex: root.dock ? 2 : 1
           text: Commons.I18n.t("dock.uninstall")
           onTriggered: root.requestUninstall(menu.entry)
         }
@@ -490,12 +602,13 @@ Item {
     id: row
 
     property string text: ""
+    property int menuIndex: 0
     signal triggered()
 
     width: parent ? parent.width : 0
     height: visible ? Style.spacing.popupRowHeight : 0
     radius: Style.cornerRadius
-    color: rowMouse.containsMouse ? Style.hoverFill : "transparent"
+    color: row.menuIndex === root.menuIndex ? Style.hoverFill : "transparent"
 
     Text {
       anchors.verticalCenter: parent.verticalCenter
@@ -513,6 +626,7 @@ Item {
       anchors.fill: parent
       hoverEnabled: true
       cursorShape: Qt.PointingHandCursor
+      onPositionChanged: if (containsMouse) root.menuIndex = row.menuIndex
       onClicked: row.triggered()
     }
   }

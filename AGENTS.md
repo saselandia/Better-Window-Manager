@@ -141,7 +141,7 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
 | About de Ajustes / detección de distro | `modules/settings/About.qml`, `services/SystemInfo.qml` y `SystemInfoData.js` (os-release sin ejecutar shell); enlaces propios de BWM |
 | Entrada del menú de Retro | `config/hypr/omarchy/bwm-menu.jsonc` (`when`/`checked` en bash) |
 | Configuración del usuario en texto (manda sobre BWM) | `scripts/bwm-user-config` (`list/edit/apply/path`), `~/.config/bwm/user/{hyprland.lua,shell.jsonc}`, `~/.config/omarchy/shell.toml`, `~/.config/bwm/extensions/menu.jsonc`; `hyprland.lua` la carga al final con `pcall`; `bwm-theme-manager.py apply-user` y al cambiar de skin |
-| Ajustes de Retro (aspecto Omarchy) | `quickshell/ii/retroSettings.qml` (mismas páginas que `settings.qml`), `open-settings.sh [página]`, menú `setup.settings.*`, reglas `omarchy-settings*` en `hypr/modules/omarchy_windows.lua` |
+| Configuración integrada de Retro | `modules/ii/omarchyMenu/omarchy/settings/` (catálogo, controlador y editores dentro de `Menu.qml`); `open-settings.sh [página]` → IPC `omarchyMenu.settings`. `retroSettings.qml` sólo redirige, sin ventana propia |
 | Un comando `omarchy-*` que falta | `config/hypr/scripts/omarchy-shims/` (+ enlace en `~/.local/bin`, `bwm-plugin.sh catalog`) |
 | Reglas de ventana / juegos | `hypr/modules/rules.lua`, `scripts/window-guard.py` |
 | Atajos | `keybinds.json` vía `keybinds-manager.py` |
@@ -169,7 +169,7 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
   - Barra `RetroBarContent.qml` (clon de la de Omarchy) con widgets fijos de `bar/omarchy/` y plugins
     (`omarchy-plugins/`, `~/.config/bwm/omarchy-plugins.json`, `bwm-plugin.sh`); cada widget de la derecha se oculta
     en Ajustes → Barra (`disabled`/`shown`). Idioma del shell de Omarchy en Ajustes → Barra (ahora inglés).
-  - Menú (Super) `omarchyMenu` + `bwm-menu.jsonc`; cuadrícula Apps (Super+Espacio, `AppGrid.qml`); dock opcional
+  - Menú (Super) `omarchyMenu` + `bwm-menu.jsonc`; cuadrícula Apps (Alt+Espacio o Super+Espacio, `AppGrid.qml`); dock opcional
     (`omarchyDock`, `dock.omarchy`, apagado; Super+M); notificaciones, OSD, polkit, recordatorios, bloqueo
     hyprlock, captura omasnap, portapapeles (Super+V), emojis (Super+.), salvapantallas, glass, transparencia.
   - Temas: 23 incluidos (`hypr/omarchy/themes`), temas instalados en `~/.local/share/bwm/omarchy-themes`

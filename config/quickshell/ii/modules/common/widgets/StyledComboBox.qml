@@ -11,7 +11,7 @@ ComboBox {
     id: root
 
     property string buttonIcon: ""
-    property real buttonRadius: height / 2
+    property real buttonRadius: Math.min(height / 2, Appearance.rounding.full)
     property color colBackground: Appearance.colors.colSecondaryContainer
     property color colBackgroundHover: Appearance.colors.colSecondaryContainerHover
     property color colBackgroundActive: Appearance.colors.colSecondaryContainerActive
@@ -20,6 +20,8 @@ ComboBox {
     Layout.fillWidth: true
 
     background: Rectangle {
+        border.width: Appearance.outlinedControls ? 1 : 0
+        border.color: root.activeFocus ? Appearance.colors.colPrimary : Appearance.m3colors.m3outlineVariant
         radius: root.buttonRadius
         color: (root.down && !root.popup.visible) ? root.colBackgroundActive : root.hovered ? root.colBackgroundHover : root.colBackground
 
@@ -60,7 +62,7 @@ ComboBox {
 
             Loader {
                 Layout.alignment: Qt.AlignVCenter
-                active: root.buttonIcon.length > 0 || (root.currentIndex >= 0 && typeof root.model[root.currentIndex] === 'object' && root.model[root.currentIndex]?.icon)
+                active: root.buttonIcon.length > 0 || !!(root.currentIndex >= 0 && typeof root.model[root.currentIndex] === 'object' && root.model[root.currentIndex]?.icon)
                 visible: active
                 sourceComponent: MaterialSymbol {
                     text: {

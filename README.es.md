@@ -73,6 +73,13 @@ bwm skin retro      # cambia de skin (comprueba antes sus requisitos)
 bwm startup off     # que la bienvenida no se abra al iniciar sesión
 ```
 
+## Configuración de Retro
+
+`Super + I` abre Configuración dentro del propio menú de Omarchy. Busca una opción escribiendo,
+cambia interruptores con Intro o Espacio y edita valores en el mismo panel. Escape vuelve
+conservando la búsqueda y la fila. Las páginas con más controles también se abren dentro del menú;
+la cuadrícula de apps incluye un botón de Configuración (`Ctrl + ,`).
+
 ## ✍️ Tu configuración en texto
 
 Si prefieres escribir a usar una interfaz, BWM te deja una zona propia que se carga **después** de la suya y, por tanto, **manda sobre lo que viene por defecto**. Vive fuera del repositorio, así que ninguna actualización la pisa. Se abre desde el menú de Retro (**Ajustes → Configuración → Editar en texto**) o con `bwm-user-config edit <nombre>`. Se crea con una cabecera «En esta zona puedes escribir tú» y ejemplos, y se aplica al guardar y cerrar el editor.

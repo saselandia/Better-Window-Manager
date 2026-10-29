@@ -3,7 +3,7 @@
   "name": "Retro",
   "imitates": "Omarchy 4 (basecamp/omarchy, rama quattro)",
   "upstream": "https://github.com/basecamp/omarchy",
-  "description": "El shell de Omarchy: su barra con plugins, menú, cuadrícula de apps, notificaciones, OSD, polkit, bloqueo y el tema de todas sus apps con capa TUI.",
+  "description": "El shell de Omarchy: su barra con plugins, menú con configuración integrada, cuadrícula de apps, notificaciones, OSD, polkit, bloqueo y el tema de todas sus apps con capa TUI.",
   "preview": "config/hypr/omarchy/themes/tokyo-night/preview.png",
   "windows": "tiling",
   "palette": "omarchy",
@@ -53,6 +53,7 @@
       "config/quickshell/ii/Commons",
       "config/quickshell/ii/Ui",
       "config/quickshell/ii/omarchy-plugins",
+      "config/quickshell/ii/modules/settings/retro",
       "config/quickshell/ii/retroSettings.qml"
     ],
     "hyprland": [

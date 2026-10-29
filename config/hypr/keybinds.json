@@ -1270,5 +1270,21 @@
     "is_default": false,
     "enabled": true,
     "is_modified": false
+  },
+  {
+    "id": "custom_1793254403_73",
+    "category": "Lanzadores",
+    "description": "Aplicaciones (Apps de Omarchy en Retro)",
+    "mods": [
+      "ALT"
+    ],
+    "key": "SPACE",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/app-launcher.sh apps",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true
   }
 ]

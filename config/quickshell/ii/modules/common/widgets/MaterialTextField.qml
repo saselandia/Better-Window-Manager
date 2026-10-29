@@ -17,6 +17,21 @@ TextField {
     Material.foreground: Appearance.m3colors.m3onSurface
     Material.containerStyle: Material.Outlined
     renderType: Text.QtRendering
+    color: Appearance.colors.colOnLayer0
+    selectByMouse: true
+    leftPadding: 12
+    rightPadding: 12
+    topPadding: 10
+    bottomPadding: 10
+
+    background: Rectangle {
+        implicitWidth: 160
+        implicitHeight: 42
+        radius: Appearance.rounding.verysmall
+        color: Appearance.m3colors.m3surface
+        border.width: root.activeFocus ? 2 : 1
+        border.color: root.activeFocus ? Appearance.colors.colPrimary : Appearance.m3colors.m3outlineVariant
+    }
 
     selectedTextColor: Appearance.m3colors.m3onSecondaryContainer
     selectionColor: Appearance.colors.colSecondaryContainer
@@ -29,7 +44,7 @@ TextField {
         hintingPreference: Font.PreferFullHinting
         variableAxes: Appearance.font.variableAxes.main
     }
-    wrapMode: TextEdit.Wrap
+    // A field is one line; long commands scroll with the caret.
 
     MouseArea {
         anchors.fill: parent

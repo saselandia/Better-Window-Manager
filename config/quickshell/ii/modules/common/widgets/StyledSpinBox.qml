@@ -28,14 +28,26 @@ SpinBox {
         StyledTextInput {
             id: labelText
             anchors.centerIn: parent
+            width: Math.max(40, implicitWidth)
+            horizontalAlignment: TextInput.AlignHCenter
             text: root.value // displayText would make the numbers weird like 1,000 instead of 1000
             color: Appearance.colors.colOnLayer2
             font.family: Appearance.font.family.numbers
             font.variableAxes: Appearance.font.variableAxes.numbers
             font.pixelSize: Appearance.font.pixelSize.small
             validator: root.validator
-            onTextChanged: {
-                root.value = parseFloat(text);
+            selectByMouse: true
+            readOnly: !root.editable
+            inputMethodHints: Qt.ImhFormattedNumbersOnly
+            // Commit complete numbers. Parsing each keystroke makes clearing a number
+            // write NaN/0 and replaces the user's next digit with a clamped value.
+            onEditingFinished: {
+                if (acceptableInput) root.value = root.valueFromText(text, root.locale);
+                text = String(root.value);
+            }
+            Connections {
+                target: root
+                function onValueChanged() { labelText.text = String(root.value); }
             }
         }
     }

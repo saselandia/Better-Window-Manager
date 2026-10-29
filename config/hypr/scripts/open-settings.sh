@@ -3,8 +3,7 @@
 # Script: open-settings.sh
 # Descripción: Abre la app de configuración del estilo activo:
 #              - Plasma (KDE): plasmaSettings.qml (estilo Preferencias del sistema)
-#              - Retro (Omarchy): retroSettings.qml (mismas páginas, marco de Omarchy);
-#                con una página concreta, en una ventanita flotante sólo con esa página
+#              - Retro (Omarchy): Configuración dentro del propio menú de Omarchy
 #              - Default: settings.qml (Material You)
 #              Página: SETTINGS_PAGE=<id> o primer argumento (p. ej. open-settings.sh bar).
 # ==============================================================================
@@ -19,7 +18,7 @@ fi
 if [[ "$THEME" == "plasma" ]]; then
     exec qs -p "$HOME/.config/quickshell/ii/plasmaSettings.qml" "$@"
 elif [[ "$THEME" == "retro" ]]; then
-    exec qs -p "$HOME/.config/quickshell/ii/retroSettings.qml" "$@"
+    exec qs -c ii ipc call omarchyMenu settings "${SETTINGS_PAGE:-all}"
 else
     exec qs -p "$HOME/.config/quickshell/ii/settings.qml" "$@"
 fi

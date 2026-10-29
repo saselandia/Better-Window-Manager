@@ -96,6 +96,12 @@ sin mezclar. Así una skin nueva o un cambio en una no rompe las demás.
 | Colores de Hyprland y apps | `hypr/modules/*.lua`, `matugen/` | `colors.lua` (Default), `retro_colors.lua` + `hypr/omarchy/` (Retro), `plasma_colors.lua` (Plasma) |
 | Plugins de Hyprland | — | `src/hyprbars` (Plasma) |
 
+En Retro, Configuración forma parte del menú de Omarchy: el catálogo y los editores viven en
+`modules/ii/omarchyMenu/omarchy/settings/`. `SettingsPage.qml` aloja los controles compartidos
+más complejos en la misma capa; `modules/settings/retro/SettingsStyle.qml` los adapta a la paleta.
+`open-settings.sh` usa IPC y `retroSettings.qml` conserva compatibilidad con comandos antiguos,
+sin crear una ventana de Ajustes.
+
 Lo que aún está mezclado (por ejemplo, barras de varias skins bajo `modules/ii/bar/`) se irá
 separando cuando se toque; el código nuevo ya debe nacer en la carpeta de su skin.
 

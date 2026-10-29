@@ -18,6 +18,17 @@ Los binarios existentes deben corresponder a su código fuente y avisos antes de
 | Iconos Fluent en `config/quickshell/ii/assets/icons/fluent/` | Joshua Oghenekaro Okwe, Windows 11 en Figma, CC BY 4.0 | [Aviso original](config/quickshell/ii/assets/icons/fluent/README.md) indica fuente y modificaciones. Verificar las condiciones de cada recurso descargado antes de distribuirlo. |
 | Formas de `config/quickshell/ii/modules/common/widgets/shapes/` | Apache-2.0 | Texto en ese directorio; revisar procedencia y cualquier aviso `NOTICE` de la versión original. |
 
+Adaptaciones de interfaz (2026-10-29): `modules/ii/omarchyMenu/omarchy/{Menu,AppGrid}.qml`
+conservan la procedencia y licencia MIT del menú y la cuadrícula de Omarchy quattro ya
+vendorizados. BWM sustituye la entrada de texto limitada por editores Qt, ajusta la cuadrícula
+y añade navegación de teclado. La apertura de Apps pasa al shell nativo y se retiran los
+pies de ruta/atajos del menú y la cuadrícula. La extensión de BWM en `omarchyMenu/omarchy/settings/`
+añade configuración dentro del menú mediante sus componentes originales `qs.Ui`; `SettingsPage.qml`
+y `modules/settings/retro/SettingsStyle.qml` integran las páginas de illogical-impulse con los colores de `colors.toml`/`shell.toml` de
+Omarchy; las correcciones de sus controles compartidos conservan la GPL de ese componente.
+La versión vendorizada previa y estas modificaciones se pueden consultar en el historial Git
+de cada archivo; no se ha actualizado el código de terceros a otra revisión upstream.
+
 ## Recursos pendientes de procedencia
 
 No se declara que los siguientes recursos estén cubiertos por MIT ni por una licencia común:

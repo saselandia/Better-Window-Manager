@@ -17,6 +17,12 @@ TextArea {
     Material.foreground: Appearance.m3colors.m3onSurface
     Material.containerStyle: Material.Filled
     renderType: Text.QtRendering
+    color: Appearance.colors.colOnLayer0
+    selectByMouse: true
+    leftPadding: 12
+    rightPadding: 12
+    topPadding: 10
+    bottomPadding: 10
 
     selectedTextColor: Appearance.m3colors.m3onSecondaryContainer
     selectionColor: Appearance.colors.colSecondaryContainer
@@ -25,9 +31,12 @@ TextArea {
     background: Rectangle {
         implicitHeight: 56
         color: Appearance.m3colors.m3surface
-        topLeftRadius: 4
-        topRightRadius: 4
+        topLeftRadius: Math.min(4, Appearance.rounding.verysmall)
+        topRightRadius: Math.min(4, Appearance.rounding.verysmall)
+        border.width: Appearance.outlinedControls ? (root.activeFocus ? 2 : 1) : 0
+        border.color: root.activeFocus ? Appearance.colors.colPrimary : Appearance.m3colors.m3outlineVariant
         Rectangle {
+            visible: !Appearance.outlinedControls
             anchors {
                 left: parent.left
                 right: parent.right

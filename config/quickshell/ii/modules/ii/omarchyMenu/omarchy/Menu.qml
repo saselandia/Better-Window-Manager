@@ -6,6 +6,7 @@ import qs.Commons
 import qs.Commons as Commons
 import qs.Ui
 import "MenuModel.js" as MenuModel
+import "settings" as Settings
 
 Item {
   id: root
@@ -14,12 +15,28 @@ Item {
   property string omarchyPath: Quickshell.env("OMARCHY_PATH")
   property var shell: null
   property var manifest: null
+  // Optional native settings extension, owned by BWM's Retro host.
+  property var settingsAdapter: null
+  readonly property bool settingsMenu: !dmenuActive && (activeMenu.startsWith("setup.settings") || editingSetting || settingsPage)
+  onSettingsMenuChanged: if (settingsMenu && settingsAdapter) settingsAdapter.refresh()
+  readonly property bool editingSetting: !!settingsAdapter && !!settingsAdapter.editing
+  readonly property bool settingsPage: !!settingsAdapter && !!settingsAdapter.page
+  onSettingsAdapterChanged: if (rowsLoaded) rebuildItemsFromSources(true)
+  Connections {
+    target: root.settingsAdapter
+    function onChanged() { if (root.opened) root.rebuildDisplay(); }
+    function onFocusSearch() { root.disarmPointer(); Qt.callLater(function() { filterInput.forceActiveFocus(); }); }
+    function onChoiceSaved(fieldId) {
+      root.goBack()
+    }
+  }
 
   // Plugin lifecycle hooks. The host calls open(payloadJson) after
   // `omarchy-shell shell summon omarchy.menu ...` and close() when hidden.
   property string pendingInitialMenu: "root"
 
   function open(payloadJson) {
+    if (root.settingsAdapter) root.settingsAdapter.reset()
     var payload = ({})
     try { payload = JSON.parse(payloadJson || "{}") } catch (e) { payload = ({}) }
 
@@ -49,6 +66,13 @@ Item {
   }
 
   function ping() { return "ok" }
+  function inspect() {
+    return JSON.stringify({ opened: opened, menu: activeMenu,
+      view: editingSetting ? "editor" : settingsPage ? "page" : "menu",
+      x: panel.screen ? panel.screen.x + card.x : 0,
+      y: panel.screen ? panel.screen.y + card.y : 0,
+      width: card.width, height: card.height })
+  }
 
   property string fontFamily: Style.font.menuFamily
   // JSONC menu definitions. The shell parses both at startup and merges
@@ -115,7 +139,10 @@ Item {
   readonly property var appLibrary: root.shell ? root.shell.appLibrary : null
   property bool deleteConfirmOpen: false
   property var deleteTarget: null
-  onOpenedChanged: if (!opened) { deleteConfirmOpen = false; deleteTarget = null }
+  onOpenedChanged: {
+    if (!opened) { deleteConfirmOpen = false; deleteTarget = null; pendingInitialMenu = ""; if (settingsAdapter) settingsAdapter.reset() }
+    else if (settingsMenu && settingsAdapter) settingsAdapter.refresh()
+  }
   // Bound to the central [menu] section in shell.toml via Commons.Color.qml.
   // Each color already includes its alpha companion (composed in the
   // singleton), so consumers can drop them straight into a Rectangle.
@@ -143,13 +170,12 @@ Item {
   property int dividerHeight: Style.space(17)
   property bool searchDivider: false
   property int layoutSerial: 0
-  property int cardWidth: Math.min(root.dmenuActive ? Style.space(root.dmenuWidth) : ((root.activeMenu === "trigger.capture.screenrecord" || root.activeMenu === "appearance.font" || root.activeMenu === "update.kernel") ? Style.space(520) : Style.space(300)), panel.width - Style.gapsOut * 2)
-  property int visibleRowsHeight: root.dmenuActive ? dmenuRowListHeight(layoutSerial, displayModel.count, filterText) : rowListHeight(layoutSerial, displayModel.count, filterText, searchDivider)
-  // BWM: pie con la ruta y las teclas (sólo en el menú normal)
-  readonly property int footerHeight: root.dmenuActive ? 0 : Style.font.caption + Style.space(10)
+  property int cardWidth: Math.min(root.dmenuActive ? Style.space(root.dmenuWidth) : (root.settingsPage ? Style.space(780) : root.settingsMenu ? Style.space(560) : ((root.activeMenu === "trigger.capture.screenrecord" || root.activeMenu === "appearance.font" || root.activeMenu === "update.kernel") ? Style.space(520) : Style.space(300))), panel.width - Style.gapsOut * 2)
+  readonly property int settingsContentHeight: root.editingSetting ? settingEditor.implicitHeight : root.settingsPage ? Math.min(Style.space(560), Math.round(panel.height * 0.62)) : 0
+  property int visibleRowsHeight: (root.editingSetting || root.settingsPage) ? settingsContentHeight : root.dmenuActive ? dmenuRowListHeight(layoutSerial, displayModel.count, filterText) : rowListHeight(layoutSerial, displayModel.count, filterText, searchDivider)
   property int cardHeight: root.dmenuActive
     ? Math.min(contentMargin * 2 + headerHeight + (mode === "input" ? 0 : contentSpacing + visibleRowsHeight), panel.height - Style.gapsOut * 2)
-    : Math.min(contentMargin * 2 + headerHeight + contentSpacing + visibleRowsHeight + contentSpacing + footerHeight, panel.height - Style.gapsOut * 2)
+    : Math.min(contentMargin * 2 + headerHeight + contentSpacing + visibleRowsHeight, panel.height - Style.gapsOut * 2)
 
   function finishRequest(selection) {
     if (!root.requestActive || !root.doneFile) {
@@ -184,7 +210,7 @@ Item {
   // Menu rows only surface their detail while a search is narrowing them;
   // dmenu rows carry caller-supplied subtext that must always be visible.
   function rowHeightForDetail(detail) {
-    return (root.filterText || root.dmenuActive) && detail ? root.detailRowHeight : root.baseRowHeight
+    return (root.filterText || root.dmenuActive || root.settingsMenu) && detail ? root.detailRowHeight : root.baseRowHeight
   }
 
   // Height the card can devote to rows before running off the screen — or
@@ -194,12 +220,11 @@ Item {
   function availableRowsHeight() {
     var top = panel.cardTop >= 0 ? panel.cardTop : Style.gapsOut
     var available = panel.height - top - Style.gapsOut - root.contentMargin * 2 - root.headerHeight - root.contentSpacing
-      - (root.footerHeight > 0 ? root.contentSpacing + root.footerHeight : 0)
     // The starting menu sets the ceiling along with the offset: drilling into
     // a longer submenu scrolls behind the fold instead of growing the card.
-    if (panel.maxRowsHeight >= 0) available = Math.min(available, panel.maxRowsHeight)
+    if (panel.maxRowsHeight >= 0 && !root.settingsMenu) available = Math.min(available, panel.maxRowsHeight)
     // A card that swallows the whole screen reads as a page, not a menu.
-    return Math.min(available, Math.round(panel.height * 0.7))
+    return Math.min(available, Math.round(panel.height * 0.7), root.settingsMenu ? Style.space(420) : available)
   }
 
   // When every row fits, the list gets its full height. When they don't,
@@ -309,13 +334,18 @@ Item {
     // "Go" label comes from the catalog's root entry; the merge only uses
     // it for the injected row, never over a user-supplied heading.
     var rootCatalog = root.menuCatalog.root
-    var mergedMenu = MenuModel.mergeMenuSources(translatedDefaults, root.userMenuItems, rootCatalog && rootCatalog.label)
+    var settingsRows = root.settingsAdapter ? root.settingsAdapter.entries.map(function(row) { return root.normalizeItem(row.id, row) }) : []
+    var mergedMenu = MenuModel.mergeMenuSources(translatedDefaults.concat(settingsRows), root.userMenuItems, rootCatalog && rootCatalog.label)
     root.providerRevision += 1
     root.providersLoaded = ({})
     root.providerQueue = []
     root.items = mergedMenu.items
     root.itemOrder = mergedMenu.itemOrder
     root.rowsLoaded = true
+    if (root.opened && root.pendingInitialMenu && root.item(root.pendingInitialMenu)) {
+      root.activeMenu = root.pendingInitialMenu
+      root.pendingInitialMenu = ""
+    }
     if (!skipGuards && root.defaultMenuSettled && root.userMenuSettled) root.evaluateGuards()
     if (root.opened) {
       root.rebuildDisplay()
@@ -561,6 +591,7 @@ Item {
   // submenus are also hidden when none of their descendants are visible;
   // provider-backed menus stay visible because their rows load on demand.
   function isVisible(entry) {
+    if (root.settingsAdapter && !root.settingsAdapter.canEdit(entry.id)) return false
     return MenuModel.isVisible(root.items, root.itemOrder, root.whenResults, entry)
   }
 
@@ -884,7 +915,9 @@ Item {
     if (!root.item(id)) id = "root"
     root.rememberSelection()
     root.pendingFocus = focusItemId || root.lastSelection[id] || ""
-    if (pushHistory && id !== root.activeMenu) root.navStack = root.navStack.concat([root.activeMenu])
+    if (pushHistory && id !== root.activeMenu) root.navStack = root.navStack.concat([{
+      menu: root.activeMenu, select: root.selectedItemId(), query: root.filterText, scroll: resultList.contentY
+    }])
     root.activeMenu = id
     root.filterText = ""
     root.selectedIndex = 0
@@ -897,6 +930,7 @@ Item {
   }
 
   function goBack() {
+    if (root.settingsAdapter && root.settingsAdapter.back()) return true
     if (root.activeMenu === "root") return false
     // BWM: al volver, el cursor queda en la entrada del submenú del que sales (no arriba del todo)
     var leaving = root.activeMenu
@@ -904,7 +938,15 @@ Item {
     if (root.navStack.length > 0) {
       var previous = root.navStack[root.navStack.length - 1]
       root.navStack = root.navStack.slice(0, root.navStack.length - 1)
-      root.setActiveMenu(previous, false, false, leaving)
+      root.setActiveMenu(typeof previous === "string" ? previous : previous.menu, false, false, previous.select || leaving)
+      if (previous.query) {
+        root.setFilter(previous.query)
+        root.pendingFocus = previous.select || leaving
+        root.rebuildDisplay()
+      }
+      if (previous.scroll !== undefined) Qt.callLater(function() {
+        resultList.contentY = Math.max(resultList.originY, Math.min(resultList.originY + Math.max(0, resultList.contentHeight - resultList.height), previous.scroll))
+      })
       return true
     }
 
@@ -946,6 +988,11 @@ Item {
     var row = displayModel.get(index)
     root.selectedIndex = index
     root.rememberSelection()
+    if (root.settingsAdapter && row.kind === "link" && root.settingsAdapter.activate(row.target)) { root.disarmPointer(); return }
+    if (root.settingsAdapter && row.action === ":" && root.settingsAdapter.activate(row.itemId)) {
+      root.disarmPointer()
+      return
+    }
     if (row.kind === "menu" || row.kind === "link") {
       root.setActiveMenu(row.target || row.itemId, true, fromPointer)
     } else if (row.kind === "app") {
@@ -1015,6 +1062,7 @@ Item {
     selectionFile = ""
     doneFile = ""
     activeMenu = root.item(initialMenu) ? initialMenu : "root"
+    root.pendingInitialMenu = root.item(initialMenu) ? "" : initialMenu
     navStack = []
     filterText = ""
     selectedIndex = 0
@@ -1391,7 +1439,12 @@ Item {
             return
           }
 
-          if (event.key === Qt.Key_Delete) {
+          if (filterInput.preeditText.length || filterInput.inputMethodComposing) return
+          if (!root.filterText && event.modifiers === Qt.NoModifier && root.settingsAdapter && root.cursorActive) {
+            var selected = root.selectedItemId()
+            if (event.key === Qt.Key_Space && root.settingsAdapter.field(selected)?.type === "bool") { root.settingsAdapter.activate(selected); event.accepted = true; return }
+          }
+          if (event.key === Qt.Key_Delete && (event.modifiers & Qt.ControlModifier) && (event.modifiers & Qt.ShiftModifier)) {
             root.requestDeleteSelected()
             event.accepted = true
           } else if (event.key === Qt.Key_Escape) {
@@ -1405,10 +1458,7 @@ Item {
           } else if ((event.modifiers & Qt.ControlModifier) && (event.key === Qt.Key_K || event.key === Qt.Key_P)) {
             root.select(-1)
             event.accepted = true
-          } else if (Util.editsFilter(event, root.filterText)) {
-            root.setFilter(Util.editedFilter(event, root.filterText))
-            event.accepted = true
-          } else if ((event.key === Qt.Key_Backspace || Util.readingKey(event) === Qt.Key_Left) && !root.filterText) {
+          } else if ((event.key === Qt.Key_Backspace || Util.readingKey(event) === Qt.Key_Left) && !root.filterText && event.modifiers === Qt.NoModifier) {
             root.goBack()
             event.accepted = true
           } else if (event.key === Qt.Key_Tab) {
@@ -1435,7 +1485,7 @@ Item {
           } else if (event.key === Qt.Key_PageDown) {
             root.select(6)
             event.accepted = true
-          } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || Util.readingKey(event) === Qt.Key_Right) {
+          } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || (Util.readingKey(event) === Qt.Key_Right && !root.filterText && event.modifiers === Qt.NoModifier)) {
             if (root.dmenuActive) {
               if (root.mode === "input") root.applyDmenuSelection(root.filterText)
               else if (displayModel.count > 0) root.activateIndex(root.cursorActive ? root.selectedIndex : 0)
@@ -1479,12 +1529,44 @@ Item {
           radius: root.cornerRadius
           color: "transparent"
 
-          FilterInput {
+          Text {
+            id: settingsBack
+            visible: root.settingsMenu
+            width: Style.space(30)
+            height: parent.height
+            text: "‹"
+            color: root.foreground
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.title
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.goBack() }
+          }
+          Text {
+            visible: root.editingSetting || root.settingsPage
+            anchors.left: settingsBack.right
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.settingsPage ? root.settingsAdapter.page[2] : "Configuración"
+            color: root.foreground
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.heading
+            elide: Text.ElideRight
+          }
+          TextInput {
             id: filterInput
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            keyHandler: keyCatcher
+            anchors.leftMargin: root.settingsMenu ? settingsBack.width + Style.spacing.sm : 0
+            visible: !root.editingSetting && !root.settingsPage
+            focus: true
+            clip: true
+            selectByMouse: true
+            selectionColor: root.selectedBackground
+            selectedTextColor: root.selectedText
+            Keys.priority: Keys.BeforeItem
+            Keys.forwardTo: [keyCatcher]
             // Input-method commits bypass key handling, so the dialog has to refuse them here.
             readOnly: root.deleteConfirmOpen
             color: root.foreground
@@ -1497,8 +1579,8 @@ Item {
             textFormat: Text.PlainText
             anchors.fill: filterInput
             verticalAlignment: Text.AlignVCenter
-            visible: !root.filterText && !filterInput.preeditText
-            text: root.dmenuActive ? (root.dmenuPrompt + "…") : ((root.item(root.activeMenu) ? (root.item(root.activeMenu).title || root.item(root.activeMenu).label) : "Go") + "…")
+            visible: filterInput.visible && !root.filterText && !filterInput.preeditText
+            text: root.dmenuActive ? (root.dmenuPrompt + "…") : ((root.settingsMenu ? "Buscar en " : "") + (root.item(root.activeMenu) ? (root.item(root.activeMenu).title || root.item(root.activeMenu).label) : "Go") + "…")
             color: root.foreground
             opacity: 0.58
             font.family: root.fontFamily
@@ -1514,6 +1596,7 @@ Item {
 
           ListView {
             id: resultList
+            visible: !root.editingSetting && !root.settingsPage
             anchors.fill: parent
             model: displayModel
             clip: true
@@ -1567,6 +1650,10 @@ Item {
               required property int childCount
               required property bool disabled
 
+              readonly property string settingValue: {
+                var revision = root.settingsAdapter ? root.settingsAdapter.revision : 0
+                return root.settingsAdapter ? root.settingsAdapter.summary(row.itemId) : ""
+              }
               readonly property bool hasCursor: root.cursorActive && row.index === root.selectedIndex
               readonly property bool isApp: row.kind === "app"
               readonly property bool hasIcon: row.icon.length > 0 || row.isApp
@@ -1628,7 +1715,7 @@ Item {
                 id: contentColumn
                 anchors.left: row.hasIcon ? iconText.right : parent.left
                 anchors.leftMargin: row.hasIcon ? Style.space(6) : root.rowReservedBorderLeft + Style.space(18)
-                anchors.right: trail.left
+                anchors.right: settingValueText.visible ? settingValueText.left : trail.left
                 anchors.rightMargin: Style.space(6)
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: Style.space(3)
@@ -1650,7 +1737,7 @@ Item {
                   width: parent.width
                   // A parent path's separator points along the reading direction.
                   text: Commons.I18n.rightToLeft && row.kind !== "dmenu" ? row.detail.replace(/ › /g, " ‹ ") : row.detail
-                  visible: (root.filterText || row.kind === "dmenu") && row.detail.length > 0
+                  visible: (root.filterText || row.kind === "dmenu" || root.settingsMenu) && row.detail.length > 0
                   color: root.foreground
                   opacity: 0.52
                   font.family: root.fontFamily
@@ -1659,6 +1746,20 @@ Item {
                 }
               }
 
+              Text {
+                id: settingValueText
+                visible: !!row.settingValue
+                anchors.right: trail.left
+                anchors.rightMargin: Style.spacing.sm
+                anchors.verticalCenter: parent.verticalCenter
+                width: Math.min(implicitWidth, Style.space(150))
+                text: row.settingValue
+                color: row.hasCursor ? root.selectedText : root.foreground
+                opacity: row.hasCursor ? 1 : 0.65
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.bodySmall
+                elide: Text.ElideRight
+              }
               Row {
                 id: trail
                 width: Style.space(14)
@@ -1751,7 +1852,7 @@ Item {
           Column {
             anchors.centerIn: parent
             spacing: Style.space(8)
-            visible: displayModel.count === 0 && root.mode !== "input"
+            visible: displayModel.count === 0 && !root.editingSetting && !root.settingsPage && root.mode !== "input"
 
             Text {
               text: "󰈉"
@@ -1774,49 +1875,22 @@ Item {
               width: Style.space(320)
             }
           }
-        }
-
-        // BWM: pie con dónde estás (ruta) y las teclas, para no perderse en submenús
-        Item {
-          width: parent.width
-          height: root.footerHeight
-          visible: root.footerHeight > 0
-
-          Rectangle {
+          Loader {
+            id: settingEditor
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.top: parent.top
-            height: Style.spacing.hairline
-            color: Util.alpha(root.foreground, 0.12)
+            active: root.editingSetting
+            sourceComponent: Settings.SettingEditor { controller: root.settingsAdapter }
           }
-
-          Text {
-            id: footerPath
-            textFormat: Text.PlainText
-            anchors.left: parent.left
-            anchors.right: footerKeys.left
-            anchors.rightMargin: Style.space(8)
-            anchors.bottom: parent.bottom
-            text: root.activeMenu === "root" ? "Inicio" : root.pathFor(root.activeMenu)
-            color: root.selectedText
-            opacity: 0.75
-            elide: Text.ElideLeft
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.caption
-          }
-
-          Text {
-            id: footerKeys
-            textFormat: Text.PlainText
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            text: root.filterText ? "↵ abrir · esc borrar" : (root.activeMenu === "root" ? "↑↓ ↵ · esc cerrar" : "↑↓ ↵ · ⌫ esc atrás")
-            color: root.foreground
-            opacity: 0.45
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.caption
+          Loader {
+            id: detailLoader
+            anchors.fill: parent
+            active: root.settingsPage
+            sourceComponent: Settings.SettingsPage { controller: root.settingsAdapter }
           }
         }
+
+
       }
     }
   }

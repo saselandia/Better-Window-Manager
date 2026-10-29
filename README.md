@@ -73,6 +73,13 @@ bwm skin retro      # switch skin (checks its requirements first)
 bwm startup off     # don't open the welcome window at login
 ```
 
+## Retro settings
+
+`Super + I` opens settings inside Omarchy's own menu. Type to find an option, toggle it with
+Enter or Space, and edit values in the same panel. Escape returns with the search and selection
+preserved. Pages with more controls also stay inside the menu; the app grid has a Settings
+button (`Ctrl + ,`).
+
 ## ✍️ Your text configuration
 
 If you prefer writing to clicking, BWM gives you your own zone, loaded **after** BWM's and therefore **overriding the defaults**. It lives outside the repository, so updates never touch it. Open it from the Retro menu (**Setup → Configuración → Editar en texto**) or with `bwm-user-config edit <name>`. Each file is created with a "you can write in this zone" header and examples, and is applied when you save and close the editor.

@@ -95,6 +95,8 @@ hl.bind("SUPER + period", hl.dsp.exec_cmd("omarchy-shell emojis toggle"), { desc
 hl.bind("SUPER + SPACE", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/app-launcher.sh apps"), { description = "Lanzadores: Aplicaciones (cuadrícula Apps de Omarchy en Retro)" })
 -- [Ventanas]
 hl.bind("SUPER + M", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/omarchy-shims/omarchy-hyprland-window-minimize"), { description = "Ventanas: Minimizar al dock (Omarchy, en workspaces sin mosaico)" })
+-- [Lanzadores]
+hl.bind("ALT + SPACE", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/app-launcher.sh apps"), { description = "Lanzadores: Aplicaciones (Apps de Omarchy en Retro)" })
 
 -- Helper binds: allow Super+Alt for corner snaps in Plasma as well
 if is_plasma then

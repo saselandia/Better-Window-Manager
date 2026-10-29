@@ -358,6 +358,9 @@ Item {
     // The layout commands call this after changing a workspace's mode.
     function refresh(): void { root.refresh() }
     function apps(): void { appGrid.toggle() }
+    function openApps(): void { appGrid.open() }
+    function closeApps(): void { appGrid.close() }
+    function inspectApps(): string { return appGrid.inspect() }
   }
 
   // An app dragged out of the app grid: the grid holds the pointer and
@@ -407,5 +410,9 @@ Item {
     id: appGrid
     appLibrary: root.appLibrary
     dock: root
+    onSettingsRequested: {
+      appGrid.close()
+      Quickshell.execDetached(["qs", "-c", "ii", "ipc", "call", "omarchyMenu", "settings", "all"])
+    }
   }
 }

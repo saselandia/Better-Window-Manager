@@ -14,6 +14,8 @@ Singleton {
     property QtObject font
     property QtObject sizes
     property string syntaxHighlightingTheme
+    // Applications can request outlined controls without changing the shared pages.
+    property bool outlinedControls: false
     readonly property bool isRetro: Config.options?.appearance?.bwmTheme === "retro"
     readonly property bool isPlasma: Config.options?.appearance?.bwmTheme === "plasma"
 

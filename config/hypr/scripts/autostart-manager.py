@@ -464,6 +464,11 @@ def find_matching_clients(entry: Dict[str, Any]) -> List[Dict[str, Any]]:
         c_class = c.get("class", "").lower()
         c_init = c.get("initialClass", "").lower()
 
+        # Wayland app IDs often use the full reverse-DNS desktop ID even when
+        # StartupWMClass contains only the X11 class (e.g. Vesktop Flatpak).
+        if file_id and (file_id == c_class or file_id == c_init):
+            matched.append(c)
+            continue
         # Match by StartupWMClass
         if wm_class and (wm_class == c_class or wm_class == c_init):
             matched.append(c)
@@ -523,32 +528,26 @@ def run_single_entry(filename: str, override_ws: Optional[str] = None) -> bool:
     matching_windows = find_matching_clients(entry)
 
     if matching_windows and target_ws is not None:
-        # Move all matching windows to the target workspace and switch focus to it
+        # This explicit action assigns the requested workspace, then raises the
+        # actual window rather than merely switching to a possibly covered one.
         for win in matching_windows:
-            addr = win.get("address")
-            if addr:
+            addr = win.get("address", "")
+            if re.fullmatch(r"0x[0-9a-fA-F]+", addr):
                 move_window_to_workspace(addr, target_ws, focus=False)
         focus_workspace(target_ws)
-        # Also invoke exec in case the app was minimized or in background/tray
-        try:
-            subprocess.Popen(
-                entry["exec"],
-                shell=True,
-                start_new_session=True,
-                env=os.environ.copy(),
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-        except Exception:
-            pass
-        return True
 
-    # If windows exist and workspace is default, focus the first window
+    # Focusing a workspace alone can leave the requested window behind another.
     if matching_windows and target_ws is None:
-        first_ws = matching_windows[0].get("workspace", {}).get("id")
-        if first_ws:
-            focus_workspace(int(first_ws))
-        return True
+        win = min(matching_windows, key=lambda c: c.get("focusHistoryID", 999999))
+        addr = win.get("address", "")
+        if re.fullmatch(r"0x[0-9a-fA-F]+", addr):
+            ws = win.get("workspace", {})
+            if ws.get("id") == 99 or str(ws.get("name", "")).startswith("special:minimized"):
+                subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), "toggle-minimize.py"), "restore", addr], check=False)
+            else:
+                subprocess.run(["hyprctl", "dispatch", f'hl.dsp.focus({{ window = "address:{addr}" }})'], check=False)
+            return True
+        return False
 
     # If no matching window exists yet, launch it targeting the workspace
     if target_ws is not None:
