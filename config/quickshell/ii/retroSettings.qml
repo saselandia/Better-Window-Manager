@@ -12,8 +12,8 @@
 //   * ventanita de una página: SETTINGS_PAGE=<id> (menú de Retro → Ajustes → Configuración → …)
 //   * ventana completa con la lista de páginas: sin SETTINGS_PAGE (Super+I)
 // Teclado, como el menú de Omarchy: ↑/↓ elige página, Intro/→/Tab entra en ella, Esc o Borrar vuelve
-// atrás (de la página a la lista, de la lista al menú). Con BWM_SETTINGS_FROM_MENU=<ruta> (lo ponen
-// las entradas del menú) al salir se vuelve a abrir el menú en esa ruta, para seguir navegando.
+// atrás (de la página a la lista, de la lista al menú). Con BWM_SETTINGS_FROM_MENU=<id de la entrada> (lo
+// ponen las entradas del menú) al salir se vuelve al menú, en su submenú y con esa entrada marcada.
 // Lo abre open-settings.sh sólo en Retro; Default usa settings.qml y Plasma plasmaSettings.qml.
 
 import QtQuick
@@ -69,21 +69,78 @@ ApplicationWindow {
             if (it === pageLoader) return true;
         return false;
     }
-    // Entra en la página: el foco va a su primer control (luego Tab/Shift+Tab los recorre)
+    // Secciones de la página (ContentSection: tienen título e icono). Se navega por ellas para no
+    // recorrer con Tab cientos de controles: ↑/↓ elige sección, Intro entra, Esc vuelve a las secciones.
+    property int sectionIndex: 0
+    readonly property bool sectionMode: sectionKeys.activeFocus
+    function sections() {
+        const page = pageLoader.item;
+        if (!page || !page.contentData) return [];
+        const out = [];
+        for (let i = 0; i < page.contentData.length; i++) {
+            const it = page.contentData[i];
+            if (it && it.visible && it.title !== undefined && it.icon !== undefined && it.height > 0) out.push(it);
+        }
+        return out;
+    }
+    function sectionOf(item) {
+        const list = root.sections();
+        for (let it = item; it; it = it.parent) {
+            const i = list.indexOf(it);
+            if (i >= 0) return i;
+        }
+        return -1;
+    }
+    function showSection(i) {
+        const list = root.sections();
+        if (list.length === 0) return;
+        root.sectionIndex = Math.max(0, Math.min(list.length - 1, i));
+        const sec = list[root.sectionIndex];
+        const page = pageLoader.item;
+        const y = sec.mapToItem(page.contentItem, 0, 0).y;
+        const maxY = Math.max(0, page.contentHeight - page.height);
+        page.contentY = Math.max(0, Math.min(maxY, y - 16));
+        sectionFrame.refresh();
+    }
+    // Entra en la página: a sus secciones si las tiene; si no, a su primer control
     function enterPage() {
         if (!pageLoader.item) return;
+        if (root.sections().length > 0) {
+            sectionKeys.forceActiveFocus();
+            root.showSection(root.sectionIndex);
+            return;
+        }
         const first = pageLoader.item.nextItemInFocusChain(true);
         (first ?? pageLoader.item).forceActiveFocus();
     }
-    // Atrás: buscador con texto → lo vacía; página → lista; lista (o ventanita) → sale y vuelve al menú
+    // Entra en la sección elegida: el foco va a su primer control; Tab sigue por los demás
+    function enterSection() {
+        const sec = root.sections()[root.sectionIndex];
+        if (!sec) return;
+        const first = sec.nextItemInFocusChain(true);
+        let inside = false;
+        for (let it = first; it; it = it.parent) if (it === sec) { inside = true; break; }
+        if (inside) first.forceActiveFocus();
+    }
+    // Atrás: buscador con texto → lo vacía; control → su sección; secciones → lista (o, en la
+    // ventanita, al menú); lista → sale y vuelve al menú
     function back() {
         if (!root.single && searchInput.text.length > 0) { searchInput.text = ""; return; }
-        if (!root.single && root.inPage()) { pageList.forceActiveFocus(); return; }
+        if (root.inPage() && root.sections().length > 0) {
+            const i = root.sectionOf(root.activeFocusItem);
+            sectionKeys.forceActiveFocus();
+            root.showSection(i >= 0 ? i : root.sectionIndex);
+            return;
+        }
+        if (!root.single && (root.sectionMode || root.inPage())) { pageList.forceActiveFocus(); return; }
         root.leave();
     }
+    // Vuelve al menú de Omarchy en el submenú de la entrada que abrió esta ventana, con ella marcada
     function leave() {
-        if (root.fromMenu.length > 0)
-            Quickshell.execDetached(["qs", "-c", "ii", "ipc", "call", "omarchyMenu", "summon", root.fromMenu]);
+        if (root.fromMenu.length > 0) {
+            const parent = root.fromMenu.includes(".") ? root.fromMenu.slice(0, root.fromMenu.lastIndexOf(".")) : "root";
+            Quickshell.execDetached(["qs", "-c", "ii", "ipc", "call", "omarchyMenu", "summonSelect", parent, root.fromMenu]);
+        }
         Qt.quit();
     }
 
@@ -94,6 +151,13 @@ ApplicationWindow {
 
     visible: true
     onClosing: Qt.quit()
+    // Al moverse con Tab de una sección a otra, el marco sigue al control
+    onActiveFocusItemChanged: {
+        if (!root.inPage()) return;
+        const i = root.sectionOf(root.activeFocusItem);
+        if (i >= 0 && i !== root.sectionIndex) { root.sectionIndex = i; sectionFrame.refresh(); }
+        focusRing.place();
+    }
     title: root.single ? `Configuración · ${root.pages[root.currentPage].name}` : "Configuración"
     minimumWidth: root.single ? 640 : 860
     minimumHeight: 460
@@ -166,8 +230,9 @@ ApplicationWindow {
                 }
                 Item { Layout.fillWidth: true }
                 Text {
-                    text: root.single ? "tab moverse · esc volver al menú"
-                        : (root.inPage() ? "tab moverse · esc volver a la lista" : "↑↓ página · intro entrar · ctrl+f buscar · esc salir")
+                    text: root.sectionMode ? ("↑↓ sección · intro entrar · esc " + (root.single ? "volver al menú" : "lista"))
+                        : root.inPage() ? (root.sections().length > 0 ? "tab controles · esc secciones" : "tab moverse · esc " + (root.single ? "volver al menú" : "lista"))
+                        : "↑↓ página · intro entrar · ctrl+f buscar · esc salir"
                     color: root.muted
                     font.family: root.mono
                     font.pixelSize: 12
@@ -265,6 +330,14 @@ ApplicationWindow {
                         if (currentIndex <= 0) searchInput.forceActiveFocus();
                         else decrementCurrentIndex();
                     }
+                    // Escribir en la lista busca directamente
+                    Keys.onPressed: event => {
+                        if (event.text.length === 1 && event.text.trim().length === 1 && !(event.modifiers & Qt.ControlModifier)) {
+                            searchInput.forceActiveFocus();
+                            searchInput.insert(searchInput.cursorPosition, event.text);
+                            event.accepted = true;
+                        }
+                    }
 
                     delegate: MouseArea {
                         id: row
@@ -338,12 +411,99 @@ ApplicationWindow {
             }
 
             // La página: la misma de settings.qml, sobre el fondo de la paleta
-            Loader {
-                id: pageLoader
+            Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                active: Config.ready
-                source: root.pages[root.currentPage].component
+
+                Loader {
+                    id: pageLoader
+                    anchors.fill: parent
+                    active: Config.ready
+                    source: root.pages[root.currentPage].component
+                    onLoaded: { root.sectionIndex = 0; sectionFrame.refresh(); }
+                }
+
+                // Marco de la sección elegida (como el cursor del menú de Omarchy)
+                Rectangle {
+                    id: sectionFrame
+                    property var target: null
+                    function refresh() {
+                        target = (root.sectionMode || root.inPage()) ? root.sections()[root.sectionIndex] ?? null : null;
+                        place();
+                    }
+                    function place() {
+                        if (!target) { visible = false; return; }
+                        const p = target.mapToItem(parent, 0, 0);
+                        x = p.x - 10; y = p.y - 8; width = target.width + 20; height = target.height + 16;
+                        visible = y + height > 0 && y < parent.height;
+                    }
+                    visible: false
+                    color: Om.Util.alpha(root.accent, root.sectionMode ? 0.06 : 0.0)
+                    border.width: 1
+                    border.color: Om.Util.alpha(root.accent, root.sectionMode ? 0.9 : 0.35)
+                    Connections {
+                        target: pageLoader.item
+                        ignoreUnknownSignals: true
+                        function onContentYChanged() { sectionFrame.place(); }
+                        function onContentHeightChanged() { sectionFrame.place(); }
+                    }
+                    Rectangle { // barra de acento a la izquierda, como la fila elegida del menú
+                        width: 3
+                        height: parent.height
+                        color: root.accent
+                        visible: root.sectionMode
+                    }
+                }
+
+                // Recuadro del control con el foco de teclado (los controles de las páginas no dibujan uno)
+                Rectangle {
+                    id: focusRing
+                    function place() {
+                        const it = root.activeFocusItem;
+                        if (!it || !root.inPage() || it === pageLoader.item) { visible = false; return; }
+                        const p = it.mapToItem(parent, 0, 0);
+                        x = p.x - 3; y = p.y - 3; width = it.width + 6; height = it.height + 6;
+                        visible = width > 6 && height > 6 && y + height > 0 && y < parent.height;
+                        // que el control quede a la vista al llegar con Tab
+                        const page = pageLoader.item;
+                        if (page && page.contentY !== undefined) {
+                            const top = it.mapToItem(page.contentItem, 0, 0).y;
+                            if (top < page.contentY + 8) page.contentY = Math.max(0, top - 24);
+                            else if (top + it.height > page.contentY + page.height - 8)
+                                page.contentY = Math.min(Math.max(0, page.contentHeight - page.height), top + it.height - page.height + 24);
+                        }
+                    }
+                    visible: false
+                    color: "transparent"
+                    border.width: 2
+                    border.color: root.accent
+                    z: 10
+                    Connections {
+                        target: pageLoader.item
+                        ignoreUnknownSignals: true
+                        function onContentYChanged() { if (focusRing.visible || root.inPage()) focusRing.place(); }
+                    }
+                }
+
+                // Recibe las teclas mientras se eligen secciones
+                Item {
+                    id: sectionKeys
+                    onActiveFocusChanged: sectionFrame.refresh()
+                    Keys.onUpPressed: root.showSection(root.sectionIndex - 1)
+                    Keys.onDownPressed: root.showSection(root.sectionIndex + 1)
+                    Keys.onBacktabPressed: root.showSection(root.sectionIndex - 1)
+                    Keys.onTabPressed: root.showSection(root.sectionIndex + 1)
+                    Keys.onPressed: event => {
+                        if (event.key === Qt.Key_Home) { root.showSection(0); event.accepted = true; }
+                        else if (event.key === Qt.Key_End) { root.showSection(root.sections().length - 1); event.accepted = true; }
+                        else if (event.key === Qt.Key_PageDown) { root.showSection(root.sectionIndex + 3); event.accepted = true; }
+                        else if (event.key === Qt.Key_PageUp) { root.showSection(root.sectionIndex - 3); event.accepted = true; }
+                    }
+                    Keys.onReturnPressed: root.enterSection()
+                    Keys.onEnterPressed: root.enterSection()
+                    Keys.onRightPressed: root.enterSection()
+                    Keys.onLeftPressed: root.back()
+                }
             }
         }
     }

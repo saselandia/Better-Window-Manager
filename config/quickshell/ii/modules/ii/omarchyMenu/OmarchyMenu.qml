@@ -64,10 +64,13 @@ Scope {
         function open(): void { menu.open("{}"); }
         function close(): void { menu.close(); }
         function summon(route: string): void { menu.open(JSON.stringify({ menu: route })); }
+        // BWM: abre <route> con la fila <item> marcada (p. ej. al volver de una página de Ajustes)
+        function summonSelect(route: string, item: string): void { menu.open(JSON.stringify({ menu: route, select: item })); }
         // Omarchy's full payload: {"menu": ...} or the select / input modes of omarchy-menu-select
         function openPayload(payload: string): void { menu.open(payload); }
         function refresh(): void { menu.refresh(); }
         function state(): string { return menu.opened ? menu.activeMenu : "closed"; }
+        function selected(): string { return menu.selectedItemId(); }
         // Same as Escape: back out of a submenu, close at the root
         function back(): string { return menu.goBack() ? menu.activeMenu : (menu.close(), "closed"); }
     }

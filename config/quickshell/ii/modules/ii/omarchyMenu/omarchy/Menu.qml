@@ -31,6 +31,7 @@ Item {
     if (payload.mode === "select" || payload.mode === "input") {
       root.openDmenu(payload)
     } else {
+      root.pendingFocus = payload.select ? String(payload.select) : ""
       root.openRoute(payload.initialMenu || payload.menu || "root")
     }
   }
@@ -100,6 +101,11 @@ Item {
   property var items: ({})
   property var itemOrder: []
   property var navStack: []
+  // BWM: dónde estaba el cursor en cada menú (id del menú -> id de la fila). Al volver atrás o
+  // entrar otra vez, el cursor vuelve ahí en vez de saltar arriba. pendingFocus: fila a marcar en
+  // la próxima reconstrucción (la del submenú del que vienes, o la pedida con summonSelect).
+  property var lastSelection: ({})
+  property string pendingFocus: ""
   property var providersLoaded: ({})
   property var providerQueue: []
   property int providerRevision: 0
@@ -139,9 +145,11 @@ Item {
   property int layoutSerial: 0
   property int cardWidth: Math.min(root.dmenuActive ? Style.space(root.dmenuWidth) : ((root.activeMenu === "trigger.capture.screenrecord" || root.activeMenu === "appearance.font" || root.activeMenu === "update.kernel") ? Style.space(520) : Style.space(300)), panel.width - Style.gapsOut * 2)
   property int visibleRowsHeight: root.dmenuActive ? dmenuRowListHeight(layoutSerial, displayModel.count, filterText) : rowListHeight(layoutSerial, displayModel.count, filterText, searchDivider)
+  // BWM: pie con la ruta y las teclas (sólo en el menú normal)
+  readonly property int footerHeight: root.dmenuActive ? 0 : Style.font.caption + Style.space(10)
   property int cardHeight: root.dmenuActive
     ? Math.min(contentMargin * 2 + headerHeight + (mode === "input" ? 0 : contentSpacing + visibleRowsHeight), panel.height - Style.gapsOut * 2)
-    : Math.min(contentMargin * 2 + headerHeight + contentSpacing + visibleRowsHeight, panel.height - Style.gapsOut * 2)
+    : Math.min(contentMargin * 2 + headerHeight + contentSpacing + visibleRowsHeight + contentSpacing + footerHeight, panel.height - Style.gapsOut * 2)
 
   function finishRequest(selection) {
     if (!root.requestActive || !root.doneFile) {
@@ -186,6 +194,7 @@ Item {
   function availableRowsHeight() {
     var top = panel.cardTop >= 0 ? panel.cardTop : Style.gapsOut
     var available = panel.height - top - Style.gapsOut - root.contentMargin * 2 - root.headerHeight - root.contentSpacing
+      - (root.footerHeight > 0 ? root.contentSpacing + root.footerHeight : 0)
     // The starting menu sets the ceiling along with the offset: drilling into
     // a longer submenu scrolls behind the fold instead of growing the card.
     if (panel.maxRowsHeight >= 0) available = Math.min(available, panel.maxRowsHeight)
@@ -711,6 +720,11 @@ Item {
       return
     }
 
+    // La fila a conservar tras reconstruir: la pendiente o la que tenía el cursor
+    var keepId = root.pendingFocus
+    if (!keepId && root.cursorActive && root.selectedIndex >= 0 && root.selectedIndex < displayModel.count)
+      keepId = String(displayModel.get(root.selectedIndex).itemId || "")
+
     displayModel.clear()
 
     if (!root.rowsLoaded) return
@@ -777,6 +791,15 @@ Item {
     for (var k = 0; k < rows.length; k++) displayModel.append(rows[k])
     layoutSerial += 1
 
+    if (keepId) {
+      for (var f = 0; f < displayModel.count; f++) {
+        if (String(displayModel.get(f).itemId) === keepId) {
+          root.selectedIndex = f
+          root.pendingFocus = ""
+          break
+        }
+      }
+    }
     root.settleCursor()
 
     Qt.callLater(function() {
@@ -806,6 +829,32 @@ Item {
     }
   }
 
+  // Id de la fila con el cursor ("" si no hay): IPC omarchyMenu selected, para pruebas y scripts
+  function selectedItemId() {
+    if (!root.opened || !root.cursorActive || root.selectedIndex < 0 || root.selectedIndex >= displayModel.count) return ""
+    return String(displayModel.get(root.selectedIndex).itemId || "")
+  }
+
+  function rememberSelection() {
+    if (root.dmenuActive || root.filterText || !root.cursorActive) return
+    if (root.selectedIndex < 0 || root.selectedIndex >= displayModel.count) return
+    var memory = Object.assign({}, root.lastSelection)
+    memory[root.activeMenu] = String(displayModel.get(root.selectedIndex).itemId || "")
+    root.lastSelection = memory
+  }
+
+  // Primera (-1) o última (+1) fila elegible: Inicio / Fin
+  function selectEdge(direction) {
+    if (displayModel.count === 0) return
+    root.disarmPointer()
+    var target = direction < 0 ? root.nextSelectable(0, 1) : root.nextSelectable(displayModel.count - 1, -1)
+    if (target < 0) return
+    root.cursorActive = true
+    root.selectedIndex = target
+    root.revealCursor()
+    root.rememberSelection()
+  }
+
   function select(delta) {
     if (displayModel.count === 0) return
 
@@ -817,6 +866,7 @@ Item {
     cursorActive = true
     selectedIndex = target
     revealCursor()
+    rememberSelection()
   }
 
   function setFilter(nextFilter) {
@@ -829,9 +879,11 @@ Item {
     root.rebuildDisplay()
   }
 
-  function setActiveMenu(id, pushHistory, fromPointer) {
+  function setActiveMenu(id, pushHistory, fromPointer, focusItemId) {
     panel.freezeCardTop()
     if (!root.item(id)) id = "root"
+    root.rememberSelection()
+    root.pendingFocus = focusItemId || root.lastSelection[id] || ""
     if (pushHistory && id !== root.activeMenu) root.navStack = root.navStack.concat([root.activeMenu])
     root.activeMenu = id
     root.filterText = ""
@@ -846,16 +898,18 @@ Item {
 
   function goBack() {
     if (root.activeMenu === "root") return false
+    // BWM: al volver, el cursor queda en la entrada del submenú del que sales (no arriba del todo)
+    var leaving = root.activeMenu
 
     if (root.navStack.length > 0) {
       var previous = root.navStack[root.navStack.length - 1]
       root.navStack = root.navStack.slice(0, root.navStack.length - 1)
-      root.setActiveMenu(previous, false)
+      root.setActiveMenu(previous, false, false, leaving)
       return true
     }
 
     var active = root.item(root.activeMenu)
-    root.setActiveMenu((active && active.parent) ? active.parent : "root", false)
+    root.setActiveMenu((active && active.parent) ? active.parent : "root", false, false, leaving)
     return true
   }
 
@@ -890,6 +944,8 @@ Item {
     if (!root.rowSelectable(index)) return
 
     var row = displayModel.get(index)
+    root.selectedIndex = index
+    root.rememberSelection()
     if (row.kind === "menu" || row.kind === "link") {
       root.setActiveMenu(row.target || row.itemId, true, fromPointer)
     } else if (row.kind === "app") {
@@ -962,6 +1018,8 @@ Item {
     navStack = []
     filterText = ""
     selectedIndex = 0
+    // La raíz empieza arriba; un submenú, donde lo dejaste (salvo que se pida otra fila)
+    if (!root.pendingFocus && activeMenu !== "root") root.pendingFocus = root.lastSelection[activeMenu] || ""
     cursorActive = true
     root.disarmPointer()
     root.evaluateGuards()
@@ -1341,11 +1399,29 @@ Item {
             if (root.filterText) root.setFilter("")
             else if (!root.goBack()) root.cancel()
             event.accepted = true
+          } else if ((event.modifiers & Qt.ControlModifier) && (event.key === Qt.Key_J || event.key === Qt.Key_N)) {
+            root.select(1)
+            event.accepted = true
+          } else if ((event.modifiers & Qt.ControlModifier) && (event.key === Qt.Key_K || event.key === Qt.Key_P)) {
+            root.select(-1)
+            event.accepted = true
           } else if (Util.editsFilter(event, root.filterText)) {
             root.setFilter(Util.editedFilter(event, root.filterText))
             event.accepted = true
           } else if ((event.key === Qt.Key_Backspace || Util.readingKey(event) === Qt.Key_Left) && !root.filterText) {
             root.goBack()
+            event.accepted = true
+          } else if (event.key === Qt.Key_Tab) {
+            root.select(1)
+            event.accepted = true
+          } else if (event.key === Qt.Key_Backtab) {
+            root.select(-1)
+            event.accepted = true
+          } else if (event.key === Qt.Key_Home && !root.filterText) {
+            root.selectEdge(-1)
+            event.accepted = true
+          } else if (event.key === Qt.Key_End && !root.filterText) {
+            root.selectEdge(1)
             event.accepted = true
           } else if (event.key === Qt.Key_Up) {
             root.select(-1)
@@ -1700,9 +1776,46 @@ Item {
           }
         }
 
+        // BWM: pie con dónde estás (ruta) y las teclas, para no perderse en submenús
         Item {
           width: parent.width
-          height: 0
+          height: root.footerHeight
+          visible: root.footerHeight > 0
+
+          Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            height: Style.spacing.hairline
+            color: Util.alpha(root.foreground, 0.12)
+          }
+
+          Text {
+            id: footerPath
+            textFormat: Text.PlainText
+            anchors.left: parent.left
+            anchors.right: footerKeys.left
+            anchors.rightMargin: Style.space(8)
+            anchors.bottom: parent.bottom
+            text: root.activeMenu === "root" ? "Inicio" : root.pathFor(root.activeMenu)
+            color: root.selectedText
+            opacity: 0.75
+            elide: Text.ElideLeft
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.caption
+          }
+
+          Text {
+            id: footerKeys
+            textFormat: Text.PlainText
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            text: root.filterText ? "↵ abrir · esc borrar" : (root.activeMenu === "root" ? "↑↓ ↵ · esc cerrar" : "↑↓ ↵ · ⌫ esc atrás")
+            color: root.foreground
+            opacity: 0.45
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.caption
+          }
         }
       }
     }

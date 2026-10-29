@@ -50,8 +50,10 @@ do
         f:close()
         local ok, err = pcall(dofile, user_file)
         if not ok then
-            local msg = tostring(err):gsub("[^%w%s%.,:_/%-%(%)]", "")
-            os.execute("notify-send -a BWM -u critical 'Tu hyprland.lua tiene un error' '" .. msg .. "' &")
+            -- Sólo se quitan las comillas y caracteres de shell; el resto del mensaje de Lua se conserva
+            local msg = tostring(err):gsub("^.-hyprland%.lua:", "línea "):gsub("['\"`$\\]", "")
+            os.execute("notify-send -a BWM -u critical 'Tu hyprland.lua (configuración en texto) tiene un error' '"
+                .. msg .. ". La configuración de BWM sigue activa; corrígelo con: bwm-user-config edit hyprland' &")
         end
     end
 end
