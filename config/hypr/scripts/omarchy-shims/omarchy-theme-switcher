@@ -1,7 +1,14 @@
 #!/bin/bash
-# Omarchy theme switcher for BWM:
-# With --print-rows: refreshes previews cache and prints TSV rows for ImagePicker
-# Without args: opens the ImagePicker overlay in Quickshell
+# Omarchy theme switcher for BWM (Retro only), after Omarchy's bin/omarchy-theme-switcher +
+# omarchy-menu-images:
+#   --print-rows  keeps the preview cache up to date and prints the picker's rows
+#                 (<preview entry>\t<thumbnail>), dynamic palette first
+#   (no args)     opens the 3D ImagePicker overlay in Quickshell
+#
+# Like Omarchy, the cache is stable: the picker opens from the rows it already holds while this
+# refreshes them, so nothing it may be decoding is ever deleted or rewritten in place. Entries
+# and thumbnails change only when their source changes, always through a rename. Thumbnails are
+# small JPEGs (1536x864, Omarchy's size) instead of the 2560x1440 previews.
 
 print_rows=false
 if [[ "${1:-}" == "--print-rows" ]]; then
@@ -9,77 +16,126 @@ if [[ "${1:-}" == "--print-rows" ]]; then
   shift
 fi
 
-CACHE_PATH="${XDG_CACHE_HOME:-$HOME/.cache}/omarchy/theme-selector"
-PREVIEW_DIR="$CACHE_PATH/previews"
-
-mkdir -p "$PREVIEW_DIR"
-
-# 1. Dynamic theme entry: a PNG thumbnail of the current wallpaper (Quickshell's Qt has no
-#    WebP decoder, and a full-size 4K image is far more than a preview needs)
-WP="$HOME/.cache/current_wallpaper"
-DYN="$PREVIEW_DIR/dynamic.png"
-if [[ -s "$WP" ]]; then
-  WP_PATH="$(tr -d '\n' < "$WP")"
-  if [[ -f "$WP_PATH" ]]; then
-    if [[ -L "$DYN" || ! -f "$DYN" || "$WP_PATH" -nt "$DYN" || "$(cat "$DYN.src" 2>/dev/null)" != "$WP_PATH" ]]; then
-      rm -f "$DYN"
-      if magick "$WP_PATH[0]" -resize 1280x800^ -gravity center -extent 1280x800 "$DYN.tmp.png" 2>/dev/null; then
-        mv -f "$DYN.tmp.png" "$DYN"
-        printf '%s' "$WP_PATH" > "$DYN.src"
-      else
-        rm -f "$DYN.tmp.png"
-      fi
-    fi
-  fi
+if [[ $print_rows != true ]]; then
+  skin=$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null)
+  [[ $skin == retro ]] || exit 0
+  exec omarchy-shell shell summon omarchy.image-picker '{"source":"themes"}'
 fi
 
-# 2. Use the same bundled/community catalog as the renderer. Themes without a preview
-# still appear: make a thumbnail from a background, or from the palette itself.
-# Remove stale thumbnails of themes that have been removed.
-for p in "$PREVIEW_DIR"/*.png; do
-  [[ ${p##*/} == dynamic.png ]] || rm -f -- "$p"
-done
-python3 - "$PREVIEW_DIR" <<'PYTHON'
-import json
+CACHE_PATH="${XDG_CACHE_HOME:-$HOME/.cache}/omarchy/theme-selector"
+mkdir -p "$CACHE_PATH"
+
+# One refresh at a time (the picker refreshes at startup and on every open)
+exec {lock_fd}>"$CACHE_PATH/lock"
+flock -w 30 "$lock_fd" || exit 1
+
+python3 - "$CACHE_PATH" <<'PYTHON'
+import concurrent.futures
+import hashlib
+import os
 import re
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
+
 sys.path.insert(0, str(Path.home() / '.config/hypr/scripts'))
 import bwm_omarchy as bwm
-previews = Path(sys.argv[1])
+
+cache = Path(sys.argv[1])
+previews = cache / 'previews'
+thumbs = cache / 'thumbnails'
+previews.mkdir(exist_ok=True)
+thumbs.mkdir(exist_ok=True)
+IMAGES = ('.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp')
+
+
+def first_image(folder):
+    if not folder or not Path(folder).is_dir():
+        return None
+    images = sorted(p for p in Path(folder).iterdir() if p.suffix.lower() in IMAGES and p.is_file())
+    return images[0] if images else None
+
+
+def hex_or(value, fallback):
+    return value if isinstance(value, str) and re.fullmatch(r'#[0-9a-fA-F]{6}', value) else fallback
+
+
+def thumb_name(*parts):
+    return hashlib.md5('\t'.join(parts).encode()).hexdigest() + '.jpg'
+
+
+# (name, source image or None, palette for themes without any image)
+items = []
+wallpaper = Path.home() / '.cache/current_wallpaper'
+try:
+    wp = Path(wallpaper.read_text().strip())
+except OSError:
+    wp = None
+if wp and wp.is_file() and wp.suffix.lower() in IMAGES:
+    items.append(('dynamic', wp, None))
 for theme in bwm.list_omarchy_themes():
-    target = previews / (theme['id'] + '.png')
-    if theme['preview']:
-        target.symlink_to(theme['preview'])
-        continue
-    backgrounds = Path(theme['backgrounds_dir']) if theme['backgrounds_dir'] else None
-    images = sorted(p for p in backgrounds.iterdir()
-                    if p.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp')) if backgrounds else []
-    if images:
-        command = ['magick', str(images[0]) + '[0]', '-resize', '1280x800^',
-                   '-gravity', 'center', '-extent', '1280x800', str(target)]
+    source = Path(theme['preview']) if theme['preview'] else first_image(theme['backgrounds_dir'])
+    items.append((theme['id'], source, None if source else theme['colors']))
+
+jobs = []
+rows = []
+wanted_entries, wanted_thumbs = set(), set()
+for name, source, colors in items:
+    if source:
+        st = source.stat()
+        thumb = thumbs / thumb_name(str(source), str(st.st_size), str(int(st.st_mtime)))
+        entry = previews / (name + source.suffix.lower())
+        target = str(source)
+        command = ['magick', str(source) + '[0]', '-auto-orient', '-thumbnail', '1536x864^',
+                   '-gravity', 'center', '-extent', '1536x864', '-strip', '-quality', '82']
     else:
-        colors = theme['colors']
-        bg = colors[0] if re.fullmatch(r'#[0-9a-fA-F]{6}', colors[0]) else '#181818'
-        accent = colors[2] if re.fullmatch(r'#[0-9a-fA-F]{6}', colors[2]) else '#888888'
-        command = ['magick', '-size', '1280x800', 'xc:' + bg, '-fill', accent,
-                   '-draw', 'rectangle 0,680 1280,800', str(target)]
-    subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+        bg, accent = hex_or(colors[0], '#181818'), hex_or(colors[2], '#888888')
+        thumb = thumbs / thumb_name('palette', bg, accent)
+        entry = previews / (name + '.jpg')
+        target = str(thumb)
+        command = ['magick', '-size', '1536x864', 'xc:' + bg, '-fill', accent,
+                   '-draw', 'rectangle 0,730 1536,864', '-quality', '82']
+    wanted_entries.add(entry.name)
+    wanted_thumbs.add(thumb.name)
+    if not thumb.exists():
+        jobs.append((command, thumb))
+    rows.append((entry, target, thumb))
+
+
+def render(job):
+    command, thumb = job
+    tmp = thumb.with_name(f'.{thumb.stem}.{os.getpid()}.jpg')
+    ok = subprocess.run(command + [str(tmp)], stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL, check=False).returncode == 0
+    if ok and tmp.exists():
+        os.replace(tmp, thumb)
+    else:
+        tmp.unlink(missing_ok=True)
+
+
+with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, os.cpu_count() or 2)) as pool:
+    list(pool.map(render, jobs))
+
+# Entries: symlinks named after the theme (the picker's label and selection key), swapped
+# atomically and only when their target changed
+out = []
+for entry, target, thumb in rows:
+    if entry.is_symlink() and os.readlink(entry) == target:
+        pass
+    else:
+        tmp = entry.with_name(f'.{entry.name}.{os.getpid()}')
+        tmp.unlink(missing_ok=True)
+        os.symlink(target, tmp)
+        os.replace(tmp, entry)
+    out.append(f'{entry}\t{thumb if thumb.exists() else target}')
+
+# Drop what no theme uses any more (removed themes, older wallpapers, previous cache layout)
+for path in previews.iterdir():
+    if path.name not in wanted_entries:
+        path.unlink(missing_ok=True)
+for path in thumbs.iterdir():
+    if path.name not in wanted_thumbs and not path.name.startswith('.'):
+        path.unlink(missing_ok=True)
+
+print('\n'.join(out))
 PYTHON
-
-if [[ "$print_rows" == true ]]; then
-  # Print rows for ImagePicker: dynamic first, then alphabetically
-  if [[ -e "$PREVIEW_DIR/dynamic.png" ]]; then
-    printf '%s\t%s\n' "$PREVIEW_DIR/dynamic.png" "$PREVIEW_DIR/dynamic.png"
-  fi
-  for p in "$PREVIEW_DIR"/*.png; do
-    [[ -e "$p" ]] || continue
-    [[ "$(basename "$p")" == "dynamic.png" ]] && continue
-    printf '%s\t%s\n' "$p" "$p"
-  done
-  exit 0
-fi
-
-# Bare invocation: summon the 3D ImagePicker overlay
-exec omarchy-shell shell summon omarchy.image-picker '{"source":"themes"}'

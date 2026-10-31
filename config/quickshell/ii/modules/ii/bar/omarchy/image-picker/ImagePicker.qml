@@ -864,7 +864,7 @@ Item {
                   // every preview visited in a large collection.
                   // Queue the selected preview first; neighbors must not delay
                   // the image the user opened the picker to see.
-                  source: previewHold.held && (item.selected || root.neighborImagesEnabled) && item.thumbnailPath ? Util.fileUrl(item.thumbnailPath) : ""
+                  source: previewHold.held && (item.selected || root.neighborImagesEnabled) && item.thumbnailPath ? Util.fileUrl(item.thumbnailPath) + (retries ? "#" + retries : "") : ""
                   sourceSize.width: Math.ceil(root.expandedWidth * Screen.devicePixelRatio)
                   sourceSize.height: Math.ceil(root.expandedHeight * Screen.devicePixelRatio)
                   fillMode: Image.PreserveAspectCrop
@@ -872,7 +872,14 @@ Item {
                   cache: false
                   smooth: true
                   opacity: status === Image.Ready ? 1 : 0
-                  onStatusChanged: if (item.selected && (status === Image.Ready || status === Image.Error)) root.neighborImagesEnabled = true
+                  onStatusChanged: {
+                    if (item.selected && (status === Image.Ready || status === Image.Error)) root.neighborImagesEnabled = true
+                    // BWM: a thumbnail being replaced while it decoded must not stay a grey card
+                    if (status === Image.Error && retries < 3) retryTimer.restart()
+                  }
+                  property int retries: 0
+                  onSourceChanged: if (!source.toString()) retries = 0
+                  Timer { id: retryTimer; interval: 250; onTriggered: image.retries++ }
                 }
 
                 Rectangle {

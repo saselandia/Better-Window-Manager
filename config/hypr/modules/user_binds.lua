@@ -10,6 +10,7 @@ local menu        = "quickshell -c ii ipc call search toggle || rofi -show drun"
 local ok_theme, active_theme = pcall(require, "modules.theme")
 local is_plasma = ok_theme and (active_theme.name == "plasma" or (active_theme.name and string.find(active_theme.name, "plasma") ~= nil))
 local fullscreen_mode = is_plasma and 1 or 0
+local active_skin = ok_theme and active_theme.name or ""
 
 -- [General]
 hl.bind("ALT + A", hl.dsp.exec_cmd("quickshell -c ii ipc call cheatsheet toggle"), { description = "General: Guía de atajos (Cheatsheet)" })
@@ -79,7 +80,7 @@ hl.bind("ALT + 0", hl.dsp.focus({ workspace = 10 }), { description = "Espacios d
 hl.bind("ALT + SHIFT + 0", hl.dsp.window.move({ workspace = 10 }), { description = "Espacios de trabajo: Mover ventana al espacio de trabajo 10" })
 -- [Lanzadores]
 hl.bind("ALT + T", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/theme-picker.sh"), { description = "Lanzadores: Selector de estilos (BWM)" })
-hl.bind("ALT + R", hl.dsp.exec_cmd("omarchy-theme-switcher"), { description = "Lanzadores: Galería 3D de temas Retro (Omarchy)" })
+if active_skin == "retro" then hl.bind("ALT + R", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/omarchy-shims/omarchy-theme-switcher"), { description = "Lanzadores: Galería 3D de temas Retro (Omarchy)" }) end
 -- [Ventanas]
 hl.bind((is_plasma and "CTRL + left" or "SUPER + left"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py left"), { description = "Ventanas: Ajustar ventana a la izquierda (Quick Tile Left)" })
 hl.bind((is_plasma and "CTRL + right" or "SUPER + right"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py right"), { description = "Ventanas: Ajustar ventana a la derecha (Quick Tile Right)" })

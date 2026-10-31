@@ -718,6 +718,7 @@ def generate_lua(binds: List[Dict[str, Any]]) -> str:
         "local ok_theme, active_theme = pcall(require, \"modules.theme\")",
         "local is_plasma = ok_theme and (active_theme.name == \"plasma\" or (active_theme.name and string.find(active_theme.name, \"plasma\") ~= nil))",
         "local fullscreen_mode = is_plasma and 1 or 0",
+        "local active_skin = ok_theme and active_theme.name or \"\"",
         ""
     ]
 
@@ -783,10 +784,15 @@ def generate_lua(binds: List[Dict[str, Any]]) -> str:
             combo_expr = to_lua_string(combo)
 
         opts_table = f"{{ {', '.join(opts)} }}" if opts else ""
-        if opts_table:
-            lines.append(f"hl.bind({combo_expr}, {dsp_call}, {opts_table})")
+        bind_line = f"hl.bind({combo_expr}, {dsp_call}, {opts_table})" if opts_table else f"hl.bind({combo_expr}, {dsp_call})"
+        # "skins": ["retro"] → the bind only exists in those skins (the key reaches the apps in
+        # the others); Hyprland reloads once on every skin change
+        skins = [str(x) for x in (b.get("skins") or []) if str(x).strip()]
+        if skins:
+            cond = " or ".join(f"active_skin == {to_lua_string(x)}" for x in skins)
+            lines.append(f"if {cond} then {bind_line} end")
         else:
-            lines.append(f"hl.bind({combo_expr}, {dsp_call})")
+            lines.append(bind_line)
 
     # Extra Alt+Tab helper releases and mouse binds
     lines.append("")

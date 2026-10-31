@@ -1055,13 +1055,16 @@
     ],
     "key": "R",
     "action_type": "exec",
-    "exec": "omarchy-theme-switcher",
+    "exec": "/home/sasel/.config/hypr/scripts/omarchy-shims/omarchy-theme-switcher",
     "dispatcher": null,
     "dispatcher_arg": null,
     "options": {},
     "is_default": false,
     "enabled": true,
-    "is_modified": false
+    "is_modified": false,
+    "skins": [
+      "retro"
+    ]
   },
   {
     "id": "custom_1792430113_59",
