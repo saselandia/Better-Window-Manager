@@ -16,6 +16,11 @@ ContentPage {
         command: [Directories.aiTranslationScriptPath, translationProc.locale]
     }
 
+    // default (end-4): glass mode lives here (Retro and Breeze (Kde plasma): Style page)
+    GlassModeSection {
+        visible: !Appearance.isRetro && !Appearance.isPlasma
+    }
+
     ContentSection {
         icon: "battery_android_full"
         title: Translation.tr("Battery")

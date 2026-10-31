@@ -876,5 +876,8 @@
   "Omarchy's widgets on the right of the Retro bar, in their order. Turn off the ones you do not want.": "Los widgets de Omarchy a la derecha de la barra Retro, en su orden. Desactiva los que no quieras.",
   "Omarchy dock (on workspaces without tiled windows)": "Dock de Omarchy (en workspaces sin ventanas en mosaico)",
   "Omarchy panels language": "Idioma de los paneles de Omarchy",
-  "Language of Omarchy's bar panels, menu, dock, OSD, polkit dialog and reminders.": "Idioma de los paneles de la barra, el menú, el dock, el OSD, el diálogo de polkit y los recordatorios de Omarchy."
+  "Language of Omarchy's bar panels, menu, dock, OSD, polkit dialog and reminders.": "Idioma de los paneles de la barra, el menú, el dock, el OSD, el diálogo de polkit y los recordatorios de Omarchy.",
+  "Glass mode": "Modo glass",
+  "Translucent windows with blur": "Ventanas translúcidas con desenfoque",
+  "Like Omarchy's glass mode: terminals at 65 %, dimmed GTK apps and\nfrosted blur behind the bar and menus. For every skin.": "Como el modo glass de Omarchy: terminales al 65 %, apps GTK atenuadas y\nbarra y menús con desenfoque esmerilado detrás. Para todas las skins."
 }

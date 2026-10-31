@@ -24,6 +24,11 @@ ApplicationWindow {
     property bool showNextTime: false
     property var pages: [
         {
+            name: Translation.tr("Quick"),
+            icon: "instant_mix",
+            component: "modules/settings/QuickConfig.qml"
+        },
+        {
             name: Translation.tr("General"),
             icon: "browse",
             component: "modules/settings/GeneralConfig.qml"
@@ -45,14 +50,20 @@ ApplicationWindow {
             component: "modules/settings/InterfaceConfig.qml"
         },
         {
-            name: Translation.tr("Keybinds"),
-            icon: "keyboard",
-            component: "modules/settings/KeybindsConfig.qml"
-        },
-        {
             name: Translation.tr("Services"),
             icon: "settings",
             component: "modules/settings/ServicesConfig.qml"
+        },
+        {
+            name: Translation.tr("Advanced"),
+            icon: "construction",
+            component: "modules/settings/AdvancedConfig.qml"
+        },
+        // BWM's own pages after end-4's
+        {
+            name: Translation.tr("Keybinds"),
+            icon: "keyboard",
+            component: "modules/settings/KeybindsConfig.qml"
         },
         {
             name: Translation.tr("Autostart"),
@@ -73,18 +84,6 @@ ApplicationWindow {
             name: Translation.tr("Default apps"),
             icon: "apps",
             component: "modules/settings/DefaultAppsConfig.qml"
-        },
-        {
-            id: "plugins",
-            name: "Plugins",
-            icon: "extension",
-            component: "modules/settings/PluginsConfig.qml"
-        },
-        {
-            id: "themes",
-            name: "Temas",
-            icon: "palette",
-            component: "modules/settings/ThemesConfig.qml"
         },
         {
             name: Translation.tr("Style"),

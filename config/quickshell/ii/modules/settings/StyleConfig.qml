@@ -9,7 +9,7 @@ import qs.modules.common.widgets
 // "Estilo" page: Omarchy features shared by the three skins
 //  * system monospace font (font-set.sh, port of omarchy-font-set): terminals, fontconfig's
 //    "monospace" (Qt, GTK, Quickshell), GNOME's monospace font, Retro's TUI overlays
-//  * glass mode (glass.sh, port of Omarchy's glassy windows)
+//  * glass mode (GlassModeSection; in General for default (end-4))
 //  * terminal screensaver on idle (modules/ii/screensaver, launch-screensaver.sh)
 //  * boot splash / login screen matching the theme (bwm_boot.py, install-boot-theme.sh)
 ContentPage {
@@ -18,14 +18,12 @@ ContentPage {
 
     readonly property string scripts: Quickshell.env("HOME") + "/.config/hypr/scripts/"
     readonly property string script: scripts + "font-set.sh"
-    property bool glass: false
     property var fonts: []
     property string current: ""
 
     function refresh() {
         listProc.running = true;
         currentProc.running = true;
-        glassProc.running = true;
     }
     Component.onCompleted: refresh()
 
@@ -46,13 +44,6 @@ ContentPage {
     Process {
         id: setProc
         onExited: page.refresh()
-    }
-    Process {
-        id: glassProc
-        command: [page.scripts + "glass.sh", "status"]
-        stdout: StdioCollector {
-            onStreamFinished: page.glass = text.trim() === "on"
-        }
     }
     Process {
         id: bootProc
@@ -108,22 +99,9 @@ ContentPage {
         }
     }
 
-    ContentSection {
-        icon: "blur_on"
-        title: "Modo glass"
-
-        ConfigSwitch {
-            buttonIcon: "opacity"
-            text: "Ventanas translúcidas con desenfoque"
-            checked: page.glass
-            onClicked: {
-                page.glass = !page.glass;
-                Quickshell.execDetached([page.scripts + "glass.sh", page.glass ? "on" : "off"]);
-            }
-            StyledToolTip {
-                text: "Como el modo glass de Omarchy: terminales al 65 %, apps GTK atenuadas y\nbarra y menús con desenfoque esmerilado detrás. Para los tres estilos."
-            }
-        }
+    // default (end-4) has it in General, like its other shell options
+    GlassModeSection {
+        visible: Appearance.isRetro || Appearance.isPlasma
     }
 
     ContentSection {

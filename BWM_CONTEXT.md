@@ -128,7 +128,7 @@ Panel flotante/pegado, Kickoff, applets Bluetooth/red/audio/calendario/notificac
 * Al volver de Plasma, los workspaces con 3+ ventanas pueden cambiar el reparto del mosaico (§3.53).
 * Gestor de archivos por skin (posible Dolphin en Plasma); el resto de apps predeterminadas sigue común. Sin decidir.
 * `xdg-desktop-portal-gtk` no está instalado (FileChooser=gtk): `sudo emerge --ask sys-apps/xdg-desktop-portal-gtk` (lo ejecuta el usuario).
-* `QuickConfig.qml` ya no está en Ajustes (fondo aleatorio de Konachan y claro/oscuro de Default sólo estaban ahí).
+* `QuickConfig.qml` vuelve a Ajustes de default (end-4) (§3.73); Retro y Breeze (Kde plasma) no lo muestran.
 
 
 ### 2.7 Actualizar este equipo (Gentoo + Flatpak)
@@ -154,7 +154,7 @@ flatpak update
 
 ### 2.8 Ajustes y About
 * **Dos About distintos:** el del menú Retro es Fastfetch con presentación Omarchy (§3.47). El de Settings mantiene las tarjetas y enlaces BWM; el usuario pidió expresamente cambiar sólo el primero.
-* Navegación: Plugins y Temas separados en ambas apps, Cursor conservado y Advanced eliminado (también su QML). Estilo conserva fuentes, glass, salvapantallas y arranque.
+* Navegación (§3.73): `settings.qml` (default (end-4)) sigue a end-4: Quick, General, Bar, Background, Interface, Services, Advanced y después las de BWM (Keybinds, Autostart, Display, Workspaces, Default apps, Style, Cursor, About); sin Temas ni Plugins (son de Omarchy: siguen en Retro y en `plasmaSettings.qml`). Modo glass: `GlassModeSection.qml`, en General para default (end-4) y en Estilo para Retro/Breeze. Estilo conserva fuentes, salvapantallas y arranque.
 * About: tarjeta Distro con nombre/versión/logo detectados de os-release y enlace de inicio; tarjeta WM con BWM, logo del arranque y accesos a GitLab/GitHub. Documentation abre README.es.md en GitLab; Issues abre los de GitHub; Star tiene un GIF local de 32 fotogramas y abre GitHub. Sin botones de ayuda/documentación/bugs/privacidad de la distro ni Donate. Discussions omitido: GitHub API `has_discussions=false`, comprobado el 2026-10-27.
 * `SystemInfoData.js` parsea comillas simples/dobles y valores sin comillas como datos, sin ejecutar shell. `SystemInfo.qml` aplica al cargar FileView, vigila cambios y recurre a `/usr/lib/os-release` si falta `/etc/os-release`. El lector anterior no reconocía el formato con comillas simples de Gentoo. Logo simbólico con fallback incluido y ColorOverlay para que sea visible sobre fondos oscuros.
 
@@ -821,7 +821,13 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 * **Petición:** en la skin default (end-4), pasar el modo glass de Estilo a General, quitar Temas y Plugins y poner lo que tiene illogical-impulse, copiando casi todo de end-4/dots-hyprland sin cambiar la configuración esencial.
 * **Comparado con end-4** (`dots-hyprland` `2f2a376`): sus páginas son Quick, General, Bar, Background, Interface, Services, Advanced y About. Quick, Background y Services eran idénticas; Bar e Interface sólo añaden secciones visibles en Retro; General sólo difiere por la protección de volumen (quitada a petición en §3.52, se mantiene quitada). Faltaban Quick (retirada en §3.39) y Advanced (retirada en §3.46).
 * **Hecho:** `settings.qml` = orden de end-4 (Quick, General, Bar, Background, Interface, Services, Advanced) y luego las páginas de BWM (Keybinds, Autostart, Display, Workspaces, Default apps, Style, Cursor, About). `AdvancedConfig.qml` copiado sin cambios de end-4 (GPL, como el resto del shell); sus opciones (`wallpaperTheming.*`) las sigue usando `switchwall.sh`/`applycolor.sh`. Temas y Plugins fuera de `settings.qml` (Omarchy: siguen en el menú de Retro y en `plasmaSettings.qml`). Nuevo `modules/settings/GlassModeSection.qml`: en General sólo con default (end-4), en Estilo sólo con Retro/Breeze. Traducciones es_ES/es_MX del modo glass. About sigue siendo el de BWM (§3.46) y los widgets comunes conservan las correcciones de §3.63.
-* **Verificado:** las páginas 0 (Quick), 1 (General), 6 (Advanced) y 12 (Style) cargan con `qs -p settings.qml` en el workspace 9 sin errores (sólo los avisos de `Revealer` ya conocidos); `configerrors` vacío. **No probado:** verlo con la skin default (end-4) activa (la sesión estaba en Retro, donde la sección glass de General queda oculta) ni revisión visual.
+* **Verificado:** las páginas 0 (Quick), 1 (General), 6 (Advanced) y 12 (Style) cargan con `qs -p settings.qml` en el workspace 9 sin errores (sólo los avisos de `Revealer` ya conocidos); `configerrors` vacío. Con la skin default (end-4) activa, así que General cargó con la sección glass. **No probado:** revisión visual ni pulsar el interruptor.
+
+### 73. Ajustes de default (end-4) como los de end-4 (2026-10-31)
+* **Petición:** en la skin default (end-4), pasar el modo glass de Estilo a General, quitar Temas y Plugins y poner lo que tiene illogical-impulse, copiando casi todo de end-4/dots-hyprland sin cambiar la configuración esencial.
+* **Comparado con end-4** (`dots-hyprland` `2f2a376`): sus páginas son Quick, General, Bar, Background, Interface, Services, Advanced y About. Quick, Background y Services eran idénticas; Bar e Interface sólo añaden secciones visibles en Retro; General sólo difiere por la protección de volumen (quitada a petición en §3.52, se mantiene quitada). Faltaban Quick (retirada en §3.39) y Advanced (retirada en §3.46).
+* **Hecho:** `settings.qml` = orden de end-4 (Quick, General, Bar, Background, Interface, Services, Advanced) y luego las páginas de BWM (Keybinds, Autostart, Display, Workspaces, Default apps, Style, Cursor, About). `AdvancedConfig.qml` copiado sin cambios de end-4 (GPL, como el resto del shell); sus opciones (`wallpaperTheming.*`) las sigue usando `switchwall.sh`/`applycolor.sh`. Temas y Plugins fuera de `settings.qml` (Omarchy: siguen en el menú de Retro y en `plasmaSettings.qml`). Nuevo `modules/settings/GlassModeSection.qml`: en General sólo con default (end-4), en Estilo sólo con Retro/Breeze. Traducciones es_ES/es_MX del modo glass. About sigue siendo el de BWM (§3.46) y los widgets comunes conservan las correcciones de §3.63.
+* **Verificado:** las páginas 0 (Quick), 1 (General), 6 (Advanced) y 12 (Style) cargan con `qs -p settings.qml` en el workspace 9 sin errores (sólo los avisos de `Revealer` ya conocidos); `configerrors` vacío. Con la skin default (end-4) activa, así que General cargó con la sección glass. **No probado:** revisión visual ni pulsar el interruptor.
 
 ---
 
