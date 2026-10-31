@@ -98,6 +98,8 @@ hl.bind("SUPER + SPACE", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/app-l
 hl.bind("SUPER + M", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/omarchy-shims/omarchy-hyprland-window-minimize"), { description = "Ventanas: Minimizar al dock (Omarchy, en workspaces sin mosaico)" })
 -- [Lanzadores]
 hl.bind("ALT + SPACE", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/app-launcher.sh apps"), { description = "Lanzadores: Aplicaciones (Apps de Omarchy en Retro)" })
+-- [General]
+if active_skin == "default" then hl.bind("SUPER + G", hl.dsp.exec_cmd("quickshell -c ii ipc call overlay toggle"), { description = "General: Overlay de widgets (end-4)" }) end
 
 -- Helper binds: allow Super+Alt for corner snaps in Plasma as well
 if is_plasma then

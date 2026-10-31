@@ -1,0 +1,3 @@
+module qs.modules.settings.shared
+
+GlassModeSection 1.0 GlassModeSection.qml

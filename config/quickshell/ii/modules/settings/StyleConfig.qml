@@ -5,6 +5,7 @@ import Quickshell.Io
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.modules.settings.shared
 
 // "Estilo" page: Omarchy features shared by the three skins
 //  * system monospace font (font-set.sh, port of omarchy-font-set): terminals, fontconfig's
