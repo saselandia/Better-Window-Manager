@@ -200,19 +200,17 @@ def mpris_playing() -> list:
     return playing
 
 
-def snapshot_focus() -> dict:
+def snapshot_focus(media: bool = True) -> dict:
     """Workspace visible de cada monitor, monitor y ventana con el foco, y qué estaba sonando.
     Una app que se reabre toma el foco (focus_on_activate) y te cambia de workspace, y lo que
     queda oculto puede pausarse: restore_focus lo deja como estaba."""
     monitors = hypr_json("monitors")
-    active = subprocess.run(["hyprctl", "activewindow", "-j"], capture_output=True, text=True).stdout
-    try:
-        win = json.loads(active) if active.strip() not in ("", "{}") else {}
-    except ValueError:
-        win = {}
+    win = hypr_json("activewindow")
+    win = win if isinstance(win, dict) else {}
     return {"workspaces": {m["name"]: _active_workspace_id(m) for m in monitors},
             "focused_monitor": next((m["name"] for m in monitors if m.get("focused")), None),
-            "window": win.get("address"), "window_pid": win.get("pid"), "playing": mpris_playing()}
+            "window": win.get("address"), "window_pid": win.get("pid"),
+            "playing": mpris_playing() if media else []}
 
 
 def restore_focus(snap: dict):
@@ -245,6 +243,46 @@ def restore_focus(snap: dict):
             subprocess.run(["busctl", "--user", "call", name, "/org/mpris/MediaPlayer2",
                             "org.mpris.MediaPlayer2.Player", "Play"], stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL, timeout=5)
+
+
+class FocusKeeper:
+    """Mientras una app se reinicia sola (cambio de tema): si una ventana nueva suya te quita el
+    foco o te lleva a su workspace nada más aparecer, vuelves a donde estabas justo antes.
+    La foto se renueva en cada comprobación, así que lo que hagas tú entretanto (cambiar de
+    workspace, enfocar esa app a propósito) no se deshace, a diferencia de restaurar al final una
+    foto tomada al empezar. `is_new(client)` dice si una ventana es nueva de esa app."""
+
+    STEAL_SECS = 2.5  # un robo es inmediato; después, el foco en esa ventana es cosa tuya
+
+    def __init__(self, is_new):
+        import time
+        self._time = time.time
+        self.is_new = is_new
+        self.snap = snapshot_focus()          # lo que sonaba al empezar
+        self.playing = self.snap["playing"]
+        self.seen = {}                        # dirección -> cuándo apareció
+        self.handled = set()
+
+    def check(self, clients=None):
+        now = self._time()
+        clients = clients if clients is not None else hypr_json("clients")
+        fresh = [c for c in clients if self.is_new(c)]
+        for c in fresh:
+            self.seen.setdefault(c["address"], now)
+        recent = {c["address"]: c for c in fresh
+                  if now - self.seen[c["address"]] < self.STEAL_SECS and c["address"] not in self.handled}
+        active = hypr_json("activewindow")
+        active = active if isinstance(active, dict) else {}
+        monitors = hypr_json("monitors")
+        moved_to = {_active_workspace_id(m) for m in monitors} - set(self.snap["workspaces"].values())
+        stolen = active.get("address") in recent or any(
+            c.get("workspace", {}).get("id") in moved_to for c in recent.values())
+        if stolen:
+            self.handled.update(recent)
+            self.snap["playing"] = self.playing
+            restore_focus(self.snap)
+        else:
+            self.snap = snapshot_focus(media=False)
 
 
 if __name__ == "__main__":

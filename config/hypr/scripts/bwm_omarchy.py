@@ -1217,7 +1217,6 @@ def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None, qu
     if not windows:
         return False
     import bwm_windows
-    focus = bwm_windows.snapshot_focus()
     layout = [{"title": c["title"], "ws": c["workspace"]["name"], "at": c["at"], "size": c["size"],
                "floating": c.get("floating", False)} for c in windows]
     pids = set(quit_pids or {c["pid"] for c in windows})
@@ -1246,6 +1245,9 @@ def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None, qu
     # workspace, en silencio: no aparece en medio del que estás mirando ni te cambia de workspace
     hold = "bwm-restart-" + re.sub(r"[^A-Za-z0-9]+", "-", windows[0].get("class", "app")).strip("-").lower()
     bwm_windows.hold_new_windows(hold, sorted({c.get("class", "") for c in windows}), layout[0]["ws"])
+    # Sólo se deshace un robo de foco de la app recién abierta; lo que hagas tú mientras se
+    # reabre se respeta (antes se restauraba al final una foto del principio: con Steam, minutos)
+    keeper = bwm_windows.FocusKeeper(lambda c: match(c) and c["pid"] not in pids)
     subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
     pending = list(layout)
@@ -1256,6 +1258,7 @@ def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None, qu
     while time.time() - start < place_secs and (pending or time.time() - last_place < 8):
         time.sleep(0.5)
         clients = _hypr_clients()
+        keeper.check(clients)
         alive = {c["address"] for c in clients}
         for addr in [a for a in placed if a not in alive]:
             pending.append(placed.pop(addr))
@@ -1276,8 +1279,6 @@ def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None, qu
             pending.remove(m)
             last_place = time.time()
     bwm_windows.release_new_windows(hold)
-    # Por si algo tomó el foco o cambió de workspace: todo como estaba (y lo que sonaba, sonando)
-    bwm_windows.restore_focus(focus)
     return True
 
 STEAM_MAIN = r"ubuntu12_32/steam( |$)"

@@ -75,6 +75,13 @@ def main():
     subprocess.run(["pkill", "-9", "-f", "com.spotify.Client"], stderr=subprocess.DEVNULL)
     subprocess.run(["pkill", "-9", "-x", "spotify"], stderr=subprocess.DEVNULL)
     time.sleep(0.5)
+    import bwm_windows
+    # Its new window opens straight in its workspace, without focus, and only a focus steal by it
+    # is undone (bwm_windows.FocusKeeper): switching workspace meanwhile is respected
+    hold = "bwm-restart-spotify"
+    if saved:
+        bwm_windows.hold_new_windows(hold, sorted({w.get("class", "") for w in before}), saved["workspace"])
+    keeper = bwm_windows.FocusKeeper(lambda c: c.get("class", "").lower() == "spotify" and c["pid"] not in old_pids)
     # Lua config: the old "hyprctl dispatch exec <cmd>" syntax no longer works
     lua('hl.dsp.exec_cmd("flatpak run com.spotify.Client")')
 
@@ -86,6 +93,7 @@ def main():
     deadline = time.time() + 40
     while time.time() < deadline:
         time.sleep(0.4)
+        keeper.check()
         for w in spotify_windows():
             if w["pid"] in old_pids or w["address"] in placed:
                 continue
@@ -96,6 +104,7 @@ def main():
         if w["address"] in placed:
             time.sleep(1.5)
             restore(w, saved)
+    bwm_windows.release_new_windows(hold)
 
 
 if __name__ == "__main__":
