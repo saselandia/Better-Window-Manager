@@ -18,11 +18,11 @@
   },
   "look": {
     "wallpaper": "default.jpg",
-    "rounding": 14,
-    "roundingPower": 2,
-    "borderSize": 2,
+    "rounding": 18,
+    "roundingPower": 2.5,
+    "borderSize": 1,
     "gapsIn": 4,
-    "gapsOut": 8,
+    "gapsOut": 5,
     "btopRounded": true
   },
   "bar": {

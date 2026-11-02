@@ -62,9 +62,15 @@ elseif is_retro then
     active_2 = (ok_retro and retro_colors and retro_colors.secondary) or boost_color(ok and colors.secondary, "rgba(00ff99ee)")
     inactive = (ok_retro and retro_colors and retro_colors.border_inactive) or "rgba(101520aa)"
 else
-    active_1 = ok and colors.primary or "rgba(33ccffee)"
-    active_2 = ok and colors.primary_container or "rgba(00ff99ee)"
-    inactive = ok and colors.outline or "rgba(595959aa)"
+    -- default (end-4): como dots-hyprland (matugen templates/hyprland/colors.lua), borde casi
+    -- invisible sin degradado: outline_variant al 0x77 activo, surface_container_low al 0x33 inactivo
+    local function with_alpha(c_str, alpha, fallback)
+        local hex = c_str and string.match(c_str, "%x%x%x%x%x%x")
+        return hex and ("rgba(" .. hex .. alpha .. ")") or fallback
+    end
+    active_1 = with_alpha(ok and colors.outline_variant, "77", "rgba(44464f77)")
+    active_2 = active_1
+    inactive = with_alpha(ok and colors.surface_container_low, "33", "rgba(1a1b2033)")
 end
 
 hl.config({

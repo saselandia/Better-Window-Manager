@@ -37,12 +37,12 @@ Item { // Bar content region
     // Background (Only for Default Material You theme; RetroBarContent handles its own background)
     Rectangle {
         id: barBackground
-        visible: !Appearance.isRetro && !Appearance.isPlasma && Config.options.bar.showBackground
+        visible: !Appearance.isRetro && !Appearance.isPlasma
         anchors {
             fill: parent
             margins: Config.options.bar.cornerStyle === 1 ? (Appearance.sizes.hyprlandGapsOut) : 0 // idk why but +1 is needed
         }
-        color: Appearance.colors.colLayer0
+        color: Config.options.bar.showBackground ? Appearance.colors.colLayer0 : "transparent"
         radius: Config.options.bar.cornerStyle === 1 ? Appearance.rounding.windowRounding : 0
         border.width: Config.options.bar.cornerStyle === 1 ? 1 : 0
         border.color: Appearance.colors.colLayer0Border
