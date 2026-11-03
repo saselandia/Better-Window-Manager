@@ -105,15 +105,23 @@ hl.config({
         rounding_power = win_round_pwr,
 
         active_opacity   = 1.0,
-        -- Retro, como Omarchy: apps opacas (sólo terminales/TUIs son translúcidos, ver omarchy_windows.lua)
-        inactive_opacity = (is_plasma or is_retro) and 1.0 or 0.95,
+        -- Todas opacas: Retro, como Omarchy (sólo terminales/TUIs son translúcidos, ver omarchy_windows.lua);
+        -- default (end-4), como dots-hyprland, distingue las inactivas oscureciéndolas (dim_*), no con opacidad
+        inactive_opacity = 1.0,
 
-        -- Sombra desactivada en retro y plasma para evitar estela/halo gris en los bordes
+        -- default (end-4): oscurecido de dots-hyprland (general.lua)
+        dim_inactive = not is_retro and not is_plasma,
+        dim_strength = 0.05,
+        dim_special  = 0.2,
+
+        -- Sombra de dots-hyprland en default (end-4); desactivada en retro y plasma para evitar
+        -- estela/halo gris en los bordes
         shadow = {
             enabled      = not is_retro and not is_plasma,
-            range        = 18,
-            render_power = 3,
-            color        = "rgba(00000035)",
+            range        = 20,
+            offset       = { 0, 2 },
+            render_power = 10,
+            color        = "rgba(00000020)",
         },
 
         -- Blur Dual-Kawase desactivado en plasma para evitar halo gris en márgenes CSD
