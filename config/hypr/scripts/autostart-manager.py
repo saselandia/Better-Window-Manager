@@ -11,12 +11,24 @@ import glob
 import json
 import re
 import argparse
+import socket
 import subprocess
 import time
 from typing import List, Dict, Any, Optional
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import bwm_windows  # noqa: E402  (mismo directorio)
+
 AUTOSTART_DIR = os.path.expanduser("~/.config/autostart")
 LOG_FILE = os.path.expanduser("~/.cache/hypr-autostart.log")
+# Al iniciar sesión se empieza en este workspace, abra lo que abra el autoarranque
+HOME_WORKSPACE = 1
+# Cuánto se vigilan las ventanas de las apps de inicio: algunas (Steam) enseñan antes una ventana
+# de carga o de inicio de sesión y la principal llega minutos después
+SETTLE_SECS = 180
+# Lanzadores que no dicen nada de la clase de la ventana
+WRAPPER_BINARIES = {"flatpak", "env", "sh", "bash", "python", "python3", "gtk-launch", "dbus-launch",
+                    "uwsm", "uwsm-app", "systemd-run", "nice", "setsid", "gamemoderun", "prime-run"}
 
 def get_app_directories() -> List[str]:
     """Returns list of directories where .desktop files are stored."""
@@ -416,22 +428,11 @@ def ensure_display_env() -> None:
     os.environ.setdefault("XDG_SESSION_TYPE", "wayland")
     os.environ.setdefault("XDG_SESSION_DESKTOP", "Hyprland")
 
-def launch_command(exec_cmd: str, workspace: str = "default") -> bool:
-    """Launches an application directly or bound to a Hyprland workspace."""
+def spawn_command(exec_cmd: str) -> Optional[int]:
+    """Launches an application detached and returns its PID (its windows descend from it)."""
     ensure_display_env()
-    ws = str(workspace).strip()
-    if ws and ws not in ("default", "D") and ws in [str(i) for i in range(1, 11)]:
-        try:
-            lua_str = json.dumps(f"[workspace {ws} silent] {exec_cmd}")
-            sub_cmd = f"hl.dsp.exec_cmd({lua_str})"
-            res = subprocess.run(["hyprctl", "dispatch", sub_cmd], capture_output=True, text=True)
-            if res.returncode == 0 and "ok" in res.stdout:
-                return True
-        except Exception:
-            pass
-
     try:
-        subprocess.Popen(
+        proc = subprocess.Popen(
             exec_cmd,
             shell=True,
             start_new_session=True,
@@ -439,9 +440,112 @@ def launch_command(exec_cmd: str, workspace: str = "default") -> bool:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
-        return True
+        return proc.pid
     except Exception:
-        return False
+        return None
+
+def target_workspace(entry: Dict[str, Any]) -> Optional[int]:
+    ws = str(entry.get("workspace", "default")).strip()
+    return int(ws) if ws in [str(i) for i in range(1, 11)] else None
+
+def entry_classes(entry: Dict[str, Any]) -> List[str]:
+    """Window classes this autostart app may use (StartupWMClass, desktop ID, its last part,
+    binary and name), as written and in lower case."""
+    file_id = entry.get("file", "").replace(".desktop", "")
+    names = [entry.get("wm_class", ""), file_id, file_id.split(".")[-1], entry.get("name", "")]
+    for part in entry.get("exec", "").split():
+        binary = os.path.basename(part)
+        if not part.startswith("-") and binary not in WRAPPER_BINARIES and "=" not in part:
+            names.append(binary)
+            break
+    classes = []
+    for n in names:
+        for variant in (n.strip(), n.strip().lower()):
+            if variant and variant not in classes:
+                classes.append(variant)
+    return classes
+
+def hold_rule_name(entry: Dict[str, Any]) -> str:
+    return "bwm-autostart-" + re.sub(r"[^a-zA-Z0-9_-]", "_", entry.get("file", "app"))
+
+def descends_from(pid: int, ancestors: set) -> bool:
+    """Is `pid` one of `ancestors` or a child (at any depth) of one of them?"""
+    seen = 0
+    while pid and pid > 1 and seen < 64:
+        if pid in ancestors:
+            return True
+        try:
+            with open(f"/proc/{pid}/stat", "r") as f:
+                pid = int(f.read().rsplit(")", 1)[1].split()[1])
+        except (OSError, ValueError, IndexError):
+            return False
+        seen += 1
+    return False
+
+def settle_windows(launched: List[Dict[str, Any]], known: set, deadline: float, log) -> None:
+    """While the autostart apps start, every window of theirs (the loading or sign-in window and
+    the real one that comes later) ends up in its app's workspace without taking you there: if
+    one steals the focus, you go back to where you were (HOME_WORKSPACE after login).
+
+    The temporary rules from run_all_autostart already open them in place; this also covers
+    windows whose class could not be guessed (they descend from the launched process)."""
+    def owner(client):
+        cls = {client.get("class", ""), client.get("initialClass", "")}
+        cls |= {c.lower() for c in cls}
+        for rec in launched:
+            if descends_from(client.get("pid", 0), {rec["pid"]}) or cls & set(rec["classes"]):
+                return rec
+        return None
+
+    def is_new(client):
+        return client.get("address") not in known and owner(client) is not None
+
+    keeper = bwm_windows.FocusKeeper(is_new)
+    placed = set()
+
+    def check():
+        clients = bwm_windows.hypr_json("clients")
+        moves = []
+        for c in clients:
+            key = (c.get("address"), c.get("pid"))
+            if c.get("address") in known or key in placed:
+                continue
+            rec = owner(c)
+            if rec is None:
+                continue
+            placed.add(key)  # only on first sight: later moves are the user's
+            ws = c.get("workspace", {}).get("id", 0)
+            if rec["workspace"] and 0 < ws != rec["workspace"]:
+                moves.append(f"hl.dispatch(hl.dsp.window.move({{ workspace = {rec['workspace']}, "
+                             f"follow = false, window = 'address:{c['address']}' }}))")
+                log.write(f"[PLACE] '{rec['name']}' window '{c.get('title', '')}' -> workspace {rec['workspace']}\n")
+        bwm_windows.dispatch(moves)
+        keeper.check(bwm_windows.hypr_json("clients") if moves else clients)
+
+    sig = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "")
+    path = f"{os.environ.get('XDG_RUNTIME_DIR', f'/run/user/{os.getuid()}')}/hypr/{sig}/.socket2.sock"
+    relevant = (b"openwindow", b"activewindowv2", b"workspacev2", b"focusedmonv2", b"movewindowv2")
+    check()
+    while time.monotonic() < deadline:
+        try:
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+                sock.connect(path)
+                sock.settimeout(2)
+                buf = b""
+                while time.monotonic() < deadline:
+                    try:
+                        chunk = sock.recv(4096)
+                    except socket.timeout:
+                        continue
+                    if not chunk:
+                        break
+                    buf += chunk
+                    *lines, buf = buf.split(b"\n")
+                    if any(line.partition(b">>")[0] in relevant for line in lines):
+                        check()
+        except OSError:
+            time.sleep(2)
+            check()
 
 def find_matching_clients(entry: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Finds open Hyprland window clients that match this desktop entry."""
@@ -605,9 +709,15 @@ def run_all_autostart(force: bool = False) -> None:
                 return
 
     os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
-    with open(LOG_FILE, "a", encoding="utf-8") as log:
+    with open(LOG_FILE, "a", encoding="utf-8", buffering=1) as log:
         log.write(f"\n--- Autostart session started at {time.strftime('%Y-%m-%d %H:%M:%S')} ---\n")
-        
+
+        # You start in HOME_WORKSPACE; the apps open in theirs without taking you there
+        focus_workspace(HOME_WORKSPACE)
+        known = {c.get("address") for c in bwm_windows.hypr_json("clients")}
+        launched = []
+        deadline = time.monotonic() + SETTLE_SECS
+
         for entry in entries:
             name = entry["name"]
             exec_cmd = entry["exec"]
@@ -627,10 +737,17 @@ def run_all_autostart(force: bool = False) -> None:
                 continue
 
             try:
-                ws = entry.get("workspace", "default")
-                ok = launch_command(exec_cmd, ws)
-                ws_info = f" on workspace {ws}" if str(ws) not in ("default", "D") else ""
-                if ok:
+                ws = target_workspace(entry)
+                classes = entry_classes(entry)
+                if ws is not None:
+                    # Every new window of the app (loading window first, real one later) opens
+                    # in its workspace, silently, until settle_windows ends
+                    bwm_windows.hold_new_windows(hold_rule_name(entry), classes, ws)
+                pid = spawn_command(exec_cmd)
+                ws_info = f" on workspace {ws}" if ws is not None else ""
+                if pid:
+                    launched.append({"name": name, "pid": pid, "workspace": ws, "classes": classes,
+                                     "rule": hold_rule_name(entry) if ws is not None else None})
                     log.write(f"[START] Launched '{name}'{ws_info}: {exec_cmd}\n")
                 else:
                     log.write(f"[ERROR] Failed to launch '{name}'{ws_info}: {exec_cmd}\n")
@@ -639,14 +756,25 @@ def run_all_autostart(force: bool = False) -> None:
             except Exception as e:
                 log.write(f"[ERROR] Failed to launch '{name}': {e}\n")
 
-    # Mark lock file after launch
-    try:
-        lock_fd.seek(0)
-        lock_fd.truncate()
-        lock_fd.write(str(time.time()))
-        lock_fd.flush()
-    except Exception:
-        pass
+        # Mark lock file after launch
+        try:
+            lock_fd.seek(0)
+            lock_fd.truncate()
+            lock_fd.write(str(time.time()))
+            lock_fd.flush()
+        except Exception:
+            pass
+
+        if launched:
+            try:
+                settle_windows(launched, known, deadline, log)
+            except Exception as e:
+                log.write(f"[ERROR] Placing autostart windows: {e}\n")
+            finally:
+                for rec in launched:
+                    if rec["rule"]:
+                        bwm_windows.release_new_windows(rec["rule"])
+                log.write("[DONE] Autostart windows settled.\n")
 
 def main():
     parser = argparse.ArgumentParser(description="Autostart Manager for Hyprland & Quickshell")
