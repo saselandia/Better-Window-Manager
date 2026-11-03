@@ -8,6 +8,7 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
 import org.kde.kirigami as Kirigami
+import "KeybindGroups.js" as KeybindGroups
 
 ContentPage {
     id: root
@@ -32,6 +33,16 @@ ContentPage {
     property string formExecCmd: ""
     property string formDispatcher: "window.close"
     property string formDispatcherArg: ""
+
+    // Grupos desplegados (flechas, números, teclas multimedia, combinaciones alternativas)
+    property var expandedGroups: ({})
+    readonly property var displayGroups: KeybindGroups.build(root.getFilteredList(), root.selectedCategory !== "Eliminados")
+
+    function toggleGroup(key) {
+        const next = Object.assign({}, root.expandedGroups);
+        next[key] = !next[key];
+        root.expandedGroups = next;
+    }
 
     property string feedbackMessage: ""
     property bool feedbackIsError: false
@@ -297,10 +308,12 @@ ContentPage {
         if (cat === "Eliminados") {
             return root.keybindsList.filter(b => b.enabled === false).length;
         }
+        // Un grupo (flechas, números, multimedia, combinaciones alternativas) cuenta como una fila
+        const active = root.keybindsList.filter(b => b.enabled !== false);
         if (cat === "Todos") {
-            return root.keybindsList.filter(b => b.enabled !== false).length;
+            return KeybindGroups.build(active, true).length;
         }
-        return root.keybindsList.filter(b => b.enabled !== false && (b.category || "Otros").toLowerCase() === cat.toLowerCase()).length;
+        return KeybindGroups.build(active.filter(b => (b.category || "Otros").toLowerCase() === cat.toLowerCase()), true).length;
     }
 
     // Backend process to list current keybinds
@@ -893,11 +906,11 @@ ContentPage {
         // --- LISTA DE ATAJOS DE TECLADO ---
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: 4
 
             // Estado vacío cuando no hay coincidencias
             Rectangle {
-                visible: root.getFilteredList().length === 0
+                visible: root.displayGroups.length === 0
                 Layout.fillWidth: true
                 implicitHeight: 140
                 radius: Appearance.rounding.normal
@@ -930,251 +943,355 @@ ContentPage {
                 }
             }
 
-            // Repeater de Atajos
+            // Atajos: los más usados primero; flechas, números, teclas multimedia y combinaciones
+            // alternativas de una misma acción en una fila desplegable (KeybindGroups.js)
             Repeater {
-                model: root.getFilteredList()
+                model: root.displayGroups
 
-                delegate: Rectangle {
-                    id: bindCard
+                delegate: ColumnLayout {
+                    id: entry
                     required property var modelData
+                    readonly property bool isGroup: modelData.binds.length > 1
+                    readonly property bool expanded: isGroup && (root.searchQuery.trim() !== "" || root.expandedGroups[modelData.key] === true)
                     Layout.fillWidth: true
-                    implicitHeight: 70
-                    radius: Appearance.rounding.normal
-                    color: Appearance.colors.colLayer2
-                    opacity: modelData.enabled === false ? 0.75 : 1.0
-                    border.width: 1
-                    border.color: Appearance.colors.colOutlineVariant
+                    spacing: 4
 
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 16
-                        anchors.rightMargin: 16
-                        spacing: 16
+                    // Cabecera de un grupo: todas sus combinaciones y el desplegable
+                    Rectangle {
+                        visible: entry.isGroup
+                        Layout.fillWidth: true
+                        implicitHeight: 46
+                        radius: Appearance.rounding.normal
+                        color: groupMouse.containsMouse ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer2
+                        border.width: 1
+                        border.color: entry.expanded ? Appearance.colors.colPrimary : Appearance.colors.colOutlineVariant
 
-                        // Insignias Visuales de Teclado
+                        MouseArea {
+                            id: groupMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.toggleGroup(entry.modelData.key)
+                        }
+
                         RowLayout {
-                            spacing: 4
-                            Layout.preferredWidth: 210
-                            Layout.fillWidth: false
-                            Layout.alignment: Qt.AlignVCenter
+                            anchors.fill: parent
+                            anchors.leftMargin: 12
+                            anchors.rightMargin: 8
+                            spacing: 12
 
-                            Repeater {
-                                model: modelData.mods || []
-                                delegate: RowLayout {
-                                    spacing: 4
-                                    required property string modelData
-                                    KeyboardKey {
-                                        key: modelData
-                                    }
-                                    StyledText {
-                                        text: "+"
-                                        font.pixelSize: Appearance.font.pixelSize.smaller
-                                        color: Appearance.colors.colOutline
+                            Row {
+                                Layout.preferredWidth: Math.max(150, implicitWidth)
+                                Layout.alignment: Qt.AlignVCenter
+                                spacing: 6
+                                clip: true
+                                Repeater {
+                                    model: entry.modelData.combos
+                                    delegate: Row {
+                                        id: comboRow
+                                        required property var modelData
+                                        required property int index
+                                        spacing: 3
+                                        StyledText {
+                                            visible: comboRow.index > 0
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: Translation.tr("o")
+                                            font.pixelSize: Appearance.font.pixelSize.smaller
+                                            color: Appearance.colors.colOutline
+                                        }
+                                        Repeater {
+                                            model: comboRow.modelData.mods
+                                            delegate: KeyboardKey {
+                                                required property string modelData
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                key: modelData
+                                            }
+                                        }
+                                        KeyboardKey {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            key: comboRow.modelData.key
+                                        }
                                     }
                                 }
                             }
 
-                            KeyboardKey {
-                                key: modelData.key || ""
+                            Rectangle {
+                                visible: root.selectedCategory === "Todos" && entry.modelData.category !== ""
+                                implicitWidth: groupCatText.implicitWidth + 10
+                                implicitHeight: 18
+                                radius: Appearance.rounding.small
+                                color: Appearance.colors.colSurfaceContainerHigh
+                                StyledText {
+                                    id: groupCatText
+                                    anchors.centerIn: parent
+                                    text: entry.modelData.category
+                                    font.pixelSize: Appearance.font.pixelSize.smaller - 2
+                                    font.weight: Font.Medium
+                                    color: Appearance.colors.colOutline
+                                }
+                            }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: entry.modelData.title
+                                font.pixelSize: Appearance.font.pixelSize.normal
+                                font.weight: Font.DemiBold
+                                color: Appearance.colors.colOnSecondaryContainer
+                                elide: Text.ElideRight
+                            }
+
+                            StyledText {
+                                text: entry.modelData.binds.length
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                color: Appearance.colors.colOutline
+                            }
+
+                            MaterialSymbol {
+                                iconSize: 20
+                                text: entry.expanded ? "expand_less" : "expand_more"
+                                color: Appearance.colors.colOnSecondaryContainer
                             }
                         }
+                    }
 
-                        // Columna Informativa
-                        ColumnLayout {
+                    // Atajos de la entrada: el único, o los del grupo desplegado (sangrados)
+                    Repeater {
+                        model: entry.isGroup ? (entry.expanded ? entry.modelData.binds : []) : entry.modelData.binds
+
+                        delegate: Rectangle {
+                            id: bindCard
+                            required property var modelData
                             Layout.fillWidth: true
-                            spacing: 3
-                            Layout.alignment: Qt.AlignVCenter
+                            Layout.leftMargin: entry.isGroup ? 20 : 0
+                            implicitHeight: 48
+                            radius: Appearance.rounding.normal
+                            color: entry.isGroup ? Appearance.colors.colLayer1 : Appearance.colors.colLayer2
+                            opacity: modelData.enabled === false ? 0.75 : 1.0
+                            border.width: 1
+                            border.color: Appearance.colors.colOutlineVariant
 
                             RowLayout {
-                                spacing: 8
-                                // Chip de Categoría
-                                Rectangle {
-                                    implicitWidth: catTagText.implicitWidth + 10
-                                    implicitHeight: 18
-                                    radius: Appearance.rounding.small
-                                    color: Appearance.colors.colSurfaceContainerHigh
+                                anchors.fill: parent
+                                anchors.leftMargin: 12
+                                anchors.rightMargin: 8
+                                spacing: 12
 
-                                    StyledText {
-                                        id: catTagText
-                                        anchors.centerIn: parent
-                                        text: modelData.category || "General"
-                                        font.pixelSize: Appearance.font.pixelSize.smaller - 2
-                                        font.weight: Font.Medium
-                                        color: Appearance.colors.colOutline
+                                // Insignias visuales de teclado
+                                Row {
+                                    spacing: 3
+                                    Layout.preferredWidth: Math.max(entry.isGroup ? 130 : 150, implicitWidth)
+                                    Layout.alignment: Qt.AlignVCenter
+                                    clip: true
+
+                                    Repeater {
+                                        model: KeybindGroups.visibleMods(bindCard.modelData.mods, bindCard.modelData.key)
+                                        delegate: KeyboardKey {
+                                            required property string modelData
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            key: modelData
+                                        }
+                                    }
+
+                                    KeyboardKey {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        key: KeybindGroups.keyLabel(bindCard.modelData.key || "")
                                     }
                                 }
 
-                                StyledText {
-                                    text: modelData.description || modelData.id
-                                    font.pixelSize: Appearance.font.pixelSize.normal
-                                    font.weight: Font.DemiBold
-                                    color: Appearance.colors.colOnSecondaryContainer
-                                    elide: Text.ElideRight
+                                // Descripción y, debajo, la orden o acción
+                                ColumnLayout {
                                     Layout.fillWidth: true
+                                    Layout.alignment: Qt.AlignVCenter
+                                    spacing: 0
+
+                                    RowLayout {
+                                        spacing: 8
+                                        Rectangle {
+                                            visible: !entry.isGroup && root.selectedCategory === "Todos"
+                                            implicitWidth: catTagText.implicitWidth + 10
+                                            implicitHeight: 18
+                                            radius: Appearance.rounding.small
+                                            color: Appearance.colors.colSurfaceContainerHigh
+
+                                            StyledText {
+                                                id: catTagText
+                                                anchors.centerIn: parent
+                                                text: bindCard.modelData.category || "General"
+                                                font.pixelSize: Appearance.font.pixelSize.smaller - 2
+                                                font.weight: Font.Medium
+                                                color: Appearance.colors.colOutline
+                                            }
+                                        }
+
+                                        StyledText {
+                                            text: bindCard.modelData.description || bindCard.modelData.id
+                                            font.pixelSize: Appearance.font.pixelSize.small
+                                            font.weight: Font.DemiBold
+                                            color: Appearance.colors.colOnSecondaryContainer
+                                            elide: Text.ElideRight
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+
+                                    StyledText {
+                                        text: bindCard.modelData.action_type === "exec" ? (bindCard.modelData.exec || "") : ("Acción: " + (bindCard.modelData.dispatcher || "") + (bindCard.modelData.dispatcher_arg ? " (" + bindCard.modelData.dispatcher_arg + ")" : ""))
+                                        font.pixelSize: Appearance.font.pixelSize.smaller - 1
+                                        font.family: Appearance.font.family.monospace
+                                        color: Appearance.colors.colOutline
+                                        elide: Text.ElideMiddle
+                                        Layout.fillWidth: true
+                                    }
                                 }
-                            }
 
-                            // Comando o acción en fuente monoespaciada
-                            StyledText {
-                                text: modelData.action_type === "exec" ? (modelData.exec || "") : ("Acción: " + (modelData.dispatcher || "") + (modelData.dispatcher_arg ? " (" + modelData.dispatcher_arg + ")" : ""))
-                                font.pixelSize: Appearance.font.pixelSize.smaller
-                                font.family: Appearance.font.family.monospace
-                                color: Appearance.colors.colOutline
-                                elide: Text.ElideMiddle
-                                Layout.fillWidth: true
-                            }
-                        }
+                                // Insignia de estado: Desactivado / Modificado / Personalizado
+                                Rectangle {
+                                    visible: bindCard.modelData.enabled === false
+                                    implicitWidth: disabledBadgeText.implicitWidth + 12
+                                    implicitHeight: 20
+                                    radius: Appearance.rounding.full
+                                    color: Appearance.colors.colErrorContainer
 
-                        // Insignia de Estado: Desactivado / Modificado / Personalizado
-                        Rectangle {
-                            visible: modelData.enabled === false
-                            implicitWidth: disabledBadgeText.implicitWidth + 12
-                            implicitHeight: 22
-                            radius: Appearance.rounding.full
-                            color: Appearance.colors.colErrorContainer
+                                    StyledText {
+                                        id: disabledBadgeText
+                                        anchors.centerIn: parent
+                                        text: Translation.tr("Desactivado")
+                                        font.pixelSize: Appearance.font.pixelSize.smaller - 1
+                                        font.weight: Font.Medium
+                                        color: Appearance.colors.colOnErrorContainer
+                                    }
+                                }
 
-                            StyledText {
-                                id: disabledBadgeText
-                                anchors.centerIn: parent
-                                text: Translation.tr("Desactivado")
-                                font.pixelSize: Appearance.font.pixelSize.smaller - 1
-                                font.weight: Font.Medium
-                                color: Appearance.colors.colOnErrorContainer
-                            }
-                        }
+                                Rectangle {
+                                    visible: bindCard.modelData.enabled !== false && bindCard.modelData.is_default && bindCard.modelData.is_modified
+                                    implicitWidth: modBadgeText.implicitWidth + 12
+                                    implicitHeight: 20
+                                    radius: Appearance.rounding.full
+                                    color: Appearance.colors.colSecondaryContainer
 
-                        Rectangle {
-                            visible: modelData.enabled !== false && modelData.is_default && modelData.is_modified
-                            implicitWidth: modBadgeText.implicitWidth + 12
-                            implicitHeight: 22
-                            radius: Appearance.rounding.full
-                            color: Appearance.colors.colSecondaryContainer
+                                    StyledText {
+                                        id: modBadgeText
+                                        anchors.centerIn: parent
+                                        text: Translation.tr("Modificado")
+                                        font.pixelSize: Appearance.font.pixelSize.smaller - 1
+                                        font.weight: Font.Medium
+                                        color: Appearance.colors.colOnSecondaryContainer
+                                    }
+                                }
 
-                            StyledText {
-                                id: modBadgeText
-                                anchors.centerIn: parent
-                                text: Translation.tr("Modificado")
-                                font.pixelSize: Appearance.font.pixelSize.smaller - 1
-                                font.weight: Font.Medium
-                                color: Appearance.colors.colOnSecondaryContainer
-                            }
-                        }
+                                Rectangle {
+                                    visible: bindCard.modelData.enabled !== false && !bindCard.modelData.is_default
+                                    implicitWidth: badgeText.implicitWidth + 12
+                                    implicitHeight: 20
+                                    radius: Appearance.rounding.full
+                                    color: Appearance.colors.colPrimaryContainer
 
-                        Rectangle {
-                            visible: modelData.enabled !== false && !modelData.is_default
-                            implicitWidth: badgeText.implicitWidth + 12
-                            implicitHeight: 22
-                            radius: Appearance.rounding.full
-                            color: Appearance.colors.colPrimaryContainer
+                                    StyledText {
+                                        id: badgeText
+                                        anchors.centerIn: parent
+                                        text: Translation.tr("Personalizado")
+                                        font.pixelSize: Appearance.font.pixelSize.smaller - 1
+                                        font.weight: Font.Medium
+                                        color: Appearance.colors.colOnPrimaryContainer
+                                    }
+                                }
 
-                            StyledText {
-                                id: badgeText
-                                anchors.centerIn: parent
-                                text: Translation.tr("Personalizado")
-                                font.pixelSize: Appearance.font.pixelSize.smaller - 1
-                                font.weight: Font.Medium
-                                color: Appearance.colors.colOnPrimaryContainer
-                            }
-                        }
+                                // --- Botones de los atajos en «Eliminados» ---
+                                RippleButton {
+                                    visible: bindCard.modelData.enabled === false
+                                    implicitWidth: 30
+                                    implicitHeight: 30
+                                    buttonRadius: Appearance.rounding.full
+                                    colBackground: Appearance.colors.colLayer3
+                                    colBackgroundHover: Appearance.colors.colPrimaryContainer
+                                    onClicked: root.restoreItem(bindCard.modelData)
+                                    contentItem: MaterialSymbol {
+                                        anchors.centerIn: parent
+                                        iconSize: 16
+                                        text: "restore"
+                                        color: Appearance.colors.colPrimary
+                                    }
+                                    StyledToolTip {
+                                        text: Translation.tr("Restaurar atajo y volver a activarlo")
+                                    }
+                                }
 
-                        // --- BOTONES PARA ITEMS EN \"ELIMINADOS\" ---
-                        RippleButton {
-                            visible: modelData.enabled === false
-                            implicitWidth: 36
-                            implicitHeight: 36
-                            buttonRadius: Appearance.rounding.full
-                            colBackground: Appearance.colors.colLayer3
-                            colBackgroundHover: Appearance.colors.colPrimaryContainer
-                            onClicked: root.restoreItem(modelData)
-                            contentItem: MaterialSymbol {
-                                anchors.centerIn: parent
-                                iconSize: 18
-                                text: "restore"
-                                color: Appearance.colors.colPrimary
-                            }
-                            StyledToolTip {
-                                text: Translation.tr("Restaurar atajo y volver a activarlo")
-                            }
-                        }
+                                RippleButton {
+                                    visible: bindCard.modelData.enabled === false
+                                    implicitWidth: 30
+                                    implicitHeight: 30
+                                    buttonRadius: Appearance.rounding.full
+                                    colBackground: Appearance.colors.colLayer3
+                                    colBackgroundHover: Appearance.colors.colErrorContainer
+                                    colRipple: Appearance.colors.colError
+                                    onClicked: root.purgeItem(bindCard.modelData)
+                                    contentItem: MaterialSymbol {
+                                        anchors.centerIn: parent
+                                        iconSize: 16
+                                        text: "delete_forever"
+                                        color: Appearance.colors.colOnErrorContainer
+                                    }
+                                    StyledToolTip {
+                                        text: Translation.tr("Eliminar definitivamente")
+                                    }
+                                }
 
-                        RippleButton {
-                            visible: modelData.enabled === false
-                            implicitWidth: 36
-                            implicitHeight: 36
-                            buttonRadius: Appearance.rounding.full
-                            colBackground: Appearance.colors.colLayer3
-                            colBackgroundHover: Appearance.colors.colErrorContainer
-                            colRipple: Appearance.colors.colError
-                            onClicked: root.purgeItem(modelData)
-                            contentItem: MaterialSymbol {
-                                anchors.centerIn: parent
-                                iconSize: 18
-                                text: "delete_forever"
-                                color: Appearance.colors.colOnErrorContainer
-                            }
-                            StyledToolTip {
-                                text: Translation.tr("Eliminar definitivamente")
-                            }
-                        }
+                                // --- Botones de los atajos activos ---
+                                RippleButton {
+                                    visible: bindCard.modelData.enabled !== false && bindCard.modelData.is_default && bindCard.modelData.is_modified
+                                    implicitWidth: 30
+                                    implicitHeight: 30
+                                    buttonRadius: Appearance.rounding.full
+                                    colBackground: Appearance.colors.colLayer3
+                                    colBackgroundHover: Appearance.colors.colPrimaryContainer
+                                    onClicked: root.resetItem(bindCard.modelData)
+                                    contentItem: MaterialSymbol {
+                                        anchors.centerIn: parent
+                                        iconSize: 16
+                                        text: "restart_alt"
+                                        color: Appearance.colors.colPrimary
+                                    }
+                                    StyledToolTip {
+                                        text: Translation.tr("Restaurar combinación original de fábrica")
+                                    }
+                                }
 
-                        // --- BOTONES PARA ITEMS ACTIVOS ---
-                        // Botón Restaurar a fábrica (si fue modificado)
-                        RippleButton {
-                            visible: modelData.enabled !== false && modelData.is_default && modelData.is_modified
-                            implicitWidth: 36
-                            implicitHeight: 36
-                            buttonRadius: Appearance.rounding.full
-                            colBackground: Appearance.colors.colLayer3
-                            colBackgroundHover: Appearance.colors.colPrimaryContainer
-                            onClicked: root.resetItem(modelData)
-                            contentItem: MaterialSymbol {
-                                anchors.centerIn: parent
-                                iconSize: 18
-                                text: "restart_alt"
-                                color: Appearance.colors.colPrimary
-                            }
-                            StyledToolTip {
-                                text: Translation.tr("Restaurar combinación original de fábrica")
-                            }
-                        }
+                                RippleButton {
+                                    visible: bindCard.modelData.enabled !== false
+                                    implicitWidth: 30
+                                    implicitHeight: 30
+                                    buttonRadius: Appearance.rounding.full
+                                    colBackground: Appearance.colors.colLayer3
+                                    onClicked: root.openEditDialog(bindCard.modelData)
+                                    contentItem: MaterialSymbol {
+                                        anchors.centerIn: parent
+                                        iconSize: 16
+                                        text: "edit"
+                                        color: Appearance.colors.colOnSecondaryContainer
+                                    }
+                                    StyledToolTip {
+                                        text: Translation.tr("Editar combinación o acción")
+                                    }
+                                }
 
-                        // Botón Editar
-                        RippleButton {
-                            visible: modelData.enabled !== false
-                            implicitWidth: 36
-                            implicitHeight: 36
-                            buttonRadius: Appearance.rounding.full
-                            colBackground: Appearance.colors.colLayer3
-                            onClicked: root.openEditDialog(modelData)
-                            contentItem: MaterialSymbol {
-                                anchors.centerIn: parent
-                                iconSize: 18
-                                text: "edit"
-                                color: Appearance.colors.colOnSecondaryContainer
-                            }
-                            StyledToolTip {
-                                text: Translation.tr("Editar combinación o acción")
-                            }
-                        }
-
-                        // Botón Eliminar (Visible para TODOS los atajos activos)
-                        RippleButton {
-                            visible: modelData.enabled !== false
-                            implicitWidth: 36
-                            implicitHeight: 36
-                            buttonRadius: Appearance.rounding.full
-                            colBackground: Appearance.colors.colLayer3
-                            colBackgroundHover: Appearance.colors.colErrorContainer
-                            colRipple: Appearance.colors.colError
-                            onClicked: root.deleteItem(modelData)
-                            contentItem: MaterialSymbol {
-                                anchors.centerIn: parent
-                                iconSize: 18
-                                text: "delete"
-                                color: Appearance.colors.colOnErrorContainer
-                            }
-                            StyledToolTip {
-                                text: Translation.tr("Eliminar atajo")
+                                RippleButton {
+                                    visible: bindCard.modelData.enabled !== false
+                                    implicitWidth: 30
+                                    implicitHeight: 30
+                                    buttonRadius: Appearance.rounding.full
+                                    colBackground: Appearance.colors.colLayer3
+                                    colBackgroundHover: Appearance.colors.colErrorContainer
+                                    colRipple: Appearance.colors.colError
+                                    onClicked: root.deleteItem(bindCard.modelData)
+                                    contentItem: MaterialSymbol {
+                                        anchors.centerIn: parent
+                                        iconSize: 16
+                                        text: "delete"
+                                        color: Appearance.colors.colOnErrorContainer
+                                    }
+                                    StyledToolTip {
+                                        text: Translation.tr("Eliminar atajo")
+                                    }
+                                }
                             }
                         }
                     }
