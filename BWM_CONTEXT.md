@@ -105,7 +105,7 @@ Panel flotante/pegado, Kickoff, applets Bluetooth/red/audio/calendario/notificac
   volver a iniciar sesión: preview 12 % opacidad, borde de 1 px al 65 %, radio 2 px, inset 1 px.
 
 ### 2.5 Ventanas, juegos y sistema
-* `window-guard.py watch` (autostart): primary de XWayland = monitor del workspace 1, ventanas fuera de pantalla de vuelta, juegos sin bordes a pantalla completa. Regla `games-main-monitor` (HP, foco al activarse, inhibir reposo).
+* `window-guard.py watch` (autostart): primary de XWayland = monitor del workspace 1, ventanas fuera de pantalla de vuelta, juegos sin bordes a pantalla completa, y fondo repuesto en los monitores que swww/awww deja en negro al reconectarse (§3.81; `window-guard.py wallpaper` lo hace a mano). Regla `games-main-monitor` (HP, foco al activarse, inhibir reposo).
 * `focus_on_activate = true`, `xwayland.force_zero_scaling = true`, `on_focus_under_fullscreen` por defecto (2).
 * Las apps no pueden solicitar maximizado (`suppress-maximize-events`, global); incluye botones CSD. El maximizado/pantalla completa se controla con Alt+Enter (Plasma: maximizado, otros estilos: fullscreen), y fullscreen solicitado por juegos/vídeo sigue permitido. Kitty tiene `remember_window_size no` para no restaurar tamaño/estado maximizado de su caché. Véase §3.48.
 * Atajos en `config/hypr/keybinds.json` → `keybinds-manager.py` → `modules/user_binds.lua`.
@@ -897,6 +897,12 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 * **Hecho:** `environment.lua` en Retro usa `gtk3` si existe `platformthemes/libqgtk3.so`; si no, qt6ct como antes. Requisito recomendado de Retro `qt-gtk3` (Gentoo `dev-qt/qtbase[gtk]`; el usuario lo activó en `/etc/portage/package.use/bwm-qt-gtk` y recompiló qtbase). En el resto de skins no cambia.
 * **Encontrado con el plugin GTK:** dos errores que afectaban a todas las apps GTK: `config/gtk-3.0/settings.ini` empezaba por `Settings]` (faltaba el `[`; ya estaba así en el repo, causa desconocida, GTK ignoraba el archivo) y la plantilla `matugen/templates/gtk.css` usaba `!important`, que GTK no admite (descartaba el color de la fila seleccionada de `navigation-sidebar`). Corregidos la cabecera, la plantilla y los dos CSS generados; `gtk-theme.py reload` aplicado.
 * **Verificado:** la ventanita Qt Widgets de demostración con `QT_QPA_PLATFORMTHEME=gtk3` (workspace 10, sin foco) sale con la paleta del tema GTK actual y, al poner un momento `gtk-theme` Adwaita, se repintó **en vivo** a claro; al volver a `BWM-1`, de nuevo con la paleta. Tras corregir, sin avisos de GTK al arrancar (sólo el del portal por app ID, inofensivo). Durante la limpieza, una tercera prueba de 3 s se abrió en el workspace visible porque ya se había retirado la regla temporal. **No probado:** la skin Retro activa de verdad (no se cambió de skin) ni con un tema de Omarchy claro/estático.
+
+### 81. El fondo no desaparece al reconectarse un monitor (2026-11-04)
+* **Petición:** se quitó el fondo del monitor principal; que no vuelva a pasar.
+* **Causa (log de Hyprland):** el MSI (`DP-2`) se desconectó y volvió a conectarse (`Connector DP-2 disconnected` / `connected`), p. ej. al entrar en reposo. swww-daemon recrea la salida pero la deja en un color (`swww query`: `currently displaying: color: 000000`); el LG seguía con la imagen. `autostart.sh` sólo reintenta al iniciar sesión.
+* **Hecho:** `window-guard.py` (ya escuchaba `monitoradded/monitorremoved/configreloaded`) llama a `restore_wallpapers()`: busca en `swww query` las salidas que muestran un color y les pone el fondo actual (`~/.cache/current_wallpaper`, si no `background.wallpaperPath`) con `--outputs`, sin transición, hasta 10 intentos. No hace nada con un fondo de vídeo (`mpvpaper`) ni sin swww/awww. También al arrancar el vigilante y con `window-guard.py wallpaper`.
+* **Verificado:** `window-guard.py wallpaper` devolvió el fondo al MSI; vigilante reiniciado (PID nuevo); `swww clear` del `DP-2` + `hyprctl reload` → el vigilante lo repuso solo en <4 s; `configerrors` vacío; 3 pruebas en `tests/test_window_guard_wallpaper.py`. **No probado:** una desconexión física real del monitor (el evento es `monitoradded`, el mismo camino).
 
 ---
 

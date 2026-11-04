@@ -11,15 +11,19 @@ Vigilante de ventanas para juegos y apps a pantalla completa (todos los temas).
   completa en ese monitor, así no quedan tapadas por otras ventanas ni por la barra.
   Sólo una vez por ventana (por PID, Hyprland reutiliza direcciones): si el usuario la saca
   de pantalla completa no se vuelve a forzar.
+- Fondo de pantalla: un monitor que se desconecta y vuelve (reposo, cambio de entrada) queda en
+  negro en swww/awww; al volver se le pone otra vez el fondo actual.
 
 Los juegos colocan y redimensionan la ventana después de mapearla y Hyprland no emite
 eventos por eso, así que cada ventana nueva se revisa varias veces durante ~20 s.
 
-Uso: window-guard.py watch | check
+Uso: window-guard.py watch | check | wallpaper
 """
 import importlib.util
 import json
 import os
+import re
+import shutil
 import socket
 import subprocess
 import sys
@@ -116,15 +120,58 @@ def check_all():
         check_window(c["address"])
 
 
+WALL_BIN = shutil.which("swww") or shutil.which("awww")
+BLACK_OUTPUT = re.compile(r"(\S+): \d+x\d+.*currently displaying: color")
+
+
+def current_wallpaper():
+    try:
+        path = open(os.path.expanduser("~/.cache/current_wallpaper"), encoding="utf-8").read().strip()
+        if os.path.isfile(path):
+            return path
+    except OSError:
+        pass
+    try:
+        with open(os.path.expanduser("~/.config/illogical-impulse/config.json"), encoding="utf-8") as f:
+            path = json.load(f).get("background", {}).get("wallpaperPath", "")
+        return path if os.path.isfile(path) else ""
+    except (OSError, ValueError):
+        return ""
+
+
+def black_outputs():
+    try:
+        out = subprocess.run([WALL_BIN, "query"], capture_output=True, text=True, timeout=5).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return []
+    return [m.group(1) for line in out.splitlines() if (m := BLACK_OUTPUT.search(line))]
+
+
+def restore_wallpapers(tries=10):
+    """Pone el fondo actual en los monitores que swww/awww muestra en negro (un color)."""
+    if not WALL_BIN or subprocess.run(["pgrep", "-x", "mpvpaper"], stdout=subprocess.DEVNULL).returncode == 0:
+        return  # sin swww, o con un fondo de vídeo (mpvpaper) no hay nada que reponer
+    for _ in range(tries):
+        outputs = black_outputs()
+        wallpaper = current_wallpaper()
+        if not outputs or not wallpaper:
+            return
+        subprocess.run([WALL_BIN, "img", wallpaper, "--outputs", ",".join(outputs),
+                        "--transition-type", "none"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        time.sleep(0.5)
+
+
 def on_monitors_changed():
     # Los outputs de XWayland aparecen un poco después que el monitor
     time.sleep(1.5)
     xwayland_primary.apply_retrying(tries=5)
+    restore_wallpapers()
     check_all()
 
 
 def watch():
     xwayland_primary.apply_retrying()
+    restore_wallpapers()
     check_all()
     sig = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE")
     run = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
@@ -174,5 +221,8 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "watch"
     if cmd == "check":
         check_all()
+        sys.exit(0)
+    if cmd == "wallpaper":
+        restore_wallpapers()
         sys.exit(0)
     sys.exit(watch())
