@@ -6,6 +6,7 @@ import fcntl
 from pathlib import Path
 import subprocess
 import shutil
+import sys
 
 APP = 'com.stremio.Stremio'
 SCRIPTS = Path(__file__).resolve().parent
@@ -35,6 +36,38 @@ def configure():
                     APP], check=True)
 
 
+LAUNCHER = Path.home() / '.local/share/applications' / f'{APP}.desktop'
+EXPORTS = (Path.home() / '.local/share/flatpak/exports/share/applications', Path('/var/lib/flatpak/exports/share/applications'))
+NO_DECORATIONS = '--no-window-decorations'
+MARK = 'X-BWM-Generated=stremio-theme.py'
+
+
+def launcher():
+    """BWM's copy of Stremio's launcher, without its GTK title bar (Stremio's own
+    --no-window-decorations): the bar is GTK and only takes the theme when Stremio starts, while
+    the web UI under it changes live. Tiling skins have no title bars anyway (as Omarchy).
+    Written only if there is no launcher of the user's own; updated when Flatpak changes it."""
+    source = next((d / f'{APP}.desktop' for d in EXPORTS if (d / f'{APP}.desktop').is_file()), None)
+    if source is None:
+        return
+    try:
+        if LAUNCHER.exists() and MARK not in LAUNCHER.read_text(encoding='utf-8'):
+            return  # the user's own
+    except OSError:
+        return
+    lines = []
+    for line in source.read_text(encoding='utf-8').splitlines():
+        if line.startswith('Exec=') and NO_DECORATIONS not in line:
+            line = line.replace(f' {APP}', f' {APP} {NO_DECORATIONS}', 1)
+        lines.append(line)
+        if line == '[Desktop Entry]':
+            lines.append(MARK)
+    text = '\n'.join(lines) + '\n'
+    if not LAUNCHER.exists() or LAUNCHER.read_text(encoding='utf-8') != text:
+        LAUNCHER.parent.mkdir(parents=True, exist_ok=True)
+        LAUNCHER.write_text(text, encoding='utf-8')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--setup-only', action='store_true', help='Configure without restarting windows')
@@ -45,6 +78,8 @@ def main():
     with (STATE / 'setup.lock').open('w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         configure()
+        launcher()
+        sys.path.insert(0, str(SCRIPTS))  # also when loaded by path (tests)
         import bwm_transition
         if args.setup_only or bwm_transition.switching():
             return
@@ -67,7 +102,7 @@ def main():
             capture_output=True, text=True)
         if 'Playing' in playback.stdout:
             return
-        restart_app(lambda c: c.get('class') == APP, ['flatpak', 'run', APP])
+        restart_app(lambda c: c.get('class') == APP, ['flatpak', 'run', APP, NO_DECORATIONS])
 
 
 if __name__ == '__main__':

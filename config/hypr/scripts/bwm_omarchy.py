@@ -980,9 +980,9 @@ def apply_retro_palette_colors(colors: dict, wallpaper: str = ""):
 
     write_retro_sync_files(colors)
 
-    # Firefox only reads its chrome CSS at startup: restart it (session and windows kept)
-    if "firefox" in changed and not bwm_transition.switching():
-        _detached(f"{sys.executable} {Path(__file__).resolve()} restart-firefox")
+    # Firefox: no restart. Its toolbar colours come from Pywalfox, live (userChrome.css uses the
+    # Firefox 13x+ theme variables); the chrome CSS file only adds the Retro TUI shape, which is
+    # the same for every Retro theme and loads at the next Firefox start (§3.83).
 
     if "gtk4" in changed and not bwm_transition.switching():
         for app in GTK_RELAUNCH_APPS:
