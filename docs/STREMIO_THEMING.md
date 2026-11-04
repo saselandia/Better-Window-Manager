@@ -7,7 +7,7 @@ WebKitGTK. El antiguo `stremio-shell` sí utilizaba Qt. Los colores de qt6ct no
 cambian ninguna de las dos interfaces web.
 
 BWM genera `~/.local/state/bwm/stremio/theme.css` con la plantilla matugen
-`stremio.css`. Default usa la paleta de matugen, Plasma la paleta Breeze y Retro
+`stremio.css`. default (end-4) usa la paleta de matugen, Plasma la paleta Breeze y Retro
 la paleta estática o dinámica más `omarchy/overlays/stremio.css`.
 
 `stremio-theme.py`, como post_hook, configura sólo este Flatpak: permite leer
@@ -84,5 +84,5 @@ Fuentes: [Stremio Linux](https://github.com/Stremio/stremio-linux-shell),
 
 En Retro, `omarchy/overlays/steam.css` hace que la barra superior use el fondo
 base del tema, como el escritorio. El template compartido conserva la superficie
-elevada para Default y Plasma. Esto corrige la diferencia entre `#131a3a` y
+elevada para default (end-4) y Breeze (Kde plasma). Esto corrige la diferencia entre `#131a3a` y
 `#060b1e` que se veía en Ethereal.

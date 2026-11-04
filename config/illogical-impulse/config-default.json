@@ -38,12 +38,10 @@
       "automatic": true,
       "backgroundTransparency": 0.11,
       "contentTransparency": 0.57,
-      "enable": true
+      "enable": false
     },
     "wallpaperTheming": {
-      "enableAppsAndShell": true,
       "enableQtApps": true,
-      "enableTerminal": true,
       "terminalGenerationProps": {
         "forceDarkMode": false,
         "harmonizeThreshold": 100,
@@ -151,6 +149,14 @@
         "showUnreadCount": false
       }
     },
+    "plasma": {
+      "centerTasks": false,
+      "color": "#24292e",
+      "floating": false,
+      "floatingGap": 8,
+      "opacity": 0.91,
+      "style": "translucent"
+    },
     "resources": {
       "alwaysShowCpu": true,
       "alwaysShowSwap": true,
@@ -230,6 +236,7 @@
     "hoverToReveal": true,
     "ignoredAppRegexes": [],
     "monochromeIcons": true,
+    "omarchy": false,
     "pinnedApps": [
       "org.kde.dolphin",
       "kitty"
@@ -373,6 +380,10 @@
   },
   "screenSnip": {
     "savePath": ""
+  },
+  "screensaver": {
+    "enable": true,
+    "timeoutMinutes": 5
   },
   "search": {
     "engineBaseUrl": "https://www.google.com/search?q=",
@@ -581,9 +592,5 @@
         "university"
       ]
     }
-  },
-  "screensaver": {
-    "enable": true,
-    "timeoutMinutes": 5
   }
 }

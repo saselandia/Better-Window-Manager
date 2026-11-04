@@ -41,7 +41,7 @@ import qs.modules.ii.plasmaThemePicker
 Scope {
     PanelLoader { extraCondition: !Config.options.bar.vertical; component: Bar {} }
     PanelLoader { extraCondition: Boolean(Config.options.background?.enable); component: Background {} }
-    PanelLoader { component: Cheatsheet {} }
+    PanelLoader { extraCondition: !Appearance.isRetro; component: Cheatsheet {} }
     // BWM's dock; Retro has Omarchy's instead (dock.omarchy), never both
     PanelLoader { extraCondition: Config.options.dock.enable && !Appearance.isRetro; component: Dock {} }
     PanelLoader { component: Lock {} }

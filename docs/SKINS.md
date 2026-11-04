@@ -12,7 +12,7 @@ sus atajos, sus decoraciones de ventana y, sobre todo, **sus temas**. Al cambiar
 
 **Regla del proyecto: compatibilidad con el ecosistema de temas del original.** Una skin no está
 terminada cuando se parece al escritorio que imita, sino cuando acepta lo que la gente ya usa para
-cambiar su aspecto. Si estás en la skin KDE Plasma y pones un tema de Plasma de internet, debe
+cambiar su aspecto. Si estás en la skin Breeze (Kde plasma) y pones un tema de Plasma de internet, debe
 aplicarse y funcionar; en Retro, un tema o plugin de Omarchy. Cuando haya que elegir, se adapta BWM
 al formato del original y no al revés.
 
@@ -28,8 +28,8 @@ curso— para tenerlo todo en un solo compositor. Cada escritorio porteado es un
 
 Toda skin declara en su `skin.json` cómo gestiona las ventanas:
 
-* `"windows": "tiling"` — **mosaico** (Default, Retro): las ventanas se reparten la pantalla sin solaparse.
-* `"windows": "traditional"` — **WM tradicional** (KDE Plasma; el modelo de Windows, macOS o GNOME):
+* `"windows": "tiling"` — **mosaico** (default (end-4), Retro): las ventanas se reparten la pantalla sin solaparse.
+* `"windows": "traditional"` — **WM tradicional** (Breeze (Kde plasma); el modelo de Windows, macOS o GNOME):
   cada ventana flota con su barra de título y se solapan. Añade un bloque `"traditional"` con la barra
   de título, el panel, el margen con los bordes y el hueco entre ventanas.
 
@@ -42,9 +42,9 @@ una de mosaico, se rehace el mosaico. Detalle y ejemplo en
 
 | id | Skin | Imita | Tema por defecto | Ecosistema de temas |
 | :--- | :--- | :--- | :--- | :--- |
-| `default` | Default | end-4 / illogical-impulse | Material You **dinámico** (matugen desde el fondo) | Plantillas de matugen, fondos |
+| `default` | default (end-4) | end-4 / illogical-impulse | Material You **dinámico** (matugen desde el fondo) | Plantillas de matugen, fondos |
 | `retro` | Retro | Omarchy 4 (`quattro`) | Paleta **dinámica** con formato de Omarchy; 23 temas **estáticos** de Omarchy | `colors.toml` de Omarchy, plugins del shell de Omarchy (Ajustes → Temas / Plugins) |
-| `plasma` | KDE Plasma | Plasma 6 Breeze Dark | Breeze Dark **estático** | Esquemas de color y temas globales de Plasma (objetivo, pendiente) |
+| `plasma` | Breeze (Kde plasma) | Plasma 6 Breeze Dark | Breeze Dark **estático** | Esquemas de color y temas globales de Plasma (objetivo, pendiente) |
 
 *Dinámico* = la paleta se genera del fondo de pantalla y cambia con él. *Estático* = colores fijos
 de un tema; cambiar el fondo no los toca.
@@ -54,8 +54,8 @@ de un tema; cambiar el fondo no los toca.
 | Skin | Temas del original | Plugins del original | Falta |
 | :--- | :---: | :---: | :--- |
 | Retro | ~90 % | ~80 % | `hyprland.lua` e `icons.theme` de los temas, tema de Chromium (root); plugins que sustituyen barra, bloqueo, overlays o paneles |
-| Default | ~90 % | — | Plantillas de matugen de terceros: se añaden a mano en `matugen/config.toml` |
-| KDE Plasma | ~5 % | 0 % | Esquemas de color (`.colors`), temas globales, estilos de Plasma, Aurorae, plasmoides. Sólo funcionan los cursores |
+| default (end-4) | ~90 % | — | Plantillas de matugen de terceros: se añaden a mano en `matugen/config.toml` |
+| Breeze (Kde plasma) | ~5 % | 0 % | Esquemas de color (`.colors`), temas globales, estilos de Plasma, Aurorae, plasmoides. Sólo funcionan los cursores |
 
 Actualiza esta tabla y la del README cuando cambie el soporte.
 
@@ -91,9 +91,9 @@ sin mezclar. Así una skin nueva o un cambio en una no rompe las demás.
 | :--- | :--- | :--- |
 | Manifiesto, aspecto y requisitos | `hypr/skins/requirements.json` | `hypr/skins/<id>/skin.json` |
 | Ajustes de Quickshell | Secciones comunes de `config.json` | `illogical-impulse/config-<id>.json` (secciones propias) |
-| Interfaz QML | `quickshell/ii/modules/common`, `services`, `modules/settings` | Default: `modules/ii/*` de illogical-impulse; Retro: `modules/ii/omarchy*`, `modules/ii/bar/omarchy`, `Commons`, `Ui`, `omarchy-plugins`; Plasma: `modules/ii/plasma*`, `plasmaCommon` |
+| Interfaz QML | `quickshell/ii/modules/common`, `services`, `modules/settings` | default (end-4): `modules/ii/*` de illogical-impulse; Retro: `modules/ii/omarchy*`, `modules/ii/bar/omarchy`, `Commons`, `Ui`, `omarchy-plugins`; Plasma: `modules/ii/plasma*`, `plasmaCommon` |
 | Qué se carga en cada skin | `panelFamilies/IllogicalImpulseFamily.qml` (`extraCondition`) | — |
-| Colores de Hyprland y apps | `hypr/modules/*.lua`, `matugen/` | `colors.lua` (Default), `retro_colors.lua` + `hypr/omarchy/` (Retro), `plasma_colors.lua` (Plasma) |
+| Colores de Hyprland y apps | `hypr/modules/*.lua`, `matugen/` | `colors.lua` (default (end-4)), `retro_colors.lua` + `hypr/omarchy/` (Retro), `plasma_colors.lua` (Plasma) |
 | Plugins de Hyprland | — | `src/hyprbars` (Plasma) |
 
 En Retro, Configuración forma parte del menú de Omarchy: el catálogo y los editores viven en

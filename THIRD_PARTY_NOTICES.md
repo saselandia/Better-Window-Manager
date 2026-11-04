@@ -29,6 +29,14 @@ Omarchy; las correcciones de sus controles compartidos conservan la GPL de ese c
 La versión vendorizada previa y estas modificaciones se pueden consultar en el historial Git
 de cada archivo; no se ha actualizado el código de terceros a otra revisión upstream.
 
+Guía de atajos de Retro (2026-10-29): `omarchyMenu/Keybindings.qml` reutiliza el selector
+del menú de Omarchy ya vendorizado, siguiendo el flujo de
+[`bin/omarchy-menu-keybindings`](https://github.com/basecamp/omarchy/blob/quattro/bin/omarchy-menu-keybindings)
+(Quattro, MIT). El selector recibe una señal de selección dentro del proceso. El adaptador y
+`hypr/skins/retro/scripts/keybindings.py` son código de BWM para presentar los atajos activos
+del compositor; el script upstream no se ha incorporado ni se han sustituido sus fuentes
+vendorizadas. La licencia y el aviso del menú original se conservan.
+
 ## Recursos pendientes de procedencia
 
 No se declara que los siguientes recursos estén cubiertos por MIT ni por una licencia común:
@@ -47,3 +55,26 @@ No se declara que los siguientes recursos estén cubiertos por MIT ni por una li
   terceros. Los términos de cada licencia de terceros siguen aplicándose independientemente de esa decisión.
 
 Hasta completar estas verificaciones, no debe presentarse una release como íntegramente auditada.
+
+Colores de Default (2026-10-29): los scripts `scheme_for_image.py` y
+`generate_colors_material.py`, y la plantilla Matugen `colors.json`, se cotejaron con
+[end-4/dots-hyprland, 2f2a376fdb2a](https://github.com/end-4/dots-hyprland/tree/2f2a376fdb2ad738bf55f693dd0b474b64bb0ab8)
+sin diferencias (GPL-3.0 del proyecto). BWM adapta `switchwall.sh` con una entrada
+`--colors-only` y un runner de dependencias aisladas; `applycolor.sh` escribe el tema
+de terminal original en la ruta usada por Kitty en BWM. Las fuentes correspondientes
+están en `config/quickshell/ii/scripts/colors/` y su historial Git. Las bibliotecas de
+Python se descargan al instalar el entorno, con sus propios avisos/licencias; no se
+incorporan sus binarios al repositorio.
+
+Aplicación rápida de colores (2026-10-29): BWM añade el coordinador
+`config/hypr/skins/default/scripts/matugen-fast.py` y adapta las llamadas de
+`switchwall.sh` para publicar los mismos colores antes de ejecutar los hooks de apps.
+El clasificador y el generador de colores de end-4 conservan el código cotejado con
+`2f2a376fdb2a`; no se modifica su selección de colores. Los cambios de nombres visibles
+de skins tampoco alteran los avisos de procedencia de KDE Plasma/end-4.
+
+Apps Qt de Default (2026-11-03): `config/hypr/skins/default/scripts/kde-material-you-colors-wrapper.sh`
+y `config/kde-material-you-colors/config.conf` proceden de end-4/dots-hyprland `2f2a376fdb2a`
+(GPL-3.0); el primero se adapta al entorno de colores de BWM. `kde-material-you-colors`
+(GPL-3.0, de luisbocanegra) y `dbus-python` (MIT y GPL-2.0-or-later o AFL-2.1) se descargan con pip al instalar, con sus avisos;
+no se incluyen en el repositorio. `kde-shims/plasma-apply-colorscheme` es propio de BWM.

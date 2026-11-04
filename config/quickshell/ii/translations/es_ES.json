@@ -879,5 +879,7 @@
   "Language of Omarchy's bar panels, menu, dock, OSD, polkit dialog and reminders.": "Idioma de los paneles de la barra, el menú, el dock, el OSD, el diálogo de polkit y los recordatorios de Omarchy.",
   "Glass mode": "Modo glass",
   "Translucent windows with blur": "Ventanas translúcidas con desenfoque",
-  "Like Omarchy's glass mode: terminals at 65 %, dimmed GTK apps and\nfrosted blur behind the bar and menus. For every skin.": "Como el modo glass de Omarchy: terminales al 65 %, apps GTK atenuadas y\nbarra y menús con desenfoque esmerilado detrás. Para todas las skins."
+  "Like Omarchy's glass mode: terminals at 65 %, dimmed GTK apps and\nfrosted blur behind the bar and menus. For every skin.": "Como el modo glass de Omarchy: terminales al 65 %, apps GTK atenuadas y\nbarra y menús con desenfoque esmerilado detrás. Para todas las skins.",
+  "Neutral terminal": "Terminal neutra",
+  "Fixed palette (end-4 base) that never changes with the wallpaper or theme": "Paleta fija (la base de end-4) que no cambia con el fondo ni con el tema"
 }

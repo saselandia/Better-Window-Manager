@@ -8,7 +8,7 @@
   },
   "core": {
     "requires": [
-      "hyprland", "quickshell", "qt5compat", "qtsvg", "qt-synchronizer", "python", "pillow",
+      "hyprland", "quickshell", "qt5compat", "qtpositioning", "qtsvg", "qt-synchronizer", "python", "pillow",
       "jq", "swww", "wl-clipboard", "cliphist", "kitty", "grim", "slurp", "libnotify",
       "gsettings", "fontconfig", "wireplumber", "adw-gtk3", "font-material-symbols"
     ],
@@ -18,6 +18,35 @@
     ]
   },
   "catalog": {
+    "default-colors-runtime": {
+      "label": "Colores end-4 (OpenCV, NumPy, Pillow, materialyoucolor)",
+      "why": "Selección automática de paleta y colores de terminal originales de illogical-impulse",
+      "provider": "bwm",
+      "check": {"type": "version", "cmd": ["bash", "-c", "bash ~/.config/hypr/skins/default/scripts/colors-python.sh --check"], "regex": "colors-runtime ([0-9]+)", "min": "1"},
+      "packages": {"gentoo": null, "arch": null, "fedora": null, "opensuse": null, "debian": null},
+      "manual": "bash ~/.config/hypr/skins/default/scripts/colors-python.sh --install"
+    },
+    "default-qt-colors": {
+      "label": "Colores Qt de end-4 (kde-material-you-colors)",
+      "why": "Apps Qt de default (end-4) con la paleta del fondo, como en illogical-impulse",
+      "provider": "bwm",
+      "check": {"type": "version", "cmd": ["bash", "-c", "bash ~/.config/hypr/skins/default/scripts/colors-python.sh --check-qt"], "regex": "qt-colors ([0-9]+)", "min": "1"},
+      "packages": {"gentoo": null, "arch": null, "fedora": null, "opensuse": null, "debian": null},
+      "manual": "bash ~/.config/hypr/skins/default/scripts/colors-python.sh --install-qt"
+    },
+    "plasma-integration": {
+      "label": "Plugin de plataforma de KDE para Qt",
+      "why": "Las apps Qt de default (end-4) leen kdeglobals (QT_QPA_PLATFORMTHEME=kde), como en end-4",
+      "check": {"type": "qtplugin", "path": "platformthemes/KDEPlasmaPlatformTheme6.so"},
+      "packages": {"gentoo": "kde-plasma/plasma-integration", "arch": "plasma-integration", "fedora": "plasma-integration", "opensuse": "plasma6-integration-plugin", "debian": "plasma-integration"}
+    },
+    "darkly": {
+      "label": "Darkly (estilo de widgets Qt)",
+      "why": "Estilo de las apps Qt de end-4 en default (end-4)",
+      "check": {"type": "qtplugin", "path": "styles/darkly6.so"},
+      "packages": {"gentoo": null, "arch": "aur:darkly-bin", "fedora": "copr:deltacopy/darkly:darkly", "opensuse": null, "debian": null},
+      "manual": "https://github.com/Bali10050/Darkly"
+    },
     "hyprland": {
       "label": "Hyprland ≥ 0.55",
       "why": "Compositor. BWM se configura en Lua, que llegó con Hyprland 0.55",
@@ -37,6 +66,12 @@
       "why": "Sombras, máscaras y tintes de los iconos en Quickshell",
       "check": {"type": "qml", "module": "Qt5Compat/GraphicalEffects"},
       "packages": {"gentoo": "dev-qt/qt5compat", "arch": "qt6-5compat", "fedora": "qt6-qt5compat", "opensuse": "qt6-qt5compat-imports", "debian": "qml6-module-qt5compat-graphicaleffects"}
+    },
+    "qtpositioning": {
+      "label": "Qt 6 Positioning",
+      "why": "Servicio del tiempo de Quickshell (ubicación); sin él no carga la configuración del shell",
+      "check": {"type": "qml", "module": "QtPositioning"},
+      "packages": {"gentoo": "dev-qt/qtpositioning", "arch": "qt6-positioning", "fedora": "qt6-qtpositioning", "opensuse": "qt6-positioning-imports", "debian": "qml6-module-qtpositioning"}
     },
     "qtsvg": {
       "label": "Qt 6 SVG",
@@ -151,14 +186,14 @@
     },
     "matugen": {
       "label": "matugen",
-      "why": "Genera la paleta Material You desde el fondo (tema dinámico de Default)",
+      "why": "Genera la paleta Material You desde el fondo (tema dinámico de default (end-4))",
       "check": {"type": "cmd", "any": ["matugen"]},
       "packages": {"gentoo": "guru:x11-misc/matugen", "arch": "aur:matugen-bin", "fedora": null, "opensuse": null, "debian": null},
       "manual": "cargo install matugen"
     },
     "rofi": {
       "label": "rofi (con Wayland)",
-      "why": "Selector de estilos y de fondos de Default",
+      "why": "Selector de estilos y de fondos de default (end-4)",
       "check": {"type": "cmd", "any": ["rofi"]},
       "packages": {"gentoo": "guru:gui-apps/rofi-wayland", "arch": "rofi", "fedora": "rofi-wayland", "opensuse": "rofi", "debian": "rofi"}
     },

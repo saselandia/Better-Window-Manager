@@ -30,7 +30,7 @@
   "system.shutdown": {"icon":"󰐥","label":"Apagar","action":"systemctl poweroff"},
 
   // Aprender
-  "learn.keybindings": {"icon":"","label":"Atajos de teclado","aliases":["keybindings","atajos"],"action":"qs -c ii ipc call cheatsheet toggle"},
+  "learn.keybindings": {"icon":"","label":"Atajos de teclado","aliases":["keybindings","atajos"],"action":"omarchy-shell shell summon bwm.keybindings"},
   "learn.bwm": {"icon":"","label":"BWM","description":"Repositorio y documentación","action":"xdg-open https://github.com/saselandia/Better-Window-Manager"},
   "learn.omarchy": {"icon":"","label":"Omarchy","action":"xdg-open https://omarchy.org/manual/"},
   "learn.hyprland": {"icon":"","label":"Hyprland","action":"xdg-open https://wiki.hypr.land/"},
@@ -42,8 +42,8 @@
   // Estilo
   "appearance.theme": {"icon":"󰸌","label":"Estilo","aliases":["skin","estilo","theme","tema"]},
   "appearance.theme.retro": {"icon":"󰊠","label":"Retro (Omarchy)","checked":"[[ $(python3 ~/.config/hypr/scripts/bwm-theme-manager.py get) == retro ]]","action":"python3 ~/.config/hypr/scripts/bwm-theme-manager.py set retro"},
-  "appearance.theme.default": {"icon":"󰏘","label":"Default (Material You)","checked":"[[ $(python3 ~/.config/hypr/scripts/bwm-theme-manager.py get) == default ]]","action":"python3 ~/.config/hypr/scripts/bwm-theme-manager.py set default"},
-  "appearance.theme.plasma": {"icon":"","label":"KDE Plasma","checked":"[[ $(python3 ~/.config/hypr/scripts/bwm-theme-manager.py get) == plasma ]]","action":"python3 ~/.config/hypr/scripts/bwm-theme-manager.py set plasma"},
+  "appearance.theme.default": {"icon":"󰏘","label":"default (end-4)","checked":"[[ $(python3 ~/.config/hypr/scripts/bwm-theme-manager.py get) == default ]]","action":"python3 ~/.config/hypr/scripts/bwm-theme-manager.py set default"},
+  "appearance.theme.plasma": {"icon":"","label":"Breeze (Kde plasma)","checked":"[[ $(python3 ~/.config/hypr/scripts/bwm-theme-manager.py get) == plasma ]]","action":"python3 ~/.config/hypr/scripts/bwm-theme-manager.py set plasma"},
   "appearance.theme.picker": {"icon":"󰉼","label":"Selector de estilos…","action":"~/.config/hypr/scripts/theme-picker.sh"},
   "appearance.retro-palette": {"icon":"󰸌","label":"Temas Retro (Omarchy)","when":"[[ $(python3 ~/.config/hypr/scripts/bwm-theme-manager.py get) == retro ]]"},
   "appearance.retro-palette.gallery": {"icon":"󰋩","label":"Galería visual de temas (3D Carousel)","action":"omarchy-theme-switcher"},

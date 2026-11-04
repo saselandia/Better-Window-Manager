@@ -41,9 +41,7 @@
       "enable": true
     },
     "wallpaperTheming": {
-      "enableAppsAndShell": true,
       "enableQtApps": true,
-      "enableTerminal": true,
       "terminalGenerationProps": {
         "forceDarkMode": false,
         "harmonizeThreshold": 100,
@@ -81,7 +79,7 @@
       "workspaceZoom": 1.07
     },
     "thumbnailPath": "",
-    "wallpaperPath": "/home/sasel/Pictures/Wallpapers/plasma.png",
+    "wallpaperPath": "/home/sasel/Pictures/1736719369508933.jpg",
     "widgets": {
       "clock": {
         "cookie": {

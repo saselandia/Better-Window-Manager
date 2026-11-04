@@ -863,5 +863,7 @@
   "Todos los atajos de teclado configurados están activos.": "All configured keybinds are active.",
   "Atajo '%1' restaurado a sus valores de fábrica": "Keybind '%1' restored to factory defaults",
   "Bar thickness (pixels)": "Bar thickness (pixels)",
-  "Bar height (pixels)": "Bar height (pixels)"
+  "Bar height (pixels)": "Bar height (pixels)",
+  "Neutral terminal": "Neutral terminal",
+  "Fixed palette (end-4 base) that never changes with the wallpaper or theme": "Fixed palette (end-4 base) that never changes with the wallpaper or theme"
 }

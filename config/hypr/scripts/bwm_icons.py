@@ -18,6 +18,7 @@ templates render into ~/.config/qt6ct/colors/bwm.conf.
 """
 
 import colorsys
+import json
 import os
 import shutil
 import subprocess
@@ -217,7 +218,66 @@ def write_kdeglobals():
            + _kde_fonts()
            + "[KDE]\nwidgetStyle=Fusion\n\n"
            + f"[Icons]\nTheme={_current_icons()}\n")
+    scheme = _end4_qt_scheme()
+    if scheme:
+        out = _with_end4_scheme(out, scheme)
     KDEGLOBALS.write_text(out, encoding="utf-8")
+
+
+# default (end-4) with «Qt apps» on: the colours are end-4's, made by kde-material-you-colors
+# (skins/default/scripts/kde-material-you-colors-wrapper.sh) into ~/.local/share/color-schemes,
+# and the widget style Darkly when installed. Rewriting kdeglobals keeps them.
+COLOR_SCHEMES = HOME / ".local" / "share" / "color-schemes"
+KDE_COLOR_GROUPS = ("Colors:", "ColorEffects:", "WM")
+
+
+def _end4_qt_scheme():
+    try:
+        options = json.loads((HOME / ".config/illogical-impulse/config.json").read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    appearance = options.get("appearance", {})
+    if appearance.get("bwmTheme", "default") != "default":
+        return None
+    if appearance.get("wallpaperTheming", {}).get("enableQtApps") is False:
+        return None
+    mode = subprocess.run(["gsettings", "get", "org.gnome.desktop.interface", "color-scheme"],
+                          capture_output=True, text=True).stdout
+    scheme = COLOR_SCHEMES / ("MaterialYouLight.colors" if "light" in mode else "MaterialYouDark.colors")
+    return scheme if scheme.is_file() else None
+
+
+def _with_end4_scheme(text: str, scheme: Path) -> str:
+    import configparser
+    import io
+
+    def ini():
+        parser = configparser.ConfigParser(interpolation=None, strict=False)
+        parser.optionxform = str
+        return parser
+    out, colors = ini(), ini()
+    out.read_string(text)
+    colors.read(scheme, encoding="utf-8")
+    for section in out.sections():
+        if section.startswith(KDE_COLOR_GROUPS):
+            out.remove_section(section)
+    for section in colors.sections():
+        if section.startswith(KDE_COLOR_GROUPS):
+            out[section] = dict(colors[section])
+    out["General"]["ColorScheme"] = scheme.stem
+    if _darkly_installed():
+        out["KDE"]["widgetStyle"] = "Darkly"
+    buf = io.StringIO()
+    out.write(buf, space_around_delimiters=False)
+    return buf.getvalue()
+
+
+def _darkly_installed() -> bool:
+    for base in ("/usr/lib64/qt6/plugins", "/usr/lib/qt6/plugins",
+                 "/usr/lib/x86_64-linux-gnu/qt6/plugins"):
+        if any(Path(base, "styles").glob("darkly*.so")):
+            return True
+    return False
 
 
 def _kde_fonts() -> str:

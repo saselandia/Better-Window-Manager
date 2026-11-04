@@ -42,7 +42,7 @@ Item {
   // BWM: the same carousel picks the skin (Default / Retro / KDE Plasma), from
   // hypr/scripts/skin-switcher.sh rows; the file name is the label
   property bool skinMode: false
-  readonly property var skinIds: ({ "Default": "default", "Retro": "retro", "KDE Plasma": "plasma" })
+  readonly property var skinIds: ({ "default (end-4)": "default", "Retro": "retro", "Breeze (Kde plasma)": "plasma", "Default": "default", "KDE Plasma": "plasma" })
   property bool themeOpenPending: false
   property var extraThemeNames: []
   property var stockThemeNames: []

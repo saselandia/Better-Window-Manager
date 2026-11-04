@@ -101,6 +101,8 @@ Item {
   property string mode: "menu"
   readonly property bool dmenuActive: mode === "select" || mode === "input"
   property string dmenuPrompt: ""
+  property string dmenuRequestTag: ""
+  signal selectionAccepted(string tag, string value)
   property var dmenuOptions: []
   property bool dmenuMultiple: false
   property var dmenuSelected: []
@@ -1038,6 +1040,7 @@ Item {
     opened = false
     filterText = ""
     root.finishRequest(value)
+    root.selectionAccepted(root.dmenuRequestTag, value)
   }
 
   function applySelected(id, action) {
@@ -1058,6 +1061,7 @@ Item {
   function openExistingMenu(initialMenu) {
     requestSerial += 1
     mode = "menu"
+    dmenuRequestTag = ""
     requestActive = false
     selectionFile = ""
     doneFile = ""
@@ -1085,6 +1089,7 @@ Item {
   function openDmenu(payload) {
     requestSerial += 1
     mode = payload.mode === "input" ? "input" : "select"
+    dmenuRequestTag = String(payload.requestTag || "")
     dmenuPrompt = String(payload.prompt || (mode === "input" ? Commons.I18n.t("menu.inputPrompt") : Commons.I18n.t("menu.selectPrompt")))
     dmenuOptions = Array.isArray(payload.options) ? payload.options : []
     dmenuMultiple = mode === "select" && payload.multiple === true

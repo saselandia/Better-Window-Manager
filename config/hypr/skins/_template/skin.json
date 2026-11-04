@@ -7,7 +7,7 @@
   "description": "Qué reproduce de su escritorio original, en una frase.",
   "preview": "assets/skin-previews/mi-skin.png",
 
-  "_ayuda_windows": "La variable de ventanas: \"tiling\" = mosaico (como Default y Retro) o \"traditional\" = WM tradicional, todas las ventanas flotan con barra de título (como KDE Plasma). Con \"traditional\" rellena el bloque \"traditional\"; con \"tiling\" bórralo.",
+  "_ayuda_windows": "La variable de ventanas: \"tiling\" = mosaico (como default (end-4) y Retro) o \"traditional\" = WM tradicional, todas las ventanas flotan con barra de título (como Breeze (Kde plasma)). Con \"traditional\" rellena el bloque \"traditional\"; con \"tiling\" bórralo.",
   "windows": "tiling",
   "traditional": {
     "titlebar": 30,

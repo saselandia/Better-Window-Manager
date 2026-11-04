@@ -182,7 +182,7 @@ fi
 # ==============================================================================
 # 4. Configuraciones (enlaces o copia)
 # ==============================================================================
-CONFIG_DIRS=(hypr quickshell illogical-impulse matugen kitty rofi swaync xdg-desktop-portal gtk-3.0 gtk-4.0 btop)
+CONFIG_DIRS=(hypr quickshell illogical-impulse matugen kitty rofi swaync xdg-desktop-portal gtk-3.0 gtk-4.0 btop kde-material-you-colors)
 
 print_step "4. Instalando las configuraciones (modo: ${INSTALL_MODE})..."
 for cfg in "${CONFIG_DIRS[@]}"; do
@@ -208,6 +208,11 @@ for cfg in "${CONFIG_DIRS[@]}"; do
         print_success "Copiado: ~/.config/$cfg"
     fi
 done
+
+if [[ ${#SKINS[@]} -eq 0 || " ${SKINS[*]} " == *" default "* ]]; then
+    print_info "Preparando los módulos de colores originales de end-4 para Default (también apps Qt)..."
+    bash "$TARGET_CONFIG/hypr/skins/default/scripts/colors-python.sh" --install-qt
+fi
 
 mkdir -p "$TARGET_CONFIG/illogical-impulse/actions"
 ln -sf "$TARGET_CONFIG/hypr/scripts/open-autostart.sh" "$TARGET_CONFIG/illogical-impulse/actions/autostart"

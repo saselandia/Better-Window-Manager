@@ -11,6 +11,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SHELL_CONFIG_FILE="$XDG_CONFIG_HOME/illogical-impulse/config.json"
 MATUGEN_DIR="$XDG_CONFIG_HOME/matugen"
 terminalscheme="$SCRIPT_DIR/terminal/scheme-base.json"
+COLORS_PYTHON="$XDG_CONFIG_HOME/hypr/skins/default/scripts/colors-python.sh"
+if [[ -z "${BWM_COLORS_REQUEST:-}" ]]; then
+    exec python3 "$XDG_CONFIG_HOME/hypr/skins/default/scripts/matugen-fast.py" --request "$0" "$@"
+fi
 
 handle_kde_material_you_colors() {
     # Check if Qt app theming is enabled in config
@@ -31,7 +35,8 @@ handle_kde_material_you_colors() {
             kde_scheme_variant="scheme-tonal-spot" # default
             ;;
     esac
-    "$XDG_CONFIG_HOME"/matugen/templates/kde/kde-material-you-colors-wrapper.sh --scheme-variant "$kde_scheme_variant"
+    # BWM: the wrapper lives in the default (end-4) skin folder
+    "$XDG_CONFIG_HOME"/hypr/skins/default/scripts/kde-material-you-colors-wrapper.sh --scheme-variant "$kde_scheme_variant"
 }
 
 pre_process() {
@@ -193,22 +198,27 @@ switch() {
 
     # Start Gemini auto-categorization if enabled
     aiStylingEnabled=$(jq -r '.background.widgets.clock.cookie.aiStyling' "$SHELL_CONFIG_FILE")
-    if [[ "$aiStylingEnabled" == "true" ]]; then
+    if [[ "$aiStylingEnabled" == "true" && "$colors_only" != "1" ]]; then
         categorize_wallpaper "$imgpath" &
     fi
 
-    read scale screenx screeny screensizey < <(hyprctl monitors -j | jq '.[] | select(.focused) | .scale, .x, .y, .height' | xargs)
-    cursorposx=$(hyprctl cursorpos -j | jq '.x' 2>/dev/null) || cursorposx=960
-    cursorposx=$(bc <<< "scale=0; ($cursorposx - $screenx) * $scale / 1")
-    cursorposy=$(hyprctl cursorpos -j | jq '.y' 2>/dev/null) || cursorposy=540
-    cursorposy=$(bc <<< "scale=0; ($cursorposy - $screeny) * $scale / 1")
-    cursorposy_inverted=$((screensizey - cursorposy))
+    if [[ "$colors_only" != "1" ]]; then
+        read scale screenx screeny screensizey < <(hyprctl monitors -j | jq '.[] | select(.focused) | .scale, .x, .y, .height' | xargs)
+        cursorposx=$(hyprctl cursorpos -j | jq '.x' 2>/dev/null) || cursorposx=960
+        cursorposx=$(bc <<< "scale=0; ($cursorposx - $screenx) * $scale / 1")
+        cursorposy=$(hyprctl cursorpos -j | jq '.y' 2>/dev/null) || cursorposy=540
+        cursorposy=$(bc <<< "scale=0; ($cursorposy - $screeny) * $scale / 1")
+        cursorposy_inverted=$((screensizey - cursorposy))
+    fi
 
     matugen_args=(--source-color-index 0)
 
     if [[ "$color_flag" == "1" ]]; then
         matugen_args+=(color hex "$color")
         generate_colors_material_args=(--color "$color")
+    elif [[ "$colors_only" == "1" ]]; then
+        matugen_args+=(image "$imgpath")
+        generate_colors_material_args=(--path "$imgpath")
     else
         if [[ -z "$imgpath" ]]; then
             echo 'Aborted'
@@ -307,14 +317,7 @@ switch() {
 
     pre_process "$mode_flag"
 
-    # Check if app and shell theming is enabled in config
-    if [ -f "$SHELL_CONFIG_FILE" ]; then
-        enable_apps_shell=$(jq -r '.appearance.wallpaperTheming.enableAppsAndShell' "$SHELL_CONFIG_FILE")
-        if [ "$enable_apps_shell" == "false" ]; then
-            echo "App and shell theming disabled, skipping matugen and color generation"
-            return
-        fi
-    fi
+    # BWM: shell, apps and terminal theming are always on (end-4's enableAppsAndShell was removed)
 
     # Set harmony and related properties
     if [ -f "$SHELL_CONFIG_FILE" ]; then
@@ -326,12 +329,20 @@ switch() {
         [[ "$term_fg_boost" != "null" && -n "$term_fg_boost" ]] && generate_colors_material_args+=(--term_fg_boost "$term_fg_boost")
     fi
 
-    matugen "${matugen_args[@]}"
-    source "$(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV)/bin/activate"
-    python3 "$SCRIPT_DIR/generate_colors_material.py" "${generate_colors_material_args[@]}" \
-        > "$STATE_DIR"/user/generated/material_colors.scss
-    deactivate
+    # Check dependencies before applying any palette. Keep failures visible to callers.
+    bash "$COLORS_PYTHON" --check >/dev/null || return 1
+    mkdir -p "$STATE_DIR/user/generated"
+    python3 "$XDG_CONFIG_HOME/hypr/skins/default/scripts/matugen-fast.py" "${matugen_args[@]}" || return 1
+    bash "$COLORS_PYTHON" "$SCRIPT_DIR/generate_colors_material.py" "${generate_colors_material_args[@]}" \
+        > "$STATE_DIR"/user/generated/material_colors.scss || return 1
     "$SCRIPT_DIR"/applycolor.sh
+
+    # set-wallpaper.sh already handles the background, profiles and BWM app hooks.
+    if [[ "$colors_only" == "1" ]]; then
+        # Qt apps, as end-4's post_process does
+        handle_kde_material_you_colors &
+        return 0
+    fi
 
     # Pass screen width, height, and wallpaper path to post_process
     max_width_desired="$(hyprctl monitors -j | jq '([.[].width] | min)' | xargs)"
@@ -346,6 +357,7 @@ main() {
     color_flag=""
     color=""
     noswitch_flag=""
+    colors_only=""
 
     get_type_from_config() {
         jq -r '.appearance.palette.type' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "auto"
@@ -360,13 +372,15 @@ main() {
 
     detect_scheme_type_from_image() {
         local img="$1"
-        source "$(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV)/bin/activate"
-        "$SCRIPT_DIR"/scheme_for_image.py "$img" 2>/dev/null | tr -d '\n'
-        deactivate
+        bash "$COLORS_PYTHON" "$SCRIPT_DIR/scheme_for_image.py" "$img" | tr -d '\n'
     }
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
+            --colors-only)
+                colors_only="1"
+                shift
+                ;;
             --mode)
                 mode_flag="$2"
                 shift 2

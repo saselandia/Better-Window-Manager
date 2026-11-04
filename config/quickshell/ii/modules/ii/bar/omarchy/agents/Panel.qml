@@ -852,7 +852,8 @@ Panel {
     cursorActive = false
     keyRow = 0
     keyColumn = 0
-    Qt.callLater(function() { if (picking) pointAt("choice", 0) })
+    // BWM: the bar can rebuild this panel before the tick (skin reload at startup)
+    Qt.callLater(function() { if (root && typeof root.pointAt === "function" && root.picking) root.pointAt("choice", 0) })
   }
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight

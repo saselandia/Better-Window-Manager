@@ -21,6 +21,15 @@ hl.window_rule({
     float = true,
 })
 
+-- kitty
+hl.window_rule({
+    name  = "persist_kitty",
+    match = {
+        class = "^kitty$",
+    },
+    float = true,
+})
+
 -- Minecraft* 26.2
 hl.window_rule({
     name  = "persist_minecraft_26_2",
@@ -57,11 +66,11 @@ hl.window_rule({
     float = false,
 })
 
--- steam_app_413150
+-- steam_app_960090
 hl.window_rule({
-    name  = "persist_steam_app_413150",
+    name  = "persist_steam_app_960090",
     match = {
-        class = "^steam_app_413150$",
+        class = "^steam_app_960090$",
     },
     float = false,
 })

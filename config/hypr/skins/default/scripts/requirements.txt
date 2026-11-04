@@ -1,0 +1,5 @@
+# Runtime for end-4/dots-hyprland color scripts (2f2a376fdb2a).
+opencv-python-headless==5.0.0.93
+numpy==2.5.4
+materialyoucolor==2.0.10
+pillow==13.0.0

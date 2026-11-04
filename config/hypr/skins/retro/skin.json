@@ -66,6 +66,7 @@
       "config/hypr/omarchy/overlays"
     ],
     "scripts": [
+      "config/hypr/skins/retro/scripts",
       "config/hypr/scripts/bwm_omarchy.py",
       "config/hypr/scripts/bwm_omarchy_apps.py",
       "config/hypr/scripts/omarchy-shims",

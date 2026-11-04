@@ -1,6 +1,6 @@
 {
   "id": "default",
-  "name": "Default",
+  "name": "default (end-4)",
   "imitates": "end-4 / illogical-impulse (Material You)",
   "upstream": "https://github.com/end-4/dots-hyprland",
   "description": "Material Design 3: barra, panel lateral, vista general y Alt+Tab de illogical-impulse. Todo el escritorio y las apps toman los colores del fondo de pantalla.",
@@ -58,17 +58,23 @@
       "config/matugen/templates"
     ],
     "scripts": [
+      "config/hypr/skins/default/scripts",
+      "config/kde-material-you-colors",
       "config/hypr/scripts/set-wallpaper.sh",
       "config/hypr/scripts/theme-picker.sh"
     ]
   },
   "requires": [
+    "default-colors-runtime",
     "matugen",
     "rofi",
     "hyprpolkitagent"
   ],
   "recommends": [
     "swaync",
-    "hyprsunset"
+    "hyprsunset",
+    "default-qt-colors",
+    "plasma-integration",
+    "darkly"
   ]
 }

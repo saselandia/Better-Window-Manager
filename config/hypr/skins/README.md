@@ -10,9 +10,9 @@ config/hypr/skins/
 ├── README.md            ← esta guía
 ├── requirements.json    ← núcleo (lo que necesitan todas) + catálogo de requisitos por distro
 ├── _template/skin.json  ← plantilla comentada para empezar una skin nueva
-├── default/skin.json    ← Default (end-4 / illogical-impulse)   · ventanas: tiling
+├── default/skin.json    ← default (end-4)   · ventanas: tiling
 ├── retro/skin.json      ← Retro (Omarchy 4)                     · ventanas: tiling
-└── plasma/skin.json     ← KDE Plasma 6                          · ventanas: traditional
+└── plasma/skin.json     ← Breeze (Kde plasma)                          · ventanas: traditional
 ```
 
 Las skins de la comunidad van en `~/.local/share/bwm/skins/<id>/skin.json` (mismo formato). Las
@@ -24,8 +24,8 @@ Lo primero que decide una skin es cómo gestiona las ventanas:
 
 | `"windows"` | Qué es | Ejemplos |
 | :--- | :--- | :--- |
-| `"tiling"` | **Mosaico**: las ventanas se reparten la pantalla sin solaparse | Default, Retro (Hyprland, i3, Sway, Omarchy) |
-| `"traditional"` | **WM tradicional**: cada ventana flota con su barra de título y se solapan | KDE Plasma (Windows, macOS, GNOME) |
+| `"tiling"` | **Mosaico**: las ventanas se reparten la pantalla sin solaparse | default (end-4), Retro (Hyprland, i3, Sway, Omarchy) |
+| `"traditional"` | **WM tradicional**: cada ventana flota con su barra de título y se solapan | Breeze (Kde plasma) (Windows, macOS, GNOME) |
 
 Una skin `"traditional"` añade su bloque `"traditional"`:
 

@@ -21,8 +21,25 @@ colorstrings=''
 colorlist=()
 colorvalues=()
 
-colornames=$(cat $STATE_DIR/user/generated/material_colors.scss | cut -d: -f1)
-colorstrings=$(cat $STATE_DIR/user/generated/material_colors.scss | cut -d: -f2 | cut -d ' ' -f2 | cut -d ";" -f1)
+CONFIG_FILE="$XDG_CONFIG_HOME/illogical-impulse/config.json"
+term_colors_file="$STATE_DIR/user/generated/material_colors.scss"
+
+# BWM: terminal neutral mode. The terminal keeps end-4's base palette (terminal/scheme-base.json,
+# dark) untouched, with pure greys for the extra slots: it never changes with the wallpaper or theme.
+if [ -f "$CONFIG_FILE" ] && [ "$(jq -r '.appearance.wallpaperTheming.terminalGenerationProps.neutral' "$CONFIG_FILE")" = "true" ]; then
+  neutral_file="$STATE_DIR/user/generated/terminal/neutral_colors.scss"
+  if [ ! -s "$neutral_file" ]; then
+    mkdir -p "$STATE_DIR/user/generated/terminal"
+    bash "$XDG_CONFIG_HOME/hypr/skins/default/scripts/colors-python.sh" "$SCRIPT_DIR/generate_colors_material.py" \
+      --color "#808080" --mode dark --scheme scheme-monochrome --harmony 0 --term_fg_boost 0 \
+      --termscheme "$SCRIPT_DIR/terminal/scheme-base.json" > "$neutral_file.tmp" \
+      && mv "$neutral_file.tmp" "$neutral_file"
+  fi
+  [ -s "$neutral_file" ] && term_colors_file="$neutral_file"
+fi
+
+colornames=$(cat "$term_colors_file" | cut -d: -f1)
+colorstrings=$(cat "$term_colors_file" | cut -d: -f2 | cut -d ' ' -f2 | cut -d ";" -f1)
 IFS=$'\n'
 colorlist=($colornames)     # Array of color names
 colorvalues=($colorstrings) # Array of color values
@@ -41,11 +58,9 @@ apply_kitty() {
     sed -i "s/${colorlist[$i]} #/${colorvalues[$i]#\#}/g" "$STATE_DIR"/user/generated/terminal/kitty-theme.conf
   done
 
-  # Reload
-  if ! pgrep -f kitty >/dev/null; then
-    return
-  fi
-  kill -SIGUSR1 $(pidof kitty)
+  # BWM's Kitty includes this path; use end-4's generated palette there too.
+  cp "$STATE_DIR/user/generated/terminal/kitty-theme.conf" "$XDG_CONFIG_HOME/kitty/kitty-colors.conf"
+  "$XDG_CONFIG_HOME/hypr/scripts/kitty-recolor.sh"
 }
 
 apply_anyterm() {
@@ -78,16 +93,7 @@ apply_term() {
   apply_kitty &
 }
 
-# Check if terminal theming is enabled in config
-CONFIG_FILE="$XDG_CONFIG_HOME/illogical-impulse/config.json"
-if [ -f "$CONFIG_FILE" ]; then
-  enable_terminal=$(jq -r '.appearance.wallpaperTheming.enableTerminal' "$CONFIG_FILE")
-  if [ "$enable_terminal" = "true" ]; then
-    apply_term &
-  fi
-else
-  echo "Config file not found at $CONFIG_FILE. Applying terminal theming by default."
-  apply_term &
-fi
+# BWM: terminal theming is always on (end-4's enableTerminal was removed)
+apply_term &
 
 # apply_qt & # Qt theming is already handled by kde-material-colors

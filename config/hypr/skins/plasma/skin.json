@@ -1,6 +1,6 @@
 {
   "id": "plasma",
-  "name": "KDE Plasma",
+  "name": "Breeze (Kde plasma)",
   "imitates": "KDE Plasma 6 (Breeze Dark)",
   "upstream": "https://kde.org/plasma-desktop/",
   "description": "Panel flotante, Kickoff, applets de red/Bluetooth/audio/calendario/notificaciones, Alt+Tab de KWin, OSD Breeze y barras de título Breeze con snapping.",

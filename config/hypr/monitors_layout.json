@@ -1,12 +1,12 @@
 {
   "desc:LG Electronics LG ULTRAFINE 405NTVS2J655": {
     "name": "DP-1",
-    "x": 1920,
+    "x": 2560,
     "y": 0,
     "width": 3840,
     "height": 2160,
-    "refreshRate": 60.0,
-    "scale": 1.0,
+    "refreshRate": 60,
+    "scale": 1,
     "transform": 0,
     "disabled": false
   },
@@ -18,6 +18,17 @@
     "height": 1080,
     "refreshRate": 144.0,
     "scale": 1.0,
+    "transform": 0,
+    "disabled": false
+  },
+  "desc:Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101": {
+    "name": "DP-2",
+    "x": 0,
+    "y": 720,
+    "width": 2560,
+    "height": 1440,
+    "refreshRate": 240,
+    "scale": 1,
     "transform": 0,
     "disabled": false
   }

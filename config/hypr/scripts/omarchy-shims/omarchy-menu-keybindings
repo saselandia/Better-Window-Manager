@@ -1,0 +1,6 @@
+#!/bin/bash
+# BWM: Omarchy's keybindings picker in Retro's native menu, with live BWM binds.
+if [[ "${1:-}" == --print || "${1:-}" == -p ]]; then
+    exec python3 "$HOME/.config/hypr/skins/retro/scripts/keybindings.py" --print
+fi
+exec qs -c ii ipc call cheatsheet open

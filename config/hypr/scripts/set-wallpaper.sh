@@ -67,7 +67,7 @@ fi
 
 # 3. Generar la paleta de colores según el estilo
 if [[ "$CURRENT_THEME" == "plasma" ]]; then
-    echo "Estilo Plasma activo: manteniendo paleta estática Breeze Dark (sin Matugen ni recoloreo)."
+    echo "Estilo Breeze (Kde plasma) activo: manteniendo paleta estática Breeze Dark (sin Matugen ni recoloreo)."
     python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py apply-plasma-colors 2>/dev/null || true
 elif [[ "$CURRENT_THEME" == "retro" ]]; then
     # Sin matugen: bwm_omarchy.py genera desde el fondo una paleta estilo Omarchy y rellena
@@ -76,7 +76,12 @@ elif [[ "$CURRENT_THEME" == "retro" ]]; then
     python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py apply-wallpaper-colors "$WALLPAPER" 2>/dev/null || true
 else
     echo "Extrayendo colores del wallpaper..."
-    timeout 10 matugen image --source-color-index 0 "$WALLPAPER" || true
+    bash "$HOME/.config/quickshell/ii/scripts/colors/switchwall.sh" --colors-only --image "$WALLPAPER"
+    # default (end-4) already published the shell palette and queued its app hooks.
+    if [[ "${BWM_SKIN_SWITCH:-0}" != "1" ]]; then
+        python3 "$HOME/.config/hypr/scripts/bwm_boot.py" render >/dev/null 2>&1 &
+    fi
+    exit 0
 fi
 
 # El gestor hace una sola recarga después de generar la paleta y ajustar las ventanas.

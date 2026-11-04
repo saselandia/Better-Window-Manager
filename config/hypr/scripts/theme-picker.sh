@@ -28,7 +28,7 @@ else
     ROFI_THEME="$HOME/.config/rofi/theme-picker.rasi"
 fi
 
-OPTIONS="🎨 Default (Material You)\n⚡ Retro (Omarchy)\n❄️ KDE Plasma (Breeze Dark)"
+OPTIONS="🎨 default (end-4)\n⚡ Retro (Omarchy)\n❄️ Breeze (Kde plasma)"
 
 SELECTED_ROW=0
 case "$CURRENT_THEME" in

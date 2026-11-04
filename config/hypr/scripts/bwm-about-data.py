@@ -58,8 +58,8 @@ def value(field):
             skin = config.get('appearance', {}).get('bwmTheme', 'retro')
         except (OSError, ValueError):
             skin = 'retro'
-        return {'retro': 'Retro (Omarchy)', 'default': 'Default (Material You)',
-                'plasma': 'KDE Plasma'}.get(skin, skin)
+        return {'retro': 'Retro (Omarchy)', 'default': 'default (end-4)',
+                'plasma': 'Breeze (Kde plasma)'}.get(skin, skin)
     if field == 'theme':
         name = read(STATE / 'theme.name', 'dynamic')
         return 'Dynamic' if read(STATE / 'theme.mode') == 'dynamic' else name.replace('-', ' ').title()

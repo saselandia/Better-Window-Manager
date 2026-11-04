@@ -3,7 +3,7 @@
 <div align="center">
 
 **Un gestor de ventanas que reúne a todos los demás como _skins_.**
-Default (end-4 / illogical-impulse), Retro (Omarchy) y KDE Plasma sobre Hyprland y Quickshell: cambia de uno a otro sin cerrar nada y las aplicaciones cambian con él.
+default (end-4), Retro (Omarchy) y Breeze (Kde plasma) sobre Hyprland y Quickshell: cambia de uno a otro sin cerrar nada y las aplicaciones cambian con él.
 
 <p align="center">
   <a href="README.md">English</a> • <b>Español</b>
@@ -23,7 +23,7 @@ Default (end-4 / illogical-impulse), Retro (Omarchy) y KDE Plasma sobre Hyprland
 
 **BWM (Better Window Manager) es un gestor de ventanas que trata de encapsular todos los gestores de ventanas y escritorios que existen como _skins_.** Cada skin reproduce otro escritorio —su barra, sus menús, sus paneles, sus atajos y sus temas— sobre el mismo compositor (Hyprland) y el mismo shell (Quickshell), y todo el sistema le sigue: GTK, Qt, terminales, Firefox, Vesktop, Spotify, Steam, la pantalla de bloqueo y la de inicio de sesión. Se cambia de skin en caliente con **`Alt + T`**.
 
-**La meta es la compatibilidad.** Cada skin debe aceptar los temas y mejoras de aspecto de su escritorio original: si estás en la skin KDE Plasma y te bajas un tema de Plasma de internet, debe aplicarse y funcionar; si estás en Retro y añades un tema o un plugin de Omarchy, igual. BWM tiene pocas interfaces propias; casi todo es la interfaz de cada escritorio original.
+**La meta es la compatibilidad.** Cada skin debe aceptar los temas y mejoras de aspecto de su escritorio original: si estás en la skin Breeze (Kde plasma) y te bajas un tema de Plasma de internet, debe aplicarse y funcionar; si estás en Retro y añades un tema o un plugin de Omarchy, igual. BWM tiene pocas interfaces propias; casi todo es la interfaz de cada escritorio original.
 
 > ### 🟩 Diseñado con tarjetas NVIDIA en mente
 > BWM se desarrolla y se prueba sobre una **GPU NVIDIA** (con Wayland, Hyprland y el driver oficial de NVIDIA), y sus decisiones —arranque, monitores, capturas, juegos— están pensadas para ese hardware.
@@ -33,9 +33,9 @@ Default (end-4 / illogical-impulse), Retro (Omarchy) y KDE Plasma sobre Hyprland
 
 | Skin | Imita | Ventanas | Tema por defecto | Otros temas | Compatibilidad buscada |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Default** | [end-4 / illogical-impulse](https://github.com/end-4/dots-hyprland) (Material You) | Mosaico | **Dinámico**: matugen saca la paleta del fondo cada vez que lo cambias | — (claro u oscuro según el fondo) | Plantillas y fondos de matugen / end-4 |
+| **default (end-4)** | [end-4 / illogical-impulse](https://github.com/end-4/dots-hyprland) (Material You) | Mosaico | **Dinámico**: matugen saca la paleta del fondo cada vez que lo cambias | — (claro u oscuro según el fondo) | Plantillas y fondos de matugen / end-4 |
 | **Retro** | [Omarchy 4](https://github.com/basecamp/omarchy) (rama `quattro`) | Mosaico | **Dinámico**: paleta con el formato de Omarchy sacada del fondo | 23 temas estáticos de Omarchy (Tokyo Night, Catppuccin, Nord, Gruvbox…) con `Alt + R`; al fijar uno, el fondo ya no cambia los colores | Temas y plugins de la comunidad de Omarchy (Ajustes → Temas / Plugins) |
-| **KDE Plasma** | KDE Plasma 6 (Breeze Dark) | WM tradicional (flotantes) | **Estático**: Breeze Dark, no cambia con el fondo | — | Esquemas de color y temas globales de Plasma de la KDE Store (pendiente) |
+| **Breeze (Kde plasma)** | KDE Plasma 6 (Breeze Dark) | WM tradicional (flotantes) | **Estático**: Breeze Dark, no cambia con el fondo | — | Esquemas de color y temas globales de Plasma de la KDE Store (pendiente) |
 
 ### Pocas skins, lo esencial y lo mismo en todas
 
@@ -50,8 +50,8 @@ Es la finalidad del proyecto, así que la medimos. Son estimaciones del porcenta
 | Skin | Temas del original | Plugins / extensiones del original | En qué se basa la estimación |
 | :--- | :---: | :---: | :--- |
 | **Retro** (Omarchy) | **~90 %** | **~80 %** | Temas: se aplican `colors.toml`, fondos y los archivos de apps (Neovim, VS Code, btop…); no `hyprland.lua` del tema, `icons.theme` (Retro usa Papirus con el acento) ni el tema de Chromium (necesita root). Plugins: los de barra y servicios funcionan sin cambios; no los que sustituyen la barra, el bloqueo, overlays o paneles |
-| **Default** (end-4) | **~90 %** | — | Cualquier fondo genera su paleta (100 %); plantillas de matugen de terceros se añaden a `matugen/config.toml`. end-4 no tiene catálogo de plugins |
-| **KDE Plasma** | **~5 %** | **0 %** | Sólo Breeze Dark. De la KDE Store funcionan los cursores (compartidos por todas las skins); esquemas de color, temas globales, estilos de Plasma, Aurorae y plasmoides todavía no |
+| **default (end-4)** | **~90 %** | — | Cualquier fondo genera su paleta (100 %); plantillas de matugen de terceros se añaden a `matugen/config.toml`. end-4 no tiene catálogo de plugins |
+| **Breeze (Kde plasma)** | **~5 %** | **0 %** | Sólo Breeze Dark. De la KDE Store funcionan los cursores (compartidos por todas las skins); esquemas de color, temas globales, estilos de Plasma, Aurorae y plasmoides todavía no |
 
 ### Hacia un único compositor: Hyprland
 
@@ -133,9 +133,9 @@ La lista completa, con los paquetes de cada distribución, está en [docs/REQUIR
 | | Necesita |
 | :--- | :--- |
 | **Núcleo** (todas las skins) | Hyprland ≥ 0.55 (configuración en Lua), Quickshell (probado con 0.3.1), Qt ≥ 6.10 con 5Compat y SVG, Python ≥ 3.11 con Pillow, jq, swww (o awww), wl-clipboard, cliphist, kitty, grim, slurp, libnotify, GLib, fontconfig, PipeWire/WirePlumber, adw-gtk3. Las fuentes (Material Symbols, Google Sans Flex, JetBrainsMono Nerd Font) las instala BWM |
-| **Default** | matugen, rofi (Wayland), hyprpolkitagent |
+| **default (end-4)** | matugen, rofi (Wayland), hyprpolkitagent |
 | **Retro** | ImageMagick 7 (`magick`). Polkit, notificaciones y OSD los dibuja Quickshell |
-| **KDE Plasma** | hyprpolkitagent, iconos Breeze y el plugin hyprbars de BWM **compilado para tu versión de Hyprland** (el instalador lo compila si tienes las cabeceras de Hyprland, `make` y un compilador de C++) |
+| **Breeze (Kde plasma)** | hyprpolkitagent, iconos Breeze y el plugin hyprbars de BWM **compilado para tu versión de Hyprland** (el instalador lo compila si tienes las cabeceras de Hyprland, `make` y un compilador de C++) |
 
 Opcional: portales de escritorio (hyprland, gtk), NetworkManager, BlueZ, qt6ct, socat, git, Nautilus, Firefox, Flatpak (Vesktop, Spotify, Stremio), btop, fastfetch, Papirus, hyprsunset, SDDM y Plymouth.
 

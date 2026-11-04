@@ -61,7 +61,7 @@ compilarlos o usar sus repositorios de terceros.
 | Firefox | Navegador tematizado (userChrome + Pywalfox) | `www-client/firefox-bin` | `firefox` | `firefox` | `MozillaFirefox` | `firefox-esr` |
 | Flatpak | Vesktop, Spotify, Stremio… tematizados con overrides | `sys-apps/flatpak` | `flatpak` | `flatpak` | `flatpak` | `flatpak` |
 
-## Skin Default
+## Skin default (end-4)
 
 Imita **end-4 / illogical-impulse (Material You)**. Material Design 3: barra, panel lateral, vista general y Alt+Tab de illogical-impulse. Todo el escritorio y las apps toman los colores del fondo de pantalla.
 
@@ -72,8 +72,9 @@ Imita **end-4 / illogical-impulse (Material You)**. Material Design 3: barra, pa
 
 | Requisito | Para qué | Gentoo | Arch / CachyOS | Fedora | openSUSE | Debian / Ubuntu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| matugen | Genera la paleta Material You desde el fondo (tema dinámico de Default) | `guru:x11-misc/matugen` | `aur:matugen-bin` | — | — | — |
-| rofi (con Wayland) | Selector de estilos y de fondos de Default | `guru:gui-apps/rofi-wayland` | `rofi` | `rofi-wayland` | `rofi` | `rofi` |
+| Colores end-4 (OpenCV, NumPy, Pillow, materialyoucolor) | Selección automática de paleta y colores de terminal originales de illogical-impulse | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
+| matugen | Genera la paleta Material You desde el fondo (tema dinámico de default (end-4)) | `guru:x11-misc/matugen` | `aur:matugen-bin` | — | — | — |
+| rofi (con Wayland) | Selector de estilos y de fondos de default (end-4) | `guru:gui-apps/rofi-wayland` | `rofi` | `rofi-wayland` | `rofi` | `rofi` |
 | hyprpolkitagent | Diálogo de contraseña (polkit). En Retro lo dibuja Quickshell y no hace falta | `hyproverlay:sys-auth/hyprpolkitagent` | `hyprpolkitagent` | `copr:solopasha/hyprland:hyprpolkitagent` | `hyprpolkitagent` | — |
 
 **Recomendado:**
@@ -85,7 +86,7 @@ Imita **end-4 / illogical-impulse (Material You)**. Material Design 3: barra, pa
 
 ## Skin Retro
 
-Imita **Omarchy 4 (basecamp/omarchy, rama quattro)**. El shell de Omarchy: su barra con plugins, menú, cuadrícula de apps, notificaciones, OSD, polkit, bloqueo y el tema de todas sus apps con capa TUI.
+Imita **Omarchy 4 (basecamp/omarchy, rama quattro)**. El shell de Omarchy: su barra con plugins, menú con configuración integrada, cuadrícula de apps, notificaciones, OSD, polkit, bloqueo y el tema de todas sus apps con capa TUI.
 
 * **Ventanas:** mosaico (*tiling*)
 * **Tema por defecto:** Paleta dinámica (formato Omarchy) (dinámico). Dinámico por defecto: genera un colors.toml de Omarchy desde el fondo. Se puede fijar cualquiera de los 23 temas estáticos de Omarchy (Alt+R) y entonces el fondo no cambia la paleta.
@@ -108,7 +109,7 @@ Imita **Omarchy 4 (basecamp/omarchy, rama quattro)**. El shell de Omarchy: su ba
 | socat | Salvapantallas de terminal (eventos de Hyprland) | `net-misc/socat` | `socat` | `socat` | `socat` | `socat` |
 | hyprsunset | Luz nocturna que no tiñe las capturas (sin él se usa un shader) | `hyproverlay:gui-apps/hyprsunset` | `hyprsunset` | `copr:solopasha/hyprland:hyprsunset` | `hyprsunset` | — |
 
-## Skin KDE Plasma
+## Skin Breeze (Kde plasma)
 
 Imita **KDE Plasma 6 (Breeze Dark)**. Panel flotante, Kickoff, applets de red/Bluetooth/audio/calendario/notificaciones, Alt+Tab de KWin, OSD Breeze y barras de título Breeze con snapping.
 
@@ -134,7 +135,7 @@ Imita **KDE Plasma 6 (Breeze Dark)**. Panel flotante, Kickoff, applets de red/Bl
 | blueman | Botón «Configurar» del applet Bluetooth | `net-wireless/blueman` | `blueman` | `blueman` | `blueman` | `blueman` |
 | SwayNotificationCenter | Centro de notificaciones fuera de Retro | `guru:gui-apps/swaync` | `swaync` | `SwayNotificationCenter` | `SwayNotificationCenter` | `sway-notification-center` |
 
-## Plugin hyprbars (skin KDE Plasma)
+## Plugin hyprbars (skin Breeze (Kde plasma))
 
 Los plugins de Hyprland sólo cargan en la versión exacta para la que se compilaron (el `.so`
 guarda el commit de Hyprland). `bwm check` compara ese commit con el del Hyprland que usas; si

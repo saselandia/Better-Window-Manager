@@ -45,9 +45,9 @@ preview() {  # <imagen> <etiqueta>
 }
 
 if [[ "${1:-}" == "--print-rows" ]]; then
-    preview "$SHOTS/end4-illogical-impulse.png" "Default"
+    preview "$SHOTS/end4-illogical-impulse.png" "default (end-4)"
     preview "$(retro_shot)" "Retro"
-    preview "$SHOTS/kde-plasma-6.png" "KDE Plasma"
+    preview "$SHOTS/kde-plasma-6.png" "Breeze (Kde plasma)"
     exit 0
 fi
 

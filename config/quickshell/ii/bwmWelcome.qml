@@ -491,7 +491,7 @@ ApplicationWindow {
                                 + "de una a otra cuando quieras sin cerrar nada."
                         }
                         Paragraph {
-                            text: "La meta es la compatibilidad: si en la skin KDE Plasma pones un tema de Plasma descargado de "
+                            text: "La meta es la compatibilidad: si en la skin Breeze (Kde plasma) pones un tema de Plasma descargado de "
                                 + "internet, o en Retro uno de Omarchy, debe aplicarse y funcionar igual que en el original."
                         }
 
@@ -547,7 +547,7 @@ ApplicationWindow {
                                 model: [
                                     ["Alt + T", "Cambiar de skin"],
                                     ["Alt + R", "Temas de la skin Retro"],
-                                    ["Alt + W", "Fondo de pantalla (la skin Default toma sus colores)"],
+                                    ["Alt + W", "Fondo de pantalla (la skin default (end-4) toma sus colores)"],
                                     ["Super + I", "Ajustes"],
                                     ["bwm", "Abre esta ventana desde la terminal"],
                                     ["bwm check", "Requisitos y comandos para instalarlos"]

@@ -17,7 +17,7 @@ archivos de contexto están versionados; no incluyas contraseñas, tokens ni vol
 **BWM es un gestor de ventanas que trata de encapsular todos los gestores de ventanas y escritorios
 como skins.** Cada skin reproduce otro escritorio (barra, menús, paneles, atajos, decoraciones y
 temas) sobre Hyprland + Quickshell, y el sistema entero la sigue. **Finalidad: compatibilidad con
-las mejoras de aspecto de cada original**: en la skin KDE Plasma un tema de Plasma bajado de
+las mejoras de aspecto de cada original**: en la skin Breeze (Kde plasma) un tema de Plasma bajado de
 internet debe aplicarse y funcionar; en Retro, un tema o plugin de Omarchy. BWM tiene pocas
 interfaces propias (la bienvenida, Ajustes); casi todo es la interfaz del escritorio original.
 **Pocas skins, fáciles y con lo mismo**: las tres actuales hacen lo esencial, se aprenden enseguida y
@@ -28,10 +28,14 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
 
 ## 0. Vocabulario
 
-- **Estilo** (*skin*): Default (Material You), Retro (Omarchy), KDE Plasma (Breeze Dark).
+- **Estilo** (*skin*): default (end-4), Retro (Omarchy), Breeze (Kde plasma).
 - **Tema**: lo de *dentro* de un estilo (temas de Omarchy incluidos/instalados en Retro o su paleta dinámica).
 - Los nombres internos no cambian (`bwm-theme-manager.py get|set <estilo>`, `theme.lua`, `Appearance.isRetro`,
   `THEME_SPECIFIC_SECTIONS`…). En textos visibles, comentarios y documentación: «estilo/skin».
+
+Los nombres visibles de las skins son **default (end-4)**, **Retro** y **Breeze (Kde plasma)**.
+Los identificadores internos siguen siendo `default`, `retro` y `plasma`; KDE Plasma sigue
+siendo el nombre del escritorio original que imita Breeze.
 
 ## 1. Qué es y dónde está
 
@@ -42,7 +46,7 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
   editar el repo = editar lo que corre.
 - Usuario: `sasel` (git `saselandia`). Habla **español**: responde en español.
 - Remotos: `git push origin main` sube a GitLab y GitHub a la vez.
-- Monitores: LG UltraFine 4K (arriba a la derecha, `1920x0`) y HP X24ih 1080p@144 (`0x1080`, principal).
+- Monitores (desde 2026-11-04): LG UltraFine 4K (arriba a la derecha, `2560x0`) y MSI MAG 274Q 1440p@240 (`0x720`, principal; antes un HP X24ih 1080p@144).
   **Se identifican por `desc:`**, nunca por `DP-N` (cambian con el orden de arranque de las GPU).
 
 ## 2. Reglas que NO se pueden romper
@@ -82,8 +86,8 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
     completó una actualización, reinicio, prueba visual o push sin haberlo verificado. Si el usuario pide
     «commitear todo», incluye también los cambios ajenos y generados tras revisarlos; no los descartes.
 11. **Compatibilidad con los temas del original**: al tocar una skin, hazlo de forma que siga aceptando los
-    temas/plugins de su escritorio original (formato de Omarchy en Retro, de Plasma en KDE Plasma, de
-    matugen/end-4 en Default). Ante la duda, se adapta BWM al formato del original, no al revés. No
+    temas/plugins de su escritorio original (formato de Omarchy en Retro, de Plasma en Breeze (Kde plasma), de
+    matugen/end-4 en default (end-4)). Ante la duda, se adapta BWM al formato del original, no al revés. No
     introduzcas formatos de tema propios donde el original ya tiene uno.
 12. **Requisitos declarados**: si una skin o el núcleo empieza a usar un programa, módulo QML/Qt, fuente o
     biblioteca nuevos, añádelo a `config/hypr/skins/requirements.json` (catálogo con paquetes por distro) y al
@@ -133,7 +137,7 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
 | Cambiar de estilo / ver qué hace al cambiar | `config/hypr/scripts/bwm-theme-manager.py` (`apply_theme`) |
 | Algo que sólo cargue en un estilo | `quickshell/ii/panelFamilies/IllogicalImpulseFamily.qml` (`extraCondition`) |
 | Colores/temas de Retro y sus apps | `scripts/bwm_omarchy.py` (`apply_retro_palette_colors`), `scripts/bwm_omarchy_apps.py`, `hypr/omarchy/themed/*.tpl` |
-| Colores de apps en Default/Plasma | `config/matugen/config.toml` + `templates/` (Plasma los rellena con Breeze en `bwm-theme-manager.py`) |
+| Colores de apps en default (end-4)/Plasma | `config/matugen/config.toml` + `templates/` (Plasma los rellena con Breeze en `bwm-theme-manager.py`) |
 | GTK 3 / Qt / flatpaks | `scripts/gtk-theme.py`, `scripts/bwm_icons.py` (qt6ct, `kdeglobals`, overrides) |
 | Barra Retro y su derecha | `modules/ii/bar/RetroBarContent.qml`, `bar/omarchy/*`, Ajustes → Barra (`BarConfig.qml`) |
 | Instalar/elegir temas y plugins | `modules/settings/{PluginsConfig,ThemesConfig}.qml`, `modules/settings/addons/`, `scripts/bwm-addons.py`, `scripts/bwm-plugin.sh`; detalle en `docs/OMARCHY_ADDONS.md` |
@@ -156,8 +160,8 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
 - **Gestor**: `bwm-theme-manager.py get|set|toggle|list`. Perfil de Quickshell por estilo en
   `illogical-impulse/config-<estilo>.json` (secciones propias: appearance, background, bar, dock, panelFamily,
   waffles; dentro de `bar` se comparten `workspaces.shown`, `weather` y `topLeftIcon`); el resto se comparte.
-- **Default**: Material You con matugen desde el fondo (`scripts/set-wallpaper.sh`).
-- **Plasma** (`quickshell/ii/modules/ii/plasma*`, comunes en `plasmaCommon/`: `Breeze.qml`, `BreezePopupWindow` —se
+- **default (end-4)**: Material You con matugen desde el fondo (`scripts/set-wallpaper.sh`).
+- **Breeze (Kde plasma)** (`quickshell/ii/modules/ii/plasma*`, comunes en `plasmaCommon/`: `Breeze.qml`, `BreezePopupWindow` —se
   desliza con un offset y respeta `bar.bottom`, `passBarClicks`—, `BreezeSlider`…): panel flotante, Kickoff
   (Super), applets Bluetooth/red/audio/calendario/notificaciones, menú de tareas con miniaturas y «peek»,
   selector «Estilo global» (Alt+T), Alt+Tab de KDE (el foco cambia al soltar Alt), OSD Breeze, hyprbars con
@@ -181,10 +185,10 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
 - **Skins = carpetas**: `config/hypr/skins/<id>/skin.json` es la única fuente de datos de una skin (identidad,
   `windows`, `palette`, `look`, `bar`, `fonts`, mapa `parts`, requisitos); `bwm_skins.py` lo carga y
   `bwm-theme-manager.py` construye `THEMES` desde ahí. Variable de ventanas **`"windows"`**: `"tiling"`
-  (mosaico: Default, Retro) o `"traditional"` (WM tradicional, todo flota con barra: Plasma) + bloque
+  (mosaico: default (end-4), Retro) o `"traditional"` (WM tradicional, todo flota con barra: Plasma) + bloque
   `traditional` (titlebar, panel, edgeMargin, gap). `theme.lua` lleva `windows` y `rules.lua` lo usa.
   `tests/test_skins.py` valida los manifiestos y que existan las rutas de `parts`.
-- **Temas por defecto**: Default = Material You **dinámico** (matugen desde el fondo); Retro = paleta **dinámica**
+- **Temas por defecto**: default (end-4) = Material You **dinámico** (matugen desde el fondo); Retro = paleta **dinámica**
   en formato Omarchy (o uno de los 23 temas **estáticos** con Alt+R); Plasma = Breeze Dark **estático**.
 - **Bienvenida** (`bwm`): asistente tipo Calamares que se abre en cada inicio de sesión hasta desactivarlo
   (`bwm startup off`): gracias, skins instaladas en verde si tienen sus requisitos (desplegables, con comandos y
@@ -209,7 +213,7 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
   (Vesktop flatpak: detecta `/app/` y usa `flatpak run`). Firefox: quita las URL con que se abrió.
 - **Steam/Stremio no son Qt** en esta instalación: Steam usa CEF (Adwaita no cambia Tienda/Comunidad web); Stremio Linux usa GTK4/WebKit, con puente propio `stremio-theme.py`/`.cjs` para la web y CSS en vivo, activado sólo si está instalado (también desde `install.sh`). No confundir tema del marco con tema del contenido. Detalle y desactivación: `docs/STREMIO_THEMING.md`.
 - **Steam en Retro:** `overlays/steam.css` hace que la barra superior use el fondo base del tema;
-  Default/Plasma conservan la superficie elevada de la plantilla compartida.
+  default (end-4)/Plasma conservan la superficie elevada de la plantilla compartida.
 - **Ajustes:** Plugins y Temas son páginas independientes en ambas apps; Advanced se eliminó.
   Tipos compartidos en `modules/settings/addons/` necesitan su `qmldir` explícito. About usa el logo
   BWM del arranque, GitLab/GitHub del proyecto y `assets/bwm-star.gif`.
@@ -238,7 +242,7 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
   `Desktop::windowState()`, `CViewHitTester`, `Fullscreen::controller()`, `Animation::mgr()`), portéalo con el
   diff del hyprbars oficial entre los commits que fija `hyprpm.toml` de hyprwm/hyprland-plugins.
 - **swww/awww**: GURU publica swww con su nombre nuevo, `awww` (mismo uso). Los scripts usan el que exista.
-- **Luz nocturna**: dos motores (servicio `Hyprsunset.qml` en Default/Plasma, `nightlight.py` en Retro) con un
+- **Luz nocturna**: dos motores (servicio `Hyprsunset.qml` en default (end-4)/Plasma, `nightlight.py` en Retro) con un
   solo Kelvin: `nightlight.py --temperature` lo copia a `light.night.colorTemperature` y el servicio llama a
   `nightlight.py --remember K` (sólo guarda; no enciende ni apaga).
 - **XWayland**: Hyprland no fija primary (Wine usa el primer monitor); coordenadas X distintas de las de Hyprland.
@@ -262,7 +266,7 @@ corren sobre él (KDE Plasma en curso). Compatibilidad estimada y qué se conser
   «Handler was registered but will not be used» con dos monitores es esperado.
 - Ajustes sin abrirlos a la vista: `SETTINGS_PAGE=<nombre|índice> timeout 8 qs -p ~/.config/quickshell/ii/settings.qml`
   con la regla temporal al workspace 9, y mira su salida.
-- Capas visibles: `hyprctl layers -j` (namespaces `omarchy-*`). Capturas: `grim -g "x,y wxh"` (HP en `0,1080 1920x1080`).
+- Capas visibles: `hyprctl layers -j` (namespaces `omarchy-*`). Capturas: `grim -g "x,y wxh"` (principal, MSI, en `0,720 2560x1440`).
 - Python/bash: `python3 -m py_compile`, `bash -n`.
 - Requisitos: `./install.sh --check` o `bwm check [--skin id] [--distro arch|fedora|…]` (sólo lee; `--distro`
   enseña los comandos de otra distribución). La bienvenida no se renderiza con `QT_QPA_PLATFORM=offscreen`

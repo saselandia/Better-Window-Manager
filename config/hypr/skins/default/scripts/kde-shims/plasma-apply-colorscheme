@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+"""BWM stand-in for Plasma's plasma-apply-colorscheme, used by kde-material-you-colors when
+plasma-workspace is not installed (only put first in its PATH in that case).
+
+  plasma-apply-colorscheme <name | file.colors>
+
+Like the original: the colour groups of the scheme replace those of ~/.config/kdeglobals,
+[General] ColorScheme names it, the rest of kdeglobals stays, and running KDE/Qt apps on the KDE
+platform theme get KGlobalSettings.notifyChange(PaletteChanged) to repaint."""
+import configparser
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+HOME = Path.home()
+CONFIG = Path(os.environ.get("XDG_CONFIG_HOME") or HOME / ".config")
+DATA = Path(os.environ.get("XDG_DATA_HOME") or HOME / ".local/share")
+KDEGLOBALS = CONFIG / "kdeglobals"
+COLOR_GROUPS = ("Colors:", "ColorEffects:", "WM")
+
+
+def ini():
+    parser = configparser.ConfigParser(interpolation=None, strict=False)
+    parser.optionxform = str
+    return parser
+
+
+def find_scheme(arg):
+    path = Path(arg).expanduser()
+    if path.suffix == ".colors" and path.is_file():
+        return path
+    for base in (DATA / "color-schemes", Path("/usr/share/color-schemes")):
+        candidate = base / (arg if arg.endswith(".colors") else arg + ".colors")
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def main():
+    args = [a for a in sys.argv[1:] if not a.startswith("-")]
+    if not args:
+        print(__doc__)
+        return 1
+    scheme_path = find_scheme(args[0])
+    if not scheme_path:
+        print(f"Could not find the color scheme {args[0]}", file=sys.stderr)
+        return 1
+    scheme = ini()
+    scheme.read(scheme_path, encoding="utf-8")
+    globals_ = ini()
+    if KDEGLOBALS.is_file():
+        globals_.read(KDEGLOBALS, encoding="utf-8")
+    for section in list(globals_.sections()):
+        if section.startswith(COLOR_GROUPS):
+            globals_.remove_section(section)
+    for section in scheme.sections():
+        if section.startswith(COLOR_GROUPS):
+            globals_[section] = dict(scheme[section])
+    if not globals_.has_section("General"):
+        globals_.add_section("General")
+    globals_["General"]["ColorScheme"] = scheme_path.stem
+    if scheme.has_option("KDE", "contrast"):
+        if not globals_.has_section("KDE"):
+            globals_.add_section("KDE")
+        globals_["KDE"]["contrast"] = scheme["KDE"]["contrast"]
+    KDEGLOBALS.parent.mkdir(parents=True, exist_ok=True)
+    tmp = KDEGLOBALS.with_name(".kdeglobals.bwm-tmp")
+    with tmp.open("w", encoding="utf-8") as out:
+        globals_.write(out, space_around_delimiters=False)
+    tmp.replace(KDEGLOBALS)
+    subprocess.run(["dbus-send", "--session", "--type=signal", "/KGlobalSettings",
+                    "org.kde.KGlobalSettings.notifyChange", "int32:0", "int32:0"],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+    print(f"Successfully applied the color scheme {scheme_path.stem} to your current Plasma session")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

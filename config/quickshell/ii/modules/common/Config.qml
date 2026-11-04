@@ -129,14 +129,13 @@ Singleton {
                     property real contentTransparency: 0.57
                 }
                 property JsonObject wallpaperTheming: JsonObject {
-                    property bool enableAppsAndShell: true
                     property bool enableQtApps: true
-                    property bool enableTerminal: true
                     property JsonObject terminalGenerationProps: JsonObject {
                         property real harmony: 0.6
                         property real harmonizeThreshold: 100
                         property real termFgBoost: 0.35
                         property bool forceDarkMode: false
+                        property bool neutral: false // BWM: paleta fija, no sigue al fondo ni al tema
                     }
                 }
                 property JsonObject palette: JsonObject {

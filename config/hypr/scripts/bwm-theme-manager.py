@@ -4,9 +4,9 @@
 BWM Theme Manager (Better Window Manager) - gestor de estilos (skins)
 Manages and switches skins ("estilos"; the themes inside a skin, like Retro's Omarchy
 themes, are "temas") between:
-  1. Default (Material You)
+  1. default (end-4)
   2. Retro (Omarchy)
-  3. KDE Plasma (Breeze Dark)
+  3. Breeze (Kde plasma)
 Provides complete settings isolation (config-default.json, config-retro.json, config-plasma.json),
 dynamic wallpaper color adaptation (omitted in Plasma to maintain official Breeze Dark palette),
 and Hyprland / Quickshell synchronization.
@@ -1002,7 +1002,7 @@ def main():
 
     subparsers.add_parser("get", help="Obtener el estilo (skin) actual")
     subparsers.add_parser("list", help="Listar estilos disponibles")
-    subparsers.add_parser("toggle", help="Alternar entre estilos (Default -> Retro -> Plasma)")
+    subparsers.add_parser("toggle", help="Alternar entre estilos (default (end-4) -> Retro -> Breeze (Kde plasma))")
 
     set_parser = subparsers.add_parser("set", help="Activar un estilo")
     set_parser.add_argument("theme", choices=list(THEMES.keys()), help="Nombre del estilo")

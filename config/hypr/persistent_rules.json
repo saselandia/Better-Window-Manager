@@ -16,14 +16,6 @@
         },
         "float": false
     },
-    "steam_app_413150": {
-        "name": "persist_steam_app_413150",
-        "description": "steam_app_413150",
-        "match": {
-            "class": "^steam_app_413150$"
-        },
-        "float": false
-    },
     "steam_sign_in_to_steam": {
         "name": "persist_steam_sign_in_to_steam",
         "description": "Steam (Sign in to Steam)",
@@ -90,6 +82,22 @@
             "title": "^Steam$"
         },
         "float": false
+    },
+    "steam_app_960090": {
+        "name": "persist_steam_app_960090",
+        "description": "steam_app_960090",
+        "match": {
+            "class": "^steam_app_960090$"
+        },
+        "float": false
+    },
+    "kitty": {
+        "name": "persist_kitty",
+        "description": "kitty",
+        "match": {
+            "class": "^kitty$"
+        },
+        "float": true
     },
     "virt_manager": {
         "name": "persist_virt_manager",

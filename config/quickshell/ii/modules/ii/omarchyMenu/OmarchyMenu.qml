@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.Commons as Commons
+import qs.modules.common
 import qs.modules.ii.bar.omarchy
 import "omarchy" as OM
 import "omarchy/settings" as Settings
@@ -20,10 +21,17 @@ import "omarchy/settings" as Settings
 Scope {
     id: root
 
+    readonly property alias menu: mainMenu
+
     AppLibrary {
         id: appLibrary
     }
     Settings.SettingsController { id: settingsController }
+    Loader {
+        id: keybindingsLoader
+        active: Config.ready && Appearance.isRetro
+        sourceComponent: Keybindings { menu: mainMenu; onOpening: root.closeApps() }
+    }
 
     function closeApps() {
         Commons.IpcRegistry.call("omarchy.dock", "closeApps", []);
@@ -56,6 +64,7 @@ Scope {
         id: shellApi
         readonly property var appLibrary: appLibrary
         function summon(id, payload) {
+            if (id === "bwm.keybindings" && keybindingsLoader.item) { keybindingsLoader.item.open(); return true; }
             if (id === "bwm.apps") { root.openApps(false); return true; }
             if (id === "bwm.settings") {
                 let data = {};
@@ -72,7 +81,7 @@ Scope {
     }
 
     OM.Menu {
-        id: menu
+        id: mainMenu
         shell: shellApi
         settingsAdapter: settingsController
     }

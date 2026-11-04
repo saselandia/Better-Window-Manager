@@ -25,7 +25,7 @@ Scope {
 
     readonly property var themes: [
         {
-            id: "default", title: "Material You", subtitle: "Colores dinámicos del fondo de pantalla",
+            id: "default", title: "default (end-4)", subtitle: "Colores dinámicos del fondo de pantalla",
             bg: "#1c1b1f", window: "#2b2930", titlebar: "#36343b", accent: "#d0bcff", panel: "#2b2930", panelPos: "floating"
         },
         {
@@ -33,7 +33,7 @@ Scope {
             bg: "#0f0f09", window: "#14140c", titlebar: "#1b1b10", accent: "#fffd02", panel: "#0f0f09", panelPos: "top"
         },
         {
-            id: "plasma", title: "Breeze Dark", subtitle: "Estilo KDE Plasma 6",
+            id: "plasma", title: "Breeze (Kde plasma)", subtitle: "Estilo KDE Plasma 6",
             bg: "#1b1e20", window: "#31363b", titlebar: "#2a2e32", accent: "#3daee9", panel: "#24292e", panelPos: "bottom"
         }
     ]

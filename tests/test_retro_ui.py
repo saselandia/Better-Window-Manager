@@ -50,6 +50,8 @@ ApplicationWindow {
 '''
 
 HARNESS = r'''
+    property var qaKeybindings: null
+    property var qaKeybindingCommand: []
     property var qaGrid: null
     property var qaMenu: null
     property string qaMode: "settings"
@@ -115,6 +117,26 @@ HARNESS = r'''
         function displayState(): string {
             const page = root.qaMenu.qaDetails?.pageItem;
             return JSON.stringify({script:page?.managerScript, row:page?.rowIndex, selected:page?.selectedIndex, editing:page?.editingLayout, hints:page?.keyboardHintsVisible, monitors:page?.monitors, logicalSizes:page?.monitors?.map(m => DisplayGeometry.size(m)), dirty:page?.dirty, busy:page?.busy, message:page?.message, error:page?.messageIsError});
+        }
+        function keybindings(): void {
+            if (!root.qaKeybindings) {
+                const component = Qt.createComponent("modules/ii/omarchyMenu/Keybindings.qml");
+                root.qaKeybindings = component.createObject(root, {menu:root.qaMenu, dispatchCommands:false});
+                if (!root.qaKeybindings) throw new Error(component.errorString());
+                root.qaKeybindings.commandSelected.connect(command => root.qaKeybindingCommand = command);
+            }
+            root.qaKeybindingCommand = [];
+            root.qaKeybindings.open();
+        }
+        function keybindingsState(): string {
+            return JSON.stringify({opened:root.qaKeybindings?.opened, loading:root.qaKeybindings?.loading, count:root.qaKeybindings?.entries.length, entries:root.qaKeybindings?.entries, command:root.qaKeybindingCommand, tag:root.qaMenu.dmenuRequestTag});
+        }
+        function keybindingsFixture(payload: string): void {
+            root.qaKeybindings.entries = JSON.parse(Qt.atob(payload));
+            root.qaKeybindings.showEntries();
+        }
+        function hostLoads(): bool {
+            return Qt.createComponent("modules/ii/omarchyMenu/OmarchyMenu.qml").status === Component.Ready;
         }
         function missingFields(): string {
             return JSON.stringify(qaSettings.fields.filter(f => { if (f.backend) return false; let obj = Config.options; for (const key of f.path.split(".")) obj = obj?.[key]; return obj === undefined; }).map(f => f.path));
@@ -461,6 +483,47 @@ class RetroUiTests(unittest.TestCase):
         self.assertTrue(state['error'])
         self.assertIn('superponen', state['message'])
         self.assertFalse(self.capture.exists())
+
+    def open_keybindings(self):
+        self.call('openMode', 'menu')
+        self.wait_for(lambda s: s['opened'])
+        self.call('keybindings')
+        deadline = time.monotonic() + 5
+        state = {}
+        while time.monotonic() < deadline:
+            state = json.loads(self.call('keybindingsState'))
+            if state.get('count') and not state.get('loading'): break
+            time.sleep(.05)
+        self.assertTrue(state['opened'])
+        self.assertGreater(state['count'], 0)
+        return state
+
+    def test_retro_host_compiles(self):
+        self.assertEqual(self.call('hostLoads'), 'true')
+
+    def test_keybindings_uses_omarchy_menu_with_native_search_and_escape(self):
+        state = self.open_keybindings()
+        self.assertEqual(state['tag'], 'bwm.keybindings')
+        self.assertTrue(any('ALT + A' in entry['label'] and 'Cheatsheet' in entry['description'] for entry in state['entries']))
+        self.edit('terminal')
+        self.key('Home'); self.key('Right'); self.key('Delete')
+        self.assertEqual(self.state()['text'], 'trminal')
+        self.key('Escape')
+        self.assertEqual(self.state()['text'], '')
+        self.assertTrue(self.state()['opened'])
+        self.key('Escape')
+        self.assertFalse(self.state()['opened'])
+
+    def test_keybindings_selection_only_dispatches_selected_record(self):
+        self.open_keybindings()
+        fixture = [{'label':'CTRL + T  → Test terminal', 'description':'Test terminal', 'command':['fake-program','only-captured']},
+                   {'label':'ALT + M  → Mouse reference', 'description':'Mouse reference', 'command':[]}]
+        encoded = base64.b64encode(json.dumps(fixture).encode()).decode()
+        self.call('keybindingsFixture', encoded)
+        self.edit('Test terminal'); self.key('Return')
+        state = json.loads(self.call('keybindingsState'))
+        self.assertFalse(state['opened'])
+        self.assertEqual(state['command'], ['fake-program','only-captured'])
 
     def test_native_complex_pages_use_the_existing_layer(self):
         before = sum(c['pid'] == self.proc.pid for c in json.loads(subprocess.check_output(['hyprctl', 'clients', '-j'])))

@@ -1,9 +1,9 @@
-@define-color m3_primary #7daea3;
-@define-color m3_on_primary #282828;
-@define-color m3_primary_container #504945;
-@define-color m3_surface #282828;
-@define-color m3_on_surface #d4be98;
-@define-color m3_outline #665c54;
+@define-color m3_primary #ffb599;
+@define-color m3_on_primary #5a1c00;
+@define-color m3_primary_container #fa5d06;
+@define-color m3_surface #1e100b;
+@define-color m3_on_surface #f9ddd3;
+@define-color m3_outline #aa8a7e;
 
 * {
     font-family: 'JetBrainsMono Nerd Font', 'Noto Sans', sans-serif;
@@ -34,24 +34,4 @@
 
 .body {
     color: @m3_on_surface;
-}
-
-/* ==============================================================================
- * BWM Retro (Omarchy) - TUI overlay for swaync (like Omarchy's mako)
- * ============================================================================== */
-* {
-    font-family: "JetBrainsMono Nerd Font", monospace;
-}
-
-.control-center, .notification, .notification-row, .widget-title, .widget-dnd, button {
-    border-radius: 0;
-    box-shadow: none;
-}
-
-.control-center {
-    border: 2px solid @m3_primary;
-}
-
-.notification {
-    border: 2px solid @m3_primary;
 }

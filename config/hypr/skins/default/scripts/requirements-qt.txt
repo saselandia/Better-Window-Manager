@@ -1,0 +1,3 @@
+# Optional: end-4's Qt app colors (sdata/uv/requirements.txt of dots-hyprland 2f2a376).
+kde-material-you-colors==1.10.1
+dbus-python==1.5.1

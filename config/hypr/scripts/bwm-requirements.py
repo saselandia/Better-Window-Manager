@@ -378,7 +378,7 @@ compilarlos o usar sus repositorios de terceros.
 """
 
 DOC_FOOTER = """
-## Plugin hyprbars (skin KDE Plasma)
+## Plugin hyprbars (skin Breeze (Kde plasma))
 
 Los plugins de Hyprland sólo cargan en la versión exacta para la que se compilaron (el `.so`
 guarda el commit de Hyprland). `bwm check` compara ese commit con el del Hyprland que usas; si
