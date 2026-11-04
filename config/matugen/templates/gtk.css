@@ -51,8 +51,8 @@ navigation-sidebar > row {
 }
 
 navigation-sidebar > row:selected {
-    background-color: {{colors.secondary_container.default.hex}} !important;
-    color: {{colors.on_secondary_container.default.hex}} !important;
+    background-color: {{colors.secondary_container.default.hex}};
+    color: {{colors.on_secondary_container.default.hex}};
     font-weight: bold;
 }
 

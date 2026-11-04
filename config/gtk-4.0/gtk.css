@@ -51,8 +51,8 @@ navigation-sidebar > row {
 }
 
 navigation-sidebar > row:selected {
-    background-color: #7f300b !important;
-    color: #ffddd1 !important;
+    background-color: #7f300b;
+    color: #ffddd1;
     font-weight: bold;
 }
 

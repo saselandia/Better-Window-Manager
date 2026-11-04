@@ -83,6 +83,7 @@
     "papirus",
     "git",
     "socat",
-    "hyprsunset"
+    "hyprsunset",
+    "qt-gtk3"
   ]
 }

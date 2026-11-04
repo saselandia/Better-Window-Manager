@@ -40,6 +40,13 @@
       "check": {"type": "qtplugin", "path": "platformthemes/KDEPlasmaPlatformTheme6.so"},
       "packages": {"gentoo": "kde-plasma/plasma-integration", "arch": "plasma-integration", "fedora": "plasma-integration", "opensuse": "plasma6-integration-plugin", "debian": "plasma-integration"}
     },
+    "qt-gtk3": {
+      "label": "Plugin GTK de Qt (gtk3)",
+      "why": "Las apps Qt de Retro toman los colores del tema GTK, como en Omarchy (QT_QPA_PLATFORMTHEME=gtk3)",
+      "check": {"type": "qtplugin", "path": "platformthemes/libqgtk3.so"},
+      "packages": {"gentoo": "dev-qt/qtbase[gtk]", "arch": "qt6-base", "fedora": "qt6-qtbase-gui", "opensuse": "qt6-platformtheme-gtk3", "debian": "qt6-gtk-platformtheme"},
+      "manual": "En Gentoo: activa USE=gtk en dev-qt/qtbase (package.use) y recompílalo"
+    },
     "darkly": {
       "label": "Darkly (estilo de widgets Qt)",
       "why": "Estilo de las apps Qt de end-4 en default (end-4)",
