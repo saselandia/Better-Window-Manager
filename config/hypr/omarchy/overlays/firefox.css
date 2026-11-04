@@ -77,7 +77,12 @@
 
 /* Toolbars as terminal panes: one background, a 1px line between them */
 :root:root #navigator-toolbox { border-bottom: 1px solid var(--mat-outline, transparent) !important; }
-:root:root #nav-bar, :root:root #PersonalToolbar, :root:root #TabsToolbar { background: var(--mat-surface, inherit) !important; }
+/* One background: the theme's exact one. Pywalfox gives the frame (--lwt-accent-color) the palette
+   background and the toolbars lighter shades of it, so the frame colour is used everywhere; it
+   changes live with the theme, --mat-surface only at Firefox start */
+:root:root #navigator-toolbox, :root:root #nav-bar, :root:root #PersonalToolbar, :root:root #TabsToolbar,
+:root:root #urlbar-background,
+:root:root #urlbar[focused] > #urlbar-background { background: var(--lwt-accent-color, var(--mat-surface, inherit)) !important; }
 
 /* Address bar as a prompt */
 :root:root #urlbar-input-container::before {

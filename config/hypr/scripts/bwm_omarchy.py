@@ -1283,21 +1283,93 @@ def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None, qu
 
 STEAM_MAIN = r"ubuntu12_32/steam( |$)"
 
-def restart_steam():
+STEAM_INSTALL_LOG = Path.home() / ".local/state/bwm/steam/install.log"
+
+
+def _steam_started_at():
+    """Start time (epoch) of the running Steam client, or None."""
+    try:
+        pid = subprocess.run(["pgrep", "-of", STEAM_MAIN], capture_output=True, text=True).stdout.split()[0]
+        ticks = int(Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[19])
+        boot = next(float(l.split()[1]) for l in Path("/proc/stat").read_text().splitlines() if l.startswith("btime"))
+        return boot + ticks / os.sysconf("SC_CLK_TCK")
+    except Exception:
+        return None
+
+
+STEAM_GAME_WAIT = 12 * 3600
+STEAM_RESTART_LOCK = f"/tmp/bwm-steam-restart-{os.getuid()}.lock"
+
+
+def _steam_game_running() -> bool:
+    return (any(c.get("class", "").startswith("steam_app_") or c.get("class") == "gamescope"
+                for c in _hypr_clients()) or _alive("SteamLaunch AppId"))
+
+
+def _wait_skin_switch_end(timeout=180):
+    """Block until bwm-theme-manager.py releases its lock (the skin switch is over)."""
+    import fcntl
+    import time
+    deadline = time.monotonic() + timeout
+    with open("/tmp/bwm-theme-manager.lock", "a") as lock:
+        while time.monotonic() < deadline:
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                fcntl.flock(lock, fcntl.LOCK_UN)
+                return True
+            except OSError:
+                time.sleep(0.5)
+    return False
+
+
+def restart_steam(after_switch=False):
     """Steam only loads its skin (Adwaita-for-Steam, steam-theme.sh) at startup: restart it so the
     new colours show, unless a game is running (it would be closed). `steam -shutdown` is its clean
-    exit; the main window comes back in place, or Steam starts in the tray if it was there."""
+    exit; the main window comes back in place, or Steam starts in the tray if it was there.
+    With a game open it waits (up to 12 h) for it to be closed instead of skipping the restart.
+    `after_switch`: started by steam-theme.sh during a skin change; waits for the switch to end, so
+    the switch itself stays free of app restarts, and only acts if the skin was installed after
+    Steam started."""
     import time
-    if bwm_transition.switching():
+    if after_switch:
+        if not _wait_skin_switch_end():
+            return
+        time.sleep(1)
+        started = _steam_started_at()
+        try:
+            installed = STEAM_INSTALL_LOG.stat().st_mtime
+        except OSError:
+            return
+        if started is None or installed <= started:
+            return
+    elif bwm_transition.switching():
         return
     if not _alive(STEAM_MAIN):
         return
-    clients = _hypr_clients()
-    if (any(c.get("class", "").startswith("steam_app_") or c.get("class") == "gamescope" for c in clients)
-            or _alive("SteamLaunch AppId")):
-        _detached('notify-send -a "BWM" "Steam" "El tema nuevo se aplicará cuando reinicies Steam '
-                  '(no se reinicia con un juego abierto)."')
+    import fcntl
+    # One waiter at a time: later theme changes are covered by the one already waiting
+    lock = open(STEAM_RESTART_LOCK, "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
         return
+    if _steam_game_running():
+        # Never close a game: wait until it is closed, then restart Steam with the new skin
+        _detached('notify-send -a "BWM" "Steam" "El tema nuevo de Steam se aplicará al cerrar el juego."')
+        deadline = time.monotonic() + STEAM_GAME_WAIT
+        while _steam_game_running():
+            if time.monotonic() > deadline:
+                return
+            time.sleep(15)
+        time.sleep(5)  # let Steam finish syncing the game's cloud saves
+        started = _steam_started_at()
+        try:
+            installed = STEAM_INSTALL_LOG.stat().st_mtime
+        except OSError:
+            return
+        if not _alive(STEAM_MAIN) or started is None or installed <= started:
+            return  # Steam was closed or restarted meanwhile: it already has the new skin
+    clients = _hypr_clients()
     match = lambda c: c.get("class", "") == "steam"
     if any(match(c) for c in clients):
         # Steam puede tardar en volver (actualizaciones, ventana de carga): más margen para colocarla
@@ -1386,7 +1458,7 @@ if __name__ == "__main__":
             restart_firefox(force="--force" in sys.argv)
             sys.exit(0)
         elif cmd == "restart-steam":
-            restart_steam()
+            restart_steam(after_switch="--after-switch" in sys.argv)
             sys.exit(0)
         elif cmd == "vesktop-enable":
             vesktop_enable_theme()
