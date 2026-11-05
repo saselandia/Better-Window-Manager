@@ -931,6 +931,14 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
             for action in ("vesktop-enable",):
                 subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_omarchy.py"), action],
                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            # Firefox: la forma de Retro (fuente mono, esquinas rectas) sólo se carga al arrancar.
+            # Al entrar o salir de Retro se reinicia una vez, cuando el cambio de skin ya ha terminado.
+            if (theme_name == "retro") != (curr_theme == "retro"):
+                env = os.environ.copy()
+                env.pop("BWM_SKIN_SWITCH", None)
+                subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_omarchy.py"),
+                                  "restart-firefox", "--after-switch"], env=env,
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
         # 5. Recargar Hyprland primero para aplicar las reglas del nuevo tema
         try:

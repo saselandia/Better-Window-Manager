@@ -1402,15 +1402,27 @@ def _firefox_cmd(pid: int) -> list:
             keep_next = a in ("-P", "-p", "--profile", "-profile", "--class", "--name", "-name")
     return cmd or ["firefox"]
 
-def restart_firefox(force: bool = False):
+def restart_firefox(force: bool = False, after_switch: bool = False):
     """Restart Firefox when its chrome CSS (the Retro TUI theme, or Material You/Breeze) is newer
     than the running Firefox, which only reads it at startup. Session restore relies on
     browser.startup.page = 3, forced once (resume_session_once) if unset. Waits for the CSS to
-    settle first (the skin switch and the palette step can both ask for it): one restart."""
+    settle first (the skin switch and the palette step can both ask for it): one restart.
+    `after_switch`: started by bwm-theme-manager.py when a skin change enters or leaves Retro (the
+    TUI font and square corners only load at startup; colours already change live through
+    Pywalfox). Waits for the switch to end and restarts a Firefox that was running before it."""
     import fcntl
     import time
 
-    if bwm_transition.switching():
+    if after_switch:
+        asked = time.time()
+        if not _wait_skin_switch_end():
+            return
+        time.sleep(1)
+        windows = [c for c in _hypr_clients() if "firefox" in c.get("class", "").lower()]
+        if not windows or _proc_start(min(c["pid"] for c in windows)) > asked:
+            return
+        force = True
+    elif bwm_transition.switching():
         return
     last, stable = None, 0
     for _ in range(40):
@@ -1455,7 +1467,7 @@ if __name__ == "__main__":
             run_hooks(sys.argv[2])
             sys.exit(0)
         elif cmd == "restart-firefox":
-            restart_firefox(force="--force" in sys.argv)
+            restart_firefox(force="--force" in sys.argv, after_switch="--after-switch" in sys.argv)
             sys.exit(0)
         elif cmd == "restart-steam":
             restart_steam(after_switch="--after-switch" in sys.argv)
