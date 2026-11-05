@@ -224,6 +224,28 @@ def apply_user_options():
     os.replace(tmp, target)
 
 
+def installed_font_families():
+    """Families known to fontconfig (lower case), or None if fc-list is unavailable."""
+    try:
+        out = subprocess.run(["fc-list", ":", "family"], capture_output=True, text=True, timeout=10).stdout
+    except Exception:
+        return None
+    return {name.strip().lower() for line in out.splitlines() for name in line.split(",") if name.strip()}
+
+
+def replace_missing_fonts(fonts: dict, defaults: dict, installed=None):
+    """A profile font that isn't installed falls back to the skin's own font: Qt would otherwise
+    substitute any family (a monospace one here), and the skin would look like another one."""
+    installed = installed_font_families() if installed is None else installed
+    if not installed:
+        return
+    for key, family in list(fonts.items()):
+        default = defaults.get(key)
+        if family and default and family.lower() not in installed and default.lower() in installed:
+            print(f"[Info] Fuente «{family}» no instalada: se usa «{default}» ({key})")
+            fonts[key] = default
+
+
 def load_theme_config(target_theme: str, cfg: dict):
     """
     Restores the isolated config for the target theme, ensuring settings
@@ -272,6 +294,7 @@ def load_theme_config(target_theme: str, cfg: dict):
         data["appearance"]["fonts"] = {}
         for font_key, font_val in cfg["fonts"].items():
             data["appearance"]["fonts"][font_key] = font_val
+    replace_missing_fonts(data["appearance"]["fonts"], cfg["fonts"])
 
     if "bar" not in data:
         data["bar"] = {}
