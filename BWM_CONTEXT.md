@@ -936,6 +936,12 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 * **Hecho:** `bwm-theme-manager.py` `replace_missing_fonts()`: al cargar el perfil de una skin, una fuente que fontconfig no conoce (`fc-list : family`) se sustituye por la de su `skin.json`, si ésa sí está; las del usuario instaladas se respetan. Aplicado a `config-default.json`/`config.json` (Rubik y Gabarito → Google Sans Flex) y reinicio de mantenimiento con `set default --restart-shell`. 3 pruebas en `tests/test_profile_fonts.py`.
 * **Verificado:** captura recortada de la barra con Google Sans Flex; con la instancia nueva, cambiar `fonts.main` en `config.json` cambia la barra en vivo (probado y deshecho). **No probado:** un cambio de skin Retro → default con esta instancia nueva.
 
+### 87. Contraseña tres veces al iniciar sesión: reintento de SDDM (2026-11-06)
+* **Petición:** tras reiniciar en default (end-4) pidió la contraseña dos veces en el saludo de SDDM (que siempre tiene el aspecto de Omarchy) y otra en el bloqueo de default.
+* **Causa (journal del arranque de las 13:26):** el autologin de SDDM entró bien, pero Hyprland 0.56.2 murió con SIGSEGV a los 0,3 s dentro de `libaquamarine.so.0.15.1` (`segfault at 1c8`, misma dirección en los dos intentos, log de Hyprland vacío: antes de leer la configuración). SDDM mostró entonces el saludo; el primer intento con contraseña volvió a caerse igual y el segundo arrancó; después vino el bloqueo de default, que es el inicio de sesión normal de esa skin. Intermitente: el arranque de las 10:12 del mismo día entró solo, sin cambios de configuración ni paquetes desde el 2026-11-04 y con el mismo orden de GPU; hubo caídas parecidas el 2026-10-31 y el 2026-11-02. Sin backtrace: systemd-coredump no guardó los volcados de Hyprland y no hay gdb.
+* **Hecho:** `install-boot-theme.sh` escribe `Relogin=true` en `/etc/sddm.conf.d/autologin.conf` (sólo cuando hay autologin: default, Breeze o `--autologin`): si la sesión termina, SDDM vuelve a entrar solo. Efecto secundario: cerrar sesión también vuelve a entrar. Lo aplica el usuario con `sudo …/install-boot-theme.sh --sddm --auto` (reescribe la configuración de SDDM y la copia root del script que usa el servicio).
+* **Verificado:** `bash -n` y el texto generado. El usuario ejecutó `--sddm --auto` (2026-11-07): `/etc/sddm.conf.d/autologin.conf` lleva `Relogin=true`, la copia de `/usr/local/sbin/bwm-boot-theme` está al día y `bwm-boot-theme.path` sigue activo. **No probado:** un arranque con la caída real.
+
 ---
 
 ## 4. 📂 Estructura del repositorio

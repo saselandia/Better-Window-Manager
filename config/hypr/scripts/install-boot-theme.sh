@@ -26,7 +26,8 @@
 # cambiar de estilo el servicio de --auto cambia el autologin de SDDM para el próximo arranque.
 # --enable-sddm lo activa al arrancar y aparca el autologin de getty en tty1 (si lo había);
 # --autologin: SDDM entra siempre solo, sea cual sea el tema (sin --autologin vuelve al modo
-# por estilo). --disable-sddm lo desactiva y devuelve el autologin de getty.
+# por estilo). --disable-sddm lo desactiva y devuelve el autologin de getty. Con autologin, SDDM vuelve
+# a entrar solo si la sesión termina (Relogin=true), también al cerrar sesión.
 #
 # --auto: copia este script a /usr/local/sbin/bwm-boot-theme (de root: el del repo lo puede
 #   editar el usuario) y crea bwm-boot-theme.path/.service. bwm_boot.py render se ejecuta
@@ -187,7 +188,9 @@ apply_login_mode() {
   local theme
   theme=$(sed -n 's/^theme=\([a-z]*\)$/\1/p' "$SRC/sddm/greeter.conf" 2>/dev/null | head -n1)
   if [[ -f $STATE_DIR/autologin-always ]] || [[ $theme == default || $theme == plasma ]]; then
-    write_root_file "$SDDM_CONF_D/autologin.conf" <<<$'[Autologin]\nUser='"$USER_NAME"$'\nSession=hyprland.desktop'
+    # Relogin: si Hyprland se cae al arrancar (fallo intermitente de aquamarine, §3.87), SDDM
+    # vuelve a entrar solo en vez de mostrar el saludo. Al cerrar sesión también vuelve a entrar.
+    write_root_file "$SDDM_CONF_D/autologin.conf" <<<$'[Autologin]\nUser='"$USER_NAME"$'\nSession=hyprland.desktop\nRelogin=true'
   elif [[ $theme == retro ]]; then
     rm -f "$SDDM_CONF_D/autologin.conf"
   fi
