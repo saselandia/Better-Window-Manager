@@ -1,30 +1,91 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 
 ContentPage {
+    id: page
     forceWidth: true
 
+    // BWM: each skin only shows what it uses. The AI sidebar, the overview search (prefixes, web
+    // search) and the bar's resource monitor are default (end-4)'s; Retro's Omarchy bar and launcher
+    // read only the weather city/units and the save paths; Breeze has no quick toggles (music).
+    readonly property bool isDefault: !Appearance.isRetro && !Appearance.isPlasma
+    property bool promptExpanded: false
+    readonly property string promptPreview: {
+        // First line of real text, skipping Markdown headings
+        const lines = (Config.options.ai.systemPrompt ?? "").split("\n").filter(l => !/^\s*#/.test(l));
+        return lines.map(l => l.replace(/^[\-*\s]+/, "").trim()).find(l => l.length > 0) ?? "";
+    }
+
     ContentSection {
+        visible: page.isDefault && Config.options.policies.ai !== 0
         icon: "neurology"
         title: Translation.tr("AI")
 
-        MaterialTextArea {
+        // Folded by default: a one-line summary that opens a small, scrollable editor
+        RippleButton {
             Layout.fillWidth: true
-            placeholderText: Translation.tr("System prompt")
-            text: Config.options.ai.systemPrompt
-            wrapMode: TextEdit.Wrap
-            onTextChanged: {
-                Qt.callLater(() => {
-                    Config.options.ai.systemPrompt = text;
-                });
+            implicitHeight: 40
+            buttonRadius: Appearance.rounding.small
+            onClicked: page.promptExpanded = !page.promptExpanded
+            contentItem: RowLayout {
+                spacing: 10
+                MaterialSymbol {
+                    Layout.leftMargin: 8
+                    text: "edit_note"
+                    iconSize: Appearance.font.pixelSize.larger
+                    color: Appearance.colors.colOnSecondaryContainer
+                }
+                StyledText {
+                    text: Translation.tr("System prompt")
+                    color: Appearance.colors.colOnSecondaryContainer
+                }
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: !page.promptExpanded
+                    text: page.promptPreview
+                    elide: Text.ElideRight
+                    font.pixelSize: Appearance.font.pixelSize.smaller
+                    color: Appearance.colors.colSubtext
+                }
+                Item {
+                    Layout.fillWidth: true
+                    visible: page.promptExpanded
+                }
+                MaterialSymbol {
+                    Layout.rightMargin: 8
+                    text: page.promptExpanded ? "expand_less" : "expand_more"
+                    iconSize: Appearance.font.pixelSize.larger
+                    color: Appearance.colors.colOnSecondaryContainer
+                }
+            }
+        }
+
+        ScrollView {
+            visible: page.promptExpanded
+            Layout.fillWidth: true
+            Layout.preferredHeight: 150
+            clip: true
+
+            MaterialTextArea {
+                placeholderText: Translation.tr("System prompt")
+                text: Config.options.ai.systemPrompt
+                wrapMode: TextEdit.Wrap
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                onTextChanged: {
+                    Qt.callLater(() => {
+                        Config.options.ai.systemPrompt = text;
+                    });
+                }
             }
         }
     }
 
     ContentSection {
+        visible: !Appearance.isPlasma
         icon: "music_cast"
         title: Translation.tr("Music Recognition")
 
@@ -53,21 +114,7 @@ ContentPage {
     }
 
     ContentSection {
-        icon: "cell_tower"
-        title: Translation.tr("Networking")
-
-        MaterialTextArea {
-            Layout.fillWidth: true
-            placeholderText: Translation.tr("User agent (for services that require it)")
-            text: Config.options.networking.userAgent
-            wrapMode: TextEdit.Wrap
-            onTextChanged: {
-                Config.options.networking.userAgent = text;
-            }
-        }
-    }
-
-    ContentSection {
+        visible: !Appearance.isRetro
         icon: "memory"
         title: Translation.tr("Resources")
 
@@ -82,7 +129,7 @@ ContentPage {
                 Config.options.resources.updateInterval = value;
             }
         }
-        
+
     }
 
     ContentSection {
@@ -98,7 +145,7 @@ ContentPage {
                 Config.options.screenRecord.savePath = text;
             }
         }
-        
+
         MaterialTextArea {
             Layout.fillWidth: true
             placeholderText: Translation.tr("Screenshot Path (leave empty to just copy)")
@@ -111,6 +158,7 @@ ContentPage {
     }
 
     ContentSection {
+        visible: !Appearance.isRetro
         icon: "search"
         title: Translation.tr("Search")
 
@@ -126,6 +174,7 @@ ContentPage {
         }
 
         ContentSubsection {
+            visible: page.isDefault
             title: Translation.tr("Prefixes")
             ConfigRow {
                 uniform: true
@@ -190,6 +239,7 @@ ContentPage {
             }
         }
         ContentSubsection {
+            visible: page.isDefault
             title: Translation.tr("Web search")
             MaterialTextArea {
                 Layout.fillWidth: true
@@ -232,31 +282,23 @@ ContentPage {
     ContentSection {
         icon: "weather_mix"
         title: Translation.tr("Weather")
-        ConfigRow {
-            ConfigSwitch {
-                buttonIcon: "assistant_navigation"
-                text: Translation.tr("Enable GPS based location")
-                checked: Config.options.bar.weather.enableGPS
-                onCheckedChanged: {
-                    Config.options.bar.weather.enableGPS = checked;
-                }
+        // BWM: no GPS switch. It needs geoclue, which a desktop without Wi-Fi can't locate, and an
+        // empty city already falls back to the IP location (wttr.in), in every skin
+        ConfigSwitch {
+            buttonIcon: "thermometer"
+            text: Translation.tr("Fahrenheit unit")
+            checked: Config.options.bar.weather.useUSCS
+            onCheckedChanged: {
+                Config.options.bar.weather.useUSCS = checked;
             }
-            ConfigSwitch {
-                buttonIcon: "thermometer"
-                text: Translation.tr("Fahrenheit unit")
-                checked: Config.options.bar.weather.useUSCS
-                onCheckedChanged: {
-                    Config.options.bar.weather.useUSCS = checked;
-                }
-                StyledToolTip {
-                    text: Translation.tr("It may take a few seconds to update")
-                }
+            StyledToolTip {
+                text: Translation.tr("It may take a few seconds to update")
             }
         }
-        
+
         MaterialTextArea {
             Layout.fillWidth: true
-            placeholderText: Translation.tr("City name")
+            placeholderText: Translation.tr("City name (empty: detected from your IP)")
             text: Config.options.bar.weather.city
             wrapMode: TextEdit.Wrap
             onTextChanged: {
@@ -264,6 +306,7 @@ ContentPage {
             }
         }
         ConfigSpinBox {
+            visible: !Appearance.isRetro
             icon: "av_timer"
             text: Translation.tr("Polling interval (m)")
             value: Config.options.bar.weather.fetchInterval

@@ -27,7 +27,10 @@
 # sink. Portal capture and --resolution are gpu-screen-recorder only.
 
 [[ -f ~/.config/user-dirs.dirs ]] && source ~/.config/user-dirs.dirs
-OUTPUT_DIR="${OMARCHY_SCREENRECORD_DIR:-${XDG_VIDEOS_DIR:-$HOME/Videos}}"
+# BWM: the folder set in Settings → Services (screenRecord.savePath) comes before the default one
+BWM_RECORD_DIR=$(jq -r '.screenRecord.savePath // ""' "$HOME/.config/illogical-impulse/config.json" 2>/dev/null)
+OUTPUT_DIR="${OMARCHY_SCREENRECORD_DIR:-${BWM_RECORD_DIR:-${XDG_VIDEOS_DIR:-$HOME/Videos}}}"
+OUTPUT_DIR="${OUTPUT_DIR/#\~/$HOME}"
 
 DESKTOP_AUDIO="false"
 MICROPHONE_AUDIO="false"

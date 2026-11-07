@@ -79,6 +79,7 @@
   ],
   "recommends": [
     "btop",
+    "songrec",
     "fastfetch",
     "papirus",
     "git",

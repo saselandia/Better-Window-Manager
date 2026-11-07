@@ -148,6 +148,12 @@
       "check": {"type": "cmd", "any": ["slurp"]},
       "packages": {"gentoo": "gui-apps/slurp", "arch": "slurp", "fedora": "slurp", "opensuse": "slurp", "debian": "slurp"}
     },
+    "songrec": {
+      "label": "SongRec",
+      "why": "Reconocer la música que suena (botón de los ajustes rápidos)",
+      "check": {"type": "cmd", "any": ["songrec"]},
+      "packages": {"gentoo": "guru:media-sound/songrec", "arch": "songrec", "fedora": null, "opensuse": null, "debian": null}
+    },
     "libnotify": {
       "label": "libnotify (notify-send)",
       "why": "Avisos de los scripts",

@@ -546,6 +546,7 @@
   "Path copied": "Path copied",
   "On-screen keyboard": "On-screen keyboard",
   "City name": "City name",
+  "City name (empty: detected from your IP)": "City name (empty: detected from your IP)",
   "Click to cycle through power profiles": "Click to cycle through power profiles",
   "Recognize music | Right-click to toggle source": "Recognize music | Right-click to toggle source",
   "Use old sine wave cookie implementation": "Use old sine wave cookie implementation",

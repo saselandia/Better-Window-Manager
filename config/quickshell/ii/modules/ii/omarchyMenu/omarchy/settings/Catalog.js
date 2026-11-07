@@ -47,7 +47,6 @@ function fields() {
   bool("bar", "bar.autoHide.enable", "Ocultar automáticamente la barra");
   bool("bar", "bar.indicators.notifications.showUnreadCount", "Contador de notificaciones");
   num("bar", "bar.workspaces.shown", "Número de workspaces", 1, 20, 1);
-  bool("bar", "bar.weather.enable", "Tiempo en la barra");
   bool("bar", "tray.showItemId", "Identificador de iconos de bandeja");
   select("bar", "bar.topLeftIcon", "Icono del lanzador", [["BWM", "spark"], ["Distribución", "distro"]]);
   bool("background", "background.widgets.clock.enable", "Reloj en el fondo");
@@ -80,15 +79,12 @@ function fields() {
   bool("general", "battery.automaticSuspend", "Suspender con batería baja");
   num("general", "battery.suspend", "Nivel de batería para suspender", 0, 100, 1, "%");
   select("general", "policies.ai", "Funciones de inteligencia artificial", [["Desactivadas", 0], ["Activadas", 1], ["Sólo locales", 2]]);
-  bool("services", "bar.weather.enable", "Servicio del tiempo");
-  bool("services", "bar.weather.enableGPS", "Localización automática para el tiempo");
+  // Retro: la barra de Omarchy (plugins de tiempo) sólo lee la ciudad y las unidades; el buscador, el
+  // monitor de recursos y el GPS son de la barra/vista general de default (end-4)
   text("services", "bar.weather.city", "Ciudad del tiempo", "Nombre de la ciudad; vacío para detección automática.");
   bool("services", "bar.weather.useUSCS", "Unidades imperiales");
-  bool("services", "search.sloppy", "Búsqueda aproximada");
-  text("services", "search.engineBaseUrl", "Buscador web", "URL base que se antepone a la consulta.");
   text("services", "screenRecord.savePath", "Carpeta de grabaciones");
   text("services", "screenSnip.savePath", "Carpeta de capturas");
-  num("services", "resources.updateInterval", "Intervalo del monitor de recursos", 100, 10000, 100, "ms");
   num("services", "musicRecognition.timeout", "Tiempo para reconocer música", 1, 120, 1, "s");
   add("bar", "shell-language", "Idioma del menú y los paneles", "choice", {backend:"language", choices:[choice("English", "en"), choice("Español (México)", "es-MX")]});
   var widgets = [

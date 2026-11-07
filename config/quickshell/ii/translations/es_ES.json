@@ -200,6 +200,7 @@
   "Color picker": "Selector de color",
   "Automatic": "Automático",
   "City name": "Nombre de ciudad",
+  "City name (empty: detected from your IP)": "Ciudad (vacío: se detecta por tu IP)",
   "e.g. 󱊫 for F1, 󱊶  for F12": "p. ej. 󱊫 para F1, 󱊶  para F12",
   "Top-down": "De arriba hacia abajo",
   "Font family name (e.g., Space Grotesk)": "Nombre de familia de fuente (p. ej., Space Grotesk)",

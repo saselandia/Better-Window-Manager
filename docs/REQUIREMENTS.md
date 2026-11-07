@@ -27,6 +27,7 @@ compilarlos o usar sus repositorios de terceros.
 | Hyprland ≥ 0.55 | Compositor. BWM se configura en Lua, que llegó con Hyprland 0.55 | `hyproverlay:gui-wm/hyprland` | `hyprland` | `copr:solopasha/hyprland:hyprland` | `hyprland` | — |
 | Quickshell | Pinta barras, paneles, menús, bloqueo y OSD de todas las skins (Qt 6 / QML) | `guru:gui-apps/quickshell` | `aur:quickshell` | `copr:errornointernet/quickshell:quickshell` | — | — |
 | Qt 6 5Compat (GraphicalEffects) | Sombras, máscaras y tintes de los iconos en Quickshell | `dev-qt/qt5compat` | `qt6-5compat` | `qt6-qt5compat` | `qt6-qt5compat-imports` | `qml6-module-qt5compat-graphicaleffects` |
+| Qt 6 Positioning | Servicio del tiempo de Quickshell (ubicación); sin él no carga la configuración del shell | `dev-qt/qtpositioning` | `qt6-positioning` | `qt6-qtpositioning` | `qt6-positioning-imports` | `qml6-module-qtpositioning` |
 | Qt 6 SVG | Iconos SVG de las barras y applets | `dev-qt/qtsvg` | `qt6-svg` | `qt6-qtsvg` | `qt6-svg` | `qt6-svg-plugins` |
 | Qt ≥ 6.10 (Qt.labs.synchronizer) | Controles de Ajustes y paneles sincronizados con la configuración | `dev-qt/qtdeclarative` | `qt6-declarative` | `qt6-qtdeclarative` | `qt6-declarative-imports` | — |
 | Python ≥ 3.11 | Gestor de skins, motor de temas y scripts (usa tomllib) | `dev-lang/python` | `python` | `python3` | `python3` | `python3` |
@@ -82,7 +83,11 @@ Imita **end-4 / illogical-impulse (Material You)**. Material Design 3: barra, pa
 | Requisito | Para qué | Gentoo | Arch / CachyOS | Fedora | openSUSE | Debian / Ubuntu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | SwayNotificationCenter | Centro de notificaciones fuera de Retro | `guru:gui-apps/swaync` | `swaync` | `SwayNotificationCenter` | `SwayNotificationCenter` | `sway-notification-center` |
+| SongRec | Reconocer la música que suena (botón de los ajustes rápidos) | `guru:media-sound/songrec` | `songrec` | — | — | — |
 | hyprsunset | Luz nocturna que no tiñe las capturas (sin él se usa un shader) | `hyproverlay:gui-apps/hyprsunset` | `hyprsunset` | `copr:solopasha/hyprland:hyprsunset` | `hyprsunset` | — |
+| Colores Qt de end-4 (kde-material-you-colors) | Apps Qt de default (end-4) con la paleta del fondo, como en illogical-impulse | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
+| Plugin de plataforma de KDE para Qt | Las apps Qt de default (end-4) leen kdeglobals (QT_QPA_PLATFORMTHEME=kde), como en end-4 | `kde-plasma/plasma-integration` | `plasma-integration` | `plasma-integration` | `plasma6-integration-plugin` | `plasma-integration` |
+| Darkly (estilo de widgets Qt) | Estilo de las apps Qt de end-4 en default (end-4) | — | `aur:darkly-bin` | `copr:deltacopy/darkly:darkly` | — | — |
 
 ## Skin Retro
 
@@ -103,11 +108,13 @@ Imita **Omarchy 4 (basecamp/omarchy, rama quattro)**. El shell de Omarchy: su ba
 | Requisito | Para qué | Gentoo | Arch / CachyOS | Fedora | openSUSE | Debian / Ubuntu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | btop | Gestor de tareas de Retro (y tema btop de Omarchy) | `sys-process/btop` | `btop` | `btop` | `btop` | `btop` |
+| SongRec | Reconocer la música que suena (botón de los ajustes rápidos) | `guru:media-sound/songrec` | `songrec` | — | — | — |
 | fastfetch | «Acerca de» del menú de Retro, como en Omarchy | `app-misc/fastfetch` | `fastfetch` | `fastfetch` | `fastfetch` | `fastfetch` |
 | Papirus | Iconos de Retro con las carpetas del color del tema (sin él, Adwaita) | `x11-themes/papirus-icon-theme` | `papirus-icon-theme` | `papirus-icon-theme` | `papirus-icon-theme` | `papirus-icon-theme` |
 | git | Instalar temas y plugins de la comunidad y actualizar BWM | `dev-vcs/git` | `git` | `git` | `git` | `git` |
 | socat | Salvapantallas de terminal (eventos de Hyprland) | `net-misc/socat` | `socat` | `socat` | `socat` | `socat` |
 | hyprsunset | Luz nocturna que no tiñe las capturas (sin él se usa un shader) | `hyproverlay:gui-apps/hyprsunset` | `hyprsunset` | `copr:solopasha/hyprland:hyprsunset` | `hyprsunset` | — |
+| Plugin GTK de Qt (gtk3) | Las apps Qt de Retro toman los colores del tema GTK, como en Omarchy (QT_QPA_PLATFORMTHEME=gtk3) | `dev-qt/qtbase[gtk]` | `qt6-base` | `qt6-qtbase-gui` | `qt6-platformtheme-gtk3` | `qt6-gtk-platformtheme` |
 
 ## Skin Breeze (Kde plasma)
 
