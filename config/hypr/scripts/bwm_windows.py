@@ -11,6 +11,7 @@ con los bordes ("edgeMargin") y un hueco entre ventanas ("gap"), para que se not
 mosaico. Los datos los da bwm_skins.py.
 """
 import json
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -173,6 +174,64 @@ def release_new_windows(name: str):
     """Quita la regla de hold_new_windows: redefinida con el mismo nombre no casa con nada."""
     subprocess.run(["hyprctl", "eval", f"hl.window_rule({{ name = {json.dumps(name)}, match = {{ class = \"^$BWM-none^\" }}, "
                     "workspace = \"1 silent\" })"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+class quiet_activation:
+    """Bloque `with`: misc:focus_on_activate apagado mientras una app se reinicia sola. Steam activa
+    su ventana al cerrarse con `steam -shutdown` y varias veces al volver (también la de carga), y
+    cada activación te llevaba a su workspace; las reglas de ventana no frenan esas peticiones y
+    FocusKeeper sólo deshacía la primera. Con varios reinicios a la vez (Steam y Firefox) el valor
+    original vuelve al terminar el último: un archivo por proceso en $XDG_RUNTIME_DIR, con candado."""
+
+    DIR = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "bwm-quiet-activation"
+
+    def _locked(self, fn):
+        import fcntl
+        self.DIR.mkdir(parents=True, exist_ok=True)
+        with open(self.DIR / ".lock", "w") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            return fn()
+
+    def _holders(self):
+        holders = []
+        for f in self.DIR.glob("pid-*"):
+            pid = f.name[4:]
+            if pid.isdigit() and Path(f"/proc/{pid}").exists():
+                holders.append(f)
+            else:
+                f.unlink(missing_ok=True)
+        return holders
+
+    @staticmethod
+    def _set(value: bool):
+        subprocess.run(["hyprctl", "eval", f"hl.config({{ misc = {{ focus_on_activate = {str(value).lower()} }} }})"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    def __enter__(self):
+        def enter():
+            orig = self.DIR / "original"
+            if not self._holders() or not orig.exists():
+                out = subprocess.run(["hyprctl", "getoption", "misc:focus_on_activate", "-j"],
+                                     capture_output=True, text=True).stdout
+                try:
+                    value = bool(json.loads(out).get("bool", True))
+                except ValueError:
+                    value = True
+                orig.write_text("1" if value else "0")
+            (self.DIR / f"pid-{os.getpid()}").touch()
+            self._set(False)
+        self._locked(enter)
+        return self
+
+    def __exit__(self, *exc):
+        def leave():
+            (self.DIR / f"pid-{os.getpid()}").unlink(missing_ok=True)
+            orig = self.DIR / "original"
+            if not self._holders():
+                self._set(not orig.exists() or orig.read_text().strip() != "0")
+                orig.unlink(missing_ok=True)
+        self._locked(leave)
+        return False
 
 
 def _active_workspace_id(mon: dict):

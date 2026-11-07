@@ -72,39 +72,42 @@ def main():
 
     if subprocess.run("spicetify -n apply >/dev/null 2>&1", shell=True).returncode != 0:
         subprocess.run("spicetify -n refresh >/dev/null 2>&1", shell=True)
-    subprocess.run(["pkill", "-9", "-f", "com.spotify.Client"], stderr=subprocess.DEVNULL)
-    subprocess.run(["pkill", "-9", "-x", "spotify"], stderr=subprocess.DEVNULL)
-    time.sleep(0.5)
     import bwm_windows
-    # Its new window opens straight in its workspace, without focus, and only a focus steal by it
-    # is undone (bwm_windows.FocusKeeper): switching workspace meanwhile is respected
-    hold = "bwm-restart-spotify"
-    if saved:
-        bwm_windows.hold_new_windows(hold, sorted({w.get("class", "") for w in before}), saved["workspace"])
-    keeper = bwm_windows.FocusKeeper(lambda c: c.get("class", "").lower() == "spotify" and c["pid"] not in old_pids)
-    # Lua config: the old "hyprctl dispatch exec <cmd>" syntax no longer works
-    lua('hl.dsp.exec_cmd("flatpak run com.spotify.Client")')
+    # Sin focus_on_activate mientras se reabre: una activación suya te llevaba a su workspace
+    with bwm_windows.quiet_activation():
+        subprocess.run(["pkill", "-9", "-f", "com.spotify.Client"], stderr=subprocess.DEVNULL)
+        subprocess.run(["pkill", "-9", "-x", "spotify"], stderr=subprocess.DEVNULL)
+        time.sleep(0.5)
+        # Its new window opens straight in its workspace, without focus, and only a focus steal by it
+        # is undone (bwm_windows.FocusKeeper): switching workspace meanwhile is respected
+        hold = "bwm-restart-spotify"
+        if saved:
+            bwm_windows.hold_new_windows(hold, sorted({w.get("class", "") for w in before}), saved["workspace"])
+        keeper = bwm_windows.FocusKeeper(lambda c: c.get("class", "").lower() == "spotify" and c["pid"] not in old_pids)
+        # Lua config: the old "hyprctl dispatch exec <cmd>" syntax no longer works
+        lua('hl.dsp.exec_cmd("flatpak run com.spotify.Client")')
 
-    if not saved:
-        return
-    # The new window can take a while to map; move it as soon as it appears and check again
-    # a little later, since Spotify may reopen or resize its window while it loads
-    placed = set()
-    deadline = time.time() + 40
-    while time.time() < deadline:
-        time.sleep(0.4)
-        keeper.check()
+        if not saved:
+            time.sleep(8)  # its new window may still ask for activation
+            return
+        # The new window can take a while to map; move it as soon as it appears and check again
+        # a little later, since Spotify may reopen or resize its window while it loads
+        placed = set()
+        deadline = time.time() + 40
+        while time.time() < deadline:
+            time.sleep(0.4)
+            keeper.check()
+            for w in spotify_windows():
+                if w["pid"] in old_pids or w["address"] in placed:
+                    continue
+                restore(w, saved)
+                placed.add(w["address"])
+                deadline = min(deadline, time.time() + 6)  # a few more seconds for a second window
         for w in spotify_windows():
-            if w["pid"] in old_pids or w["address"] in placed:
-                continue
-            restore(w, saved)
-            placed.add(w["address"])
-            deadline = min(deadline, time.time() + 6)  # a few more seconds for a second window
-    for w in spotify_windows():
-        if w["address"] in placed:
-            time.sleep(1.5)
-            restore(w, saved)
-    bwm_windows.release_new_windows(hold)
+            if w["address"] in placed:
+                time.sleep(1.5)
+                restore(w, saved)
+        bwm_windows.release_new_windows(hold)
 
 
 if __name__ == "__main__":

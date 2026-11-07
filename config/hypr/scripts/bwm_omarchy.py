@@ -1220,66 +1220,70 @@ def restart_app(match, cmd, before_start=None, wait_for=None, quit_pids=None, qu
     layout = [{"title": c["title"], "ws": c["workspace"]["name"], "at": c["at"], "size": c["size"],
                "floating": c.get("floating", False)} for c in windows]
     pids = set(quit_pids or {c["pid"] for c in windows})
-    if quit_cmd:  # the app's own clean shutdown (steam -shutdown)
-        subprocess.run(quit_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
-    else:
-        for pid in pids:
-            try:
-                os.kill(pid, signal.SIGTERM)
-            except ProcessLookupError:
-                pass
-    for _ in range(int(wait_secs * 10)):
-        if not any(Path(f"/proc/{p}").exists() for p in pids) and not (wait_for and _alive(wait_for)):
-            break
-        time.sleep(0.1)
-    else:
-        return False  # still running (a "quit?" dialog): leave it alone
-
-    if before_start:
-        try:
-            before_start()
-        except Exception as e:
-            print(f"[Warning] {e}", file=sys.stderr)
-
-    # Lo que la app abra mientras arranca (la ventana de carga de Steam…) va directamente a su
-    # workspace, en silencio: no aparece en medio del que estás mirando ni te cambia de workspace
-    hold = "bwm-restart-" + re.sub(r"[^A-Za-z0-9]+", "-", windows[0].get("class", "app")).strip("-").lower()
-    bwm_windows.hold_new_windows(hold, sorted({c.get("class", "") for c in windows}), layout[0]["ws"])
-    # Sólo se deshace un robo de foco de la app recién abierta; lo que hagas tú mientras se
-    # reabre se respeta (antes se restauraba al final una foto del principio: con Steam, minutos)
-    keeper = bwm_windows.FocusKeeper(lambda c: match(c) and c["pid"] not in pids)
-    subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-
-    pending = list(layout)
-    placed = {}            # address -> layout entry
-    start = last_place = time.time()
-    # Sigue hasta colocarlas todas y unos segundos más, por si una ventana colocada era la de
-    # carga y se cierra (vuelve su hueco a pending y se coloca la definitiva)
-    while time.time() - start < place_secs and (pending or time.time() - last_place < 8):
-        time.sleep(0.5)
-        clients = _hypr_clients()
-        keeper.check(clients)
-        alive = {c["address"] for c in clients}
-        for addr in [a for a in placed if a not in alive]:
-            pending.append(placed.pop(addr))
-        for c in clients:
-            if not pending:
+    # Sin focus_on_activate desde antes de cerrarla: Steam activa su ventana al cerrarse y al
+    # volver, y cada activación te llevaba a su workspace (bwm_windows.quiet_activation)
+    with bwm_windows.quiet_activation():
+        if quit_cmd:  # the app's own clean shutdown (steam -shutdown)
+            subprocess.run(quit_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
+        else:
+            for pid in pids:
+                try:
+                    os.kill(pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+        for _ in range(int(wait_secs * 10)):
+            if not any(Path(f"/proc/{p}").exists() for p in pids) and not (wait_for and _alive(wait_for)):
                 break
-            # c["pid"] in pids: an old window not gone yet (Hyprland reuses addresses: compare PIDs)
-            if not match(c) or c["address"] in placed or c["pid"] in pids:
-                continue
-            m = next((l for l in pending if l["title"] == c["title"]), None)
-            if not m and time.time() - start > 12:
-                m = pending[0]
-            if not m:
-                continue
-            box = bwm_windows.restored_box(m, c)
-            bwm_windows.dispatch([bwm_windows.place_lua(c["address"], workspace=m["ws"], box=box)])
-            placed[c["address"]] = m
-            pending.remove(m)
-            last_place = time.time()
-    bwm_windows.release_new_windows(hold)
-    return True
+            time.sleep(0.1)
+        else:
+            return False  # still running (a "quit?" dialog): leave it alone
+
+        if before_start:
+            try:
+                before_start()
+            except Exception as e:
+                print(f"[Warning] {e}", file=sys.stderr)
+
+        # Lo que la app abra mientras arranca (la ventana de carga de Steam…) va directamente a su
+        # workspace, en silencio: no aparece en medio del que estás mirando ni te cambia de workspace
+        hold = "bwm-restart-" + re.sub(r"[^A-Za-z0-9]+", "-", windows[0].get("class", "app")).strip("-").lower()
+        bwm_windows.hold_new_windows(hold, sorted({c.get("class", "") for c in windows}), layout[0]["ws"])
+        # Sólo se deshace un robo de foco de la app recién abierta; lo que hagas tú mientras se
+        # reabre se respeta (antes se restauraba al final una foto del principio: con Steam, minutos)
+        keeper = bwm_windows.FocusKeeper(lambda c: match(c) and c["pid"] not in pids)
+        subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
+        pending = list(layout)
+        placed = {}            # address -> layout entry
+        start = last_place = time.time()
+        # Sigue hasta colocarlas todas y unos segundos más, por si una ventana colocada era la de
+        # carga y se cierra (vuelve su hueco a pending y se coloca la definitiva)
+        while time.time() - start < place_secs and (pending or time.time() - last_place < 8):
+            # Más a menudo al principio: un robo de foco al arrancar se deshace antes de que se note
+            time.sleep(0.2 if time.time() - start < 30 else 0.5)
+            clients = _hypr_clients()
+            keeper.check(clients)
+            alive = {c["address"] for c in clients}
+            for addr in [a for a in placed if a not in alive]:
+                pending.append(placed.pop(addr))
+            for c in clients:
+                if not pending:
+                    break
+                # c["pid"] in pids: an old window not gone yet (Hyprland reuses addresses: compare PIDs)
+                if not match(c) or c["address"] in placed or c["pid"] in pids:
+                    continue
+                m = next((l for l in pending if l["title"] == c["title"]), None)
+                if not m and time.time() - start > 12:
+                    m = pending[0]
+                if not m:
+                    continue
+                box = bwm_windows.restored_box(m, c)
+                bwm_windows.dispatch([bwm_windows.place_lua(c["address"], workspace=m["ws"], box=box)])
+                placed[c["address"]] = m
+                pending.remove(m)
+                last_place = time.time()
+        bwm_windows.release_new_windows(hold)
+        return True
 
 STEAM_MAIN = r"ubuntu12_32/steam( |$)"
 
