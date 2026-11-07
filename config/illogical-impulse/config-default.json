@@ -238,7 +238,7 @@
     "monochromeIcons": true,
     "omarchy": false,
     "pinnedApps": [
-      "org.kde.dolphin",
+      "org.gnome.Nautilus",
       "kitty"
     ],
     "pinnedOnStartup": false

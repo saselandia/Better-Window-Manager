@@ -14,7 +14,8 @@ import qs.modules.ii.onScreenKeyboard
 import qs.modules.ii.overview
 import qs.modules.ii.polkit
 import qs.modules.ii.omarchyPolkit
-import qs.modules.ii.omarchyDock
+// Named import: omarchyDock also has a Dock.qml, which would otherwise shadow end-4's Dock below
+import qs.modules.ii.omarchyDock as OmarchyDockModule
 import qs.modules.ii.regionSelector
 import qs.modules.ii.screenCorners
 import qs.modules.ii.screenTranslator
@@ -56,7 +57,7 @@ Scope {
     PanelLoader { extraCondition: Config.ready && Appearance.isRetro; component: OmarchyPolkit {} }
     // Retro: Omarchy's dock, on workspaces without tiled windows (modules/ii/omarchyDock); optional,
     // Settings → Interface → Dock
-    PanelLoader { extraCondition: Config.ready && Appearance.isRetro && Config.options.dock.omarchy; component: OmarchyDock {} }
+    PanelLoader { extraCondition: Config.ready && Appearance.isRetro && Config.options.dock.omarchy; component: OmarchyDockModule.OmarchyDock {} }
     PanelLoader { component: RegionSelector {} }
     PanelLoader { extraCondition: Appearance.isRetro; component: OmarchyScreenshotPreview {} }
     // Retro: Omarchy's notification daemon instead of BWM's (services/Notifications.qml)

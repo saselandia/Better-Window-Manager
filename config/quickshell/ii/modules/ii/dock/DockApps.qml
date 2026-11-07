@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -25,6 +26,20 @@ Item {
     Layout.fillHeight: true
     Layout.topMargin: Appearance.sizes.hyprlandGapsOut
     implicitWidth: listView.implicitWidth
+
+    // BWM: minimized windows live on workspace 99 (toggle-minimize.py). Activating one there would
+    // jump to that workspace, so it is restored to where it was minimized from instead.
+    function activateToplevel(toplevel) {
+        const hyprToplevel = Hyprland.toplevels.values.find(t => t.wayland === toplevel);
+        if (hyprToplevel?.workspace?.id === 99) {
+            let address = String(hyprToplevel.address);
+            if (!address.startsWith("0x"))
+                address = "0x" + address;
+            Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/toggle-minimize.py", "restore", address]);
+            return;
+        }
+        toplevel?.activate();
+    }
 
     function popupCenterXForButton(button) {
         if (!button || !root.QsWindow)
@@ -162,7 +177,7 @@ Item {
                                 windowButton.modelData?.close();
                             }
                             onClicked: {
-                                windowButton.modelData?.activate();
+                                root.activateToplevel(windowButton.modelData);
                             }
                             contentItem: ColumnLayout {
                                 implicitWidth: screencopyView.implicitWidth

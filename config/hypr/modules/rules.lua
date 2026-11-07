@@ -55,6 +55,17 @@ hl.window_rule({
 -- })
 -- overlayLayerRule:set_enabled(false)
 
+-- Dock de end-4 (default (end-4)/Breeze): sube desde abajo y con desenfoque, como en
+-- dots-hyprland (hypr/hyprland/rules.lua: quickshell:.* y quickshell:dock)
+hl.layer_rule({
+    name         = "bwm-ii-dock",
+    match        = { namespace = "^quickshell:dock$" },
+    blur         = true,
+    blur_popups  = true,
+    ignore_alpha = 0.79,
+    animation    = "slide bottom",
+})
+
 -- Hyprland-run windowrule
 hl.window_rule({
     name  = "move-hyprland-run",

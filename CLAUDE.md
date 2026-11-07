@@ -249,6 +249,8 @@ siendo el nombre del escritorio original que imita Breeze.
 - **XWayland**: Hyprland no fija primary (Wine usa el primer monitor); coordenadas X distintas de las de Hyprland.
 - **Quickshell**: un archivo con el mismo nombre que un tipo que usa dentro (p. ej. `PolkitAgent.qml`) lo ensombrece;
   tipos de una carpeta hermana cargada por `Loader` no se resuelven (usa `component` en línea o importa la carpeta).
+  Dos módulos importados con un archivo del mismo nombre: gana el último import (pasó con `Dock.qml` de `dock` y
+  `omarchyDock`); usa `import … as Nombre`.
 - **Hyprland 0.55 Lua**: `hyprctl dispatch 'hl.dsp.…'`; inyectar atajos con
   `hyprctl eval 'return hl.dispatch(hl.dsp.send_shortcut({…}))'`.
 - `pkill -f <patrón>` mata tu propia shell si el patrón está en el comando: mata por PID. Lo mismo `pgrep -f` en un
