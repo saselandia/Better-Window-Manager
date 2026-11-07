@@ -36,6 +36,7 @@ require("modules.binds")
 require("modules.appearance")
 require("modules.omarchy_windows")
 require("modules.glass")
+require("modules.fullscreen")
 require("modules.nightlight")
 
 require("modules.cursor")

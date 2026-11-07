@@ -67,3 +67,11 @@
 #PersonalToolbar {
     background-color: var(--toolbar-background-color, var(--toolbar-bgcolor, var(--mat-surface-low, transparent))) !important;
 }
+
+/* Pantalla completa (F11 o vídeo): sin la línea del marco sobre la página */
+:root[inFullscreen] #navigator-toolbox,
+:root[inDOMFullscreen] #navigator-toolbox,
+:root[sizemode="fullscreen"] #navigator-toolbox {
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+}

@@ -26,3 +26,6 @@
     background-color: {{colors.surface_container_high.default.hex}} !important;
     border: 1px solid {{colors.outline_variant.default.hex}} !important;
 }
+
+/* Pantalla completa: sin el contorno de 1 px (--outer-glow) sobre el reproductor */
+:fullscreen, :fullscreen * { --outer-glow: none !important; }

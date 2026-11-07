@@ -241,6 +241,7 @@ siendo el nombre del escritorio original que imita Breeze.
   recompilar (`make && make install`, nunca `cp`). Si la API cambió (0.55→0.56: `State::monitorState()`,
   `Desktop::windowState()`, `CViewHitTester`, `Fullscreen::controller()`, `Animation::mgr()`), portéalo con el
   diff del hyprbars oficial entre los commits que fija `hyprpm.toml` de hyprwm/hyprland-plugins.
+- **Pantalla completa**: `modules/fullscreen.lua` (cargado el último de las reglas) la deja sin bordes ni sombra, sin quitar la transparencia; un CSS nuevo para una app debe anular sus bordes/contornos en `:fullscreen` (Discord re-declara variables en `.theme-dark`: hay que ponerlas también ahí).
 - **swww/awww**: GURU publica swww con su nombre nuevo, `awww` (mismo uso). Los scripts usan el que exista.
 - **Luz nocturna**: dos motores (servicio `Hyprsunset.qml` en default (end-4)/Plasma, `nightlight.py` en Retro) con un
   solo Kelvin: `nightlight.py --temperature` lo copia a `light.night.colorTemperature` y el servicio llama a

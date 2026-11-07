@@ -106,6 +106,7 @@ Panel flotante/pegado, Kickoff, applets Bluetooth/red/audio/calendario/notificac
 
 ### 2.5 Ventanas, juegos y sistema
 * `window-guard.py watch` (autostart): primary de XWayland = monitor del workspace 1, ventanas fuera de pantalla de vuelta, juegos sin bordes a pantalla completa, y fondo repuesto en los monitores que swww/awww deja en negro al reconectarse (§3.81; `window-guard.py wallpaper` lo hace a mano). Regla `games-main-monitor` (HP, foco al activarse, inhibir reposo).
+* Pantalla completa (§3.90): `modules/fullscreen.lua` la deja sin borde/sombra/redondeo/atenuado en todas las skins (la transparencia se respeta); el CSS de apps (Vesktop, Firefox, Stremio) anula sus bordes en `:fullscreen`.
 * `focus_on_activate = true`, `xwayland.force_zero_scaling = true`, `on_focus_under_fullscreen` por defecto (2).
 * Las apps no pueden solicitar maximizado (`suppress-maximize-events`, global); incluye botones CSD. El maximizado/pantalla completa se controla con Alt+Enter (Plasma: maximizado, otros estilos: fullscreen), y fullscreen solicitado por juegos/vídeo sigue permitido. Kitty tiene `remember_window_size no` para no restaurar tamaño/estado maximizado de su caché. Véase §3.48.
 * Atajos en `config/hypr/keybinds.json` → `keybinds-manager.py` → `modules/user_binds.lua`.
@@ -954,6 +955,11 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 * **Causa:** Hyprland daba a Vesktop el monitor entero (`fullscreen 2`, 2560×1440) y no era el borde de ventana (con `border_size = 0` seguía). Era una columna de 1 px dibujada por Discord con `--border-subtle`, que los temas de BWM ponen opaca (`outline_variant`, aquí `#5b4137`); el tema la vuelve a declarar en cada `.theme-dark`, así que no basta con cambiarla en `:root`. Las barras negras anchas a los lados son de la emisión, no de BWM.
 * **Hecho:** plantillas `matugen/templates/vesktop.css` (default (end-4)/Breeze) y `omarchy/themed/vesktop.theme.css.tpl` (Retro): dentro de `:fullscreen` `--border-subtle` transparente y `border-left-width`/`border-top-width: 0` (también había una línea gris de 1 px arriba). Aplicado también al `bwm.theme.css` en uso, escrito en el mismo inodo. La regla `electron-render-unfocused` no reconocía Vesktop (su clase es `dev.vencord.Vesktop`): añadida.
 * **Verificado:** con la emisión a pantalla completa, la columna `x=0` pasó de `#5b4137` a negro sin reabrir Vesktop; `configerrors` vacío. **No probado:** Retro (la plantilla se aplica al siguiente tema) ni otros vídeos a pantalla completa en Discord.
+
+### 90. Pantalla completa limpia en todas las apps (2026-11-07)
+* **Petición:** que lo de §3.89 (líneas o franjas a pantalla completa) no pase en ninguna otra app.
+* **Hecho:** `modules/fullscreen.lua`, cargado tras `omarchy_windows` y `glass` para ganar a sus reglas: toda ventana a pantalla completa va sin borde, sombra, redondeo ni atenuado. **Se conserva la transparencia** (Omarchy/glass/la propia app): la primera versión la forzaba opaca y el usuario lo rechazó. En el CSS que BWM pone a apps: Firefox (`userChrome.css`, sin la línea inferior del marco en `inFullscreen`/`inDOMFullscreen`, copiado a los perfiles) y Stremio (`--outer-glow` nulo en `:fullscreen`; también en el CSS en uso). Lo que dibuja una app por su cuenta sin tema de BWM no se puede corregir desde fuera.
+* **Verificado:** `Hyprland --verify-config` y `configerrors` limpios; `hyprctl getprop` de Vesktop a pantalla completa: `opaque` false, `no_dim` true, `border_size` 0, `rounding` 0; Firefox en ventana sigue con borde 1 y redondeo 18. Firefox carga el CSS nuevo al reiniciarse (no se reinició). **No probado:** pantalla completa de Firefox/Stremio ni un terminal translúcido de Retro a pantalla completa.
 
 ---
 
