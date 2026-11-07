@@ -356,3 +356,18 @@ input:focus, textarea:focus, [class*="inputDefault_"]:focus-within { border-colo
 ::-webkit-scrollbar-thumb { border-radius: 0 !important; background: var(--bwm-muted) !important; border: 0 !important; }
 ::-webkit-scrollbar-thumb:hover { background: var(--bwm-accent) !important; }
 ::-webkit-scrollbar-track { background: transparent !important; border: 0 !important; }
+
+/* Pantalla completa (emisiones, vídeos): Discord deja visible la línea --border-subtle
+   del panel a la izquierda; aquí no hace falta */
+:root:has(:fullscreen),
+:root:has(:fullscreen) :is(.theme-dark, .theme-light, [class*="theme-dark"], [class*="theme-light"]),
+:fullscreen,
+:fullscreen * {
+    --border-subtle: transparent !important;
+}
+
+:fullscreen,
+:fullscreen * {
+    border-left-width: 0 !important;
+    border-top-width: 0 !important;
+}

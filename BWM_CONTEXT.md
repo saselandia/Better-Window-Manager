@@ -949,6 +949,12 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 * **Verificado:** página cargada con `qs -p` sin errores y captura recortada en default (IA plegada, sin user agent ni GPS); suite de pruebas OK; `bash -n` del shim y la carpeta resuelta (`~/Videos`). Después el usuario instaló `media-sound/songrec-0.7.3` (GURU, con `~amd64` en `package.accept_keywords/songrec`); `songrec listen` acepta las opciones de `recognize-music.sh` y ve el monitor de la salida por defecto. **No probado:** abrir el editor del prompt con clic, la página en Retro/Breeze, una grabación real y un reconocimiento real (envía la huella del audio a Shazam).
 
 * **Después (2026-11-07):** la sección IA pasa al final de la página. Bajo cada carpeta de «Save paths» se ve la que está en uso: la escrita o, vacía, `~/Videos` (en Retro la carpeta XDG de vídeos) y «sólo se copia al portapapeles» (en Retro `~/Pictures/Screenshots`). Captura recortada comprobada; traducciones en/es.
+### 89. Vesktop: sin línea a la izquierda en pantalla completa (2026-11-07)
+* **Petición:** al poner a pantalla completa una emisión de Discord quedaba una barra a la izquierda.
+* **Causa:** Hyprland daba a Vesktop el monitor entero (`fullscreen 2`, 2560×1440) y no era el borde de ventana (con `border_size = 0` seguía). Era una columna de 1 px dibujada por Discord con `--border-subtle`, que los temas de BWM ponen opaca (`outline_variant`, aquí `#5b4137`); el tema la vuelve a declarar en cada `.theme-dark`, así que no basta con cambiarla en `:root`. Las barras negras anchas a los lados son de la emisión, no de BWM.
+* **Hecho:** plantillas `matugen/templates/vesktop.css` (default (end-4)/Breeze) y `omarchy/themed/vesktop.theme.css.tpl` (Retro): dentro de `:fullscreen` `--border-subtle` transparente y `border-left-width`/`border-top-width: 0` (también había una línea gris de 1 px arriba). Aplicado también al `bwm.theme.css` en uso, escrito en el mismo inodo. La regla `electron-render-unfocused` no reconocía Vesktop (su clase es `dev.vencord.Vesktop`): añadida.
+* **Verificado:** con la emisión a pantalla completa, la columna `x=0` pasó de `#5b4137` a negro sin reabrir Vesktop; `configerrors` vacío. **No probado:** Retro (la plantilla se aplica al siguiente tema) ni otros vídeos a pantalla completa en Discord.
+
 ---
 
 ## 4. 📂 Estructura del repositorio
