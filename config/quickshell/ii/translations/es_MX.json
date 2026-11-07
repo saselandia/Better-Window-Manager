@@ -200,6 +200,8 @@
   "Color picker": "Selector de color",
   "Automatic": "Automático",
   "City name": "Nombre de ciudad",
+  "In use: %1": "En uso: %1",
+  "In use: only copied to the clipboard": "En uso: sólo se copia al portapapeles",
   "City name (empty: detected from your IP)": "Ciudad (vacío: se detecta por tu IP)",
   "e.g. 󱊫 for F1, 󱊶  for F12": "p. ej. 󱊫 para F1, 󱊶  para F12",
   "Top-down": "De arriba hacia abajo",
