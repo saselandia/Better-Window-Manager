@@ -149,7 +149,7 @@ siendo el nombre del escritorio original que imita Breeze.
 | Un comando `omarchy-*` que falta | `config/hypr/scripts/omarchy-shims/` (+ enlace en `~/.local/bin`, `bwm-plugin.sh catalog`) |
 | Reglas de ventana / juegos | `hypr/modules/rules.lua`, `scripts/window-guard.py` |
 | Atajos | `keybinds.json` vía `keybinds-manager.py` |
-| Bloqueo / pantalla de inicio de cada skin | `modules/ii/lock/Lock.qml` elige: `lock/LockSurface.qml` (end-4, el desenfoque lo pinta `background/Background.qml`), `omarchyLock/` (Omarchy 4, Retro), `plasmaLock/` (KDE, Breeze); SDDM común entra solo (`install-boot-theme.sh`) |
+| Bloqueo / pantalla de inicio de cada skin | `modules/ii/lock/Lock.qml` elige: `lock/LockSurface.qml` (end-4, el desenfoque lo pinta `background/Background.qml` y necesita `session_lock_xray` de `skins/default/hypr/lock.lua`), `omarchyLock/` (Omarchy 4, Retro), `plasmaLock/` (KDE, Breeze); SDDM común entra solo (`install-boot-theme.sh`) |
 | Apagar, reiniciar, cerrar sesión, suspender | `config/hypr/scripts/bwm-power <acción> [--dry-run]` (común a todas las skins); los menús de cada skin sólo lo llaman |
 | Animaciones (ventanas, workspaces, menús/capas, fondo) | `config/hypr/skins/<id>/hypr/animations.lua` (copia de las del original); fondo: `modules/ii/background` (default (end-4)), `modules/ii/omarchyBackground` (Retro, vía `set-wallpaper.sh`) |
 | Temas web de Stremio / barra de Steam | `scripts/stremio-theme.py`, `scripts/stremio-theme.cjs`, `scripts/steam-theme.sh`, `hypr/omarchy/overlays/steam.css`; alcance en `docs/STREMIO_THEMING.md` |

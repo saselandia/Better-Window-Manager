@@ -154,6 +154,16 @@ if not ok_anim then
     os.execute("notify-send -a BWM 'Animaciones de la skin " .. anim_skin .. "' '" .. msg .. "' &")
 end
 
+-- Ajustes del bloqueo de la skin, si los tiene (skins/<id>/hypr/lock.lua)
+local lock_mod = "skins." .. anim_skin .. ".hypr.lock"
+if package.searchpath and package.searchpath(lock_mod, package.path) then
+    local ok_lock, lock_err = pcall(require, lock_mod)
+    if not ok_lock then
+        local msg = tostring(lock_err):gsub("['\"`$\\]", "")
+        os.execute("notify-send -a BWM 'Bloqueo de la skin " .. anim_skin .. "' '" .. msg .. "' &")
+    end
+end
+
 -- Ref https://wiki.hypr.land/Configuring/Basics/Workspace-Rules/
 -- "Smart gaps" / "No gaps when only"
 -- uncomment all if you wish to use that.
