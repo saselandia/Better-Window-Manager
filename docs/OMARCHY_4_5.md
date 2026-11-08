@@ -82,9 +82,12 @@ pasa `$1` a `xdg-open` sin validar el esquema.
 4. ~~**Hyprland de Retro**~~ **Hecho el 2026-11-08** (§3.103, `skins/retro/hypr/misc.lua`): SDR en pantalla
    completa (`cm_auto_hdr = 0`); campanilla y aviso de donación protegidos, porque Hyprland 0.56.2 aún no
    tiene esas opciones. Las animaciones apagadas con render por CPU no se portan: este equipo tiene NVIDIA.
-5. **Cambio deslizante de fondo sin parpadeo negro** en todos los monitores: relacionado con el fallo de §3.81.
-6. **Notificaciones**: comparar `omarchy-notification-send` y `Service.qml` con upstream (56 líneas de diferencia,
-   sobre todo la acción sobre la última notificación, que sería un atajo) y traer sólo lo que no lo sea.
+5. ~~**Cambio deslizante de fondo sin parpadeo negro**~~ **Ya estaba** (§3.104): el fondo de Retro
+   (`omarchyBackground`, §3.94) se copió de `598e4eb`, que ya incluye ese cambio (#17179), y no ha cambiado desde
+   entonces. El negro tras reconectar un monitor lo resolvió §3.81.
+6. ~~**Notificaciones**~~ **Hecho el 2026-11-08** (§3.104): `Service.qml` y `omarchy-notification-send` iguales a
+   upstream (`--transient`, ventana de apps con nombres de varias palabras, IPC `notifications act`). Sin el atajo
+   Super+coma.
 
 **Quizá más adelante**: panel Elsewhen/clima/Dropbox propios (BWM ya trae `omarchy-elsewhen` y `omarchy-weather`
 como plugins; Dropbox sólo si lo usa el usuario), fondos con introducción, dictado (`voxtype` etc. necesitan

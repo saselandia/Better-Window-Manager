@@ -1067,6 +1067,13 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 * **Verificado:** compilación e instalación (`cargo install --locked`), render sin pantalla con el logo, `lock isLocked` → `false`; ejecución real con `force`: dos capas `org.omarchy.screensaver`, cursor oculto, captura recortada del MSI con «BWM» animado (borrada); al cerrarlo, sin proceso ni capas, cursor visible y mismos workspaces y ventana con foco. `hyprctl reload` en Retro: `cm_auto_hdr` 0, sin errores; `Hyprland --verify-config` ok; 102 pruebas OK. Durante la prueba un `pkill -f` con el patrón dentro del propio comando mató la shell de la herramienta (trampa conocida); el salvapantallas ya se había cerrado y el cursor estaba restaurado.
 * **No probado:** que lo lance la inactividad real ni que se cierre moviendo el ratón (se cerró con SIGTERM), la vuelta a default con `cm_auto_hdr` repuesto a 1 (no se cambió de skin) y un juego HDR a pantalla completa.
 
+### 104. Fin del estudio de Omarchy 4.5: fondo y notificaciones (2026-11-08)
+* **Petición:** seguir con los puntos 5 y 6 del estudio de §3.99.
+* **Fondo sin parpadeo negro (5):** ya estaba. `omarchyBackground/OmarchyBackground.qml` (§3.94) viene de `598e4eb`, posterior a «Slide background changes on every monitor without a black flash» (#17179); el `Background.qml` de `d9cc361c` sólo difiere en los dobles clics que BWM cambió. Las introducciones de fondo (#16875…) siguen en «quizá».
+* **Notificaciones (6):** de `omarchyNotifications/` sólo diferían `Service.qml` y el shim `omarchy-notification-send`, sin parches de BWM pendientes (el de `transient` de §3.99 ya es el de upstream). Copiados de `d9cc361c`: `--transient` en el envío (no se guarda ni se repone tras reiniciar), la ventana de la app se encuentra también con nombres de varias palabras («Telegram Desktop» → `org.telegram.desktop`) y la IPC `notifications act` (cierra, pulsa su único botón o toma el teclado sobre la última tarjeta). El atajo de Omarchy que la llama (Super+coma) no se añade.
+* **Verificado (en Retro, recarga en caliente):** `act` aparece en la IPC; una notificación con `--transient` no llegó a `~/.local/state/omarchy/notifications` y otra normal sí; dos `act` cerraron las dos y el tercero devolvió `none`. La entrada de prueba se quitó del historial y el servicio se recargó para que no la volviera a escribir. Sin errores nuevos en el log.
+* **No probado:** `act` sobre una tarjeta con botones o que abre una app, y el enfoque de una app de nombre compuesto.
+
 ---
 
 ## 4. 📂 Estructura del repositorio
