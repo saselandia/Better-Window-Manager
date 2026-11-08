@@ -1,6 +1,7 @@
 
 #include "barDeco.hpp"
 #include "CSDDetect.hpp"
+#include "appName.hpp"
 #include "SnapHelper.hpp"
 
 #include <hyprland/src/desktop/state/WindowState.hpp>
@@ -51,6 +52,20 @@ static bool isKnownCSD(PHLWINDOW window) {
 
 // Con plugin:hyprbars:workspace_tag (workspaces flotantes de Retro, como omarchy-hyprland-titlebars)
 // sólo llevan barra las ventanas flotantes con esa etiqueta.
+static bool tagMode() {
+    return !g_pGlobalState->config.workspaceTag->value().empty();
+}
+
+static int textWeight(const std::string& weight) {
+    if (weight == "bold")
+        return 700;
+    if (weight == "light")
+        return 300;
+    try {
+        return std::clamp(std::stoi(weight), 100, 1000);
+    } catch (...) { return 400; }
+}
+
 static bool outsideWorkspaceTag(PHLWINDOW window) {
     const auto TAG = g_pGlobalState->config.workspaceTag->value();
     if (TAG.empty())
@@ -128,7 +143,8 @@ CHyprColor CHyprBar::currentTextColor() {
 
 CHyprBar::CHyprBar(PHLWINDOW pWindow) : IHyprWindowDecoration(pWindow) {
     m_pWindow = pWindow;
-    m_hidden  = isKnownCSD(pWindow) || outsideWorkspaceTag(pWindow);
+    // En los workspaces flotantes de Retro llevan barra todas, también las que traen la suya, como en Omarchy
+    m_hidden  = tagMode() ? outsideWorkspaceTag(pWindow) : isKnownCSD(pWindow);
 
     const auto PMONITOR         = pWindow->m_monitor.lock();
     PMONITOR->m_scheduledRecalc = true;
@@ -405,8 +421,8 @@ void CHyprBar::onMouseMove(Vector2D coords) {
         return;
     }
 
-    // ensure proper redraws of button icons on hover when using hardware cursors
-    if (!m_hidden && g_pGlobalState->config.iconOnHover->value())
+    // Los botones se resaltan al pasar el ratón: redibujar al moverse entre ellos, también con cursor por hardware
+    if (!m_hidden)
         damageOnButtonHover();
 
     if (!m_bDragPending || m_bTouchEv || !Desktop::View::validMapped(m_pWindow) || m_touchId != 0)
@@ -458,6 +474,10 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
 
     const bool BUTTONSRIGHT = ALIGNBUTTONS != "left";
 
+    // Sin barra en los workspaces flotantes de Retro: la ventana es de la app, como en Omarchy
+    if (m_hidden && tagMode())
+        return;
+
     if (m_hidden) {
         // CSD Window (Antigravity IDE, Steam, Firefox, Chrome, Vesktop, etc.)
         CBox windowBox = PWINDOW->getWindowMainSurfaceBox();
@@ -499,11 +519,13 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
             return;
         }
 
+        // La pulsación sigue en la app: es ella quien pide moverse (xdg_toplevel.move) donde no hay
+        // otra cosa, y así se pueden arrastrar las pestañas de un navegador. Antes BWM convertía en
+        // arrastre de la ventana cualquier pulsación en los 50 px de arriba. El snapping sigue a esos
+        // movimientos de la propia app (main.cpp, s_pNativeDraggedWindow).
         m_lastMouseDown   = now;
-        m_bDraggingCSD    = true;
+        m_bDraggingCSD    = false;
         m_bDragInitiated  = false;
-        m_vDragStartMouse = g_pInputManager->getMouseCoordsInternal();
-        m_vGrabOffset     = mousePos;
         return;
     }
 
@@ -514,6 +536,11 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
         PMONITOR                    = PMONITOR ? PMONITOR : Desktop::focusState()->monitor();
         COORDS = Vector2D(PMONITOR->m_position.x + e.pos.x * PMONITOR->m_size.x, PMONITOR->m_position.y + e.pos.y * PMONITOR->m_size.y) - assignedBoxGlobal().pos();
     }
+
+    // Hyprland mide la franja de redimensionar desde el contenido: con barra cae bajo la barra y el
+    // borde de encima no redimensiona. Una pulsación ahí empieza el redimensionado (Omarchy 379ff91).
+    if (!m_bTouchEv && startTopEdgeResize(info, PWINDOW, COORDS))
+        return;
 
     if (!VECINRECT(COORDS, 0, 0, assignedBoxGlobal().w, HEIGHT - 1)) {
 
@@ -558,6 +585,33 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
 }
 
 
+bool CHyprBar::startTopEdgeResize(Event::SCallbackInfo& info, PHLWINDOW window, const Vector2D& coords) {
+    static const auto RESIZEONBORDER = CConfigValue<Config::INTEGER>("general:resize_on_border");
+    static const auto EXTENDGRAB     = CConfigValue<Config::INTEGER>("general:extend_border_grab_area");
+
+    if (m_hidden || !*RESIZEONBORDER || !window || !window->m_isFloating || Fullscreen::controller()->isFullscreen(window))
+        return false;
+
+    const double GRAB  = window->getRealBorderSize() + *EXTENDGRAB;
+    const double WIDTH = assignedBoxGlobal().w;
+    if (coords.y >= 0 || coords.y < -GRAB || coords.x < -GRAB || coords.x >= WIDTH + GRAB)
+        return false;
+
+    if (Desktop::focusState()->window() != window)
+        Desktop::focusState()->fullWindowFocus(window, Desktop::FOCUS_REASON_CLICK);
+    Desktop::windowState()->raise(window);
+
+    g_pKeybindManager->changeMouseBindMode(MBIND_RESIZE);
+
+    // La pulsación no llega a Hyprland, así que tampoco la liberación: la termina handleUpEvent
+    info.cancelled   = true;
+    m_bCancelledDown = true;
+    m_bDraggingThis  = true;
+    m_bResizingTop   = true;
+    m_bDragPending   = false;
+    return true;
+}
+
 void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
     if (m_bCancelledDown)
         info.cancelled = true;
@@ -572,7 +626,9 @@ void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
             Config::Actions::floatWindow(Config::Actions::eTogglableAction::TOGGLE_ACTION_DISABLE);
 
         Log::logger->log(Log::DEBUG, "[hyprbars] Dragging ended on {:x}", (uintptr_t)m_pWindow.lock().get());
-        checkAndTriggerEdgeSnap(m_pWindow.lock(), g_pInputManager->getMouseCoordsInternal());
+        if (!m_bResizingTop)
+            checkAndTriggerEdgeSnap(m_pWindow.lock(), g_pInputManager->getMouseCoordsInternal());
+        m_bResizingTop = false;
     }
 
     m_bDragPending = false;
@@ -690,7 +746,7 @@ void CHyprBar::renderBarTitle(const Vector2D& bufferSize, const float scale) {
 
     (void)COLORVAL;
     const CHyprColor COLOR = m_bForcedTitleColor.value_or(currentTextColor());
-    m_pTextTex             = g_pHyprRenderer->renderText(m_szLastTitle, COLOR, scaledSize, false, FONT, maxWidth);
+    m_pTextTex             = g_pHyprRenderer->renderText(m_szLastTitle, COLOR, scaledSize, false, FONT, maxWidth, textWeight(g_pGlobalState->config.barTextWeight->value()));
 }
 
 size_t CHyprBar::getVisibleButtonCount(Config::INTEGER barButtonPadding, Config::INTEGER barPadding, const Vector2D& bufferSize, const float scale) {
@@ -753,7 +809,17 @@ void CHyprBar::renderBarButtons(CBox* barBox, const float scale, const float a) 
                           scaledButtonSize};
         buttonBox.round();
 
-        g_pHyprOpenGL->renderRect(buttonBox, color, {.round = static_cast<int>(std::round(scaledButtonSize / 2.0)), .roundingPower = 2.F});
+        const auto ROUNDINGCFG = g_pGlobalState->config.buttonRounding->value();
+        const int  rounding    = ROUNDINGCFG < 0 ? static_cast<int>(std::round(scaledButtonSize / 2.0)) : static_cast<int>(std::round(ROUNDINGCFG * scale));
+        g_pHyprOpenGL->renderRect(buttonBox, color, {.round = rounding, .roundingPower = 2.F});
+
+        // Botón bajo el puntero: se aclara con el color de su icono, que sigue a cualquier tema
+        // (omarchy-hyprland-titlebars f85f282)
+        if (m_iButtonHoverState & (1u << i)) {
+            auto hover = button.userfg ? button.fgcol : (button.bgcol.r + button.bgcol.g + button.bgcol.b < 1) ? CHyprColor(0xFFFFFFFF) : CHyprColor(0xFF000000);
+            hover.a    = 0.18 * a;
+            g_pHyprOpenGL->renderRect(buttonBox, hover, {.round = rounding, .roundingPower = 2.F});
+        }
 
         offset += scaledButtonsPad + scaledButtonSize;
     }
@@ -945,8 +1011,13 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
         g_pHyprOpenGL->renderRect(titleBarBox, color, {.round = scaledRounding, .roundingPower = m_pWindow->roundingPower()});
 
     // render title
-    if (ENABLETITLE && (m_szLastTitle != PWINDOW->m_title || m_bWindowSizeChanged || !m_pTextTex || m_pTextTex->m_texID == 0 || m_bTitleColorChanged)) {
-        m_szLastTitle = PWINDOW->m_title;
+    // Retro (workspace_tag): el nombre de la app, más estable que el título (una web app titula con su
+    // página o su dominio), como Omarchy. Breeze conserva el título de la ventana, como KDE.
+    std::string title = tagMode() ? omarchyAppName(PWINDOW->m_class) : std::string{};
+    if (title.empty())
+        title = PWINDOW->m_title;
+    if (ENABLETITLE && (m_szLastTitle != title || m_bWindowSizeChanged || !m_pTextTex || m_pTextTex->m_texID == 0 || m_bTitleColorChanged)) {
+        m_szLastTitle = title;
         renderBarTitle(BARBUF, pMonitor->m_scale);
     }
 
@@ -1061,7 +1132,7 @@ void CHyprBar::updateRules() {
 
     m_bForcedBarColor   = std::nullopt;
     m_bForcedTitleColor = std::nullopt;
-    m_hidden            = isKnownCSD(PWINDOW);
+    m_hidden            = tagMode() ? false : isKnownCSD(PWINDOW);
 
     if (PWINDOW->m_ruleApplicator) {
         if (PWINDOW->m_ruleApplicator->m_otherProps.props.contains(g_pGlobalState->nobarRuleIdx))
@@ -1113,17 +1184,20 @@ void CHyprBar::damageOnButtonHover() {
 
     const auto COORDS = cursorRelativeToBar();
 
-    for (auto& b : g_pGlobalState->buttons) {
-        const auto BARBUF     = Vector2D{(int)assignedBoxGlobal().w, HEIGHT};
-        Vector2D   currentPos = Vector2D{(BUTTONSRIGHT ? BARBUF.x - BARBUTTONPADDING - b.size - offset : offset), (BARBUF.y - b.size) / 2.0}.floor();
+    unsigned int hoverState = 0;
+    for (size_t i = 0; i < g_pGlobalState->buttons.size(); ++i) {
+        const auto& b          = g_pGlobalState->buttons[i];
+        const auto  BARBUF     = Vector2D{(int)assignedBoxGlobal().w, HEIGHT};
+        Vector2D    currentPos = Vector2D{(BUTTONSRIGHT ? BARBUF.x - BARBUTTONPADDING - b.size - offset : offset), (BARBUF.y - b.size) / 2.0}.floor();
 
-        bool       hover = VECINRECT(COORDS, currentPos.x, currentPos.y, currentPos.x + b.size + BARBUTTONPADDING, currentPos.y + b.size);
-
-        if (hover != m_bButtonHovered) {
-            m_bButtonHovered = hover;
-            damageEntire();
-        }
+        if (VECINRECT(COORDS, currentPos.x, currentPos.y, currentPos.x + b.size + BARBUTTONPADDING, currentPos.y + b.size))
+            hoverState |= 1u << i;
 
         offset += BARBUTTONPADDING + b.size;
+    }
+
+    if (hoverState != m_iButtonHoverState) {
+        m_iButtonHoverState = hoverState;
+        damageEntire();
     }
 }

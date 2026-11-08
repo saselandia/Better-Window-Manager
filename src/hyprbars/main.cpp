@@ -513,6 +513,10 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g_pGlobalState->config.onDoubleClick       = makeShared<Config::Values::CStringValue>("plugin:hyprbars:on_double_click", "Action to execute on double click of the bar", "");
     // De omarchy-hyprland-titlebars (Omarchy, MIT): barra sólo en ventanas flotantes con esta etiqueta
     // (los workspaces flotantes de Retro). Vacío = todas las ventanas, como en Breeze.
+    // De omarchy-hyprland-titlebars: grosor del título ("normal", "bold" o un número) y redondeo de los
+    // botones de texto (-1 = círculo, el de hyprbars; Omarchy usa 0)
+    g_pGlobalState->config.barTextWeight       = makeShared<Config::Values::CStringValue>("plugin:hyprbars:bar_text_weight", "Weight of the bar's text", "normal");
+    g_pGlobalState->config.buttonRounding      = makeShared<Config::Values::CIntValue>("plugin:hyprbars:button_rounding", "Rounding of text buttons, -1 = circle", -1);
     // Encajar a los bordes al arrastrar por la barra (Breeze). Retro lo apaga: Omarchy no lo tiene.
     g_pGlobalState->config.snap                = makeShared<Config::Values::CBoolValue>("plugin:hyprbars:snap", "Snap windows dragged by the bar to screen edges", true);
     g_pGlobalState->config.workspaceTag        = makeShared<Config::Values::CStringValue>("plugin:hyprbars:workspace_tag", "Restrict bars to floating windows with this tag", "");
@@ -538,6 +542,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.onDoubleClick);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.workspaceTag);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.snap);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.barTextWeight);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.buttonRounding);
 
     if (Config::mgr()->type() == Config::CONFIG_LEGACY)
         HyprlandAPI::addConfigKeyword(PHANDLE, "plugin:hyprbars:hyprbars-button", onNewButton, Hyprlang::SHandlerOptions{});

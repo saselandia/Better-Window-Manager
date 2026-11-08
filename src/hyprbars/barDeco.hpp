@@ -98,6 +98,7 @@ class CHyprBar : public IHyprWindowDecoration {
     void handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch::SDownEvent> touchEvent);
     void handleUpEvent(Event::SCallbackInfo& info);
     void handleMovement();
+    bool startTopEdgeResize(Event::SCallbackInfo& info, PHLWINDOW window, const Vector2D& coords);
     bool doButtonPress(Config::INTEGER barPadding, Config::INTEGER barButtonPadding, Config::INTEGER barHeight, Vector2D COORDS, bool BUTTONSRIGHT);
 
     CBox assignedBoxGlobal();
@@ -118,6 +119,7 @@ class CHyprBar : public IHyprWindowDecoration {
     bool                m_bCancelledDown = false;
     int                 m_touchId        = 0;
     bool                m_bDraggingCSD   = false;
+    bool                m_bResizingTop   = false;
     bool                m_bDragInitiated = false;
     Vector2D            m_vDragStartMouse;
     Vector2D            m_vGrabOffset;

@@ -140,10 +140,26 @@ end
 -- Una ventana que ya flotaba por su cuenta queda sin reclamar (sigue flotando al salir del modo);
 -- una a pantalla completa, como está. Se reclaman todas antes de hacer flotar ninguna: hacer flotar a
 -- un miembro de un grupo hace flotar al resto.
+-- La etiqueta de la regla de apertura (con «*» por ser de regla) dice que la hizo flotar el modo
+local function opened_by_mode(window)
+    for _, tag in ipairs(window.tags or {}) do
+        if tag == OPENED_TAG or tag == OPENED_TAG .. "*" then
+            return true
+        end
+    end
+    return false
+end
+
 local function float_for_mode(windows)
     local claiming = {}
+    local mine = claimed()
     for _, window in ipairs(windows) do
         set_on_floating_workspace(window, true)
+        -- BWM: algunas apps (Firefox, Electron) reciben las etiquetas de regla después de abrirse, así que
+        -- claim_opened no las ve; se reclaman aquí para que vuelvan al mosaico al acabar el modo
+        if window.floating and opened_by_mode(window) and not mine[window.address] then
+            set_claimed(window, true)
+        end
         if not window.floating and (window.fullscreen or 0) == 0 then
             set_claimed(window, true)
             table.insert(claiming, window)
@@ -242,13 +258,10 @@ end
 -- La etiqueta de una regla se va con la regla: la ventana que la regla hizo flotar se reclama al
 -- abrirse, para volver a mosaico al acabar el modo.
 local function claim_opened(window)
-    for _, tag in ipairs(window.tags or {}) do
-        if tag == OPENED_TAG or tag == OPENED_TAG .. "*" then
-            set_claimed(window, true)
-            cascade = (cascade + 1) % 5
-            sync_open_rules()
-            return
-        end
+    if opened_by_mode(window) then
+        set_claimed(window, true)
+        cascade = (cascade + 1) % 5
+        sync_open_rules()
     end
 end
 
@@ -413,12 +426,26 @@ local function titlebars()
     local window = [[window = "address:%WINDOW%"]]
     local maximize = "hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"toggle\", " .. window .. " })'"
 
+    -- Opciones que sólo tiene el plugin nuevo (las del cargado antes de actualizarlo darían error)
+    local function plugin_has(option)
+        return hl.get_config and hl.get_config("plugin:hyprbars:" .. option) ~= nil
+    end
+
+    -- Un hyprbars cargado de antes de esta versión convertía en arrastre de la ventana cualquier
+    -- pulsación arriba de una ventana sin barra (las pestañas de un navegador): mejor sin barras
+    -- hasta volver a iniciar sesión, que es cuando se carga el nuevo (nunca se recarga en caliente).
+    if not plugin_has("workspace_tag") or not plugin_has("button_rounding") then
+        return
+    end
+
     hl.config({
         plugin = {
             hyprbars = {
                 enabled = true,
+                bar_text_weight = plugin_has("bar_text_weight") and "normal" or nil,
+                button_rounding = plugin_has("button_rounding") and 0 or nil,
                 workspace_tag = WORKSPACE_TAG,
-                snap = false,
+                snap = plugin_has("snap") and false or nil,
                 bar_height = 30,
                 bar_color = colors.titlebar,
                 inactive_bar_color = colors.titlebar,
