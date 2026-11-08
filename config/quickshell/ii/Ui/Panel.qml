@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Commons as Commons
@@ -20,6 +21,17 @@ Item {
   property bool popoutSwitchClosing: false
 
   readonly property bool opened: panelController.open
+  // BWM: the monitor this copy's bar is on. Its IPC handlers are anchored to
+  // it, so a call reaches the copy on the focused monitor (Commons/IpcRegistry).
+  readonly property string ipcScreenName: QsWindow.window && QsWindow.window.screen ? QsWindow.window.screen.name : ""
+
+  Component.onCompleted: {
+    var objects = []
+    for (var i = 0; i < root.data.length; i++) objects.push(root.data[i])
+    Commons.IpcRegistry.anchor(root, objects)
+  }
+  Component.onDestruction: Commons.IpcRegistry.unanchor(root)
+  onIpcScreenNameChanged: Commons.IpcRegistry.touch()
   readonly property color barForeground: bar ? bar.barForeground : Commons.Color.foreground
 
   function open() { panelController.show() }
@@ -47,8 +59,8 @@ Item {
   }
 
   ShellIpc {
-    enabled: root.manageIpc && root.ipcTarget !== ""
-    target: root.ipcTarget
+    // A panel that answers its target itself leaves this one without one.
+    target: root.manageIpc ? root.ipcTarget : ""
 
     function open(): void { root.open() }
     function close(): void { root.close() }

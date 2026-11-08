@@ -23,6 +23,11 @@ while [[ ${1:-} == --* ]]; do
   --events) events=true ;;
   --reauth)
     reauth="${2:-}"
+    # Without an account name this would add a new account instead of re-signing one in
+    if [[ -z $reauth || $reauth == --* ]]; then
+      echo "Usage: omarchy-agent-account-add --reauth <account> [claude|codex|grok]" >&2
+      exit 1
+    fi
     shift
     ;;
   *) break ;;
