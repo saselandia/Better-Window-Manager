@@ -53,6 +53,8 @@ Scope {
         root.running = false;
         // "--" first: otherwise pkill reads the pattern as an option of its own
         Quickshell.execDetached(["pkill", "-f", "--", "class=org\\.bwm\\.screensaver"]);
+        // The native one (Omarchy 4.5) closes itself on input; SIGTERM fades it and restores the cursor
+        Quickshell.execDetached(["pkill", "-f", "--", "omarchy-screensaver/bin/omarchy-launch-screensaver"]);
     }
     function setScreens(on) {
         root.screenIsOff = !on;

@@ -76,10 +76,12 @@ pasa `$1` a `xdg-open` sin validar el esquema.
 2. ~~**Panel de agentes y Tailscale al día**~~ **Hecho el 2026-11-08** (§3.102 de `BWM_CONTEXT.md`): ambos de
    `quattro` `d9cc361c`, con los 23 colectores de uso y sin los modelos locales (necesitan `omarchy-local-ai`,
    podman y paquetes de Arch). El panel de agentes no funcionaba antes en BWM: faltaba `OMARCHY_PATH`.
-3. **Salvapantallas nativo de Wayland** en vez del de terminal (más ligero, sin kitty a pantalla completa).
-   Encaja en la inactividad común de BWM (§3.96/§3.98).
-4. **Hyprland de Retro**: campana silenciada, sin ventana de soporte, SDR en pantalla completa con HDR
-   (sin comprobar si algún monitor del usuario lo usa), animaciones apagadas con render por CPU. Son opciones de `hl.config`, sin dependencias.
+3. ~~**Salvapantallas nativo de Wayland**~~ **Hecho el 2026-11-08** (§3.103): es un programa aparte en Rust
+   (`omacom/omarchy-screensaver`, MIT); BWM lo compila con cargo (`skins/retro/scripts/install-screensaver.sh`) y
+   lo usa con el logo de BWM. Sin él sigue el de terminal.
+4. ~~**Hyprland de Retro**~~ **Hecho el 2026-11-08** (§3.103, `skins/retro/hypr/misc.lua`): SDR en pantalla
+   completa (`cm_auto_hdr = 0`); campanilla y aviso de donación protegidos, porque Hyprland 0.56.2 aún no
+   tiene esas opciones. Las animaciones apagadas con render por CPU no se portan: este equipo tiene NVIDIA.
 5. **Cambio deslizante de fondo sin parpadeo negro** en todos los monitores: relacionado con el fallo de §3.81.
 6. **Notificaciones**: comparar `omarchy-notification-send` y `Service.qml` con upstream (56 líneas de diferencia,
    sobre todo la acción sobre la última notificación, que sería un atajo) y traer sólo lo que no lo sea.

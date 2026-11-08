@@ -154,13 +154,22 @@ if not ok_anim then
     os.execute("notify-send -a BWM 'Animaciones de la skin " .. anim_skin .. "' '" .. msg .. "' &")
 end
 
--- Ajustes del bloqueo de la skin, si los tiene (skins/<id>/hypr/lock.lua)
-local lock_mod = "skins." .. anim_skin .. ".hypr.lock"
-if package.searchpath and package.searchpath(lock_mod, package.path) then
-    local ok_lock, lock_err = pcall(require, lock_mod)
-    if not ok_lock then
-        local msg = tostring(lock_err):gsub("['\"`$\\]", "")
-        os.execute("notify-send -a BWM 'Bloqueo de la skin " .. anim_skin .. "' '" .. msg .. "' &")
+-- Un hyprctl reload no devuelve a su valor por defecto lo que no se vuelve a poner: lo que una
+-- skin cambia en su misc.lua se repone aquí antes, para que no se quede al cambiar de skin
+hl.config({
+    render = { cm_auto_hdr = (hl.get_config and hl.get_config("render.cm_auto_hdr") ~= nil) and 1 or nil },
+})
+
+-- Ajustes de la skin, si los tiene: bloqueo (skins/<id>/hypr/lock.lua) y otras opciones de
+-- Hyprland de su escritorio original (skins/<id>/hypr/misc.lua)
+for _, part in ipairs({ { "lock", "Bloqueo" }, { "misc", "Opciones" } }) do
+    local mod = "skins." .. anim_skin .. ".hypr." .. part[1]
+    if package.searchpath and package.searchpath(mod, package.path) then
+        local ok_part, part_err = pcall(require, mod)
+        if not ok_part then
+            local msg = tostring(part_err):gsub("['\"`$\\]", "")
+            os.execute("notify-send -a BWM '" .. part[2] .. " de la skin " .. anim_skin .. "' '" .. msg .. "' &")
+        end
     end
 end
 

@@ -279,6 +279,13 @@
       "check": {"type": "cmd", "any": ["hyprsunset"]},
       "packages": {"gentoo": "hyproverlay:gui-apps/hyprsunset", "arch": "hyprsunset", "fedora": "copr:solopasha/hyprland:hyprsunset", "opensuse": "hyprsunset", "debian": null}
     },
+    "omarchy-screensaver": {
+      "label": "Salvapantallas nativo de Omarchy",
+      "why": "Salvapantallas de Retro como capa Wayland (sin él, el de terminal en kitty); se compila con cargo",
+      "check": {"type": "path", "any": ["~/.local/share/bwm/omarchy-screensaver/bin/omarchy-launch-screensaver"]},
+      "provider": "bwm",
+      "manual": "config/hypr/skins/retro/scripts/install-screensaver.sh"
+    },
     "swaync": {
       "label": "SwayNotificationCenter",
       "why": "Centro de notificaciones fuera de Retro",

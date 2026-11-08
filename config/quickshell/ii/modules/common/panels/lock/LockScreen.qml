@@ -109,6 +109,10 @@ Scope {
         function focus(): void {
             lockContext.shouldReFocus();
         }
+        // As Omarchy's lock service: its screensaver asks before starting (omarchy-shell lock isLocked)
+        function isLocked(): bool {
+            return GlobalStates.screenLocked;
+        }
     }
 
     GlobalShortcut {

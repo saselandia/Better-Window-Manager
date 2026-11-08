@@ -49,6 +49,12 @@ Bloqueo de Retro (2026-11-08): `modules/ii/omarchyLock/LockView.qml` es `shell/p
 Omarchy quattro `598e4eb` (MIT) sin cambios. `modules/ii/plasmaLock/` es diseño propio que imita la
 pantalla de bloqueo Breeze de Plasma 6, sin código de KDE; usa el icono `go-next` de breeze-icons.
 
+Salvapantallas nativo de Retro (2026-11-08): `hypr/skins/retro/scripts/install-screensaver.sh`
+compila [omacom/omarchy-screensaver](https://github.com/omacom/omarchy-screensaver) `b3026b63`
+(MIT, Copyright (c) 2026 Tobias Lütke) con cargo en `~/.local/share/bwm/omarchy-screensaver`; sus
+dependencias (ttfx, Smithay Client Toolkit, fontdue…) las descarga cargo con sus licencias. No se
+incluye ni el código ni el binario en el repositorio. `hypr/skins/retro/screensaver.txt` es el logo de BWM.
+
 Apagado común (2026-11-08): `hypr/scripts/bwm-power` sigue `bin/omarchy-system` y
 `bin/omarchy-hyprland-window-close-all` de Omarchy quattro `598e4eb` (MIT), reescrito para BWM.
 

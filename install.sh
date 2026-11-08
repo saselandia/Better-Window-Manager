@@ -410,6 +410,19 @@ if [ "$PLUGINS_SETUP" != "no" ] && ! command -v ai-usagebar >/dev/null 2>&1; the
     fi
 fi
 
+# Salvapantallas nativo de Omarchy para Retro (se compila con cargo; sin él, el de terminal)
+SCREENSAVER_SCRIPT="$CONFIG_SOURCE/hypr/skins/retro/scripts/install-screensaver.sh"
+if [ "$PLUGINS_SETUP" != "no" ] && [ -x "$SCREENSAVER_SCRIPT" ]; then
+    if command -v cargo >/dev/null 2>&1; then
+        print_step "10b. Compilando el salvapantallas nativo de Retro..."
+        "$SCREENSAVER_SCRIPT" >/dev/null 2>&1 \
+            && print_success "Salvapantallas nativo instalado en ~/.local/share/bwm/omarchy-screensaver." \
+            || print_warn "No se pudo compilar el salvapantallas; repítelo con: $SCREENSAVER_SCRIPT"
+    else
+        print_info "Sin cargo, Retro usa el salvapantallas de terminal. Instala Rust y ejecuta: $SCREENSAVER_SCRIPT"
+    fi
+fi
+
 if [ -d "$BACKUP_DIR" ]; then
     echo ""
     print_warn "Tus configuraciones anteriores están en: $BACKUP_DIR"

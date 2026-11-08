@@ -1,24 +1,38 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Script: launch-screensaver.sh
-# Descripción: Salvapantallas de terminal en todos los monitores.
-# Port de omarchy-launch-screensaver (https://github.com/basecamp/omarchy, MIT,
-# Copyright (c) David Heinemeier Hansson): una kitty a pantalla completa por monitor,
-# en su propio workspace especial, ejecutando bwm-screensaver.py.
+# Descripción: salvapantallas de la skin Retro en todos los monitores, como omarchy-launch-screensaver
+# (https://github.com/basecamp/omarchy, MIT, Copyright (c) David Heinemeier Hansson).
+#  * Con el salvapantallas nativo de Omarchy 4.5 compilado (install-screensaver.sh): una capa
+#    Wayland por monitor con efectos ttfx sobre el logo de BWM (skins/retro/screensaver.txt) o,
+#    si existe, el del usuario (~/.config/omarchy/branding/screensaver.txt, como en Omarchy).
+#  * Si no: el de terminal de antes, una kitty a pantalla completa por monitor, en su propio
+#    workspace especial, ejecutando bwm-screensaver.py.
 # Uso: launch-screensaver.sh [force]   (force: aunque esté desactivado en ajustes)
-# Salvapantallas de la skin Retro: lo lanza modules/ii/idle/BwmIdle.qml tras idle.screensaverTime s, si idle.screensaver (Ajustes → Inactividad)
+# Lo lanza modules/ii/idle/BwmIdle.qml tras idle.screensaverTime s, si idle.screensaver (Ajustes → Inactividad)
 # ==============================================================================
 
 CLASS="org.bwm.screensaver"
-SCRIPT="$HOME/.config/hypr/skins/retro/scripts/bwm-screensaver.py"
-
-# Ya en marcha
-pgrep -f "[o]rg\.bwm\.screensaver" >/dev/null && exit 0
+SKIN_DIR="$HOME/.config/hypr/skins/retro"
+SCRIPT="$SKIN_DIR/scripts/bwm-screensaver.py"
+NATIVE="${XDG_DATA_HOME:-$HOME/.local/share}/bwm/omarchy-screensaver/bin/omarchy-launch-screensaver"
 
 if [[ $1 != "force" ]] && [[ -f "$HOME/.config/illogical-impulse/config.json" ]] &&
    [[ $(jq -r '.idle.screensaver // true' "$HOME/.config/illogical-impulse/config.json") == "false" ]]; then
   exit 1
 fi
+
+if [[ -x $NATIVE ]]; then
+  # Él mismo evita una segunda instancia y no arranca con la sesión bloqueada (omarchy-shell lock isLocked)
+  args=()
+  [[ $1 == "force" ]] && args+=(force)
+  [[ -f $HOME/.config/omarchy/branding/screensaver.txt ]] || args+=(--input "$SKIN_DIR/screensaver.txt")
+  export PATH="$HOME/.config/hypr/scripts/omarchy-shims:$PATH"
+  exec "$NATIVE" "${args[@]}"
+fi
+
+# Ya en marcha
+pgrep -f "[o]rg\.bwm\.screensaver" >/dev/null && exit 0
 
 focused=$(hyprctl monitors -j | jq -r '.[] | select(.focused) | .name')
 
