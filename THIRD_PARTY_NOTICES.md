@@ -37,6 +37,14 @@ del menú de Omarchy ya vendorizado, siguiendo el flujo de
 del compositor; el script upstream no se ha incorporado ni se han sustituido sus fuentes
 vendorizadas. La licencia y el aviso del menú original se conservan.
 
+Animaciones y fondo (2026-11-08): `hypr/skins/retro/hypr/animations.lua` copia las curvas,
+animaciones y reglas de capa de Omarchy quattro `598e4eb` (`default/hypr/looknfeel.lua`,
+`qconsole.lua`, `apps/omarchy-shell.lua`, `apps/screenshot-selection.lua`; MIT) y
+`modules/ii/omarchyBackground/OmarchyBackground.qml` su `shell/plugins/background/Background.qml`
+(MIT), con los dobles clics del escritorio cambiados a los selectores de BWM.
+`hypr/skins/default/hypr/animations.lua` copia las de end-4/dots-hyprland `2f2a376`
+(`hypr/hyprland/general.lua` y `rules.lua`, GPL-3.0, como el resto del shell derivado).
+
 ## Recursos pendientes de procedencia
 
 No se declara que los siguientes recursos estén cubiertos por MIT ni por una licencia común:

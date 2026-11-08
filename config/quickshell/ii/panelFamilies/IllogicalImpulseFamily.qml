@@ -14,6 +14,7 @@ import qs.modules.ii.onScreenKeyboard
 import qs.modules.ii.overview
 import qs.modules.ii.polkit
 import qs.modules.ii.omarchyPolkit
+import qs.modules.ii.omarchyBackground
 // Named import: omarchyDock also has a Dock.qml, which would otherwise shadow end-4's Dock below
 import qs.modules.ii.omarchyDock as OmarchyDockModule
 import qs.modules.ii.regionSelector
@@ -41,7 +42,10 @@ import qs.modules.ii.plasmaThemePicker
 
 Scope {
     PanelLoader { extraCondition: !Config.options.bar.vertical; component: Bar {} }
-    PanelLoader { extraCondition: Boolean(Config.options.background?.enable); component: Background {} }
+    // Fondo pintado por el shell, como en el original: el de end-4 en default (end-4) y el de
+    // Omarchy (con su transición) en Retro; Breeze sigue con swww salvo background.enable
+    PanelLoader { extraCondition: (!Appearance.isRetro && !Appearance.isPlasma) || (Appearance.isPlasma && Boolean(Config.options.background?.enable)); component: Background {} }
+    PanelLoader { extraCondition: Appearance.isRetro; component: OmarchyBackground {} }
     PanelLoader { extraCondition: !Appearance.isRetro; component: Cheatsheet {} }
     // BWM's dock; Retro has Omarchy's instead (dock.omarchy), never both
     PanelLoader { extraCondition: Config.options.dock.enable && !Appearance.isRetro; component: Dock {} }

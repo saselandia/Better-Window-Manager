@@ -135,34 +135,24 @@ hl.config({
         },
     },
 
-    -- Animaciones fluidas características de End_4
+    -- Las curvas y animaciones son de cada skin: skins/<id>/hypr/animations.lua
     animations = {
         enabled = true,
     },
 })
 
 ------------------------------------
----- MD3 BEZIERS & ANIMATIONS ------
+---- ANIMACIONES DE LA SKIN ---------
 ------------------------------------
 
--- Curvas Bézier de Material Design 3 (End_4 / dots-hyprland)
-hl.curve("md3_standard", { type = "bezier", points = { {0.2, 0.0}, {0.0, 1.0} } })
-hl.curve("md3_decel",    { type = "bezier", points = { {0.05, 0.7}, {0.1, 1.0} } })
-hl.curve("md3_accel",    { type = "bezier", points = { {0.3, 0.0}, {0.8, 0.15} } })
-hl.curve("menu_decel",   { type = "bezier", points = { {0.1, 1.0}, {0.0, 1.0} } })
-
--- Animaciones dinámicas de ventanas y escritorio
-hl.animation({ leaf = "windows",          enabled = true, speed = 3,  bezier = "md3_decel",  style = "popin 60%" })
-hl.animation({ leaf = "windowsIn",        enabled = true, speed = 3,  bezier = "md3_decel",  style = "popin 60%" })
-hl.animation({ leaf = "windowsOut",       enabled = true, speed = 3,  bezier = "md3_accel",  style = "popin 60%" })
-hl.animation({ leaf = "border",           enabled = true, speed = 10, bezier = "default" })
-hl.animation({ leaf = "fade",             enabled = true, speed = 3,  bezier = "md3_decel" })
-hl.animation({ leaf = "fadeIn",           enabled = true, speed = 3,  bezier = "md3_decel" })
-hl.animation({ leaf = "fadeOut",          enabled = true, speed = 3,  bezier = "md3_accel" })
-hl.animation({ leaf = "workspaces",       enabled = true, speed = 4,  bezier = "menu_decel", style = "slide" })
-hl.animation({ leaf = "workspacesIn",     enabled = true, speed = 4,  bezier = "menu_decel", style = "slide" })
-hl.animation({ leaf = "workspacesOut",    enabled = true, speed = 4,  bezier = "menu_decel", style = "slide" })
-hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 3,  bezier = "md3_decel",  style = "slidevert" })
+-- Cada skin copia las de su escritorio original: default (end-4) las de dots-hyprland,
+-- Retro las de Omarchy y Breeze (Kde plasma) las suyas
+local anim_skin = (ok_theme and active_theme.name) or "default"
+local ok_anim, anim_err = pcall(require, "skins." .. anim_skin .. ".hypr.animations")
+if not ok_anim then
+    local msg = tostring(anim_err):gsub("['\"`$\\]", "")
+    os.execute("notify-send -a BWM 'Animaciones de la skin " .. anim_skin .. "' '" .. msg .. "' &")
+end
 
 -- Ref https://wiki.hypr.land/Configuring/Basics/Workspace-Rules/
 -- "Smart gaps" / "No gaps when only"

@@ -47,6 +47,12 @@
       "packages": {"gentoo": "dev-qt/qtbase[gtk]", "arch": "qt6-base", "fedora": "qt6-qtbase-gui", "opensuse": "qt6-platformtheme-gtk3", "debian": "qt6-gtk-platformtheme"},
       "manual": "En Gentoo: activa USE=gtk en dev-qt/qtbase (package.use) y recompílalo"
     },
+    "qt-imageformats": {
+      "label": "Plugin WebP de Qt (qtimageformats)",
+      "why": "El fondo de Omarchy en Retro dibuja los fondos WebP de muchos temas con su transición (sin él, BWM los convierte a JPG)",
+      "check": {"type": "qtplugin", "path": "imageformats/libqwebp.so"},
+      "packages": {"gentoo": "dev-qt/qtimageformats", "arch": "qt6-imageformats", "fedora": "qt6-qtimageformats", "opensuse": "qt6-imageformats", "debian": "qt6-image-formats-plugins"}
+    },
     "darkly": {
       "label": "Darkly (estilo de widgets Qt)",
       "why": "Estilo de las apps Qt de end-4 en default (end-4)",

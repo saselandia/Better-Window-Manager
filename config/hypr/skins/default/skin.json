@@ -51,7 +51,8 @@
       "config/quickshell/ii/modules/ii/lock"
     ],
     "hyprland": [
-      "config/hypr/modules/colors.lua"
+      "config/hypr/modules/colors.lua",
+      "config/hypr/skins/default/hypr/animations.lua"
     ],
     "colors": [
       "config/matugen/config.toml",

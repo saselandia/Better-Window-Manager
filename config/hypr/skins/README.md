@@ -68,9 +68,12 @@ y el hueco); al volver a una de mosaico, se rehace el mosaico. Hyprland recibe l
    (`extraCondition`). Añade esas rutas a `parts.quickshell`.
 4. Colores de Hyprland y apps: reutiliza el motor de tu `palette` (plantillas en `matugen/templates`
    o `hypr/omarchy/themed`) y anota los archivos en `parts.colors`/`parts.hyprland`.
-5. Atajos propios: `hypr/keybinds.json` vía `scripts/keybinds-manager.py`.
-6. Captura en `assets/skin-previews/` y requisitos en `requires`.
-7. Comprueba: `bwm skins` (aparece con su tipo de ventanas), `bwm check --skin <tu-id>` y
+5. Animaciones: `<tu-id>/hypr/animations.lua` con las curvas, `hl.animation` y reglas de capa
+   de animación del escritorio original (`modules/appearance.lua` carga sólo el de la skin activa;
+   sin archivo quedan las de Hyprland por defecto). Anótalo en `parts.hyprland`.
+6. Atajos propios: `hypr/keybinds.json` vía `scripts/keybinds-manager.py`.
+7. Captura en `assets/skin-previews/` y requisitos en `requires`.
+8. Comprueba: `bwm skins` (aparece con su tipo de ventanas), `bwm check --skin <tu-id>` y
    `python3 -m unittest tests/test_skins.py`. Actívala con `bwm skin <tu-id>`.
 
 Más contexto (qué se conserva entre skins, compatibilidad con temas, estructura modular):

@@ -67,7 +67,8 @@
     ],
     "hyprland": [
       "config/hypr/modules/plasma_colors.lua",
-      "config/hypr/plugins/hyprbars-plasma.so"
+      "config/hypr/plugins/hyprbars-plasma.so",
+      "config/hypr/skins/plasma/hypr/animations.lua"
     ],
     "colors": [
       "config/matugen/templates"

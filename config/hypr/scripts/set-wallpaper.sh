@@ -37,9 +37,14 @@ if ! pgrep -x "$WALL_DAEMON" > /dev/null 2>&1; then
     done
 fi
 
-# 2. Cambiar fondo con animación fluida estilo End_4 ('grow')
+# 2. Cambiar fondo (la animación es la de cada skin)
+CURRENT_THEME="$(python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py get 2>/dev/null || echo "default")"
+
 echo "Aplicando wallpaper: $WALLPAPER"
-if [[ "${BWM_SKIN_SWITCH:-0}" == "1" ]]; then
+# default (end-4) y Retro pintan el fondo en el shell, como sus originales (end-4: Background.qml;
+# Omarchy: su plugin background con su transición): swww sólo queda debajo, sin animación.
+# Breeze (Kde plasma) sigue con swww y su transición
+if [[ "${BWM_SKIN_SWITCH:-0}" == "1" || "$CURRENT_THEME" != "plasma" ]]; then
     "$WALL_BIN" img "$WALLPAPER" --transition-type none
 else
     "$WALL_BIN" img "$WALLPAPER" \
@@ -47,11 +52,38 @@ else
         --transition-duration 2 --transition-fps 60
 fi
 
-# 2.1 Guardar en caché para recuperación instantánea y persistencia por estilo
+# Retro: el fondo de Omarchy sigue ~/.local/state/omarchy/current/background y se le pide la
+# transición por IPC, como omarchy-theme-bg-set
+if [[ "$CURRENT_THEME" == "retro" ]]; then
+    OMARCHY_BG_LINK="$HOME/.local/state/omarchy/current/background"
+    mkdir -p "$(dirname "$OMARCHY_BG_LINK")"
+    PREVIOUS_BG="$(readlink -f "$OMARCHY_BG_LINK" 2>/dev/null || true)"
+    SHELL_BG="$WALLPAPER"
+    # Sin el plugin WebP de Qt (dev-qt/qtimageformats) el shell no abre los .webp de los temas:
+    # se le da una copia JPG en caché
+    QT_WEBP=0
+    for qt_plugins in /usr/lib64/qt6/plugins /usr/lib/qt6/plugins /usr/lib/x86_64-linux-gnu/qt6/plugins; do
+        [[ -e "$qt_plugins/imageformats/libqwebp.so" ]] && QT_WEBP=1
+    done
+    if [[ "${WALLPAPER,,}" == *.webp && "$QT_WEBP" == "0" ]] && command -v magick >/dev/null 2>&1; then
+        WEBP_CACHE="$HOME/.cache/bwm/omarchy-background"
+        mkdir -p "$WEBP_CACHE"
+        SHELL_BG="$WEBP_CACHE/$(printf '%s' "$WALLPAPER" | md5sum | cut -d' ' -f1).jpg"
+        if [[ ! -s "$SHELL_BG" || "$WALLPAPER" -nt "$SHELL_BG" ]]; then
+            magick "$WALLPAPER" -quality 92 "$SHELL_BG.tmp.jpg" && mv "$SHELL_BG.tmp.jpg" "$SHELL_BG" || SHELL_BG="$WALLPAPER"
+        fi
+    fi
+    ln -sfn "$SHELL_BG" "$OMARCHY_BG_LINK"
+    if [[ "${BWM_SKIN_SWITCH:-0}" == "1" ]]; then
+        quickshell -c ii ipc call background setInstant "$SHELL_BG" >/dev/null 2>&1 || true
+    else
+        quickshell -c ii ipc call background transition "$PREVIOUS_BG" "$SHELL_BG" >/dev/null 2>&1 || true
+    fi
+fi
+
 mkdir -p "$HOME/.cache"
 echo "$WALLPAPER" > "$HOME/.cache/current_wallpaper"
 
-CURRENT_THEME="$(python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py get 2>/dev/null || echo "default")"
 echo "$WALLPAPER" > "$HOME/.cache/current_wallpaper_${CURRENT_THEME}"
 
 # 2.2 Sincronizar ruta del wallpaper con Quickshell / Illogical Impulse
