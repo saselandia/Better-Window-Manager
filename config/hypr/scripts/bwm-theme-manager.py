@@ -885,6 +885,7 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         cfg = THEMES[theme_name]
         print(f"Aplicando estilo: {cfg['title']}...")
         import bwm_windows
+        import bwm_session  # demonios como hijos de Hyprland, no de quien llama al gestor
         focus = bwm_windows.snapshot_focus()
         original_clients = bwm_windows.hypr_json("clients")  # antes de que las reglas cambien floating/geometría
 
@@ -978,8 +979,7 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
             if theme_name == "retro":
                 subprocess.run(["pkill", "-x", "swaync"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             elif shutil.which("swaync") and subprocess.run(["pidof", "swaync"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
-                subprocess.Popen(["swaync"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True,
-                                 preexec_fn=lambda: signal.pthread_sigmask(signal.SIG_SETMASK, []))
+                bwm_session.spawn(["swaync"])
         except Exception:
             pass
 
@@ -992,8 +992,7 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
             elif subprocess.run(["pidof", "hyprpolkitagent"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
                 agent = shutil.which("hyprpolkitagent") or ("/usr/libexec/hyprpolkitagent" if os.access("/usr/libexec/hyprpolkitagent", os.X_OK) else None)
                 if agent:
-                    subprocess.Popen([agent], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True,
-                                     preexec_fn=lambda: signal.pthread_sigmask(signal.SIG_SETMASK, []))
+                    bwm_session.spawn([agent])
         except Exception:
             pass
 
@@ -1004,23 +1003,18 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=4,
         ).returncode == 0
         if not refreshed:
-            instances = subprocess.run(["quickshell", "-c", "ii", "list", "-j"],
-                                       capture_output=True, text=True, timeout=3)
-            for instance in json.loads(instances.stdout or "[]"):
-                pid = instance.get("pid")
-                if pid:
-                    os.kill(pid, signal.SIGTERM)
+            running = bwm_session.shell_instances()
+            for instance in running:
+                os.kill(instance["pid"], signal.SIGTERM)
             for _ in range(40):
-                if not any(Path(f"/proc/{i['pid']}").exists() for i in json.loads(instances.stdout or "[]")):
+                if not any(Path(f"/proc/{i['pid']}").exists() for i in running):
                     break
                 time.sleep(0.05)
             else:
                 raise RuntimeError("El shell anterior sigue activo; no se inicia una segunda instancia")
-            env = os.environ.copy()
-            env.pop("BWM_SKIN_SWITCH", None)
-            subprocess.Popen(["quickshell", "-n", "-c", "ii"], env=env,
-                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True,
-                             preexec_fn=lambda: signal.pthread_sigmask(signal.SIG_SETMASK, []))
+            # Hijo de Hyprland (sin BWM_SKIN_SWITCH): si fuera hijo de quien llamó al gestor
+            # (terminal, app de Claude…), moriría con él.
+            bwm_session.start_shell()
 
         # Una sola restauración, después de la geometría; los hooks no reinician apps ni restauran focos antiguos.
         bwm_windows.restore_focus(focus)

@@ -259,6 +259,9 @@ siendo el nombre del escritorio original que imita Breeze.
   `hyprctl eval 'return hl.dispatch(hl.dsp.send_shortcut({…}))'`.
 - `pkill -f <patrón>` mata tu propia shell si el patrón está en el comando: mata por PID. Lo mismo `pgrep -f` en un
   bucle de espera (no termina nunca): usa `ps -eo args | grep "[b]wm_omarchy.py restart"`.
+- Un demonio lanzado desde una terminal o una sesión de IA queda en su cgroup y puede morir con ella (pasó con la
+  barra y `window-guard.py`, §3.105): lánzalos con `bwm_session.spawn()` (`hl.dsp.exec_cmd`), no con `Popen`.
+  `window-guard.py` relanza el shell si falta: para pararlo de verdad, para antes el vigilante.
 - Kitty recuerda también el estado maximizado: `remember_window_size no` evita restaurarlo. La regla global
   `suppress-maximize-events` bloquea peticiones de maximizado de apps (también botones CSD); el compositor
   conserva el control manual y las peticiones de fullscreen de juegos/vídeo siguen permitidas.

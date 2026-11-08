@@ -13,6 +13,8 @@ Vigilante de ventanas para juegos y apps a pantalla completa (todos los temas).
   de pantalla completa no se vuelve a forzar.
 - Fondo de pantalla: un monitor que se desconecta y vuelve (reposo, cambio de entrada) queda en
   negro en swww/awww; al volver se le pone otra vez el fondo actual.
+- Barra: si no queda ninguna instancia de Quickshell `ii` durante dos comprobaciones seguidas
+  (~20 s, sin un cambio de skin en curso), la vuelve a lanzar como hijo de Hyprland (bwm_session.py).
 
 Los juegos colocan y redimensionan la ventana después de mapearla y Hyprland no emite
 eventos por eso, así que cada ventana nueva se revisa varias veces durante ~20 s.
@@ -35,7 +37,11 @@ _spec = importlib.util.spec_from_file_location("xwayland_primary", os.path.join(
 xwayland_primary = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(xwayland_primary)
 
+sys.path.insert(0, HERE)
+import bwm_session  # noqa: E402
+
 CHECK_DELAYS = (0.3, 1, 2, 4, 7, 12, 20)
+SHELL_CHECK_SECS = 10
 MONITOR_EVENTS = (b"monitoradded", b"monitorremoved", b"configreloaded", b"moveworkspace")
 SIZE_TOLERANCE = 2
 
@@ -169,7 +175,25 @@ def on_monitors_changed():
     check_all()
 
 
+def keep_shell(checks=None, sleep=time.sleep):
+    """Relanza la barra si desaparece. Dos fallos seguidos: un reinicio normal tarda < 2 s."""
+    missing = 0
+    while checks is None or checks > 0:
+        if checks is not None:
+            checks -= 1
+        sleep(SHELL_CHECK_SECS)
+        if bwm_session.shell_instances() or bwm_session.theme_manager_busy():
+            missing = 0
+            continue
+        missing += 1
+        if missing >= 2:
+            print("window-guard: no hay Quickshell ii; se vuelve a lanzar", file=sys.stderr, flush=True)
+            bwm_session.start_shell()
+            missing = 0
+
+
 def watch():
+    threading.Thread(target=keep_shell, daemon=True).start()
     xwayland_primary.apply_retrying()
     restore_wallpapers()
     check_all()
