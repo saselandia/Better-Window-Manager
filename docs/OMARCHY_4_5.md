@@ -140,7 +140,7 @@ foco cambia antes de ejecutarse). Lo útil para Breeze: las etiquetas en la vent
 propio, abrir flotando desde el primer fotograma con tamaño y cascada, clic para enfocar sólo donde hay
 superposición, y desmaximizar al abrirse otra ventana.
 
-**Hecho (§3.106 de `BWM_CONTEXT.md`):** modo por workspace en Retro con el `hyprbars-plasma` ampliado, clic para enfocar en Breeze, cambio desde la barra y el menú (sin Super+L).
+**Hecho (§3.106–3.108 de `BWM_CONTEXT.md`):** modo por workspace en Retro con el plugin de barras de Omarchy sin cambios (el de Breeze, renombrado `breezebars`, queda aparte), clic para enfocar en Breeze, cambio desde la barra y el menú (sin Super+L).
 
 **Propuesta original:** portar el modo por workspace a Retro (estaba en §2.6 de `BWM_CONTEXT.md` como pendiente),
 usando el `hyprbars-plasma` de BWM con `workspace_tag` y `%WINDOW%` añadidos, en vez de un segundo plugin;

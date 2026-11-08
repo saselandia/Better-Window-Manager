@@ -172,10 +172,10 @@ fi
     sleep 1
     # hypr-csd retired in favor of native hyprbars
     if [ -f "/home/sasel/.config/hypr/modules/theme.lua" ] && grep -q 'name = "plasma"' "/home/sasel/.config/hypr/modules/theme.lua" 2>/dev/null; then
-        if ! hyprctl plugin list 2>/dev/null | grep -q "Plugin hyprbars"; then
+        if ! hyprctl plugin list 2>/dev/null | grep -q "Plugin breezebars"; then
             hyprctl plugin load "/home/sasel/.config/hypr/plugins/hyprbars-plasma.so" 2>/dev/null || true
         fi
-        hyprctl keyword windowrulev2 "plugin:hyprbars:nobar, class:^(steam|steamwebhelper|firefox|firefox-bin|google-chrome.*|chromium.*|brave-browser|zen.*|vesktop|discord|armcord|webcord|spotify|antigravity|antigravity-ide|code|Code|code-oss|vscodium|cursor|claude|claude-desktop|com.anthropic.Claude|org.gnome..*|nautilus|pavucontrol|easyeffects|gamescope|signal|telegram-desktop|org.telegram.desktop|baobab|evince|loupe)$" 2>/dev/null || true
+        hyprctl keyword windowrulev2 "plugin:breezebars:nobar, class:^(steam|steamwebhelper|firefox|firefox-bin|google-chrome.*|chromium.*|brave-browser|zen.*|vesktop|discord|armcord|webcord|spotify|antigravity|antigravity-ide|code|Code|code-oss|vscodium|cursor|claude|claude-desktop|com.anthropic.Claude|org.gnome..*|nautilus|pavucontrol|easyeffects|gamescope|signal|telegram-desktop|org.telegram.desktop|baobab|evince|loupe)$" 2>/dev/null || true
     fi
 ) &
 

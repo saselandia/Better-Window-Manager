@@ -64,8 +64,11 @@ siendo el nombre del escritorio original que imita Breeze.
    **NUNCA `grub-mkconfig`** (la línea `rd.luks…`/`root=` no está en `/etc/default/grub`). Plymouth/SDDM sólo con
    `config/hypr/scripts/install-boot-theme.sh` (copias `.bwm-backup`, conserva los drivers de GPU; `--revert`).
    Incidente 2026-10-23: un initramfs con `amdgpu` cambió los conectores y superpuso los monitores.
-4. Campos `hyprbars:*` de `hl.window_rule` (sólo existen con el plugin, estilo Plasma): dentro de
-   `if hl.plugin and hl.plugin.hyprbars then … end`, o sale «Your config has errors» en los otros estilos.
+4. Campos `breezebars:*` de `hl.window_rule` (sólo existen con el plugin de Breeze cargado): dentro de
+   `if hl.plugin and hl.plugin.breezebars then … end`, o sale «Your config has errors» en los otros estilos.
+   **Dos plugins de barras, separados:** Breeze = `breezebars` (`src/hyprbars`, `hyprbars-plasma.so`: Breeze, CSD,
+   snapping); Retro = el de Omarchy sin cambios (`src/omarchy-titlebars`, `omarchy-titlebars.so`, se registra como
+   `hyprbars`). No mezcles funciones de uno en el otro sin que lo pida el usuario.
 5. Puede haber **otra sesión de IA trabajando a la vez**: en los commits añade sólo tus archivos (revisa el
    `git diff` de cada uno). Archivos generados que cambian solos con el estilo/tema/fondo — no los incluyas salvo
    a propósito: `colors.lua`, `retro_colors.lua`, `plasma_colors.lua`, `gtk-3.0/bwm-colors.css`, `gtk-4.0/gtk.css`,
@@ -147,7 +150,7 @@ siendo el nombre del escritorio original que imita Breeze.
 | Configuración del usuario en texto (manda sobre BWM) | `scripts/bwm-user-config` (`list/edit/apply/path`), `~/.config/bwm/user/{hyprland.lua,shell.jsonc}`, `~/.config/omarchy/shell.toml`, `~/.config/bwm/extensions/menu.jsonc`; `hyprland.lua` la carga al final con `pcall`; `bwm-theme-manager.py apply-user` y al cambiar de skin |
 | Configuración integrada de Retro | `modules/ii/omarchyMenu/omarchy/settings/` (catálogo, controlador y editores dentro de `Menu.qml`); `open-settings.sh [página]` → IPC `omarchyMenu.settings`. `retroSettings.qml` sólo redirige, sin ventana propia |
 | Un comando `omarchy-*` que falta | `config/hypr/scripts/omarchy-shims/` (+ enlace en `~/.local/bin`, `bwm-plugin.sh catalog`) |
-| Modo de cada workspace en Retro (mosaico, desplazamiento, flotante con barras) | `skins/retro/hypr/workspace-modes.lua` (port de Omarchy; modos en `~/.local/state/omarchy/workspace-layouts/`), shims `omarchy-hyprland-workspace-layout-*` y `bwm-workspace-layout-set`; barras con `plugin:hyprbars:workspace_tag` de `src/hyprbars` |
+| Modo de cada workspace en Retro (mosaico, desplazamiento, flotante con barras) | `skins/retro/hypr/workspace-modes.lua` (port de Omarchy; modos en `~/.local/state/omarchy/workspace-layouts/`), shims `omarchy-hyprland-workspace-layout-*` y `bwm-workspace-layout-set`; barras con el plugin de Omarchy sin cambios (`src/omarchy-titlebars`), nada del de Breeze |
 | Reglas de ventana / juegos | `hypr/modules/rules.lua`, `scripts/window-guard.py` |
 | Atajos | `keybinds.json` vía `keybinds-manager.py` |
 | Bloqueo / pantalla de inicio de cada skin | `modules/ii/lock/Lock.qml` elige: `lock/LockSurface.qml` (end-4, el desenfoque lo pinta `background/Background.qml` y necesita `session_lock_xray` de `skins/default/hypr/lock.lua`), `omarchyLock/` (Omarchy 4, Retro), `plasmaLock/` (KDE, Breeze); SDDM común entra solo (`install-boot-theme.sh`) |

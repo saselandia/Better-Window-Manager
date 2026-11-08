@@ -1,4 +1,3 @@
-// De omarchy-hyprland-titlebars (omacom, b351b14, MIT sobre hyprbars BSD-3-Clause), sin cambios.
 #include "appName.hpp"
 
 #include <algorithm>

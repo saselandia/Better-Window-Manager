@@ -149,8 +149,8 @@ if is_traditional then
     -- 2. Barras de título: hyprbars detecta solo qué ventanas traen sus propios
     --    botones (xdg-decoration / kde-server-decoration / _MOTIF_WM_HINTS).
     --    Forzar a mano solo si hiciera falta:
-    --      ["hyprbars:no_bar"] = true   -> quitar barra
-    --      ["hyprbars:no_bar"] = false  -> forzar barra
+    --      ["breezebars:no_bar"] = true   -> quitar barra
+    --      ["breezebars:no_bar"] = false  -> forzar barra
 end
 
 --------------------------------
@@ -208,11 +208,11 @@ hl.window_rule({
     float      = true,
     animation  = "slide",
 })
--- Sin barra de título; el campo sólo existe con hyprbars cargado (estilo Plasma)
-if hl.plugin and hl.plugin.hyprbars then
+-- Sin barra de título; el campo sólo existe con el plugin breezebars cargado (Breeze)
+if hl.plugin and hl.plugin.breezebars then
     hl.window_rule({
         name  = "bwm-screensaver-nobar",
         match = { class = "^org\\.bwm\\.screensaver$" },
-        ["hyprbars:no_bar"] = true,
+        ["breezebars:no_bar"] = true,
     })
 end

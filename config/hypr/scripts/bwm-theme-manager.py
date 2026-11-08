@@ -789,13 +789,12 @@ def sync_floating_windows(skin: str, previous_skin=None, original_clients=None):
 
     if skin == "plasma":
         plist = subprocess.run(["hyprctl", "plugin", "list"], capture_output=True, text=True, check=False)
-        if "Plugin hyprbars" not in plist.stdout:
+        if "Plugin breezebars" not in plist.stdout:
             print("[BWM] Las barras hyprbars se cargarán en el próximo inicio de sesión en Plasma.", file=sys.stderr)
-        subprocess.run(["hyprctl", "keyword", "plugin:hyprbars:enabled", "true"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    elif skin != "retro":
+        subprocess.run(["hyprctl", "keyword", "plugin:breezebars:enabled", "true"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    else:
         # DO NOT unload plugins dynamically at runtime to prevent compositor segfaults
-        # (Retro decide en su configuración: barras sólo en sus workspaces flotantes, workspace-modes.lua)
-        subprocess.run(["hyprctl", "keyword", "plugin:hyprbars:enabled", "false"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["hyprctl", "keyword", "plugin:breezebars:enabled", "false"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # Cambiar colores dentro de la misma familia no reorganiza ninguna ventana.
     if previous_skin is not None and bwm_windows.is_traditional(previous_skin) == to_traditional:

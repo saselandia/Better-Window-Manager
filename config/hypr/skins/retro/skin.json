@@ -62,7 +62,7 @@
       "config/hypr/modules/retro_colors.lua",
       "config/hypr/modules/omarchy_windows.lua",
       "config/hypr/skins/retro/hypr/animations.lua",
-      "config/hypr/plugins/hyprbars-plasma.so",
+      "config/hypr/plugins/omarchy-titlebars.so",
       "config/hypr/skins/retro/hypr/misc.lua",
       "config/hypr/skins/retro/hypr/workspace-modes.lua"
     ],
@@ -92,7 +92,7 @@
     "socat",
     "hyprsunset",
     "omarchy-screensaver",
-    "hyprbars-plasma",
+    "omarchy-titlebars",
     "qt-gtk3",
     "qt-imageformats"
   ]

@@ -241,7 +241,7 @@ fi
 print_success "Bienvenida activada al iniciar sesión."
 
 # ==============================================================================
-# 6. Plugin hyprbars de la skin KDE Plasma (compilado para tu Hyprland)
+# 6. Plugin breezebars de la skin Breeze (Kde plasma) (compilado para tu Hyprland)
 # ==============================================================================
 if [[ ${#SKINS[@]} -eq 0 || " ${SKINS[*]} " == *" plasma "* ]]; then
     PLUGIN_STATE="$(python3 "$REQUIREMENTS" check --skin plasma --json 2>/dev/null \
@@ -253,6 +253,20 @@ if [[ ${#SKINS[@]} -eq 0 || " ${SKINS[*]} " == *" plasma "* ]]; then
             print_success "Plugin compilado. Se carga al volver a iniciar sesión en la skin KDE Plasma."
         else
             print_warn "No se pudo compilar. Repítelo con: cd $SCRIPT_DIR/src/hyprbars && make && make install"
+        fi
+    fi
+fi
+
+# 6b. Barras de los workspaces flotantes de Retro: el plugin de Omarchy (omarchy-hyprland-titlebars)
+if [[ ${#SKINS[@]} -eq 0 || " ${SKINS[*]} " == *" retro "* ]]; then
+    TITLEBARS_STATE="$(python3 "$REQUIREMENTS" check --skin retro --json 2>/dev/null \
+        | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next((r["status"] for s in d["skins"] for k in ("requires","recommends") for r in s.get(k, []) if r["id"]=="omarchy-titlebars"), ""))' 2>/dev/null || true)"
+    if [[ "$TITLEBARS_STATE" == "build" ]]; then
+        print_step "6b. Compilando las barras de título de Omarchy para tu versión de Hyprland..."
+        if (cd "$SCRIPT_DIR/src/omarchy-titlebars" && make clean >/dev/null && make >/dev/null && make install >/dev/null); then
+            print_success "Plugin compilado. Retro lo carga cuando un workspace pasa a flotante."
+        else
+            print_warn "No se pudo compilar. Repítelo con: cd $SCRIPT_DIR/src/omarchy-titlebars && make && make install"
         fi
     fi
 fi

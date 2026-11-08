@@ -192,9 +192,12 @@ def check_requirement(spec: dict, catalog: dict) -> tuple[str, str]:
         if not plugin.is_file():
             state, detail = MISSING, "no está compilado"
         else:
-            built = set(re.findall(rb"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])", plugin.read_bytes()))
+            data = plugin.read_bytes()
+            built = set(re.findall(rb"(?<![0-9a-f])[0-9a-f]{40}(?![0-9a-f])", data))
             commit = running_hyprland_commit()
-            if commit and commit.encode() in built:
+            # El compilador puede fundir la cadena del commit con otra (pasa en omarchy-titlebars):
+            # basta con su principio, 16 caracteres hexadecimales que no aparecen por casualidad
+            if commit and (commit.encode() in built or commit[:16].encode() in data):
                 return OK, f"compilado para Hyprland {commit[:8]}"
             built_for = next(iter(built), b"").decode()[:8] or "?"
             state = MISSING
@@ -378,15 +381,21 @@ compilarlos o usar sus repositorios de terceros.
 """
 
 DOC_FOOTER = """
-## Plugin hyprbars (skin Breeze (Kde plasma))
+## Plugins de barras de título (Breeze (Kde plasma) y Retro)
+
+Breeze usa `breezebars` (`src/hyprbars`, fork de hyprbars con decoraciones Breeze, detección de las
+apps que traen su propia barra y snapping). Retro usa en sus workspaces flotantes el plugin de
+Omarchy sin cambios, omarchy-hyprland-titlebars (`src/omarchy-titlebars`), que se registra como
+`hyprbars` igual que en Omarchy. Tienen nombres distintos, así que pueden estar cargados a la vez.
 
 Los plugins de Hyprland sólo cargan en la versión exacta para la que se compilaron (el `.so`
 guarda el commit de Hyprland). `bwm check` compara ese commit con el del Hyprland que usas; si
-no coinciden, `install.sh` lo recompila (`cd src/hyprbars && make && make install`, que instala con
+no coinciden, `install.sh` los recompila (`make && make install` en su carpeta, que instala con
 un renombrado atómico). El plugin nuevo se carga al volver a iniciar sesión. Nunca copies el `.so`
 a mano encima del cargado ni lo descargues/cargues en caliente: Hyprland cae (SIGBUS). Cuando
-cambia la API interna de Hyprland hay que portearlo (referencia: el hyprbars oficial de
-hyprwm/hyprland-plugins fijado a esa versión en su `hyprpm.toml`).
+cambia la API interna de Hyprland hay que portearlos (referencias: el hyprbars oficial de
+hyprwm/hyprland-plugins fijado a esa versión en su `hyprpm.toml`, y el commit de
+omarchy-hyprland-titlebars que compile con ella).
 """
 
 

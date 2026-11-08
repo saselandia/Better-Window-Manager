@@ -48,6 +48,22 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+// Quita sólo las etiquetas de encaje (snapped, snapped_<borde>, quick-tile.py). Antes se borraban
+// todas las de la ventana, también las que ponen otros (reglas, scripts, modos de workspace).
+static void clearSnapTags(PHLWINDOW window) {
+    if (!window || !window->m_ruleApplicator)
+        return;
+    std::vector<std::string> snapTags;
+    for (auto tag : window->m_ruleApplicator->m_tagKeeper.getTags()) {
+        if (tag.ends_with('*'))
+            continue; // las de reglas no se quitan a mano
+        if (tag == "snapped" || tag.starts_with("snapped_"))
+            snapTags.push_back(tag);
+    }
+    for (const auto& tag : snapTags)
+        Config::Actions::tag("-" + tag, window);
+}
+
 // Do NOT change this function.
 APICALL EXPORT std::string PLUGIN_API_VERSION() {
     return HYPRLAND_API_VERSION;
@@ -296,12 +312,6 @@ static void onGlobalMouseMove(const Vector2D& coords) {
 }
 
 static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent e) {
-    // Alt/Super + arrastre de Breeze (sale de pantalla completa, quita las etiquetas snapped y encaja):
-    // sólo con el snapping de Breeze. En Retro (snap = false) las etiquetas de sus workspaces flotantes
-    // y la pantalla completa no se tocan.
-    if (!g_pGlobalState || !g_pGlobalState->config.enabled->value() || !g_pGlobalState->config.snap->value())
-        return;
-
     const auto MODS = g_pInputManager->getModsFromAllKBs();
     const auto ALTMASK = g_pKeybindManager->stringToModMask("ALT");
     const auto SUPERMASK = g_pKeybindManager->stringToModMask("SUPER");
@@ -328,7 +338,7 @@ static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEve
                     if (wasFullscreen)
                         Fullscreen::controller()->setFullscreenMode(pWindow, Fullscreen::FSMODE_NONE);
 
-                    Config::Actions::clearTags(pWindow);
+                    clearSnapTags(pWindow);
                     pWindow->updateWindowData();
 
                     if (wasSnapped || wasFullscreen) {
@@ -397,7 +407,7 @@ static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEve
                 pWindow = Desktop::focusState()->window();
 
             if (Desktop::View::validMapped(pWindow)) {
-                Config::Actions::clearTags(pWindow);
+                clearSnapTags(pWindow);
                 pWindow->updateWindowData();
             }
         }
@@ -465,7 +475,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     const std::string CLIENT_HASH = __hyprland_api_get_client_hash();
 
     if (HASH != CLIENT_HASH) {
-        HyprlandAPI::addNotification(PHANDLE, "[hyprbars] Failure in initialization: Version mismatch (headers ver is not equal to running hyprland ver)",
+        HyprlandAPI::addNotification(PHANDLE, "[breezebars] Failure in initialization: Version mismatch (headers ver is not equal to running hyprland ver)",
                                      CHyprColor{1.0, 0.2, 0.2, 1.0}, 5000);
         throw std::runtime_error("[hb] Version mismatch");
     }
@@ -473,9 +483,9 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     cleanupLegacyPinnedModule();
 
     g_pGlobalState                    = makeUnique<SGlobalState>();
-    g_pGlobalState->nobarRuleIdx      = Desktop::Rule::windowEffects()->registerEffect("hyprbars:no_bar");
-    g_pGlobalState->barColorRuleIdx   = Desktop::Rule::windowEffects()->registerEffect("hyprbars:bar_color");
-    g_pGlobalState->titleColorRuleIdx = Desktop::Rule::windowEffects()->registerEffect("hyprbars:title_color");
+    g_pGlobalState->nobarRuleIdx      = Desktop::Rule::windowEffects()->registerEffect("breezebars:no_bar");
+    g_pGlobalState->barColorRuleIdx   = Desktop::Rule::windowEffects()->registerEffect("breezebars:bar_color");
+    g_pGlobalState->titleColorRuleIdx = Desktop::Rule::windowEffects()->registerEffect("breezebars:title_color");
 
     g_pGlobalState->pOpenListener        = Event::bus()->m_events.window.open.listen([](PHLWINDOW w) { onNewWindow(w); });
     g_pGlobalState->pUpdateRulesListener = Event::bus()->m_events.window.updateRules.listen([](PHLWINDOW w) { onUpdateWindowRules(w); });
@@ -487,39 +497,30 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
         renderSnapPreviewOverlay(stage);
     });
 
-    g_pGlobalState->config.barColor            = makeShared<Config::Values::CColorValue>("plugin:hyprbars:bar_color", "Change the bar color", 0x88333333);
-    g_pGlobalState->config.textColor           = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.text", "Change the text color", 0xffffffff);
+    g_pGlobalState->config.barColor            = makeShared<Config::Values::CColorValue>("plugin:breezebars:bar_color", "Change the bar color", 0x88333333);
+    g_pGlobalState->config.textColor           = makeShared<Config::Values::CColorValue>("plugin:breezebars:col.text", "Change the text color", 0xffffffff);
     g_pGlobalState->config.inactiveButtonColor = makeShared<Config::Values::CColorValue>(
-        "plugin:hyprbars:inactive_button_color", "Change the inactive button's color. 0x00000000 means unset", 0x00000000);
+        "plugin:breezebars:inactive_button_color", "Change the inactive button's color. 0x00000000 means unset", 0x00000000);
     g_pGlobalState->config.inactiveBarColor =
-        makeShared<Config::Values::CColorValue>("plugin:hyprbars:inactive_bar_color", "Bar color of unfocused windows. 0x00000000 means same as bar_color", 0x00000000);
+        makeShared<Config::Values::CColorValue>("plugin:breezebars:inactive_bar_color", "Bar color of unfocused windows. 0x00000000 means same as bar_color", 0x00000000);
     g_pGlobalState->config.inactiveTextColor =
-        makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.inactive_text", "Title/icon color of unfocused windows. 0x00000000 means same as col.text", 0x00000000);
-    g_pGlobalState->config.barHeight       = makeShared<Config::Values::CIntValue>("plugin:hyprbars:bar_height", "Change the bar's height", 15);
-    g_pGlobalState->config.barTextSize     = makeShared<Config::Values::CIntValue>("plugin:hyprbars:bar_text_size", "Change the bar's text size", 10);
-    g_pGlobalState->config.barTitleEnabled = makeShared<Config::Values::CBoolValue>("plugin:hyprbars:bar_title_enabled", "Whether to enable titles in the bar", true);
-    g_pGlobalState->config.barBlur         = makeShared<Config::Values::CBoolValue>("plugin:hyprbars:bar_blur", "Whether to enable blur of the bar", false);
-    g_pGlobalState->config.barTextFont     = makeShared<Config::Values::CStringValue>("plugin:hyprbars:bar_text_font", "Bar's text font", "Sans");
-    g_pGlobalState->config.barTextAlign    = makeShared<Config::Values::CStringValue>("plugin:hyprbars:bar_text_align", "Bar's text alignment", "center");
+        makeShared<Config::Values::CColorValue>("plugin:breezebars:col.inactive_text", "Title/icon color of unfocused windows. 0x00000000 means same as col.text", 0x00000000);
+    g_pGlobalState->config.barHeight       = makeShared<Config::Values::CIntValue>("plugin:breezebars:bar_height", "Change the bar's height", 15);
+    g_pGlobalState->config.barTextSize     = makeShared<Config::Values::CIntValue>("plugin:breezebars:bar_text_size", "Change the bar's text size", 10);
+    g_pGlobalState->config.barTitleEnabled = makeShared<Config::Values::CBoolValue>("plugin:breezebars:bar_title_enabled", "Whether to enable titles in the bar", true);
+    g_pGlobalState->config.barBlur         = makeShared<Config::Values::CBoolValue>("plugin:breezebars:bar_blur", "Whether to enable blur of the bar", false);
+    g_pGlobalState->config.barTextFont     = makeShared<Config::Values::CStringValue>("plugin:breezebars:bar_text_font", "Bar's text font", "Sans");
+    g_pGlobalState->config.barTextAlign    = makeShared<Config::Values::CStringValue>("plugin:breezebars:bar_text_align", "Bar's text alignment", "center");
     g_pGlobalState->config.barPartOfWindow =
-        makeShared<Config::Values::CBoolValue>("plugin:hyprbars:bar_part_of_window", "Whether the bar is a part of the window (reserves space)", true);
+        makeShared<Config::Values::CBoolValue>("plugin:breezebars:bar_part_of_window", "Whether the bar is a part of the window (reserves space)", true);
     g_pGlobalState->config.barPrecedenceOverBorder =
-        makeShared<Config::Values::CBoolValue>("plugin:hyprbars:bar_precedence_over_border", "Whether the bar is before, or after the border", false);
-    g_pGlobalState->config.barButtonsAlignment = makeShared<Config::Values::CStringValue>("plugin:hyprbars:bar_buttons_alignment", "Alignment of the bar buttons", "right");
-    g_pGlobalState->config.barPadding          = makeShared<Config::Values::CIntValue>("plugin:hyprbars:bar_padding", "Padding of the bar", 7);
-    g_pGlobalState->config.barButtonPadding    = makeShared<Config::Values::CIntValue>("plugin:hyprbars:bar_button_padding", "Padding of the bar buttons", 5);
-    g_pGlobalState->config.enabled             = makeShared<Config::Values::CBoolValue>("plugin:hyprbars:enabled", "Whether bars are enabled", true);
-    g_pGlobalState->config.iconOnHover         = makeShared<Config::Values::CBoolValue>("plugin:hyprbars:icon_on_hover", "Whether to use an icon on hover of the buttons", false);
-    g_pGlobalState->config.onDoubleClick       = makeShared<Config::Values::CStringValue>("plugin:hyprbars:on_double_click", "Action to execute on double click of the bar", "");
-    // De omarchy-hyprland-titlebars (Omarchy, MIT): barra sólo en ventanas flotantes con esta etiqueta
-    // (los workspaces flotantes de Retro). Vacío = todas las ventanas, como en Breeze.
-    // De omarchy-hyprland-titlebars: grosor del título ("normal", "bold" o un número) y redondeo de los
-    // botones de texto (-1 = círculo, el de hyprbars; Omarchy usa 0)
-    g_pGlobalState->config.barTextWeight       = makeShared<Config::Values::CStringValue>("plugin:hyprbars:bar_text_weight", "Weight of the bar's text", "normal");
-    g_pGlobalState->config.buttonRounding      = makeShared<Config::Values::CIntValue>("plugin:hyprbars:button_rounding", "Rounding of text buttons, -1 = circle", -1);
-    // Encajar a los bordes al arrastrar por la barra (Breeze). Retro lo apaga: Omarchy no lo tiene.
-    g_pGlobalState->config.snap                = makeShared<Config::Values::CBoolValue>("plugin:hyprbars:snap", "Snap windows dragged by the bar to screen edges", true);
-    g_pGlobalState->config.workspaceTag        = makeShared<Config::Values::CStringValue>("plugin:hyprbars:workspace_tag", "Restrict bars to floating windows with this tag", "");
+        makeShared<Config::Values::CBoolValue>("plugin:breezebars:bar_precedence_over_border", "Whether the bar is before, or after the border", false);
+    g_pGlobalState->config.barButtonsAlignment = makeShared<Config::Values::CStringValue>("plugin:breezebars:bar_buttons_alignment", "Alignment of the bar buttons", "right");
+    g_pGlobalState->config.barPadding          = makeShared<Config::Values::CIntValue>("plugin:breezebars:bar_padding", "Padding of the bar", 7);
+    g_pGlobalState->config.barButtonPadding    = makeShared<Config::Values::CIntValue>("plugin:breezebars:bar_button_padding", "Padding of the bar buttons", 5);
+    g_pGlobalState->config.enabled             = makeShared<Config::Values::CBoolValue>("plugin:breezebars:enabled", "Whether bars are enabled", true);
+    g_pGlobalState->config.iconOnHover         = makeShared<Config::Values::CBoolValue>("plugin:breezebars:icon_on_hover", "Whether to use an icon on hover of the buttons", false);
+    g_pGlobalState->config.onDoubleClick       = makeShared<Config::Values::CStringValue>("plugin:breezebars:on_double_click", "Action to execute on double click of the bar", "");
 
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.barColor);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.textColor);
@@ -540,15 +541,11 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.enabled);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.iconOnHover);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.onDoubleClick);
-    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.workspaceTag);
-    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.snap);
-    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.barTextWeight);
-    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.buttonRounding);
 
     if (Config::mgr()->type() == Config::CONFIG_LEGACY)
-        HyprlandAPI::addConfigKeyword(PHANDLE, "plugin:hyprbars:hyprbars-button", onNewButton, Hyprlang::SHandlerOptions{});
+        HyprlandAPI::addConfigKeyword(PHANDLE, "plugin:breezebars:breezebars-button", onNewButton, Hyprlang::SHandlerOptions{});
     else
-        HyprlandAPI::addLuaFunction(PHANDLE, "hyprbars", "add_button", ::newLuaButton);
+        HyprlandAPI::addLuaFunction(PHANDLE, "breezebars", "add_button", ::newLuaButton);
     g_pGlobalState->csdCommand = HyprlandAPI::registerHyprCtlCommand(PHANDLE, SHyprCtlCommand{.name = "hyprbars-csd", .exact = true, .fn = csdReport});
     g_pGlobalState->pPreReloadListener = Event::bus()->m_events.config.preReload.listen([] { onPreConfigReload(); });
     g_pGlobalState->pReloadedListener  = Event::bus()->m_events.config.reloaded.listen([] { onConfigReloaded(); });
@@ -563,7 +560,9 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 
     HyprlandAPI::reloadConfig();
 
-    return {"hyprbars", "A plugin to add title bars to windows.", "Vaxry", "1.0"};
+    // Nombre propio (no «hyprbars»): el de Retro es el plugin de Omarchy, que se registra como hyprbars, y
+    // los dos pueden estar cargados a la vez.
+    return {"breezebars", "Breeze (KDE) title bars for BWM, a fork of hyprbars.", "Vaxry, BWM", "1.0"};
 }
 
 APICALL EXPORT void PLUGIN_EXIT() {

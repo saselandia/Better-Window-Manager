@@ -192,7 +192,7 @@ def main(argv=None):
         try:
             from bwm_windows import titlebars, has_titlebar
             if has_titlebar(target_win, titlebars()):
-                opt = json.loads(subprocess.check_output(["hyprctl", "getoption", "plugin:hyprbars:bar_height", "-j"]))
+                opt = json.loads(subprocess.check_output(["hyprctl", "getoption", "plugin:breezebars:bar_height", "-j"]))
                 titlebar = max(0, opt.get("int", 30))
         except (OSError, ValueError, subprocess.SubprocessError):
             titlebar = 30

@@ -249,12 +249,14 @@ hl.config({
     }
 })
 
--- plugin.hyprbars: habilitar en Plasma y deshabilitar limpiamente en otros estilos
-if hl.plugin and hl.plugin.hyprbars then
+-- plugin.breezebars (barras de título Breeze, src/hyprbars): habilitar en Plasma y deshabilitar en las
+-- demás skins. Las barras de los workspaces flotantes de Retro son otro plugin, el de Omarchy
+-- (hyprbars), que configura skins/retro/hypr/workspace-modes.lua.
+if hl.plugin and hl.plugin.breezebars then
     if is_plasma then
         hl.config({
             plugin = {
-                hyprbars = {
+                breezebars = {
                     enabled = true,
                     -- Paleta Breeze Dark (Plasma 6): cabecera activa / inactiva
                     bar_color = "0xff2a2e32",
@@ -281,9 +283,9 @@ if hl.plugin and hl.plugin.hyprbars then
         -- La barra solo aparece en ventanas que piden decoración al compositor;
         -- las que traen sus propios botones (CSD) se detectan solas
         -- (comprobar con: hyprctl hyprbars-csd).
-        if hl.plugin.hyprbars.add_button then
+        if hl.plugin.breezebars.add_button then
             -- Extremo derecho: Cerrar (círculo rojo Breeze #da4453 al pasar el ratón)
-            hl.plugin.hyprbars.add_button({
+            hl.plugin.breezebars.add_button({
                 bg_color = "0xffda4453",
                 fg_color = "0xfffcfcfc",
                 size = 20,
@@ -291,7 +293,7 @@ if hl.plugin and hl.plugin.hyprbars then
                 action = "hyprctl dispatch \"hl.dsp.window.close()\""
             })
             -- Centro: Maximizar / Restaurar
-            hl.plugin.hyprbars.add_button({
+            hl.plugin.breezebars.add_button({
                 bg_color = "0xfffcfcfc",
                 fg_color = "0xfffcfcfc",
                 size = 20,
@@ -299,7 +301,7 @@ if hl.plugin and hl.plugin.hyprbars then
                 action = "hyprctl dispatch \"hl.dsp.window.fullscreen({ mode = 1, action = 'toggle' })\""
             })
             -- Izquierda: Minimizar
-            hl.plugin.hyprbars.add_button({
+            hl.plugin.breezebars.add_button({
                 bg_color = "0xfffcfcfc",
                 fg_color = "0xfffcfcfc",
                 size = 20,
@@ -310,7 +312,7 @@ if hl.plugin and hl.plugin.hyprbars then
     else
         hl.config({
             plugin = {
-                hyprbars = {
+                breezebars = {
                     enabled = false,
                 }
             }

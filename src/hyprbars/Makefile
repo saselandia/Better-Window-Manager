@@ -5,7 +5,7 @@ CXXFLAGS += -shared -fPIC -fno-gnu-unique -std=c++2b -Wno-narrowing
 INCLUDES = `pkg-config --cflags pixman-1 libdrm hyprland libinput libudev wayland-server xkbcommon lua5.4`
 LIBS = -lxcb
 
-SRC = main.cpp barDeco.cpp BarPassElement.cpp CSDDetect.cpp SquareTop.cpp appName.cpp
+SRC = main.cpp barDeco.cpp BarPassElement.cpp CSDDetect.cpp SquareTop.cpp
 HEADERS = $(wildcard *.hpp)
 TARGET = hyprbars.so
 

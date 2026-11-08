@@ -7,10 +7,12 @@
 --  * `o` no existe en BWM: se crea aquí sólo con `o.workspace_mode`, el que llaman los archivos que
 --    guarda omarchy-hyprland-workspace-layout-toggle en ~/.local/state/omarchy/workspace-layouts
 --    (mismo formato que Omarchy, así que los de Omarchy valen tal cual).
---  * Barras de título con el hyprbars de BWM (hyprbars-plasma.so, el de Breeze) en vez de
---    omarchy-hyprland-titlebars: los dos se registran como «hyprbars» y no pueden convivir. El de BWM
---    tiene workspace_tag y %WINDOW% como el de Omarchy, y además no pone barra a las apps que traen
---    la suya (CSD). Se carga con `hyprctl plugin load` la primera vez que algo flota (nunca se descarga).
+--  * Barras de título con el plugin de Omarchy sin cambios, omarchy-hyprland-titlebars (src/omarchy-
+--    titlebars → plugins/omarchy-titlebars.so), con las mismas opciones y botones que Omarchy. Nada del
+--    plugin de Breeze (breezebars). Omarchy lo carga con hl.plugin.load y Hyprland lo descarga cuando
+--    la configuración deja de pedirlo; BWM nunca descarga plugins en caliente (AGENTS.md, regla 1), así
+--    que se carga con `hyprctl plugin load` la primera vez que algo flota y queda cargado: sin
+--    configurarlo no dibuja nada (su enabled vale false por defecto).
 --  * Sin o.floating_apps: se excluyen de la regla de apertura las apps flotantes de BWM con tamaño
 --    propio (rules.lua). El resto de reglas flotantes de BWM no fijan tamaño y toman el del modo.
 --  * El modo vidrio de BWM (~/.local/state/bwm/glass) hace de «glassy».
@@ -28,7 +30,7 @@ local WORKSPACE_TAG = "omarchy-floating-workspace"
 local OPENED_TAG = "omarchy-mode-opened"
 local OPEN_RULE = "omarchy-floating-open-"
 local LAST_WORKSPACE = 2147483647
-local TITLEBARS = HOME .. "/.config/hypr/plugins/hyprbars-plasma.so"
+local TITLEBARS = HOME .. "/.config/hypr/plugins/omarchy-titlebars.so"
 local SHIMS = HOME .. "/.config/hypr/scripts/omarchy-shims"
 
 -- Apps flotantes de BWM con tamaño propio (rules.lua): conservan el suyo
@@ -413,74 +415,61 @@ local function titlebars()
         return
     end
     if not titlebars_loaded() then
-        -- Una sola carga aunque varias recargas seguidas lleguen aquí antes de que acabe
+        -- Una sola carga aunque varias recargas seguidas lleguen aquí antes de que acabe. Al iniciar
+        -- sesión esto corre mientras Hyprland lee su configuración y aún no atiende a hyprctl: se
+        -- espera a que responda (hasta 30 s) antes de mirar si ya está cargado y cargarlo.
         os.execute("(sleep 0.3; flock -n \"${XDG_RUNTIME_DIR:-/tmp}/bwm-hyprbars-load.lock\" sh -c "
-            .. "'hyprctl plugin list | grep -q \"Plugin hyprbars\" || hyprctl plugin load \"" .. TITLEBARS .. "\"') >/dev/null 2>&1 &")
+            .. "'i=0; until hyprctl -j version >/dev/null 2>&1; do i=$((i+1)); [ $i -ge 60 ] && exit 1; sleep 0.5; done; "
+            .. "hyprctl plugin list | grep -q \"Plugin hyprbars\" || hyprctl plugin load \"" .. TITLEBARS .. "\"') >/dev/null 2>&1 &")
         return
     end
     if not (hl.plugin and hl.plugin.hyprbars) then
         return
     end
 
+    -- Igual que titlebars() de Omarchy (quattro 60bf28ee)
     local colors = theme_colors()
     local window = [[window = "address:%WINDOW%"]]
-    local maximize = "hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"toggle\", " .. window .. " })'"
-
-    -- Opciones que sólo tiene el plugin nuevo (las del cargado antes de actualizarlo darían error)
-    local function plugin_has(option)
-        return hl.get_config and hl.get_config("plugin:hyprbars:" .. option) ~= nil
-    end
-
-    -- Un hyprbars cargado de antes de esta versión convertía en arrastre de la ventana cualquier
-    -- pulsación arriba de una ventana sin barra (las pestañas de un navegador): mejor sin barras
-    -- hasta volver a iniciar sesión, que es cuando se carga el nuevo (nunca se recarga en caliente).
-    if not plugin_has("workspace_tag") or not plugin_has("button_rounding") then
-        return
-    end
 
     hl.config({
         plugin = {
             hyprbars = {
                 enabled = true,
-                bar_text_weight = plugin_has("bar_text_weight") and "normal" or nil,
-                button_rounding = plugin_has("button_rounding") and 0 or nil,
                 workspace_tag = WORKSPACE_TAG,
-                snap = plugin_has("snap") and false or nil,
                 bar_height = 30,
                 bar_color = colors.titlebar,
-                inactive_bar_color = colors.titlebar,
-                ["col.text"] = colors.foreground,
-                ["col.inactive_text"] = colors.foreground,
+                col = { text = colors.foreground },
                 bar_text_font = "monospace",
                 bar_text_size = 12,
+                bar_text_weight = "normal",
                 bar_text_align = "left",
                 bar_buttons_alignment = "right",
                 bar_part_of_window = true,
                 bar_precedence_over_border = true,
                 bar_padding = 10,
                 bar_button_padding = 8,
+                button_rounding = 0,
                 icon_on_hover = false,
                 inactive_button_color = colors.titlebar,
-                on_double_click = maximize,
+                on_double_click = "hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"toggle\", " .. window .. " })'",
             },
         },
     })
 
-    if hl.plugin.hyprbars.add_button then
-        for _, button in ipairs({
-            { icon = "×", action = "hyprctl dispatch 'hl.dsp.window.close({ " .. window .. " })'" },
-            { icon = "□", action = maximize },
-            -- Como en Omarchy, sólo con el dock encendido, que es quien las devuelve (workspace 99 de BWM)
-            { icon = "−", action = "PATH=" .. SHIMS .. ":$PATH " .. SHIMS .. "/omarchy-hyprland-window-minimize %WINDOW%" },
-        }) do
-            hl.plugin.hyprbars.add_button({
-                bg_color = colors.titlebar,
-                fg_color = colors.foreground,
-                size = 20,
-                icon = button.icon,
-                action = button.action,
-            })
-        end
+    for _, button in ipairs({
+        { icon = "×", action = "hyprctl dispatch 'hl.dsp.window.close({ " .. window .. " })'" },
+        { icon = "□", action = "hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = \"maximized\", action = \"toggle\", " .. window .. " })'" },
+        -- Minimized windows wait in the dock, which brings them back. (BWM: su shim, ruta absoluta porque
+        -- el PATH de Hyprland no tiene ~/.local/bin)
+        { icon = "−", action = "PATH=" .. SHIMS .. ":$PATH " .. SHIMS .. "/omarchy-hyprland-window-minimize %WINDOW%" },
+    }) do
+        hl.plugin.hyprbars.add_button({
+            bg_color = colors.titlebar,
+            fg_color = colors.foreground,
+            size = 20,
+            icon = button.icon,
+            action = button.action,
+        })
     end
 end
 
