@@ -771,6 +771,7 @@
   "Position of %1 updated in preview": "Posición de %1 actualizada en vista previa",
   "Drag displays to arrange their positions, or click to configure": "Arrastra las pantallas para ordenarlas, o haz clic para configurarlas",
   "Cursor": "Cursor",
+  "Idle": "Inactividad",
   "Cursor Settings": "Ajustes de Cursor",
   "Cursor applied successfully": "Cursor aplicado con éxito",
   "Error applying cursor: %1": "Error aplicando el cursor: %1",

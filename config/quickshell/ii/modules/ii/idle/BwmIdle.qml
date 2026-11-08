@@ -9,12 +9,11 @@ import Quickshell.Wayland
 
 /**
  * Inactividad, común a todas las skins (hace de hypridle). Los tiempos (Config.options.idle,
- * segundos, 0 = nunca) son los mismos en todas; lo que pasa depende de la skin:
- *   screen:  la skin con salvapantallas (skins/<id>/scripts/launch-screensaver.sh: Retro, como
- *            Omarchy) lo pone; las demás, o Retro con screensaver = false, apagan las pantallas
- *            (DPMS). Cualquier entrada lo cierra / las enciende
- *   lock:    bloquea con el bloqueo de la skin (IPC lock activate). Con el salvapantallas, las
- *            pantallas se apagan 5 s después de bloquear, como Omarchy
+ * segundos, 0 = nunca; Ajustes → Inactividad) son los mismos en todas:
+ *   screensaverTime: salvapantallas de la skin que lo trae (skins/<id>/scripts/launch-screensaver.sh:
+ *                    Retro, como Omarchy), si idle.screensaver. Cualquier entrada lo cierra
+ *   screen:  apaga las pantallas (DPMS); cualquier entrada las enciende
+ *   lock:    bloquea con el bloqueo de la skin (IPC lock activate)
  *   suspend: suspende con bwm-power (que bloquea antes)
  * Respetan «mantener despierto» y las apps que inhiben el reposo (vídeo a pantalla completa…).
  * Un reproductor MPRIS sonando impide el salvapantallas y la suspensión, no apagar las pantallas
@@ -29,10 +28,11 @@ Scope {
     readonly property string launcher: root.home + "/.config/hypr/skins/" + root.skin + "/scripts/launch-screensaver.sh"
     readonly property string powerCommand: root.home + "/.config/hypr/scripts/bwm-power"
 
+    readonly property int screensaverSeconds: Config.options?.idle?.screensaverTime ?? 150
     readonly property int screenSeconds: Config.options?.idle?.screen ?? 300
     readonly property int lockSeconds: Config.options?.idle?.lock ?? 600
     readonly property int suspendSeconds: Config.options?.idle?.suspend ?? 0
-    // Salvapantallas sólo si la skin trae uno y no se ha pedido apagar las pantallas en su lugar
+    // Salvapantallas sólo si la skin trae uno y está activado
     property bool skinHasScreensaver: false
     readonly property bool useScreensaver: root.skinHasScreensaver && (Config.options?.idle?.screensaver ?? true)
 
@@ -77,18 +77,28 @@ Scope {
         onIsIdleChanged: if (!isIdle && root.running) root.stop()
     }
 
-    // Pantalla: salvapantallas de la skin o pantallas apagadas
+    // Salvapantallas de la skin
     IdleMonitor {
-        enabled: root.screenSeconds > 0 && !root.awake && !(root.useScreensaver && root.mediaPlaying)
+        enabled: root.useScreensaver && root.screensaverSeconds > 0 && !root.awake && !root.mediaPlaying
+        timeout: Math.max(1, root.screensaverSeconds)
+        respectInhibitors: true
+        onIsIdleChanged: {
+            if (isIdle) root.start(false);
+            else if (root.running) root.stop();
+        }
+    }
+
+    // Pantallas apagadas (con el salvapantallas puesto, también lo cierra: no sigue dibujando a oscuras)
+    IdleMonitor {
+        enabled: root.screenSeconds > 0 && !root.awake
         timeout: Math.max(1, root.screenSeconds)
         respectInhibitors: true
         onIsIdleChanged: {
             if (isIdle) {
-                if (root.useScreensaver) root.start(false);
-                else root.setScreens(false);
-            } else {
                 if (root.running) root.stop();
-                if (root.screenIsOff) root.setScreens(true);
+                root.setScreens(false);
+            } else if (root.screenIsOff) {
+                root.setScreens(true);
             }
         }
         // «Mantener despierto» o un tiempo cambiado con la pantalla apagada: se vuelve a encender
@@ -104,18 +114,6 @@ Scope {
             if (root.running) root.stop();
             Quickshell.execDetached(["quickshell", "-c", "ii", "ipc", "call", "lock", "activate"]);
         }
-    }
-
-    // Con el salvapantallas, las pantallas se apagan 5 s después de bloquear (Omarchy)
-    IdleMonitor {
-        enabled: root.useScreensaver && root.lockSeconds > 0 && !root.awake
-        timeout: root.lockSeconds + 5
-        respectInhibitors: true
-        onIsIdleChanged: {
-            if (isIdle) root.setScreens(false);
-            else if (root.screenIsOff) root.setScreens(true);
-        }
-        onEnabledChanged: if (!enabled && root.screenIsOff) root.setScreens(true)
     }
 
     IdleMonitor {

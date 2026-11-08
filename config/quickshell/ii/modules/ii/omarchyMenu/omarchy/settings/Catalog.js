@@ -13,6 +13,7 @@ var pages = [
   ["general", "setup.settings.system.general", "General", "󰒓", "GeneralConfig.qml"],
   ["services", "setup.settings.system.services", "Servicios", "󰒋", "ServicesConfig.qml"],
   ["autostart", "setup.settings.system.autostart", "Inicio automático", "󱓞", "AutostartConfig.qml"],
+  ["idle", "setup.settings.system.idle", "Inactividad", "󰒲", "IdleConfig.qml"],
   ["defaultapps", "setup.settings.system.defaultapps", "Apps predeterminadas", "󰀻", "DefaultAppsConfig.qml"],
   ["plugins", "setup.settings.system.plugins", "Plugins", "󰐱", "PluginsConfig.qml"],
   ["about", "setup.settings.about", "Acerca de", "󰋼", "About.qml"]
@@ -23,7 +24,7 @@ var groups = [
   {page:"services", id:"weather", label:"Tiempo", icon:"󰖐", prefix:"bar.weather."}
 ];
 function page(key) {
-  if (/^\d+$/.test(String(key))) key = ["general", "bar", "background", "interface", "keybinds", "services", "autostart", "display", "workspaces", "defaultapps", "plugins", "themes", "style", "cursor", "about"][Number(key)] || "all";
+  if (/^\d+$/.test(String(key))) key = ["general", "bar", "background", "interface", "keybinds", "services", "autostart", "display", "workspaces", "defaultapps", "plugins", "themes", "style", "cursor", "about", "idle"][Number(key)] || "all";
   var name = String(key || "").toLowerCase().replace(/[^a-z]/g, "");
   if (name === "defaultapps" || name === "defaultapplications") name = "defaultapps";
   for (var i = 0; i < pages.length; i++) if (pages[i][0] === name || pages[i][1] === key) return pages[i];
@@ -61,10 +62,11 @@ function fields() {
   bool("interface", "sidebar.translator.enable", "Traductor de pantalla");
   bool("interface", "sidebar.cornerOpen.enable", "Abrir paneles desde las esquinas");
   bool("interface", "sidebar.cornerOpen.clickless", "Abrir las esquinas al pasar el puntero");
-  bool("style", "idle.screensaver", "Salvapantallas (si no, apagar las pantallas)");
-  num("style", "idle.screen", "Salvapantallas o pantallas apagadas tras", 0, 7200, 30, "s");
-  num("style", "idle.lock", "Bloquear tras", 0, 7200, 30, "s");
-  num("style", "idle.suspend", "Suspender tras", 0, 14400, 60, "s");
+  bool("idle", "idle.screensaver", "Salvapantallas");
+  num("idle", "idle.screensaverTime", "Salvapantallas tras", 0, 7200, 30, "duration");
+  num("idle", "idle.screen", "Apagar los monitores tras", 0, 7200, 30, "duration");
+  num("idle", "idle.lock", "Bloquear tras", 0, 7200, 30, "duration");
+  num("idle", "idle.suspend", "Suspender tras", 0, 14400, 60, "duration");
   bool("workspaces", "overview.orderRightLeft", "Orden inverso de las columnas");
   bool("workspaces", "overview.orderBottomUp", "Orden inverso de las filas");
   num("workspaces", "bar.workspaces.shown", "Workspaces en la barra", 1, 20);
@@ -125,8 +127,42 @@ function write(options, path, value) {
   obj[keys[keys.length - 1]] = value;
   return true;
 }
+// Tiempos en segundos (unit "duration"): se muestran «5 min 30 s» y se escriben «5:30»; un número
+// solo son minutos
+function durationLabel(s) {
+  s = Number(s) || 0;
+  if (s <= 0) return "Nunca";
+  var m = Math.floor(s / 60), r = s % 60;
+  return (m ? m + " min" : "") + (m && r ? " " : "") + (r ? r + " s" : "");
+}
+function durationText(s) {
+  s = Number(s) || 0;
+  var r = s % 60;
+  return Math.floor(s / 60) + ":" + (r < 10 ? "0" : "") + r;
+}
+function parseDuration(text) {
+  var t = String(text).trim().toLowerCase();
+  var m = t.match(/^(\d+):([0-5]?\d)$/);
+  if (m) return Number(m[1]) * 60 + Number(m[2]);
+  if (/^\d+$/.test(t)) return Number(t) * 60;
+  m = t.match(/^(?:(\d+)\s*m(?:in)?)?\s*(?:(\d+)\s*s)?$/);
+  if (m && (m[1] || m[2])) return Number(m[1] || 0) * 60 + Number(m[2] || 0);
+  return NaN;
+}
+function editText(field, value) {
+  return field && field.unit === "duration" ? durationText(value) : String(value === undefined ? "" : value);
+}
+function parseNumber(field, text) {
+  return field && field.unit === "duration" ? parseDuration(text) : (String(text).trim() ? Number(text) : NaN);
+}
 function validate(field, text) {
   if (field.type !== "number") return {ok: true, value: text};
+  if (field.unit === "duration") {
+    var d = parseDuration(text);
+    if (!isFinite(d)) return {ok: false, error: "Escribe minutos:segundos, p. ej. 5:00 (0 = nunca)"};
+    if (d < field.min || d > field.max) return {ok: false, error: "Entre " + durationText(field.min) + " y " + durationText(field.max)};
+    return {ok: true, value: d};
+  }
   if (!String(text).trim()) return {ok: false, error: "Escribe un número"};
   var n = Number(text);
   if (!isFinite(n)) return {ok: false, error: "Escribe un número válido"};
@@ -138,6 +174,7 @@ function summary(field, value) {
   if (value === undefined) return "No disponible";
   if (field.type === "bool") return value ? "Activado" : "Desactivado";
   if (field.choices) for (var i = 0; i < field.choices.length; i++) if (field.choices[i].value === value) return field.choices[i].label;
+  if (field.unit === "duration") return durationLabel(value);
   return (String(value) || "Sin definir") + (field.unit ? " " + field.unit : "");
 }
 function entries() {

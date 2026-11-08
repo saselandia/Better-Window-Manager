@@ -119,6 +119,8 @@ QtObject {
         focusSearch();
         return true;
     }
+    function editText(f, v) { return Catalog.editText(f, v); }
+    function parseNumber(f, text) { return Catalog.parseNumber(f, text); }
     function validation(text) { return editing ? Catalog.validate(editing, text) : {ok:true}; }
     function back() {
         if (editing) { editing = null; focusSearch(); return true; }

@@ -86,6 +86,11 @@ ApplicationWindow {
             component: "modules/settings/DefaultAppsConfig.qml"
         },
         {
+            name: Translation.tr("Idle"),
+            icon: "bedtime",
+            component: "modules/settings/IdleConfig.qml"
+        },
+        {
             name: Translation.tr("Style"),
             icon: "font_download",
             component: "modules/settings/StyleConfig.qml"

@@ -311,12 +311,13 @@ Singleton {
                 property string locale: "en-GB"
             }
 
-            // Inactividad (modules/ii/idle/BwmIdle.qml), común a todas las skins: segundos sin usar
-            // el equipo, 0 = nunca. A los `screen` s, default (end-4) y Breeze apagan las pantallas y
-            // Retro pone su salvapantallas (o también las apaga, con screensaver = false)
+            // Inactividad (modules/ii/idle/BwmIdle.qml, Ajustes → Inactividad), común a todas las
+            // skins: segundos sin usar el equipo, 0 = nunca. screensaverTime: salvapantallas de la
+            // skin que lo trae (Retro), si screensaver; screen: apagar las pantallas (DPMS)
             property JsonObject idle: JsonObject {
-                property int screen: 300
                 property bool screensaver: true
+                property int screensaverTime: 150
+                property int screen: 300
                 property int lock: 600
                 property int suspend: 0
             }

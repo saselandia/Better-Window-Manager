@@ -12,14 +12,14 @@ Item {
     readonly property var validation: controller.validation(input.text)
     implicitHeight: column.implicitHeight
     function begin() {
-        input.text = String(controller.value(field) ?? "");
+        input.text = controller.editText(field, controller.value(field));
         Qt.callLater(function() { input.forceActiveFocus(); input.selectAll(); });
     }
     function step(direction) {
         if (field.type !== "number") return;
-        const parsed = Number(input.text);
-        const value = isFinite(parsed) && input.text.trim() ? parsed : Number(controller.value(field));
-        input.text = String(Math.max(field.min, Math.min(field.max, value + direction * field.step)));
+        const parsed = controller.parseNumber(field, input.text);
+        const value = isFinite(parsed) ? parsed : Number(controller.value(field));
+        input.text = controller.editText(field, Math.max(field.min, Math.min(field.max, value + direction * field.step)));
         input.forceActiveFocus();
         input.selectAll();
     }
@@ -41,7 +41,7 @@ Item {
         Text {
             Layout.fillWidth: true
             visible: !!text
-            text: root.field?.hint || (root.field?.type === "number" ? "Entre " + root.field.min + " y " + root.field.max + (root.field.unit ? " " + root.field.unit : "") : "Los cambios se aplican al guardar.")
+            text: root.field?.hint || (root.field?.unit === "duration" ? "Minutos:segundos, p. ej. 5:00; un número solo son minutos; 0 = nunca" : root.field?.type === "number" ? "Entre " + root.field.min + " y " + root.field.max + (root.field.unit ? " " + root.field.unit : "") : "Los cambios se aplican al guardar.")
             color: Commons.Color.menu.text
             opacity: 0.65
             font.family: Style.font.menuFamily

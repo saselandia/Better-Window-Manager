@@ -6,7 +6,7 @@
 # Copyright (c) David Heinemeier Hansson): una kitty a pantalla completa por monitor,
 # en su propio workspace especial, ejecutando bwm-screensaver.py.
 # Uso: launch-screensaver.sh [force]   (force: aunque esté desactivado en ajustes)
-# Salvapantallas de la skin Retro: lo lanza modules/ii/idle/BwmIdle.qml tras idle.screen s (idle.screensaver = false: apaga las pantallas en su lugar)
+# Salvapantallas de la skin Retro: lo lanza modules/ii/idle/BwmIdle.qml tras idle.screensaverTime s, si idle.screensaver (Ajustes → Inactividad)
 # ==============================================================================
 
 CLASS="org.bwm.screensaver"
