@@ -1310,5 +1310,48 @@
       "default"
     ],
     "is_modified": false
+  },
+  {
+    "id": "custom_1794096369_75",
+    "category": "General",
+    "description": "Cambiar fondo (end-4)",
+    "mods": [
+      "CTRL",
+      "SUPER"
+    ],
+    "key": "T",
+    "action_type": "exec",
+    "exec": "quickshell -c ii ipc call wallpaperSelector toggle",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "is_modified": false,
+    "skins": [
+      "default"
+    ]
+  },
+  {
+    "id": "custom_1794096369_76",
+    "category": "General",
+    "description": "Fondo aleatorio de la carpeta (end-4)",
+    "mods": [
+      "CTRL",
+      "SUPER",
+      "ALT"
+    ],
+    "key": "T",
+    "action_type": "exec",
+    "exec": "quickshell -c ii ipc call wallpaperSelector random",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "default"
+    ],
+    "is_modified": false
   }
 ]

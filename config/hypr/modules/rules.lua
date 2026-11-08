@@ -66,6 +66,13 @@ hl.layer_rule({
     animation    = "slide bottom",
 })
 
+-- Selector de fondos de end-4: baja desde arriba, como en dots-hyprland
+hl.layer_rule({
+    name      = "bwm-ii-wallpaper-selector",
+    match     = { namespace = "^quickshell:wallpaperSelector$" },
+    animation = "slide top",
+})
+
 -- Hyprland-run windowrule
 hl.window_rule({
     name  = "move-hyprland-run",

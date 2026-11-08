@@ -10,6 +10,16 @@ set -euo pipefail
 WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
 CACHE_DIR="$HOME/.cache/wallpaper-thumbnails"
 CURRENT_THEME="$(python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py get 2>/dev/null || echo "default")"
+
+# default (end-4): el selector de fondos de end-4 (Quickshell, como Ctrl+Super+T en
+# dots-hyprland); rofi queda de respaldo si Quickshell no responde
+if [[ "$CURRENT_THEME" == "default" ]]; then
+    # qs devuelve 0 también con «Target not found.»: sólo vale una salida vacía
+    if out="$(qs -c ii ipc call wallpaperSelector toggle 2>&1)" && [[ -z "$out" ]]; then
+        exit 0
+    fi
+fi
+
 if [[ "$CURRENT_THEME" == "retro" ]]; then
     ROFI_THEME="$HOME/.config/rofi/wallpaper-picker-retro.rasi"
 elif [[ "$CURRENT_THEME" == "plasma" ]]; then

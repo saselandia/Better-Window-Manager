@@ -81,6 +81,8 @@ post_process() {
         if [ -n "$wall_bin" ] && pgrep -x "$(basename "$wall_bin")-daemon" >/dev/null 2>&1; then
             "$wall_bin" img "$wallpaper_path" --transition-type grow --transition-pos center --transition-step 90 --transition-duration 2 --transition-fps 60 2>/dev/null || true
         fi
+        # Plymouth/SDDM siguen los colores, igual que con set-wallpaper.sh
+        python3 /home/sasel/.config/hypr/scripts/bwm_boot.py render >/dev/null 2>&1 &
     fi
 
     handle_kde_material_you_colors &

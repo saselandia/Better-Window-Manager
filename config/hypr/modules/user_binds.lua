@@ -100,6 +100,8 @@ hl.bind("SUPER + M", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/omarchy-s
 hl.bind("ALT + SPACE", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/app-launcher.sh apps"), { description = "Lanzadores: Aplicaciones (Apps de Omarchy en Retro)" })
 -- [General]
 if active_skin == "default" then hl.bind("SUPER + G", hl.dsp.exec_cmd("quickshell -c ii ipc call overlay toggle"), { description = "General: Overlay de widgets (end-4)" }) end
+if active_skin == "default" then hl.bind("CTRL + SUPER + T", hl.dsp.exec_cmd("quickshell -c ii ipc call wallpaperSelector toggle"), { description = "General: Cambiar fondo (end-4)" }) end
+if active_skin == "default" then hl.bind("CTRL + SUPER + ALT + T", hl.dsp.exec_cmd("quickshell -c ii ipc call wallpaperSelector random"), { description = "General: Fondo aleatorio de la carpeta (end-4)" }) end
 
 -- Helper binds: allow Super+Alt for corner snaps in Plasma as well
 if is_plasma then
