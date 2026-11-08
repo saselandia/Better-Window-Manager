@@ -199,7 +199,7 @@ hl.window_rule({
     center = true,
 })
 
--- Salvapantallas de terminal (launch-screensaver.sh), como el de Omarchy:
+-- Salvapantallas de terminal de Retro (skins/retro/scripts/launch-screensaver.sh), como el de Omarchy:
 -- pantalla completa, sin barra de título y en su workspace especial si se reabre
 hl.window_rule({
     name       = "bwm-screensaver",

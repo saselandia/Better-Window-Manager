@@ -152,7 +152,7 @@ siendo el nombre del escritorio original que imita Breeze.
 | Apagar, reiniciar, cerrar sesión, suspender | `config/hypr/scripts/bwm-power <acción> [--dry-run]` (común a todas las skins); los menús de cada skin sólo lo llaman |
 | Animaciones (ventanas, workspaces, menús/capas, fondo) | `config/hypr/skins/<id>/hypr/animations.lua` (copia de las del original); fondo: `modules/ii/background` (default (end-4)), `modules/ii/omarchyBackground` (Retro, vía `set-wallpaper.sh`) |
 | Temas web de Stremio / barra de Steam | `scripts/stremio-theme.py`, `scripts/stremio-theme.cjs`, `scripts/steam-theme.sh`, `hypr/omarchy/overlays/steam.css`; alcance en `docs/STREMIO_THEMING.md` |
-| Salvapantallas e inhibición por multimedia | `modules/ii/screensaver/ScreensaverIdle.qml`, `scripts/launch-screensaver.sh` |
+| Inactividad (pantallas/salvapantallas, bloqueo, suspender) | `modules/ii/idle/BwmIdle.qml` (común) con `idle.screen/screensaver/lock/suspend` comunes a todas las skins; salvapantallas de Retro en `skins/retro/scripts/launch-screensaver.sh` (las demás apagan las pantallas) |
 | Actualizaciones de Gentoo / Flatpak | `BWM_CONTEXT.md` §2.7; shims `omarchy-update` y `omarchy-update-available` |
 | Reiniciar una app conservando sus ventanas | `bwm_omarchy.restart_app()` (Firefox, Vesktop, Steam, Stremio) + `scripts/bwm_windows.py` (`quiet_activation`: sin `focus_on_activate` mientras se reinicia, o te lleva a su workspace) |
 | Dónde quedan las ventanas al cambiar de skin | `scripts/bwm_windows.py` (`float_in_place`, `traditional_box`, `restored_box`, `hold_new_windows`), `bwm_transition.py`, `sync_floating_windows`; familia de la skin en `skins/<id>.json` → `windowing` (`tiling`/`stacking`) |
@@ -232,8 +232,9 @@ siendo el nombre del escritorio original que imita Breeze.
 - **Anchura de widgets:** `OmarchyPluginSlot` reserva cero si el widget está invisible. Los que no caben
   se ocultan con opacidad/recorte, manteniendo su medida; `visible: false` en el padre produce un bucle
   al medir `loader.item.visible`. Los servicios ajenos sólo cargan con el plugin activado.
-- **Salvapantallas:** el disparo automático respeta inhibidores, «mantener despierto» y cualquier reproductor
-  MPRIS en reproducción; el inicio manual por IPC sigue disponible.
+- **Inactividad:** cada fase respeta inhibidores y «mantener despierto»; un reproductor MPRIS sonando impide
+  el salvapantallas y la suspensión, no el bloqueo. `loginctl lock-session` no bloquea en BWM (nadie lo
+  escucha): bloquear es `bwm-power lock` / IPC `lock activate`.
 - **Gentoo:** usa `sudo eselect news read`. Sin sudo puede listar los avisos pero fallar al guardar
   `news-gentoo.unread/skip` (root:portage) con «Cannot update list of news items». No cambies permisos.
   En `dispatch-conf`, compara el archivo actual con `._cfgNNNN_*` antes de recomendar `u` (aceptar),
@@ -265,6 +266,9 @@ siendo el nombre del escritorio original que imita Breeze.
 
 ## 6. Cómo probar
 
+- **Copias de prueba de QML con acciones reales** (bloquear, suspender, apagar, IPC al shell real): sustituye
+  las llamadas y comprueba con `grep` que no quedó **ninguna** sin sustituir antes de ejecutar. Incidente
+  2026-11-08: una línea sin `;` escapó al `sed` y la prueba suspendió el PC del usuario.
 - Hyprland: `hyprctl reload`, `hyprctl configerrors`, `Hyprland --verify-config --config <archivo>`.
 - Quickshell: `qs -c ii log` (errores de la instancia real; busca «failed to load», `ReferenceError`, `TypeError`,
   «is not a type»), `qs -c ii ipc show` (un panel que no carga **desaparece**), `qs -c ii ipc call <target> <función>`.

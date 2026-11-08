@@ -30,7 +30,8 @@ case $action in
     else command=(hyprctl dispatch 'hl.dsp.exit()'); fi ;;
   suspend) command=(systemctl suspend) ;;
   hibernate) command=(systemctl hibernate) ;;
-  lock) command=(loginctl lock-session) ;;
+  # El bloqueo de la skin (Quickshell); nadie atiende loginctl lock-session en BWM (end-4 lo hace con hypridle)
+  lock) command=(quickshell -c ii ipc call lock activate) ;;
   -h|--help) echo "$usage"; exit 0 ;;
   *) echo "$usage" >&2; exit 2 ;;
 esac
@@ -39,10 +40,17 @@ run() {
   if [[ $dry_run == 1 ]]; then echo "[dry-run] $*"; else "$@"; fi
 }
 
-# Suspender, hibernar y bloquear no cierran nada
+# Suspender, hibernar y bloquear no cierran nada. Antes de dormir se bloquea, como el
+# before_sleep_cmd de end-4: al despertar está el bloqueo, no el escritorio
 case $action in
-  suspend|hibernate|lock)
-    run "${command[@]}" || { [[ $action != lock ]] && run "${command[@]/#systemctl/loginctl}"; }
+  lock)
+    run "${command[@]}"
+    exit
+    ;;
+  suspend|hibernate)
+    run quickshell -c ii ipc call lock activate >/dev/null 2>&1
+    [[ $dry_run == 1 ]] || sleep 0.5
+    run "${command[@]}" || run "${command[@]/#systemctl/loginctl}"
     exit
     ;;
 esac

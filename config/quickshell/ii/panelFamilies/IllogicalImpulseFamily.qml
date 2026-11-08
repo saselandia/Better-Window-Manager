@@ -29,7 +29,7 @@ import qs.modules.ii.wallpaperSelector
 import qs.modules.ii.altTab
 import qs.modules.ii.omarchyMenu
 import qs.modules.ii.plasmaKickoff
-import qs.modules.ii.screensaver
+import qs.modules.ii.idle
 import qs.modules.ii.screenshotPreview
 import qs.modules.ii.omarchyNotifications
 import qs.modules.ii.plasmaBluetooth
@@ -76,7 +76,7 @@ Scope {
     PanelLoader { component: AltTab {} }
     PanelLoader { component: OmarchyMenu {} }
     PanelLoader { component: PlasmaKickoff {} }
-    PanelLoader { component: ScreensaverIdle {} }
+    PanelLoader { component: BwmIdle {} }
     PanelLoader { component: PlasmaBluetooth {} }
     PanelLoader { component: PlasmaNetwork {} }
     PanelLoader { component: PlasmaTaskMenu {} }

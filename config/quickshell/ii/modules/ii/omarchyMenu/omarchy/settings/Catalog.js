@@ -61,8 +61,10 @@ function fields() {
   bool("interface", "sidebar.translator.enable", "Traductor de pantalla");
   bool("interface", "sidebar.cornerOpen.enable", "Abrir paneles desde las esquinas");
   bool("interface", "sidebar.cornerOpen.clickless", "Abrir las esquinas al pasar el puntero");
-  bool("style", "screensaver.enable", "Salvapantallas automático");
-  num("style", "screensaver.timeoutMinutes", "Espera del salvapantallas", 1, 120, 1, "min");
+  bool("style", "idle.screensaver", "Salvapantallas (si no, apagar las pantallas)");
+  num("style", "idle.screen", "Salvapantallas o pantallas apagadas tras", 0, 7200, 30, "s");
+  num("style", "idle.lock", "Bloquear tras", 0, 7200, 30, "s");
+  num("style", "idle.suspend", "Suspender tras", 0, 14400, 60, "s");
   bool("workspaces", "overview.orderRightLeft", "Orden inverso de las columnas");
   bool("workspaces", "overview.orderBottomUp", "Orden inverso de las filas");
   num("workspaces", "bar.workspaces.shown", "Workspaces en la barra", 1, 20);

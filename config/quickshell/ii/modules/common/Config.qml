@@ -311,10 +311,14 @@ Singleton {
                 property string locale: "en-GB"
             }
 
-            // Terminal screensaver on idle (modules/ii/screensaver, launch-screensaver.sh)
-            property JsonObject screensaver: JsonObject {
-                property bool enable: true
-                property int timeoutMinutes: 5
+            // Inactividad (modules/ii/idle/BwmIdle.qml), común a todas las skins: segundos sin usar
+            // el equipo, 0 = nunca. A los `screen` s, default (end-4) y Breeze apagan las pantallas y
+            // Retro pone su salvapantallas (o también las apaga, con screensaver = false)
+            property JsonObject idle: JsonObject {
+                property int screen: 300
+                property bool screensaver: true
+                property int lock: 600
+                property int suspend: 0
             }
 
             property JsonObject cheatsheet: JsonObject {

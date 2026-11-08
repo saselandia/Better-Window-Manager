@@ -6,16 +6,17 @@
 # Copyright (c) David Heinemeier Hansson): una kitty a pantalla completa por monitor,
 # en su propio workspace especial, ejecutando bwm-screensaver.py.
 # Uso: launch-screensaver.sh [force]   (force: aunque esté desactivado en ajustes)
+# Salvapantallas de la skin Retro: lo lanza modules/ii/idle/BwmIdle.qml tras idle.screen s (idle.screensaver = false: apaga las pantallas en su lugar)
 # ==============================================================================
 
 CLASS="org.bwm.screensaver"
-SCRIPT="$HOME/.config/hypr/scripts/bwm-screensaver.py"
+SCRIPT="$HOME/.config/hypr/skins/retro/scripts/bwm-screensaver.py"
 
 # Ya en marcha
 pgrep -f "[o]rg\.bwm\.screensaver" >/dev/null && exit 0
 
 if [[ $1 != "force" ]] && [[ -f "$HOME/.config/illogical-impulse/config.json" ]] &&
-   [[ $(jq -r '.screensaver.enable // true' "$HOME/.config/illogical-impulse/config.json") == "false" ]]; then
+   [[ $(jq -r '.idle.screensaver // true' "$HOME/.config/illogical-impulse/config.json") == "false" ]]; then
   exit 1
 fi
 

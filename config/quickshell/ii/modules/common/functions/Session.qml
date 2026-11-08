@@ -21,7 +21,7 @@ Singleton {
     }
 
     function lock() {
-        Quickshell.execDetached(["loginctl", "lock-session"]);
+        Quickshell.execDetached([root.powerCommand, "lock"]);
     }
 
     function suspend() {

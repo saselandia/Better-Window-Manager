@@ -11,7 +11,7 @@ import qs.modules.settings.shared
 //  * system monospace font (font-set.sh, port of omarchy-font-set): terminals, fontconfig's
 //    "monospace" (Qt, GTK, Quickshell), GNOME's monospace font, Retro's TUI overlays
 //  * glass mode (GlassModeSection; in General for default (end-4))
-//  * terminal screensaver on idle (modules/ii/screensaver, launch-screensaver.sh)
+//  * inactividad común: pantallas o salvapantallas (Retro), bloqueo y suspensión (modules/ii/idle)
 //  * boot splash / login screen matching the theme (bwm_boot.py, install-boot-theme.sh)
 ContentPage {
     id: page
@@ -105,29 +105,56 @@ ContentPage {
         visible: Appearance.isRetro || Appearance.isPlasma
     }
 
+    // Inactividad (modules/ii/idle/BwmIdle.qml): los mismos tiempos en todas las skins; default
+    // (end-4) y Breeze apagan las pantallas y Retro pone su salvapantallas (o también las apaga)
     ContentSection {
-        icon: "screenshot_monitor"
-        title: "Salvapantallas"
+        icon: "bedtime"
+        title: "Inactividad"
 
+        StyledText {
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            color: Appearance.colors.colSubtext
+            text: "Segundos sin usar el equipo; 0 = nunca. Son los mismos en todas las skins."
+        }
         ConfigSwitch {
+            visible: Appearance.isRetro
             buttonIcon: "terminal"
-            text: "Salvapantallas de terminal al estar inactivo"
-            checked: Config.options.screensaver.enable
-            onCheckedChanged: Config.options.screensaver.enable = checked
+            text: "Salvapantallas de terminal (si no, se apagan las pantallas)"
+            checked: Config.options.idle.screensaver
+            onCheckedChanged: Config.options.idle.screensaver = checked
         }
         ConfigSpinBox {
-            enabled: Config.options.screensaver.enable
-            icon: "timer"
-            text: "Minutos de inactividad"
-            value: Config.options.screensaver.timeoutMinutes
-            from: 1
-            to: 120
-            stepSize: 1
-            onValueChanged: Config.options.screensaver.timeoutMinutes = value
+            icon: Appearance.isRetro && Config.options.idle.screensaver ? "terminal" : "monitor"
+            text: Appearance.isRetro && Config.options.idle.screensaver ? "Salvapantallas tras" : "Apagar las pantallas tras"
+            value: Config.options.idle.screen
+            from: 0
+            to: 7200
+            stepSize: 30
+            onValueChanged: Config.options.idle.screen = value
+        }
+        ConfigSpinBox {
+            icon: "lock"
+            text: "Bloquear tras"
+            value: Config.options.idle.lock
+            from: 0
+            to: 7200
+            stepSize: 30
+            onValueChanged: Config.options.idle.lock = value
+        }
+        ConfigSpinBox {
+            icon: "bedtime"
+            text: "Suspender tras"
+            value: Config.options.idle.suspend
+            from: 0
+            to: 14400
+            stepSize: 60
+            onValueChanged: Config.options.idle.suspend = value
         }
         RippleButtonWithIcon {
+            visible: Appearance.isRetro
             materialIcon: "play_arrow"
-            mainText: "Probar ahora (cualquier tecla o el ratón lo cierran)"
+            mainText: "Probar el salvapantallas (cualquier tecla o el ratón lo cierran)"
             onClicked: Quickshell.execDetached(["qs", "-c", "ii", "ipc", "call", "screensaver", "start"])
         }
     }
