@@ -4,6 +4,8 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.functions
 import qs.modules.common.panels.lock
+import qs.modules.ii.omarchyLock
+import qs.modules.ii.plasmaLock
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
@@ -33,8 +35,9 @@ LockScreen {
         }
     }
 
-    // Retro: Omarchy's hyprlock look; the other skins keep the Material You one
-    lockSurface: Appearance.isRetro ? omarchySurface : defaultSurface
+    // Cada skin, su bloqueo: default (end-4) el de end-4 (LockSurface, con el fondo desenfocado
+    // que pinta Background.qml), Retro el de Omarchy 4 (omarchyLock) y Breeze el de KDE (plasmaLock)
+    lockSurface: Appearance.isRetro ? omarchySurface : (Appearance.isPlasma ? plasmaSurface : defaultSurface)
     Component {
         id: defaultSurface
         LockSurface {
@@ -44,6 +47,12 @@ LockScreen {
     Component {
         id: omarchySurface
         OmarchyLockSurface {
+            context: root.context
+        }
+    }
+    Component {
+        id: plasmaSurface
+        PlasmaLockSurface {
             context: root.context
         }
     }

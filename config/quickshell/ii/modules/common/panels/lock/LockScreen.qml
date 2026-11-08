@@ -132,11 +132,9 @@ Scope {
 
     function initIfReady() {
         if (!Config.ready || !Persistent.ready) return;
-        // Retro logs in at SDDM with a password (Omarchy style, install-boot-theme.sh): don't ask
-        // again. Default/Plasma come from SDDM's autologin and this lock is their login screen.
-        const loggedInAtGreeter = Appearance.isRetro
-            && (Quickshell.env("XDG_SESSION_PATH") ?? "").startsWith("/org/freedesktop/DisplayManager");
-        if (Config.options.lock.launchOnStartup && Persistent.isNewHyprlandInstance && !loggedInAtGreeter) {
+        // BWM: SDDM entra solo en todas las skins (install-boot-theme.sh) y este bloqueo, el de la
+        // skin activa, hace de inicio de sesión
+        if (Config.options.lock.launchOnStartup && Persistent.isNewHyprlandInstance) {
             root.lock();
         } else {
             KeyringStorage.fetchKeyringData();

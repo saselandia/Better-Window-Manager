@@ -52,6 +52,7 @@
   },
   "parts": {
     "quickshell": [
+      "config/quickshell/ii/modules/ii/plasmaLock",
       "config/quickshell/ii/modules/ii/bar/PlasmaBarContent.qml",
       "config/quickshell/ii/modules/ii/plasmaCommon",
       "config/quickshell/ii/modules/ii/plasmaKickoff",

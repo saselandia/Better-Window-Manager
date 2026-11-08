@@ -45,6 +45,10 @@ animaciones y reglas de capa de Omarchy quattro `598e4eb` (`default/hypr/looknfe
 `hypr/skins/default/hypr/animations.lua` copia las de end-4/dots-hyprland `2f2a376`
 (`hypr/hyprland/general.lua` y `rules.lua`, GPL-3.0, como el resto del shell derivado).
 
+Bloqueo de Retro (2026-11-08): `modules/ii/omarchyLock/LockView.qml` es `shell/plugins/lock/LockView.qml` de
+Omarchy quattro `598e4eb` (MIT) sin cambios. `modules/ii/plasmaLock/` es diseño propio que imita la
+pantalla de bloqueo Breeze de Plasma 6, sin código de KDE; usa el icono `go-next` de breeze-icons.
+
 Apagado común (2026-11-08): `hypr/scripts/bwm-power` sigue `bin/omarchy-system` y
 `bin/omarchy-hyprland-window-close-all` de Omarchy quattro `598e4eb` (MIT), reescrito para BWM.
 

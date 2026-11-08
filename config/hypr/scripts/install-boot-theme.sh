@@ -20,14 +20,14 @@
 # "omarchy" (aquí "bwm", mismo Main.qml) dentro de un Hyprland mínimo (DisplayServer=wayland,
 # sin logo ni animaciones, con la distribución de teclado y los monitores del usuario),
 # recordando último usuario y sesión (sesión por defecto hyprland.desktop).
-# Inicio de sesión según el estilo BWM activo: en Retro se entra con contraseña en SDDM (como
-# Omarchy) y Quickshell no vuelve a bloquear; en Default y Plasma SDDM entra solo y el
-# bloqueo del propio tema (Quickshell, lock.launchOnStartup) hace de inicio de sesión. Al
-# cambiar de estilo el servicio de --auto cambia el autologin de SDDM para el próximo arranque.
+# Inicio de sesión igual en todas las skins (desde 2026-11-08): SDDM es de BWM y entra solo, y la
+# contraseña la pide el bloqueo de la skin activa al arrancar (Quickshell, lock.launchOnStartup):
+# el de end-4 en default, el de Omarchy 4 en Retro y el de KDE en Breeze. Antes Retro pedía la
+# contraseña en SDDM y las demás entraban solas.
 # --enable-sddm lo activa al arrancar y aparca el autologin de getty en tty1 (si lo había);
-# --autologin: SDDM entra siempre solo, sea cual sea el tema (sin --autologin vuelve al modo
-# por estilo). --disable-sddm lo desactiva y devuelve el autologin de getty. Con autologin, SDDM vuelve
-# a entrar solo si la sesión termina (Relogin=true), también al cerrar sesión.
+# --autologin se conserva por compatibilidad (ya es lo normal). --disable-sddm lo desactiva y
+# devuelve el autologin de getty. Con autologin, SDDM vuelve a entrar solo si la sesión termina
+# (Relogin=true), también al cerrar sesión.
 #
 # --auto: copia este script a /usr/local/sbin/bwm-boot-theme (de root: el del repo lo puede
 #   editar el usuario) y crea bwm-boot-theme.path/.service. bwm_boot.py render se ejecuta
@@ -183,17 +183,11 @@ hl.config({
 EOF
 }
 
-# Autologin de SDDM según el estilo (ver la cabecera). El tema viene de greeter.conf.
+# Autologin de SDDM en todas las skins (ver la cabecera): la contraseña la pide el bloqueo de la skin.
 apply_login_mode() {
-  local theme
-  theme=$(sed -n 's/^theme=\([a-z]*\)$/\1/p' "$SRC/sddm/greeter.conf" 2>/dev/null | head -n1)
-  if [[ -f $STATE_DIR/autologin-always ]] || [[ $theme == default || $theme == plasma ]]; then
-    # Relogin: si Hyprland se cae al arrancar (fallo intermitente de aquamarine, §3.87), SDDM
-    # vuelve a entrar solo en vez de mostrar el saludo. Al cerrar sesión también vuelve a entrar.
-    write_root_file "$SDDM_CONF_D/autologin.conf" <<<$'[Autologin]\nUser='"$USER_NAME"$'\nSession=hyprland.desktop\nRelogin=true'
-  elif [[ $theme == retro ]]; then
-    rm -f "$SDDM_CONF_D/autologin.conf"
-  fi
+  # Relogin: si Hyprland se cae al arrancar (fallo intermitente de aquamarine, §3.87), SDDM
+  # vuelve a entrar solo en vez de mostrar el saludo. Al cerrar sesión también vuelve a entrar.
+  write_root_file "$SDDM_CONF_D/autologin.conf" <<<$'[Autologin]\nUser='"$USER_NAME"$'\nSession=hyprland.desktop\nRelogin=true'
 }
 
 # Drivers de GPU que lleva un initramfs (uno por línea, ordenados)

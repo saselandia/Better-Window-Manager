@@ -51,6 +51,7 @@
       "config/quickshell/ii/modules/ii/omarchyOsd",
       "config/quickshell/ii/modules/ii/omarchyPolkit",
       "config/quickshell/ii/modules/ii/omarchyBackground",
+      "config/quickshell/ii/modules/ii/omarchyLock",
       "config/quickshell/ii/Commons",
       "config/quickshell/ii/Ui",
       "config/quickshell/ii/omarchy-plugins",
