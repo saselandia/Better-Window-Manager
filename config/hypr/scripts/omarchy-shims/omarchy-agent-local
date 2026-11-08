@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# BWM stand-in for Omarchy's local models (omarchy-local-ai, podman and the NVIDIA container
+# toolkit from pacman): not ported. The agents panel refreshes and reads status quietly, so those
+# succeed with nothing to show; anything that would set a model up says it isn't available.
+# omarchy-agent-local <use|list|status|start|stop|remove|refresh> [args]
+case "${1:-}" in
+  refresh | status | list) exit 0 ;;
+esac
+echo "Local models are not available in BWM yet." >&2
+notify-send "Local models" "Running models on this machine is not available in BWM yet." 2>/dev/null
+exit 1

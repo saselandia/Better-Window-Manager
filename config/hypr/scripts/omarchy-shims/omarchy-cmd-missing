@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# BWM stand-in for Omarchy's helper: succeed when any named command is missing.
+for c in "$@"; do command -v "$c" >/dev/null 2>&1 || exit 0; done
+exit 1

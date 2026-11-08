@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# BWM stand-in for Omarchy's pacman check: succeed when every named package is installed.
+# Gentoo packages are checked by name with qlist (portage-utils), then flatpaks by app id.
+for p in "$@"; do
+  if command -v qlist >/dev/null 2>&1 && qlist -IC 2>/dev/null | grep -qE "(^|/)${p}$"; then continue; fi
+  if command -v flatpak >/dev/null 2>&1 && flatpak info "$p" >/dev/null 2>&1; then continue; fi
+  exit 1
+done

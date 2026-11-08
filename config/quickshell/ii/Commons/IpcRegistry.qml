@@ -86,6 +86,9 @@ Singleton {
   // another monitor, so the focused output is read from hyprctl at start and
   // then followed through Hyprland's focusedmon events.
   property string focusedScreen: ""
+  // No copy is switched on before the focused output is known, so loading
+  // doesn't hand a target from one monitor's copy to another's.
+  property bool focusKnown: false
 
   property Process focusedProc: Process {
     command: ["hyprctl", "-j", "activeworkspace"]
@@ -98,8 +101,19 @@ Singleton {
         } catch (e) {
           // hyprctl missing / Hyprland not running: keep Hyprland.focusedMonitor.
         }
+        root.focusKnown = true
         root.reconcile()
       }
+    }
+  }
+
+  // Should hyprctl never answer, calls still need a handler.
+  property Timer focusFallback: Timer {
+    interval: 2000
+    running: !root.focusKnown
+    onTriggered: {
+      root.focusKnown = true
+      root.reconcile()
     }
   }
 
@@ -134,6 +148,7 @@ Singleton {
   }
 
   function enableLeaders() {
+    if (!focusKnown) return
     for (var i = 0; i < handlers.length; i++) {
       var handler = handlers[i]
       if (!handler || handler.enabled || leaderFor(handler.target) !== handler) continue
@@ -148,10 +163,9 @@ Singleton {
 
   Connections {
     target: Hyprland
-    function onFocusedMonitorChanged() {
-      if (Hyprland.focusedMonitor) root.focusedScreen = Hyprland.focusedMonitor.name
-      root.reconcile()
-    }
+    // Right after start it can announce a monitor that doesn't have focus, so
+    // it never overrides focusedScreen; only the events below do.
+    function onFocusedMonitorChanged() { root.reconcile() }
     function onRawEvent(event) {
       var name = event ? String(event.name) : ""
       if (name !== "focusedmon" && name !== "focusedmonv2") return

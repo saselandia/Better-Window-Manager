@@ -262,6 +262,9 @@ siendo el nombre del escritorio original que imita Breeze.
 - Kitty recuerda también el estado maximizado: `remember_window_size no` evita restaurarlo. La regla global
   `suppress-maximize-events` bloquea peticiones de maximizado de apps (también botones CSD); el compositor
   conserva el control manual y las peticiones de fullscreen de juegos/vídeo siguen permitidas.
+- **`OMARCHY_PATH`** = `~/.config/hypr/omarchy` (`environment.lua`): las piezas de Omarchy buscan ahí `bin/`,
+  `default/i18n`, `themes/` y `shell/plugins/…` (enlaces a los shims y plugins vendidos). Sin ella fallan en silencio
+  (agentes, recordatorios, Elsewhen). Un plugin nuevo que la use necesita su enlace bajo `shell/plugins/`.
 - Omarchy usa `pacman`/AUR: al portar sus scripts, cámbialo por emerge/flatpak/`qlist` y avisa del paquete con
   `scripts/bwm-require.sh`.
 

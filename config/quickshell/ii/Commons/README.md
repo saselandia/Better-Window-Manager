@@ -20,8 +20,11 @@ BWM changes, kept minimal so the files can be refreshed from upstream:
   `enabled` itself, the old leader off first and the new one on a turn later, so Quickshell
   never sees two handlers on one target; `Commons/ShellIpc.qml` therefore starts `enabled: false`
   instead of binding it to `leads()`. `Hyprland.focusedMonitor` stays empty until focus first
-  moves between monitors, so the registry reads the focused output from `hyprctl -j
-  activeworkspace` at start and follows `focusedmon`/`focusedmonv2` events (`focusedScreen`).
+  moves between monitors (and right after start it can name the wrong one), so the registry
+  reads the focused output from `hyprctl -j activeworkspace` at start and follows
+  `focusedmon`/`focusedmonv2` events (`focusedScreen`). No copy is switched on until that first
+  answer (`focusKnown`, 2 s fallback): switching one on and handing over at load made Quickshell
+  warn once per panel.
 
 Last refreshed from `quattro` `d9cc361c` (2026-11-08): every other file in `Commons/` and `Ui/`
 is identical to upstream. To refresh again, copy upstream's files and re-apply the list above.

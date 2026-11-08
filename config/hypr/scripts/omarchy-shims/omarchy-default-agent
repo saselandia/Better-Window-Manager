@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# BWM stand-in for Omarchy's default coding agent: read or set ~/.config/omarchy/defaults/agent
+# (the same file Omarchy uses) and launch it. Omarchy installs a missing agent with mise; BWM
+# doesn't install anything: install the agent first (emerge, npm, its own installer).
+# omarchy-default-agent [agent]
+
+agent_file="$HOME/.config/omarchy/defaults/agent"
+
+if (($# == 0)); then
+  [[ -f $agent_file ]] && read -r agent <"$agent_file"
+  [[ -n ${agent:-} ]] && echo "$agent"
+  exit 0
+fi
+
+# Omarchy's names and aliases (bin/omarchy-default-agent, quattro d9cc361c)
+case "$1" in
+pi) agent="pi" ;;
+omp | oh-my-pi) agent="omp" ;;
+opencode | open-code) agent="opencode" ;;
+ori | openrouter) agent="ori" ;;
+claude | claude-code) agent="claude" ;;
+codex) agent="codex" ;;
+crush) agent="crush" ;;
+grok) agent="grok" ;;
+openclaw) agent="openclaw" ;;
+agy | antigravity | antigravity-cli | gemini | gemini-cli) agent="agy" ;;
+hermes) agent="hermes" ;;
+copilot | github-copilot) agent="copilot" ;;
+muse | muse-code | musecode) agent="muse" ;;
+cursor | cursor-agent) agent="cursor-agent" ;;
+kimi | kimi-code) agent="kimi" ;;
+qwen | qwen-code) agent="qwen" ;;
+dsh | deepseek | deepseek-harness) agent="dsh" ;;
+mcode | minimax-code | minimax) agent="mcode" ;;
+kiro-cli | kiro) agent="kiro-cli" ;;
+freebuff) agent="freebuff" ;;
+kilo | kilocode | kilo-code) agent="kilo" ;;
+devin | devin-cli) agent="devin" ;;
+amp | ampcode) agent="amp" ;;
+commandcode | command-code | cmdc) agent="commandcode" ;;
+*)
+  echo "Usage: omarchy-default-agent <pi|omp|opencode|ori|claude|codex|grok|openclaw|agy|hermes|copilot|crush|cursor-agent|muse|kimi|qwen|dsh|mcode|kiro-cli|freebuff|kilo|devin|amp|commandcode>" >&2
+  exit 1
+  ;;
+esac
+
+if ! command -v "$agent" >/dev/null 2>&1; then
+  echo "$agent is not installed. Install it first, then choose it again." >&2
+  notify-send "$agent is not installed" "Install it first, then choose it again as the default agent." 2>/dev/null
+  exit 1
+fi
+
+mkdir -p "$(dirname "$agent_file")"
+printf '%s\n' "$agent" >"$agent_file"
+exec omarchy-agent

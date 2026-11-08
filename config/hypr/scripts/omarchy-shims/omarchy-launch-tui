@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# BWM stand-in for Omarchy's TUI launcher: run a command in the default terminal (bwm-terminal).
+# omarchy-launch-tui [--app-id=<id>] <command> [args...]
+app_id=""
+if [[ ${1:-} == --app-id=* ]]; then
+  app_id=${1#--app-id=}
+  shift
+fi
+[[ -z $app_id ]] && app_id="org.omarchy.$(basename "${1:-tui}")"
+exec "$HOME/.config/hypr/scripts/bwm-terminal" --class "$app_id" -- "$@"

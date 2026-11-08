@@ -8,6 +8,11 @@ local function exists(path)
     return f ~= nil
 end
 
+-- Como Omarchy (default/uwsm/env): la raíz de Omarchy, donde sus piezas buscan bin/, default/i18n,
+-- themes/ y shell/plugins/. En BWM es config/hypr/omarchy, con enlaces a los shims y a los
+-- plugins vendidos (panel de agentes, recordatorios, Elsewhen, idioma del menú).
+hl.env("OMARCHY_PATH", os.getenv("HOME") .. "/.config/hypr/omarchy")
+
 -- Apps Qt 6 (KeePassXC, diálogos de KDE...):
 --  * default (end-4) con «Apps Qt» y el plugin de KDE (kde-plasma/plasma-integration): como end-4,
 --    QT_QPA_PLATFORMTHEME=kde lee ~/.config/kdeglobals, con los colores de kde-material-you-colors

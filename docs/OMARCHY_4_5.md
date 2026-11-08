@@ -73,8 +73,9 @@ pasa `$1` a `xdg-open` sin validar el esquema.
    diferencias eran menores de lo que parecía: un solo líder de IPC por destino, lectura síncrona de catálogos,
    `PopupMenuRow`, desplegables que se cierran con un segundo clic y deslizadores que llegan al final. Las reglas
    de movimiento están en los plugins/paneles, no en `Ui/`: llegarán al traer cada panel.
-2. **Panel de agentes y Tailscale al día** (`agents/` 744 líneas de diferencia, `tailscale/` 448): mejoras de
-   uso real, sin dependencias del sistema salvo los CLI de cada agente.
+2. ~~**Panel de agentes y Tailscale al día**~~ **Hecho el 2026-11-08** (§3.102 de `BWM_CONTEXT.md`): ambos de
+   `quattro` `d9cc361c`, con los 23 colectores de uso y sin los modelos locales (necesitan `omarchy-local-ai`,
+   podman y paquetes de Arch). El panel de agentes no funcionaba antes en BWM: faltaba `OMARCHY_PATH`.
 3. **Salvapantallas nativo de Wayland** en vez del de terminal (más ligero, sin kitty a pantalla completa).
    Encaja en la inactividad común de BWM (§3.96/§3.98).
 4. **Hyprland de Retro**: campana silenciada, sin ventana de soporte, SDR en pantalla completa con HDR
