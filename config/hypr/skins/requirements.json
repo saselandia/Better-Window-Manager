@@ -235,12 +235,12 @@
       "packages": {"gentoo": "kde-frameworks/breeze-icons", "arch": "breeze-icons", "fedora": "breeze-icon-theme", "opensuse": "breeze6-icons", "debian": "breeze-icon-theme"}
     },
     "hyprbars-plasma": {
-      "label": "Plugin hyprbars de BWM (barras de título Breeze)",
-      "why": "Barras de título Breeze y snapping con previsualización; debe estar compilado para el Hyprland que usas",
+      "label": "Plugin hyprbars de BWM (barras de título)",
+      "why": "Barras de título Breeze y snapping con previsualización, y las de los workspaces flotantes de Retro; debe estar compilado para el Hyprland que usas",
       "check": {"type": "hyprland-plugin", "path": "config/hypr/plugins/hyprbars-plasma.so", "source": "src/hyprbars"},
       "provider": "build",
       "build": "cd {repo}/src/hyprbars && make clean && make && make install",
-      "notes": {"all": "Se carga al volver a iniciar sesión. Nunca copies el .so a mano ni lo descargues/cargues en caliente."}
+      "notes": {"all": "Breeze lo carga al iniciar sesión y Retro la primera vez que un workspace flota. Nunca copies el .so a mano ni lo descargues ni lo recargues en caliente."}
     },
     "plugin-build": {
       "label": "Herramientas para compilar plugins de Hyprland",

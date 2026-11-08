@@ -98,5 +98,87 @@ paquetes y micrófono), modelos locales (CUDA/container toolkit: coste alto), Ja
 mezclarlo rompería el arranque cifrado. Tampoco el panel de notificaciones retirado, ni el sshd/`sudo` de
 Omarchy, ni instaladores de servicios (Slack, Microsoft) que BWM no gestiona.
 
+## 4. Lo que faltaba en este estudio (revisión del 2026-11-08)
+
+La primera pasada miró sobre todo lo vendido en BWM. Repasando los commits de funciones desde octubre
+salen piezas que no estaban en la lista, algunas anteriores al 2026-10-23 pero nunca portadas.
+
+### 4.1 Escritorio tradicional: workspaces flotantes con barras de título
+
+Omarchy tiene desde el 2026-10-11 (#14482, ampliado hasta 4.5) un **modo por workspace**: cada workspace
+es `dwindle` (mosaico), `scrolling` o `floating`, y `omarchy-hyprland-workspace-layout-toggle` (Super+L,
+y desde 4.5 la tecla de pantalla) los recorre. `omarchy-hyprland-workspace-layout-default` fija el modo
+de los workspaces sin uno propio; un workspace con ventanas conserva el suyo al cambiar el predeterminado.
+El modo de cada workspace se guarda en `~/.local/state/omarchy/workspace-layouts/<n>.lua` y lo reponen
+`default/hypr/workspace-layouts.lua` y `workspace-modes.lua` (573 líneas) al cargar la configuración.
+
+Cómo funciona el modo flotante (Hyprland no tiene un layout flotante, así que se hace sobre las ventanas):
+* Etiqueta `omarchy-mode-floated` en las ventanas que el modo hizo flotar (sólo esas vuelven a mosaico al
+  salir) y `omarchy-floating-workspace` en todas las del workspace (barra, sombra y opacidad siguen a esa
+  etiqueta, también en diálogos). Las etiquetas viven en la ventana: sobreviven a recargas y la siguen
+  entre workspaces.
+* Las ventanas nuevas flotan desde el primer fotograma por una regla `r[a-b]` con tamaño
+  `min(1100, 64 %) × min(760, 68 %)`, centradas y en cascada de 24 px; los diálogos modales y las apps con
+  regla flotante propia se respetan. Fullscreen y fijadas no se tocan.
+* Clic para enfocar (`follow_mouse = 0`) sólo mientras el workspace activo flota; sombras y opacidad 1
+  para distinguir ventanas superpuestas. Una ventana maximizada vuelve a su tamaño al abrirse otra.
+* Barras de título con su plugin, **omarchy-hyprland-titlebars** (fork de hyprbars, BSD-3 + MIT, en
+  `omacom/omarchy-hyprland-titlebars`): se registra como `hyprbars` con la misma API Lua
+  (`hl.plugin.hyprbars.add_button`), y añade `workspace_tag` (barra sólo en ventanas con esa etiqueta),
+  `bar_color_inactive`, `%WINDOW%` en las acciones de los botones y el título tomado del `.desktop` de la
+  app. Colores del tema (`lighter_background`/`selection`), botones × □ − (− minimiza al dock), doble clic
+  maximiza, arrastrar una maximizada la devuelve a su tamaño bajo el puntero.
+* El dock de Omarchy aparece en los workspaces flotantes (#15263; BWM ya lo imita con un shim que llama
+  «flotante» a un workspace sin ventanas en mosaico).
+
+**Frente a Breeze (Kde plasma) de BWM:** BWM decide el modo por skin (`"windows": "traditional"` en
+`skin.json`, todo flota en Plasma) y Omarchy por workspace dentro de la misma skin. El plugin de Omarchy y
+el `hyprbars-plasma` de BWM son dos forks de hyprbars **con el mismo nombre de plugin**: no pueden estar
+cargados a la vez. El de BWM ya tiene detección de CSD, iconos Breeze, snapping con previsualización y
+minimizar; le faltan `workspace_tag` y `%WINDOW%` (que evita que un botón actúe sobre otra ventana si el
+foco cambia antes de ejecutarse). Lo útil para Breeze: las etiquetas en la ventana en vez de estado
+propio, abrir flotando desde el primer fotograma con tamaño y cascada, clic para enfocar sólo donde hay
+superposición, y desmaximizar al abrirse otra ventana.
+
+**Hecho (§3.106 de `BWM_CONTEXT.md`):** modo por workspace en Retro con el `hyprbars-plasma` ampliado, clic para enfocar en Breeze, cambio desde la barra y el menú (sin Super+L).
+
+**Propuesta original:** portar el modo por workspace a Retro (estaba en §2.6 de `BWM_CONTEXT.md` como pendiente),
+usando el `hyprbars-plasma` de BWM con `workspace_tag` y `%WINDOW%` añadidos, en vez de un segundo plugin;
+y llevar a `bwm_windows.py`/Breeze las ideas de la lista anterior. Sin atajos nuevos mientras siga la
+petición de no añadirlos (el recorrido de modos quedaría en el menú de Retro).
+
+### 4.2 Temas que cambian las decoraciones
+
+El README del plugin cita los temas **Omarchy 98** y **Windows XP**, que traen su propio fork de hyprbars
+(`omacom/omarchy-98-theme`, no accesible sin cuenta el 2026-11-08). Es justo la finalidad de BWM (temas
+del original que funcionan en su skin): hoy BWM no carga plugins que vengan con un tema de Omarchy.
+Pendiente de estudiar cuando se pueda leer uno de esos temas.
+
+### 4.3 Workspaces por monitor
+
+`monitor-workspaces.lua` (#15655, 674 líneas, como Niri): cada monitor tiene sus workspaces 1-10 (bloques
+de 10 por monitor físico, identificado por marca, modelo y número de serie), Super+3 va al tercero del
+monitor con foco y los de un monitor desenchufado vuelven a él al reconectarlo. BWM numera los workspaces
+de forma global y común a todas las skins (regla 14): adoptarlo cambiaría la regla, así que queda para
+decidir.
+
+### 4.4 Otras novedades sin portar
+
+* **Introducciones de fondo** (#16875, #16877, #16884): un fondo con intro la reproduce al cambiar de fondo
+  o de tema, fundida como las de los temas.
+* **Panel de pantallas**: una pantalla cada vez con mapa de distribución, girar desde el mapa, Extender |
+  Duplicar y frecuencias (#17159…#17232). BWM tiene su propio editor (§3.67); comparar al tocarlo.
+* **Motion rules**: las animaciones por defecto de Hyprland pasan por las reglas de movimiento (#16889).
+  BWM copió las de `598e4eb`, posterior: revisar si quedó algo.
+* **Menú**: Apariencia como menú principal con las opciones de Estilo, Barra con Ocultar/Mostrar,
+  transparencia de apps opcional (#14253), Setup > Teclado (#17270). El catálogo de BWM es propio:
+  comparar entrada a entrada.
+* Avisos con botones Abrir/Cortar en descargas de yt-dlp (#16843) y grabaciones (#16499); aviso de batería
+  baja como tarjeta normal (#16562).
+* Instaladores de Arch (Notion, Slack, Microsoft, Amp, Herdr, dictado Hex/Voxtype/Superwhisper): no aplican
+  tal cual en Gentoo.
+
+## 5. Atajos
+
 **Atajos (anotado, sin implementar)**: ciclo de layout de workspace, Alt+Mayús+Tab, seleccionar todo universal,
 Super+coma sobre notificaciones, dictado, gestos de touchpad.

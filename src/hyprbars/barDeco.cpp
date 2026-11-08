@@ -49,6 +49,29 @@ static bool isKnownCSD(PHLWINDOW window) {
     return detectDecorations(window).clientDraws;
 }
 
+// Con plugin:hyprbars:workspace_tag (workspaces flotantes de Retro, como omarchy-hyprland-titlebars)
+// sólo llevan barra las ventanas flotantes con esa etiqueta.
+static bool outsideWorkspaceTag(PHLWINDOW window) {
+    const auto TAG = g_pGlobalState->config.workspaceTag->value();
+    if (TAG.empty())
+        return false;
+    return !window->m_isFloating || !window->m_ruleApplicator || !window->m_ruleApplicator->m_tagKeeper.isTagged(TAG);
+}
+
+// %WINDOW% en la acción de un botón o del doble clic = dirección de la ventana de esa barra
+// (de omarchy-hyprland-titlebars): la orden se lanza aparte y no debe elegir su ventana por el
+// foco, que puede haber cambiado antes de ejecutarse.
+static std::string windowCommand(std::string command, const PHLWINDOW& window) {
+    constexpr std::string_view TOKEN   = "%WINDOW%";
+    const auto                 ADDRESS = std::format("0x{:x}", reinterpret_cast<uintptr_t>(window.get()));
+    size_t                     offset  = 0;
+    while ((offset = command.find(TOKEN, offset)) != std::string::npos) {
+        command.replace(offset, TOKEN.size(), ADDRESS);
+        offset += ADDRESS.size();
+    }
+    return command;
+}
+
 // Iconos de la decoración Breeze (KDE Plasma), con la misma geometría que
 // breeze/kdecoration: rejilla de 18x18, trazo de ~1px y extremos redondeados.
 static SP<Render::ITexture> breezeIcon(SHyprButton& button, bool maximized, const CHyprColor& col, int px) {
@@ -105,7 +128,7 @@ CHyprColor CHyprBar::currentTextColor() {
 
 CHyprBar::CHyprBar(PHLWINDOW pWindow) : IHyprWindowDecoration(pWindow) {
     m_pWindow = pWindow;
-    m_hidden  = isKnownCSD(pWindow);
+    m_hidden  = isKnownCSD(pWindow) || outsideWorkspaceTag(pWindow);
 
     const auto PMONITOR         = pWindow->m_monitor.lock();
     PMONITOR->m_scheduledRecalc = true;
@@ -525,7 +548,7 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
             if (Desktop::View::validMapped(PWINDOW))
                 Fullscreen::controller()->setFullscreenMode(PWINDOW, Fullscreen::controller()->isFullscreen(PWINDOW) ? Fullscreen::FSMODE_NONE : Fullscreen::FSMODE_MAXIMIZED);
         } else {
-            Config::Supplementary::executor()->spawn(ON_DOUBLE_CLICK);
+            Config::Supplementary::executor()->spawn(Desktop::View::validMapped(PWINDOW) ? windowCommand(ON_DOUBLE_CLICK, PWINDOW) : ON_DOUBLE_CLICK);
         }
         m_bDragPending = false;
     } else {
@@ -627,7 +650,9 @@ bool CHyprBar::doButtonPress(Config::INTEGER barPadding, Config::INTEGER barButt
                     return true;
                 }
             }
-            if (cmd.find("toggle-minimize.py min") != std::string::npos && PW) {
+            if (PW && cmd.find("%WINDOW%") != std::string::npos)
+                cmd = windowCommand(cmd, PW);
+            else if (cmd.find("toggle-minimize.py min") != std::string::npos && PW) {
                 cmd += " " + std::format("0x{:x}", (uintptr_t)PW.get());
             }
             g_pKeybindManager->m_dispatchers["exec"](cmd);
@@ -982,6 +1007,7 @@ void CHyprBar::updateWindow(PHLWINDOW pWindow) {
 }
 
 void CHyprBar::onConfigReloaded() {
+    updateRules(); // workspace_tag puede haber cambiado
     m_bButtonsDirty      = true;
     m_bTitleColorChanged = true;
     m_pTextTex           = nullptr;
@@ -1040,6 +1066,7 @@ void CHyprBar::updateRules() {
     if (PWINDOW->m_ruleApplicator) {
         if (PWINDOW->m_ruleApplicator->m_otherProps.props.contains(g_pGlobalState->nobarRuleIdx))
             m_hidden = truthy(PWINDOW->m_ruleApplicator->m_otherProps.props.at(g_pGlobalState->nobarRuleIdx)->effect);
+        m_hidden = m_hidden || outsideWorkspaceTag(PWINDOW);
         if (PWINDOW->m_ruleApplicator->m_otherProps.props.contains(g_pGlobalState->barColorRuleIdx))
             m_bForcedBarColor = CHyprColor(Config::ParserUtils::parseColor(PWINDOW->m_ruleApplicator->m_otherProps.props.at(g_pGlobalState->barColorRuleIdx)->effect).value_or(0));
         if (PWINDOW->m_ruleApplicator->m_otherProps.props.contains(g_pGlobalState->titleColorRuleIdx))

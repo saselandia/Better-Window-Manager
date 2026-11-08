@@ -64,6 +64,17 @@
   "appearance.windows.opaque": {"icon":"󰝤","label":"Opaco","checked":"[[ $(~/.config/hypr/scripts/window-transparency.sh status) == opaque ]]","action":"~/.config/hypr/scripts/window-transparency.sh opaque"},
   "appearance.windows.glass": {"icon":"󰂵","label":"Modo glass","description":"Desenfoque detrás de lo translúcido","checked":"[[ $(~/.config/hypr/scripts/glass.sh status) == on ]]","action":"~/.config/hypr/scripts/glass.sh toggle"},
   "appearance.windows.aspect": {"icon":"󰹑","label":"Ventana única cuadrada","description":"Super + Enter","checked":"[[ -e ~/.local/state/bwm/single-window-aspect ]]","action":"~/.config/hypr/scripts/toggle-single-window-aspect.sh"},
+  // Modo de cada workspace, como Omarchy 4.5 (skins/retro/hypr/workspace-modes.lua). Omarchy lo cambia con Super + L
+  // o pulsando el glifo del workspace en la barra; aquí también desde el menú. Sin atajo propio.
+  "appearance.workspace-layout": {"icon":"󱂬","label":"Layout de workspace","aliases":["layout","workspace layout","flotante","floating"]},
+  "appearance.workspace-layout.this": {"icon":"󰕰","label":"Este workspace"},
+  "appearance.workspace-layout.this.dwindle": {"icon":"󱓻","label":"Mosaico","checked":"[[ $(omarchy-hyprland-workspace-layout-current) == dwindle ]]","action":"bwm-workspace-layout-set dwindle"},
+  "appearance.workspace-layout.this.scrolling": {"icon":"󰝥","label":"Desplazamiento","checked":"[[ $(omarchy-hyprland-workspace-layout-current) == scrolling ]]","action":"bwm-workspace-layout-set scrolling"},
+  "appearance.workspace-layout.this.floating": {"icon":"󰔶","label":"Flotante","description":"Ventanas con barra de título, como un escritorio tradicional","checked":"[[ $(omarchy-hyprland-workspace-layout-current) == floating ]]","action":"bwm-workspace-layout-set floating"},
+  "appearance.workspace-layout.default": {"icon":"󰘦","label":"Predeterminado","title":"Layout predeterminado de los workspaces"},
+  "appearance.workspace-layout.default.dwindle": {"icon":"󱓻","label":"Mosaico","checked":"[[ $(omarchy-hyprland-workspace-layout-default) == dwindle ]]","action":"omarchy-hyprland-workspace-layout-default dwindle"},
+  "appearance.workspace-layout.default.scrolling": {"icon":"󰝥","label":"Desplazamiento","checked":"[[ $(omarchy-hyprland-workspace-layout-default) == scrolling ]]","action":"omarchy-hyprland-workspace-layout-default scrolling"},
+  "appearance.workspace-layout.default.floating": {"icon":"󰔶","label":"Flotante","checked":"[[ $(omarchy-hyprland-workspace-layout-default) == floating ]]","action":"omarchy-hyprland-workspace-layout-default floating"},
   "appearance.bar": {"icon":"󰍜","label":"Barra","target":"setup.settings.look.bar"},
   "appearance.style": {"icon":"","label":"Más estilo (Ajustes)","description":"Fuente, glass, arranque","target":"setup.settings.look.style"},
 

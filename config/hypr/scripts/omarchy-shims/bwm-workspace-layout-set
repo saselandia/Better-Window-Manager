@@ -1,0 +1,16 @@
+#!/bin/bash
+# BWM: put the focused workspace in one layout (dwindle|scrolling|floating) from Retro's menu, where
+# Omarchy cycles them with Super + L. Steps omarchy-hyprland-workspace-layout-toggle (which applies,
+# saves and notifies) until the workspace has it.
+target=${1:-}
+case $target in dwindle | scrolling | floating) ;; *)
+  echo "Usage: bwm-workspace-layout-set dwindle|scrolling|floating" >&2
+  exit 1
+  ;;
+esac
+dir=$(dirname "$(readlink -f "$0")")
+export PATH="$dir:$PATH"
+for _ in 1 2 3; do
+  [[ $(omarchy-hyprland-workspace-layout-current) == "$target" ]] && exit 0
+  omarchy-hyprland-workspace-layout-toggle || exit 1
+done

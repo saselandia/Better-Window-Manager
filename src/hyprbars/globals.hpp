@@ -52,8 +52,8 @@ struct SGlobalState {
         SP<Config::Values::CIntValue>    barTextSize;
         SP<Config::Values::CIntValue>    barPadding;
         SP<Config::Values::CIntValue>    barButtonPadding;
-        SP<Config::Values::CBoolValue>   barBlur, barTitleEnabled, barPartOfWindow, barPrecedenceOverBorder, enabled, iconOnHover;
-        SP<Config::Values::CStringValue> barTextFont, barTextAlign, barButtonsAlignment, onDoubleClick;
+        SP<Config::Values::CBoolValue>   barBlur, barTitleEnabled, barPartOfWindow, barPrecedenceOverBorder, enabled, iconOnHover, snap;
+        SP<Config::Values::CStringValue> barTextFont, barTextAlign, barButtonsAlignment, onDoubleClick, workspaceTag;
     } config;
 };
 

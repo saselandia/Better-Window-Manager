@@ -296,6 +296,12 @@ static void onGlobalMouseMove(const Vector2D& coords) {
 }
 
 static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent e) {
+    // Alt/Super + arrastre de Breeze (sale de pantalla completa, quita las etiquetas snapped y encaja):
+    // sólo con el snapping de Breeze. En Retro (snap = false) las etiquetas de sus workspaces flotantes
+    // y la pantalla completa no se tocan.
+    if (!g_pGlobalState || !g_pGlobalState->config.enabled->value() || !g_pGlobalState->config.snap->value())
+        return;
+
     const auto MODS = g_pInputManager->getModsFromAllKBs();
     const auto ALTMASK = g_pKeybindManager->stringToModMask("ALT");
     const auto SUPERMASK = g_pKeybindManager->stringToModMask("SUPER");
@@ -505,6 +511,11 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g_pGlobalState->config.enabled             = makeShared<Config::Values::CBoolValue>("plugin:hyprbars:enabled", "Whether bars are enabled", true);
     g_pGlobalState->config.iconOnHover         = makeShared<Config::Values::CBoolValue>("plugin:hyprbars:icon_on_hover", "Whether to use an icon on hover of the buttons", false);
     g_pGlobalState->config.onDoubleClick       = makeShared<Config::Values::CStringValue>("plugin:hyprbars:on_double_click", "Action to execute on double click of the bar", "");
+    // De omarchy-hyprland-titlebars (Omarchy, MIT): barra sólo en ventanas flotantes con esta etiqueta
+    // (los workspaces flotantes de Retro). Vacío = todas las ventanas, como en Breeze.
+    // Encajar a los bordes al arrastrar por la barra (Breeze). Retro lo apaga: Omarchy no lo tiene.
+    g_pGlobalState->config.snap                = makeShared<Config::Values::CBoolValue>("plugin:hyprbars:snap", "Snap windows dragged by the bar to screen edges", true);
+    g_pGlobalState->config.workspaceTag        = makeShared<Config::Values::CStringValue>("plugin:hyprbars:workspace_tag", "Restrict bars to floating windows with this tag", "");
 
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.barColor);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.textColor);
@@ -525,6 +536,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.enabled);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.iconOnHover);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.onDoubleClick);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.workspaceTag);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.snap);
 
     if (Config::mgr()->type() == Config::CONFIG_LEGACY)
         HyprlandAPI::addConfigKeyword(PHANDLE, "plugin:hyprbars:hyprbars-button", onNewButton, Hyprlang::SHandlerOptions{});

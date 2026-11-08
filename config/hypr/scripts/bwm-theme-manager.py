@@ -792,8 +792,9 @@ def sync_floating_windows(skin: str, previous_skin=None, original_clients=None):
         if "Plugin hyprbars" not in plist.stdout:
             print("[BWM] Las barras hyprbars se cargarán en el próximo inicio de sesión en Plasma.", file=sys.stderr)
         subprocess.run(["hyprctl", "keyword", "plugin:hyprbars:enabled", "true"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    else:
+    elif skin != "retro":
         # DO NOT unload plugins dynamically at runtime to prevent compositor segfaults
+        # (Retro decide en su configuración: barras sólo en sus workspaces flotantes, workspace-modes.lua)
         subprocess.run(["hyprctl", "keyword", "plugin:hyprbars:enabled", "false"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # Cambiar colores dentro de la misma familia no reorganiza ninguna ventana.

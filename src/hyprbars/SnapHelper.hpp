@@ -249,7 +249,7 @@ inline void hideSnapPreview() {
 }
 
 inline void updateSnapPreview(const Vector2D& mousePos) {
-    if (!g_pGlobalState || !g_pGlobalState->config.enabled->value()) {
+    if (!g_pGlobalState || !g_pGlobalState->config.enabled->value() || !g_pGlobalState->config.snap->value()) {
         hideSnapPreview();
         return;
     }
@@ -287,7 +287,7 @@ inline void checkAndTriggerEdgeSnap(PHLWINDOW pWindow, const Vector2D& mousePos)
         return;
     }
 
-    if (!g_pGlobalState || !g_pGlobalState->config.enabled->value()) {
+    if (!g_pGlobalState || !g_pGlobalState->config.enabled->value() || !g_pGlobalState->config.snap->value()) {
         hideSnapPreview();
         return;
     }
@@ -323,7 +323,7 @@ inline void renderSnapPreviewOverlay(eRenderStage stage) {
     if (stage != RENDER_LAST_MOMENT || !g_bSnapPreviewActive)
         return;
 
-    if (!g_pGlobalState || !g_pGlobalState->config.enabled->value())
+    if (!g_pGlobalState || !g_pGlobalState->config.enabled->value() || !g_pGlobalState->config.snap->value())
         return;
 
     auto pMonitor = g_pHyprRenderer->m_renderData.pMonitor.lock();

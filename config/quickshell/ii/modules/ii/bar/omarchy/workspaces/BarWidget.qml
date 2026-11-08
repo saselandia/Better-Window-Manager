@@ -11,8 +11,10 @@ import qs.modules.common as Bwm
 // numbering: Omarchy gives each monitor a block of ten (1-10, 11-20…), BWM's workspaces are global
 // and the same in every skin, so every bar shows 1..bar.workspaces.shown (shared by all skins, Settings
 // → Bar) and any other workspace that exists on its own monitor.
-// The one this monitor shows carries its layout glyph (a square tiles, a circle scrolls). BWM has
-// no per-workspace layout switcher, so clicking it does nothing, as in Omarchy without one.
+// The one this monitor shows carries its layout glyph (a square tiles, a circle scrolls, a triangle
+// floats), read per workspace with omarchy-hyprland-workspace-layout-current; clicking it cycles the
+// layout as Omarchy's Super + L does (skins/retro/hypr/workspace-modes.lua). Mode cache and refresh IPC
+// from Omarchy quattro 60bf28ee.
 BarWidget {
   id: root
   moduleName: "omarchy.workspaces"
@@ -81,8 +83,10 @@ BarWidget {
     if (target !== ids[index]) root.focusWorkspace(target)
   }
 
-  // Hyprland's global layout (dwindle/master tile, scrolling scrolls)
+  // The workspace each monitor shows carries its layout: a square tiles, a
+  // circle scrolls, and a triangle floats. Clicking it cycles to the next one.
   property string activeMode: "dwindle"
+  property bool modeStale: false
 
   function modeGlyph(mode) {
     if (mode === "scrolling") return "󰝥"
@@ -90,17 +94,62 @@ BarWidget {
     return "󱓻"
   }
 
-  function readMode() {
-    if (!modeProc.running) modeProc.running = true
+  // A layout only changes through the layout commands, which ask for a refresh,
+  // or a config reload, so each workspace's mode is read once and cached.
+  property var modeCache: ({})
+  property int modeGeneration: 0
+  property int modeProcWorkspace: -1
+  property int modeProcGeneration: 0
+
+  function showActiveMode() {
+    var mode = root.modeCache[root.activeWorkspaceId()]
+    if (mode !== undefined) root.activeMode = mode
+    else readMode()
   }
 
-  Component.onCompleted: readMode()
+  function readMode() {
+    if (modeProc.running) {
+      root.modeStale = true
+      return
+    }
+    var id = root.activeWorkspaceId()
+    if (id === -1) return
+    root.modeProcWorkspace = id
+    root.modeProcGeneration = root.modeGeneration
+    modeProc.command = ["omarchy-hyprland-workspace-layout-current", String(id)]
+    modeProc.running = true
+  }
+
+  function refresh() {
+    root.modeCache = ({})
+    root.modeGeneration++
+    readMode()
+  }
+
+  // The layout commands act on the focused workspace, so a click on another
+  // monitor's bar focuses that monitor first.
+  function cycleLayout() {
+    if (!root.bar) return
+    var command = "omarchy-hyprland-workspace-layout-toggle"
+    if (root.monitor && !root.monitor.focused) {
+      command = "hyprctl dispatch " + Util.shellQuote("hl.dsp.focus({ monitor = \"" + root.monitor.name + "\" })") + " >/dev/null && " + command
+    }
+    root.bar.run(command)
+  }
+
+  Component.onCompleted: refresh()
+  onMonitorChanged: root.showActiveMode()
+
+  Connections {
+    target: root.monitor
+    function onActiveWorkspaceChanged() { root.showActiveMode() }
+  }
 
   Connections {
     target: Hyprland
     function onRawEvent(event) {
       var name = event ? String(event.name) : ""
-      if (name === "configreloaded") root.readMode()
+      if (name === "configreloaded") root.refresh()
       // Quickshell credits every workspace switch to the focused monitor, as
       // the event doesn't say which one switched, and misses the workspace a
       // monitor falls back to when its own is moved away. Moving workspaces
@@ -115,15 +164,28 @@ BarWidget {
 
   Process {
     id: modeProc
-    command: ["hyprctl", "getoption", "general:layout", "-j"]
     stdout: StdioCollector {
       onStreamFinished: {
-        try {
-          var mode = JSON.parse(text).str
-          if (mode) root.activeMode = mode
-        } catch (e) {}
+        var mode = text.trim()
+        // A read that started before a refresh may predate the change.
+        if (!mode || root.modeProcGeneration !== root.modeGeneration) return
+        root.modeCache[root.modeProcWorkspace] = mode
+        if (root.modeProcWorkspace === root.activeWorkspaceId()) root.activeMode = mode
       }
     }
+    onExited: {
+      if (!root.modeStale) return
+      root.modeStale = false
+      Qt.callLater(root.showActiveMode)
+    }
+  }
+
+  // The layout commands change the mode without a focus change, so they ask
+  // every bar to read it again (omarchy-shell omarchy.workspaces refresh).
+  ShellIpc {
+    target: "omarchy.workspaces"
+
+    function refresh(): void { root.broadcast("refresh") }
   }
 
   readonly property real trailingGap: root.vertical ? 0 : Style.spaceReal(1.5)
@@ -157,7 +219,8 @@ BarWidget {
         fixedWidth: root.vertical ? root.barSize : Style.space(20)
         fixedHeight: root.barSize
         onPressed: function() {
-          if (!shown) root.focusWorkspace(modelData)
+          if (shown) root.cycleLayout()
+          else root.focusWorkspace(modelData)
         }
         onWheelMoved: function(delta) { root.scrollWorkspaces(delta) }
       }

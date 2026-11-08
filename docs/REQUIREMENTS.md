@@ -116,6 +116,7 @@ Imita **Omarchy 4 (basecamp/omarchy, rama quattro)**. El shell de Omarchy: su ba
 | socat | Salvapantallas de terminal (eventos de Hyprland) | `net-misc/socat` | `socat` | `socat` | `socat` | `socat` |
 | hyprsunset | Luz nocturna que no tiñe las capturas (sin él se usa un shader) | `hyproverlay:gui-apps/hyprsunset` | `hyprsunset` | `copr:solopasha/hyprland:hyprsunset` | `hyprsunset` | — |
 | Salvapantallas nativo de Omarchy | Salvapantallas de Retro como capa Wayland (sin él, el de terminal en kitty); se compila con cargo | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
+| Plugin hyprbars de BWM (barras de título) | Barras de título Breeze y snapping con previsualización, y las de los workspaces flotantes de Retro; debe estar compilado para el Hyprland que usas | *se compila* | *se compila* | *se compila* | *se compila* | *se compila* |
 | Plugin GTK de Qt (gtk3) | Las apps Qt de Retro toman los colores del tema GTK, como en Omarchy (QT_QPA_PLATFORMTHEME=gtk3) | `dev-qt/qtbase[gtk]` | `qt6-base` | `qt6-qtbase-gui` | `qt6-platformtheme-gtk3` | `qt6-gtk-platformtheme` |
 | Plugin WebP de Qt (qtimageformats) | El fondo de Omarchy en Retro dibuja los fondos WebP de muchos temas con su transición (sin él, BWM los convierte a JPG) | `dev-qt/qtimageformats` | `qt6-imageformats` | `qt6-qtimageformats` | `qt6-imageformats` | `qt6-image-formats-plugins` |
 
@@ -132,7 +133,7 @@ Imita **KDE Plasma 6 (Breeze Dark)**. Panel flotante, Kickoff, applets de red/Bl
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | hyprpolkitagent | Diálogo de contraseña (polkit). En Retro lo dibuja Quickshell y no hace falta | `hyproverlay:sys-auth/hyprpolkitagent` | `hyprpolkitagent` | `copr:solopasha/hyprland:hyprpolkitagent` | `hyprpolkitagent` | — |
 | Iconos Breeze | Iconos breeze-dark de las apps y applets de la skin Plasma | `kde-frameworks/breeze-icons` | `breeze-icons` | `breeze-icon-theme` | `breeze6-icons` | `breeze-icon-theme` |
-| Plugin hyprbars de BWM (barras de título Breeze) | Barras de título Breeze y snapping con previsualización; debe estar compilado para el Hyprland que usas | *se compila* | *se compila* | *se compila* | *se compila* | *se compila* |
+| Plugin hyprbars de BWM (barras de título) | Barras de título Breeze y snapping con previsualización, y las de los workspaces flotantes de Retro; debe estar compilado para el Hyprland que usas | *se compila* | *se compila* | *se compila* | *se compila* | *se compila* |
 
 **Recomendado:**
 
