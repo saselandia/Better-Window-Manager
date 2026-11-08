@@ -14,7 +14,7 @@
     ],
     "recommends": [
       "xdg-desktop-portal-hyprland", "xdg-desktop-portal-gtk", "playerctl", "networkmanager",
-      "bluez", "qt6ct", "socat", "git", "nautilus", "firefox", "flatpak"
+      "bluez", "qt6ct", "socat", "procps", "git", "nautilus", "firefox", "flatpak"
     ]
   },
   "catalog": {
@@ -159,6 +159,12 @@
       "why": "Reconocer la música que suena (botón de los ajustes rápidos)",
       "check": {"type": "cmd", "any": ["songrec"]},
       "packages": {"gentoo": "guru:media-sound/songrec", "arch": "songrec", "fedora": null, "opensuse": null, "debian": null}
+    },
+    "procps": {
+      "label": "procps-ng (pidwait)",
+      "why": "bwm-power espera a que las apps terminen de guardar antes de apagar (sin él, sondea)",
+      "check": {"type": "cmd", "any": ["pidwait"]},
+      "packages": {"gentoo": "sys-process/procps", "arch": "procps-ng", "fedora": "procps-ng", "opensuse": "procps", "debian": "procps"}
     },
     "libnotify": {
       "label": "libnotify (notify-send)",

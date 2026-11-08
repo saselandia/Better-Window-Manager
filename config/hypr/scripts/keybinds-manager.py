@@ -426,7 +426,7 @@ DEFAULT_KEYBINDS: List[Dict[str, Any]] = [
         "mods": ["ALT"],
         "key": "M",
         "action_type": "exec",
-        "exec": "command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'",
+        "exec": os.path.expanduser("~/.config/hypr/scripts/bwm-power") + " logout",
         "dispatcher": None,
         "dispatcher_arg": None,
         "options": {},

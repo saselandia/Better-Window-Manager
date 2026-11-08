@@ -45,7 +45,7 @@ hl.bind("SUPER + ALT + A", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/ope
 hl.bind("SUPER + L", hl.dsp.exec_cmd("quickshell -c ii ipc call lock activate"), { description = "Sistema: Bloquear pantalla" })
 hl.bind("Print", hl.dsp.exec_cmd("quickshell -c ii ipc call region screenshot"), { description = "Sistema: Captura de pantalla por región (Print)" })
 hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd("quickshell -c ii ipc call region screenshot"), { description = "Sistema: Captura de pantalla alternativa (Super+Shift+S)" })
-hl.bind("ALT + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { description = "Sistema: Menú de apagado / Salir de sesión" })
+hl.bind("ALT + M", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm-power logout"), { description = "Sistema: Menú de apagado / Salir de sesión" })
 -- [Multimedia]
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { description = "Multimedia: Subir volumen", locked = true, repeating = true })
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), { description = "Multimedia: Bajar volumen", locked = true, repeating = true })

@@ -21,7 +21,7 @@ var PRIORITY = [
     /app-launcher\.sh(?! apps)/, /app-launcher\.sh apps/, /^terminal /, /window\.close/,
     /window\.fullscreen/, /altTab/, /focus_direction/, /workspace_focus/, /workspace_window_move \d/,
     /window_move_direction/, /quick-tile/, /cheatsheet/, /open-settings/, /lock activate/,
-    /region screenshot/, /clipboard/, /emojis/, /nautilus/, /sidebarRight/, /hyprshutdown/,
+    /region screenshot/, /clipboard/, /emojis/, /nautilus/, /sidebarRight/, /hyprshutdown/, /bwm-power/,
     /theme-picker/, /omarchy-theme/, /wallpaper-picker/, /toggle_special|special:magic/
 ];
 var CATEGORY_ORDER = ["Lanzadores", "Ventanas", "Navegación", "Espacios de trabajo", "Sistema",

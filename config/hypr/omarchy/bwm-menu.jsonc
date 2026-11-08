@@ -24,10 +24,10 @@
   // Sistema
   "system.screensaver": {"icon":"󱄄","label":"Salvapantallas","action":"qs -c ii ipc call screensaver start"},
   "system.lock": {"icon":"","label":"Bloquear","action":"qs -c ii ipc call lock activate"},
-  "system.suspend": {"icon":"󰒲","label":"Suspender","action":"systemctl suspend"},
-  "system.logout": {"icon":"󰍃","label":"Cerrar sesión","action":"command -v hyprshutdown >/dev/null && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"},
-  "system.reboot": {"icon":"󰜉","label":"Reiniciar","action":"systemctl reboot"},
-  "system.shutdown": {"icon":"󰐥","label":"Apagar","action":"systemctl poweroff"},
+  "system.suspend": {"icon":"󰒲","label":"Suspender","action":"~/.config/hypr/scripts/bwm-power suspend"},
+  "system.logout": {"icon":"󰍃","label":"Cerrar sesión","action":"~/.config/hypr/scripts/bwm-power logout"},
+  "system.reboot": {"icon":"󰜉","label":"Reiniciar","action":"~/.config/hypr/scripts/bwm-power reboot"},
+  "system.shutdown": {"icon":"󰐥","label":"Apagar","action":"~/.config/hypr/scripts/bwm-power shutdown"},
 
   // Aprender
   "learn.keybindings": {"icon":"","label":"Atajos de teclado","aliases":["keybindings","atajos"],"action":"omarchy-shell shell summon bwm.keybindings"},

@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# bwm-power: apagar, reiniciar, cerrar sesión, suspender… igual en todas las skins.
+# Las pantallas son de cada skin (menú de sesión de end-4, Kickoff de Breeze, menú de
+# Omarchy); la acción es de BWM. Como omarchy-system (Omarchy, MIT): avisa, cierra las
+# ventanas con cortesía y espera a que sus procesos terminen (con un límite, por si una
+# no responde) para que las apps guarden su estado, y sigue desde un servicio de usuario
+# para no morir con la app que lo pidió.
+#
+# Uso: bwm-power <shutdown|reboot|firmware|logout|suspend|hibernate|lock> [--dry-run]
+#      --dry-run (o BWM_POWER_DRY_RUN=1): dice qué haría, sin cerrar nada ni apagar.
+# ==============================================================================
+set -uo pipefail
+
+usage="Uso: bwm-power <shutdown|reboot|firmware|logout|suspend|hibernate|lock> [--dry-run]"
+# Tiempo máximo esperando a que las apps cierren (Firefox, Steam… guardan su sesión al salir)
+CLOSE_TIMEOUT="${BWM_POWER_CLOSE_TIMEOUT:-5}"
+
+action="${1:-}"
+stage="${2:-}"
+dry_run="${BWM_POWER_DRY_RUN:-0}"
+[[ $stage == "--dry-run" ]] && { dry_run=1; stage=""; }
+
+case $action in
+  shutdown|poweroff) action=shutdown; command=(systemctl poweroff --no-wall); message="Apagando…" ;;
+  reboot) command=(systemctl reboot --no-wall); message="Reiniciando…" ;;
+  firmware) command=(systemctl reboot --firmware-setup --no-wall); message="Reiniciando al firmware…" ;;
+  logout) message="Cerrando sesión…"
+    if command -v hyprshutdown >/dev/null 2>&1; then command=(hyprshutdown)
+    else command=(hyprctl dispatch 'hl.dsp.exit()'); fi ;;
+  suspend) command=(systemctl suspend) ;;
+  hibernate) command=(systemctl hibernate) ;;
+  lock) command=(loginctl lock-session) ;;
+  -h|--help) echo "$usage"; exit 0 ;;
+  *) echo "$usage" >&2; exit 2 ;;
+esac
+
+run() {
+  if [[ $dry_run == 1 ]]; then echo "[dry-run] $*"; else "$@"; fi
+}
+
+# Suspender, hibernar y bloquear no cierran nada
+case $action in
+  suspend|hibernate|lock)
+    run "${command[@]}" || { [[ $action != lock ]] && run "${command[@]/#systemctl/loginctl}"; }
+    exit
+    ;;
+esac
+
+close_all_windows() {
+  local clients pids waiter=""
+  clients=$(hyprctl clients -j 2>/dev/null) || return 0
+  # Los procesos se apuntan antes de que desaparezcan sus ventanas: cerrar la ventana no
+  # significa que la app haya terminado de guardar
+  pids=$(jq -r '[.[].pid | select(. > 0)] | unique | join(",")' <<<"$clients")
+  if [[ $dry_run == 1 ]]; then
+    echo "[dry-run] cerraría $(jq length <<<"$clients") ventanas y esperaría a los procesos ${pids:-ninguno} (máx. ${CLOSE_TIMEOUT} s)"
+    return 0
+  fi
+  if [[ -n $pids ]]; then
+    if command -v pidwait >/dev/null 2>&1; then
+      timeout "${CLOSE_TIMEOUT}s" pidwait --euid "$UID" --pid "$pids" &
+    else
+      # Sin pidwait (procps-ng antiguo): sondeo con kill -0
+      ( deadline=$((SECONDS + CLOSE_TIMEOUT))
+        while ((SECONDS < deadline)); do
+          alive=0; for pid in ${pids//,/ }; do kill -0 "$pid" 2>/dev/null && alive=1; done
+          ((alive)) || break; sleep 0.1
+        done ) &
+    fi
+    waiter=$!
+  fi
+  jq -r '.[].address' <<<"$clients" | while read -r addr; do
+    hyprctl dispatch "hl.dsp.window.close({ window = \"address:$addr\" })" >/dev/null 2>&1
+  done
+  [[ -n $waiter ]] && wait "$waiter"
+  return 0
+}
+
+exit_session() {
+  if [[ $dry_run == 1 ]]; then
+    echo "[dry-run] aviso: $message"
+  else
+    notify-send -a BWM -u low -t 5000 "$message" 2>/dev/null || true
+  fi
+  close_all_windows
+  run "${command[@]}"
+}
+
+if [[ $stage == "--inhibited" ]]; then
+  exit_session
+elif [[ $stage == "--execute" || $dry_run == 1 ]]; then
+  if [[ $action == "shutdown" && $dry_run != 1 ]]; then
+    # La tapa del portátil no respeta los inhibidores de alto nivel: se bloquea explícitamente
+    systemd-inhibit --what=sleep:idle:handle-lid-switch --who=BWM --why="Apagando" --mode=block \
+      "$0" "$action" --inhibited
+  else
+    exit_session
+  fi
+  status=$?
+  if (( status != 0 )) && [[ $dry_run != 1 ]]; then
+    notify-send -a BWM -u critical "No se pudo completar: $action" "Vuelve a intentarlo." 2>/dev/null || true
+  fi
+  exit "$status"
+elif [[ -z $stage ]]; then
+  # Sigue aunque se cierre la terminal o el panel que lo pidió
+  if command -v systemd-run >/dev/null 2>&1; then
+    systemd-run --user --collect --quiet --property=Type=exec \
+      --property=RuntimeMaxSec=$((CLOSE_TIMEOUT + 30))s \
+      --setenv=PATH --setenv=HYPRLAND_INSTANCE_SIGNATURE --setenv=XDG_RUNTIME_DIR \
+      --setenv=WAYLAND_DISPLAY --setenv=DBUS_SESSION_BUS_ADDRESS \
+      "$(realpath "$0")" "$action" --execute
+  else
+    setsid "$0" "$action" --execute >/dev/null 2>&1 < /dev/null &
+  fi
+else
+  echo "$usage" >&2
+  exit 2
+fi

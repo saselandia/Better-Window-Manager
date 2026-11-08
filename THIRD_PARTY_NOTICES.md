@@ -45,6 +45,9 @@ animaciones y reglas de capa de Omarchy quattro `598e4eb` (`default/hypr/looknfe
 `hypr/skins/default/hypr/animations.lua` copia las de end-4/dots-hyprland `2f2a376`
 (`hypr/hyprland/general.lua` y `rules.lua`, GPL-3.0, como el resto del shell derivado).
 
+Apagado común (2026-11-08): `hypr/scripts/bwm-power` sigue `bin/omarchy-system` y
+`bin/omarchy-hyprland-window-close-all` de Omarchy quattro `598e4eb` (MIT), reescrito para BWM.
+
 ## Recursos pendientes de procedencia
 
 No se declara que los siguientes recursos estén cubiertos por MIT ni por una licencia común:

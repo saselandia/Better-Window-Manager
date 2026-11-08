@@ -6,6 +6,10 @@ import qs.modules.common
 Singleton {
     id: root
 
+    // BWM: apagar/reiniciar/cerrar sesión/suspender van por bwm-power, común a todas las skins
+    // (cierra las apps con cortesía y espera a que guarden antes de apagar)
+    readonly property string powerCommand: Quickshell.env("HOME") + "/.config/hypr/scripts/bwm-power"
+
     function closeAllWindows() {
         HyprlandData.windowList.map(w => w.pid).forEach(pid => {
             Quickshell.execDetached(["kill", pid]);
@@ -21,12 +25,11 @@ Singleton {
     }
 
     function suspend() {
-        Quickshell.execDetached(["bash", "-c", "systemctl suspend || loginctl suspend"]);
+        Quickshell.execDetached([root.powerCommand, "suspend"]);
     }
 
     function logout() {
-        closeAllWindows();
-        Quickshell.execDetached(["pkill", "-i", "Hyprland"]);
+        Quickshell.execDetached([root.powerCommand, "logout"]);
     }
 
     function launchTaskManager() {
@@ -34,21 +37,18 @@ Singleton {
     }
 
     function hibernate() {
-        Quickshell.execDetached(["bash", "-c", `systemctl hibernate || loginctl hibernate`]);
+        Quickshell.execDetached([root.powerCommand, "hibernate"]);
     }
 
     function poweroff() {
-        closeAllWindows();
-        Quickshell.execDetached(["bash", "-c", `systemctl poweroff || loginctl poweroff`]);
+        Quickshell.execDetached([root.powerCommand, "shutdown"]);
     }
 
     function reboot() {
-        closeAllWindows();
-        Quickshell.execDetached(["bash", "-c", `reboot || loginctl reboot`]);
+        Quickshell.execDetached([root.powerCommand, "reboot"]);
     }
 
     function rebootToFirmware() {
-        closeAllWindows();
-        Quickshell.execDetached(["bash", "-c", `systemctl reboot --firmware-setup || loginctl reboot --firmware-setup`]);
+        Quickshell.execDetached([root.powerCommand, "firmware"]);
     }
 }

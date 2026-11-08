@@ -854,7 +854,7 @@ Scope {
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     root.close();
-                                    Quickshell.execDetached(["systemctl", "reboot"]);
+                                    Quickshell.execDetached([Quickshell.env("HOME") + "/.config/hypr/scripts/bwm-power", "reboot"]);
                                 }
 
                                 Rectangle {
@@ -878,7 +878,7 @@ Scope {
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     root.close();
-                                    Quickshell.execDetached(["bash", "-c", "command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"]);
+                                    Quickshell.execDetached([Quickshell.env("HOME") + "/.config/hypr/scripts/bwm-power", "logout"]);
                                 }
 
                                 Rectangle {
@@ -902,7 +902,7 @@ Scope {
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     root.close();
-                                    Quickshell.execDetached(["systemctl", "poweroff"]);
+                                    Quickshell.execDetached([Quickshell.env("HOME") + "/.config/hypr/scripts/bwm-power", "shutdown"]);
                                 }
 
                                 Rectangle {
