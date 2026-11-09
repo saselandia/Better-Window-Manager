@@ -25,6 +25,7 @@
   "system.screensaver": {"icon":"󱄄","label":"Salvapantallas","action":"qs -c ii ipc call screensaver start"},
   "system.lock": {"icon":"","label":"Bloquear","action":"qs -c ii ipc call lock activate"},
   "system.suspend": {"icon":"󰒲","label":"Suspender","action":"~/.config/hypr/scripts/bwm-power suspend"},
+  "system.hibernate": {"icon":"󰤁","label":"Hibernar","when":"omarchy-hibernation-available","action":"~/.config/hypr/scripts/bwm-power hibernate"},
   "system.logout": {"icon":"󰍃","label":"Cerrar sesión","action":"~/.config/hypr/scripts/bwm-power logout"},
   "system.reboot": {"icon":"󰜉","label":"Reiniciar","action":"~/.config/hypr/scripts/bwm-power reboot"},
   "system.shutdown": {"icon":"󰐥","label":"Apagar","action":"~/.config/hypr/scripts/bwm-power shutdown"},
@@ -37,6 +38,7 @@
   "learn.quickshell": {"icon":"󰘦","label":"Quickshell","action":"xdg-open https://quickshell.org/docs/"},
   "learn.gentoo": {"icon":"","label":"Gentoo","when":"[[ -f /etc/gentoo-release ]]","action":"xdg-open https://wiki.gentoo.org/"},
   "learn.arch": {"icon":"󰣇","label":"Arch","when":"[[ -f /etc/arch-release ]]","action":"xdg-open https://wiki.archlinux.org/"},
+  "learn.neovim": {"icon":"","label":"Neovim","action":"xdg-open https://www.lazyvim.org/keymaps"},
   "learn.bash": {"icon":"󱆃","label":"Bash","action":"xdg-open https://devhints.io/bash"},
 
   // Estilo
@@ -59,6 +61,7 @@
   "appearance.retro-palette.osaka-jade": {"icon":"󰊠","label":"Osaka Jade","checked":"[[ $(omarchy-theme-current) == osaka-jade ]]","action":"omarchy-theme-set osaka-jade"},
   "appearance.retro-palette.jade-horse": {"icon":"󰊠","label":"Jade Horse","checked":"[[ $(omarchy-theme-current) == jade-horse ]]","action":"omarchy-theme-set jade-horse"},
   "appearance.background": {"icon":"","label":"Fondo de pantalla","aliases":["background","wallpaper","fondo"],"action":"~/.config/hypr/scripts/wallpaper-picker.sh"},
+  "appearance.background-intros": {"icon":"󰕧","label":"Intros de fondo","aliases":["intro","background intros"],"when":"[[ $(python3 ~/.config/hypr/scripts/bwm-theme-manager.py get) == retro ]]","checked":"omarchy-theme-bg-intro status","action":"omarchy-theme-bg-intro toggle"},
   "appearance.font": {"icon":"","label":"Fuente","aliases":["font","fuente"],"provider":"fonts"},
   "appearance.windows": {"icon":"󰖲","label":"Ventanas"},
   "appearance.windows.transparent": {"icon":"󰂵","label":"Transparencia","description":"Terminales translúcidos, el resto opaco","checked":"[[ $(~/.config/hypr/scripts/window-transparency.sh status) == transparent ]]","action":"~/.config/hypr/scripts/window-transparency.sh transparent"},
@@ -67,6 +70,14 @@
   "appearance.windows.aspect": {"icon":"󰹑","label":"Ventana única cuadrada","description":"Super + Enter","checked":"[[ -e ~/.local/state/bwm/single-window-aspect ]]","action":"~/.config/hypr/scripts/toggle-single-window-aspect.sh"},
   // Modo de cada workspace, como Omarchy 4.5 (skins/retro/hypr/workspace-modes.lua). Omarchy lo cambia con Super + L
   // o pulsando el glifo del workspace en la barra; aquí también desde el menú. Sin atajo propio.
+  "appearance.dock": {"icon":"󱂩","label":"Dock","when":"qs -c ii ipc show 2>/dev/null | grep -q '^target omarchy.dock$' && [[ $(omarchy-hyprland-workspace-layout-current) == \"floating\" ]]"},
+  "appearance.dock.autohide": {"icon":"󰈉","label":"Ocultar automáticamente","when":"[[ $(omarchy-dock autohide) == \"off\" ]]","action":"omarchy-dock autohide on"},
+  "appearance.dock.always-on": {"icon":"󰈈","label":"Mostrar siempre","when":"[[ $(omarchy-dock autohide) == \"on\" ]]","action":"omarchy-dock autohide off"},
+  "appearance.dock.position": {"icon":"","label":"Posición del dock"},
+  "appearance.dock.position.top": {"icon":"󰁝","label":"Arriba","checked":"[[ $(omarchy-dock position) == \"top\" ]]","action":"omarchy-dock position top"},
+  "appearance.dock.position.bottom": {"icon":"󰁅","label":"Abajo","checked":"[[ $(omarchy-dock position) == \"bottom\" ]]","action":"omarchy-dock position bottom"},
+  "appearance.dock.position.left": {"icon":"󰁍","label":"Izquierda","checked":"[[ $(omarchy-dock position) == \"left\" ]]","action":"omarchy-dock position left"},
+  "appearance.dock.position.right": {"icon":"󰁔","label":"Derecha","checked":"[[ $(omarchy-dock position) == \"right\" ]]","action":"omarchy-dock position right"},
   "appearance.workspace-layout": {"icon":"󱂬","label":"Layout de workspace","aliases":["layout","workspace layout","flotante","floating"]},
   "appearance.workspace-layout.this": {"icon":"󰕰","label":"Este workspace"},
   "appearance.workspace-layout.this.dwindle": {"icon":"󱓻","label":"Mosaico","checked":"[[ $(omarchy-hyprland-workspace-layout-current) == dwindle ]]","action":"bwm-workspace-layout-set dwindle"},

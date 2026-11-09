@@ -126,6 +126,8 @@ fi
             fi
         done
         "$HOME/.config/hypr/scripts/bwm-video-wallpaper" sync >/dev/null 2>&1 || true
+        # Intro del fondo al iniciar sesión, una vez por sesión (Retro, como omarchy-theme-bg-boot-intro)
+        setsid -f "$HOME/.config/hypr/scripts/bwm-video-wallpaper" boot-intro >/dev/null 2>&1
     fi
 ) &
 

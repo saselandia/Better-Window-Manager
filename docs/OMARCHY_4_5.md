@@ -90,8 +90,9 @@ pasa `$1` a `xdg-open` sin validar el esquema.
    Super+coma.
 
 **Quizá más adelante**: panel Elsewhen/clima/Dropbox propios (BWM ya trae `omarchy-elsewhen` y `omarchy-weather`
-como plugins; Dropbox sólo si lo usa el usuario), fondos con introducción, dictado (`voxtype` etc. necesitan
-paquetes y micrófono), modelos locales (CUDA/container toolkit: coste alto), Jade Horse como tema extra.
+como plugins; Dropbox sólo si lo usa el usuario), dictado (`voxtype` etc. necesitan paquetes y micrófono), modelos
+locales (CUDA/container toolkit: coste alto). Hechos después: fondos con introducción (§3.116 de `BWM_CONTEXT.md`)
+y Jade Horse (§3.110).
 
 **No**: todo lo de Arch/hardware (Apple, Snapdragon, ASUS, kernel `linux-omarchy`, módulos NVIDIA, keyring,
 `pacman`, canales, migraciones, `omarchy update`): BWM actualiza con Portage (§2.7 de `BWM_CONTEXT.md`) y
@@ -159,22 +160,29 @@ Pendiente de estudiar cuando se pueda leer uno de esos temas.
 `monitor-workspaces.lua` (#15655, 674 líneas, como Niri): cada monitor tiene sus workspaces 1-10 (bloques
 de 10 por monitor físico, identificado por marca, modelo y número de serie), Super+3 va al tercero del
 monitor con foco y los de un monitor desenchufado vuelven a él al reconectarlo. BWM numera los workspaces
-de forma global y común a todas las skins (regla 14): adoptarlo cambiaría la regla, así que queda para
-decidir.
+de forma global y común a todas las skins (regla 14).
+
+**Decidido (2026-11-09): no.** Lo de Omarchy son bloques de ids (11–20 para el segundo monitor), no un modelo
+propio de Hyprland, y BWM depende de que un id sea único (modos de workspace, etiquetas de minimizado,
+autoarranque, primario de XWayland, barra y dock). Los escritorios que imitan las skins (KDE, end-4, Omarchy)
+son globales. El uso de este equipo (1–9 en el principal, el 10 fijo en el secundario por `desc:`) ya
+recupera los workspaces de un monitor al reconectarlo.
 
 ### 4.4 Otras novedades sin portar
 
-* **Introducciones de fondo** (#16875, #16877, #16884): un fondo con intro la reproduce al cambiar de fondo
-  o de tema, fundida como las de los temas.
+* ~~**Introducciones de fondo**~~ (#16875, #16877, #16884): **hecho** (§3.116), con OWE en Retro.
 * **Panel de pantallas**: una pantalla cada vez con mapa de distribución, girar desde el mapa, Extender |
-  Duplicar y frecuencias (#17159…#17232). BWM tiene su propio editor (§3.67); comparar al tocarlo.
-* **Motion rules**: las animaciones por defecto de Hyprland pasan por las reglas de movimiento (#16889).
-  BWM copió las de `598e4eb`, posterior: revisar si quedó algo.
+  Duplicar y frecuencias (#17159…#17232). Comparado (§3.116): el editor de BWM (§3.67) ya tiene mapa,
+  giro, frecuencias, escala, principal y apagar. Falta **Duplicar** (espejo); pendiente.
+* ~~**Motion rules**~~ (#16889): **revisado** (§3.116): curvas, animaciones y reglas de capa de Retro iguales a
+  `quattro` `18ac93c`; lo que no está son las reglas de su modo vidrio, que BWM tiene propio.
 * **Menú**: Apariencia como menú principal con las opciones de Estilo, Barra con Ocultar/Mostrar,
-  transparencia de apps opcional (#14253), Setup > Teclado (#17270). El catálogo de BWM es propio:
-  comparar entrada a entrada.
-* Avisos con botones Abrir/Cortar en descargas de yt-dlp (#16843) y grabaciones (#16499); aviso de batería
-  baja como tarjeta normal (#16562).
+  transparencia de apps opcional (#14253), Setup > Teclado (#17270). Comparado (§3.116): añadidos Hibernar,
+  Dock (ocultar/posición), Intros de fondo y Neovim. Quedan Barra (ocultar, posición, fondo, formato del
+  reloj), Animaciones sí/no, Branding, Setup > Teclado/Entrada/Idioma/Seguridad, Transcodificar, Compartir y
+  Hardware.
+* Avisos con botones: **hecho** (§3.116) en grabaciones (Abrir y, si está Omacut, Cortar) y batería baja como
+  tarjeta normal. yt-dlp es la extensión de Chromium de Omarchy: no aplica.
 * Instaladores de Arch (Notion, Slack, Microsoft, Amp, Herdr, dictado Hex/Voxtype/Superwhisper): no aplican
   tal cual en Gentoo.
 

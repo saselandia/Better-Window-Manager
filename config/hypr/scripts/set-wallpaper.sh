@@ -93,8 +93,16 @@ if [[ "$CURRENT_THEME" == "retro" ]]; then
         fi
     fi
     ln -sfn "$SHELL_BG" "$OMARCHY_BG_LINK"
+    # Intro del fondo (Omarchy 4.5), si tiene y están activadas: sustituye a la transición. Corre
+    # aparte para que los colores de las apps cambien mientras se ve, como en Omarchy
+    INTRO=""
+    if [[ "${BWM_SKIN_SWITCH:-0}" != "1" && "$IS_VIDEO" == "0" ]]; then
+        INTRO="$("$VIDEO_WALLPAPER" intro-for "$WALLPAPER" 2>/dev/null || true)"
+    fi
     if [[ "${BWM_SKIN_SWITCH:-0}" == "1" ]]; then
         quickshell -c ii ipc call background setInstant "$SHELL_BG" >/dev/null 2>&1 || true
+    elif [[ -n "$INTRO" ]]; then
+        setsid -f "$VIDEO_WALLPAPER" intro "$INTRO" "$SHELL_BG" >/dev/null 2>&1
     else
         quickshell -c ii ipc call background transition "$PREVIOUS_BG" "$SHELL_BG" >/dev/null 2>&1 || true
     fi
@@ -103,7 +111,7 @@ fi
 # Motor de vídeo de la skin activa, o ninguno con una imagen
 if [[ "$IS_VIDEO" == "1" ]]; then
     "$VIDEO_WALLPAPER" play "$WALLPAPER" || true
-else
+elif [[ -z "${INTRO:-}" ]]; then
     "$VIDEO_WALLPAPER" stop || true
 fi
 

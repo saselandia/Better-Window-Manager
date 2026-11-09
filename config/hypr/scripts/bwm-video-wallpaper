@@ -19,6 +19,10 @@
 #                                               sigue al enlace de Omarchy y devuelve el fondo al shell)
 #   bwm-video-wallpaper sync [skin]             motor correcto para la skin y el fondo actuales
 #                                               (inicio de sesión y cambio de skin)
+#   bwm-video-wallpaper intro-for <imagen>      la intro de ese fondo si toca reproducirla (Retro con OWE,
+#                                               intros activadas y animaciones encendidas), o nada
+#   bwm-video-wallpaper intro <clip> <imagen>   reproduce la intro con OWE y deja <imagen> en el shell
+#   bwm-video-wallpaper boot-intro              la intro del fondo actual, una vez por sesión
 #   bwm-video-wallpaper thumbnails --size <normal|large|x-large|xx-large> -d <carpeta>
 #                                               miniaturas freedesktop de los vídeos de la carpeta
 #                                               (selector de fondos de end-4; imprime «FILE ruta»)
@@ -153,6 +157,72 @@ sync_engine() {
   fi
 }
 
+# Intros de fondo (Omarchy 4.5, #16875): un clip en backgrounds/intros/<nombre>.<ext> junto a un fondo
+# fijo se reproduce al elegir ese fondo (también al cambiar de tema) y al iniciar sesión, y termina
+# fundiéndose en el fondo. Como omarchy-theme-bg-boot-intro: mismo interruptor
+# (omarchy-theme-bg-intro) y nada con las animaciones apagadas. Sólo en Retro, que tiene OWE.
+INTRO_TOGGLE="$HOME/.local/state/omarchy/toggles/background-intros-off"
+INTRO_MARKER="$HOME/.local/state/omarchy/background-intro.session-id"
+
+animations_off() {
+  [[ $(hyprctl -j getoption animations:enabled 2>/dev/null | jq -r '.bool' 2>/dev/null) == "false" ]]
+}
+
+intro_for() {
+  local background stem extension
+  [[ ! -f $INTRO_TOGGLE && -x $OWE_BIN/owed && $(current_skin) == retro ]] || return 1
+  animations_off && return 1
+  background="$(readlink -f "$1" 2>/dev/null)" || return 1
+  case "${background,,}" in
+    *.jpg | *.jpeg | *.png | *.bmp | *.webp) ;;
+    *) return 1 ;;
+  esac
+  stem="${background##*/}"
+  stem="${stem%.*}"
+  for extension in mp4 m4v mov webm mkv avi; do
+    if [[ -f ${background%/*}/intros/$stem.$extension ]]; then
+      printf '%s\n' "${background%/*}/intros/$stem.$extension"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# La intro tapa el fondo viejo desde su primer fotograma; mientras se ve (motor «renderer»), el shell
+# pasa al fondo nuevo por debajo, sin transición, y OWE termina fundiéndose en él. Con una imagen de
+# fondo, owed sólo se queda mientras dura la intro.
+play_intro() {
+  local clip="$1" still="$2" pid
+  owe_start || return 1
+  "$OWE_BIN/owe" intro --start first-frame --refresh "$clip" >/dev/null 2>&1 &
+  pid=$!
+  for _ in $(seq 1 50); do
+    "$OWE_BIN/owe" status 2>/dev/null | jq -e '.engine == "renderer" or .intro == false' >/dev/null && break
+    sleep 0.1
+  done
+  quickshell -c ii ipc call background setInstant "$still" >/dev/null 2>&1 || true
+  wait "$pid"
+  sync_engine
+}
+
+boot_intro() {
+  local session clip
+  session="${HYPRLAND_INSTANCE_SIGNATURE:-}"
+  [[ -n $session ]] || return 0
+  [[ -f $INTRO_MARKER && $(<"$INTRO_MARKER") == "$session" ]] && return 0
+  mkdir -p "$(dirname "$INTRO_MARKER")"
+  printf '%s\n' "$session" >"$INTRO_MARKER.tmp" && mv -f "$INTRO_MARKER.tmp" "$INTRO_MARKER"
+  # BWM pide la contraseña con el bloqueo de la skin al entrar y OWE no reproduce intros con la sesión
+  # bloqueada: se espera al desbloqueo (hasta 10 min)
+  for _ in $(seq 1 600); do
+    [[ $(quickshell -c ii ipc call lock isLocked 2>/dev/null) == "false" ]] && break
+    sleep 1
+  done
+  [[ $(quickshell -c ii ipc call lock isLocked 2>/dev/null) == "false" ]] || return 0
+  clip="$(intro_for "$(current_wallpaper)")" || return 0
+  play_intro "$clip" "$(readlink -f "$BG_LINK" 2>/dev/null || current_wallpaper)"
+}
+
 urlencode() {
   # Como encodeURIComponent por partes, igual que ThumbnailImage.qml (quien busca la miniatura)
   python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe="/!*'"'"'()"))' "$1"
@@ -199,6 +269,9 @@ case "${1:-}" in
     [[ $(current_skin) == retro ]] || owe_stop
     ;;
   sync) sync_engine "${2:-}" ;;
+  intro-for) intro_for "${2:-}" ;;
+  intro) [[ -f ${2:-} && -n ${3:-} ]] && play_intro "$2" "$3" ;;
+  boot-intro) boot_intro ;;
   thumbnails) shift; thumbnails "$@" ;;
   *)
     sed -n '/^# Uso:/,/^# =====/p' "$0" | grep -v '^# =' | sed 's/^# \{0,1\}//' >&2
