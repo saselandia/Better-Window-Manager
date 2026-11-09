@@ -83,8 +83,8 @@ def check_window(addr):
         win = next((c for c in clients if c["address"] == addr), None)
         if not win or not win.get("mapped") or win.get("hidden") or win.get("fullscreen"):
             return
-        if win["workspace"]["name"].startswith("special:") or win["workspace"]["id"] == 99:
-            return  # minimizadas (toggle-minimize.py) y scratchpads: no tocar
+        if win["workspace"]["name"].startswith("special:"):
+            return  # minimizadas (special:minimized) y scratchpads: no tocar
         if not win.get("floating"):
             return
         mons = [m for m in hyprctl_json("monitors") if not m.get("disabled")]

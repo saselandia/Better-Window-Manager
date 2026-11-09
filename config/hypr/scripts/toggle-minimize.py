@@ -11,11 +11,11 @@ Supports:
   toggle-minimize.py show-desktop leave  (a window appeared while showing the desktop: bring the
                                           hidden windows back but keep the new one in front, like KWin)
 
-Uses background workspace 99 instead of special:minimized.
-This completely avoids:
-- Screen dimming / scratchpad animations
-- Special workspace unmapping which crashes/freezes Electron / Chromium WebRTC streams
-- 2 FPS drop and blank void artifacts upon restoring / maximizing
+Minimized windows wait on special:minimized with Omarchy's tag omarchy-minimized-from-<n> (Omarchy
+quattro b99593e), so Retro's dock and this script share them: no conversion when changing skin.
+Unlike Omarchy it works on tiled workspaces and without a dock, puts a window back on the
+workspace it came from and keeps the exact geometry of floating ones. Windows left by older
+versions on workspace 99 with from_ws_<n> are still recognised and restored.
 """
 
 import os
@@ -23,12 +23,15 @@ import sys
 import json
 import subprocess
 
-MINIMIZED_WS_ID = 99
+MINIMIZED_WS = "special:minimized"
+TAG_PREFIX = "omarchy-minimized-from-"
+LEGACY_WS_ID = 99            # older versions: workspace 99 + from_ws_<n>
+LEGACY_TAG_PREFIX = "from_ws_"
 # Windows hidden by "Show Desktop", read by Quickshell (PlasmaPanelState) to dock the panel.
 # Quickshell empties it as soon as a window shows up again, which ends the mode like KWin.
 SHOW_DESKTOP_STATE = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "bwm-show-desktop.json")
-# Exact geometry of minimized floating windows. Workspace 99 lives on a single monitor, and
-# Hyprland moves/clamps windows coming from a bigger monitor into it, so it is put back on restore.
+# Exact geometry of minimized floating windows: moving between workspaces (and monitors, on
+# restore) lets Hyprland move/clamp a floating window, so it is put back as it was.
 GEOMETRY_STATE = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "bwm-minimized-geometry.json")
 
 def load_geometries() -> dict:
@@ -69,7 +72,23 @@ def is_minimized(client: dict) -> bool:
     ws = client.get("workspace", {})
     ws_name = str(ws.get("name", ""))
     ws_id = ws.get("id", 0)
-    return ws_id == MINIMIZED_WS_ID or ws_name == str(MINIMIZED_WS_ID) or ws_name == "minimized" or ws_name.startswith("special:minimized")
+    return ws_name == MINIMIZED_WS or ws_id == LEGACY_WS_ID
+
+def minimize_tags(client: dict) -> list:
+    """Tags this script or Omarchy's minimize left (dynamic tags may end in "*")."""
+    return [t.rstrip("*") for t in client.get("tags", []) or []
+            if t.rstrip("*").startswith((TAG_PREFIX, LEGACY_TAG_PREFIX))]
+
+def origin_workspace(client: dict):
+    for tag in minimize_tags(client):
+        number = tag[len(TAG_PREFIX):] if tag.startswith(TAG_PREFIX) else tag[len(LEGACY_TAG_PREFIX):]
+        if number.isdigit() and int(number) >= 1 and int(number) != LEGACY_WS_ID:
+            return int(number)
+    return None
+
+def untag_lua(tags: list) -> str:
+    return " ".join(
+        f'pcall(function() hl.dispatch(hl.dsp.window.tag({{ tag = "-{t}", window = w }})) end)' for t in tags)
 
 def minimize_win(client: dict):
     addr = client.get("address")
@@ -84,14 +103,21 @@ def minimize_win(client: dict):
         geometries[addr] = {"at": client.get("at"), "size": client.get("size")}
         save_geometries(geometries)
 
-    # Move to background workspace 99 silently without switching to it (follow = false)
+    # Like Omarchy: one origin tag, the window to the hidden special workspace without following it,
+    # and focus back on the workspace it left (else the next window opened would join it there).
+    # Only when that workspace is the one in front: minimizing from a dock or a list never switches.
     lua_code = f"""(function()
         local cur = hl.get_cursor_pos()
         local w = hl.get_window("address:{addr}")
         if w then
+            {untag_lua(minimize_tags(client))}
             -- "+" sets the tag (a bare tag name toggles it in Hyprland)
-            pcall(function() hl.dispatch(hl.dsp.window.tag({{ tag = "+from_ws_{ws_id}", window = w }})) end)
-            hl.dispatch(hl.dsp.window.move({{ workspace = {MINIMIZED_WS_ID}, follow = false, window = w }}))
+            pcall(function() hl.dispatch(hl.dsp.window.tag({{ tag = "+{TAG_PREFIX}{ws_id}", window = w }})) end)
+            hl.dispatch(hl.dsp.window.move({{ workspace = "{MINIMIZED_WS}", follow = false, window = w }}))
+            local active = hl.get_active_workspace()
+            if active and active.id == {ws_id} then
+                pcall(function() hl.dispatch(hl.dsp.focus({{ workspace = "{ws_id}" }})) end)
+            end
             if cur and cur.x and cur.y then
                 pcall(function() hl.dispatch(hl.dsp.cursor.move({{ x = cur.x, y = cur.y }})) end)
             end
@@ -105,22 +131,12 @@ def restore_win(client: dict):
     if not addr:
         return
 
-    target_ws_id = None
-    tags = client.get("tags", [])
-    # Only our own from_ws_* tags are removed: quick-tile's snapped_* tags must survive
+    # Only the minimize tags are removed: quick-tile's snapped_* tags must survive
     # (they let Alt+Enter un-maximize a window that was minimized while maximized)
-    untag = " ".join(
-        f'pcall(function() hl.dispatch(hl.dsp.window.tag({{ tag = "-{t}", window = w }})) end)'
-        for t in tags if t.startswith("from_ws_")
-    )
-    for t in tags:
-        if t.startswith("from_ws_"):
-            orig_id = t.replace("from_ws_", "")
-            if orig_id.isdigit():
-                target_ws_id = int(orig_id)
-                break
+    untag = untag_lua(minimize_tags(client))
+    target_ws_id = origin_workspace(client)
 
-    if target_ws_id is not None and target_ws_id != MINIMIZED_WS_ID:
+    if target_ws_id is not None:
         target_clause = f"local target = {target_ws_id}"
     else:
         target_clause = "local target = (hl.get_active_workspace() and hl.get_active_workspace().id) or 1"

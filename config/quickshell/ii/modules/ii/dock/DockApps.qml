@@ -27,11 +27,11 @@ Item {
     Layout.topMargin: Appearance.sizes.hyprlandGapsOut
     implicitWidth: listView.implicitWidth
 
-    // BWM: minimized windows live on workspace 99 (toggle-minimize.py). Activating one there would
-    // jump to that workspace, so it is restored to where it was minimized from instead.
+    // BWM: minimized windows wait on special:minimized (toggle-minimize.py; 99 in older versions).
+    // Activating one there would show that workspace, so it is restored to where it came from instead.
     function activateToplevel(toplevel) {
         const hyprToplevel = Hyprland.toplevels.values.find(t => t.wayland === toplevel);
-        if (hyprToplevel?.workspace?.id === 99) {
+        if (hyprToplevel?.workspace?.name === "special:minimized" || hyprToplevel?.workspace?.id === 99) {
             let address = String(hyprToplevel.address);
             if (!address.startsWith("0x"))
                 address = "0x" + address;

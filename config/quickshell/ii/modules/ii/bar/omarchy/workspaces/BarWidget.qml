@@ -19,9 +19,6 @@ BarWidget {
   id: root
   moduleName: "omarchy.workspaces"
 
-  // BWM parks minimized windows on workspace 99 (toggle-minimize.py): never a slot of its own
-  readonly property int minimizedWorkspace: 99
-
   readonly property var monitor: {
     var window = root.QsWindow.window
     var screen = window ? window.screen : null
@@ -52,7 +49,7 @@ BarWidget {
 
     for (var i = 0; i < values.length; i++) {
       var id = values[i].id
-      if (id <= 0 || id === root.minimizedWorkspace) continue
+      if (id <= 0) continue
       if (!values[i].monitor || values[i].monitor.name !== monitorName) continue
       if (ids.indexOf(id) === -1) ids.push(id)
     }

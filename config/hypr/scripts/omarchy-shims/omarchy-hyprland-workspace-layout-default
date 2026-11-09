@@ -2,7 +2,8 @@
 # From Omarchy (basecamp/omarchy quattro 60bf28ee, MIT). Copied for BWM's Retro theme, where the
 # workspace modes live (skins/retro/hypr/workspace-modes.lua): elsewhere it says so and stops. BWM has no
 # omarchy-restart-hyprctl, so it reloads with hyprctl reload. Minimized windows wait on special:minimized
-# with Omarchy's tag; those left on BWM's workspace 99 (from_ws_<n>, toggle-minimize.py) count too.
+# with Omarchy's tag (toggle-minimize.py of the other skins uses the same); those left by older BWM
+# versions on workspace 99 (from_ws_<n>) count too.
 
 # omarchy:summary=Show or set the layout of workspaces without one of their own: dwindle, scrolling, or floating
 # omarchy:args=[dwindle|scrolling|floating]

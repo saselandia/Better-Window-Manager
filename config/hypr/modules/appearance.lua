@@ -329,10 +329,12 @@ hl.config({
 })
 
 -- Ajustes de la skin, si los tiene: bloqueo (skins/<id>/hypr/lock.lua), otras opciones de
--- Hyprland de su escritorio original (skins/<id>/hypr/misc.lua) y modos de workspace
+-- Hyprland de su escritorio original (skins/<id>/hypr/misc.lua), colocación de ventanas nuevas
+-- (skins/<id>/hypr/placement.lua, Breeze) y modos de workspace
 -- (skins/<id>/hypr/workspace-modes.lua, Retro). Al final, para que lo suyo gane a lo común de arriba
 -- (p. ej. las barras de título de los workspaces flotantes de Retro).
-for _, part in ipairs({ { "lock", "Bloqueo" }, { "misc", "Opciones" }, { "workspace-modes", "Modos de workspace" } }) do
+for _, part in ipairs({ { "lock", "Bloqueo" }, { "misc", "Opciones" }, { "placement", "Colocación de ventanas" },
+                       { "workspace-modes", "Modos de workspace" } }) do
     local mod = "skins." .. anim_skin .. ".hypr." .. part[1]
     if package.searchpath and package.searchpath(mod, package.path) then
         local ok_part, part_err = pcall(require, mod)

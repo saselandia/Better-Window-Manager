@@ -9,7 +9,7 @@ import "../omarchyMenu/omarchy" as OMG
 // BWM: Omarchy's dock (shell/plugins/dock, MIT), loaded in Retro by OmarchyDock.qml. Adapted:
 // floating workspaces are Retro's workspace modes (skins/retro/hypr/workspace-modes.lua), read with
 // Omarchy's `omarchy-hyprland-workspace-layout-current`. Minimizing is Omarchy's (special:minimized,
-// back to the workspace in front of the user); windows left on BWM's workspace 99 come back the same way.
+// back to the workspace in front of the user), shared with toggle-minimize.py of the other skins.
 
 // An app dock that shows on floating workspaces. A floating workspace has no
 // tiles to hand the apps out, so the dock gives back a place to find them:

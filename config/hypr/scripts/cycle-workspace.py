@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Cycle through the open workspaces of the focused monitor (Alt + mouse wheel),
-like Hyprland's "e+1"/"e-1" but skipping workspace 99, where toggle-minimize.py
-keeps minimized windows (otherwise scrolling would show every minimized window).
+like Hyprland's "e+1"/"e-1". Minimized windows wait on special:minimized, which
+is never part of the cycle; workspace 99 (where older versions kept them) is still skipped.
 
 Usage: cycle-workspace.py next|prev
 """

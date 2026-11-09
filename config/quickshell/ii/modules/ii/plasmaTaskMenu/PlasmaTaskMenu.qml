@@ -30,7 +30,8 @@ Scope {
         return toplevel?.HyprlandToplevel?.address ?? "";
     }
     function isMinimized(toplevel) {
-        return (HyprlandData.windowByAddress["0x" + addressOf(toplevel)]?.workspace?.id ?? 0) === 99;
+        const ws = HyprlandData.windowByAddress["0x" + addressOf(toplevel)]?.workspace;
+        return ws?.name === "special:minimized" || (ws?.id ?? 0) === 99;
     }
     function activateWindow(toplevel) {
         if (!toplevel) return;

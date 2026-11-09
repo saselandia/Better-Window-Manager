@@ -44,7 +44,7 @@ function isDockWindow(window) {
 // back.
 var MINIMIZED_WORKSPACE = "special:minimized"
 
-// BWM: windows minimized by the other skins (toggle-minimize.py) wait on workspace 99
+// BWM: toggle-minimize.py (default, Breeze) uses the same workspace; older versions used 99
 function isMinimizedWorkspace(name) {
   return String(name || "") === MINIMIZED_WORKSPACE || String(name || "") === "99"
 }

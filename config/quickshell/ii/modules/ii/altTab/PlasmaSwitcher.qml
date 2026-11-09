@@ -138,7 +138,7 @@ PanelWindow {
                         required property var modelData
                         required property int index
                         readonly property bool isSelected: index === root.selectedIndex
-                        readonly property bool minimized: (modelData.workspace?.id ?? 0) === 99
+                        readonly property bool minimized: modelData.workspace?.name === "special:minimized" || (modelData.workspace?.id ?? 0) === 99
                         width: win.cellW
                         height: win.cellH
                         radius: 5

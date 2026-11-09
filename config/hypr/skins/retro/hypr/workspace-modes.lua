@@ -84,11 +84,10 @@ local function claimed()
     return addresses
 end
 
--- Los workspaces especiales (scratchpad, minimizadas) y con nombre (id negativo) se dejan como estén,
--- igual que el 99 de las minimizadas de BWM.
+-- Los workspaces especiales (scratchpad, minimizadas) y con nombre (id negativo) se dejan como estén.
 local function floating_workspace(id)
     id = tonumber(id)
-    if not id or id < 1 or id == 99 then
+    if not id or id < 1 then
         return false
     end
     local mode = modes[tostring(id)]
@@ -186,7 +185,7 @@ end
 local function floating_ranges()
     local ranges = {}
     if default_mode == "floating" then
-        local tiled = { 99 }
+        local tiled = {}
         for id, mode in pairs(modes) do
             local n = tonumber(id)
             if n and n >= 1 and mode ~= "floating" then
@@ -205,7 +204,7 @@ local function floating_ranges()
     else
         for id, mode in pairs(modes) do
             local n = tonumber(id)
-            if n and n >= 1 and n ~= 99 and mode == "floating" then
+            if n and n >= 1 and mode == "floating" then
                 table.insert(ranges, { n, n })
             end
         end
@@ -285,7 +284,7 @@ local function arrange(windows, workspace)
     local mine = claimed()
     for _, window in ipairs(windows) do
         local id = tonumber(workspace and workspace.id or (window.workspace and window.workspace.id))
-        if id and id >= 1 and id ~= 99 then
+        if id and id >= 1 then
             if floating_workspace(id) then
                 table.insert(floating, window)
             else

@@ -120,34 +120,6 @@ def dispatch(lua_blocks: list):
     subprocess.run(["hyprctl", "dispatch", code], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-OMARCHY_MINIMIZED = "special:minimized"
-OMARCHY_MINIMIZED_TAG = re.compile(r"^omarchy-minimized-from-([1-9][0-9]*)$")
-
-
-def omarchy_minimized_to_bwm(clients: list = None) -> int:
-    """Retro minimiza como Omarchy (special:minimized + omarchy-minimized-from-<n>); las demás skins,
-    con toggle-minimize.py (workspace 99 + from_ws_<n>). Al salir de Retro, sus minimizadas pasan
-    al sistema común para que el dock, la barra de Breeze o el de end-4 las devuelvan."""
-    clients = clients if clients is not None else hypr_json("clients")
-    blocks = []
-    for c in clients:
-        if c.get("workspace", {}).get("name") != OMARCHY_MINIMIZED or not c.get("address"):
-            continue
-        origin = None
-        for tag in c.get("tags") or []:
-            m = OMARCHY_MINIMIZED_TAG.match(tag.rstrip("*"))
-            if m:
-                origin = m.group(1)
-        lua = f"local w = hl.get_window('address:{c['address']}'); if w then "
-        if origin:
-            lua += (f"hl.dispatch(hl.dsp.window.tag({{ tag = '-omarchy-minimized-from-{origin}', window = w }})) "
-                    f"hl.dispatch(hl.dsp.window.tag({{ tag = '+from_ws_{origin}', window = w }})) ")
-        lua += "hl.dispatch(hl.dsp.window.move({ workspace = 99, follow = false, window = w })) end "
-        blocks.append(lua)
-    dispatch(blocks)
-    return len(blocks)
-
-
 def float_in_place(skin: str, clients: list = None):
     """Al entrar en una skin tradicional, las ventanas en mosaico pasan a flotar en su mismo sitio
     (con su barra de título, el margen y el hueco de la skin)."""
@@ -158,8 +130,7 @@ def float_in_place(skin: str, clients: list = None):
     blocks = []
     for c in clients:
         if (c.get("floating") or c.get("fullscreen", 0) or c.get("pinned") or not c.get("address")
-                or not c.get("mapped", True) or c.get("workspace", {}).get("id", 0) <= 0
-                or c.get("workspace", {}).get("id") == 99):
+                or not c.get("mapped", True) or c.get("workspace", {}).get("id", 0) <= 0):
             continue
         mon = next((m for m in monitors if m.get("id") == c.get("monitor")), None) \
             or monitor_for(c["at"], c["size"], monitors)

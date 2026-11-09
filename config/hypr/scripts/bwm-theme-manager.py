@@ -827,8 +827,7 @@ def sync_floating_windows(skin: str, previous_skin=None, original_clients=None):
         cls = client.get("class", "")
         is_floating = client.get("floating", False)
         if (not addr or not client.get("mapped", True) or client.get("fullscreen", 0) or client.get("pinned")
-                or client.get("workspace", {}).get("id", 0) <= 0
-                or client.get("workspace", {}).get("id") == 99):
+                or client.get("workspace", {}).get("id", 0) <= 0):
             continue
 
         if to_traditional:
@@ -903,11 +902,6 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
                 bwm_omarchy.restore_non_retro()
             except Exception as e:
                 print(f"[Warning] No se pudo restaurar el tema de apps de Retro: {e}", file=sys.stderr)
-            # Minimizadas al estilo Omarchy (special:minimized) → sistema común de BWM (workspace 99)
-            try:
-                bwm_windows.omarchy_minimized_to_bwm(original_clients)
-            except Exception as e:
-                print(f"[Warning] No se pudieron pasar las minimizadas de Retro: {e}", file=sys.stderr)
 
         # 2. Cargar el perfil de configuración aislado del tema seleccionado
         load_theme_config(theme_name, cfg)

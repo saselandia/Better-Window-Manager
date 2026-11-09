@@ -62,7 +62,7 @@ class SkinSwitchTests(unittest.TestCase):
                 'mapped': True, 'floating': False}
         clients = [{**base, 'address': '0x1', 'workspace': {'id': 1}},
                    {**base, 'address': '0x2', 'workspace': {'id': 2}, 'fullscreen': 2},
-                   {**base, 'address': '0x3', 'workspace': {'id': 99}},
+                   {**base, 'address': '0x3', 'workspace': {'id': -98, 'name': 'special:minimized'}},
                    {**base, 'address': '0x4', 'workspace': {'id': -1}}]
         mon = {'id': 1, 'x': 0, 'y': 0, 'width': 1920, 'height': 1080, 'scale': 1}
         with patch.object(bwm_windows, 'hypr_json', return_value=[mon]), \

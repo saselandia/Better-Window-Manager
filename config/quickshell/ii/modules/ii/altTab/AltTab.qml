@@ -91,10 +91,12 @@ Scope {
             var c = clients[i];
             if (!c || !c.class || c.class.length === 0) continue;
             if (c.mapped === false || c.hidden === true) continue;
-            if (!c.workspace || c.workspace.id <= 0) continue;
+            // Minimized windows wait on special:minimized (toggle-minimize.py; 99 in older versions)
+            const minimizedClient = c.workspace?.name === "special:minimized" || c.workspace?.id === 99;
+            if (!c.workspace || (c.workspace.id <= 0 && !minimizedClient)) continue;
             // KDE Plasma: like KWin's default, only windows of the visible workspaces
-            // (plus minimized ones, which live on workspace 99) and, for Alt+`, one app
-            if (Appearance.isPlasma && c.workspace.id !== 99 && !activeWorkspaceIds.includes(c.workspace.id)) continue;
+            // (plus minimized ones) and, for Alt+`, one app
+            if (Appearance.isPlasma && !minimizedClient && !activeWorkspaceIds.includes(c.workspace.id)) continue;
             if (appFilter !== "" && c.class !== appFilter) continue;
             visible.push({
                 address: c.address,
@@ -170,7 +172,7 @@ Scope {
 
     function focusTarget(target) {
         if (!target || !target.address) return;
-        const minimized = (target.workspace?.id ?? 0) === 99;
+        const minimized = target.workspace?.name === "special:minimized" || (target.workspace?.id ?? 0) === 99;
         // minimized window: restore it first
         if (minimized)
             Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/toggle-minimize.py", "restore", target.address]);
