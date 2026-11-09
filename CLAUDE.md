@@ -142,7 +142,7 @@ siendo el nombre del escritorio original que imita Breeze.
 | Colores/temas de Retro y sus apps | `scripts/bwm_omarchy.py` (`apply_retro_palette_colors`), `scripts/bwm_omarchy_apps.py`, `hypr/omarchy/themed/*.tpl` |
 | Colores de apps en default (end-4)/Plasma | `config/matugen/config.toml` + `templates/` (Plasma los rellena con Breeze en `bwm-theme-manager.py`) |
 | GTK 3 / Qt / flatpaks | `scripts/gtk-theme.py`, `scripts/bwm_icons.py` (qt6ct, `kdeglobals`, overrides) |
-| Barra Retro y su derecha | `modules/ii/bar/RetroBarContent.qml`, `bar/omarchy/*`, Ajustes → Barra (`BarConfig.qml`) |
+| Barra Retro (la de Omarchy), sus paneles y plugins | `quickshell/ii/omarchyShell/` (copia de `shell/` de Omarchy: `OmarchyShell.qml` = su anfitrión, `plugins/{bar,panels,agents,services}`), `~/.config/omarchy/shell.json`, `omarchy-bar`/`omarchy-plugin-*`; `bwm-plugin.sh` traduce las órdenes de Ajustes → Barra/Plugins y del menú |
 | Instalar/elegir temas y plugins | `modules/settings/{PluginsConfig,ThemesConfig}.qml`, `modules/settings/addons/`, `scripts/bwm-addons.py`, `scripts/bwm-plugin.sh`; detalle en `docs/OMARCHY_ADDONS.md` |
 | About del menú Retro (Fastfetch) | `scripts/omarchy-shims/omarchy-launch-about`, `hypr/omarchy/about/`, `scripts/bwm-about-data.py`; no confundir con About de Settings |
 | About de Ajustes / detección de distro | `modules/settings/About.qml`, `services/SystemInfo.qml` y `SystemInfoData.js` (os-release sin ejecutar shell); enlaces propios de BWM |
@@ -177,9 +177,11 @@ siendo el nombre del escritorio original que imita Breeze.
   - Librerías de Omarchy en `quickshell/ii/Commons` y `Ui` (`qs.Commons`, `qs.Ui`; cambios BWM en `Commons/README.md`):
     `Color.qml` vigila `~/.local/state/bwm/omarchy/{colors,shell}.toml`, `I18n.qml` con cadenas incluidas (en, es-MX),
     `Style.qml` con `bwmScale`.
-  - Barra `RetroBarContent.qml` (clon de la de Omarchy) con widgets fijos de `bar/omarchy/` y plugins
-    (`omarchy-plugins/`, `~/.config/bwm/omarchy-plugins.json`, `bwm-plugin.sh`); cada widget de la derecha se oculta
-    en Ajustes → Barra (`disabled`/`shown`). Idioma del shell de Omarchy en Ajustes → Barra (ahora inglés).
+  - Barra = **la de Omarchy tal cual** (`omarchyShell/`, quattro `18ac93c`, BWM_CONTEXT §3.118): arrastrar widgets,
+    mover la barra a cualquier borde, doble clic para el fondo, módulos propios; se configura en
+    `~/.config/omarchy/shell.json` (formato de Omarchy) con `omarchy-bar`/`omarchy-plugin-*`. Plugins de terceros en
+    `~/.config/omarchy/plugins` y los preinstalados de BWM en `omarchy-plugins/`. Parches «BWM» mínimos (workspaces
+    con numeración global, servicios de BWM, menú y capas de `OmarchyPlugins`). Idioma en Ajustes → Barra.
   - Menú (Super) `omarchyMenu` + `bwm-menu.jsonc`; cuadrícula Apps (Alt+Espacio o Super+Espacio, `AppGrid.qml`); dock opcional
     (`omarchyDock`, `dock.omarchy`, apagado; Super+M); notificaciones, OSD, polkit, recordatorios, bloqueo
     hyprlock, captura omasnap, portapapeles (Super+V), emojis (Super+.), salvapantallas, glass, transparencia.
@@ -234,9 +236,12 @@ siendo el nombre del escritorio original que imita Breeze.
 - **Temas de la comunidad:** `~/.config/omarchy/themes` es un enlace al repo en este equipo. No instalar
   ahí: usar `~/.local/share/bwm/omarchy-themes` (respeta `XDG_DATA_HOME`). Listado, resolución y carrusel
   comparten el catálogo; no volver a limitar las búsquedas a `THEMES_DIR`.
-- **Anchura de widgets:** `OmarchyPluginSlot` reserva cero si el widget está invisible. Los que no caben
-  se ocultan con opacidad/recorte, manteniendo su medida; `visible: false` en el padre produce un bucle
-  al medir `loader.item.visible`. Los servicios ajenos sólo cargan con el plugin activado.
+- **Barra de Retro:** es el anfitrión de Omarchy (`omarchyShell/OmarchyShell.qml`); el único destino IPC `shell` es
+  el de `OmarchyPlugins`, que le pasa las funciones de Omarchy (`ipc`) cuando existe. Lo que no es un plugin suyo
+  (menú, portapapeles, emojis, selector de imágenes, recordatorios) vuelve a `OmarchyPlugins.summonLocal`. Su widget
+  de workspaces da por hecho el modelo por monitor de Omarchy: está parcheado a la numeración global (§4.3 de
+  `docs/OMARCHY_4_5.md`). Los comandos de monitores de Omarchy guardan con `omarchy-hyprland-monitor-persist` de BWM
+  (`monitor-manager.py`, por `desc:`). Al actualizar desde Omarchy, conservar las marcas «BWM».
 - **Inactividad:** cada fase respeta inhibidores y «mantener despierto»; un reproductor MPRIS sonando impide
   el salvapantallas y la suspensión, no el bloqueo. `loginctl lock-session` no bloquea en BWM (nadie lo
   escucha): bloquear es `bwm-power lock` / IPC `lock activate`.

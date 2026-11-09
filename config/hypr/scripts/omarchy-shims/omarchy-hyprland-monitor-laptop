@@ -1,0 +1,6 @@
+#!/bin/bash
+# From Omarchy (basecamp/omarchy quattro 18ac93c, MIT), unchanged; BWM saves with its own omarchy-hyprland-monitor-persist.
+
+# omarchy:summary=Print the name of the built-in laptop display, including disabled outputs.
+
+hyprctl monitors all -j | jq -r '.[] | select(.name | test("^(eDP|LVDS|DSI)-")).name' | head -n 1

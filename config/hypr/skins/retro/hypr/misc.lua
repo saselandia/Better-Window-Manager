@@ -21,3 +21,17 @@ hl.config({
         cm_auto_hdr = has("render.cm_auto_hdr") and 0 or nil,
     },
 })
+
+-- Fondo «vidrio» de la barra de Omarchy (doble clic en su centro, o `omarchy-bar background glassy`):
+-- omarchy-bar deja su interruptor en ~/.local/state/omarchy/toggles/hypr/bar-glassy.lua, como en
+-- Omarchy, y recarga Hyprland; aquí se lee (Omarchy lee esa carpeta entera, BWM sólo este archivo)
+local state_home = os.getenv("XDG_STATE_HOME") or ((os.getenv("HOME") or "") .. "/.local/state")
+local bar_glassy = state_home .. "/omarchy/toggles/hypr/bar-glassy.lua"
+local glassy_file = io.open(bar_glassy, "r")
+if glassy_file then
+    glassy_file:close()
+    local ok, err = pcall(dofile, bar_glassy)
+    if not ok then
+        print("BWM: bar-glassy.lua: " .. tostring(err))
+    end
+end

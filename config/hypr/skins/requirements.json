@@ -224,6 +224,18 @@
       "check": {"type": "font", "family": "JetBrainsMono Nerd Font"},
       "provider": "bwm"
     },
+    "font-omarchy": {
+      "label": "Fuente de iconos de Omarchy (omarchy.ttf)",
+      "why": "Logo del menú y marcas de los agentes en la barra de Omarchy (Retro)",
+      "check": {"type": "font", "family": "omarchy"},
+      "provider": "bwm"
+    },
+    "inotify-tools": {
+      "label": "inotify-tools",
+      "why": "La barra de Omarchy recarga sola un plugin de ~/.config/omarchy/plugins al editarlo (inotifywait)",
+      "check": {"type": "cmd", "any": ["inotifywait"]},
+      "packages": {"gentoo": "sys-fs/inotify-tools", "arch": "inotify-tools", "fedora": "inotify-tools", "opensuse": "inotify-tools", "debian": "inotify-tools"}
+    },
     "matugen": {
       "label": "matugen",
       "why": "Genera la paleta Material You desde el fondo (tema dinámico de default (end-4))",

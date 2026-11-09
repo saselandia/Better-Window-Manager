@@ -940,10 +940,80 @@ def ensure_omarchy_language():
     OMARCHY_LANGUAGE.parent.mkdir(parents=True, exist_ok=True)
     OMARCHY_LANGUAGE.write_text(code + "\n", encoding="utf-8")
 
+OMARCHY_SHELL_JSON = CONFIG_DIR / "omarchy" / "shell.json"
+OMARCHY_SHELL_DEFAULTS = CONFIG_DIR / "hypr" / "omarchy" / "config" / "omarchy" / "shell.json"
+BWM_BAR_LAYOUT = CONFIG_DIR / "bwm" / "omarchy-plugins.json"
+# Omarchy's bar sections, in shell.json order
+BAR_SECTIONS = ("left", "centerBegin", "center", "centerEnd", "right")
+
+
+def omarchy_shell_config(defaults: dict, bwm_layout: dict, show_background: bool = True) -> dict:
+    """The shell.json Omarchy's bar would have with the choices made in BWM's own bar before it
+    (omarchy-plugins.json): Omarchy's layout without the widgets turned off there, the plugins placed
+    there in their sections with their settings inline (Omarchy's entry format), and the bar
+    background (BWM's Retro bar was opaque unless its background was off)."""
+    config = json.loads(json.dumps(defaults))
+    bar = config.setdefault("bar", {})
+    layout = bar.setdefault("layout", {})
+    for section in BAR_SECTIONS:
+        layout.setdefault(section, [])
+    bar["background"] = "opaque" if show_background else "none"
+    disabled = set(bwm_layout.get("disabled") or [])
+    placed = {}
+    for entry in bwm_layout.get("bar") or []:
+        if isinstance(entry, dict) and entry.get("id"):
+            placed[entry["id"]] = entry
+    for section in BAR_SECTIONS:
+        kept = []
+        for entry in layout[section]:
+            if entry.get("id") in disabled:
+                continue
+            saved = placed.pop(entry.get("id"), None)
+            if saved and isinstance(saved.get("settings"), dict):
+                entry = {**entry, **saved["settings"], "id": entry["id"]}
+            kept.append(entry)
+        layout[section] = kept
+    # Plugins BWM had on the bar that Omarchy's default does not place
+    for widget_id, saved in placed.items():
+        section = saved.get("section")
+        if widget_id in disabled or section not in BAR_SECTIONS:
+            continue
+        layout[section].append({"id": widget_id, **(saved.get("settings") or {})})
+    return config
+
+
+def ensure_omarchy_shell_json() -> bool:
+    """Retro's bar is Omarchy's, configured in ~/.config/omarchy/shell.json like in Omarchy. Once,
+    when that file does not exist yet, it is written from Omarchy's defaults and the choices made in
+    BWM's earlier bar; an existing shell.json is the user's and is never touched."""
+    if OMARCHY_SHELL_JSON.exists() or not OMARCHY_SHELL_DEFAULTS.exists():
+        return False
+    try:
+        defaults = json.loads(OMARCHY_SHELL_DEFAULTS.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    try:
+        bwm_layout = json.loads(BWM_BAR_LAYOUT.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        bwm_layout = {}
+    show_background = True
+    try:
+        profile = json.loads((CONFIG_DIR / "illogical-impulse" / "config-retro.json").read_text(encoding="utf-8"))
+        show_background = profile.get("bar", {}).get("showBackground", True) is not False
+    except (OSError, ValueError, AttributeError):
+        pass
+    config = omarchy_shell_config(defaults, bwm_layout, show_background)
+    OMARCHY_SHELL_JSON.parent.mkdir(parents=True, exist_ok=True)
+    tmp = OMARCHY_SHELL_JSON.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    os.replace(tmp, OMARCHY_SHELL_JSON)
+    return True
+
 def apply_retro_palette_colors(colors: dict, wallpaper: str = ""):
     """Apply an Omarchy-format palette dictionary to all apps, configs, and reload UI."""
     colors = complete_colors(colors)
     ensure_omarchy_language()
+    ensure_omarchy_shell_json()
     write_colors_toml(colors)
     apply_task_manager(True)
 

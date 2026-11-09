@@ -43,7 +43,7 @@
   },
   "parts": {
     "quickshell": [
-      "config/quickshell/ii/modules/ii/bar/RetroBarContent.qml",
+      "config/quickshell/ii/omarchyShell",
       "config/quickshell/ii/modules/ii/bar/omarchy",
       "config/quickshell/ii/modules/ii/omarchyMenu",
       "config/quickshell/ii/modules/ii/omarchyDock",
@@ -84,6 +84,8 @@
     "font-jetbrains-nerd"
   ],
   "recommends": [
+    "font-omarchy",
+    "inotify-tools",
     "omacalc",
     "omacalc-build",
     "btop",

@@ -34,7 +34,7 @@ Item { // Bar content region
             target: barBackground
         }
     }
-    // Background (Only for Default Material You theme; RetroBarContent handles its own background)
+    // Background (Only for Default Material You theme; Retro has Omarchy's own bar, omarchyShell/)
     Rectangle {
         id: barBackground
         visible: !Appearance.isRetro && !Appearance.isPlasma
@@ -345,11 +345,6 @@ Item { // Bar content region
         }
     }
 
-    RetroBarContent {
-        id: retroBarSection
-        anchors.fill: parent
-        visible: Appearance.isRetro
-    }
 
     PlasmaBarContent {
         id: plasmaBarSection

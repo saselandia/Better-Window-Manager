@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import qs.services
 import qs.modules.common
+import qs.modules.ii.bar.omarchy
 
 // Retro's notification daemon: Omarchy's own (Service.qml, from Omarchy's
 // shell/plugins/notifications, MIT): grouped cards under the bar, Omarchy glyphs, inline
@@ -18,10 +19,16 @@ Scope {
     // cards just below it
     QtObject {
         id: shellApi
+        // Omarchy's bar (omarchy-shell's host, omarchyShell/) when it runs, as in Omarchy
+        readonly property var hostBar: OmarchyPlugins.omarchyShell?.bar ?? null
         readonly property QtObject bar: QtObject {
-            readonly property string position: (Config.options?.bar?.bottom ?? false) ? "bottom" : "top"
-            readonly property int barSize: Appearance.sizes.baseBarHeight
-            readonly property bool barHidden: false
+            readonly property string position: shellApi.hostBar ? shellApi.hostBar.position
+                : ((Config.options?.bar?.bottom ?? false) ? "bottom" : "top")
+            readonly property int barSize: shellApi.hostBar ? shellApi.hostBar.barSize : Appearance.sizes.baseBarHeight
+            readonly property bool barHidden: shellApi.hostBar ? shellApi.hostBar.barHidden : false
+            function barSizeFor(screenName) {
+                return shellApi.hostBar ? shellApi.hostBar.barSizeFor(screenName) : barSize
+            }
         }
     }
 

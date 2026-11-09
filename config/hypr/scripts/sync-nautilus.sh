@@ -60,9 +60,17 @@ except Exception:
     # The palette owner sets light/dark. An accent sync must not undo that choice.
 fi
 
-# 2. Si Nautilus está en ejecución con una ventana abierta, recargar de forma transparente
+# 2. GTK 4 sólo lee gtk.css al arrancar: Nautilus se cierra para que tome la paleta nueva. Se
+#    vuelve a abrir sólo si tenía una ventana: muchas veces sigue en segundo plano sin ninguna
+#    (lo activan D-Bus o el portal de archivos), y reabrirlo entonces abría una ventana que no estaba.
 if [[ "${BWM_SKIN_SWITCH:-0}" != "1" ]] && pgrep -x "nautilus" > /dev/null 2>&1; then
+    HAD_WINDOW=0
+    if hyprctl clients -j 2>/dev/null | jq -e 'any(.[]; .class == "org.gnome.Nautilus")' > /dev/null 2>&1; then
+        HAD_WINDOW=1
+    fi
     nautilus -q > /dev/null 2>&1 || true
-    sleep 0.12
-    hyprctl dispatch 'hl.dsp.exec_cmd("nautilus")' > /dev/null 2>&1 || true
+    if [[ "$HAD_WINDOW" == "1" ]]; then
+        sleep 0.12
+        hyprctl dispatch 'hl.dsp.exec_cmd("nautilus")' > /dev/null 2>&1 || true
+    fi
 fi

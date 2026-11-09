@@ -33,30 +33,39 @@ Singleton {
         return root.services[String(id || "")] ?? null;
     }
     function firstPartyServiceFor(id) {
-        // omarchy.media (MPRIS, for the bar's media widget); BWM has its own equivalents of the rest
-        if (String(id) === "omarchy.media")
-            return mediaServiceLoader.item;
+        // In Retro, omarchy-shell's host (omarchyShell/OmarchyShell.qml) owns the services
+        if (root.omarchyShell)
+            return root.omarchyShell.firstPartyServiceFor(String(id));
+        // Outside Retro nothing on the desktop uses Omarchy's first-party services
         return null;
     }
+
+    // omarchy-shell's host while Retro runs it (it registers itself): the bar, its panels and their
+    // plugins are its; the menu and the overlays below stay here (summonLocal and the like).
+    property var omarchyShell: null
     function summon(id, payloadJson) {
+        return root.omarchyShell ? root.omarchyShell.summon(id, payloadJson) : root.summonLocal(id, payloadJson);
+    }
+    function hide(id) {
+        return root.omarchyShell ? root.omarchyShell.hide(id) : root.hideLocal(id);
+    }
+    function toggle(id, payloadJson) {
+        return root.omarchyShell ? root.omarchyShell.toggle(id, payloadJson) : root.toggleLocal(id, payloadJson);
+    }
+    // The Retro menu (OmarchyMenu), as the omarchy-shell shim does for `shell summon omarchy.menu`
+    function menuIpc(method, payload) {
+        const args = ["qs", "-c", "ii", "ipc", "call", "omarchyMenu", method];
+        if (payload !== undefined)
+            args.push(payload);
+        Quickshell.execDetached(args);
+        return true;
+    }
+    function summonLocal(id, payloadJson) {
+        if (String(id) === "omarchy.menu")
+            return root.menuIpc("openPayload", payloadJson || "{}");
         const strId = String(id || "");
         const normId = strId.startsWith("omarchy.") ? strId : ("omarchy." + strId);
-        if (normId === "omarchy.speedtest") {
-            if (!speedtestLoader.item) speedtestLoader.active = true;
-            if (speedtestLoader.item) speedtestLoader.item.open(payloadJson);
-            else speedtestLoader.loaded.connect(function() { speedtestLoader.item.open(payloadJson); });
-            return true;
-        } else if (normId === "omarchy.disk-speedtest") {
-            if (!diskSpeedtestLoader.item) diskSpeedtestLoader.active = true;
-            if (diskSpeedtestLoader.item) diskSpeedtestLoader.item.open(payloadJson);
-            else diskSpeedtestLoader.loaded.connect(function() { diskSpeedtestLoader.item.open(payloadJson); });
-            return true;
-        } else if (normId === "omarchy.wifiqr") {
-            if (!wifiqrLoader.item) wifiqrLoader.active = true;
-            if (wifiqrLoader.item) wifiqrLoader.item.open(payloadJson);
-            else wifiqrLoader.loaded.connect(function() { wifiqrLoader.item.open(payloadJson); });
-            return true;
-        } else if (normId === "omarchy.clipboard") {
+        if (normId === "omarchy.clipboard") {
             if (!clipboardLoader.item) clipboardLoader.active = true;
             if (clipboardLoader.item) clipboardLoader.item.open(payloadJson);
             else clipboardLoader.loaded.connect(function() { clipboardLoader.item.open(payloadJson); });
@@ -81,19 +90,12 @@ Singleton {
         return false;
     }
 
-    function hide(id) {
+    function hideLocal(id) {
+        if (String(id) === "omarchy.menu")
+            return root.menuIpc("close");
         const strId = String(id || "");
         const normId = strId.startsWith("omarchy.") ? strId : ("omarchy." + strId);
-        if (normId === "omarchy.speedtest") {
-            speedtestLoader.item?.close();
-            return true;
-        } else if (normId === "omarchy.disk-speedtest") {
-            diskSpeedtestLoader.item?.close();
-            return true;
-        } else if (normId === "omarchy.wifiqr") {
-            wifiqrLoader.item?.close();
-            return true;
-        } else if (normId === "omarchy.clipboard") {
+        if (normId === "omarchy.clipboard") {
             clipboardLoader.item?.close();
             return true;
         } else if (normId === "omarchy.emojis") {
@@ -109,32 +111,22 @@ Singleton {
         return false;
     }
 
-    function toggle(id, payloadJson) {
+    function toggleLocal(id, payloadJson) {
+        if (String(id) === "omarchy.menu")
+            return root.menuIpc("toggle");
         const strId = String(id || "");
         const normId = strId.startsWith("omarchy.") ? strId : ("omarchy." + strId);
-        if (normId === "omarchy.speedtest") {
-            if (speedtestLoader.item?.opened) root.hide(normId);
-            else root.summon(normId, payloadJson || "{}");
-            return true;
-        } else if (normId === "omarchy.disk-speedtest") {
-            if (diskSpeedtestLoader.item?.opened) root.hide(normId);
-            else root.summon(normId, payloadJson || "{}");
-            return true;
-        } else if (normId === "omarchy.wifiqr") {
-            if (wifiqrLoader.item?.opened) root.hide(normId);
-            else root.summon(normId, payloadJson || "{}");
-            return true;
-        } else if (normId === "omarchy.clipboard") {
-            if (clipboardLoader.item?.opened) root.hide(normId);
-            else root.summon(normId, payloadJson || "{}");
+        if (normId === "omarchy.clipboard") {
+            if (clipboardLoader.item?.opened) root.hideLocal(normId);
+            else root.summonLocal(normId, payloadJson || "{}");
             return true;
         } else if (normId === "omarchy.emojis") {
-            if (emojisLoader.item?.opened) root.hide(normId);
-            else root.summon(normId, payloadJson || "{}");
+            if (emojisLoader.item?.opened) root.hideLocal(normId);
+            else root.summonLocal(normId, payloadJson || "{}");
             return true;
         } else if (normId === "omarchy.image-picker" || normId === "omarchy.image-selector") {
-            if (imagePickerLoader.item?.opened) root.hide(normId);
-            else root.summon(normId, payloadJson || "{}");
+            if (imagePickerLoader.item?.opened) root.hideLocal(normId);
+            else root.summonLocal(normId, payloadJson || "{}");
             return true;
         }
         return false;
@@ -274,36 +266,6 @@ Singleton {
     }
 
     Loader {
-        id: speedtestLoader
-        active: false
-        source: Qt.resolvedUrl("speedtest/Panel.qml")
-        onLoaded: {
-            item.shell = root;
-            item.manifest = { id: "omarchy.speedtest" };
-        }
-    }
-
-    Loader {
-        id: diskSpeedtestLoader
-        active: false
-        source: Qt.resolvedUrl("disk-speedtest/Panel.qml")
-        onLoaded: {
-            item.shell = root;
-            item.manifest = { id: "omarchy.disk-speedtest" };
-        }
-    }
-
-    Loader {
-        id: wifiqrLoader
-        active: false
-        source: Qt.resolvedUrl("wifiqr/Panel.qml")
-        onLoaded: {
-            item.shell = root;
-            item.manifest = { id: "omarchy.wifiqr" };
-        }
-    }
-
-    Loader {
         id: clipboardLoader
         active: true
         source: Qt.resolvedUrl("clipboard/Clipboard.qml")
@@ -323,16 +285,6 @@ Singleton {
         }
     }
 
-    // Omarchy's media service (shell/plugins/services/media, MIT): players, active one, IPC `media`
-    Loader {
-        id: mediaServiceLoader
-        active: true
-        source: Qt.resolvedUrl("media/Service.qml")
-        onLoaded: {
-            item.shell = root;
-        }
-    }
-
     // Omarchy's interactive reminder flow (omarchy-reminder -i), from shell/plugins/reminders (MIT)
     Loader {
         id: remindersLoader
@@ -348,27 +300,6 @@ Singleton {
         id: imagePickerLoader
         active: false
         source: Qt.resolvedUrl("image-picker/ImagePicker.qml")
-    }
-
-    IpcHandler {
-        target: "omarchy.speedtest"
-        function open(): void { root.summon("omarchy.speedtest", "{}"); }
-        function close(): void { root.hide("omarchy.speedtest"); }
-        function toggle(): void { root.toggle("omarchy.speedtest", "{}"); }
-    }
-
-    IpcHandler {
-        target: "omarchy.disk-speedtest"
-        function open(): void { root.summon("omarchy.disk-speedtest", "{}"); }
-        function close(): void { root.hide("omarchy.disk-speedtest"); }
-        function toggle(): void { root.toggle("omarchy.disk-speedtest", "{}"); }
-    }
-
-    IpcHandler {
-        target: "omarchy.wifiqr"
-        function open(): void { root.summon("omarchy.wifiqr", "{}"); }
-        function close(): void { root.hide("omarchy.wifiqr"); }
-        function toggle(): void { root.toggle("omarchy.wifiqr", "{}"); }
     }
 
     IpcHandler {
@@ -451,11 +382,27 @@ Singleton {
         function toggle(): void { root.toggle("omarchy.image-picker", "{}"); }
     }
 
+    // The one `shell` target of every skin. In Retro it also answers what omarchy-shell's own does
+    // (omarchy-bar, omarchy-plugin…), through its host; elsewhere those say "no-shell".
     IpcHandler {
         target: "shell"
         function summon(id: string, payload: string): void { root.summon(id, payload ?? "{}"); }
         function toggle(id: string, payload: string): void { root.toggle(id, payload ?? "{}"); }
         function hide(id: string): void { root.hide(id); }
+        function rescanPlugins(): void { root.omarchyShell?.ipc.rescanPlugins(); }
+        function reloadPlugins(): void { root.omarchyShell?.ipc.reloadPlugins(); }
+        function reloadConfig(): string { return root.omarchyShell ? root.omarchyShell.ipc.reloadConfig() : "no-shell"; }
+        function toggleBarTransparency(): string { return root.omarchyShell ? root.omarchyShell.ipc.toggleBarTransparency() : "no-shell"; }
+        function setPluginEnabled(id: string, enabled: string): string { return root.omarchyShell ? root.omarchyShell.ipc.setPluginEnabled(id, enabled) : "no-shell"; }
+        function enablePlugin(id: string, placementJson: string): string { return root.omarchyShell ? root.omarchyShell.ipc.enablePlugin(id, placementJson) : "no-shell"; }
+        function putBarWidget(id: string, placementJson: string): string { return root.omarchyShell ? root.omarchyShell.ipc.putBarWidget(id, placementJson) : "no-shell"; }
+        function moveBarWidget(id: string, placementJson: string): string { return root.omarchyShell ? root.omarchyShell.ipc.moveBarWidget(id, placementJson) : "no-shell"; }
+        function setBarWidget(id: string, key: string, valueJson: string, selectorJson: string): string { return root.omarchyShell ? root.omarchyShell.ipc.setBarWidget(id, key, valueJson, selectorJson) : "no-shell"; }
+        function listPlugins(): string { return root.omarchyShell ? root.omarchyShell.ipc.listPlugins() : "[]"; }
+        function listShellConfig(): string { return root.omarchyShell ? root.omarchyShell.ipc.listShellConfig() : "{}"; }
+        function debugBarGeometry(): string { return root.omarchyShell ? root.omarchyShell.ipc.debugBarGeometry() : "[]"; }
+        function togglePanelAt(section: string, index: string): string { return root.omarchyShell ? root.omarchyShell.ipc.togglePanelAt(section, index) : "unknown"; }
+        function call(id: string, method: string, arg: string): string { return root.omarchyShell ? root.omarchyShell.ipc.call(id, method, arg) : ""; }
     }
 
     Component.onCompleted: reload()

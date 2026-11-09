@@ -1,5 +1,6 @@
-Stand-ins for the Omarchy commands that Omarchy bar plugins run through `bar.run(...)`.
-The Retro bar's plugin host (`quickshell/ii/modules/ii/bar/omarchy/OmarchyPluginSlot.qml`) puts this
-folder first in `PATH` for those commands only, and `bwm-plugin.sh catalog` links them into `~/.local/bin`
-(never over an existing file) for the plugins that run them directly (weather, Elsewhen).
+Omarchy commands (`omarchy-*`) for BWM: copies of Omarchy's own `bin/` scripts (MIT, most unchanged) and
+BWM stand-ins where Omarchy's would act on Arch, its own state or root. Retro's bar is Omarchy's
+(`quickshell/ii/omarchyShell`), which runs them by name; `bwm-plugin.sh catalog` links them into
+`~/.local/bin` (never over an existing file), which is in the shell's `PATH`. `$OMARCHY_PATH/bin`
+(`config/hypr/omarchy/bin`) is a link to this folder too, as Omarchy's scripts expect.
 `omarchy-weather-*` are Omarchy's own scripts (MIT), with BWM's city (`bar.weather.city`) and units.

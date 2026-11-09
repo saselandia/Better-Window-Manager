@@ -1,0 +1,37 @@
+#!/bin/bash
+# BWM stand-in for Omarchy's omarchy-hyprland-monitor-persist (basecamp/omarchy quattro 18ac93c, MIT).
+# Omarchy's monitor scripts (layout, resolution, rotate, scaling) change Hyprland at once and then
+# call this to remember the result. Omarchy keeps it in ~/.local/state/omarchy/monitors/settings;
+# BWM saves its monitors by description in monitors.lua and monitors_layout.json with
+# monitor-manager.py, so this saves the current arrangement of every monitor there (the arguments
+# are checked as in Omarchy, but what is saved is what Hyprland now shows).
+# omarchy:summary=Save a monitor's scale, mode, position and rotation (BWM: monitor-manager.py)
+# omarchy:args=OUTPUT SCALE [MODE] [POSITION] [TRANSFORM]
+# omarchy:hidden=true
+
+output="${1:-}"
+scale="${2:-}"
+mode="${3:-}"
+position="${4:-}"
+transform="${5:-}"
+
+if [[ -z $output || -z $scale ]]; then
+  echo "Usage: omarchy-hyprland-monitor-persist OUTPUT SCALE [MODE] [POSITION] [TRANSFORM]" >&2
+  exit 1
+fi
+
+if [[ ! $output =~ ^[A-Za-z0-9._-]+$ || ! $scale =~ ^[0-9]+([.][0-9]+)?$ ]] ||
+  [[ -n $mode && ! $mode =~ ^[0-9]+x[0-9]+(@[0-9.]+)?$ ]] ||
+  [[ -n $position && ! $position =~ ^-?[0-9]+x-?[0-9]+$ ]] ||
+  [[ -n $transform && ! $transform =~ ^[0-7]$ ]]; then
+  echo "Refusing to save an unsafe monitor setting: $*" >&2
+  exit 1
+fi
+
+manager="$HOME/.config/hypr/scripts/monitor-manager.py"
+# Omarchy's scripts call this once per monitor right after one eval: save once, after the last
+exec 9>"${XDG_RUNTIME_DIR:-/tmp}/bwm-monitor-persist.lock"
+flock 9
+sleep 0.3
+state=$(python3 "$manager" list) || exit 1
+python3 "$manager" apply "$state" >/dev/null

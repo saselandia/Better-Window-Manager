@@ -80,6 +80,31 @@ incluye ni el código ni el binario en el repositorio. `hypr/skins/retro/screens
 Apagado común (2026-11-08): `hypr/scripts/bwm-power` sigue `bin/omarchy-system` y
 `bin/omarchy-hyprland-window-close-all` de Omarchy quattro `598e4eb` (MIT), reescrito para BWM.
 
+Barra de Retro (2026-11-09): `config/quickshell/ii/omarchyShell/` es una copia de `shell/` de Omarchy
+quattro [`18ac93c`](https://github.com/basecamp/omarchy/tree/18ac93c) (MIT, Copyright (c) David
+Heinemeier Hansson): la barra (`plugins/bar`), sus paneles (`plugins/panels`), el de agentes
+(`plugins/agents`), los servicios de multimedia y sesión remota (`plugins/services`), el registro de
+plugins y sus API (`services/`) y el anfitrión `shell/shell.qml` como `OmarchyShell.qml`. Cambios de BWM,
+marcados «BWM» en el código: el anfitrión es un `Scope` dentro del shell de BWM, sin biblioteca de apps,
+teclas de brillo, introducciones de fondo, atajos globales, socket IPC ni el IPC del selector de imágenes
+(BWM los tiene en otra parte); el menú y las capas que aloja BWM se piden a `OmarchyPlugins`; los
+servicios de inactividad, luz nocturna y no molestar son adaptadores sobre los de BWM; el registro lee
+además los plugins preinstalados de BWM; el widget de workspaces usa la numeración global de BWM; y el
+botón del menú se declara sólo como widget de barra. También de `18ac93c`, sin cambios: `omarchy-bar`,
+`omarchy-shell-config`, `omarchy-plugin-*`, `omarchy-restart-hyprctl`, `omarchy-git-url-check`,
+`omarchy-hyprland-monitor-{layout,resolution,rotate,scaling,laptop}`, `omarchy-monitor-state` y
+`omarchy-hyprland-toggle-enabled` en `hypr/scripts/omarchy-shims`; propios de BWM con su interfaz:
+`omarchy-hyprland-monitor-persist` (guarda con `monitor-manager.py`) y `omarchy-sudo-passwordless`
+(nunca activo). `Commons/omarchy/default/hypr/toggles/bar-glassy.lua` procede de
+`default/hypr/toggles/bar-glassy.lua` sin la llamada a su modo vidrio.
+
+Fuente de iconos de Omarchy (2026-11-09): `assets/fonts/omarchy.ttf`, de
+`default/fonts/omarchy/omarchy.ttf` de Omarchy quattro `18ac93c` (repositorio MIT), con su descripción en
+`assets/fonts/licenses/omarchy-font-README.md`. Además del logo de Omarchy contiene marcas de terceros
+(Claude, Codex, Cursor, Tailscale…) redibujadas desde sus logos: son marcas de sus dueños y su uso no
+queda cubierto por la licencia MIT; pendiente de revisar antes de una release, como el resto de
+recursos de la lista siguiente.
+
 ## Recursos pendientes de procedencia
 
 No se declara que los siguientes recursos estén cubiertos por MIT ni por una licencia común:

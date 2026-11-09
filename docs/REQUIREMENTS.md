@@ -112,6 +112,8 @@ Imita **Omarchy 4 (basecamp/omarchy, rama quattro)**. El shell de Omarchy: su ba
 
 | Requisito | Para qué | Gentoo | Arch / CachyOS | Fedora | openSUSE | Debian / Ubuntu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Fuente de iconos de Omarchy (omarchy.ttf) | Logo del menú y marcas de los agentes en la barra de Omarchy (Retro) | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
+| inotify-tools | La barra de Omarchy recarga sola un plugin de ~/.config/omarchy/plugins al editarlo (inotifywait) | `sys-fs/inotify-tools` | `inotify-tools` | `inotify-tools` | `inotify-tools` | `inotify-tools` |
 | Omacalc (calculadora de Omarchy) | Calculadora con los colores de cada skin, recarga en vivo y fuente iA Writer Mono incluida | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
 | Compilar Omacalc (Qt 6) | Sólo durante la instalación: BWM compila la calculadora original con soporte para sus paletas | `dev-qt/qtbase` `dev-qt/qtdeclarative` `dev-vcs/git` `sys-devel/patch` | `base-devel` `qt6-base` `qt6-declarative` `git` | `gcc-c++` `make` `qt6-qtbase-devel` `qt6-qtdeclarative-devel` `git` `patch` | `gcc-c++` `make` `qt6-base-devel` `qt6-declarative-devel` `git` `patch` | `build-essential` `qt6-base-dev` `qt6-declarative-dev` `qmake6` `git` `patch` |
 | btop | Gestor de tareas de Retro (y tema btop de Omarchy) | `sys-process/btop` | `btop` | `btop` | `btop` | `btop` |

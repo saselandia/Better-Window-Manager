@@ -1,183 +1,134 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Script: bwm-plugin.sh
-# Descripción: Plugins de la barra de Omarchy en el estilo Retro de BWM. Equivalente a
-# `omarchy plugin add/remove/update/list/enable/disable` (Omarchy, MIT): un plugin es un
-# repositorio git con un manifest.json en la raíz (https://omarchy.org/manual/shell-plugins/).
-# La barra Retro los carga con las librerías qs.Commons / qs.Ui de Omarchy
-# (quickshell/ii/Commons, quickshell/ii/Ui) y modules/ii/bar/omarchy/.
+# Descripción: plugins de la barra de Omarchy en el estilo Retro de BWM. La barra es la de Omarchy
+# (quickshell/ii/omarchyShell, BWM_CONTEXT §3.118) y se configura como en Omarchy: en
+# ~/.config/omarchy/shell.json, con `omarchy plugin add/remove/update/enable/disable`
+# (omarchy-plugin-*, en hypr/scripts/omarchy-shims). Este script mantiene las órdenes que usan
+# Ajustes → Barra, Ajustes → Plugins y el menú de Retro, y las pasa a esas de Omarchy.
 #
 # Uso:
 #   bwm-plugin.sh add <url-git> [--section left|center|centerEnd|right] [--disabled] [--yes]
 #   bwm-plugin.sh remove <id>        bwm-plugin.sh update [id]
 #   bwm-plugin.sh enable <id> [--section S]   bwm-plugin.sh disable <id>
-#   bwm-plugin.sh list               bwm-plugin.sh catalog   (JSON para la barra)
+#   bwm-plugin.sh hide <id> | show <id>       (lo mismo que disable / enable)
+#   bwm-plugin.sh list               bwm-plugin.sh catalog   (JSON para Ajustes y el menú)
 #   bwm-plugin.sh build              # compila el binario de ai-usagebar (cargo)
 #
-# Preinstalados (quickshell/ii/omarchy-plugins, activos salvo que se desactiven en Ajustes →
-# Barra): los plugins más usados de Omarchy que no necesitan cuentas: ai-usagebar, omastats,
-# omarchy-mpris y omarchy-active-window. El reloj con calendario de Omarchy no es un plugin:
-# forma parte de la barra Retro (quickshell/ii/modules/ii/bar/omarchy/clock).
-#
-# Como en Omarchy, un plugin es código sin aislar que corre dentro de Quickshell: revisa
-# lo que instalas. No se ejecutan hooks de instalación ni se pide sudo.
+# Plugins de terceros: los del usuario en ~/.config/omarchy/plugins (donde los instala Omarchy) y
+# los que trae BWM preinstalados en quickshell/ii/omarchy-plugins (ai-usagebar, omastats,
+# omarchy-mpris, omarchy-active-window). Como en Omarchy, un plugin es código sin aislar que corre
+# dentro de Quickshell: revisa lo que instalas. No se ejecutan hooks de instalación ni se pide sudo.
 # ==============================================================================
 set -euo pipefail
 
-PLUGINS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/bwm/omarchy-plugins"
-BUILTIN_DIR="${BWM_BUILTIN_PLUGINS:-$HOME/.config/quickshell/ii/omarchy-plugins}"
+SHIMS="$HOME/.config/hypr/scripts/omarchy-shims"
+USER_PLUGINS="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/plugins"
+BUNDLED_PLUGINS="${BWM_BUILTIN_PLUGINS:-$HOME/.config/quickshell/ii/omarchy-plugins}"
+FIRST_PARTY="$HOME/.config/quickshell/ii/omarchyShell/plugins"
+SHELL_JSON="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/shell.json"
+DEFAULT_SHELL_JSON="$HOME/.config/hypr/omarchy/config/omarchy/shell.json"
 # ai-usagebar: el plugin preinstalado es sólo la interfaz; su binario sale de este commit
 AI_USAGEBAR_GIT="https://github.com/akitaonrails/ai-usagebar.git"
 AI_USAGEBAR_REV="d1af986fe4bf8d05316bc8d6e1506881b5f4d265"
-LAYOUT="${BWM_OMARCHY_LAYOUT:-${XDG_CONFIG_HOME:-$HOME/.config}/bwm/omarchy-plugins.json}"
 export GIT_TERMINAL_PROMPT=0
+export PATH="$SHIMS:$PATH"
 
 fail() { echo "bwm-plugin: $*" >&2; exit 1; }
 need() { command -v "$1" >/dev/null || fail "falta $1"; }
 need jq
-need git
 
-mkdir -p "$PLUGINS_DIR" "${LAYOUT%/*}"
-[[ -s $LAYOUT ]] || echo '{"bar": []}' >"$LAYOUT"
-
-save_layout() {   # stdin: nuevo JSON
-  local tmp
-  tmp=$(mktemp "${LAYOUT}.XXXXXX")
-  jq '.' >"$tmp" && mv -f "$tmp" "$LAYOUT"
-  # La barra vigila el archivo; esto sólo acelera la recarga si Quickshell corre
-  qs -c ii ipc call omarchyPlugins reload >/dev/null 2>&1 || true
-}
-
-plugin_dir() {    # id -> carpeta (instalados por el usuario o preinstalados)
-  local id=$1 d
-  for d in "$PLUGINS_DIR"/*/ "$BUILTIN_DIR"/*/; do
-    [[ -f $d/manifest.json ]] || continue
-    [[ $(jq -r '.id // ""' "$d/manifest.json") == "$id" ]] && { echo "${d%/}"; return 0; }
-  done
-  return 1
-}
-
-# Secciones de Omarchy (left, centerBegin, center, centerEnd, tray, right) -> las de BWM
-section_for() {
+# BWM llamaba «center» a la izquierda del reloj, que en Omarchy es centerBegin
+omarchy_section() {
   case "$1" in
-    left) echo left ;;
-    center|centerBegin) echo center ;;
-    centerEnd|after-clock) echo centerEnd ;;
+    center|centerBegin) echo centerBegin ;;
+    left|centerEnd|right|tray) echo "$1" ;;
     *) echo right ;;
   esac
 }
 
-enable_plugin() { # id [section]
-  local id=$1 section=${2:-} dir manifest
-  dir=$(plugin_dir "$id") || fail "no está instalado: $id"
-  manifest="$dir/manifest.json"
-  if ! jq -e '(.kinds // []) | index("bar-widget")' "$manifest" >/dev/null; then
-    echo "$id no es un widget de barra; sus servicios se cargan igualmente."
+# ¿Está la barra de Omarchy en marcha (Retro)? Sin ella, las órdenes de Omarchy no tienen a quién
+# pedírselo y se edita shell.json directamente, como haría Omarchy sin su shell
+shell_running() {
+  [[ $(qs -c ii ipc call shell listShellConfig 2>/dev/null) == "{"* ]] &&
+    [[ $(qs -c ii ipc call shell listShellConfig 2>/dev/null) != "{}" ]]
+}
+
+ensure_shell_json() {
+  [[ -s $SHELL_JSON ]] && return 0
+  python3 -c 'import sys; sys.path.insert(0, sys.argv[1]); import bwm_omarchy; bwm_omarchy.ensure_omarchy_shell_json()' \
+    "$HOME/.config/hypr/scripts" || true
+  [[ -s $SHELL_JSON ]] || { mkdir -p "${SHELL_JSON%/*}"; cp "$DEFAULT_SHELL_JSON" "$SHELL_JSON"; }
+}
+
+edit_shell_json() {   # jq filter, args...
+  local filter=$1 tmp
+  shift
+  ensure_shell_json
+  tmp=$(mktemp "$SHELL_JSON.XXXXXX")
+  jq "$@" "$filter" "$SHELL_JSON" >"$tmp" && mv -f "$tmp" "$SHELL_JSON"
+}
+
+cmd_enable() {   # id [section]
+  local id=$1 section=${2:-}
+  if shell_running; then
+    if [[ -n $section ]]; then omarchy-plugin-enable "$id" --section "$section"
+    else omarchy-plugin-enable "$id"; fi
+    return
   fi
-  if [[ -z $section ]]; then
-    # Como en el shell.json de Omarchy: Elsewhen y el tiempo justo después del reloj
-    if [[ $id == omarchy.elsewhen || $id == omarchy.weather ]]; then section=centerEnd
-    elif [[ $id == crmne.mpris ]]; then section=centerEnd # a la derecha del reloj; la barra limita el ancho disponible
-    else section=$(section_for "$(jq -r '.barWidget.defaultSection // "right"' "$manifest")"); fi
-  fi
-  jq --arg id "$id" --arg s "$section" --argjson d "$(jq '.barWidget.defaults // {}' "$manifest")" '
-    (first(.bar[]? | select(.id == $id)) // {}) as $old
-    | .bar |= ((map(select(.id != $id))) + [{id: $id, section: $s, settings: ($d * ($old.settings // {}))}])
-    | .disabled = ((.disabled // []) - [$id])' "$LAYOUT" | save_layout
-  echo "Activado $id en la sección $section."
+  edit_shell_json '
+    .bar.layout = (.bar.layout // {})
+    | if any(.bar.layout[]?[]?; .id == $id) and $section == "" then .
+      else .bar.layout |= with_entries(.value |= map(select(.id != $id)))
+        | .bar.layout[($section | if . == "" then "right" else . end)] += [{id: $id}] end' \
+    --arg id "$id" --arg section "$section"
+  echo "Activado $id."
+}
+
+cmd_disable() {
+  local id=${1:?id}
+  if shell_running; then omarchy-plugin-disable "$id"; return; fi
+  edit_shell_json '.bar.layout |= with_entries(.value |= map(select(.id != $id)))' --arg id "$id"
+  echo "Desactivado $id."
 }
 
 cmd_add() {
-  local url="" section="" enable=true yes=false name dest id
+  local url="" section="" enable=true args=()
   while (($#)); do
     case "$1" in
-      --section) section=$(section_for "${2:?}"); shift ;;
+      --section) section=$(omarchy_section "${2:?}"); shift ;;
       --disabled) enable=false ;;
-      --yes) yes=true ;;
+      --yes) args+=(--yes) ;;
       -*) fail "opción desconocida: $1" ;;
       *) url=$1 ;;
     esac
     shift
   done
-  [[ $url =~ ^(https://|git@)[A-Za-z0-9._/:@-]+$ ]] || fail "URL git no válida: $url"
-  name=$(basename "${url%.git}")
-  [[ $name =~ ^[A-Za-z0-9._-]+$ && $name != .* ]] || fail "nombre de repositorio no válido: $name"
-  dest="$PLUGINS_DIR/$name"
-  [[ ! -e $dest ]] || fail "ya existe $dest; no se sobrescribe"
-  if ! $yes && [[ -t 0 ]]; then
-    read -r -p "Los plugins son código sin aislar dentro de la barra. ¿Instalar $url? [s/N] " reply
-    [[ $reply == [sSyY]* ]] || exit 1
-  fi
-  # Stage and validate before exposing a plugin to the running shell. No install hooks.
-  local staging validation
-  staging=$(mktemp -d "$PLUGINS_DIR/.install.XXXXXX")
-  if ! git -c core.hooksPath=/dev/null clone -q --depth 1 -- "$url" "$staging/repo"; then
-    rm -rf -- "$staging"
-    fail "no se pudo descargar $url"
-  fi
-  if ! validation=$(python3 "$(dirname "$(readlink -f "$0")")/bwm-addons.py" validate-plugin "$staging/repo"); then
-    rm -rf -- "$staging"
-    fail "$(jq -r '.message // "plugin incompatible"' <<<"$validation")"
-  fi
-  id=$(jq -r '.id' "$staging/repo/manifest.json")
-  if plugin_dir "$id" >/dev/null; then
-    rm -rf -- "$staging"
-    fail "ya hay un plugin instalado con id $id"
-  fi
-  if ! mv -T -- "$staging/repo" "$dest"; then
-    rm -rf -- "$staging"
-    fail "no se pudo instalar $id"
-  fi
-  rmdir "$staging"
-  echo "Instalado $id ($(jq -r '.name // ""' "$dest/manifest.json")) en $dest"
-  if $enable; then enable_plugin "$id" "$section"; fi
+  [[ -n $url ]] || fail "falta la URL git"
+  local before after id
+  before=$(ls "$USER_PLUGINS" 2>/dev/null || true)
+  omarchy-plugin-add "$url" "${args[@]}"
+  after=$(ls "$USER_PLUGINS" 2>/dev/null || true)
+  id=$(comm -13 <(sort <<<"$before") <(sort <<<"$after") | head -n 1)
+  [[ -n $id && -f $USER_PLUGINS/$id/manifest.json ]] || return 0
+  id=$(jq -r '.id' "$USER_PLUGINS/$id/manifest.json")
+  if $enable; then cmd_enable "$id" "$section"; fi
 }
 
 cmd_remove() {
-  local id=${1:?id} dir
-  dir=$(plugin_dir "$id") || fail "no está instalado: $id"
-  [[ $dir == "$BUILTIN_DIR"/* ]] && fail "$id viene preinstalado: desactívalo (bwm-plugin.sh disable $id)"
-  jq --arg id "$id" '.bar |= map(select(.id != $id)) | .disabled = ((.disabled // []) - [$id])' "$LAYOUT" | save_layout
-  rm -rf -- "$dir"
-  echo "Eliminado $id."
-}
-
-cmd_update() {
-  local d
-  for d in "$PLUGINS_DIR"/*/; do
-    [[ -d $d/.git ]] || continue
-    if [[ -n ${1:-} && $(jq -r '.id // ""' "$d/manifest.json" 2>/dev/null) != "$1" ]]; then continue; fi
-    echo "Actualizando $(basename "$d")..."
-    git -C "$d" pull -q --ff-only || echo "  no se pudo actualizar (¿cambios locales?)" >&2
-  done
-  qs -c ii ipc call omarchyPlugins reload >/dev/null 2>&1 || true
-}
-
-cmd_disable() {
   local id=${1:?id}
-  jq --arg id "$id" '.bar |= map(select(.id != $id)) | .disabled = (((.disabled // []) - [$id]) + [$id])' "$LAYOUT" | save_layout
-  echo "Desactivado $id."
+  [[ -d $BUNDLED_PLUGINS ]] && grep -qs "\"id\": *\"$id\"" "$BUNDLED_PLUGINS"/*/manifest.json &&
+    fail "$id viene preinstalado: desactívalo (bwm-plugin.sh disable $id)"
+  omarchy-plugin-remove "$id" --yes
 }
 
-cmd_list() {
-  local d id
-  for d in "$BUILTIN_DIR"/*/ "$PLUGINS_DIR"/*/; do
-    [[ -f $d/manifest.json ]] || continue
-    id=$(jq -r '.id' "$d/manifest.json")
-    printf '%-32s %-8s %s\n' "$id" \
-      "$(jq -r --arg id "$id" --argjson b "$([[ $d == "$BUILTIN_DIR"/* ]] && echo true || echo false)" '(.bar[] | select(.id == $id) | .section) // (if ((.disabled // []) | index($id)) then "off" elif $b then "default" else "-" end)' "$LAYOUT")" \
-      "$(jq -r '.name // ""' "$d/manifest.json")"
-  done
-}
-
-# JSON para modules/ii/bar/omarchy/OmarchyPlugins.qml: plugins instalados y activos
-# Las órdenes omarchy-* que los plugins lanzan por su cuenta (sin bar.run) tienen que estar en el
-# PATH de Quickshell: enlaces en ~/.local/bin a hypr/scripts/omarchy-shims, sin pisar nada propio
+# Las órdenes omarchy-* que los plugins lanzan por su cuenta tienen que estar en el PATH de
+# Quickshell: enlaces en ~/.local/bin a hypr/scripts/omarchy-shims, sin pisar nada propio
 link_shims() {
-  local shim_dir="$HOME/.config/hypr/scripts/omarchy-shims" bin="$HOME/.local/bin" f name
-  [[ -d $shim_dir ]] || return 0
+  local bin="$HOME/.local/bin" f name
+  [[ -d $SHIMS ]] || return 0
   mkdir -p "$bin"
-  for f in "$shim_dir"/omarchy-*; do
+  for f in "$SHIMS"/omarchy-*; do
     name=${f##*/}
     if [[ ! -e $bin/$name || ( -L $bin/$name && $(readlink "$bin/$name") == "$f" ) ]]; then
       ln -sfn "$f" "$bin/$name"
@@ -185,27 +136,69 @@ link_shims() {
   done
 }
 
+# JSON para Ajustes → Barra / Plugins y el menú de Retro, con la forma de antes:
+# {"layout": {"bar": [{id, section, settings}], "disabled": [...], "shown": [...]}, "plugins": [...]},
+# sacado de shell.json (lo que está en la barra) y de los manifest.json de los plugins
 cmd_catalog() {
   link_shims
-  local d first=true builtin
-  printf '{"layout": %s, "plugins": [' "$(jq -c '.' "$LAYOUT")"
-  for d in "$BUILTIN_DIR"/*/ "$PLUGINS_DIR"/*/; do
-    [[ -f $d/manifest.json ]] || continue
-    $first || printf ','
-    first=false
-    builtin=false; [[ $d == "$BUILTIN_DIR"/* ]] && builtin=true
-    jq -c --arg dir "${d%/}" --argjson builtin "$builtin" '{
-      builtin: $builtin,
-      defaultSection: (if (.id == "omarchy.elsewhen" or .id == "omarchy.weather") then "centerEnd" elif .id == "crmne.mpris" then "centerEnd" else (.barWidget.defaultSection // "right" | if . == "left" then "left" elif (. == "center" or . == "centerBegin") then "center" elif . == "centerEnd" then "centerEnd" else "right" end) end),
-      description: (.description // ""),
-      id, name, version, kinds: (.kinds // []), dir: $dir,
-      keepLoaded: (.keepLoaded // false),
-      barWidget: (if .entryPoints.barWidget then ($dir + "/" + .entryPoints.barWidget) else null end),
-      service: (if .entryPoints.service then ($dir + "/" + .entryPoints.service) else null end),
-      defaults: (.barWidget.defaults // {})
-    }' "$d/manifest.json"
-  done
-  printf ']}\n'
+  ensure_shell_json
+  python3 - "$SHELL_JSON" "$FIRST_PARTY" "$BUNDLED_PLUGINS" "$USER_PLUGINS" <<'PY'
+import json, sys
+from pathlib import Path
+
+shell_json, first_party, bundled, user = sys.argv[1:5]
+try:
+    layout = json.loads(Path(shell_json).read_text()).get("bar", {}).get("layout", {})
+except (OSError, ValueError, AttributeError):
+    layout = {}
+to_bwm = {"left": "left", "centerBegin": "center", "center": "center", "centerEnd": "centerEnd", "right": "right", "tray": "right"}
+placed = []
+for section in ("left", "centerBegin", "center", "centerEnd", "tray", "right"):
+    for entry in layout.get(section) or []:
+        if isinstance(entry, dict) and entry.get("id"):
+            settings = {k: v for k, v in entry.items() if k != "id"}
+            placed.append({"id": entry["id"], "section": to_bwm[section], "settings": settings})
+
+def manifests():
+    for root, builtin in ((first_party, True), (bundled, True), (user, False)):
+        base = Path(root)
+        if not base.is_dir():
+            continue
+        found = list(base.glob("*/manifest.json")) + list(base.glob("*/*/manifest.json")) + list(base.glob("*/*/*.manifest.json"))
+        for path in sorted(found):
+            try:
+                data = json.loads(path.read_text())
+            except (OSError, ValueError):
+                continue
+            if isinstance(data, dict) and data.get("id"):
+                yield path, data, builtin
+
+plugins, seen = [], set()
+for path, data, builtin in manifests():
+    pid = data["id"]
+    if pid in seen or "bar-widget" not in (data.get("kinds") or []):
+        continue
+    seen.add(pid)
+    entry = data.get("entryPoints") or {}
+    folder = path.parent
+    section = (data.get("barWidget") or {}).get("defaultSection", "right")
+    plugins.append({
+        "builtin": builtin,
+        "defaultSection": to_bwm.get(section, "right"),
+        "description": data.get("description", ""),
+        "id": pid, "name": data.get("name", pid), "version": data.get("version", ""),
+        "kinds": data.get("kinds") or [], "dir": str(folder),
+        "keepLoaded": bool(data.get("keepLoaded")),
+        "barWidget": str(folder / entry["barWidget"]) if entry.get("barWidget") else None,
+        "service": str(folder / entry["service"]) if entry.get("service") else None,
+        "defaults": (data.get("barWidget") or {}).get("defaults") or {},
+    })
+on_bar = [e["id"] for e in placed]
+print(json.dumps({
+    "layout": {"bar": placed, "disabled": [p["id"] for p in plugins if p["id"] not in on_bar], "shown": on_bar},
+    "plugins": plugins,
+}))
+PY
 }
 
 # Binario de ai-usagebar (el plugin preinstalado es sólo su interfaz) en ~/.local/bin
@@ -221,16 +214,14 @@ cmd_build() {
 case "${1:-}" in
   add) shift; cmd_add "$@" ;;
   remove|rm) shift; cmd_remove "$@" ;;
-  update) shift; cmd_update "$@" ;;
-  enable) shift; id=${1:?id}; shift; s=""; [[ ${1:-} == --section ]] && s=$(section_for "${2:?}"); enable_plugin "$id" "$s" ;;
-  disable) shift; cmd_disable "$@" ;;
-  # Widgets fijos de la barra Retro (omarchy.tray, omarchy.audio…): sólo la lista `disabled`
-  # (`shown` turns on the ones that are off by default, such as omarchy.media)
-  hide) shift; jq --arg id "${1:?id}" '.disabled = (((.disabled // []) - [$id]) + [$id]) | .shown = ((.shown // []) - [$id])' "$LAYOUT" | save_layout ;;
-  show) shift; jq --arg id "${1:?id}" '.disabled = ((.disabled // []) - [$id]) | .shown = (((.shown // []) - [$id]) + [$id])' "$LAYOUT" | save_layout ;;
-  list|ls) cmd_list ;;
+  update) shift; omarchy-plugin-update "$@" ;;
+  enable|show)
+    shift; id=${1:?id}; shift; s=""
+    [[ ${1:-} == --section ]] && s=$(omarchy_section "${2:?}")
+    cmd_enable "$id" "$s" ;;
+  disable|hide) shift; cmd_disable "$@" ;;
+  list|ls) omarchy-plugin-list ;;
   catalog) cmd_catalog ;;
-  build) cmd_build ;;
-  defaults) cmd_build ;;   # nombre anterior: los plugins ya vienen preinstalados
-  *) sed -n '9,16p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+  build|defaults) cmd_build ;;
+  *) sed -n '/^# Uso:/,/^# Plugins de terceros/p' "$0" | sed 's/^# \{0,1\}//' | head -n -1; exit 1 ;;
 esac
