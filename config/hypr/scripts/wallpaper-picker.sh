@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Script: wallpaper-picker.sh
-# Descripción: Selector gráfico orgánico de fondos de pantalla estilo Material You.
-#              Genera miniaturas en paralelo y muestra una cuadrícula visual interactiva.
+# Descripción: Selector de fondos de la skin activa (end-4, Omarchy o Breeze).
 # ==============================================================================
 
 set -euo pipefail
@@ -10,6 +9,12 @@ set -euo pipefail
 WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
 CACHE_DIR="$HOME/.cache/wallpaper-thumbnails"
 CURRENT_THEME="$(python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py get 2>/dev/null || echo "default")"
+
+# Retro conserva Alt+W y usa el selector original de Omarchy, con la colección
+# del tema activo y Pictures/Wallpapers. El backend vive dentro de su skin.
+if [[ "$CURRENT_THEME" == "retro" ]]; then
+    exec python3 "$HOME/.config/hypr/skins/retro/scripts/wallpaper-picker.py"
+fi
 
 # default (end-4): el selector de fondos de end-4 (Quickshell, como Ctrl+Super+T en
 # dots-hyprland); rofi queda de respaldo si Quickshell no responde
@@ -20,9 +25,7 @@ if [[ "$CURRENT_THEME" == "default" ]]; then
     fi
 fi
 
-if [[ "$CURRENT_THEME" == "retro" ]]; then
-    ROFI_THEME="$HOME/.config/rofi/wallpaper-picker-retro.rasi"
-elif [[ "$CURRENT_THEME" == "plasma" ]]; then
+if [[ "$CURRENT_THEME" == "plasma" ]]; then
     ROFI_THEME="$HOME/.config/rofi/wallpaper-picker-plasma.rasi"
 else
     ROFI_THEME="$HOME/.config/rofi/wallpaper-picker.rasi"
@@ -39,11 +42,12 @@ SEARCH_DIRS=(
     "/usr/share/backgrounds"
 )
 
-# Recopilar imágenes válidas
+# Recopilar imágenes y vídeos válidos (los vídeos los reproduce bwm-video-wallpaper)
 mapfile -t IMAGES < <(
     for dir in "${SEARCH_DIRS[@]}"; do
         if [ -d "$dir" ]; then
-            find "$dir" -maxdepth 2 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) 2>/dev/null
+            find "$dir" -maxdepth 2 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \
+                -o -iname "*.mp4" -o -iname "*.m4v" -o -iname "*.mov" -o -iname "*.webm" -o -iname "*.mkv" -o -iname "*.avi" \) 2>/dev/null
         fi
     done | sort -u
 )
@@ -67,7 +71,7 @@ def gen(img):
         thumb = os.path.join(cache_dir, f"{h}.png")
         if not os.path.exists(thumb) or os.path.getmtime(img) > os.path.getmtime(thumb):
             subprocess.run(
-                ["ffmpeg", "-v", "error", "-threads", "1", "-i", img,
+                ["ffmpeg", "-v", "error", "-threads", "1", "-i", img, "-frames:v", "1",
                  "-vf", "scale=240:135:force_original_aspect_ratio=decrease,pad=240:135:(ow-iw)/2:(oh-ih)/2:black@0",
                  thumb, "-y"],
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL

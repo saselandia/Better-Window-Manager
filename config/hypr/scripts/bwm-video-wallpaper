@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# bwm-video-wallpaper: fondos de vídeo, comunes a todas las skins (Omarchy 4.5: «Backgrounds can
+# be videos»). Cada skin los reproduce como su original:
+#   · Retro: OWE (omacom/owe), el motor de Omarchy. `owed` vigila
+#     ~/.local/state/omarchy/current/background (lo apunta set-wallpaper.sh) y suspende el fondo
+#     del shell mientras suena el vídeo. Se compila con skins/retro/scripts/install-owe.sh.
+#   · default (end-4) y Breeze (Kde plasma): mpvpaper con las opciones de switchwall.sh de end-4,
+#     uno por monitor, en la capa de fondo; el fondo del shell (end-4) o swww (Breeze) muestran
+#     encima o debajo el primer fotograma.
+# swww, las paletas y el bloqueo usan siempre una imagen fija: el primer fotograma (`poster`).
+#
+# Uso:
+#   bwm-video-wallpaper is-video <ruta>         ¿es un vídeo? (código de salida)
+#   bwm-video-wallpaper poster <vídeo>          imprime la ruta del primer fotograma (en caché)
+#   bwm-video-wallpaper still <ruta>            la ruta tal cual, o el primer fotograma si es vídeo
+#   bwm-video-wallpaper play <vídeo>            lo reproduce con el motor de la skin activa
+#   bwm-video-wallpaper stop                    para mpvpaper, y OWE fuera de Retro (en Retro OWE
+#                                               sigue al enlace de Omarchy y devuelve el fondo al shell)
+#   bwm-video-wallpaper sync [skin]             motor correcto para la skin y el fondo actuales
+#                                               (inicio de sesión y cambio de skin)
+#   bwm-video-wallpaper thumbnails --size <normal|large|x-large|xx-large> -d <carpeta>
+#                                               miniaturas freedesktop de los vídeos de la carpeta
+#                                               (selector de fondos de end-4; imprime «FILE ruta»)
+# ==============================================================================
+set -uo pipefail
+
+SCRIPTS="$HOME/.config/hypr/scripts"
+POSTERS="${XDG_CACHE_HOME:-$HOME/.cache}/bwm/video-posters"
+OWE_BIN="${XDG_DATA_HOME:-$HOME/.local/share}/bwm/owe/bin"
+OWE_LOG="${XDG_RUNTIME_DIR:-/tmp}/bwm-owed.log"
+BG_LINK="$HOME/.local/state/omarchy/current/background"
+# Las de switchwall.sh de end-4, sin cambios
+VIDEO_OPTS="no-audio loop hwdec=auto scale=bilinear interpolation=no video-sync=display-resample panscan=1.0 video-scale-x=1.0 video-scale-y=1.0 video-align-x=0.5 video-align-y=0.5 load-scripts=no"
+
+is_video() {
+  case "${1,,}" in
+    *.mp4 | *.m4v | *.mov | *.webm | *.mkv | *.avi) return 0 ;;
+  esac
+  return 1
+}
+
+current_skin() {
+  python3 "$SCRIPTS/bwm-theme-manager.py" get 2>/dev/null || echo default
+}
+
+current_wallpaper() {
+  local wp
+  wp="$(cat "$HOME/.cache/current_wallpaper" 2>/dev/null || true)"
+  [[ -f $wp ]] && printf '%s\n' "$wp"
+}
+
+poster() {
+  local video="$1" key out
+  [[ -f $video ]] || return 1
+  key="$(printf '%s\0%s' "$video" "$(stat -c %Y "$video" 2>/dev/null)" | md5sum | cut -d' ' -f1)"
+  out="$POSTERS/$key.jpg"
+  if [[ ! -s $out ]]; then
+    mkdir -p "$POSTERS"
+    ffmpeg -nostdin -loglevel error -y -i "$video" -frames:v 1 -q:v 2 "$out.tmp.jpg" &&
+      mv -f "$out.tmp.jpg" "$out" || { rm -f "$out.tmp.jpg"; return 1; }
+  fi
+  printf '%s\n' "$out"
+}
+
+# Proceso duradero: hijo de Hyprland, no de quien lo pide (bwm_session.spawn)
+spawn() {
+  python3 -c 'import sys; sys.path.insert(0, sys.argv[1]); import bwm_session; sys.exit(0 if bwm_session.spawn(sys.argv[3:], sys.argv[2] or None) else 1)' \
+    "$SCRIPTS" "${LOG:-}" "$@"
+}
+
+mpvpaper_stop() {
+  local pids
+  pids="$(pgrep -x mpvpaper || true)"
+  [[ -n $pids ]] && kill $pids 2>/dev/null
+  return 0
+}
+
+mpvpaper_play() {
+  local video="$1" monitor
+  if ! command -v mpvpaper >/dev/null 2>&1; then
+    notify-send -a "BWM" "Fondo de vídeo" \
+      "Falta mpvpaper: sudo emerge --ask gui-apps/mpvpaper (GURU). Se queda el primer fotograma." 2>/dev/null
+    return 1
+  fi
+  mpvpaper_stop
+  for monitor in $(hyprctl monitors -j | jq -r '.[].name'); do
+    LOG="" spawn mpvpaper -o "$VIDEO_OPTS" "$monitor" "$video"
+    sleep 0.1
+  done
+}
+
+owed_running() {
+  pgrep -x owed >/dev/null 2>&1
+}
+
+owe_start() {
+  owed_running && return 0
+  if [[ ! -x $OWE_BIN/owed ]]; then
+    return 1
+  fi
+  LOG="$OWE_LOG" spawn "$OWE_BIN/owed"
+  for _ in $(seq 1 30); do
+    "$OWE_BIN/owe" status >/dev/null 2>&1 && return 0
+    sleep 0.1
+  done
+  return 0
+}
+
+owe_stop() {
+  owed_running || return 0
+  "$OWE_BIN/owe" shutdown >/dev/null 2>&1 || kill $(pgrep -x owed) 2>/dev/null
+  return 0
+}
+
+# Retro: OWE si está compilado; si no, aviso (el enlace se queda en el primer fotograma)
+retro_play() {
+  mpvpaper_stop
+  if owe_start; then
+    "$OWE_BIN/owe" refresh >/dev/null 2>&1 || true
+    return 0
+  fi
+  notify-send -a "BWM" "Fondo de vídeo" \
+    "Retro reproduce los vídeos con OWE, como Omarchy: ~/.config/hypr/skins/retro/scripts/install-owe.sh. Se queda el primer fotograma." 2>/dev/null
+  return 1
+}
+
+play() {
+  local video="$1" skin
+  skin="$(current_skin)"
+  if [[ $skin == retro ]]; then
+    retro_play
+  else
+    owe_stop
+    mpvpaper_play "$video"
+  fi
+}
+
+sync_engine() {
+  local skin="${1:-$(current_skin)}" wp
+  wp="$(current_wallpaper || true)"
+  if [[ $skin == retro ]]; then
+    mpvpaper_stop
+    # OWE también reproduce imágenes fijas, pero sólo hace falta con un vídeo
+    if [[ -n $wp ]] && is_video "$wp"; then retro_play; else owe_stop; fi
+    return 0
+  fi
+  owe_stop
+  if [[ -n $wp ]] && is_video "$wp"; then
+    pgrep -x mpvpaper >/dev/null 2>&1 || mpvpaper_play "$wp"
+  else
+    mpvpaper_stop
+  fi
+}
+
+urlencode() {
+  # Como encodeURIComponent por partes, igual que ThumbnailImage.qml (quien busca la miniatura)
+  python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe="/!*'"'"'()"))' "$1"
+}
+
+thumbnails() {
+  local size=normal dir="" px video abs uri hash out
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --size) size="$2"; shift 2 ;;
+      -d | --directory) dir="$2"; shift 2 ;;
+      *) shift ;;
+    esac
+  done
+  case "$size" in
+    normal) px=128 ;; large) px=256 ;; x-large) px=512 ;; xx-large) px=1024 ;; *) px=128; size=normal ;;
+  esac
+  [[ -d $dir ]] || return 0
+  out="${XDG_CACHE_HOME:-$HOME/.cache}/thumbnails/$size"
+  mkdir -p "$out"
+  while IFS= read -r -d '' video; do
+    is_video "$video" || continue
+    abs="$(realpath "$video")"
+    uri="file://$(urlencode "$abs")"
+    hash="$(printf '%s' "$uri" | md5sum | cut -d' ' -f1)"
+    [[ -s $out/$hash.png ]] && continue
+    # Como los de imágenes de end-4: lado mayor = tamaño freedesktop
+    ffmpeg -nostdin -loglevel error -y -i "$abs" -frames:v 1 \
+      -vf "scale='if(gt(iw,ih),$px,-2)':'if(gt(iw,ih),-2,$px)'" "$out/$hash.tmp.png" &&
+      mv -f "$out/$hash.tmp.png" "$out/$hash.png" && echo "FILE $abs"
+    rm -f "$out/$hash.tmp.png"
+  done < <(find "$dir" -maxdepth 1 -type f -print0 2>/dev/null)
+}
+
+case "${1:-}" in
+  is-video) is_video "${2:-}" ;;
+  poster) poster "${2:-}" ;;
+  still)
+    if is_video "${2:-}"; then poster "$2"; else printf '%s\n' "${2:-}"; fi
+    ;;
+  play) [[ -f ${2:-} ]] && play "$2" ;;
+  stop)
+    mpvpaper_stop
+    [[ $(current_skin) == retro ]] || owe_stop
+    ;;
+  sync) sync_engine "${2:-}" ;;
+  thumbnails) shift; thumbnails "$@" ;;
+  *)
+    sed -n '/^# Uso:/,/^# =====/p' "$0" | grep -v '^# =' | sed 's/^# \{0,1\}//' >&2
+    exit 2
+    ;;
+esac

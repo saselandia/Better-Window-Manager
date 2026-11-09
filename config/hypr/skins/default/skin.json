@@ -73,11 +73,14 @@
     "hyprpolkitagent"
   ],
   "recommends": [
+    "omacalc",
+    "omacalc-build",
     "swaync",
     "songrec",
     "hyprsunset",
     "default-qt-colors",
     "plasma-integration",
-    "darkly"
+    "darkly",
+    "mpvpaper"
   ]
 }

@@ -62,6 +62,7 @@ compilarlos o usar sus repositorios de terceros.
 | Nautilus | Gestor de archivos tematizado (Super+E) | `gnome-base/nautilus` | `nautilus` | `nautilus` | `nautilus` | `nautilus` |
 | Firefox | Navegador tematizado (userChrome + Pywalfox) | `www-client/firefox-bin` | `firefox` | `firefox` | `MozillaFirefox` | `firefox-esr` |
 | Flatpak | Vesktop, Spotify, Stremio… tematizados con overrides | `sys-apps/flatpak` | `flatpak` | `flatpak` | `flatpak` | `flatpak` |
+| FFmpeg | Primer fotograma y miniaturas de los fondos de vídeo; miniaturas del selector de fondos rofi | `media-video/ffmpeg` | `ffmpeg` | `ffmpeg-free` | `ffmpeg` | `ffmpeg` |
 
 ## Skin default (end-4)
 
@@ -83,12 +84,15 @@ Imita **end-4 / illogical-impulse (Material You)**. Material Design 3: barra, pa
 
 | Requisito | Para qué | Gentoo | Arch / CachyOS | Fedora | openSUSE | Debian / Ubuntu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Omacalc (calculadora de Omarchy) | Calculadora con los colores de cada skin, recarga en vivo y fuente iA Writer Mono incluida | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
+| Compilar Omacalc (Qt 6) | Sólo durante la instalación: BWM compila la calculadora original con soporte para sus paletas | `dev-qt/qtbase` `dev-qt/qtdeclarative` `dev-vcs/git` `sys-devel/patch` | `base-devel` `qt6-base` `qt6-declarative` `git` | `gcc-c++` `make` `qt6-qtbase-devel` `qt6-qtdeclarative-devel` `git` `patch` | `gcc-c++` `make` `qt6-base-devel` `qt6-declarative-devel` `git` `patch` | `build-essential` `qt6-base-dev` `qt6-declarative-dev` `qmake6` `git` `patch` |
 | SwayNotificationCenter | Centro de notificaciones fuera de Retro | `guru:gui-apps/swaync` | `swaync` | `SwayNotificationCenter` | `SwayNotificationCenter` | `sway-notification-center` |
 | SongRec | Reconocer la música que suena (botón de los ajustes rápidos) | `guru:media-sound/songrec` | `songrec` | — | — | — |
 | hyprsunset | Luz nocturna que no tiñe las capturas (sin él se usa un shader) | `hyproverlay:gui-apps/hyprsunset` | `hyprsunset` | `copr:solopasha/hyprland:hyprsunset` | `hyprsunset` | — |
 | Colores Qt de end-4 (kde-material-you-colors) | Apps Qt de default (end-4) con la paleta del fondo, como en illogical-impulse | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
 | Plugin de plataforma de KDE para Qt | Las apps Qt de default (end-4) leen kdeglobals (QT_QPA_PLATFORMTHEME=kde), como en end-4 | `kde-plasma/plasma-integration` | `plasma-integration` | `plasma-integration` | `plasma6-integration-plugin` | `plasma-integration` |
 | Darkly (estilo de widgets Qt) | Estilo de las apps Qt de end-4 en default (end-4) | — | `aur:darkly-bin` | `copr:deltacopy/darkly:darkly` | — | — |
+| mpvpaper | Fondos de vídeo en default (end-4) y Breeze (Kde plasma), como switchwall.sh de end-4; sin él se queda el primer fotograma | `guru:gui-apps/mpvpaper` | `aur:mpvpaper` | — | — | — |
 
 ## Skin Retro
 
@@ -108,6 +112,8 @@ Imita **Omarchy 4 (basecamp/omarchy, rama quattro)**. El shell de Omarchy: su ba
 
 | Requisito | Para qué | Gentoo | Arch / CachyOS | Fedora | openSUSE | Debian / Ubuntu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Omacalc (calculadora de Omarchy) | Calculadora con los colores de cada skin, recarga en vivo y fuente iA Writer Mono incluida | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
+| Compilar Omacalc (Qt 6) | Sólo durante la instalación: BWM compila la calculadora original con soporte para sus paletas | `dev-qt/qtbase` `dev-qt/qtdeclarative` `dev-vcs/git` `sys-devel/patch` | `base-devel` `qt6-base` `qt6-declarative` `git` | `gcc-c++` `make` `qt6-qtbase-devel` `qt6-qtdeclarative-devel` `git` `patch` | `gcc-c++` `make` `qt6-base-devel` `qt6-declarative-devel` `git` `patch` | `build-essential` `qt6-base-dev` `qt6-declarative-dev` `qmake6` `git` `patch` |
 | btop | Gestor de tareas de Retro (y tema btop de Omarchy) | `sys-process/btop` | `btop` | `btop` | `btop` | `btop` |
 | SongRec | Reconocer la música que suena (botón de los ajustes rápidos) | `guru:media-sound/songrec` | `songrec` | — | — | — |
 | fastfetch | «Acerca de» del menú de Retro, como en Omarchy | `app-misc/fastfetch` | `fastfetch` | `fastfetch` | `fastfetch` | `fastfetch` |
@@ -119,6 +125,7 @@ Imita **Omarchy 4 (basecamp/omarchy, rama quattro)**. El shell de Omarchy: su ba
 | Barras de título de Omarchy (omarchy-hyprland-titlebars) | Barras de las ventanas en los workspaces flotantes de Retro, el plugin de Omarchy sin cambios; debe estar compilado para el Hyprland que usas | *se compila* | *se compila* | *se compila* | *se compila* | *se compila* |
 | Plugin GTK de Qt (gtk3) | Las apps Qt de Retro toman los colores del tema GTK, como en Omarchy (QT_QPA_PLATFORMTHEME=gtk3) | `dev-qt/qtbase[gtk]` | `qt6-base` | `qt6-qtbase-gui` | `qt6-platformtheme-gtk3` | `qt6-gtk-platformtheme` |
 | Plugin WebP de Qt (qtimageformats) | El fondo de Omarchy en Retro dibuja los fondos WebP de muchos temas con su transición (sin él, BWM los convierte a JPG) | `dev-qt/qtimageformats` | `qt6-imageformats` | `qt6-qtimageformats` | `qt6-imageformats` | `qt6-image-formats-plugins` |
+| OWE (fondos de vídeo de Omarchy) | Fondos de vídeo en Retro, como Omarchy 4.5 (omacom/owe; sin él se queda el primer fotograma); se compila con meson y necesita libmpv | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
 
 ## Skin Breeze (Kde plasma)
 
@@ -139,12 +146,15 @@ Imita **KDE Plasma 6 (Breeze Dark)**. Panel flotante, Kickoff, applets de red/Bl
 
 | Requisito | Para qué | Gentoo | Arch / CachyOS | Fedora | openSUSE | Debian / Ubuntu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Omacalc (calculadora de Omarchy) | Calculadora con los colores de cada skin, recarga en vivo y fuente iA Writer Mono incluida | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
+| Compilar Omacalc (Qt 6) | Sólo durante la instalación: BWM compila la calculadora original con soporte para sus paletas | `dev-qt/qtbase` `dev-qt/qtdeclarative` `dev-vcs/git` `sys-devel/patch` | `base-devel` `qt6-base` `qt6-declarative` `git` | `gcc-c++` `make` `qt6-qtbase-devel` `qt6-qtdeclarative-devel` `git` `patch` | `gcc-c++` `make` `qt6-base-devel` `qt6-declarative-devel` `git` `patch` | `build-essential` `qt6-base-dev` `qt6-declarative-dev` `qmake6` `git` `patch` |
 | qt6ct | Paleta de la skin en las apps Qt | `gui-apps/qt6ct` | `qt6ct` | `qt6ct` | `qt6ct` | `qt6ct` |
 | NetworkManager | Applets y paneles de red | `net-misc/networkmanager` | `networkmanager` | `NetworkManager` | `NetworkManager` | `network-manager` |
 | nm-connection-editor | Botón «Configurar» del applet de red | `gnome-extra/nm-applet` | `nm-connection-editor` | `nm-connection-editor` | `NetworkManager-connection-editor` | `network-manager-gnome` |
 | BlueZ | Applets y paneles de Bluetooth | `net-wireless/bluez` | `bluez-utils` | `bluez` | `bluez` | `bluez` |
 | blueman | Botón «Configurar» del applet Bluetooth | `net-wireless/blueman` | `blueman` | `blueman` | `blueman` | `blueman` |
 | SwayNotificationCenter | Centro de notificaciones fuera de Retro | `guru:gui-apps/swaync` | `swaync` | `SwayNotificationCenter` | `SwayNotificationCenter` | `sway-notification-center` |
+| mpvpaper | Fondos de vídeo en default (end-4) y Breeze (Kde plasma), como switchwall.sh de end-4; sin él se queda el primer fotograma | `guru:gui-apps/mpvpaper` | `aur:mpvpaper` | — | — | — |
 
 ## Plugins de barras de título (Breeze (Kde plasma) y Retro)
 

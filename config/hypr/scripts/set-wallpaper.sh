@@ -21,6 +21,19 @@ if [ ! -f "$WALLPAPER" ]; then
     exit 1
 fi
 
+# Fondos de vídeo (Omarchy 4.5): swww, las paletas y el bloqueo usan su primer fotograma; el vídeo
+# lo reproduce el motor de cada skin (bwm-video-wallpaper: OWE en Retro, mpvpaper en las demás)
+VIDEO_WALLPAPER="$HOME/.config/hypr/scripts/bwm-video-wallpaper"
+STILL="$WALLPAPER"
+IS_VIDEO=0
+if "$VIDEO_WALLPAPER" is-video "$WALLPAPER"; then
+    IS_VIDEO=1
+    STILL="$("$VIDEO_WALLPAPER" poster "$WALLPAPER")" || {
+        echo "Error: no se pudo sacar el primer fotograma de '$WALLPAPER' (¿falta ffmpeg?)." >&2
+        exit 1
+    }
+fi
+
 # 1. Asegurar que el demonio swww-daemon esté en ejecución
 # swww cambió de nombre a awww (mismo uso y opciones): vale cualquiera de los dos
 WALL_BIN="$(command -v swww || command -v awww || echo swww)"
@@ -45,9 +58,9 @@ echo "Aplicando wallpaper: $WALLPAPER"
 # Omarchy: su plugin background con su transición): swww sólo queda debajo, sin animación.
 # Breeze (Kde plasma) sigue con swww y su transición
 if [[ "${BWM_SKIN_SWITCH:-0}" == "1" || "$CURRENT_THEME" != "plasma" ]]; then
-    "$WALL_BIN" img "$WALLPAPER" --transition-type none
+    "$WALL_BIN" img "$STILL" --transition-type none
 else
-    "$WALL_BIN" img "$WALLPAPER" \
+    "$WALL_BIN" img "$STILL" \
         --transition-type grow --transition-pos center --transition-step 90 \
         --transition-duration 2 --transition-fps 60
 fi
@@ -58,19 +71,25 @@ if [[ "$CURRENT_THEME" == "retro" ]]; then
     OMARCHY_BG_LINK="$HOME/.local/state/omarchy/current/background"
     mkdir -p "$(dirname "$OMARCHY_BG_LINK")"
     PREVIOUS_BG="$(readlink -f "$OMARCHY_BG_LINK" 2>/dev/null || true)"
-    SHELL_BG="$WALLPAPER"
+    # Con OWE el enlace apunta al vídeo (owed lo reproduce y el fondo del shell se suspende);
+    # sin OWE, a su primer fotograma
+    SHELL_BG="$STILL"
+    if [[ "$IS_VIDEO" == "1" && -x "${XDG_DATA_HOME:-$HOME/.local/share}/bwm/owe/bin/owed" ]]; then
+        SHELL_BG="$WALLPAPER"
+    fi
     # Sin el plugin WebP de Qt (dev-qt/qtimageformats) el shell no abre los .webp de los temas:
     # se le da una copia JPG en caché
     QT_WEBP=0
     for qt_plugins in /usr/lib64/qt6/plugins /usr/lib/qt6/plugins /usr/lib/x86_64-linux-gnu/qt6/plugins; do
         [[ -e "$qt_plugins/imageformats/libqwebp.so" ]] && QT_WEBP=1
     done
-    if [[ "${WALLPAPER,,}" == *.webp && "$QT_WEBP" == "0" ]] && command -v magick >/dev/null 2>&1; then
+    if [[ "${SHELL_BG,,}" == *.webp && "$QT_WEBP" == "0" ]] && command -v magick >/dev/null 2>&1; then
         WEBP_CACHE="$HOME/.cache/bwm/omarchy-background"
         mkdir -p "$WEBP_CACHE"
-        SHELL_BG="$WEBP_CACHE/$(printf '%s' "$WALLPAPER" | md5sum | cut -d' ' -f1).jpg"
-        if [[ ! -s "$SHELL_BG" || "$WALLPAPER" -nt "$SHELL_BG" ]]; then
-            magick "$WALLPAPER" -quality 92 "$SHELL_BG.tmp.jpg" && mv "$SHELL_BG.tmp.jpg" "$SHELL_BG" || SHELL_BG="$WALLPAPER"
+        WEBP_SRC="$SHELL_BG"
+        SHELL_BG="$WEBP_CACHE/$(printf '%s' "$WEBP_SRC" | md5sum | cut -d' ' -f1).jpg"
+        if [[ ! -s "$SHELL_BG" || "$WEBP_SRC" -nt "$SHELL_BG" ]]; then
+            magick "$WEBP_SRC" -quality 92 "$SHELL_BG.tmp.jpg" && mv "$SHELL_BG.tmp.jpg" "$SHELL_BG" || SHELL_BG="$WEBP_SRC"
         fi
     fi
     ln -sfn "$SHELL_BG" "$OMARCHY_BG_LINK"
@@ -81,6 +100,13 @@ if [[ "$CURRENT_THEME" == "retro" ]]; then
     fi
 fi
 
+# Motor de vídeo de la skin activa, o ninguno con una imagen
+if [[ "$IS_VIDEO" == "1" ]]; then
+    "$VIDEO_WALLPAPER" play "$WALLPAPER" || true
+else
+    "$VIDEO_WALLPAPER" stop || true
+fi
+
 mkdir -p "$HOME/.cache"
 echo "$WALLPAPER" > "$HOME/.cache/current_wallpaper"
 
@@ -88,13 +114,13 @@ echo "$WALLPAPER" > "$HOME/.cache/current_wallpaper_${CURRENT_THEME}"
 
 # 2.2 Sincronizar ruta del wallpaper con Quickshell / Illogical Impulse
 if [ -f "$HOME/.config/illogical-impulse/config.json" ] && command -v jq >/dev/null 2>&1; then
-    jq --arg path "$WALLPAPER" '.background.wallpaperPath = $path' "$HOME/.config/illogical-impulse/config.json" > "$HOME/.config/illogical-impulse/config.json.tmp" && mv "$HOME/.config/illogical-impulse/config.json.tmp" "$HOME/.config/illogical-impulse/config.json"
+    jq --arg path "$WALLPAPER" --arg still "$STILL" '.background.wallpaperPath = $path | .background.thumbnailPath = $still' "$HOME/.config/illogical-impulse/config.json" > "$HOME/.config/illogical-impulse/config.json.tmp" && mv "$HOME/.config/illogical-impulse/config.json.tmp" "$HOME/.config/illogical-impulse/config.json"
 fi
 
 # 2.3 Sincronizar con el perfil aislado del estilo activo (config-retro.json / config-default.json)
 PROFILE_JSON="$HOME/.config/illogical-impulse/config-${CURRENT_THEME}.json"
 if [ -f "$PROFILE_JSON" ] && command -v jq >/dev/null 2>&1; then
-    jq --arg path "$WALLPAPER" '.background.wallpaperPath = $path' "$PROFILE_JSON" > "$PROFILE_JSON.tmp" && mv "$PROFILE_JSON.tmp" "$PROFILE_JSON"
+    jq --arg path "$WALLPAPER" --arg still "$STILL" '.background.wallpaperPath = $path | .background.thumbnailPath = $still' "$PROFILE_JSON" > "$PROFILE_JSON.tmp" && mv "$PROFILE_JSON.tmp" "$PROFILE_JSON"
 fi
 
 # 3. Generar la paleta de colores según el estilo
@@ -108,7 +134,7 @@ elif [[ "$CURRENT_THEME" == "retro" ]]; then
     python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py apply-wallpaper-colors "$WALLPAPER" 2>/dev/null || true
 else
     echo "Extrayendo colores del wallpaper..."
-    bash "$HOME/.config/quickshell/ii/scripts/colors/switchwall.sh" --colors-only --image "$WALLPAPER"
+    bash "$HOME/.config/quickshell/ii/scripts/colors/switchwall.sh" --colors-only --image "$STILL"
     # default (end-4) already published the shell palette and queued its app hooks.
     if [[ "${BWM_SKIN_SWITCH:-0}" != "1" ]]; then
         python3 "$HOME/.config/hypr/scripts/bwm_boot.py" render >/dev/null 2>&1 &

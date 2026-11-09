@@ -71,6 +71,11 @@ try:
     wp = Path(wallpaper.read_text().strip())
 except OSError:
     wp = None
+if wp and wp.is_file() and wp.suffix.lower() in ('.mp4', '.m4v', '.mov', '.webm', '.mkv', '.avi'):
+    # BWM: a video wallpaper shows its first frame (bwm-video-wallpaper poster)
+    poster = subprocess.run([str(Path.home() / '.config/hypr/scripts/bwm-video-wallpaper'), 'poster', str(wp)],
+                            capture_output=True, text=True).stdout.strip()
+    wp = Path(poster) if poster else None
 if wp and wp.is_file() and wp.suffix.lower() in IMAGES:
     items.append(('dynamic', wp, None))
 for theme in bwm.list_omarchy_themes():

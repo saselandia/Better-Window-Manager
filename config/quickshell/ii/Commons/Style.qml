@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import qs.Commons as Commons
+import qs.modules.common as Bwm
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
@@ -264,17 +265,16 @@ QtObject {
 
   // ---------------------------------------------------------- typography
   //
-  // `fontFamily` defaults to "monospace" so the bar and every qs.Ui
-  // component follows the fontconfig alias `omarchy-font-set` writes.
-  // Themes can override per-token via [font] in shell.toml, but the
-  // family stays system-wide.
-  property string fontFamily: "monospace"
-
-  // The concrete family `monospace` resolves to right now, e.g.
-  // "JetBrainsMono Nerd Font". Bind `font.family` to `fontFamily` (so the
-  // alias path keeps working when the user runs `omarchy font set`), but
-  // read `resolvedFontFamily` when you want to *display* what's drawing.
-  property string resolvedFontFamily: "monospace"
+  // BWM does not install Omarchy's system-wide 50-omarchy.conf. Supply
+  // the profile's font after the monospace alias, before distro fallbacks.
+  // An explicit fontconfig preference (including omarchy-font-set) still
+  // wins. Use the concrete result so Qt makes the same choice as fc-match.
+  readonly property string bwmFallbackFont: Bwm.Config.options.appearance.fonts.monospace
+  readonly property string bwmFontPattern: "monospace" + (bwmFallbackFont
+    ? "," + bwmFallbackFont.replace(/([\\,:-])/g, "\\$1") : "")
+  onBwmFontPatternChanged: resolveFontFamily()
+  property string fontFamily: resolvedFontFamily
+  property string resolvedFontFamily: bwmFallbackFont || "monospace"
 
   // The only sanity floor is 1px. Themes and users can make this as large
   // as they like; if the shell gets ridiculous, that's their call.
@@ -514,12 +514,21 @@ QtObject {
   // set <name>` rewrites ~/.config/fontconfig/fonts.conf and restarts the
   // shell, but rerun on file change anyway so manual edits propagate too.
   function resolveFontFamily() {
-    fcMatchProc.running = true
+    fontResolveTimer.restart()
+  }
+
+  property Timer fontResolveTimer: Timer {
+    id: fontResolveTimer
+    interval: 50
+    onTriggered: {
+      if (fcMatchProc.running) restart()
+      else fcMatchProc.running = true
+    }
   }
 
   property Process fcMatchProc: Process {
     id: fcMatchProc
-    command: ["fc-match", "-f", "%{family[0]}", "monospace"]
+    command: ["fc-match", "-f", "%{family[0]}", root.bwmFontPattern]
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: {

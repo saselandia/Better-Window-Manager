@@ -4,6 +4,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.Commons as Commons
 
 // Host for Omarchy bar plugins in the Retro theme: the part of omarchy-shell that third-party
 // plugins talk to (`bar.shell`). Plugins are installed by hypr/scripts/bwm-plugin.sh (like
@@ -347,10 +348,6 @@ Singleton {
         id: imagePickerLoader
         active: false
         source: Qt.resolvedUrl("image-picker/ImagePicker.qml")
-        onLoaded: {
-            item.shell = root;
-            item.manifest = { id: "omarchy.image-picker" };
-        }
     }
 
     IpcHandler {
@@ -400,6 +397,42 @@ Singleton {
         function open(): void { root.summon("omarchy.emojis", "{}"); }
         function close(): void { root.hide("omarchy.emojis"); }
         function toggle(): void { root.toggle("omarchy.emojis", "{}"); }
+    }
+
+    IpcHandler {
+        // Omarchy's original image-selector protocol (shell/shell.qml):
+        // omarchy-menu-images supplies cached rows and waits for doneFile.
+        target: "omarchy.image-selector"
+        function open(imageDirs: string, imageRowsB64: string, selectedImage: string,
+                      selectionFile: string, doneFile: string,
+                      showLabels: string, filterable: string): string {
+            const payload = JSON.stringify({
+                imageDirs, imageRows: Commons.Util.decodeBase64(imageRowsB64),
+                selectedImage, selectionFile, doneFile, showLabels, filterable
+            });
+            const accepted = root.summon("omarchy.image-picker", payload);
+            return accepted && imagePickerLoader.status !== Loader.Error ? "ok" : "unknown";
+        }
+        function preload(imageRowsB64: string, selectedImage: string,
+                         showLabels: string, filterable: string): string {
+            imagePickerLoader.item?.preloadRows(Commons.Util.decodeBase64(imageRowsB64),
+                                               selectedImage, showLabels, filterable);
+            return "ok";
+        }
+        function cancel(doneFile: string): string {
+            if (imagePickerLoader.item) imagePickerLoader.item.closeSelector(doneFile || "");
+            return "ok";
+        }
+        function ping(): string { return "ok"; }
+        function inspect(): string {
+            const picker = imagePickerLoader.item;
+            return JSON.stringify({opened: picker?.opened ?? false,
+                count: picker?.imageArray.length ?? 0,
+                selected: picker?.currentPath() ?? "",
+                ready: picker?.layoutSettled ?? false,
+                themeMode: picker?.themeMode ?? false,
+                skinMode: picker?.skinMode ?? false});
+        }
     }
 
     IpcHandler {

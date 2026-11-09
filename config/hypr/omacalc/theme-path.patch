@@ -1,0 +1,61 @@
+--- a/src/backend.cpp
++++ b/src/backend.cpp
+@@ -4,6 +4,7 @@
+ #include <QColor>
+ #include <QDir>
+ #include <QFile>
++#include <QFileInfo>
+ #include <QGuiApplication>
+ #include <QLocale>
+ #include <QSettings>
+@@ -12,6 +13,15 @@
+ #include <cmath>
+ 
+ namespace {
++// BWM: an application-specific native Omarchy palette, for all BWM skins.
++// Without the override, upstream's path and behavior remain unchanged.
++QString themeColorsPath() {
++    const QString override = qEnvironmentVariable("OMACALC_THEME_FILE");
++    return override.isEmpty()
++        ? QDir::homePath() + QStringLiteral("/.local/state/omarchy/current/theme/colors.toml")
++        : QFileInfo(override).absoluteFilePath();
++}
++
+ const QString plusSign = QStringLiteral("+");
+ const QString minusSign = QStringLiteral("−");
+ const QString multiplySign = QStringLiteral("×");
+@@ -492,8 +502,7 @@
+ }
+ 
+ void Backend::loadOmarchyTheme() {
+-    const QString colorsPath = QDir::homePath()
+-        + QStringLiteral("/.local/state/omarchy/current/theme/colors.toml");
++    const QString colorsPath = themeColorsPath();
+     QString themeMode;
+     QString themeBackground;
+     QString themeForeground;
+@@ -570,6 +579,24 @@
+     if (!watched.isEmpty())
+         m_themeWatcher.removePaths(watched);
+ 
++    if (!qEnvironmentVariableIsEmpty("OMACALC_THEME_FILE")) {
++        const QString colorsPath = themeColorsPath();
++        QString directory = QFileInfo(colorsPath).absolutePath();
++        // Watch the nearest existing ancestor too, so first-time generation
++        // and atomic file replacement both reach an already open calculator.
++        while (!QDir(directory).exists()) {
++            const QString parent = QFileInfo(directory).absolutePath();
++            if (parent == directory)
++                break;
++            directory = parent;
++        }
++        if (QDir(directory).exists())
++            m_themeWatcher.addPath(directory);
++        if (QFile::exists(colorsPath))
++            m_themeWatcher.addPath(colorsPath);
++        return;
++    }
++
+     const QString currentDir = QDir::homePath()
+         + QStringLiteral("/.local/state/omarchy/current");
+     const QString themeDir = currentDir + QStringLiteral("/theme");

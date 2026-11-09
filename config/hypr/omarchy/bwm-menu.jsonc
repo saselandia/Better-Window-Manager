@@ -57,6 +57,7 @@
   "appearance.retro-palette.rose-pine": {"icon":"󰊠","label":"Rose Pine","checked":"[[ $(omarchy-theme-current) == rose-pine ]]","action":"omarchy-theme-set rose-pine"},
   "appearance.retro-palette.everforest": {"icon":"󰊠","label":"Everforest","checked":"[[ $(omarchy-theme-current) == everforest ]]","action":"omarchy-theme-set everforest"},
   "appearance.retro-palette.osaka-jade": {"icon":"󰊠","label":"Osaka Jade","checked":"[[ $(omarchy-theme-current) == osaka-jade ]]","action":"omarchy-theme-set osaka-jade"},
+  "appearance.retro-palette.jade-horse": {"icon":"󰊠","label":"Jade Horse","checked":"[[ $(omarchy-theme-current) == jade-horse ]]","action":"omarchy-theme-set jade-horse"},
   "appearance.background": {"icon":"","label":"Fondo de pantalla","aliases":["background","wallpaper","fondo"],"action":"~/.config/hypr/scripts/wallpaper-picker.sh"},
   "appearance.font": {"icon":"","label":"Fuente","aliases":["font","fuente"],"provider":"fonts"},
   "appearance.windows": {"icon":"󰖲","label":"Ventanas"},
@@ -79,6 +80,7 @@
   "appearance.style": {"icon":"","label":"Más estilo (Ajustes)","description":"Fuente, glass, arranque","target":"setup.settings.look.style"},
 
   // Acciones
+  "trigger.calculator": {"icon":"󰃬","label":"Calculadora","aliases":["calculator","calculadora","omacalc"],"when":"command -v omacalc >/dev/null","action":"~/.config/hypr/scripts/bwm-omacalc"},
   "trigger.reminder": {"icon":"󰢌","label":"Recordatorio","aliases":["reminder","recordatorio"]},
   "trigger.reminder.set": {"icon":"󰢌","label":"Poner uno","aliases":["reminder-set","remind"],"action":"omarchy-reminder -i"},
   "trigger.reminder.show": {"icon":"󰢌","label":"Ver todos","action":"omarchy-reminder show"},

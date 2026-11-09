@@ -87,11 +87,14 @@
     "hyprbars-plasma"
   ],
   "recommends": [
+    "omacalc",
+    "omacalc-build",
     "qt6ct",
     "networkmanager",
     "nm-connection-editor",
     "bluez",
     "blueman",
-    "swaync"
+    "swaync",
+    "mpvpaper"
   ]
 }

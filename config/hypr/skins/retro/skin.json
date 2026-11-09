@@ -84,6 +84,8 @@
     "font-jetbrains-nerd"
   ],
   "recommends": [
+    "omacalc",
+    "omacalc-build",
     "btop",
     "songrec",
     "fastfetch",
@@ -94,6 +96,7 @@
     "omarchy-screensaver",
     "omarchy-titlebars",
     "qt-gtk3",
-    "qt-imageformats"
+    "qt-imageformats",
+    "owe"
   ]
 }

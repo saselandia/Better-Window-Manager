@@ -12,6 +12,7 @@ Los binarios existentes deben corresponder a su código fuente y avisos antes de
 | omarchy-hyprland-titlebars, `src/omarchy-titlebars/` y `config/hypr/plugins/omarchy-titlebars.so` | [omacom/omarchy-hyprland-titlebars](https://github.com/omacom/omarchy-hyprland-titlebars) `379ff91` (2026-10-13, el último que compila con Hyprland 0.56): fork de hyprbars (BSD-3-Clause, `src/omarchy-titlebars/LICENSE`) con cambios de Omarchy bajo MIT (`src/omarchy-titlebars/LICENSE.MIT`) | Sin cambios en el código; BWM sólo añade un `Makefile` que compila e instala de forma atómica. Barras de los workspaces flotantes de Retro. |
 | Omarchy: `config/hypr/omarchy/`, librerías `config/quickshell/ii/Commons/`, `Ui/` y módulos identificados como Omarchy | [basecamp/omarchy, rama quattro](https://github.com/basecamp/omarchy/tree/quattro), Copyright (c) David Heinemeier Hansson, MIT; [texto íntegro](licenses/omarchy-MIT.txt) | BWM adapta shell, menús, temas, plantillas y pantallas de arranque. Los subdirectorios con avisos propios los conservan. Los fondos, marcas y recursos de terceros contenidos en temas requieren revisión independiente. Los logos de `modules/ii/bar/omarchy/agents/assets/` (Claude, Codex, Copilot, Cursor, NVIDIA y otros proveedores) vienen tal cual de Omarchy y siguen siendo marcas de sus titulares; no implican relación ni patrocinio. |
 | Plugins en `config/quickshell/ii/omarchy-plugins/` | Cada plugin conserva su `LICENSE` y manifiesto | Los iconos de `ai-usagebar/omarchy/icons/` tienen [créditos específicos](config/quickshell/ii/omarchy-plugins/ai-usagebar/omarchy/icons/README.md), incluida la licencia de Lobe Icons. Las marcas siguen perteneciendo a sus titulares. |
+| Omacalc (instalado por `config/hypr/scripts/install-omacalc.sh`) | [omacom/omacalc, `573d7106`](https://github.com/omacom/omacalc/tree/573d7106f5c6c0225864eb8634ae37ddcb657f63), Copyright (c) 2026 David Heinemeier Hansson, [MIT](licenses/omacalc-MIT.txt); fuente iA Writer Mono S incluida: Information Architects Inc. / IBM Plex (IBM Corp.), [OFL-1.1](licenses/omacalc-iA-Writer-OFL.txt) | Se conserva la interfaz, fuentes, aritmética e icono originales. `config/hypr/omacalc/theme-path.patch` añade una ruta opcional de paleta nativa (`OMACALC_THEME_FILE`) y su vigilancia; BWM genera sus colores con los motores existentes de cada skin. Fuentes correspondientes en `~/.local/share/bwm/omacalc/source`, parche y avisos junto al binario; el instalador conserva MIT y OFL. Detalle y reproducción en `config/hypr/omacalc/README.md`. |
 | Cursores `assets/cursors/Bibata-Modern-{Classic,Ice}` | [Bibata Cursor](https://github.com/ful1e5/Bibata_Cursor/tree/v2.0.6), GPL-3.0; `COPYING` junto a cada tema | Los `index.theme` indican v2.0.6; se incluyen XCursors y versiones Hyprcursor. Véase `SOURCE.md` en cada carpeta. La correspondencia de cada binario y la generación de Hyprcursor siguen pendientes de verificar. |
 | Pywalfox, `config/firefox/extensions/pywalfox@frewacom.org.xpi` | [Frewacom/pywalfox](https://github.com/Frewacom/pywalfox/tree/v2.1.1), MPL-2.0; [texto](licenses/pywalfox-MPL-2.0.txt) | El manifiesto del XPI indica versión 2.1.1 (SHA-256 `b7a7a86d1d49a8309758ce1d38492975abe07a61e3788e2d913c70a4d07758b4`). El código publicado de esa versión está en la etiqueta enlazada; no se ha comprobado que el binario sea reproducible desde ella ni si contiene dependencias adicionales. |
 | Fuentes `assets/fonts/` | Google Sans Flex, Readex Pro, Space Grotesk y JetBrains Mono Nerd Font: OFL-1.1. Material Symbols: fuente de la familia [Material Design Icons](https://github.com/google/material-design-icons), Apache-2.0 | Avisos por familia y licencias de Nerd Fonts 3.4.0 y 3.5.1 en `assets/fonts/licenses/`. Google Sans Flex: Copyright 2015 Google LLC según el TTF distribuido. JetBrains Mono: Copyright 2020 The JetBrains Mono Project Authors. La procedencia exacta de cada glifo añadido por Nerd Fonts y de la compilación de Material Symbols aún requiere cotejo. |
@@ -37,6 +38,21 @@ del menú de Omarchy ya vendorizado, siguiendo el flujo de
 `hypr/skins/retro/scripts/keybindings.py` son código de BWM para presentar los atajos activos
 del compositor; el script upstream no se ha incorporado ni se han sustituido sus fuentes
 vendorizadas. La licencia y el aviso del menú original se conservan.
+
+Fuentes del shell de Retro (2026-11-09): `Commons/Style.qml`, derivado de Omarchy
+quattro `d9cc361c` (MIT), resuelve `monospace` con la fuente del perfil de BWM como
+alternativa anterior a las fuentes genéricas de la distribución, conservando las preferencias
+explícitas de Fontconfig. Detalle de las adaptaciones en `Commons/README.md`.
+
+Selector de fondos de Retro (2026-11-09): el carrusel vendorizado de Omarchy en
+`modules/ii/bar/omarchy/image-picker/` conserva su interfaz. El nuevo
+`hypr/scripts/omarchy-shims/omarchy-menu-images` y el protocolo añadido a `OmarchyPlugins.qml`
+proceden de `bin/omarchy-menu-images` y `shell/shell.qml` de Omarchy quattro
+[`cbd0029f`](https://github.com/basecamp/omarchy/tree/cbd0029fddcfcae0b73cf1c01a1c6031eae98f99)
+(MIT, Copyright (c) David Heinemeier Hansson). BWM adapta los conversores de miniaturas a
+ImageMagick/FFmpeg, el IPC al shell existente y la aplicación a sus perfiles/motores; añade
+`~/Pictures/Wallpapers` a los fondos del tema y los extras personales de Omarchy. Detalle en
+`modules/ii/bar/omarchy/image-picker/README.md`.
 
 Animaciones y fondo (2026-11-08): `hypr/skins/retro/hypr/animations.lua` copia las curvas,
 animaciones y reglas de capa de Omarchy quattro `598e4eb` (`default/hypr/looknfeel.lua`,

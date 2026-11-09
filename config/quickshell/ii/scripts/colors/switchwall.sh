@@ -73,14 +73,15 @@ post_process() {
             fi
         fi
         if [ "$current_theme" == "retro" ]; then
-            python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py apply-wallpaper-colors "$wallpaper_path" 2>/dev/null || true
+            python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py apply-wallpaper-colors "${still_path:-$wallpaper_path}" 2>/dev/null || true
         fi
         # swww cambió de nombre a awww (mismo uso): vale cualquiera de los dos
         local wall_bin
         wall_bin="$(command -v swww || command -v awww || true)"
         if [ -n "$wall_bin" ] && pgrep -x "$(basename "$wall_bin")-daemon" >/dev/null 2>&1; then
             # Background.qml de end-4 pinta el fondo encima: swww sólo queda debajo, sin animación
-            "$wall_bin" img "$wallpaper_path" --transition-type none 2>/dev/null || true
+            # A video shows its first frame under mpvpaper
+            "$wall_bin" img "${still_path:-$wallpaper_path}" --transition-type none 2>/dev/null || true
         fi
         # Plymouth/SDDM siguen los colores, igual que con set-wallpaper.sh
         python3 /home/sasel/.config/hypr/scripts/bwm_boot.py render >/dev/null 2>&1 &
@@ -142,8 +143,12 @@ is_video() {
     [[ "$extension" == "mp4" || "$extension" == "webm" || "$extension" == "mkv" || "$extension" == "avi" || "$extension" == "mov" ]] && return 0 || return 1
 }
 
+# BWM: the video engine of each skin (mpvpaper here, with end-4's options) is in
+# bwm-video-wallpaper, shared with set-wallpaper.sh and the login restore in autostart.sh
+BWM_VIDEO_WALLPAPER="$XDG_CONFIG_HOME/hypr/scripts/bwm-video-wallpaper"
+
 kill_existing_mpvpaper() {
-    pkill -f -9 mpvpaper || true
+    "$BWM_VIDEO_WALLPAPER" stop || true
 }
 
 create_restore_script() {
@@ -232,12 +237,9 @@ switch() {
         kill_existing_mpvpaper
 
         if is_video "$imgpath"; then
-            mkdir -p "$THUMBNAIL_DIR"
-
+            # BWM: without mpvpaper bwm-video-wallpaper says which package to install and the
+            # first frame stays as the wallpaper; only ffmpeg is needed to go on
             missing_deps=()
-            if ! command -v mpvpaper &> /dev/null; then
-                missing_deps+=("mpvpaper")
-            fi
             if ! command -v ffmpeg &> /dev/null; then
                 missing_deps+=("ffmpeg")
             fi
@@ -264,15 +266,11 @@ switch() {
 
             # Set video wallpaper
             local video_path="$imgpath"
-            monitors=$(hyprctl monitors -j | jq -r '.[] | .name')
-            for monitor in $monitors; do
-                mpvpaper -o "$VIDEO_OPTS" "$monitor" "$video_path" &
-                sleep 0.1
-            done
+            "$BWM_VIDEO_WALLPAPER" play "$video_path" || true
 
             # Extract first frame for color generation
-            thumbnail="$THUMBNAIL_DIR/$(basename "$imgpath").jpg"
-            ffmpeg -y -i "$imgpath" -vframes 1 "$thumbnail" 2>/dev/null
+            # BWM: cached by bwm-video-wallpaper (not in ~/.config/hypr, which is the repo)
+            thumbnail="$("$BWM_VIDEO_WALLPAPER" poster "$imgpath" || true)"
 
             # Set thumbnail path
             set_thumbnail_path "$thumbnail"
@@ -280,10 +278,9 @@ switch() {
             if [ -f "$thumbnail" ]; then
                 matugen_args+=(image "$thumbnail")
                 generate_colors_material_args=(--path "$thumbnail")
-                create_restore_script "$video_path"
+                still_path="$thumbnail"
             else
                 echo "Cannot create image to colorgen"
-                remove_restore
                 exit 1
             fi
         else
@@ -291,7 +288,7 @@ switch() {
             generate_colors_material_args=(--path "$imgpath")
             # Update wallpaper path in config
             set_wallpaper_path "$imgpath"
-            remove_restore
+            still_path="$imgpath"
         fi
     fi
 

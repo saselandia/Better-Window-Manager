@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Omacalc keeps its native Omarchy palette format and live reload in every skin.
+set -euo pipefail
+binary="${XDG_DATA_HOME:-$HOME/.local/share}/bwm/omacalc/bin/omacalc"
+if [[ ! -x $binary ]]; then
+    echo "Omacalc no está instalado. Ejecuta: bash ~/.config/hypr/scripts/install-omacalc.sh" >&2
+    exit 1
+fi
+export OMACALC_THEME_FILE="${OMACALC_THEME_FILE:-$HOME/.local/state/bwm/omacalc/colors.toml}"
+exec "$binary" "$@"

@@ -8,8 +8,8 @@ import "../omarchyMenu/omarchy" as OMG
 
 // BWM: Omarchy's dock (shell/plugins/dock, MIT), loaded in Retro by OmarchyDock.qml. Adapted:
 // floating workspaces are Retro's workspace modes (skins/retro/hypr/workspace-modes.lua), read with
-// Omarchy's `omarchy-hyprland-workspace-layout-current`; minimized windows live on BWM's workspace 99
-// and come back through toggle-minimize.py.
+// Omarchy's `omarchy-hyprland-workspace-layout-current`. Minimizing is Omarchy's (special:minimized,
+// back to the workspace in front of the user); windows left on BWM's workspace 99 come back the same way.
 
 // An app dock that shows on floating workspaces. A floating workspace has no
 // tiles to hand the apps out, so the dock gives back a place to find them:
@@ -201,15 +201,22 @@ Item {
     if (address.indexOf("0x") !== 0) address = "0x" + address
     var target = "window = \"address:" + address + "\""
     var steps = []
+    var after = []
     if (window.minimized) {
-      // BWM restores to the workspace and geometry it was minimized from
-      Util.execDetached(Util.shellQuote(Quickshell.env("HOME") + "/.config/hypr/scripts/toggle-minimize.py") + " restore " + Util.shellQuote(address))
-      return
+      var monitor = Hyprland.focusedMonitor
+      var workspace = monitor && monitor.activeWorkspace ? monitor.activeWorkspace.id : -1
+      if (!(workspace >= 1)) return
+      // A restored window is simply there again, without animating in.
+      steps.push("hl.dsp.window.set_prop({ prop = \"no_anim\", value = \"1\", " + target + " })")
+      steps.push("hl.dsp.window.move({ workspace = \"" + workspace + "\", " + target + " })")
+      after.push("hl.dsp.window.set_prop({ prop = \"no_anim\", value = \"unset\", " + target + " })")
     }
     steps.push("hl.dsp.focus({ " + target + " })")
     steps.push("hl.dsp.window.alter_zorder({ mode = \"top\", " + target + " })")
     var dispatch = function(step) { return "hyprctl dispatch " + Util.shellQuote(step) }
-    Util.execDetached(steps.map(dispatch).join(" && "))
+    var command = steps.map(dispatch).join(" && ")
+    if (after.length > 0) command += "; sleep 0.4; " + after.map(dispatch).join("; ")
+    Util.execDetached(command)
   }
 
   function quit(item) {

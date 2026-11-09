@@ -189,6 +189,14 @@ hl.window_rule({
     center = true,
 })
 
+-- Omacalc conserva su tamaño nativo (incluida la escala de texto) en todas las skins.
+hl.window_rule({
+    name   = "omacalc",
+    match  = { class = "^omacalc$" },
+    float  = true,
+    center = true,
+})
+
 -- Omarchy About: Fastfetch with its upstream ASCII layout, fitted by the launcher.
 hl.window_rule({
     name   = "omarchy-about",

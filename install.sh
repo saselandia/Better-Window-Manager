@@ -371,6 +371,16 @@ if [ -x "$SCRIPTS_SOURCE/cursor-manager.py" ]; then
 fi
 
 # ==============================================================================
+# 7b. Calculadora de Omarchy para todas las skins (sin sudo)
+# ==============================================================================
+print_step "7b. Instalando Omacalc..."
+if bash "$SCRIPTS_SOURCE/install-omacalc.sh"; then
+    print_success "Omacalc disponible en Apps; sus colores seguirán la skin activa."
+else
+    print_warn "No se pudo instalar Omacalc (opcional). Instala sus requisitos y ejecuta: bash $SCRIPTS_SOURCE/install-omacalc.sh"
+fi
+
+# ==============================================================================
 # 8. Paleta inicial
 # ==============================================================================
 CURRENT_WALL="$(cat "$HOME/.cache/current_wallpaper" 2>/dev/null || true)"
@@ -434,6 +444,19 @@ if [ "$PLUGINS_SETUP" != "no" ] && [ -x "$SCREENSAVER_SCRIPT" ]; then
             || print_warn "No se pudo compilar el salvapantallas; repítelo con: $SCREENSAVER_SCRIPT"
     else
         print_info "Sin cargo, Retro usa el salvapantallas de terminal. Instala Rust y ejecuta: $SCREENSAVER_SCRIPT"
+    fi
+fi
+
+# Fondos de vídeo de Retro: OWE, el motor de Omarchy (meson + libmpv; sin él, el primer fotograma)
+OWE_SCRIPT="$CONFIG_SOURCE/hypr/skins/retro/scripts/install-owe.sh"
+if [ "$PLUGINS_SETUP" != "no" ] && [ -x "$OWE_SCRIPT" ]; then
+    if command -v meson >/dev/null 2>&1 && pkg-config --exists mpv 2>/dev/null; then
+        print_step "10c. Compilando OWE (fondos de vídeo de Retro)..."
+        "$OWE_SCRIPT" >/dev/null 2>&1 \
+            && print_success "OWE instalado en ~/.local/share/bwm/owe." \
+            || print_warn "No se pudo compilar OWE; repítelo con: $OWE_SCRIPT"
+    else
+        print_info "Sin meson o libmpv, Retro muestra el primer fotograma de los fondos de vídeo. Después: $OWE_SCRIPT"
     fi
 fi
 

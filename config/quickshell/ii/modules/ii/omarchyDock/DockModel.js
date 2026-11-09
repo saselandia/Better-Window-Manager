@@ -44,7 +44,7 @@ function isDockWindow(window) {
 // back.
 var MINIMIZED_WORKSPACE = "special:minimized"
 
-// BWM: toggle-minimize.py parks minimized windows on workspace 99
+// BWM: windows minimized by the other skins (toggle-minimize.py) wait on workspace 99
 function isMinimizedWorkspace(name) {
   return String(name || "") === MINIMIZED_WORKSPACE || String(name || "") === "99"
 }

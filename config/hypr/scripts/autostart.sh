@@ -115,13 +115,17 @@ fi
         # swww-daemon responde antes de tener todos los monitores (más aún al entrar desde
         # SDDM, con la GPU recién liberada por el saludo): reintentar hasta que todos
         # muestren la imagen, o quedan en negro.
+        # Un fondo de vídeo: swww muestra su primer fotograma y el vídeo lo reproduce el motor de
+        # la skin (bwm-video-wallpaper sync: OWE en Retro, mpvpaper en las demás)
+        STILL="$("$HOME/.config/hypr/scripts/bwm-video-wallpaper" still "$WALLPAPER" 2>/dev/null || echo "$WALLPAPER")"
         for _ in $(seq 1 30); do
-            "$WALL_BIN" img "$WALLPAPER" --transition-type none 2>/dev/null || true
+            "$WALL_BIN" img "$STILL" --transition-type none 2>/dev/null || true
             sleep 0.5
             if "$WALL_BIN" query 2>/dev/null | grep -q . && ! "$WALL_BIN" query 2>/dev/null | grep -q "currently displaying: color"; then
                 break
             fi
         done
+        "$HOME/.config/hypr/scripts/bwm-video-wallpaper" sync >/dev/null 2>&1 || true
     fi
 ) &
 

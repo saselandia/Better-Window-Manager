@@ -10,7 +10,11 @@ BWM changes, kept minimal so the files can be refreshed from upstream:
   palette: `colors.toml` + `shell.toml`, written by `hypr/scripts/bwm_omarchy.py`); both files
   are watched (`watchChanges` + `reload()`), because BWM rewrites them on every wallpaper change.
 - `Commons/Style.qml`: `bwmScale` multiplies the font base size (and with it bar tokens and
-  spacing); the Retro bar sets it to its height / 24.
+  spacing); the Retro bar sets it to its height / 24. Font resolution queries
+  `monospace,<profile monospace font>` and uses the concrete matched family. This supplies
+  the default missing without Omarchy's system-wide `50-omarchy.conf`, while keeping explicit
+  fontconfig preferences and `OMARCHY_MENU_FONT` authoritative. Profile changes and the existing
+  `fonts.conf` watcher re-resolve the family; the query is deferred while another is running.
 - `Commons/I18n.qml`: without `OMARCHY_PATH`, strings come from `Commons/omarchy/default/i18n`
   (Omarchy's `default/i18n/{en,es}/shell.json` and `locales.json`).
 - `Ui/ScreenMoveRemap.qml` is BWM's own and has its line in `Ui/qmldir`.

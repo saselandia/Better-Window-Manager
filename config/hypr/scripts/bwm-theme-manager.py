@@ -694,6 +694,9 @@ def apply_plasma_app_themes():
     wallpaper = ""
     try:
         wallpaper = (Path.home() / ".cache" / "current_wallpaper").read_text(encoding="utf-8").strip()
+        # Un fondo de vídeo: las plantillas reciben su primer fotograma
+        wallpaper = subprocess.run([str(CONFIG_DIR / "hypr" / "scripts" / "bwm-video-wallpaper"), "still", wallpaper],
+                                   capture_output=True, text=True, timeout=30).stdout.strip() or wallpaper
     except Exception:
         pass
 
@@ -900,6 +903,11 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
                 bwm_omarchy.restore_non_retro()
             except Exception as e:
                 print(f"[Warning] No se pudo restaurar el tema de apps de Retro: {e}", file=sys.stderr)
+            # Minimizadas al estilo Omarchy (special:minimized) → sistema común de BWM (workspace 99)
+            try:
+                bwm_windows.omarchy_minimized_to_bwm(original_clients)
+            except Exception as e:
+                print(f"[Warning] No se pudieron pasar las minimizadas de Retro: {e}", file=sys.stderr)
 
         # 2. Cargar el perfil de configuración aislado del tema seleccionado
         load_theme_config(theme_name, cfg)

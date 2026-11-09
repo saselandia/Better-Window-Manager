@@ -162,7 +162,10 @@ def restore_wallpapers(tries=10):
         wallpaper = current_wallpaper()
         if not outputs or not wallpaper:
             return
-        subprocess.run([WALL_BIN, "img", wallpaper, "--outputs", ",".join(outputs),
+        # Un fondo de vídeo: su primer fotograma (lo reproduce OWE en Retro, debajo)
+        still = subprocess.run([os.path.expanduser("~/.config/hypr/scripts/bwm-video-wallpaper"), "still", wallpaper],
+                               capture_output=True, text=True).stdout.strip() or wallpaper
+        subprocess.run([WALL_BIN, "img", still, "--outputs", ",".join(outputs),
                         "--transition-type", "none"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         time.sleep(0.5)
 

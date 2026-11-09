@@ -93,6 +93,7 @@ sin mezclar. Así una skin nueva o un cambio en una no rompe las demás.
 | Ajustes de Quickshell | Secciones comunes de `config.json` | `illogical-impulse/config-<id>.json` (secciones propias) |
 | Interfaz QML | `quickshell/ii/modules/common`, `services`, `modules/settings` | default (end-4): `modules/ii/*` de illogical-impulse; Retro: `modules/ii/omarchy*`, `modules/ii/bar/omarchy`, `Commons`, `Ui`, `omarchy-plugins`; Plasma: `modules/ii/plasma*`, `plasmaCommon` |
 | Qué se carga en cada skin | `panelFamilies/IllogicalImpulseFamily.qml` (`extraCondition`) | — |
+| Selector de fondos (Alt+W) | `hypr/scripts/wallpaper-picker.sh` elige la skin | default: `modules/ii/wallpaperSelector`; Retro: `bar/omarchy/image-picker` + `hypr/skins/retro/scripts/wallpaper-picker.py` (fondos del tema, extras de Omarchy y `~/Pictures/Wallpapers`); Breeze: rofi |
 | Colores de Hyprland y apps | `hypr/modules/*.lua`, `matugen/` | `colors.lua` (default (end-4)), `retro_colors.lua` + `hypr/omarchy/` (Retro), `plasma_colors.lua` (Plasma) |
 | Plugins de Hyprland | — | `src/hyprbars` (Plasma) |
 

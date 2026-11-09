@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Omarchy's background selector, with BWM's theme catalog and shared wallpapers.
+exec python3 "$HOME/.config/hypr/skins/retro/scripts/wallpaper-picker.py" --select "$@"

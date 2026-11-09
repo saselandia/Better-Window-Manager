@@ -1,8 +1,8 @@
 #!/bin/bash
 # From Omarchy (basecamp/omarchy quattro 60bf28ee, MIT). Copied for BWM's Retro theme, where the
 # workspace modes live (skins/retro/hypr/workspace-modes.lua): elsewhere it says so and stops. BWM has no
-# omarchy-restart-hyprctl, so it reloads with hyprctl reload. Minimized windows wait on workspace 99 with a
-# from_ws_<n> tag (toggle-minimize.py), not on special:minimized.
+# omarchy-restart-hyprctl, so it reloads with hyprctl reload. Minimized windows wait on special:minimized
+# with Omarchy's tag; those left on BWM's workspace 99 (from_ws_<n>, toggle-minimize.py) count too.
 
 # omarchy:summary=Show or set the layout of workspaces without one of their own: dwindle, scrolling, or floating
 # omarchy:args=[dwindle|scrolling|floating]
@@ -66,10 +66,10 @@ busy_workspace_ids() {
       (
         [$workspaces[] | select(.id >= 1 and (.windows // 0) > 0) | .id] +
         [$clients[]
-          | select(.workspace.id == 99)
+          | select(.workspace.name == "special:minimized" or .workspace.id == 99)
           | (.tags // [])[]
-          | select(test("^from_ws_[1-9][0-9]*\\*?$"))
-          | sub("^from_ws_"; "") | sub("\\*$"; "")
+          | select(test("^(omarchy-minimized-from-|from_ws_)[1-9][0-9]*\\*?$"))
+          | sub("^(omarchy-minimized-from-|from_ws_)"; "") | sub("\\*$"; "")
           | tonumber]
       ) | unique | .[]
     else

@@ -10,7 +10,8 @@ MouseArea {
     id: root
     required property var fileModelData
     property bool isDirectory: fileModelData.fileIsDir
-    property bool useThumbnail: Images.isValidImageByName(fileModelData.fileName)
+    // BWM: videos too (their first frame, made by bwm-video-wallpaper thumbnails)
+    property bool useThumbnail: Images.isValidImageByName(fileModelData.fileName) || /\.(mp4|webm|mkv|avi|mov)$/i.test(fileModelData.fileName)
 
     property alias colBackground: background.color
     property alias colText: wallpaperItemName.color

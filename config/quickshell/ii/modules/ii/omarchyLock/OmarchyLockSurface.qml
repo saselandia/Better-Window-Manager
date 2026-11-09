@@ -6,7 +6,8 @@ import qs.Commons as Commons
 
 // Bloqueo de la skin Retro: la vista de Omarchy 4 (LockView.qml, copia sin cambios: fondo
 // desenfocado y un único campo de contraseña con su borde y textos) sobre el bloqueo de BWM
-// (LockContext: PAM, huella, llavero). El fondo es el de Retro (background.wallpaperPath).
+// (LockContext: PAM, huella, llavero). El fondo es el de Retro (background.wallpaperPath); con un
+// fondo de vídeo, su primer fotograma (thumbnailPath, de set-wallpaper.sh), como en Omarchy.
 Item {
     id: root
     required property LockContext context
@@ -30,6 +31,7 @@ Item {
         id: view
         anchors.fill: parent
         backgroundPath: Config.options.background.wallpaperPath
+        videoPosterPath: Config.options.background.thumbnailPath
         fingerprintConfigured: root.context.fingerprintsConfigured
         authenticatingPassword: root.context.unlockInProgress
         failureMessage: GlobalStates.screenUnlockFailed ? Commons.I18n.t("lock.authenticationFailed").arg(root.attempts) : ""

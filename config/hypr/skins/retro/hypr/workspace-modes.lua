@@ -16,7 +16,7 @@
 --  * Sin o.floating_apps: se excluyen de la regla de apertura las apps flotantes de BWM con tamaño
 --    propio (rules.lua). El resto de reglas flotantes de BWM no fijan tamaño y toman el del modo.
 --  * El modo vidrio de BWM (~/.local/state/bwm/glass) hace de «glassy».
---  * Minimizar de la barra: omarchy-hyprland-window-minimize de BWM (workspace 99; sólo con el dock).
+--  * Minimizar de la barra: omarchy-hyprland-window-minimize de Omarchy (special:minimized; sólo con el dock).
 -- -----------------------------------------------------
 
 local HOME = os.getenv("HOME") or ""

@@ -76,3 +76,7 @@ post_hook = '~/.config/hypr/scripts/steam-theme.sh'
 input_path = '~/.config/matugen/templates/stremio.css'
 output_path = '~/.local/state/bwm/stremio/theme.css'
 post_hook = 'python3 ~/.config/hypr/scripts/stremio-theme.py'
+
+[templates.omacalc]
+input_path = '~/.config/matugen/templates/omacalc-colors.toml'
+output_path = '~/.local/state/bwm/omacalc/colors.toml'

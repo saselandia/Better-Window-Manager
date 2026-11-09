@@ -1009,9 +1009,32 @@ def _theme_wallpaper(theme_dir: Path) -> str:
     bgs = sorted(p for p in bg_dir.iterdir() if p.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"))
     return str(bgs[0]) if bgs else ""
 
+VIDEO_WALLPAPER = CONFIG_DIR / "hypr" / "scripts" / "bwm-video-wallpaper"
+OWED = Path(os.environ.get("XDG_DATA_HOME", HOME / ".local" / "share")) / "bwm" / "owe" / "bin" / "owed"
+
+
+def _is_video(path: str) -> bool:
+    return str(path).lower().endswith((".mp4", ".m4v", ".mov", ".webm", ".mkv", ".avi"))
+
+
+def _still(path: str) -> str:
+    """A video wallpaper's first frame (palettes, templates); any other path as is."""
+    if not path or not _is_video(path):
+        return path
+    try:
+        out = subprocess.run([str(VIDEO_WALLPAPER), "poster", path], capture_output=True,
+                             text=True, timeout=60).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        out = ""
+    return out or path
+
+
 def _link_background(wp: str):
     if not wp:
         return
+    # OWE plays a video from Omarchy's link; without it the shell gets the first frame
+    if _is_video(wp) and not OWED.exists():
+        wp = _still(wp)
     try:
         OMARCHY_CURRENT_DIR.mkdir(parents=True, exist_ok=True)
         if OMARCHY_CURRENT_BG_LINK.is_symlink() or OMARCHY_CURRENT_BG_LINK.exists():
@@ -1057,7 +1080,7 @@ def apply_retro_static_theme(theme_name: str, set_wallpaper: bool = True, notify
     except Exception:
         wp = ""
     _link_background(wp)
-    apply_retro_palette_colors(colors, wp)
+    apply_retro_palette_colors(colors, _still(wp))
     if notify:
         _notify(f"Tema estático: {display_name}")
     return colors
@@ -1078,7 +1101,9 @@ def apply_retro_dynamic_theme(wallpaper: str = "", notify: bool = False) -> dict
     if not wp or not os.path.exists(wp):
         wp = str(WALLPAPERS_DIR / "omarchy-frost.jpg")
 
-    palette = extract_vivid_palette(wp)
+    # A video wallpaper: palette and templates from its first frame, Omarchy's link to the video
+    still = _still(wp)
+    palette = extract_vivid_palette(still)
     if not palette:
         palette = {"accent": "#38bdf8", "secondary": "#818cf8", "bg": "#0b1016", "fg": "#f8fafc", "border": "#38bdf8"}
 
@@ -1086,7 +1111,7 @@ def apply_retro_dynamic_theme(wallpaper: str = "", notify: bool = False) -> dict
 
     _link_background(wp)
 
-    apply_retro_palette_colors(colors, wp)
+    apply_retro_palette_colors(colors, still)
     if notify:
         _notify("Paleta dinámica sacada del fondo")
     return colors

@@ -14,10 +14,25 @@
     ],
     "recommends": [
       "xdg-desktop-portal-hyprland", "xdg-desktop-portal-gtk", "playerctl", "networkmanager",
-      "bluez", "qt6ct", "socat", "procps", "git", "nautilus", "firefox", "flatpak"
+      "bluez", "qt6ct", "socat", "procps", "git", "nautilus", "firefox", "flatpak",
+      "ffmpeg"
     ]
   },
   "catalog": {
+    "omacalc": {
+      "label": "Omacalc (calculadora de Omarchy)",
+      "why": "Calculadora con los colores de cada skin, recarga en vivo y fuente iA Writer Mono incluida",
+      "provider": "bwm",
+      "check": {"type": "version", "cmd": ["bash", "-c", "test -x \"${XDG_DATA_HOME:-$HOME/.local/share}/bwm/omacalc/bin/omacalc\" && cat \"${XDG_DATA_HOME:-$HOME/.local/share}/bwm/omacalc/build-info\""], "regex": "bwm-omacalc ([0-9]+)", "min": "1"},
+      "packages": {"gentoo": null, "arch": null, "fedora": null, "opensuse": null, "debian": null},
+      "manual": "bash ~/.config/hypr/scripts/install-omacalc.sh"
+    },
+    "omacalc-build": {
+      "label": "Compilar Omacalc (Qt 6)",
+      "why": "Sólo durante la instalación: BWM compila la calculadora original con soporte para sus paletas",
+      "check": {"type": "pkgconfig", "modules": ["Qt6Core", "Qt6Gui", "Qt6Qml", "Qt6Quick", "Qt6QuickControls2", "Qt6DBus"], "cmds": ["git", "make", "c++", "qmake6", "patch"]},
+      "packages": {"gentoo": "dev-qt/qtbase dev-qt/qtdeclarative dev-vcs/git sys-devel/patch", "arch": "base-devel qt6-base qt6-declarative git", "fedora": "gcc-c++ make qt6-qtbase-devel qt6-qtdeclarative-devel git patch", "opensuse": "gcc-c++ make qt6-base-devel qt6-declarative-devel git patch", "debian": "build-essential qt6-base-dev qt6-declarative-dev qmake6 git patch"}
+    },
     "default-colors-runtime": {
       "label": "Colores end-4 (OpenCV, NumPy, Pillow, materialyoucolor)",
       "why": "Selección automática de paleta y colores de terminal originales de illogical-impulse",
@@ -293,6 +308,25 @@
       "check": {"type": "path", "any": ["~/.local/share/bwm/omarchy-screensaver/bin/omarchy-launch-screensaver"]},
       "provider": "bwm",
       "manual": "config/hypr/skins/retro/scripts/install-screensaver.sh"
+    },
+    "owe": {
+      "label": "OWE (fondos de vídeo de Omarchy)",
+      "why": "Fondos de vídeo en Retro, como Omarchy 4.5 (omacom/owe; sin él se queda el primer fotograma); se compila con meson y necesita libmpv",
+      "check": {"type": "path", "any": ["~/.local/share/bwm/owe/bin/owed"]},
+      "provider": "bwm",
+      "manual": "config/hypr/skins/retro/scripts/install-owe.sh"
+    },
+    "mpvpaper": {
+      "label": "mpvpaper",
+      "why": "Fondos de vídeo en default (end-4) y Breeze (Kde plasma), como switchwall.sh de end-4; sin él se queda el primer fotograma",
+      "check": {"type": "cmd", "any": ["mpvpaper"]},
+      "packages": {"gentoo": "guru:gui-apps/mpvpaper", "arch": "aur:mpvpaper", "fedora": null, "opensuse": null, "debian": null}
+    },
+    "ffmpeg": {
+      "label": "FFmpeg",
+      "why": "Primer fotograma y miniaturas de los fondos de vídeo; miniaturas del selector de fondos rofi",
+      "check": {"type": "cmd", "any": ["ffmpeg"]},
+      "packages": {"gentoo": "media-video/ffmpeg", "arch": "ffmpeg", "fedora": "ffmpeg-free", "opensuse": "ffmpeg", "debian": "ffmpeg"}
     },
     "swaync": {
       "label": "SwayNotificationCenter",

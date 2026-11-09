@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Port of Omarchy's bin/omarchy-theme-bg-set (MIT, David Heinemeier Hansson).
+# BWM keeps its wallpaper/profile/palette/video-engine synchronization here.
+if [[ $# != 1 || ! -f $1 ]]; then
+    echo "Uso: omarchy-theme-bg-set <imagen-o-vídeo>" >&2
+    exit 1
+fi
+exec "$HOME/.config/hypr/scripts/set-wallpaper.sh" "$(realpath -- "$1")"
