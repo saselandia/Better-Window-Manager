@@ -24,15 +24,15 @@
     "fonts": {
       "expressive": "Space Grotesk",
       "iconNerd": "JetBrains Mono NF",
-      "main": "Rubik",
+      "main": "Google Sans Flex",
       "monospace": "JetBrains Mono",
       "numbers": "Google Sans Flex",
       "reading": "Readex Pro",
-      "title": "Gabarito"
+      "title": "Google Sans Flex"
     },
     "palette": {
       "accentColor": "",
-      "type": "auto"
+      "type": "scheme-fidelity"
     },
     "transparency": {
       "automatic": true,
@@ -46,6 +46,7 @@
         "forceDarkMode": false,
         "harmonizeThreshold": 100,
         "harmony": 0.6,
+        "neutral": false,
         "termFgBoost": 0.35
       }
     }
@@ -79,7 +80,7 @@
       "workspaceZoom": 1.07
     },
     "thumbnailPath": "",
-    "wallpaperPath": "/home/sasel/Pictures/goku-orange-3840x2160-23199.jpg",
+    "wallpaperPath": "/home/sasel/Pictures/9ub6vykxchzc1.png",
     "widgets": {
       "clock": {
         "cookie": {
@@ -110,7 +111,7 @@
           "vertical": false
         },
         "enable": false,
-        "placementStrategy": "leastBusy",
+        "placementStrategy": "free",
         "quote": {
           "enable": false,
           "text": ""
@@ -141,7 +142,7 @@
     },
     "borderless": false,
     "bottom": false,
-    "cornerStyle": 1,
+    "cornerStyle": 2,
     "floatStyleShadow": true,
     "height": 40,
     "indicators": {
@@ -191,10 +192,7 @@
     "workspaces": {
       "alwaysShowNumbers": false,
       "monochromeIcons": true,
-      "numberMap": [
-        "1",
-        "2"
-      ],
+      "numberMap": [],
       "showAppIcons": true,
       "showNumberDelay": 300,
       "shown": 10,
@@ -235,7 +233,7 @@
     "hoverRegionHeight": 2,
     "hoverToReveal": true,
     "ignoredAppRegexes": [],
-    "monochromeIcons": true,
+    "monochromeIcons": false,
     "omarchy": false,
     "pinnedApps": [
       "org.gnome.Nautilus",
@@ -245,6 +243,13 @@
   },
   "hacks": {
     "arbitraryRaceConditionDelay": 20
+  },
+  "idle": {
+    "lock": 0,
+    "screen": 1200,
+    "screensaver": true,
+    "screensaverTime": 150,
+    "suspend": 0
   },
   "interactions": {
     "deadPixelWorkaround": {
@@ -348,7 +353,7 @@
   "panelFamily": "ii",
   "policies": {
     "ai": 1,
-    "weeb": 0
+    "weeb": 1
   },
   "regionSelector": {
     "annotation": {
@@ -380,10 +385,6 @@
   },
   "screenSnip": {
     "savePath": ""
-  },
-  "screensaver": {
-    "enable": true,
-    "timeoutMinutes": 5
   },
   "search": {
     "engineBaseUrl": "https://www.google.com/search?q=",
@@ -592,5 +593,9 @@
         "university"
       ]
     }
+  },
+  "screensaver": {
+    "enable": true,
+    "timeoutMinutes": 5
   }
 }

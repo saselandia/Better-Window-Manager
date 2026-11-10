@@ -12,6 +12,15 @@ hl.window_rule({
     float = true,
 })
 
+-- Chatgpt
+hl.window_rule({
+    name  = "persist_chatgpt",
+    match = {
+        class = "^Chatgpt$",
+    },
+    float = false,
+})
+
 -- com.mojang.minecraft
 hl.window_rule({
     name  = "persist_com_mojang_minecraft",

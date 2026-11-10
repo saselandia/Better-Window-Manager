@@ -130,7 +130,7 @@ print_success "Requisitos completos (lo marcado como opcional se puede instalar 
 # ==============================================================================
 print_step "2. Permisos de ejecución de los scripts..."
 find "$SCRIPTS_SOURCE" "$CONFIG_SOURCE/quickshell" -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod +x {} + 2>/dev/null || true
-chmod +x "$SCRIPTS_SOURCE/bwm" "$SCRIPTS_SOURCE/bwm-terminal" "$SCRIPTS_SOURCE"/omarchy-shims/* 2>/dev/null || true
+chmod +x "$SCRIPTS_SOURCE/bwm" "$SCRIPTS_SOURCE/bwmenu" "$SCRIPTS_SOURCE/bwm-terminal" "$SCRIPTS_SOURCE"/omarchy-shims/* 2>/dev/null || true
 print_success "Listo."
 
 # ==============================================================================
@@ -223,6 +223,7 @@ ln -sf "$TARGET_CONFIG/hypr/scripts/open-autostart.sh" "$TARGET_CONFIG/illogical
 print_step "5. Comando bwm y bienvenida..."
 # El comando apunta al repositorio: así funciona también con --copy y con la instalación a medias
 ln -sfn "$SCRIPTS_SOURCE/bwm" "$HOME/.local/bin/bwm"
+ln -sfn "$SCRIPTS_SOURCE/bwmenu" "$HOME/.local/bin/bwmenu"
 print_success "Comando bwm en ~/.local/bin (abre la bienvenida; bwm help para más)."
 case ":$PATH:" in
     *":$HOME/.local/bin:"*) ;;

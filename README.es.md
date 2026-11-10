@@ -71,7 +71,15 @@ bwm check           # requisitos del núcleo y de cada skin, con los comandos pa
 bwm skins           # skins instaladas
 bwm skin retro      # cambia de skin (comprueba antes sus requisitos)
 bwm startup off     # que la bienvenida no se abra al iniciar sesión
+bwm menu            # BWMenu visual; --tui para rescate sin Quickshell
+bwm version         # revisión instalada de BWM
 ```
+
+**BWMenu:** mantén `+` y pulsa `-` (o al revés, también en el teclado numérico). Galería
+visual de skins que sigue sus colores, fuentes y temas en vivo, con versiones y
+compatibilidad de dependencias, aplicación de skins y recuperación de barra y paneles.
+Conserva una consola de rescate sin Quickshell. Si cae toda la sesión gráfica, entra con Ctrl+Alt+F3 y ejecuta
+`bwm menu --tui`. [Guía de BWMenu](docs/BWMENU.md).
 
 ## Configuración de Retro
 

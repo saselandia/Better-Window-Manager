@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# BWMenu funciona también desde una consola sin sesión gráfica.
+scripts=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+exec "$scripts/bwm" menu "$@"

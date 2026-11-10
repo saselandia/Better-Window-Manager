@@ -73,6 +73,15 @@ hl.layer_rule({
     animation = "slide top",
 })
 
+-- BWMenu y su consola de rescate viven fuera de la barra de cualquier skin.
+hl.window_rule({
+    name   = "bwm-recovery-menu",
+    match  = { class = "^org\\.bwm\\.menu(\\.console)?$" },
+    float  = true,
+    size   = "1100 760",
+    center = true,
+})
+
 -- Hyprland-run windowrule
 hl.window_rule({
     name  = "move-hyprland-run",

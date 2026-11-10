@@ -25,14 +25,6 @@
         },
         "float": false
     },
-    "org_quickshell": {
-        "name": "persist_org_quickshell",
-        "description": "org.quickshell",
-        "match": {
-            "class": "^org\\.quickshell$"
-        },
-        "float": true
-    },
     "com_mojang_minecraft": {
         "name": "persist_com_mojang_minecraft",
         "description": "com.mojang.minecraft",
@@ -91,19 +83,35 @@
         },
         "float": false
     },
-    "kitty": {
-        "name": "persist_kitty",
-        "description": "kitty",
-        "match": {
-            "class": "^kitty$"
-        },
-        "float": true
-    },
     "virt_manager": {
         "name": "persist_virt_manager",
         "description": "virt-manager",
         "match": {
             "class": "^virt\\-manager$"
+        },
+        "float": true
+    },
+    "org_quickshell": {
+        "name": "persist_org_quickshell",
+        "description": "org.quickshell",
+        "match": {
+            "class": "^org\\.quickshell$"
+        },
+        "float": true
+    },
+    "chatgpt": {
+        "name": "persist_chatgpt",
+        "description": "Chatgpt",
+        "match": {
+            "class": "^Chatgpt$"
+        },
+        "float": false
+    },
+    "kitty": {
+        "name": "persist_kitty",
+        "description": "kitty",
+        "match": {
+            "class": "^kitty$"
         },
         "float": true
     }

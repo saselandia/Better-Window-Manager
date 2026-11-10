@@ -103,6 +103,16 @@ if active_skin == "default" then hl.bind("SUPER + G", hl.dsp.exec_cmd("quickshel
 if active_skin == "default" then hl.bind("CTRL + SUPER + T", hl.dsp.exec_cmd("quickshell -c ii ipc call wallpaperSelector toggle"), { description = "General: Cambiar fondo (end-4)" }) end
 if active_skin == "default" then hl.bind("CTRL + SUPER + ALT + T", hl.dsp.exec_cmd("quickshell -c ii ipc call wallpaperSelector random"), { description = "General: Fondo aleatorio de la carpeta (end-4)" }) end
 
+-- BWMenu: dos teclas normales a la vez, independiente de Quickshell; cualquier orden
+hl.bind("plus + minus", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm menu --open"), { ignore_mods = true, description = "General: BWMenu (+ y - a la vez)" })
+hl.bind("minus + plus", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm menu --open"), { ignore_mods = true, description = "General: BWMenu (+ y - a la vez)" })
+hl.bind("plus + KP_Subtract", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm menu --open"), { ignore_mods = true, description = "General: BWMenu (+ y - a la vez)" })
+hl.bind("KP_Subtract + plus", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm menu --open"), { ignore_mods = true, description = "General: BWMenu (+ y - a la vez)" })
+hl.bind("KP_Add + minus", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm menu --open"), { ignore_mods = true, description = "General: BWMenu (+ y - a la vez)" })
+hl.bind("minus + KP_Add", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm menu --open"), { ignore_mods = true, description = "General: BWMenu (+ y - a la vez)" })
+hl.bind("KP_Add + KP_Subtract", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm menu --open"), { ignore_mods = true, description = "General: BWMenu (+ y - a la vez)" })
+hl.bind("KP_Subtract + KP_Add", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm menu --open"), { ignore_mods = true, description = "General: BWMenu (+ y - a la vez)" })
+
 -- Helper binds: allow Super+Alt for corner snaps in Plasma as well
 if is_plasma then
     hl.bind("SUPER + ALT + left", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top-left"), { description = "Ventanas: Ajustar esquina superior izquierda (Quick Tile)" })

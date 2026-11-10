@@ -71,7 +71,15 @@ bwm check           # core and per-skin requirements, with the commands for your
 bwm skins           # installed skins
 bwm skin retro      # switch skin (checks its requirements first)
 bwm startup off     # don't open the welcome window at login
+bwm menu            # visual BWMenu; --tui for recovery without Quickshell
+bwm version         # installed BWM revision
 ```
+
+**BWMenu:** hold `+` and press `-` (or the other way round; keypad keys also work). Browse
+skin previews in a gallery that follows the active colors, fonts and themes live. Check
+dependencies, apply a skin, or recover bars and panels; a console remains available without Quickshell. If the
+entire graphical session crashes, log into a console with Ctrl+Alt+F3 and run
+`bwm menu --tui`. [BWMenu guide (Spanish)](docs/BWMENU.md).
 
 ## Retro settings
 

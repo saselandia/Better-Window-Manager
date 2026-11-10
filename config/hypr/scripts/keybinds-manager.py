@@ -796,6 +796,13 @@ def generate_lua(binds: List[Dict[str, Any]]) -> str:
 
     # Extra Alt+Tab helper releases and mouse binds
     lines.append("")
+    lines.append("-- BWMenu: dos teclas normales a la vez, independiente de Quickshell; cualquier orden")
+    for plus in ("plus", "KP_Add"):
+        for minus in ("minus", "KP_Subtract"):
+            # Hyprland Lua exige que la última tecla del combo se pulse la última.
+            for first, last in ((plus, minus), (minus, plus)):
+                lines.append(f'hl.bind("{first} + {last}", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm menu --open"), {{ ignore_mods = true, description = "General: BWMenu (+ y - a la vez)" }})')
+    lines.append("")
     lines.append("-- Helper binds: allow Super+Alt for corner snaps in Plasma as well")
     lines.append('if is_plasma then')
     lines.append('    hl.bind("SUPER + ALT + left", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py top-left"), { description = "Ventanas: Ajustar esquina superior izquierda (Quick Tile)" })')

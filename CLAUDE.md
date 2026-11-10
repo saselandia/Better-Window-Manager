@@ -137,6 +137,7 @@ siendo el nombre del escritorio original que imita Breeze.
 | Requisitos (instalador, `bwm check`, bienvenida) | `config/hypr/skins/requirements.json` + `requires` de cada `skin.json`, `scripts/bwm-requirements.py`; tabla en `docs/REQUIREMENTS.md` |
 | Instalador | `install.sh` (sale con los comandos de la distro si falta un requisito) |
 | Bienvenida / comando `bwm` | `quickshell/ii/bwmWelcome.qml` (qs -p aparte), `scripts/bwm`, `~/.config/bwm/welcome.json`, `autostart.sh` |
+| BWMenu (rescate con + y - a la vez) | Galería autónoma `quickshell/bwmenu/`, paletas nativas en `scripts/bwm_menu_appearance.py`; `bwm-menu.py`/`bwm_versions.py`, `bwmenu`, `bwm menu`. Consola independiente de Qt/Quickshell con `--tui`, también en TTY. Atajos en helpers de `keybinds-manager.py`; guía `docs/BWMENU.md` |
 | Cambiar de estilo / ver qué hace al cambiar | `config/hypr/scripts/bwm-theme-manager.py` (`apply_theme`) |
 | Algo que sólo cargue en un estilo | `quickshell/ii/panelFamilies/IllogicalImpulseFamily.qml` (`extraCondition`) |
 | Colores/temas de Retro y sus apps | `scripts/bwm_omarchy.py` (`apply_retro_palette_colors`), `scripts/bwm_omarchy_apps.py`, `hypr/omarchy/themed/*.tpl` |

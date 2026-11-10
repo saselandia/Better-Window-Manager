@@ -8,6 +8,8 @@
 #   bwm check [--skin ID]    requisitos del núcleo y de las skins, con comandos para tu distro
 #   bwm skins                skins instaladas (verde = requisitos completos)
 #   bwm skin [ID]            skin activa, o cambia a otra
+#   bwm menu [--tui|--open]  BWMenu visual; --tui conserva el rescate sin Quickshell
+#   bwm version              revisión instalada de BWM
 #
 # Funciona desde el checkout aunque la instalación no haya terminado.
 # ==============================================================================
@@ -71,6 +73,20 @@ case "$cmd" in
         esac
         ;;
     check) exec python3 "$SCRIPTS/bwm-requirements.py" check "$@" ;;
+    menu)
+        if [[ $# -eq 0 && -n "${WAYLAND_DISPLAY:-}" ]]; then
+            exec python3 "$SCRIPTS/bwm-menu.py" --open
+        fi
+        exec python3 "$SCRIPTS/bwm-menu.py" "$@"
+        ;;
+    version|--version)
+        exec python3 - "$SCRIPTS" "$REPO" <<'EOF'
+import sys
+sys.path.insert(0, sys.argv[1])
+from bwm_versions import bwm_version
+print("BWM " + bwm_version(sys.argv[2]))
+EOF
+        ;;
     skins) exec python3 "$SCRIPTS/bwm-requirements.py" skins "$@" ;;
     skin)
         if [[ $# -eq 0 ]]; then
@@ -85,7 +101,7 @@ case "$cmd" in
         exec python3 "$SCRIPTS/bwm-theme-manager.py" set "$1"
         ;;
     -h|--help|help)
-        sed -n '3,12p' "$(readlink -f "${BASH_SOURCE[0]}")" | sed 's/^# \{0,1\}//'
+        sed -n '3,14p' "$(readlink -f "${BASH_SOURCE[0]}")" | sed 's/^# \{0,1\}//'
         ;;
     *)
         echo "Orden desconocida: $cmd (bwm help)" >&2

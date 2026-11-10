@@ -46,9 +46,12 @@
         "forceDarkMode": false,
         "harmonizeThreshold": 100,
         "harmony": 0.6,
+        "neutral": false,
         "termFgBoost": 0.35
       }
-    }
+    },
+    "retroThemeMode": "static",
+    "retroThemeName": "nord"
   },
   "apps": {
     "bluetooth": "blueman-manager",
@@ -78,8 +81,8 @@
       "widgetsFactor": 1.2,
       "workspaceZoom": 1.07
     },
-    "thumbnailPath": "",
-    "wallpaperPath": "/mnt/HDD1TB/Projects/hyprland-de/config/hypr/omarchy/themes/vantablack/backgrounds/0-dot-hands.webp",
+    "thumbnailPath": "/mnt/HDD1TB/Projects/hyprland-de/config/hypr/omarchy/themes/nord/backgrounds/0-black-moon.jpg",
+    "wallpaperPath": "/mnt/HDD1TB/Projects/hyprland-de/config/hypr/omarchy/themes/nord/backgrounds/0-black-moon.jpg",
     "widgets": {
       "clock": {
         "cookie": {
@@ -236,7 +239,7 @@
     "hoverToReveal": true,
     "ignoredAppRegexes": [],
     "monochromeIcons": true,
-    "omarchy": false,
+    "omarchy": true,
     "pinnedApps": [
       "org.kde.dolphin",
       "kitty"
@@ -245,6 +248,13 @@
   },
   "hacks": {
     "arbitraryRaceConditionDelay": 20
+  },
+  "idle": {
+    "lock": 0,
+    "screen": 1200,
+    "screensaver": true,
+    "screensaverTime": 150,
+    "suspend": 0
   },
   "interactions": {
     "deadPixelWorkaround": {
@@ -348,7 +358,7 @@
   "panelFamily": "ii",
   "policies": {
     "ai": 1,
-    "weeb": 0
+    "weeb": 1
   },
   "regionSelector": {
     "annotation": {
@@ -380,10 +390,6 @@
   },
   "screenSnip": {
     "savePath": ""
-  },
-  "screensaver": {
-    "enable": true,
-    "timeoutMinutes": 5
   },
   "search": {
     "engineBaseUrl": "https://www.google.com/search?q=",

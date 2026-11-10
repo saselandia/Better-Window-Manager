@@ -145,7 +145,18 @@ def check_requirement(spec: dict, catalog: dict) -> tuple[str, str]:
     if kind == "version":
         if not which(check["cmd"][0]):
             return MISSING, f"no está {check['cmd'][0]}"
-        match = re.search(check["regex"], run(check["cmd"]))
+        version_output = run(check["cmd"])
+        running = False
+        # Puede haberse actualizado el binario sin haber cerrado la sesión.
+        if check["cmd"][0] == "Hyprland" and os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+            try:
+                live = json.loads(run(["hyprctl", "version", "-j"]))
+                if live.get("version"):
+                    version_output = "Hyprland " + live["version"]
+                    running = True
+            except ValueError:
+                pass
+        match = re.search(check["regex"], version_output)
         if not match:
             return MISSING, "no se pudo leer la versión"
         found = match.group(1)
@@ -154,7 +165,7 @@ def check_requirement(spec: dict, catalog: dict) -> tuple[str, str]:
         tested = check.get("tested")
         if tested and version_tuple(found) < version_tuple(tested):
             return OK, f"{found} (BWM se prueba con {tested})"
-        return OK, found
+        return OK, found + (" (en ejecución)" if running else "")
     if kind == "python":
         found = ".".join(map(str, sys.version_info[:3]))
         return (OK, found) if sys.version_info[:2] >= version_tuple(check["min"])[:2] \
@@ -320,7 +331,7 @@ def current_skin() -> str:
     return out[-1] if out else ""
 
 
-def report(selected: list[str] | None, pre_install: bool, family: str | None) -> dict:
+def report(selected: list[str] | None, pre_install: bool, family: str | None, versions: bool = False) -> dict:
     base, skins = load_data()
     catalog, links = base["catalog"], base.get("links", {})
     distro = detect_distro(family)
@@ -348,6 +359,16 @@ def report(selected: list[str] | None, pre_install: bool, family: str | None) ->
             "plan": install_plan(req, catalog, distro["family"], links),
             "recommendPlan": install_plan(rec, catalog, distro["family"], links),
         })
+    if versions:
+        from bwm_versions import requirement_versions
+        cache = {}
+        for group in [data["core"], *data["skins"]]:
+            for row in group["requires"] + group["recommends"]:
+                rid = row["id"]
+                if rid not in cache:
+                    cache[rid] = requirement_versions(catalog.get(rid, {}), distro["family"],
+                                                      row["detail"], row["status"])
+                row.update(cache[rid])
     data["ok"] = data["core"]["ok"] and all(s["ready"] for s in data["skins"])
     return data
 
@@ -449,12 +470,17 @@ def print_group(title: str, required: list[dict], recommended: list[dict], c: di
     marks = {OK: f"{c['g']}✓", PENDING: f"{c['c']}•", BUILD: f"{c['y']}⚙", OUTDATED: f"{c['r']}✗", MISSING: f"{c['r']}✗"}
     for r in required:
         detail = f" {c['d']}({r['detail']}){c['n']}" if r["detail"] and r["status"] != OK else ""
+        if "version" in r:
+            detail += f" — {r['version'] or 'versión sin dato'} · {r['versionPolicy']}"
         print(f"  {marks[r['status']]}{c['n']} {r['label']}{detail}")
         if r["status"] != OK:
             print(f"      {c['d']}{r['why']}{c['n']}")
     missing_rec = [r for r in recommended if r["status"] != OK]
     if missing_rec:
         print(f"  {c['d']}Recomendado (opcional): " + ", ".join(r["label"] for r in missing_rec) + c["n"])
+    for r in recommended:
+        if "version" in r:
+            print(f"  [opcional · {r['status']}] {r['label']} — {r['version'] or 'versión sin dato'} · {r['versionPolicy']}")
 
 
 def print_plan(title: str, plan: dict, c: dict):
@@ -506,6 +532,7 @@ def main() -> int:
     parser.add_argument("action", nargs="?", default="check", choices=["check", "skins", "docs"])
     parser.add_argument("--skin", action="append", help="sólo esta skin (repetible)")
     parser.add_argument("--json", action="store_true")
+    parser.add_argument("--versions", action="store_true", help="añade versiones instaladas y mínimos declarados")
     parser.add_argument("--pre-install", action="store_true", help="no cuenta lo que hace el instalador")
     parser.add_argument("--distro", choices=sorted(set(FAMILIES.values()) | {"unknown"}))
     args = parser.parse_args()
@@ -513,7 +540,7 @@ def main() -> int:
     if args.action == "docs":
         print(requirements_markdown(), end="")
         return 0
-    data = report(args.skin, args.pre_install, args.distro)
+    data = report(args.skin, args.pre_install, args.distro, args.versions)
     if args.skin:
         unknown = set(args.skin) - {s["id"] for s in data["skins"]}
         if unknown:

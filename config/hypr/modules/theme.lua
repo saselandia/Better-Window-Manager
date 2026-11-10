@@ -4,14 +4,14 @@
 -- =============================================================================
 
 local theme = {
-    name = "default",
-    rounding = 18,
-    rounding_power = 2.5,
-    border_size = 1,
-    gaps_in = 4,
+    name = "retro",
+    rounding = 0,
+    rounding_power = 2,
+    border_size = 2,
+    gaps_in = 3,
     gaps_out = 5,
     -- Ventanas: "tiling" (mosaico) o "traditional" (WM tradicional, todas flotantes con barra de
-    -- título). Sale de config/hypr/skins/default/skin.json → "windows"
+    -- título). Sale de config/hypr/skins/retro/skin.json → "windows"
     windows = "tiling",
 }
 

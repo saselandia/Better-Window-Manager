@@ -72,6 +72,13 @@
       "label": "Darkly (estilo de widgets Qt)",
       "why": "Estilo de las apps Qt de end-4 en default (end-4)",
       "check": {"type": "qtplugin", "path": "styles/darkly6.so"},
+      "versionFiles": [
+        {"path": "/usr/local/lib64/cmake/Darkly/DarklyConfigVersion.cmake", "regex": "^set\\(PACKAGE_VERSION \"([0-9.]+)\"\\)"},
+        {"path": "/usr/local/lib/cmake/Darkly/DarklyConfigVersion.cmake", "regex": "^set\\(PACKAGE_VERSION \"([0-9.]+)\"\\)"},
+        {"path": "/usr/lib64/cmake/Darkly/DarklyConfigVersion.cmake", "regex": "^set\\(PACKAGE_VERSION \"([0-9.]+)\"\\)"},
+        {"path": "/usr/lib/cmake/Darkly/DarklyConfigVersion.cmake", "regex": "^set\\(PACKAGE_VERSION \"([0-9.]+)\"\\)"},
+        {"path": "/usr/lib/x86_64-linux-gnu/cmake/Darkly/DarklyConfigVersion.cmake", "regex": "^set\\(PACKAGE_VERSION \"([0-9.]+)\"\\)"}
+      ],
       "packages": {"gentoo": null, "arch": "aur:darkly-bin", "fedora": "copr:deltacopy/darkly:darkly", "opensuse": null, "debian": null},
       "manual": "https://github.com/Bali10050/Darkly"
     },
@@ -135,6 +142,10 @@
       "label": "swww o awww",
       "why": "Pinta el fondo de pantalla con transiciones (awww es el nombre nuevo de swww; vale cualquiera)",
       "check": {"type": "cmd", "groups": [["swww", "swww-daemon"], ["awww", "awww-daemon"]]},
+      "versionProbes": [
+        {"cmd": ["swww", "--version"], "regex": "swww ([0-9][^\\s]*)"},
+        {"cmd": ["awww", "--version"], "regex": "awww ([0-9][^\\s]*)"}
+      ],
       "packages": {"gentoo": "guru:gui-apps/awww", "arch": "swww", "fedora": null, "opensuse": "swww", "debian": null},
       "manual": "https://codeberg.org/LGFae/awww"
     },
@@ -148,6 +159,7 @@
       "label": "cliphist",
       "why": "Historial del portapapeles",
       "check": {"type": "cmd", "any": ["cliphist"]},
+      "versionProbes": [{"cmd": ["cliphist", "version"], "regex": "^version\\s+([0-9][^\\s]*)", "stderr": true}],
       "packages": {"gentoo": "guru:app-misc/cliphist", "arch": "cliphist", "fedora": "cliphist", "opensuse": "cliphist", "debian": "cliphist"},
       "manual": "go install go.senan.xyz/cliphist@latest"
     },
@@ -240,6 +252,7 @@
       "label": "matugen",
       "why": "Genera la paleta Material You desde el fondo (tema dinámico de default (end-4))",
       "check": {"type": "cmd", "any": ["matugen"]},
+      "versionProbes": [{"cmd": ["matugen", "--version"], "regex": "matugen ([0-9][^\\s]*)"}],
       "packages": {"gentoo": "guru:x11-misc/matugen", "arch": "aur:matugen-bin", "fedora": null, "opensuse": null, "debian": null},
       "manual": "cargo install matugen"
     },
@@ -374,6 +387,7 @@
       "label": "playerctl",
       "why": "Teclas multimedia",
       "check": {"type": "cmd", "any": ["playerctl"]},
+      "versionProbes": [{"cmd": ["playerctl", "--version"], "regex": "v?([0-9][^\\s]*)"}],
       "packages": {"gentoo": "media-sound/playerctl", "arch": "playerctl", "fedora": "playerctl", "opensuse": "playerctl", "debian": "playerctl"}
     },
     "networkmanager": {
