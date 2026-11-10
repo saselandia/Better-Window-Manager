@@ -55,7 +55,7 @@ de un tema; cambiar el fondo no los toca.
 | :--- | :---: | :---: | :--- |
 | Retro | ~90 % | ~80 % | `hyprland.lua` e `icons.theme` de los temas, tema de Chromium (root); plugins que sustituyen barra, bloqueo, overlays o paneles |
 | default (end-4) | ~90 % | — | Plantillas de matugen de terceros: se añaden a mano en `matugen/config.toml` |
-| Breeze (Kde plasma) | ~25 % | 0 % | Esquemas de color (`.colors`), estilos de Plasma, iconos y temas globales se aplican con `plasma-theme.py`, y el esquema colorea el shell y las apps (probado en configuraciones aisladas; falta probarlo en una sesión Breeze real). Faltan: panel y applets con el estilo de Plasma (SVG), decoraciones (Aurorae/Breeze reales), cambiador de ventanas, bloqueo, plasmoides (docs/BREEZE_PLAN.md) |
+| Breeze (Kde plasma) | ~35 % | 0 % | Esquemas, iconos, temas globales y panel con SVG del estilo de Plasma (probado con Breeze y Sweet en cuatro bordes). Pendientes: decoraciones reales, Kickoff/applets portados, bloqueo/cambiador y plasmoides externos. Port reducido y límites en docs/BREEZE_ARCH.md §10. |
 
 Actualiza esta tabla y la del README cuando cambie el soporte.
 
@@ -91,7 +91,7 @@ sin mezclar. Así una skin nueva o un cambio en una no rompe las demás.
 | :--- | :--- | :--- |
 | Manifiesto, aspecto y requisitos | `hypr/skins/requirements.json` | `hypr/skins/<id>/skin.json` |
 | Ajustes de Quickshell | Secciones comunes de `config.json` | `illogical-impulse/config-<id>.json` (secciones propias) |
-| Interfaz QML | `quickshell/ii/modules/common`, `services`, `modules/settings` | default (end-4): `modules/ii/*` de illogical-impulse; Retro: `modules/ii/omarchy*`, `modules/ii/bar/omarchy`, `Commons`, `Ui`, `omarchy-plugins`; Plasma: `modules/ii/plasma*`, `plasmaCommon` |
+| Interfaz QML | `quickshell/ii/modules/common`, `services`, `modules/settings` | default (end-4): `modules/ii/*` de illogical-impulse; Retro: `modules/ii/omarchy*`, `modules/ii/bar/omarchy`, `Commons`, `Ui`, `omarchy-plugins`; Plasma: modules/plasma/panel y theme; temporalmente también `modules/ii/plasma*`, `plasmaCommon` |
 | Qué se carga en cada skin | `panelFamilies/IllogicalImpulseFamily.qml` (`extraCondition`) | — |
 | Selector de fondos (Alt+W) | `hypr/scripts/wallpaper-picker.sh` elige la skin | default: `modules/ii/wallpaperSelector`; Retro: `bar/omarchy/image-picker` + `hypr/skins/retro/scripts/wallpaper-picker.py` (fondos del tema, extras de Omarchy y `~/Pictures/Wallpapers`); Breeze: rofi |
 | Colores de Hyprland y apps | `hypr/modules/*.lua`, `matugen/` | `colors.lua` (default (end-4)), `retro_colors.lua` + `hypr/omarchy/` (Retro), `plasma_colors.lua` (Plasma) |
@@ -136,3 +136,8 @@ En Breeze, cursor/teclado/Kelvin/idioma/workspaces se exportan a los archivos de
 importa lo propio de la skin (fuentes, temas, opciones de ventana); la configuración en texto del
 usuario sigue teniendo prioridad. El puente se detiene y retira sus exportaciones al salir.
 Los KCMs de pantallas de KWin no representan la sesión Hyprland: se usa el gestor común de BWM.
+
+El panel de Breeze se configura en bar.plasma: borde, grosor, longitud, alineación, visibilidad,
+flotación y widgets incluidos. Usa SVG/márgenes/sombras de Plasma; ya no admite el antiguo color
+plano superpuesto. Se necesitan los módulos KDE declarados en requires de Breeze. El Loader
+carga su ruta sólo en esa skin. Los archivos nuevos requieren reinicio de mantenimiento del shell.

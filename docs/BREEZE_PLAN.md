@@ -110,7 +110,7 @@ C++, F10 parte C++) comparten `src/breezebars/`: **nunca dos a la vez**.
 
 ## 4. Prompts
 
-> **Hechas: fases 0–2** (arquitectura en `docs/BREEZE_ARCH.md`; motor de temas y puente de configuración en `BWM_CONTEXT.md` §3.139–140). `docs/BREEZE_ARCH.md` manda sobre lo que digan los
+> **Hechas: fases 0–3** (arquitectura en `docs/BREEZE_ARCH.md`; motor de temas y puente de configuración en `BWM_CONTEXT.md` §3.139–141). `docs/BREEZE_ARCH.md` manda sobre lo que digan los
 > prompts siguientes: lo que cambió está anotado en su §7, y F6 se ha partido en F6a y F6b.
 
 ### F0 · Viabilidad y arquitectura — **[HIGH]**
@@ -234,6 +234,12 @@ configuración, respetando la regla 14 (lo común manda desde BWM) y la 18 (lo d
 ```
 
 ### F3 · Panel de Plasma
+
+> Implementada como port reducido de panel, tareas sólo-iconos y reloj: BREEZE_ARCH.md §10.
+> Se eligió bar.plasma. Edición de widgets incluidos; alojar plasmoides externos y el catálogo
+> completo «Añadir widgets» queda pendiente por las dependencias del anfitrión de F0.
+> Insignias/progreso Unity y múltiples zonas horarias necesitan trabajo adicional.
+> F4/F5 conservan temporalmente Kickoff y applets actuales con sus nuevos anclajes.
 
 ```text
 Fase 3 de docs/BREEZE_PLAN.md (lee el plan, su sección 2, docs/BREEZE_ARCH.md y el resultado de F1).

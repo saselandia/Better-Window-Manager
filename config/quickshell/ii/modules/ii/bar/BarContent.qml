@@ -346,9 +346,5 @@ Item { // Bar content region
     }
 
 
-    PlasmaBarContent {
-        id: plasmaBarSection
-        anchors.fill: parent
-        visible: Appearance.isPlasma
-    }
+
 }

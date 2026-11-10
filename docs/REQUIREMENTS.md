@@ -137,6 +137,8 @@ Son las versiones registradas en el entorno local de BWM, no las últimas public
 | plasma-nm (applet de red) | 6.7.5 | — |
 | plasma-pa (applet de sonido) | 6.7.5 | — |
 | BluezQt | 6.29.0 | — |
+| Kirigami (componentes KDE) | 6.29.0 | — |
+| Reloj de Plasma | 6.7.5 | — |
 
 ## Skin default (end-4)
 
@@ -218,6 +220,11 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | hyprpolkitagent | Diálogo de contraseña (polkit). En Retro lo dibuja Quickshell y no hace falta | `hyproverlay:sys-auth/hyprpolkitagent` | `hyprpolkitagent` | `copr:solopasha/hyprland:hyprpolkitagent` | `hyprpolkitagent` | — |
 | Iconos Breeze | Iconos breeze-dark de las apps y applets de la skin Plasma | `kde-frameworks/breeze-icons` | `breeze-icons` | `breeze-icon-theme` | `breeze6-icons` | `breeze-icon-theme` |
 | Plugin breezebars de BWM (barras de título Breeze) | Barras de título Breeze y snapping con previsualización; debe estar compilado para el Hyprland que usas | *se compila* | *se compila* | *se compila* | *se compila* | *se compila* |
+| KSvg (SVG de temas de Plasma) | Pinta el panel, los popups y los controles de Breeze con el estilo de Plasma activo (desktoptheme) | `kde-frameworks/ksvg` | `ksvg` | `kf6-ksvg` | — | — |
+| libplasma (PlasmaComponents 3) | Controles de Plasma (botones, menús, deslizadores) con el tema de Plasma en el shell de Breeze | `kde-plasma/libplasma` | `libplasma` | `libplasma` | — | — |
+| Kirigami (componentes KDE) | Iconos, fuentes y métricas de los componentes portados del panel Plasma | `kde-frameworks/kirigami` | `kirigami` | `kf6-kirigami` | — | `qml6-module-org-kde-kirigami` |
+| plasma-workspace (herramientas de temas y KCMs) | plasma-apply-*, lookandfeeltool, módulos de Preferencias (colores, estilo de Plasma, iconos, cursores, fuentes, tema global) y modelos de Kickoff/bandeja. Instala KWin, pero BWM no lo ejecuta | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
+| Reloj de Plasma | Fuente de hora del reloj digital portado de Plasma | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
 
 **Recomendado:**
 
@@ -232,13 +239,10 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | blueman | Botón «Configurar» del applet Bluetooth | `net-wireless/blueman` | `blueman` | `blueman` | `blueman` | `blueman` |
 | SwayNotificationCenter | Centro de notificaciones fuera de Retro | `guru:gui-apps/swaync` | `swaync` | `SwayNotificationCenter` | `SwayNotificationCenter` | `sway-notification-center` |
 | mpvpaper | Fondos de vídeo en default (end-4) y Breeze (Kde plasma), como switchwall.sh de end-4; sin él se queda el primer fotograma | `guru:gui-apps/mpvpaper` | `aur:mpvpaper` | — | — | — |
-| KSvg (SVG de temas de Plasma) | Pinta el panel, los popups y los controles de Breeze con el estilo de Plasma activo (desktoptheme) | `kde-frameworks/ksvg` | `ksvg` | `kf6-ksvg` | — | — |
-| libplasma (PlasmaComponents 3) | Controles de Plasma (botones, menús, deslizadores) con el tema de Plasma en el shell de Breeze | `kde-plasma/libplasma` | `libplasma` | `libplasma` | — | — |
 | Plasma5Support | Fuentes de datos que usan los plasmoides portados (reloj, energía) | `kde-plasma/plasma5support` | `plasma5support` | — | — | — |
 | KDecoration3 | Biblioteca de decoraciones de KWin: BWM la usa para dibujar las barras de título del tema de Plasma activo | `kde-plasma/kdecoration` | `kdecoration` | `kdecoration` | — | — |
 | Decoración y estilo Breeze | Barras de título Breeze reales y estilo de widgets Breeze | `kde-plasma/breeze` | `breeze` | `plasma-breeze` | — | `breeze` |
 | Aurorae (decoraciones SVG) | Decoraciones de ventana de la KDE Store en formato Aurorae | `kde-plasma/aurorae` | `aurorae` | `aurorae` | — | — |
-| plasma-workspace (herramientas de temas y KCMs) | plasma-apply-*, lookandfeeltool, módulos de Preferencias (colores, estilo de Plasma, iconos, cursores, fuentes, tema global) y modelos de Kickoff/bandeja. Instala KWin, pero BWM no lo ejecuta | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
 | Preferencias del sistema de KDE | Base de las Preferencias del sistema de Breeze (KCMs con kcmshell6) | `kde-plasma/systemsettings` | `systemsettings` | `plasma-systemsettings` | — | `systemsettings` |
 | plasma-nm (applet de red) | Modelos de red del applet de Plasma (org.kde.plasma.networkmanagement) | `kde-plasma/plasma-nm` | `plasma-nm` | `plasma-nm` | — | `plasma-nm` |
 | plasma-pa (applet de sonido) | Modelos de sonido del applet de Plasma (org.kde.plasma.private.volume) | `kde-plasma/plasma-pa` | `plasma-pa` | `plasma-pa` | — | `plasma-pa` |

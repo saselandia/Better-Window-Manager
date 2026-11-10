@@ -57,7 +57,7 @@
     "quickshell": [
       "config/quickshell/ii/modules/plasma/theme",
       "config/quickshell/ii/modules/ii/plasmaLock",
-      "config/quickshell/ii/modules/ii/bar/PlasmaBarContent.qml",
+      "config/quickshell/ii/modules/plasma/panel",
       "config/quickshell/ii/modules/ii/plasmaCommon",
       "config/quickshell/ii/modules/ii/plasmaKickoff",
       "config/quickshell/ii/modules/ii/plasmaAudio",
@@ -93,7 +93,12 @@
   "requires": [
     "hyprpolkitagent",
     "breeze-icons",
-    "hyprbars-plasma"
+    "hyprbars-plasma",
+    "ksvg",
+    "libplasma",
+    "kirigami",
+    "plasma-workspace",
+    "plasma-clock"
   ],
   "recommends": [
     "omacalc",
@@ -105,13 +110,10 @@
     "blueman",
     "swaync",
     "mpvpaper",
-    "ksvg",
-    "libplasma",
     "plasma5support",
     "kdecoration",
     "breeze-decoration",
     "aurorae",
-    "plasma-workspace",
     "systemsettings",
     "plasma-nm",
     "plasma-pa",

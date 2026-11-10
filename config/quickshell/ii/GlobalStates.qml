@@ -32,6 +32,7 @@ Singleton {
     property bool workspaceShowNumbers: false
     // KDE Plasma Bluetooth applet (opened from the Plasma taskbar)
     property bool plasmaBluetoothOpen: false
+    property real plasmaPopupAnchorY: -1
     property real plasmaBluetoothAnchorX: -1
     property string plasmaBluetoothScreen: ""
     // KDE Plasma Networks applet (opened from the Plasma taskbar)

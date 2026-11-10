@@ -4,6 +4,7 @@ import qs.modules.common
 import qs.modules.common.functions
 import qs.modules.common.widgets
 import qs.modules.ii.plasmaCommon
+import qs.modules.plasma.panel
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -396,10 +397,15 @@ Scope {
             height: root.kickoffHeight
             // Floating panel: Kickoff floats with the same gap and gets all corners rounded
             readonly property int edgeGap: PlasmaPanelState.gapFor(win.screen?.name ?? "")
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: PlasmaPanelState.panelEdgeOffset(win.screen?.name ?? "")
-            anchors.left: parent.left
-            anchors.leftMargin: edgeGap
+            // BWM F3: attach the existing Kickoff to the panel's actual edge and alignment.
+            readonly property string panelEdge: PanelState.edgeFor(win.screen?.name ?? "")
+            readonly property var panelGeometry: PanelState.panels[win.screen?.name ?? ""] ?? {}
+            x: panelEdge === "left" ? PlasmaPanelState.panelEdgeOffset(win.screen?.name ?? "") :
+                panelEdge === "right" ? win.width-width-PlasmaPanelState.panelEdgeOffset(win.screen?.name ?? "") :
+                Math.max(edgeGap,Math.min(win.width-width-edgeGap,panelGeometry.x??edgeGap))
+            y: panelEdge === "top" ? PlasmaPanelState.panelEdgeOffset(win.screen?.name ?? "") :
+                panelEdge === "bottom" ? win.height-height-PlasmaPanelState.panelEdgeOffset(win.screen?.name ?? "") :
+                Math.max(edgeGap,Math.min(win.height-height-edgeGap,panelGeometry.y??edgeGap))
             color: root.colPanelBg
             border.width: 1
             border.color: root.colBorder

@@ -247,9 +247,18 @@ Singleton {
                 property bool showBackground: true
                 property bool verbose: true
                 property bool vertical: false
-                // KDE Plasma skin panel (PlasmaBarContent)
+                // KDE Plasma skin panel (modules/plasma/panel)
                 property JsonObject plasma: JsonObject {
-                    property string style: "translucent" // "translucent" | "opaque" ("floating" = legacy, read as translucent + floating)
+                    property string edge: "" // empty: migrate from bar.bottom; then bottom/top/left/right
+                    property int thickness: 44
+                    property string visibility: "always" // always | autoHide | dodge | windowsGoBelow
+                    property string alignment: "center" // start | center | end
+                    property real length: 1
+                    property list<string> widgets: ["kickoff", "tasks", "tray", "clock", "desktop"]
+                    property list<string> taskOrder: []
+                    property bool showDate: true
+                    property bool showSeconds: false
+                    property string style: "translucent" // adaptive | translucent | opaque (floating = legacy adaptive + floating)
                     property bool floating: false // Floating panel; it docks while a window is maximized on its screen
                     property int floatingGap: 8 // Gap around the panel when floating
                     property string color: "#24292e" // Panel background (Breeze Dark by default)

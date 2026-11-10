@@ -1,3 +1,5 @@
+import qs.modules.plasma.panel
+import qs
 import qs.modules.common
 import QtQuick
 import QtQuick.Layouts
@@ -26,7 +28,9 @@ PanelWindow {
     signal closeRequested()
 
     // Plasma panel edge: popups slide out of it (bottom by default, top if the bar is on top)
-    readonly property bool atTop: !(Config.options?.bar?.bottom ?? true)
+    readonly property string edge: PanelState.edgeFor(win.screen?.name ?? "")
+    readonly property bool atTop: edge === "top"
+    readonly property bool vertical: edge === "left" || edge === "right"
     // Opening/closing state; the slide is a transform offset (not the card's y), so the
     // layer surface being resized after it maps can never make the card travel across the screen
     readonly property bool shown: opened
@@ -39,8 +43,11 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: win.opened ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     anchors { top: true; bottom: true; left: true; right: true }
-    margins.bottom: passBarClicks && !atTop ? PlasmaPanelState.panelEdgeOffset(win.screen?.name ?? "") : 0
-    margins.top: passBarClicks && atTop ? PlasmaPanelState.panelEdgeOffset(win.screen?.name ?? "") : 0
+    margins.bottom: passBarClicks && edge === "bottom" ? PlasmaPanelState.panelEdgeOffset(win.screen?.name ?? "") : 0
+    margins.top: passBarClicks && edge === "top" ? PlasmaPanelState.panelEdgeOffset(win.screen?.name ?? "") : 0
+
+    margins.left: passBarClicks && edge === "left" ? PanelState.distanceFor(win.screen?.name ?? "") : 0
+    margins.right: passBarClicks && edge === "right" ? PanelState.distanceFor(win.screen?.name ?? "") : 0
 
     // Click-outside closes (also catches the taskbar button -> natural toggle)
     MouseArea {
@@ -60,13 +67,16 @@ PanelWindow {
         height: win.popupHeight
         // Centered over the taskbar button, clamped to the screen edges
         x: {
+            if (win.edge === "left") return win.bottomMargin;
+            if (win.edge === "right") return win.width - width - win.bottomMargin;
             const centered = win.anchorX >= 0 ? win.anchorX - width / 2 : win.width - width;
             return Math.max(win.edgeGap, Math.min(win.width - width - win.edgeGap, centered));
         }
-        anchors.top: win.atTop ? parent.top : undefined
-        anchors.bottom: win.atTop ? undefined : parent.bottom
-        anchors.topMargin: win.bottomMargin
-        anchors.bottomMargin: win.bottomMargin
+        y: {
+            if (!win.vertical) return win.atTop ? win.bottomMargin : win.height-height-win.bottomMargin;
+            const centered=GlobalStates.plasmaPopupAnchorY>=0 ? GlobalStates.plasmaPopupAnchorY-height/2 : win.height-height;
+            return Math.max(win.edgeGap,Math.min(win.height-height-win.edgeGap,centered));
+        }
         opacity: win.shown ? 1 : 0
         property real slide: win.shown ? 0 : (win.atTop ? -12 : 12)
         transform: Translate { y: card.slide }

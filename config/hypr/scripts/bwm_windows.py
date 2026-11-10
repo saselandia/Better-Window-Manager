@@ -85,7 +85,15 @@ def traditional_box(at, size, mon: dict, titlebar: bool, win: dict) -> tuple:
     mx, my, mw, mh = monitor_box(mon)
     margin, half_gap = win.get("edgeMargin", 10), win.get("gap", 0) / 2
     panel = win.get("panel", {})
-    reserve = {e: (panel.get("size", 0) if panel.get("edge") == e else 0) for e in ("top", "bottom", "left", "right")}
+    # Layer-shell es la fuente: incluye paneles verticales y deja de reservar al ocultarse.
+    # El manifiesto sólo sirve antes de que el compositor haya publicado reserved.
+    raw_reserved = mon.get("reserved")
+    if isinstance(raw_reserved, dict):
+        reserve = {e: raw_reserved.get(e, 0) for e in ("left", "top", "right", "bottom")}
+    elif isinstance(raw_reserved, (list, tuple)) and len(raw_reserved) == 4:
+        reserve = dict(zip(("left", "top", "right", "bottom"), raw_reserved))
+    else:
+        reserve = {e: (panel.get("size", 0) if panel.get("edge") == e else 0) for e in ("top", "bottom", "left", "right")}
     left, top = mx + reserve["left"] + margin, my + reserve["top"] + margin
     right, bottom = mx + mw - reserve["right"] - margin, my + mh - reserve["bottom"] - margin
     x0, y0 = max(at[0] + half_gap, left), max(at[1] + half_gap, top)

@@ -156,3 +156,16 @@ Puente de configuración de Breeze (F2, 2026-11-11): `kde-config-bridge.py` y `h
 son código propio; los nombres de claves y señales se verificaron con los `.kcfg` de KDE Plasma
 v6.7.5 y KConfig v6.29.0. No se copió implementación KDE. Rutas y procedencia en
 `config/hypr/skins/plasma/scripts/README.md` y decisiones en `docs/BREEZE_ARCH.md` §9.
+
+Panel de Breeze (F3, 2026-11-11): componentes derivados de KDE Plasma **v6.7.5** en
+config/quickshell/ii/modules/plasma/panel, GPL-2.0-or-later. Origen:
+[plasma-desktop](https://invent.kde.org/plasma/plasma-desktop/-/tree/v6.7.5)
+(desktoppackage/contents/views/Panel.qml, containments/panel, applets/taskmanager/qml/Task.qml y
+code/TaskTools.js) y
+[plasma-workspace](https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5)
+(applets/digital-clock/DigitalClock.qml, shell/panelview.cpp y panelshadows.cpp).
+Se conservan las cabeceras SPDX de Marco Martin, Eike Hein, Nate Graham, Heena Mahour,
+Sebastian Kügler, Martin Klapetek y David Edmundson en los archivos derivados. BWM adapta
+anfitrión, datos y acciones a Quickshell/Hyprland, reduce las representaciones compactas y
+sustituye la configuración attached de Plasma. Fuente correspondiente incluida y adaptación en
+el README de la carpeta; [texto de licencia](licenses/KDE-GPL-2.0-or-later.txt).

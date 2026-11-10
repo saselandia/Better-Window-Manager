@@ -589,6 +589,20 @@
       "check": {"type": "qtplugin", "path": "styles/libkvantum.so"},
       "packages": {"gentoo": "x11-themes/kvantum", "arch": "kvantum", "fedora": "kvantum", "opensuse": null, "debian": null},
       "notes": {"gentoo": "Sólo en ~amd64: echo 'x11-themes/kvantum ~amd64' | sudo tee /etc/portage/package.accept_keywords/kvantum"}
+    },
+    "kirigami": {
+      "label": "Kirigami (componentes KDE)",
+      "referenceVersion": "6.29.0",
+      "why": "Iconos, fuentes y métricas de los componentes portados del panel Plasma",
+      "check": {"type": "qml", "module": "org/kde/kirigami"},
+      "packages": {"gentoo": "kde-frameworks/kirigami", "arch": "kirigami", "fedora": "kf6-kirigami", "opensuse": null, "debian": "qml6-module-org-kde-kirigami"}
+    },
+    "plasma-clock": {
+      "label": "Reloj de Plasma",
+      "referenceVersion": "6.7.5",
+      "why": "Fuente de hora del reloj digital portado de Plasma",
+      "check": {"type": "qml", "module": "org/kde/plasma/clock"},
+      "packages": {"gentoo": "kde-plasma/plasma-workspace", "arch": "plasma-workspace", "fedora": "plasma-workspace", "opensuse": null, "debian": "plasma-workspace"}
     }
   }
 }

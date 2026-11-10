@@ -35,7 +35,7 @@ default (end-4), Retro (Omarchy) y Breeze (Kde plasma) sobre Hyprland y Quickshe
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **default (end-4)** | [end-4 / illogical-impulse](https://github.com/end-4/dots-hyprland) (Material You) | Mosaico | **Dinámico**: matugen saca la paleta del fondo cada vez que lo cambias | — (claro u oscuro según el fondo) | Plantillas y fondos de matugen / end-4 |
 | **Retro** | [Omarchy 4](https://github.com/basecamp/omarchy) (rama `quattro`) | Mosaico | **Dinámico**: paleta con el formato de Omarchy sacada del fondo | 23 temas estáticos de Omarchy (Tokyo Night, Catppuccin, Nord, Gruvbox…) con `Alt + R`; al fijar uno, el fondo ya no cambia los colores | Temas y plugins de la comunidad de Omarchy (Ajustes → Temas / Plugins) |
-| **Breeze (Kde plasma)** | KDE Plasma 6 (Breeze Dark) | WM tradicional (flotantes) | **Estático**: Breeze Dark, no cambia con el fondo | — | Esquemas de color y temas globales de Plasma de la KDE Store (pendiente) |
+| **Breeze (Kde plasma)** | KDE Plasma 6 | WM tradicional (flotantes) | **Estático**: esquema de Plasma activo, independiente del fondo | Esquemas, estilos de Plasma, iconos y temas globales | Formatos de Plasma de la KDE Store; panel con SVG del estilo activo |
 
 ### Pocas skins, lo esencial y lo mismo en todas
 
@@ -51,7 +51,7 @@ Es la finalidad del proyecto, así que la medimos. Son estimaciones del porcenta
 | :--- | :---: | :---: | :--- |
 | **Retro** (Omarchy) | **~90 %** | **~80 %** | Temas: se aplican `colors.toml`, fondos y los archivos de apps (Neovim, VS Code, btop…); no `hyprland.lua` del tema, `icons.theme` (Retro usa Papirus con el acento) ni el tema de Chromium (necesita root). Plugins: los de barra y servicios funcionan sin cambios; no los que sustituyen la barra, el bloqueo, overlays o paneles |
 | **default (end-4)** | **~90 %** | — | Cualquier fondo genera su paleta (100 %); plantillas de matugen de terceros se añaden a `matugen/config.toml`. end-4 no tiene catálogo de plugins |
-| **Breeze (Kde plasma)** | **~25 %** | **0 %** | Esquemas de color, estilos de Plasma, iconos y temas globales de la KDE Store (los cursores, compartidos por todas las skins); el esquema colorea el shell y las apps. Aurorae, panel con el estilo de Plasma y plasmoides todavía no |
+| **Breeze (Kde plasma)** | **~35 %** | **0 %** | Esquemas, iconos, temas globales y panel con SVG de Plasma (Breeze/Sweet, cuatro bordes). Pendientes: decoraciones reales, Kickoff/applets completos, bloqueo/cambiador y plasmoides externos. |
 
 ### Hacia un único compositor: Hyprland
 
@@ -147,7 +147,7 @@ La lista completa, con los paquetes de cada distribución, está en [docs/REQUIR
 | **Núcleo** (todas las skins) | Hyprland ≥ 0.55 (configuración en Lua), Quickshell (probado con 0.3.1), Qt ≥ 6.10 con 5Compat y SVG, Python ≥ 3.11 con Pillow, jq, swww (o awww), wl-clipboard, cliphist, kitty, grim, slurp, libnotify, GLib, fontconfig, PipeWire/WirePlumber, adw-gtk3. Las fuentes (Material Symbols, Google Sans Flex, JetBrainsMono Nerd Font) las instala BWM |
 | **default (end-4)** | matugen, rofi (Wayland), hyprpolkitagent |
 | **Retro** | ImageMagick 7 (`magick`). Polkit, notificaciones y OSD los dibuja Quickshell |
-| **Breeze (Kde plasma)** | hyprpolkitagent, iconos Breeze y el plugin hyprbars de BWM **compilado para tu versión de Hyprland** (el instalador lo compila si tienes las cabeceras de Hyprland, `make` y un compilador de C++) |
+| **Breeze (Kde plasma)** | hyprpolkitagent, KSvg, libplasma, Kirigami, plasma-workspace (Clock), iconos Breeze y el plugin hyprbars de BWM **compilado para tu versión de Hyprland** (el instalador lo compila si tienes las cabeceras de Hyprland, `make` y un compilador de C++) |
 
 Opcional: portales de escritorio (hyprland, gtk), NetworkManager, BlueZ, qt6ct, socat, git, Nautilus, Firefox, Flatpak (Vesktop, Spotify, Stremio), btop, fastfetch, Papirus, hyprsunset, SDDM y Plymouth.
 

@@ -1,5 +1,6 @@
 pragma Singleton
 
+import qs.modules.plasma.panel
 import qs.modules.common
 import QtQuick
 import Quickshell
@@ -64,16 +65,8 @@ Singleton {
         return root.active && (root.showingDesktop || root.docked[screenName] === true);
     }
     // Gap the panel and its popups keep from the screen edges on that screen
-    function gapFor(screenName) {
-        return root.active && !root.isDocked(screenName) ? Appearance.sizes.plasmaFloatingGap : 0;
-    }
-
-    // Distance from the screen edge to the outer side of the panel, where popups attach:
-    // floating = gap + panel thickness + gap above it; docked = just the panel thickness.
-    // The panel keeps its thickness in both states (only its side/bottom margins change).
-    function panelEdgeOffset(screenName) {
-        return Appearance.sizes.plasmaPanelHeight + 2 * root.gapFor(screenName);
-    }
+    function gapFor(screenName) { return PanelState.gapFor(screenName); }
+    function panelEdgeOffset(screenName) { return PanelState.distanceFor(screenName); }
 
     function refresh() {
         if ((root.active || root.showingDesktop) && !stateProc.running) stateProc.running = true;

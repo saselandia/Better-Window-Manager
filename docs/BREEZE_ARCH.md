@@ -228,3 +228,44 @@ inicial, vigilante parado, 11 ventanas con los mismos PID y foco conservado. No 
 Pendiente de validación visual: todas las opciones de colocación, botones con el plugin cargado
 en la próxima sesión, KCMs embebidos (F11), ajustes de Qt 6 con apps abiertas y un tema global
 aplicado directamente por un KCM en vez del aplicador BWM.
+
+## 10. Fase 3: panel de Plasma (2026-11-11)
+
+modules/plasma/panel sustituye modules/ii/bar/PlasmaBarContent.qml. Se ha adaptado el fondo de
+desktoppackage/contents/views/Panel.qml, las representaciones compactas de Task/DigitalClock y
+los prefijos originales del gestor de tareas (Plasma v6.7.5). Fuentes, modificaciones y límites en
+el README de la carpeta; GPL-2.0-or-later conservada. Quickshell aloja el panel mediante un Loader
+con ruta vacía fuera de Breeze: sus dependencias KDE permanecen propias de esta skin.
+
+**Configuración:** bar.plasma, admitida por F3. No se escribe un archivo appletsrc parcial que
+pueda confundirse con un anfitrión completo de plasmoides. Workspaces, time.format y servicios
+siguen siendo comunes. Las ancladas usan dock.pinnedApps del perfil y el orden de grupos se guarda
+en bar.plasma.taskOrder. El editor elige/reordena los seis widgets incluidos; no instala widgets
+externos incompatibles.
+
+**Panel:** cuatro bordes, alineación/longitud/grosor, flotación eliminada al tocar una ventana,
+SVG de fondo/sombra del estilo activo y opacidad adaptable/opaca/traslúcida. AutoHide, Dodge y
+WindowsGoBelow reservan cero; el último permanece visible. Siempre visible reserva sólo el
+grosor, como PanelView::updateExclusiveZone en Wayland. La superficie incluye las sombras del SVG;
+el hueco flotante se superpone al área útil. Geometría aislada en PanelLogic.js; IPC de diagnóstico:
+qs -c ii ipc call plasmaPanel inspect.
+
+**Área útil:** bwm_windows.traditional_box usa reserved real del compositor (lista/diccionario),
+incluidos ceros para panel oculto; sólo usa el manifiesto si ese dato no existe. quick-tile.py y
+placement.lua ya consumían esa reserva. Popups y Kickoff existentes se adaptan al borde y posición.
+
+**Datos:** TaskbarApps/Quickshell reemplazan el protocolo PlasmaWindowManagement de KWin.
+Grupos por app, SVG widgets/tasks, miniaturas ScreencopyView, ancladas, clic central, rueda y
+orden por arrastre. El reloj usa org.kde.plasma.clock y PC3 con formato horario común. Bandeja y
+applets existentes hasta F5.
+
+**Probado:** ocho casos reales (dos estilos × cuatro bordes), reserva exacta sólo en su borde.
+Se retiró una animación de posición que desplazaba el panel al cambiar de orientación; los bordes
+se aplican directamente. AutoHide/Dodge reservan cero y pueden ocultarse; WindowsGoBelow reserva
+cero y queda visible. Capturas recortadas y borradas. El reinicio de mantenimiento carga el módulo
+nuevo. Al volver a Retro se restauran el estilo de Plasma y los ajustes del panel.
+
+**Pendiente:** interacción completa de arrastre/menú/miniaturas, insignias/progreso Unity, zonas
+horarias múltiples, applets portados (F5) y alojamiento de plasmoides de terceros. qmllint se
+ejecuta con avisos por imports virtuales qs.* y metadatos incompletos de Quickshell/KSvg; la carga
+real complementa esta comprobación.

@@ -43,8 +43,13 @@ import qs.modules.ii.plasmaThemePicker
 
 Scope {
     // Retro: Omarchy's own bar, inside omarchy-shell's host (omarchyShell/), with its panels and plugins
-    PanelLoader { extraCondition: !Config.options.bar.vertical && !Appearance.isRetro; component: Bar {} }
+    PanelLoader { extraCondition: !Config.options.bar.vertical && !Appearance.isRetro && !Appearance.isPlasma; component: Bar {} }
     PanelLoader { extraCondition: Appearance.isRetro; component: OmarchyShell {} }
+    // The source is empty outside Breeze: its KDE QML dependencies remain skin-specific.
+    PanelLoader {
+        extraCondition: Appearance.isPlasma
+        source: extraCondition ? Qt.resolvedUrl("../modules/plasma/panel/Panel.qml") : ""
+    }
     // Fondo pintado por el shell, como en el original: el de end-4 en default (end-4) y el de
     // Omarchy (con su transición) en Retro; Breeze sigue con swww salvo background.enable
     PanelLoader { extraCondition: (!Appearance.isRetro && !Appearance.isPlasma) || (Appearance.isPlasma && Boolean(Config.options.background?.enable)); component: Background {} }
@@ -74,7 +79,7 @@ Scope {
     PanelLoader { component: SessionScreen {} }
     PanelLoader { component: SidebarLeft {} }
     PanelLoader { component: SidebarRight {} }
-    PanelLoader { extraCondition: Config.options.bar.vertical && !Appearance.isRetro; component: VerticalBar {} }
+    PanelLoader { extraCondition: Config.options.bar.vertical && !Appearance.isRetro && !Appearance.isPlasma; component: VerticalBar {} }
     PanelLoader { component: WallpaperSelector {} }
     PanelLoader { component: AltTab {} }
     PanelLoader { component: OmarchyMenu {} }
