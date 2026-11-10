@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 
 Rectangle {
@@ -7,10 +8,10 @@ Rectangle {
     required property var style
     property bool selected: false
     property bool active: false
-    property bool ready: false
+    property var health: ({state:"unknown", description:"Comprobando"})
     signal chosen()
-    implicitHeight: 254
-    radius: skin.rounding
+    implicitHeight: 214
+    radius: 0
     color: selected ? style.selection : style.surface
     border.color: selected || active ? style.accent : style.border
     border.width: selected ? 2 : 1
@@ -24,8 +25,8 @@ Rectangle {
         spacing: 10
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 146
-            radius: Math.min(card.skin.rounding, 10)
+            Layout.preferredHeight: 144
+            radius: 0
             color: card.style.background
             clip: true
             Image {
@@ -58,16 +59,6 @@ Rectangle {
                     GradientStop { position: 1; color: "#bb000000" }
                 }
             }
-            Text {
-                anchors.left: parent.left
-                anchors.bottom: parent.bottom
-                anchors.margins: 10
-                text: card.skin.windows === "traditional" ? "VENTANAS LIBRES" : "MOSAICO"
-                color: "white"
-                font.pixelSize: 10
-                font.bold: true
-                font.letterSpacing: 1
-            }
             Rectangle {
                 visible: card.active
                 anchors.right: parent.right
@@ -75,34 +66,36 @@ Rectangle {
                 anchors.margins: 8
                 width: activeText.implicitWidth + 16
                 height: 24
-                radius: Math.min(card.skin.rounding, 12)
+                radius: 0
                 color: card.style.accent
-                Text { id: activeText; anchors.centerIn: parent; text: "● ACTIVA"; color: card.style.onAccent; font.pixelSize: 10; font.bold: true }
+                Text { id: activeText; anchors.centerIn: parent; text: "Activa"; color: card.style.onAccent; font.pixelSize: 10; font.bold: true }
             }
         }
-        Text {
+        RowLayout {
             Layout.fillWidth: true
-            text: card.skin.name
-            color: card.style.foreground
-            font.family: card.skin.font
-            font.pixelSize: 17
-            font.bold: true
-            elide: Text.ElideRight
-        }
-        Text {
-            Layout.fillWidth: true
-            text: card.ready ? "✓  Requisitos completos" : "!  Revisar requisitos"
-            color: card.ready ? card.style.muted : card.style.error
-            font.family: card.style.font
-            font.pixelSize: 11
-            elide: Text.ElideRight
+            spacing: 4
+            StatusLight { state: card.health.state; description: card.health.description }
+            Text {
+                Layout.fillWidth: true
+                text: card.skin.name
+                color: card.style.foreground
+                font.family: card.skin.font
+                font.pixelSize: 15
+                font.bold: true
+                elide: Text.ElideRight
+            }
         }
     }
     MouseArea {
+        id: cardHover
         anchors.fill: parent
+        hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: { card.forceActiveFocus(); card.chosen(); }
     }
+    ToolTip.visible: cardHover.containsMouse
+    ToolTip.text: "Núcleo y skin: " + health.description
+    ToolTip.delay: 400
     Rectangle {
         visible: card.activeFocus
         anchors.fill: parent

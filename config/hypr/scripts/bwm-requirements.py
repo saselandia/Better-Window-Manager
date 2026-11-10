@@ -339,6 +339,7 @@ def report(selected: list[str] | None, pre_install: bool, family: str | None, ve
     core_rec = evaluate(base["core"].get("recommends", []), catalog)
     data = {
         "distro": distro, "repo": str(REPO), "links": links, "current": current_skin(),
+        "referenceEnvironment": base.get("referenceEnvironment", {}),
         "core": {"ok": group_ok(core_req, pre_install), "requires": core_req, "recommends": core_rec,
                  "plan": install_plan(core_req, catalog, distro["family"], links),
                  "recommendPlan": install_plan(core_rec, catalog, distro["family"], links)},
@@ -360,7 +361,7 @@ def report(selected: list[str] | None, pre_install: bool, family: str | None, ve
             "recommendPlan": install_plan(rec, catalog, distro["family"], links),
         })
     if versions:
-        from bwm_versions import requirement_versions
+        from bwm_versions import requirement_versions, version_health
         cache = {}
         for group in [data["core"], *data["skins"]]:
             for row in group["requires"] + group["recommends"]:
@@ -369,6 +370,10 @@ def report(selected: list[str] | None, pre_install: bool, family: str | None, ve
                     cache[rid] = requirement_versions(catalog.get(rid, {}), distro["family"],
                                                       row["detail"], row["status"])
                 row.update(cache[rid])
+        core_rows = data["core"]["requires"] + data["core"]["recommends"]
+        data["core"]["versionHealth"] = version_health(core_rows)
+        for skin in data["skins"]:
+            skin["versionHealth"] = version_health(core_rows + skin["requires"] + skin["recommends"])
     data["ok"] = data["core"]["ok"] and all(s["ready"] for s in data["skins"])
     return data
 
@@ -443,6 +448,16 @@ def requirements_markdown() -> str:
 
     out = [DOC_HEADER, "## Núcleo: lo que necesita cualquier skin para pintar la pantalla\n",
            table(base["core"]["requires"]), "\n### Recomendado (opcional)\n", table(base["core"]["recommends"])]
+    references = [(rid, spec) for rid, spec in catalog.items() if spec.get("referenceVersion")]
+    if references:
+        metadata = base.get("referenceEnvironment", {})
+        out += ["\n## Referencias de versiones de BWMenu\n",
+                f"Registro local: **{metadata.get('recorded', 'sin fecha')}**. Base de BWM: `{metadata.get('bwmBaseCommit', '')[:12]}`.\n",
+                "Son las versiones registradas en el entorno local de BWM, no las últimas publicadas por cada proyecto. "
+                "Se usan para los semáforos; los mínimos compatibles siguen controlando la instalación y la activación de skins.\n",
+                "| Dependencia | Referencia BWM | Mínimo compatible |", "| :--- | :--- | :--- |"]
+        for rid, spec in references:
+            out.append(f"| {spec['label']} | {spec['referenceVersion']} | {spec.get('check', {}).get('min', '—')} |")
     for skin in skins:
         mode = "dinámico" if skin["defaultTheme"]["mode"] == "dynamic" else "estático"
         kind = "mosaico (*tiling*)" if skin.get("windows", "tiling") == "tiling" else "WM tradicional (ventanas flotantes)"

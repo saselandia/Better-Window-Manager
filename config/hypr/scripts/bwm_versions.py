@@ -91,7 +91,58 @@ def requirement_versions(spec, family, detail, status):
             if match:
                 version, source = match[1], str(path)
                 break
-    return {"version": version, "versionSource": source,
+    reference = spec.get("referenceVersion") or check.get("tested") or check.get("min", "")
+    # Las versiones de paquetes se muestran con su nombre; para comparar se usa
+    # la versión del único paquete, no los dígitos que pudiera contener su nombre.
+    comparable = version
+    if source == "paquetes instalados":
+        comparable = version.rsplit(" ", 1)[-1] if ";" not in version else ""
+    state, reason = version_state(status, comparable, reference, kind)
+    return {"version": version, "versionSource": source, "versionState": state, "versionReason": reason,
+            "referenceVersion": reference,
             "minimumVersion": check.get("min", ""), "testedVersion": check.get("tested", ""),
             "versionPolicy": ("commit exacto de Hyprland" if kind == "hyprland-plugin" else
                               f">= {check['min']}" if check.get("min") else "sin mínimo declarado")}
+
+
+def numeric_version(value):
+    match = re.match(r"^v?(\d+(?:\.\d+)*)", str(value).strip())
+    if not match:
+        return None
+    parts = [int(x) for x in match[1].split(".")]
+    while len(parts) > 1 and parts[-1] == 0:
+        parts.pop()
+    return tuple(parts)
+
+
+def version_state(status, installed, reference, kind=""):
+    """Semáforo respecto a la referencia de BWM; no consulta actualizaciones remotas."""
+    if status != "ok":
+        return "error", {"missing": "Falta este requisito", "outdated": "Versión inferior a la requerida", "build": "Necesita recompilarse",
+                         "pending": "Instalación pendiente"}.get(status, "Requisito ausente o incompatible")
+    if kind == "hyprland-plugin":
+        return "ok", "Coincide con el commit de Hyprland en ejecución"
+    if not reference:
+        return "ok", "Comprobación correcta; sin versión mínima declarada"
+    actual, required = numeric_version(installed), numeric_version(reference)
+    if actual is None or required is None:
+        return "unknown", "No se puede comparar esta versión"
+    if actual < required:
+        return "error", f"Inferior a la referencia de BWM ({reference})"
+    if actual > required:
+        return "newer", f"Referencia de BWM desactualizada ({reference}); instalada más reciente ({installed})"
+    return "ok", f"Coincide con la referencia de BWM ({reference})"
+
+
+def version_health(rows):
+    # Un requisito compartido sólo se cuenta una vez en el resumen de una skin.
+    unique = {row["id"]: row for row in rows}
+    counts = {key: 0 for key in ("ok", "newer", "error", "unknown")}
+    for row in unique.values():
+        state = row.get("versionState", "error" if row.get("status") != "ok" else "unknown")
+        counts[state] += 1
+    state = next((key for key in ("error", "newer", "ok") if counts[key]), "unknown")
+    labels = {"error": "Hay dependencias ausentes, antiguas o incompatibles",
+              "newer": "Referencia de BWM desactualizada: hay versiones instaladas más recientes",
+              "ok": "Todas las comprobaciones son correctas", "unknown": "Sin diagnóstico"}
+    return {"state": state, "description": labels[state], "counts": counts}

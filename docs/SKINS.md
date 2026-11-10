@@ -122,5 +122,11 @@ campos y la plantilla (`_template/skin.json`) están en
 * `tests/test_skins.py` comprueba que cada `skin.json` está completo, que su variable `windows` es
   válida y que las rutas de `parts` existen.
 
-Instalar skins de terceros sin tocar el repositorio (formato de paquete, firma, sandbox) está por
-diseñar; cuando exista se documentará aquí y la bienvenida podrá activarlas.
+BWMenu → Skins → **Añadir skins** consulta el catálogo independiente
+[`saselandia/bwm-skins`](https://github.com/saselandia/bwm-skins), con respaldo en GitLab.
+BWM incluye sólo las tres skins actuales; las nuevas tendrán versiones y descargas
+propias en ese repositorio. El menú ofrece búsqueda, vistas previas y acceso a sus
+instrucciones. Consulta la [guía del catálogo](SKIN_CATALOG.md).
+
+El instalador automático y la carga completa de módulos externos siguen pendientes.
+Detectar un manifiesto externo no equivale a cargar todo su escritorio.

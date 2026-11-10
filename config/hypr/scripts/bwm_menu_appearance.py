@@ -81,8 +81,9 @@ def contrast(background):
 
 
 def current_skin(config=CONFIG):
-    active = read_json(config / "illogical-impulse/config.json").get("appearance", {}).get("bwmTheme")
-    if active:
+    settings = read_json(config / "illogical-impulse/config.json").get("appearance", {})
+    active = settings.get("bwmTheme") if isinstance(settings, dict) else None
+    if isinstance(active, str) and active:
         return active
     match = re.search(r'name\s*=\s*"([^"]+)"', read_text(config / "hypr/modules/theme.lua"))
     return match[1] if match else "default"
@@ -136,13 +137,18 @@ def appearance(config=CONFIG, state=STATE):
     sid = current_skin(config)
     skin = next((s for s in skins if s["id"] == sid), skins[0] if skins else {})
     profile = read_json(config / "illogical-impulse/config.json")
-    fonts = profile.get("appearance", {}).get("fonts", {})
+    settings = profile.get("appearance", {})
+    fonts = settings.get("fonts", {}) if isinstance(settings, dict) else {}
+    if not isinstance(fonts, dict):
+        fonts = {}
     # Los perfiles actuales pueden contener strings o grupos de familias.
     family = fonts.get("main") or skin.get("fonts", {}).get("main", "sans-serif")
     if not isinstance(family, str):
         family = skin.get("fonts", {}).get("main", "sans-serif")
     if skin.get("palette") == "omarchy":
         family = fonts.get("monospace") or skin.get("fonts", {}).get("monospace", "monospace")
+        if not isinstance(family, str):
+            family = skin.get("fonts", {}).get("monospace", "monospace")
     rounding = skin.get("look", {}).get("rounding", 8)
     cards = []
     for entry in skins:
@@ -150,11 +156,15 @@ def appearance(config=CONFIG, state=STATE):
         if not preview.is_absolute():
             preview = REPO / preview
         saved = profile if entry["id"] == sid else read_json(config / f"illogical-impulse/config-{entry['id']}.json")
-        wallpaper = saved.get("background", {}).get("wallpaperPath", "")
+        background = saved.get("background", {})
+        wallpaper = background.get("wallpaperPath", "") if isinstance(background, dict) else ""
+        if not isinstance(wallpaper, str):
+            wallpaper = ""
         if not wallpaper or not Path(wallpaper).is_file():
             wallpaper = read_text(Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / f"current_wallpaper_{entry['id']}")
         cards.append({"id": entry["id"], "name": entry["name"], "preview": str(preview),
-                      "wallpaper": wallpaper if Path(wallpaper).is_file() else "", "barBottom": entry.get("bar", {}).get("bottom", False),
+                      "wallpaper": wallpaper if Path(wallpaper).is_file() and Path(wallpaper).suffix.lower() in (".png", ".jpg", ".jpeg", ".webp", ".avif", ".bmp", ".svg", ".gif") else "",
+                      "barBottom": entry.get("bar", {}).get("bottom", False),
                       "description": entry.get("description", ""), "imitates": entry.get("imitates", ""),
                       "windows": entry.get("windows", "tiling"), "rounding": entry.get("look", {}).get("rounding", 8),
                       "font": entry.get("fonts", {}).get("main", "sans-serif"),

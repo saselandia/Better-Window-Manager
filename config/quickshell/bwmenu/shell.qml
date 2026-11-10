@@ -9,6 +9,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import "ThemeUtils.js" as Theme
 
 ApplicationWindow {
     id: root
@@ -32,9 +33,21 @@ ApplicationWindow {
     property string selectedSkin: ""
     property string dependencyGroup: "core"
     property string query: ""
+    property bool showPlan: false
+    onDependencyGroupChanged: { showPlan = false; Qt.callLater(() => { requirementsTable.expandedId = ""; if (pageScroll.contentItem) pageScroll.contentItem.contentY = 0; }); }
+    readonly property color dependencyBackground: look.background
+    readonly property color dependencyField: look.surface
+    readonly property color dependencyInk: Theme.ink(dependencyBackground)
+    readonly property color dependencyFieldInk: Theme.ink(dependencyField)
+    readonly property var dependencyStyle: Object.assign({}, look, {foreground:dependencyFieldInk})
     property string notice: ""
     property string actionOutput: ""
     property string shellLog: ""
+    property var catalogData: ({skins:[], source:"", warning:"", publishingGuide:"", repository:""})
+    property bool catalogReady: false
+    property string catalogQuery: ""
+    property string catalogError: ""
+    readonly property var catalogSkins: catalogData.skins.filter(s => !catalogQuery || (s.name + " " + s.description + " " + s.imitates).toLowerCase().includes(catalogQuery.toLowerCase()))
     property bool diagnosticsReady: false
     readonly property var card: look.skins.find(s => s.id === selectedSkin) || look.skins[0] || ({})
     readonly property var selectedReport: report.skins.find(s => s.id === selectedSkin) || ({})
@@ -44,7 +57,6 @@ ApplicationWindow {
                                       .concat((depGroup.recommends || []).map(x => Object.assign({}, x, {optional:true})))
                                       .filter(x => !query || (x.label + " " + (x.version || "")).toLowerCase().includes(query.toLowerCase()))
     readonly property bool busy: action.running
-    readonly property int problemCount: [report.core].concat(report.skins).reduce((n, g) => n + (g.requires || []).filter(r => r.status !== "ok").length, 0)
 
     function refresh() { if (!diagnostic.running) diagnostic.running = true; }
     function acceptAppearance(value) {
@@ -62,6 +74,16 @@ ApplicationWindow {
         action.running = true;
     }
     function requirements(id) { dependencyGroup = id; page = "Dependencias"; }
+    function openCatalog(force) {
+        page = "Añadir skins";
+        if (catalogLoader.running || (!force && catalogReady)) return;
+        catalogError = "";
+        catalogLoader.command = ["python3", scripts + "/bwm-skin-catalog.py", "discover"].concat(previewMode ? ["--local"] : force ? ["--refresh"] : []);
+        catalogLoader.running = true;
+    }
+    function hasPlan(group) {
+        return [group.plan || {}, group.recommendPlan || {}].some(p => (p.commands || []).length || (p.manual || []).length);
+    }
     function planText(group) {
         let result = [];
         for (const pair of [["plan", "Necesario"], ["recommendPlan", "Opcional"]]) {
@@ -75,12 +97,16 @@ ApplicationWindow {
     Component.onCompleted: refresh()
     IpcHandler {
         target: "bwmenu"
-        function inspect(): string { return JSON.stringify({page:root.page, skin:root.look.skin, theme:root.look.themeName, background:root.look.background, accent:root.look.accent, font:root.look.font, radius:root.look.radius, preview:root.previewMode, busy:root.busy, ready:root.diagnosticsReady}); }
+        function inspect(): string { return JSON.stringify({page:root.page, skin:root.look.skin, theme:root.look.themeName, background:root.look.background, accent:root.look.accent, font:root.look.font, radius:root.look.radius, preview:root.previewMode, busy:root.busy, ready:root.diagnosticsReady, health:root.report.skins.map(s => ({id:s.id, state:s.versionHealth?.state || "unknown"})), rows:root.dependencies.length, catalogCount:root.catalogData.skins.length, catalogSource:root.catalogData.source, catalogLoading:catalogLoader.running, mascot:{variant:mascot.variant, ready:mascot.ready, moving:mascot.moving}}); }
         function navigate(name: string): void { if (["Skins", "Estado", "Dependencias", "Recuperación", "Ayuda"].includes(name)) root.page = name; }
         function selectSkin(id: string): void { if (root.look.skins.some(s => s.id === id)) root.selectedSkin = id; }
+        function requirementsFor(id: string): void { if (id === "core" || root.report.skins.some(s => s.id === id)) root.requirements(id); }
+        function catalog(): void { root.openCatalog(false); }
+        function refreshCatalog(): void { root.openCatalog(true); }
+        function closeMenu(): void { closeButton.clicked(); }
     }
     Shortcut { sequence: "Escape"; onActivated: { if (page !== "Skins") page = "Skins"; else if (!busy) Qt.quit(); } }
-    Shortcut { sequence: "Ctrl+R"; onActivated: refresh() }
+    Shortcut { sequence: "Ctrl+R"; onActivated: root.page === "Añadir skins" ? root.openCatalog(true) : root.refresh() }
 
     Process {
         id: diagnostic
@@ -122,6 +148,18 @@ ApplicationWindow {
         command: ["python3", root.scripts + "/bwm-menu.py", "--shell-log"]
         stdout: StdioCollector { onStreamFinished: root.shellLog = text }
     }
+    Process {
+        id: catalogLoader
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const result = JSON.parse(text);
+                    if (result.error) root.catalogError = result.error;
+                    else { root.catalogData = result; root.catalogReady = true; }
+                } catch (e) { root.catalogError = "No se pudo leer el catálogo."; }
+            }
+        }
+    }
 
     component Label: Text {
         color: root.look.foreground
@@ -136,29 +174,22 @@ ApplicationWindow {
         border.color: root.look.border
         border.width: 1
     }
-    component Chip: Rectangle {
-        property alias text: chipLabel.text
-        implicitWidth: chipLabel.implicitWidth + 22
-        implicitHeight: 30
-        radius: Math.min(root.look.radius, 15)
-        color: root.look.selection
-        Label { id: chipLabel; anchors.centerIn: parent; color: root.look.accent; font.pixelSize: 11 }
-    }
-
     RowLayout {
         anchors.fill: parent
         spacing: 0
         Rectangle {
-            Layout.preferredWidth: 198
+            Layout.preferredWidth: 180
             Layout.fillHeight: true
             color: root.look.surface
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 18
-                spacing: 9
-                Label { text: "✦"; color: root.look.accent; font.pixelSize: 38 }
-                Label { text: "BWMenu"; font.pixelSize: 26; font.bold: true }
-                Label { text: "Tu escritorio,\na mano."; color: root.look.muted; lineHeight: 1.3; Layout.bottomMargin: 22 }
+                spacing: 7
+                RowLayout {
+                    Layout.bottomMargin: 26
+                    Label { text: "✦"; color: root.look.accent; font.pixelSize: 25 }
+                    Label { text: "BWMenu"; font.pixelSize: 22; font.bold: true }
+                }
                 Repeater {
                     model: ["Skins", "Estado", "Dependencias", "Recuperación", "Ayuda"]
                     MenuButton {
@@ -166,15 +197,20 @@ ApplicationWindow {
                         Layout.fillWidth: true
                         style: root.look
                         text: modelData
-                        chosen: root.page === modelData
+                        chosen: root.page === modelData || (modelData === "Skins" && root.page === "Añadir skins")
                         onClicked: root.page = modelData
                     }
                 }
                 Item { Layout.fillHeight: true }
-                Label { text: root.previewMode ? "Vista previa" : "●  " + root.look.skinName; color: root.look.accent; font.pixelSize: 11; Layout.fillWidth: true }
+                BwmMascot {
+                    id: mascot
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.bottomMargin: 9
+                    style: root.look
+                    motionEnabled: root.visible
+                }
+                Label { text: root.previewMode ? "Vista previa" : root.look.skinName; color: root.look.accent; font.pixelSize: 11; Layout.fillWidth: true }
                 Label { text: root.look.themeName; color: root.look.muted; font.pixelSize: 11; Layout.fillWidth: true }
-                MenuButton { style: root.look; text: "Actualizar"; Layout.fillWidth: true; enabled: !root.busy; onClicked: root.refresh() }
-                Label { text: "+ y −  ·  abrir\nEsc  ·  volver / cerrar"; color: root.look.muted; font.pixelSize: 10; Layout.topMargin: 10 }
             }
         }
 
@@ -182,23 +218,13 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.margins: 28
-            spacing: 16
+            spacing: 18
             RowLayout {
                 Layout.fillWidth: true
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 6
-                    Label { text: root.page === "Skins" ? "Elige tu escritorio." : root.page; font.pixelSize: 30; font.bold: true; Layout.fillWidth: true }
-                    Label { text: root.page === "Skins" ? "Tres formas de trabajar. Un mismo BWM." : "Diagnóstico y recuperación de tu escritorio"; color: root.look.muted }
-                }
-            }
-            RowLayout {
-                Layout.fillWidth: true
-                Chip { text: root.look.skinName + " / " + root.look.themeName }
-                Chip { text: !root.diagnosticsReady ? "Comprobando…" : root.problemCount ? root.problemCount + " requisitos por revisar" : "✓ Requisitos completos" }
-                Item { Layout.fillWidth: true }
-                Row { spacing: 5; Repeater { model: [root.look.background, root.look.surface, root.look.accent, root.look.foreground]; Rectangle { required property string modelData; width: 13; height: 13; radius: Math.min(root.look.radius, 7); color: modelData; border.color: root.look.border; border.width: 1 } } }
-                Label { text: "Colores en vivo"; color: root.look.muted; font.pixelSize: 10 }
+                Label { text: root.page; color: root.page === "Dependencias" ? root.dependencyInk : root.look.foreground; font.pixelSize: 26; font.bold: true; Layout.fillWidth: true }
+                MenuButton { visible: root.page === "Skins"; style: root.look; text: "+ Añadir skins"; onClicked: root.openCatalog(false) }
+                MenuButton { visible: root.page === "Añadir skins"; style: root.look; text: "Instaladas"; onClicked: root.page = "Skins" }
+                MenuButton { id: closeButton; style: root.page === "Dependencias" ? root.dependencyStyle : root.look; text: "×"; enabled: !root.busy; onClicked: root.close(); Accessible.name: "Cerrar BWMenu"; ToolTip.text: "Cerrar"; ToolTip.visible: hovered }
             }
             Rectangle {
                 visible: root.notice.length > 0
@@ -206,7 +232,7 @@ ApplicationWindow {
                 implicitHeight: noticeText.implicitHeight + 22
                 radius: Math.min(root.look.radius, 10)
                 color: root.look.selection
-                Label { id: noticeText; anchors.fill: parent; anchors.margins: 11; text: (root.busy ? "◌  " : "") + root.notice; color: root.look.accent }
+                Label { id: noticeText; anchors.fill: parent; anchors.margins: 11; text: (root.busy ? "◌  " : "") + root.notice; color: root.page === "Dependencias" ? Theme.ink(parent.color) : root.look.accent }
             }
 
             ScrollView {
@@ -236,36 +262,79 @@ ApplicationWindow {
                                     style: root.look
                                     selected: modelData.id === root.selectedSkin
                                     active: modelData.id === root.look.skin
-                                    ready: (root.report.skins.find(s => s.id === modelData.id) || {}).ready || false
+                                    health: (root.report.skins.find(s => s.id === modelData.id) || {}).versionHealth || ({state:"unknown", description:"Comprobando"})
                                     onChosen: root.selectedSkin = modelData.id
                                 }
                             }
                         }
                         Surface {
                             Layout.fillWidth: true
-                            implicitHeight: detailColumn.implicitHeight + 36
-                            ColumnLayout {
-                                id: detailColumn
+                            implicitHeight: detailRow.implicitHeight + 32
+                            RowLayout {
+                                id: detailRow
                                 anchors.fill: parent
-                                anchors.margins: 18
-                                spacing: 12
-                                Label { text: root.card.name || "Cargando skins…"; font.family: root.card.font || root.look.font; font.pixelSize: 21; font.bold: true }
-                                Label { text: root.card.description || ""; Layout.fillWidth: true; lineHeight: 1.3 }
-                                Label { text: root.card.themes?.builtIn || ""; color: root.look.muted; Layout.fillWidth: true; font.pixelSize: 11 }
-                                RowLayout {
+                                anchors.margins: 16
+                                spacing: 14
+                                ColumnLayout {
                                     Layout.fillWidth: true
-                                    MenuButton {
+                                    spacing: 4
+                                    Label { text: root.card.name || "…"; font.family: root.card.font || root.look.font; font.pixelSize: 18; font.bold: true; Layout.fillWidth: true }
+                                    Label { text: (root.card.imitates || "").replace(/\s*\(.*\)/, ""); color: root.look.muted; Layout.fillWidth: true; font.pixelSize: 11; elide: Text.ElideRight; wrapMode: Text.NoWrap }
+                                }
+                                MenuButton {
                                         style: root.look
                                         primary: true
-                                        text: root.selectedSkin === root.look.skin ? "Skin activa" : "Aplicar " + (root.card.name || "skin")
+                                        text: root.selectedSkin === root.look.skin ? "Activa" : "Aplicar"
                                         enabled: !root.previewMode && !root.busy && !!root.selectedReport.ready && root.selectedSkin !== root.look.skin
                                         onClicked: root.run([root.scripts + "/bwm", "skin", root.selectedSkin], "Aplicando " + root.card.name + "…")
+                                }
+                                MenuButton { style: root.look; text: "Dependencias"; onClicked: root.requirements(root.selectedSkin) }
+                            }
+                        }
+                    }
+
+                    ColumnLayout {
+                        visible: root.page === "Añadir skins"
+                        Layout.fillWidth: true
+                        spacing: 13
+                        RowLayout {
+                            Layout.fillWidth: true
+                            TextField {
+                                Layout.fillWidth: true
+                                placeholderText: "Buscar skins…"
+                                color: root.dependencyFieldInk
+                                placeholderTextColor: root.dependencyFieldInk
+                                font.family: root.look.font
+                                font.pixelSize: 12
+                                onTextChanged: root.catalogQuery = text
+                                background: Rectangle { color: root.look.surface; radius: Math.min(root.look.radius, 6); border.color: root.look.border; border.width: 1 }
+                            }
+                            MenuButton { style: root.look; text: "Actualizar"; enabled: !catalogLoader.running; onClicked: root.openCatalog(true) }
+                            MenuButton { style: root.look; text: "Repositorio"; enabled: root.catalogData.repository.length > 0; onClicked: Qt.openUrlExternally(root.catalogData.repository) }
+                            MenuButton { style: root.look; text: "Cómo publicar"; enabled: root.catalogData.publishingGuide.length > 0; onClicked: Qt.openUrlExternally(root.catalogData.publishingGuide) }
+                        }
+                        Label { visible: catalogLoader.running; text: "Consultando catálogo…"; color: root.look.muted; font.pixelSize: 11 }
+                        Label { visible: root.catalogError.length > 0 || root.catalogData.warning.length > 0; text: root.catalogError || root.catalogData.warning; Layout.fillWidth: true; color: root.look.muted; font.pixelSize: 11 }
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 2
+                            columnSpacing: 14
+                            rowSpacing: 14
+                            Repeater {
+                                model: root.catalogSkins
+                                CatalogCard {
+                                    required property var modelData
+                                    Layout.fillWidth: true
+                                    entry: modelData
+                                    style: root.look
+                                    onOpenRequested: {
+                                        if (modelData.installed) { root.selectedSkin = modelData.id; root.page = "Skins"; }
+                                        else if (!root.previewMode) Qt.openUrlExternally(modelData.installationUrl);
                                     }
-                                    MenuButton { style: root.look; text: "Ver requisitos"; onClicked: root.requirements(root.selectedSkin) }
-                                    Item { Layout.fillWidth: true }
                                 }
                             }
                         }
+                        Label { visible: !catalogLoader.running && !root.catalogSkins.length; text: root.catalogQuery ? "Sin skins para esta búsqueda." : "Aún no hay skins adicionales publicadas."; color: root.look.muted }
                     }
 
                     ColumnLayout {
@@ -275,6 +344,7 @@ ApplicationWindow {
                         Repeater {
                             model: [
                                 ["BWM", root.report.version || "Consultando…"],
+                                ["Referencias de versiones", root.report.referenceEnvironment?.recorded || "Sin fecha"],
                                 ["Hyprland en ejecución", root.report.hyprland?.version || "Sin conexión"],
                                 ["Hyprland instalado", root.report.installedHyprland || "Sin dato"],
                                 ["Barra y paneles", root.report.shellPids.length ? "En marcha · PID " + root.report.shellPids.join(", ") : "Sin instancia detectada"],
@@ -292,50 +362,52 @@ ApplicationWindow {
                     ColumnLayout {
                         visible: root.page === "Dependencias"
                         Layout.fillWidth: true
-                        spacing: 12
+                        spacing: 10
                         Flow {
                             Layout.fillWidth: true
                             spacing: 7
-                            MenuButton { style: root.look; text: "Núcleo"; chosen: root.dependencyGroup === "core"; onClicked: root.dependencyGroup = "core" }
-                            Repeater { model: root.report.skins; MenuButton { required property var modelData; style: root.look; text: modelData.name; chosen: root.dependencyGroup === modelData.id; onClicked: root.dependencyGroup = modelData.id } }
+                            MenuButton { style: root.dependencyStyle; text: "Núcleo"; statusHealth: root.report.core.versionHealth || ({state:"unknown", description:"Comprobando"}); chosen: root.dependencyGroup === "core"; onClicked: root.dependencyGroup = "core" }
+                            Repeater { model: root.report.skins; MenuButton { required property var modelData; style: root.dependencyStyle; text: modelData.name; statusHealth: modelData.versionHealth || ({state:"unknown", description:"Comprobando"}); chosen: root.dependencyGroup === modelData.id; onClicked: root.dependencyGroup = modelData.id } }
                         }
                         TextField {
                             Layout.fillWidth: true
-                            placeholderText: "Buscar dependencia o versión…"
-                            color: root.look.foreground
-                            placeholderTextColor: root.look.muted
+                            placeholderText: "Buscar…"
+                            color: root.dependencyFieldInk
+                            placeholderTextColor: root.dependencyFieldInk
                             selectionColor: root.look.accent
+                            selectedTextColor: root.look.onAccent
                             font.family: root.look.font
+                            font.pixelSize: 12
                             onTextChanged: root.query = text
-                            background: Rectangle { color: root.look.surface; radius: Math.min(root.look.radius, 10); border.color: root.look.border; border.width: 1 }
+                            background: Rectangle { color: root.dependencyField; radius: Math.min(root.look.radius, 6); border.color: root.look.border; border.width: 1 }
                         }
-                        Repeater {
-                            model: root.dependencies
-                            Surface {
-                                required property var modelData
-                                Layout.fillWidth: true
-                                implicitHeight: requirement.implicitHeight + 26
-                                ColumnLayout {
-                                    id: requirement
-                                    anchors.fill: parent
-                                    anchors.margins: 13
-                                    spacing: 5
-                                    RowLayout {
-                                        Layout.fillWidth: true
-                                        Label { text: modelData.status === "ok" ? "✓" : "!"; color: modelData.status === "ok" ? root.look.accent : root.look.error; font.bold: true }
-                                        Label { text: modelData.label; font.bold: true; Layout.fillWidth: true }
-                                        Label { text: modelData.optional ? "Opcional" : "Necesario"; color: root.look.muted; font.pixelSize: 10 }
-                                    }
-                                    Label { text: (modelData.version || "Versión sin dato") + "   ·   " + (modelData.versionPolicy || ""); color: root.look.accent; Layout.fillWidth: true; font.pixelSize: 12 }
-                                    Label { text: modelData.why + (modelData.status !== "ok" && modelData.detail ? "\n" + modelData.detail : ""); color: root.look.muted; Layout.fillWidth: true; font.pixelSize: 11 }
+                        RowLayout {
+                            spacing: 15
+                            Repeater {
+                                model: [{state:"ok", label:"Correcta"}, {state:"error", label:"Falta"}, {state:"newer", label:"Desactualizado"}]
+                                RowLayout {
+                                    required property var modelData
+                                    spacing: 3
+                                    StatusLight { state: modelData.state; description: modelData.label }
+                                    Label { text: modelData.label; color: root.dependencyInk; font.pixelSize: 11 }
                                 }
                             }
                         }
-                        Label { text: "OK significa que cumple la comprobación declarada. Sin mínimo declarado no se certifica una versión concreta."; color: root.look.muted; Layout.fillWidth: true; font.pixelSize: 11 }
-                        Surface {
+                        DependencyTable {
+                            id: requirementsTable
                             Layout.fillWidth: true
+                            rows: root.dependencies
+                            style: root.dependencyStyle
+                            fontFamily: root.look.font
+                        }
+                        MenuButton { visible: root.hasPlan(root.depGroup); style: root.dependencyStyle; text: root.showPlan ? "Ocultar comandos" : "Resolver incidencias"; onClicked: root.showPlan = !root.showPlan }
+                        Rectangle {
+                            visible: root.showPlan && root.hasPlan(root.depGroup)
+                            Layout.fillWidth: true
+                            radius: 6
+                            color: root.dependencyField
                             implicitHeight: plan.implicitHeight + 28
-                            Label { id: plan; width: parent.width - 28; anchors.left: parent.left; anchors.top: parent.top; anchors.margins: 14; text: root.planText(root.depGroup); font.pixelSize: 11 }
+                            Label { id: plan; width: parent.width - 28; anchors.left: parent.left; anchors.top: parent.top; anchors.margins: 14; text: root.planText(root.depGroup); color: root.dependencyFieldInk; font.pixelSize: 11 }
                         }
                     }
 
@@ -343,29 +415,20 @@ ApplicationWindow {
                         visible: root.page === "Recuperación"
                         Layout.fillWidth: true
                         spacing: 14
-                        Label { text: "Recupera tu escritorio"; font.pixelSize: 24; font.bold: true }
-                        Label { text: "Las aplicaciones permanecen abiertas. El reinicio de barra y paneles puede tardar unos diez segundos."; Layout.fillWidth: true; color: root.look.muted }
                         MenuButton { style: root.look; text: "Reiniciar barra y paneles"; primary: true; enabled: !root.previewMode && !root.busy && root.diagnosticsReady; onClicked: root.run(["python3", root.scripts + "/bwm-theme-manager.py", "set", root.report.current, "--restart-shell"], "Reiniciando barra y paneles…") }
                         MenuButton { style: root.look; text: "Recargar configuración de Hyprland"; enabled: !root.previewMode && !root.busy; onClicked: root.run(["hyprctl", "reload"], "Recargando configuración…") }
                         MenuButton { style: root.look; text: "Ver registro de la barra"; onClicked: logReader.running = true }
                         MenuButton { style: root.look; text: "Abrir consola de rescate"; enabled: !root.previewMode && !root.busy; onClicked: { Quickshell.execDetached(["python3", root.scripts + "/bwm-menu.py", "--open", "--tui"]); Qt.quit(); } }
-                        Label { text: root.actionOutput || "Las incidencias de la acción aparecerán aquí."; Layout.fillWidth: true; color: root.look.muted; font.pixelSize: 11 }
+                        Label { text: root.actionOutput; visible: text.length > 0; Layout.fillWidth: true; color: root.look.muted; font.pixelSize: 11 }
                         Label { text: root.shellLog; visible: text.length > 0; Layout.fillWidth: true; color: root.look.muted; font.pixelSize: 11 }
                     }
                     ColumnLayout {
                         visible: root.page === "Ayuda"
                         Layout.fillWidth: true
                         spacing: 16
-                        Label { text: "Siempre una forma de volver."; font.pixelSize: 25; font.bold: true }
-                        Label { text: "BWMenu es una ventana independiente de la barra y sus paneles. Su aspecto sigue los colores, fuentes y formas de la skin activa, también al cambiar de tema."; Layout.fillWidth: true; lineHeight: 1.4 }
-                        Label { text: "Si falla la interfaz gráfica de BWMenu, se abre su consola de rescate. Puedes pedirla directamente con:\n\nbwm menu --open --tui\n\nSi cae todo Hyprland: Ctrl+Alt+F3, inicia sesión y ejecuta:\n\nbwm menu --tui\n\nLas instalaciones con sudo se realizan en tu terminal. Los comandos necesarios aparecen en Dependencias."; Layout.fillWidth: true; color: root.look.muted; lineHeight: 1.4 }
+                        Label { text: "Consola de rescate\n\nbwm menu --open --tui\n\nSi cae Hyprland: Ctrl+Alt+F3, inicia sesión y ejecuta:\n\nbwm menu --tui\n\nActualizar: Ctrl+R · Cerrar o volver: Esc"; Layout.fillWidth: true; color: root.look.foreground; lineHeight: 1.4 }
                     }
                 }
-            }
-            RowLayout {
-                Layout.fillWidth: true
-                Label { text: "BWM · " + (root.report.version || "…"); color: root.look.muted; font.pixelSize: 10; Layout.fillWidth: true; elide: Text.ElideRight; wrapMode: Text.NoWrap }
-                Label { text: root.busy ? "Aplicando cambios…" : "Tu sesión permanece abierta"; color: root.look.muted; font.pixelSize: 10 }
             }
         }
     }

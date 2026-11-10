@@ -407,7 +407,7 @@ class Menu:
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--open", action="store_true", help="abre BWMenu en una terminal limpia")
+    parser.add_argument("--open", action="store_true", help="abre la ventana visual (consola de rescate si falla)")
     parser.add_argument("--tui", action="store_true", help="usa esta terminal (también TTY)")
     parser.add_argument("--report", action="store_true", help="diagnóstico sin interfaz")
     parser.add_argument("--json", action="store_true", help="diagnóstico JSON sin interfaz")

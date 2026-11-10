@@ -81,6 +81,10 @@ dependencies, apply a skin, or recover bars and panels; a console remains availa
 entire graphical session crashes, log into a console with Ctrl+Alt+F3 and run
 `bwm menu --tui`. [BWMenu guide (Spanish)](docs/BWMENU.md).
 
+**Add skins** opens the independent [bwm-skins catalog](https://github.com/saselandia/bwm-skins).
+BWM bundles only the three skins above; additional skins have separate releases.
+See the [catalog guide (Spanish)](docs/SKIN_CATALOG.md) for publishing and current support.
+
 ## Retro settings
 
 `Super + I` opens settings inside Omarchy's own menu. Type to find an option, toggle it with

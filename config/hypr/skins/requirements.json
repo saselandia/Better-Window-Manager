@@ -1,5 +1,11 @@
 {
   "_comment": "Requisitos de BWM. 'core' es lo que necesita cualquier skin para pintar la pantalla; cada skin añade los suyos en <id>.json (requires/recommends con ids de 'catalog'). Lo lee scripts/bwm-requirements.py (instalador, comando bwm y bienvenida). Paquetes: gentoo 'repo:categoria/paquete' (repo = overlay a activar), arch 'aur:paquete' para AUR, fedora 'copr:usuario/proyecto:paquete'. null = la distro no lo empaqueta: se muestra 'manual' o la guía.",
+  "referenceEnvironment": {
+    "recorded": "2026-11-10",
+    "bwmBaseCommit": "f0b1ce757189dab0c104abb4b53eda62ec0a51bd",
+    "source": "local-verified-environment",
+    "note": "Referencias del entorno local comprobado con BWM; no representan las últimas versiones publicadas por los proyectos. Los mínimos compatibles se conservan por separado."
+  },
   "links": {
     "wiki": "https://github.com/saselandia/Better-Window-Manager/blob/main/docs/SKINS.md",
     "requirements": "https://github.com/saselandia/Better-Window-Manager/blob/main/docs/REQUIREMENTS.md",
@@ -21,6 +27,7 @@
   "catalog": {
     "omacalc": {
       "label": "Omacalc (calculadora de Omarchy)",
+      "referenceVersion": "1",
       "why": "Calculadora con los colores de cada skin, recarga en vivo y fuente iA Writer Mono incluida",
       "provider": "bwm",
       "check": {"type": "version", "cmd": ["bash", "-c", "test -x \"${XDG_DATA_HOME:-$HOME/.local/share}/bwm/omacalc/bin/omacalc\" && cat \"${XDG_DATA_HOME:-$HOME/.local/share}/bwm/omacalc/build-info\""], "regex": "bwm-omacalc ([0-9]+)", "min": "1"},
@@ -35,6 +42,7 @@
     },
     "default-colors-runtime": {
       "label": "Colores end-4 (OpenCV, NumPy, Pillow, materialyoucolor)",
+      "referenceVersion": "1",
       "why": "Selección automática de paleta y colores de terminal originales de illogical-impulse",
       "provider": "bwm",
       "check": {"type": "version", "cmd": ["bash", "-c", "bash ~/.config/hypr/skins/default/scripts/colors-python.sh --check"], "regex": "colors-runtime ([0-9]+)", "min": "1"},
@@ -43,6 +51,7 @@
     },
     "default-qt-colors": {
       "label": "Colores Qt de end-4 (kde-material-you-colors)",
+      "referenceVersion": "1",
       "why": "Apps Qt de default (end-4) con la paleta del fondo, como en illogical-impulse",
       "provider": "bwm",
       "check": {"type": "version", "cmd": ["bash", "-c", "bash ~/.config/hypr/skins/default/scripts/colors-python.sh --check-qt"], "regex": "qt-colors ([0-9]+)", "min": "1"},
@@ -51,12 +60,14 @@
     },
     "plasma-integration": {
       "label": "Plugin de plataforma de KDE para Qt",
+      "referenceVersion": "6.7.5",
       "why": "Las apps Qt de default (end-4) leen kdeglobals (QT_QPA_PLATFORMTHEME=kde), como en end-4",
       "check": {"type": "qtplugin", "path": "platformthemes/KDEPlasmaPlatformTheme6.so"},
       "packages": {"gentoo": "kde-plasma/plasma-integration", "arch": "plasma-integration", "fedora": "plasma-integration", "opensuse": "plasma6-integration-plugin", "debian": "plasma-integration"}
     },
     "qt-gtk3": {
       "label": "Plugin GTK de Qt (gtk3)",
+      "referenceVersion": "6.11.2",
       "why": "Las apps Qt de Retro toman los colores del tema GTK, como en Omarchy (QT_QPA_PLATFORMTHEME=gtk3)",
       "check": {"type": "qtplugin", "path": "platformthemes/libqgtk3.so"},
       "packages": {"gentoo": "dev-qt/qtbase[gtk]", "arch": "qt6-base", "fedora": "qt6-qtbase-gui", "opensuse": "qt6-platformtheme-gtk3", "debian": "qt6-gtk-platformtheme"},
@@ -64,12 +75,14 @@
     },
     "qt-imageformats": {
       "label": "Plugin WebP de Qt (qtimageformats)",
+      "referenceVersion": "6.11.2",
       "why": "El fondo de Omarchy en Retro dibuja los fondos WebP de muchos temas con su transición (sin él, BWM los convierte a JPG)",
       "check": {"type": "qtplugin", "path": "imageformats/libqwebp.so"},
       "packages": {"gentoo": "dev-qt/qtimageformats", "arch": "qt6-imageformats", "fedora": "qt6-qtimageformats", "opensuse": "qt6-imageformats", "debian": "qt6-image-formats-plugins"}
     },
     "darkly": {
       "label": "Darkly (estilo de widgets Qt)",
+      "referenceVersion": "0.5.43",
       "why": "Estilo de las apps Qt de end-4 en default (end-4)",
       "check": {"type": "qtplugin", "path": "styles/darkly6.so"},
       "versionFiles": [
@@ -84,6 +97,7 @@
     },
     "hyprland": {
       "label": "Hyprland ≥ 0.55",
+      "referenceVersion": "0.56.2",
       "why": "Compositor. BWM se configura en Lua, que llegó con Hyprland 0.55",
       "check": {"type": "version", "cmd": ["Hyprland", "--version"], "regex": "Hyprland ([0-9][0-9.]*)", "min": "0.55.0"},
       "packages": {"gentoo": "hyproverlay:gui-wm/hyprland", "arch": "hyprland", "fedora": "copr:solopasha/hyprland:hyprland", "opensuse": "hyprland", "debian": null},
@@ -91,55 +105,64 @@
     },
     "quickshell": {
       "label": "Quickshell",
+      "referenceVersion": "0.3.2",
       "why": "Pinta barras, paneles, menús, bloqueo y OSD de todas las skins (Qt 6 / QML)",
-      "check": {"type": "version", "cmd": ["quickshell", "--version"], "regex": "Quickshell ([0-9][0-9.]*)", "min": "0.2.0", "tested": "0.3.1"},
+      "check": {"type": "version", "cmd": ["quickshell", "--version"], "regex": "Quickshell ([0-9][0-9.]*)", "min": "0.2.0", "tested": "0.3.2"},
       "packages": {"gentoo": "guru:gui-apps/quickshell", "arch": "aur:quickshell", "fedora": "copr:errornointernet/quickshell:quickshell", "opensuse": null, "debian": null},
       "guide": "quickshell"
     },
     "qt5compat": {
       "label": "Qt 6 5Compat (GraphicalEffects)",
+      "referenceVersion": "6.11.2",
       "why": "Sombras, máscaras y tintes de los iconos en Quickshell",
       "check": {"type": "qml", "module": "Qt5Compat/GraphicalEffects"},
       "packages": {"gentoo": "dev-qt/qt5compat", "arch": "qt6-5compat", "fedora": "qt6-qt5compat", "opensuse": "qt6-qt5compat-imports", "debian": "qml6-module-qt5compat-graphicaleffects"}
     },
     "qtpositioning": {
       "label": "Qt 6 Positioning",
+      "referenceVersion": "6.11.2",
       "why": "Servicio del tiempo de Quickshell (ubicación); sin él no carga la configuración del shell",
       "check": {"type": "qml", "module": "QtPositioning"},
       "packages": {"gentoo": "dev-qt/qtpositioning", "arch": "qt6-positioning", "fedora": "qt6-qtpositioning", "opensuse": "qt6-positioning-imports", "debian": "qml6-module-qtpositioning"}
     },
     "qtsvg": {
       "label": "Qt 6 SVG",
+      "referenceVersion": "6.11.2",
       "why": "Iconos SVG de las barras y applets",
       "check": {"type": "qtplugin", "path": "imageformats/libqsvg.so"},
       "packages": {"gentoo": "dev-qt/qtsvg", "arch": "qt6-svg", "fedora": "qt6-qtsvg", "opensuse": "qt6-svg", "debian": "qt6-svg-plugins"}
     },
     "qt-synchronizer": {
       "label": "Qt ≥ 6.10 (Qt.labs.synchronizer)",
+      "referenceVersion": "6.11.2",
       "why": "Controles de Ajustes y paneles sincronizados con la configuración",
       "check": {"type": "qml", "module": "Qt/labs/synchronizer"},
       "packages": {"gentoo": "dev-qt/qtdeclarative", "arch": "qt6-declarative", "fedora": "qt6-qtdeclarative", "opensuse": "qt6-declarative-imports", "debian": null}
     },
     "python": {
       "label": "Python ≥ 3.11",
+      "referenceVersion": "3.14.7",
       "why": "Gestor de skins, motor de temas y scripts (usa tomllib)",
       "check": {"type": "python", "min": "3.11"},
       "packages": {"gentoo": "dev-lang/python", "arch": "python", "fedora": "python3", "opensuse": "python3", "debian": "python3"}
     },
     "pillow": {
       "label": "Pillow (Python)",
+      "referenceVersion": "12.3.0",
       "why": "Lee el fondo para sacar paletas y miniaturas",
       "check": {"type": "pymodule", "module": "PIL"},
       "packages": {"gentoo": "dev-python/pillow", "arch": "python-pillow", "fedora": "python3-pillow", "opensuse": "python3-Pillow", "debian": "python3-pil"}
     },
     "jq": {
       "label": "jq",
+      "referenceVersion": "1.8.2",
       "why": "Perfiles JSON de cada skin y scripts",
       "check": {"type": "cmd", "any": ["jq"]},
       "packages": {"gentoo": "app-misc/jq", "arch": "jq", "fedora": "jq", "opensuse": "jq", "debian": "jq"}
     },
     "swww": {
       "label": "swww o awww",
+      "referenceVersion": "0.11.2",
       "why": "Pinta el fondo de pantalla con transiciones (awww es el nombre nuevo de swww; vale cualquiera)",
       "check": {"type": "cmd", "groups": [["swww", "swww-daemon"], ["awww", "awww-daemon"]]},
       "versionProbes": [
@@ -151,12 +174,14 @@
     },
     "wl-clipboard": {
       "label": "wl-clipboard",
+      "referenceVersion": "2.2.1",
       "why": "Portapapeles de Wayland (copiar, pegar, capturas)",
       "check": {"type": "cmd", "all": ["wl-copy", "wl-paste"]},
       "packages": {"gentoo": "gui-apps/wl-clipboard", "arch": "wl-clipboard", "fedora": "wl-clipboard", "opensuse": "wl-clipboard", "debian": "wl-clipboard"}
     },
     "cliphist": {
       "label": "cliphist",
+      "referenceVersion": "0.7.0",
       "why": "Historial del portapapeles",
       "check": {"type": "cmd", "any": ["cliphist"]},
       "versionProbes": [{"cmd": ["cliphist", "version"], "regex": "^version\\s+([0-9][^\\s]*)", "stderr": true}],
@@ -165,54 +190,63 @@
     },
     "kitty": {
       "label": "kitty",
+      "referenceVersion": "0.49.2",
       "why": "Terminal por defecto; se recolorea en vivo con cada skin y tema",
       "check": {"type": "cmd", "any": ["kitty"]},
       "packages": {"gentoo": "x11-terms/kitty", "arch": "kitty", "fedora": "kitty", "opensuse": "kitty", "debian": "kitty"}
     },
     "grim": {
       "label": "grim",
+      "referenceVersion": "1.5.0",
       "why": "Capturas de pantalla y miniaturas",
       "check": {"type": "cmd", "any": ["grim"]},
       "packages": {"gentoo": "gui-apps/grim", "arch": "grim", "fedora": "grim", "opensuse": "grim", "debian": "grim"}
     },
     "slurp": {
       "label": "slurp",
+      "referenceVersion": "1.5.0",
       "why": "Seleccionar una región para capturas",
       "check": {"type": "cmd", "any": ["slurp"]},
       "packages": {"gentoo": "gui-apps/slurp", "arch": "slurp", "fedora": "slurp", "opensuse": "slurp", "debian": "slurp"}
     },
     "songrec": {
       "label": "SongRec",
+      "referenceVersion": "0.7.3",
       "why": "Reconocer la música que suena (botón de los ajustes rápidos)",
       "check": {"type": "cmd", "any": ["songrec"]},
       "packages": {"gentoo": "guru:media-sound/songrec", "arch": "songrec", "fedora": null, "opensuse": null, "debian": null}
     },
     "procps": {
       "label": "procps-ng (pidwait)",
+      "referenceVersion": "4.0.6",
       "why": "bwm-power espera a que las apps terminen de guardar antes de apagar (sin él, sondea)",
       "check": {"type": "cmd", "any": ["pidwait"]},
       "packages": {"gentoo": "sys-process/procps", "arch": "procps-ng", "fedora": "procps-ng", "opensuse": "procps", "debian": "procps"}
     },
     "libnotify": {
       "label": "libnotify (notify-send)",
+      "referenceVersion": "0.8.8",
       "why": "Avisos de los scripts",
       "check": {"type": "cmd", "any": ["notify-send"]},
       "packages": {"gentoo": "x11-libs/libnotify", "arch": "libnotify", "fedora": "libnotify", "opensuse": "libnotify-tools", "debian": "libnotify-bin"}
     },
     "gsettings": {
       "label": "GLib (gsettings)",
+      "referenceVersion": "2.88.2",
       "why": "Tema GTK, modo claro/oscuro e iconos de cada skin",
       "check": {"type": "cmd", "any": ["gsettings"]},
       "packages": {"gentoo": "dev-libs/glib", "arch": "glib2", "fedora": "glib2", "opensuse": "glib2-tools", "debian": "libglib2.0-bin"}
     },
     "fontconfig": {
       "label": "fontconfig",
+      "referenceVersion": "2.18.3",
       "why": "Registrar las fuentes que trae BWM",
       "check": {"type": "cmd", "all": ["fc-cache", "fc-list"]},
       "packages": {"gentoo": "media-libs/fontconfig", "arch": "fontconfig", "fedora": "fontconfig", "opensuse": "fontconfig", "debian": "fontconfig"}
     },
     "wireplumber": {
       "label": "PipeWire + WirePlumber",
+      "referenceVersion": "0.5.18",
       "why": "Volumen, OSD y applets de audio",
       "check": {"type": "cmd", "any": ["wpctl"]},
       "packages": {"gentoo": "media-video/wireplumber", "arch": "wireplumber", "fedora": "wireplumber", "opensuse": "wireplumber", "debian": "wireplumber"}
@@ -244,12 +278,14 @@
     },
     "inotify-tools": {
       "label": "inotify-tools",
+      "referenceVersion": "4.25.9.0",
       "why": "La barra de Omarchy recarga sola un plugin de ~/.config/omarchy/plugins al editarlo (inotifywait)",
       "check": {"type": "cmd", "any": ["inotifywait"]},
       "packages": {"gentoo": "sys-fs/inotify-tools", "arch": "inotify-tools", "fedora": "inotify-tools", "opensuse": "inotify-tools", "debian": "inotify-tools"}
     },
     "matugen": {
       "label": "matugen",
+      "referenceVersion": "4.2.0",
       "why": "Genera la paleta Material You desde el fondo (tema dinámico de default (end-4))",
       "check": {"type": "cmd", "any": ["matugen"]},
       "versionProbes": [{"cmd": ["matugen", "--version"], "regex": "matugen ([0-9][^\\s]*)"}],
@@ -258,18 +294,21 @@
     },
     "rofi": {
       "label": "rofi (con Wayland)",
+      "referenceVersion": "1.7.8",
       "why": "Selector de estilos y de fondos de default (end-4)",
       "check": {"type": "cmd", "any": ["rofi"]},
       "packages": {"gentoo": "guru:gui-apps/rofi-wayland", "arch": "rofi", "fedora": "rofi-wayland", "opensuse": "rofi", "debian": "rofi"}
     },
     "hyprpolkitagent": {
       "label": "hyprpolkitagent",
+      "referenceVersion": "0.2.0",
       "why": "Diálogo de contraseña (polkit). En Retro lo dibuja Quickshell y no hace falta",
       "check": {"type": "cmd", "any": ["hyprpolkitagent", "/usr/libexec/hyprpolkitagent", "/usr/lib/hyprpolkitagent", "/usr/lib/hyprpolkitagent/hyprpolkitagent"]},
       "packages": {"gentoo": "hyproverlay:sys-auth/hyprpolkitagent", "arch": "hyprpolkitagent", "fedora": "copr:solopasha/hyprland:hyprpolkitagent", "opensuse": "hyprpolkitagent", "debian": null}
     },
     "breeze-icons": {
       "label": "Iconos Breeze",
+      "referenceVersion": "6.29.0",
       "why": "Iconos breeze-dark de las apps y applets de la skin Plasma",
       "check": {"type": "path", "any": ["/usr/share/icons/breeze-dark/index.theme"]},
       "packages": {"gentoo": "kde-frameworks/breeze-icons", "arch": "breeze-icons", "fedora": "breeze-icon-theme", "opensuse": "breeze6-icons", "debian": "breeze-icon-theme"}
@@ -299,30 +338,35 @@
     },
     "imagemagick": {
       "label": "ImageMagick 7 (magick)",
+      "referenceVersion": "7.1.2.32",
       "why": "Miniaturas de temas y del selector de estilos, fondos WebP y color de texto de la barra",
       "check": {"type": "cmd", "any": ["magick"]},
       "packages": {"gentoo": "media-gfx/imagemagick", "arch": "imagemagick", "fedora": "ImageMagick", "opensuse": "ImageMagick", "debian": "imagemagick"}
     },
     "btop": {
       "label": "btop",
+      "referenceVersion": "1.4.7",
       "why": "Gestor de tareas de Retro (y tema btop de Omarchy)",
       "check": {"type": "cmd", "any": ["btop"]},
       "packages": {"gentoo": "sys-process/btop", "arch": "btop", "fedora": "btop", "opensuse": "btop", "debian": "btop"}
     },
     "fastfetch": {
       "label": "fastfetch",
+      "referenceVersion": "2.65.2",
       "why": "«Acerca de» del menú de Retro, como en Omarchy",
       "check": {"type": "cmd", "any": ["fastfetch"]},
       "packages": {"gentoo": "app-misc/fastfetch", "arch": "fastfetch", "fedora": "fastfetch", "opensuse": "fastfetch", "debian": "fastfetch"}
     },
     "papirus": {
       "label": "Papirus",
+      "referenceVersion": "20250501",
       "why": "Iconos de Retro con las carpetas del color del tema (sin él, Adwaita)",
       "check": {"type": "path", "any": ["/usr/share/icons/Papirus-Dark/index.theme", "~/.local/share/icons/Papirus-Dark/index.theme"]},
       "packages": {"gentoo": "x11-themes/papirus-icon-theme", "arch": "papirus-icon-theme", "fedora": "papirus-icon-theme", "opensuse": "papirus-icon-theme", "debian": "papirus-icon-theme"}
     },
     "hyprsunset": {
       "label": "hyprsunset",
+      "referenceVersion": "0.4.0",
       "why": "Luz nocturna que no tiñe las capturas (sin él se usa un shader)",
       "check": {"type": "cmd", "any": ["hyprsunset"]},
       "packages": {"gentoo": "hyproverlay:gui-apps/hyprsunset", "arch": "hyprsunset", "fedora": "copr:solopasha/hyprland:hyprsunset", "opensuse": "hyprsunset", "debian": null}
@@ -343,48 +387,56 @@
     },
     "mpvpaper": {
       "label": "mpvpaper",
+      "referenceVersion": "1.8",
       "why": "Fondos de vídeo en default (end-4) y Breeze (Kde plasma), como switchwall.sh de end-4; sin él se queda el primer fotograma",
       "check": {"type": "cmd", "any": ["mpvpaper"]},
       "packages": {"gentoo": "guru:gui-apps/mpvpaper", "arch": "aur:mpvpaper", "fedora": null, "opensuse": null, "debian": null}
     },
     "ffmpeg": {
       "label": "FFmpeg",
+      "referenceVersion": "8.1.3",
       "why": "Primer fotograma y miniaturas de los fondos de vídeo; miniaturas del selector de fondos rofi",
       "check": {"type": "cmd", "any": ["ffmpeg"]},
       "packages": {"gentoo": "media-video/ffmpeg", "arch": "ffmpeg", "fedora": "ffmpeg-free", "opensuse": "ffmpeg", "debian": "ffmpeg"}
     },
     "swaync": {
       "label": "SwayNotificationCenter",
+      "referenceVersion": "0.12.6",
       "why": "Centro de notificaciones fuera de Retro",
       "check": {"type": "cmd", "any": ["swaync"]},
       "packages": {"gentoo": "guru:gui-apps/swaync", "arch": "swaync", "fedora": "SwayNotificationCenter", "opensuse": "SwayNotificationCenter", "debian": "sway-notification-center"}
     },
     "blueman": {
       "label": "blueman",
+      "referenceVersion": "2.4.6",
       "why": "Botón «Configurar» del applet Bluetooth",
       "check": {"type": "cmd", "any": ["blueman-manager"]},
       "packages": {"gentoo": "net-wireless/blueman", "arch": "blueman", "fedora": "blueman", "opensuse": "blueman", "debian": "blueman"}
     },
     "nm-connection-editor": {
       "label": "nm-connection-editor",
+      "referenceVersion": "1.36.0",
       "why": "Botón «Configurar» del applet de red",
       "check": {"type": "cmd", "any": ["nm-connection-editor"]},
       "packages": {"gentoo": "gnome-extra/nm-applet", "arch": "nm-connection-editor", "fedora": "nm-connection-editor", "opensuse": "NetworkManager-connection-editor", "debian": "network-manager-gnome"}
     },
     "xdg-desktop-portal-hyprland": {
       "label": "xdg-desktop-portal-hyprland",
+      "referenceVersion": "1.4.1",
       "why": "Compartir pantalla y capturas desde apps",
       "check": {"type": "cmd", "any": ["/usr/libexec/xdg-desktop-portal-hyprland", "/usr/lib/xdg-desktop-portal-hyprland", "/usr/lib64/xdg-desktop-portal-hyprland"]},
       "packages": {"gentoo": "hyproverlay:gui-libs/xdg-desktop-portal-hyprland", "arch": "xdg-desktop-portal-hyprland", "fedora": "xdg-desktop-portal-hyprland", "opensuse": "xdg-desktop-portal-hyprland", "debian": null}
     },
     "xdg-desktop-portal-gtk": {
       "label": "xdg-desktop-portal-gtk",
+      "referenceVersion": "1.15.3",
       "why": "Diálogo de abrir/guardar archivos (FileChooser=gtk)",
       "check": {"type": "cmd", "any": ["/usr/libexec/xdg-desktop-portal-gtk", "/usr/lib/xdg-desktop-portal-gtk", "/usr/lib64/xdg-desktop-portal-gtk"]},
       "packages": {"gentoo": "sys-apps/xdg-desktop-portal-gtk", "arch": "xdg-desktop-portal-gtk", "fedora": "xdg-desktop-portal-gtk", "opensuse": "xdg-desktop-portal-gtk", "debian": "xdg-desktop-portal-gtk"}
     },
     "playerctl": {
       "label": "playerctl",
+      "referenceVersion": "2.4.1",
       "why": "Teclas multimedia",
       "check": {"type": "cmd", "any": ["playerctl"]},
       "versionProbes": [{"cmd": ["playerctl", "--version"], "regex": "v?([0-9][^\\s]*)"}],
@@ -392,48 +444,56 @@
     },
     "networkmanager": {
       "label": "NetworkManager",
+      "referenceVersion": "1.58.1",
       "why": "Applets y paneles de red",
       "check": {"type": "cmd", "any": ["nmcli"]},
       "packages": {"gentoo": "net-misc/networkmanager", "arch": "networkmanager", "fedora": "NetworkManager", "opensuse": "NetworkManager", "debian": "network-manager"}
     },
     "bluez": {
       "label": "BlueZ",
+      "referenceVersion": "5.87",
       "why": "Applets y paneles de Bluetooth",
       "check": {"type": "cmd", "any": ["bluetoothctl"]},
       "packages": {"gentoo": "net-wireless/bluez", "arch": "bluez-utils", "fedora": "bluez", "opensuse": "bluez", "debian": "bluez"}
     },
     "qt6ct": {
       "label": "qt6ct",
+      "referenceVersion": "0.11",
       "why": "Paleta de la skin en las apps Qt",
       "check": {"type": "cmd", "any": ["qt6ct"]},
       "packages": {"gentoo": "gui-apps/qt6ct", "arch": "qt6ct", "fedora": "qt6ct", "opensuse": "qt6ct", "debian": "qt6ct"}
     },
     "socat": {
       "label": "socat",
+      "referenceVersion": "1.8.1.3",
       "why": "Salvapantallas de terminal (eventos de Hyprland)",
       "check": {"type": "cmd", "any": ["socat"]},
       "packages": {"gentoo": "net-misc/socat", "arch": "socat", "fedora": "socat", "opensuse": "socat", "debian": "socat"}
     },
     "git": {
       "label": "git",
+      "referenceVersion": "2.55.0",
       "why": "Instalar temas y plugins de la comunidad y actualizar BWM",
       "check": {"type": "cmd", "any": ["git"]},
       "packages": {"gentoo": "dev-vcs/git", "arch": "git", "fedora": "git", "opensuse": "git", "debian": "git"}
     },
     "nautilus": {
       "label": "Nautilus",
+      "referenceVersion": "49.6",
       "why": "Gestor de archivos tematizado (Super+E)",
       "check": {"type": "cmd", "any": ["nautilus"]},
       "packages": {"gentoo": "gnome-base/nautilus", "arch": "nautilus", "fedora": "nautilus", "opensuse": "nautilus", "debian": "nautilus"}
     },
     "firefox": {
       "label": "Firefox",
+      "referenceVersion": "158.0.1",
       "why": "Navegador tematizado (userChrome + Pywalfox)",
       "check": {"type": "cmd", "any": ["firefox", "firefox-bin"]},
       "packages": {"gentoo": "www-client/firefox-bin", "arch": "firefox", "fedora": "firefox", "opensuse": "MozillaFirefox", "debian": "firefox-esr"}
     },
     "flatpak": {
       "label": "Flatpak",
+      "referenceVersion": "1.18.1",
       "why": "Vesktop, Spotify, Stremio… tematizados con overrides",
       "check": {"type": "cmd", "any": ["flatpak"]},
       "packages": {"gentoo": "sys-apps/flatpak", "arch": "flatpak", "fedora": "flatpak", "opensuse": "flatpak", "debian": "flatpak"}

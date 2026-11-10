@@ -78,3 +78,8 @@ y el hueco); al volver a una de mosaico, se rehace el mosaico. Hyprland recibe l
 
 Más contexto (qué se conserva entre skins, compatibilidad con temas, estructura modular):
 `docs/SKINS.md`.
+
+BWM incluye sólo estas tres skins. Las adicionales se publican por separado en
+[`bwm-skins`](https://github.com/saselandia/bwm-skins) y aparecen en BWMenu → Añadir skins.
+El índice se genera en ese repositorio, con `build --catalog-root /ruta/bwm-skins`.
+[Guía de publicación y estado del soporte externo](../../../docs/SKIN_CATALOG.md).

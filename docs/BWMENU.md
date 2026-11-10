@@ -34,6 +34,37 @@ En la ventana gráfica se navega con ratón o Tab/Intro; Esc vuelve a Skins (all
 y Ctrl+R actualiza el diagnóstico. Las páginas son Skins, Estado, Dependencias,
 Recuperación y Ayuda. Dependencias incluye buscador y comandos para resolver fallos.
 
+Las luces de las dependencias y las tarjetas de skins usan la referencia declarada
+por BWM: **verde / Correcta**, coincide o pasa su comprobación; **rojo / Falta**, ausente,
+inferior a la referencia o incompatible; **naranja / Desactualizado**, la referencia de
+BWM es anterior a la versión instalada.
+`referenceVersion` registra las versiones del entorno de BWM; `check.min` conserva el
+mínimo compatible para instalar/activar una skin. La fecha y la base de BWM del registro
+están en `referenceEnvironment`, en `requirements.json`, y se muestran en Estado.
+No se obtienen de la última build remota ni de los últimos commits de las dependencias.
+Cuando no hay referencia de versión y sólo se comprueba presencia, pasarla da verde.
+El gris indica que el diagnóstico aún no está disponible. No son consultas de
+actualizaciones por Internet. La luz de una skin incluye el núcleo compartido y sus
+dependencias opcionales; prevalece rojo sobre naranja y verde.
+
+Las listas usan filas compactas de 34 px y las superficies del tema activo, con texto
+negro en fondos claros y blanco en oscuros. Muestran dependencia, versión instalada y referencia BWM; pulsar una fila
+abre los detalles. Los comandos de reparación se despliegan sólo cuando hay incidencias.
+Los requisitos ausentes muestran «Falta» en la columna de versión instalada.
+
+Los selectores Núcleo y de cada skin llevan también su luz de estado, con el mismo
+resumen de versiones que las tarjetas. Las tarjetas de skins tienen esquinas rectas.
+La mascota de BWM conserva la misma ventanita con antenas, pies y cuatro marcas en
+las tres skins. Retro lleva gafas y patinete sobre fondo transparente, con una estela
+que va hacia atrás para sugerir avance a la derecha; todos sus colores salen del tema.
+Breeze mantiene la cabecera gris y default usa superficies tonales Material You/end-4.
+Al pulsarla, se desplaza lateralmente y hacia arriba como una ventana y regresa a su
+sitio, además de su gesto propio. También responde a Intro/Espacio y se pausa al ocultarse.
+
+El botón **×** superior derecho cierra BWMenu; espera si se está aplicando una acción.
+Para actualizar el diagnóstico usa Ctrl+R. En Añadir skins, **Actualizar** o Ctrl+R
+consulta el catálogo remoto.
+
 En la consola usa ↑/↓ y Intro; Esc vuelve (en Inicio sale), R actualiza y Q sale.
 También sigue la paleta activa cuando la terminal admite color verdadero.
 
@@ -51,6 +82,12 @@ El menú incluye:
 - **Skins:** manifiestos instalados, requisitos y botón para aplicar cada una. «Lista»
   significa que cumple los requisitos obligatorios, incluido el núcleo. La acción
   vuelve a comprobarlos con `bwm skin ID` antes de aplicar; usa el gestor de BWM.
+- **Añadir skins:** catálogo oficial desde GitHub con GitLab de respaldo, búsqueda,
+  capturas y estado de instalación. «Actualizar» consulta nuevas publicaciones; sin conexión usa
+  el catálogo guardado o el incluido. «Cómo publicar» abre la [guía del catálogo](SKIN_CATALOG.md).
+  Las nuevas skins se publican por separado en `saselandia/bwm-skins`, sin incluirlas en
+  builds de BWM; «Ver instalación» abre sus instrucciones. El instalador automático y
+  la carga completa de módulos externos siguen pendientes. No se ejecuta código remoto ni se cambia de skin al consultar el catálogo.
 - **Recuperación:** reinicio de mantenimiento de la barra y paneles de la skin actual
   (`set ID --restart-shell`), recarga de Hyprland, errores de configuración y últimas
   100 líneas del registro de Quickshell. No cierra sesión ni instala paquetes.

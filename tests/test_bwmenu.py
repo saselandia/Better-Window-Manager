@@ -26,6 +26,54 @@ keybinds = module("keybinds", "keybinds-manager.py")
 
 
 class VersionsTest(unittest.TestCase):
+    def test_reference_is_separate_from_minimum_compatibility(self):
+        spec = {"referenceVersion": "0.56.2", "check": {"type": "version", "min": "0.55.0", "cmd": ["tool", "--version"], "regex": r"tool ([0-9.]+)"}}
+        with patch.object(requirements, "which", return_value="/bin/tool"), \
+                patch.object(requirements, "run", return_value="tool 0.55.0"):
+            status, detail = requirements.check_requirement(spec, {})
+        self.assertEqual(status, "ok")
+        old = bwm_versions.requirement_versions(spec, "gentoo", detail, status)
+        current = bwm_versions.requirement_versions(spec, "gentoo", "0.56.2", "ok")
+        newer = bwm_versions.requirement_versions(spec, "gentoo", "0.57.0", "ok")
+        self.assertEqual(old["minimumVersion"], "0.55.0")
+        self.assertEqual(old["referenceVersion"], "0.56.2")
+        self.assertEqual(old["versionState"], "error")
+        self.assertEqual(current["versionState"], "ok")
+        self.assertEqual(newer["versionState"], "newer")
+
+    def test_package_name_digits_are_not_used_as_the_installed_version(self):
+        spec = {"referenceVersion": "0.11", "check": {"type": "cmd"}}
+        with patch.object(bwm_versions, "package_versions", return_value="qt6ct 0.11"):
+            row = bwm_versions.requirement_versions(spec, "gentoo", "", "ok")
+        self.assertEqual(row["versionState"], "ok")
+
+    def test_lights_compare_numeric_versions_against_declared_minimum(self):
+        for version, minimum, expected in (("0.55.0", "0.55", "ok"), ("2.10.0", "2.9", "newer"),
+                                          ("3.10.9", "3.11", "error"), ("v6.11.2", "6.10.0", "newer")):
+            with self.subTest(version=version, minimum=minimum):
+                self.assertEqual(bwm_versions.version_state("ok", version, minimum)[0], expected)
+
+    def test_failure_takes_priority_over_a_newer_version_and_plugins_require_exact_commit(self):
+        self.assertEqual(bwm_versions.version_state("missing", "9.0", "1.0")[0], "error")
+        self.assertEqual(bwm_versions.version_state("build", "abcdef99", "", "hyprland-plugin")[0], "error")
+        self.assertEqual(bwm_versions.version_state("ok", "abcdef99", "", "hyprland-plugin")[0], "ok")
+
+    def test_no_minimum_checks_presence_without_inventing_a_version_comparison(self):
+        state, reason = bwm_versions.version_state("ok", "tool 19.0", "")
+        self.assertEqual(state, "ok")
+        self.assertIn("sin versión mínima", reason)
+        self.assertEqual(bwm_versions.version_state("ok", "unknown", "1.0")[0], "unknown")
+
+    def test_skin_light_inherits_core_and_includes_optional_failures(self):
+        core = {"id": "python", "versionState": "newer"}
+        good = {"id": "skin", "versionState": "ok"}
+        missing_optional = {"id": "optional", "versionState": "error"}
+        self.assertEqual(bwm_versions.version_health([core, good])["state"], "newer")
+        health = bwm_versions.version_health([core, good, core, missing_optional])
+        self.assertEqual(health["state"], "error")
+        self.assertEqual(health["counts"], {"ok": 1, "newer": 1, "error": 1, "unknown": 0})
+        self.assertEqual(bwm_versions.version_health([])["state"], "unknown")
+
     def test_gentoo_multiple_slots_do_not_include_similarly_named_packages(self):
         with tempfile.TemporaryDirectory() as root:
             for name in ("python-3.13.1", "python-3.14.7", "python-exec-2.4.10"):

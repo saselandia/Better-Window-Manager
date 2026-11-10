@@ -70,6 +70,12 @@ class AppearanceTest(unittest.TestCase):
         self.assertEqual(appearance.color("rgba(81a1c1ff) rgba(ffffff00) 45deg", "#000000"), "#81a1c1")
         self.assertEqual(appearance.color("malicious\x1b[2J", "#000000"), "#000000")
 
+    def test_malformed_optional_profile_fields_do_not_break_rescue_appearance(self):
+        self.write(self.config, "illogical-impulse/config.json", {"appearance": [], "background": ["invalid"]})
+        data = appearance.appearance(self.config, self.state)
+        self.assertIsInstance(data["font"], str)
+        self.assertEqual(data["skin"], "default")
+
     def test_palette_file_replacement_updates_the_same_watcher(self):
         self.activate("default")
         path = self.write(self.state, "quickshell/user/generated/colors.json", {"primary": "#81a1c1"})

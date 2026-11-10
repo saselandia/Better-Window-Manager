@@ -81,6 +81,10 @@ compatibilidad de dependencias, aplicación de skins y recuperación de barra y 
 Conserva una consola de rescate sin Quickshell. Si cae toda la sesión gráfica, entra con Ctrl+Alt+F3 y ejecuta
 `bwm menu --tui`. [Guía de BWMenu](docs/BWMENU.md).
 
+**Añadir skins** abre el catálogo independiente [bwm-skins](https://github.com/saselandia/bwm-skins).
+BWM incluye sólo las tres skins anteriores; las adicionales tendrán versiones propias.
+[Guía de publicación y soporte actual](docs/SKIN_CATALOG.md).
+
 ## Configuración de Retro
 
 `Super + I` abre Configuración dentro del propio menú de Omarchy. Busca una opción escribiendo,

@@ -64,6 +64,69 @@ compilarlos o usar sus repositorios de terceros.
 | Flatpak | Vesktop, Spotify, Stremio… tematizados con overrides | `sys-apps/flatpak` | `flatpak` | `flatpak` | `flatpak` | `flatpak` |
 | FFmpeg | Primer fotograma y miniaturas de los fondos de vídeo; miniaturas del selector de fondos rofi | `media-video/ffmpeg` | `ffmpeg` | `ffmpeg-free` | `ffmpeg` | `ffmpeg` |
 
+## Referencias de versiones de BWMenu
+
+Registro local: **2026-11-10**. Base de BWM: `f0b1ce757189`.
+
+Son las versiones registradas en el entorno local de BWM, no las últimas publicadas por cada proyecto. Se usan para los semáforos; los mínimos compatibles siguen controlando la instalación y la activación de skins.
+
+| Dependencia | Referencia BWM | Mínimo compatible |
+| :--- | :--- | :--- |
+| Omacalc (calculadora de Omarchy) | 1 | 1 |
+| Colores end-4 (OpenCV, NumPy, Pillow, materialyoucolor) | 1 | 1 |
+| Colores Qt de end-4 (kde-material-you-colors) | 1 | 1 |
+| Plugin de plataforma de KDE para Qt | 6.7.5 | — |
+| Plugin GTK de Qt (gtk3) | 6.11.2 | — |
+| Plugin WebP de Qt (qtimageformats) | 6.11.2 | — |
+| Darkly (estilo de widgets Qt) | 0.5.43 | — |
+| Hyprland ≥ 0.55 | 0.56.2 | 0.55.0 |
+| Quickshell | 0.3.2 | 0.2.0 |
+| Qt 6 5Compat (GraphicalEffects) | 6.11.2 | — |
+| Qt 6 Positioning | 6.11.2 | — |
+| Qt 6 SVG | 6.11.2 | — |
+| Qt ≥ 6.10 (Qt.labs.synchronizer) | 6.11.2 | — |
+| Python ≥ 3.11 | 3.14.7 | 3.11 |
+| Pillow (Python) | 12.3.0 | — |
+| jq | 1.8.2 | — |
+| swww o awww | 0.11.2 | — |
+| wl-clipboard | 2.2.1 | — |
+| cliphist | 0.7.0 | — |
+| kitty | 0.49.2 | — |
+| grim | 1.5.0 | — |
+| slurp | 1.5.0 | — |
+| SongRec | 0.7.3 | — |
+| procps-ng (pidwait) | 4.0.6 | — |
+| libnotify (notify-send) | 0.8.8 | — |
+| GLib (gsettings) | 2.88.2 | — |
+| fontconfig | 2.18.3 | — |
+| PipeWire + WirePlumber | 0.5.18 | — |
+| inotify-tools | 4.25.9.0 | — |
+| matugen | 4.2.0 | — |
+| rofi (con Wayland) | 1.7.8 | — |
+| hyprpolkitagent | 0.2.0 | — |
+| Iconos Breeze | 6.29.0 | — |
+| ImageMagick 7 (magick) | 7.1.2.32 | — |
+| btop | 1.4.7 | — |
+| fastfetch | 2.65.2 | — |
+| Papirus | 20250501 | — |
+| hyprsunset | 0.4.0 | — |
+| mpvpaper | 1.8 | — |
+| FFmpeg | 8.1.3 | — |
+| SwayNotificationCenter | 0.12.6 | — |
+| blueman | 2.4.6 | — |
+| nm-connection-editor | 1.36.0 | — |
+| xdg-desktop-portal-hyprland | 1.4.1 | — |
+| xdg-desktop-portal-gtk | 1.15.3 | — |
+| playerctl | 2.4.1 | — |
+| NetworkManager | 1.58.1 | — |
+| BlueZ | 5.87 | — |
+| qt6ct | 0.11 | — |
+| socat | 1.8.1.3 | — |
+| git | 2.55.0 | — |
+| Nautilus | 49.6 | — |
+| Firefox | 158.0.1 | — |
+| Flatpak | 1.18.1 | — |
+
 ## Skin default (end-4)
 
 Imita **end-4 / illogical-impulse (Material You)**. Material Design 3: barra, panel lateral, vista general y Alt+Tab de illogical-impulse. Todo el escritorio y las apps toman los colores del fondo de pantalla.
