@@ -587,7 +587,8 @@
       "label": "Kvantum (estilo de widgets Qt)",
       "why": "Muchos temas globales de la KDE Store (Sweet, Layan…) piden el estilo de aplicaciones Kvantum; sin él las apps Qt vuelven a Breeze/Fusion",
       "check": {"type": "qtplugin", "path": "styles/libkvantum.so"},
-      "packages": {"gentoo": "x11-themes/kvantum", "arch": "kvantum", "fedora": "kvantum", "opensuse": null, "debian": null}
+      "packages": {"gentoo": "x11-themes/kvantum", "arch": "kvantum", "fedora": "kvantum", "opensuse": null, "debian": null},
+      "notes": {"gentoo": "Sólo en ~amd64: echo 'x11-themes/kvantum ~amd64' | sudo tee /etc/portage/package.accept_keywords/kvantum"}
     }
   }
 }
