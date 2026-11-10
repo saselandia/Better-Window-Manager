@@ -1,0 +1,43 @@
+#!/bin/bash
+# Adapted from Omarchy (basecamp/omarchy quattro ec62d379, MIT), bin/omarchy-branding-about.
+# BWM: the default logo is the repo's (hypr/omarchy/about/icon.txt), so ~/.config/omarchy/branding/about.txt
+# only exists once customised and "reset" removes it; "text" opens it in the terminal editor
+# ($VISUAL, $EDITOR, nvim or nano, like bwm-user-config) and shows About again when the editor closes.
+
+# omarchy:summary=Edit, set, or reset About branding
+# omarchy:group=branding
+# omarchy:name=about
+# omarchy:args=<image|text|reset>
+# omarchy:examples=omarchy branding about image | omarchy branding about text | omarchy branding about reset
+
+set -euo pipefail
+
+default_logo="$HOME/.config/hypr/omarchy/about/icon.txt"
+branding="$HOME/.config/omarchy/branding/about.txt"
+terminal="$HOME/.config/hypr/scripts/bwm-terminal"
+
+case "${1:-}" in
+image)
+  image=$(omarchy-file-select --title "$(omarchy-i18n branding.pickAboutImage)" --extensions "png svg")
+  mkdir -p "${branding%/*}"
+  if omarchy-transcode-ascii "$image" "$branding" --width 54 --height 26; then
+    omarchy-launch-about >/dev/null 2>&1
+  fi
+  ;;
+text)
+  mkdir -p "${branding%/*}"
+  [[ -f $branding ]] || cp "$default_logo" "$branding"
+  editor=${VISUAL:-${EDITOR:-}}
+  [[ -n $editor ]] || editor=$(command -v nvim || command -v nano || true)
+  [[ -n $editor ]] || { echo "omarchy-branding-about: no terminal editor found (set \$EDITOR)" >&2; exit 1; }
+  exec "$terminal" --class org.omarchy.terminal -- bash -c 'eval "$1" "$2"; omarchy-launch-about >/dev/null 2>&1' _ "$editor" "$branding"
+  ;;
+reset)
+  rm -f "$branding"
+  omarchy-launch-about >/dev/null 2>&1
+  ;;
+*)
+  echo "Usage: omarchy-branding-about <image|text|reset>" >&2
+  exit 1
+  ;;
+esac

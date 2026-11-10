@@ -22,16 +22,22 @@ hl.config({
     },
 })
 
--- Fondo «vidrio» de la barra de Omarchy (doble clic en su centro, o `omarchy-bar background glassy`):
--- omarchy-bar deja su interruptor en ~/.local/state/omarchy/toggles/hypr/bar-glassy.lua, como en
--- Omarchy, y recarga Hyprland; aquí se lee (Omarchy lee esa carpeta entera, BWM sólo este archivo)
+-- Interruptores de Hyprland de Omarchy (omarchy-hyprland-toggle): cada uno es un archivo en
+-- ~/.local/state/omarchy/toggles/hypr/ que se copia de Commons/omarchy/default/hypr/toggles/ y recarga
+-- Hyprland. Omarchy lee esa carpeta entera; aquí sólo los que BWM admite (los demás, como window-glassy,
+-- necesitan piezas de Omarchy que BWM no tiene):
+--   bar-glassy    fondo «vidrio» de la barra (doble clic en su centro, o `omarchy-bar background glassy`)
+--   no-animations sin animaciones, desenfoque ni sombras (menú → Estilo → Animaciones)
+-- Va después de animations.lua, así que gana.
 local state_home = os.getenv("XDG_STATE_HOME") or ((os.getenv("HOME") or "") .. "/.local/state")
-local bar_glassy = state_home .. "/omarchy/toggles/hypr/bar-glassy.lua"
-local glassy_file = io.open(bar_glassy, "r")
-if glassy_file then
-    glassy_file:close()
-    local ok, err = pcall(dofile, bar_glassy)
-    if not ok then
-        print("BWM: bar-glassy.lua: " .. tostring(err))
+for _, name in ipairs({ "bar-glassy", "no-animations" }) do
+    local toggle = state_home .. "/omarchy/toggles/hypr/" .. name .. ".lua"
+    local file = io.open(toggle, "r")
+    if file then
+        file:close()
+        local ok, err = pcall(dofile, toggle)
+        if not ok then
+            print("BWM: " .. name .. ".lua: " .. tostring(err))
+        end
     end
 end

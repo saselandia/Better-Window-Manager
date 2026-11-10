@@ -178,9 +178,10 @@ recupera los workspaces de un monitor al reconectarlo.
   `quattro` `18ac93c`; lo que no está son las reglas de su modo vidrio, que BWM tiene propio.
 * **Menú**: Apariencia como menú principal con las opciones de Estilo, Barra con Ocultar/Mostrar,
   transparencia de apps opcional (#14253), Setup > Teclado (#17270). Comparado (§3.116): añadidos Hibernar,
-  Dock (ocultar/posición), Intros de fondo y Neovim. Quedan Barra (ocultar, posición, fondo, formato del
-  reloj), Animaciones sí/no, Branding, Setup > Teclado/Entrada/Idioma/Seguridad, Transcodificar, Compartir y
-  Hardware.
+  Dock (ocultar/posición), Intros de fondo y Neovim. **Hechos después** (§3.128): Barra (ocultar, posición,
+  fondo, formato del reloj), Animaciones sí/no, Marca (Acerca de y salvapantallas), Idioma y Entrada.
+  Quedan Ventanas > Esquinas y Huecos, Setup > Teclado (distribuciones) y Seguridad (no aplican: pacman, PAM y
+  sudo), Transcodificar, Compartir y Hardware.
 * Avisos con botones: **hecho** (§3.116) en grabaciones (Abrir y, si está Omacut, Cortar) y batería baja como
   tarjeta normal. yt-dlp es la extensión de Chromium de Omarchy: no aplica.
 * Instaladores de Arch (Notion, Slack, Microsoft, Amp, Herdr, dictado Hex/Voxtype/Superwhisper): no aplican

@@ -17,6 +17,8 @@ export LC_CTYPE="${LC_CTYPE:-C.UTF-8}"
 # blocks, so poll for size changes and re-render fastfetch whenever it is resized.
 
 LOGO_FILE="$BWM_ABOUT_DIR/icon.txt"
+# Logo del usuario (omarchy-branding-about, como en Omarchy): sólo existe si lo ha personalizado
+[[ -f $HOME/.config/omarchy/branding/about.txt ]] && LOGO_FILE="$HOME/.config/omarchy/branding/about.txt"
 FIT_FILE="$HOME/.local/state/bwm/omarchy/about.fit"
 OMARCHY_FASTFETCH_DIR="$BWM_ABOUT_DIR"
 # Without a runtime directory, use the dedicated repo configuration directly.

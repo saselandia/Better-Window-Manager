@@ -1,0 +1,45 @@
+#!/bin/bash
+# Adapted from Omarchy (basecamp/omarchy quattro ec62d379, MIT), bin/omarchy-branding-screensaver.
+# BWM: the default logo is BWM's (skins/retro/screensaver.txt), so ~/.config/omarchy/branding/screensaver.txt
+# only exists once customised and "reset" removes it (skins/retro/scripts/launch-screensaver.sh then goes
+# back to BWM's own); "text" opens it in the terminal editor ($VISUAL, $EDITOR, nvim or nano) and runs
+# the screensaver when the editor closes. Only the native Omarchy screensaver reads the file.
+
+# omarchy:summary=Edit, set, or reset screensaver branding
+# omarchy:group=branding
+# omarchy:name=screensaver
+# omarchy:args=<image|text|reset>
+# omarchy:examples=omarchy branding screensaver image | omarchy branding screensaver text | omarchy branding screensaver reset
+
+set -euo pipefail
+
+default_logo="$HOME/.config/hypr/skins/retro/screensaver.txt"
+branding="$HOME/.config/omarchy/branding/screensaver.txt"
+terminal="$HOME/.config/hypr/scripts/bwm-terminal"
+launcher="$HOME/.config/hypr/skins/retro/scripts/launch-screensaver.sh"
+
+case "${1:-}" in
+image)
+  image=$(omarchy-file-select --title "$(omarchy-i18n branding.pickScreensaverImage)" --extensions "png svg")
+  mkdir -p "${branding%/*}"
+  if omarchy-transcode-ascii "$image" "$branding"; then
+    "$launcher" force >/dev/null 2>&1
+  fi
+  ;;
+text)
+  mkdir -p "${branding%/*}"
+  [[ -f $branding ]] || cp "$default_logo" "$branding"
+  editor=${VISUAL:-${EDITOR:-}}
+  [[ -n $editor ]] || editor=$(command -v nvim || command -v nano || true)
+  [[ -n $editor ]] || { echo "omarchy-branding-screensaver: no terminal editor found (set \$EDITOR)" >&2; exit 1; }
+  exec "$terminal" --class org.omarchy.terminal -- bash -c 'eval "$1" "$2"; "$3" force >/dev/null 2>&1' _ "$editor" "$branding" "$launcher"
+  ;;
+reset)
+  rm -f "$branding"
+  "$launcher" force >/dev/null 2>&1
+  ;;
+*)
+  echo "Usage: omarchy-branding-screensaver <image|text|reset>" >&2
+  exit 1
+  ;;
+esac

@@ -571,7 +571,7 @@ class RetroUiTests(unittest.TestCase):
         self.assertFalse(self.state()['opened'])
 
     def test_launcher_menus_have_no_navigation_footer(self):
-        self.native('appearance', 'appearance.bar')
+        self.native('appearance', 'appearance.top-bar')
         texts = json.loads(self.call('visibleTexts', 'menu'))
         self.assertFalse(any('esc atrás' in t or '↑↓ ↵' in t for t in texts))
         self.call('openMode', 'grid')
@@ -642,12 +642,12 @@ class RetroUiTests(unittest.TestCase):
         self.assertEqual(self.native_state()['menu'], 'setup.settings.system.general')
 
     def test_native_link_returns_to_original_entry(self):
-        self.native('appearance', 'appearance.bar')
+        self.native('appearance.top-bar', 'appearance.top-bar.settings')
         self.key('Return')
         self.assertEqual(self.native_state()['menu'], 'setup.settings.look.bar')
         self.key('Escape')
-        self.assertEqual(self.native_state()['menu'], 'appearance')
-        self.assertEqual(self.native_state()['selected'], 'appearance.bar')
+        self.assertEqual(self.native_state()['menu'], 'appearance.top-bar')
+        self.assertEqual(self.native_state()['selected'], 'appearance.top-bar.settings')
 
     def test_native_number_validates_before_commit(self):
         route = 'setup.settings.system.general.battery'

@@ -1,0 +1,70 @@
+#!/bin/bash
+# Adapted from Omarchy (basecamp/omarchy quattro ec62d379, MIT), bin/omarchy-language.
+# BWM: only the language of Omarchy's panels and menu (~/.config/omarchy/language, which
+# Commons/I18n.qml watches; Settings → Barra writes the same file). The session's locale
+# (/etc/locale.gen, localectl) belongs to the system and BWM leaves it alone, so there is no
+# sudo here, and only the languages BWM carries a translation of (default/i18n/<code>/) are listed.
+
+# omarchy:summary=Show or set the language of Omarchy's panels and menu
+# omarchy:args=[<code>|list]
+# omarchy:examples=omarchy language | omarchy language es-MX | omarchy language list
+
+set -euo pipefail
+
+i18n_dir=${OMARCHY_I18N_DIR:-${OMARCHY_PATH:-$HOME/.config/hypr/omarchy}/default/i18n}
+locales_json=${OMARCHY_LOCALES_JSON:-$i18n_dir/locales.json}
+language_file=${OMARCHY_LANGUAGE_FILE:-${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/language}
+
+# Codes that have a translation folder here and a row in locales.json.
+available_languages() {
+  local dir code
+  for dir in "$i18n_dir"/*/; do
+    code=$(basename "$dir")
+    jq -e --arg code "$code" 'has($code)' "$locales_json" >/dev/null 2>&1 && printf '%s\n' "$code"
+  done
+}
+
+known_language() {
+  available_languages | grep -qxF -- "$1"
+}
+
+current_language() {
+  local code=""
+  [[ -f $language_file ]] && code=$(head -n 1 "$language_file" | tr -d '[:space:]')
+  if [[ -n $code ]] && known_language "$code"; then
+    echo "$code"
+  else
+    echo "en"
+  fi
+}
+
+list_languages() {
+  # One tab-delimited row per language: native name, code, English name. English first,
+  # the rest sorted by English name, as in Omarchy.
+  local codes
+  codes=$(available_languages | jq -R . | jq -s .)
+  jq -r --argjson codes "$codes" '
+    to_entries
+    | map(select(.key as $k | $codes | index($k)))
+    | map({code: .key, name: .value.name, englishName: .value.englishName})
+    | sort_by(if .code == "en" then "" else .englishName end)
+    | .[]
+    | [.name, .code, .englishName] | @tsv
+  ' "$locales_json"
+}
+
+case "${1:-}" in
+"") current_language ;;
+list) list_languages ;;
+-h | --help)
+  echo "Usage: omarchy-language [<code>|list]" >&2
+  ;;
+*)
+  known_language "$1" || {
+    echo "omarchy-language: no translation of Omarchy's panels for '$1' (see: omarchy-language list)" >&2
+    exit 1
+  }
+  mkdir -p "$(dirname "$language_file")"
+  printf '%s\n' "$1" >"$language_file"
+  ;;
+esac

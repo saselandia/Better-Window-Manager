@@ -93,7 +93,9 @@ además los plugins preinstalados de BWM; el widget de workspaces usa la numerac
 botón del menú se declara sólo como widget de barra. También de `18ac93c`, sin cambios: `omarchy-bar`,
 `omarchy-shell-config`, `omarchy-plugin-*`, `omarchy-restart-hyprctl`, `omarchy-git-url-check`,
 `omarchy-hyprland-monitor-{layout,resolution,rotate,scaling,laptop}`, `omarchy-monitor-state` y
-`omarchy-hyprland-toggle-enabled` en `hypr/scripts/omarchy-shims`; propios de BWM con su interfaz:
+`omarchy-hyprland-toggle-enabled`, `omarchy-toggle{,-enabled,-bar,-animations}`, `omarchy-hyprland-toggle`,
+`omarchy-hyprland-animations-off`, `omarchy-transcode-ascii` y `omarchy-file-select` (quattro `ec62d379`) en
+`hypr/scripts/omarchy-shims`, adaptados `omarchy-language` y `omarchy-branding-{about,screensaver}`; propios de BWM con su interfaz:
 `omarchy-hyprland-monitor-persist` (guarda con `monitor-manager.py`) y `omarchy-sudo-passwordless`
 (nunca activo). `Commons/omarchy/default/hypr/toggles/bar-glassy.lua` procede de
 `default/hypr/toggles/bar-glassy.lua` sin la llamada a su modo vidrio.

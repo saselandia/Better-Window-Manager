@@ -47,6 +47,9 @@ TEMPLATES = {
 -- Una opción cualquiera, sobrescribe la de BWM:
 -- hl.config({ general = { gaps_in = 6, gaps_out = 12 } })
 
+-- Teclado y ratón (distribución, repetición, sensibilidad); menú → Ajustes → Entrada abre este archivo:
+-- hl.config({ input = { kb_layout = "us,es", kb_options = "grp:alt_shift_toggle", repeat_rate = 40, repeat_delay = 300 } })
+
 -- Una regla de ventana (flotante y centrada):
 -- hl.window_rule({ name = "mi-calculadora", match = { class = "^(org\\\\.gnome\\\\.Calculator)$" }, float = true, center = true })
 
