@@ -50,6 +50,9 @@
     "expressive": "Space Grotesk",
     "iconNerd": "JetBrains Mono NF"
   },
+  "hooks": {
+    "settingsChanged": "scripts/kde-config-bridge.py"
+  },
   "parts": {
     "quickshell": [
       "config/quickshell/ii/modules/plasma/theme",
@@ -72,6 +75,7 @@
       "config/hypr/plugins/hyprbars-plasma.so",
       "config/hypr/skins/plasma/hypr/animations.lua",
       "config/hypr/skins/plasma/hypr/misc.lua",
+      "config/hypr/skins/plasma/hypr/kwin.lua",
       "config/hypr/skins/plasma/hypr/placement.lua"
     ],
     "colors": [
@@ -79,6 +83,7 @@
     ],
     "scripts": [
       "config/hypr/skins/plasma/scripts/plasma-theme.py",
+      "config/hypr/skins/plasma/scripts/kde-config-bridge.py",
       "config/hypr/skins/plasma/scripts/plasma_palette.py",
       "config/hypr/scripts/quick-tile.py",
       "config/hypr/scripts/toggle-minimize.py",

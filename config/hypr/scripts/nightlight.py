@@ -68,6 +68,8 @@ def save_state(state):
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(state, f, indent=2)
         os.replace(tmp, STATE_PATH)
+        import bwm_settings_hooks
+        bwm_settings_hooks.changed()
     except OSError as e:
         print(f"Error saving nightlight state: {e}", file=sys.stderr)
 

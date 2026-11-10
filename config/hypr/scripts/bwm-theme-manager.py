@@ -222,6 +222,8 @@ def apply_user_options():
         json.dump(data, f, indent=2, ensure_ascii=False)
         tmp = Path(f.name)
     os.replace(tmp, target)
+    import bwm_settings_hooks
+    bwm_settings_hooks.changed()
 
 
 def installed_font_families():
@@ -822,6 +824,13 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         focus = bwm_windows.snapshot_focus()
         original_clients = bwm_windows.hypr_json("clients")  # antes de que las reglas cambien floating/geometría
 
+        # El puente se detiene y retira sus exportaciones antes de guardar kdeglobals y de
+        # que otra skin escriba el suyo. Sólo restaura claves que siguen teniendo su valor.
+        kde_bridge = [sys.executable, str(PLASMA_SCRIPTS / "kde-config-bridge.py")]
+        if curr_theme == "plasma" and not cfg.get("is_plasma"):
+            subprocess.run(kde_bridge + ["import", "--no-reload"], check=True)
+            subprocess.run(kde_bridge + ["leave"], check=True)
+
         # 1. Guardar la configuración del tema actual antes de cambiar
         save_current_theme_config(curr_theme)
 
@@ -848,6 +857,8 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         # 3. Actualizar configuraciones de Hyprland y btop
         update_hypr_theme_lua(theme_name, cfg)
         update_btop_conf(theme_name, cfg)
+        if cfg.get("is_plasma"):
+            subprocess.run(kde_bridge + ["enter"], check=True)
 
         # 4. Aplicar Wallpaper Persistente y Esquema de Colores
         wp = get_theme_wallpaper(theme_name)
@@ -896,14 +907,8 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
             for action in ("vesktop-enable",):
                 subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_omarchy.py"), action],
                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-            # Firefox: la forma de Retro (fuente mono, esquinas rectas) sólo se carga al arrancar.
-            # Al entrar o salir de Retro se reinicia una vez, cuando el cambio de skin ya ha terminado.
-            if (theme_name == "retro") != (curr_theme == "retro"):
-                env = os.environ.copy()
-                env.pop("BWM_SKIN_SWITCH", None)
-                subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_omarchy.py"),
-                                  "restart-firefox", "--after-switch"], env=env,
-                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            # Las apps que sólo cargan el aspecto al arrancar lo tomarán al abrirse de nuevo.
+            # Regla 16: tampoco programar reinicios para después de la transición.
 
         # 5. Recargar Hyprland primero para aplicar las reglas del nuevo tema
         try:
@@ -956,6 +961,9 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
             # Hijo de Hyprland (sin BWM_SKIN_SWITCH): si fuera hijo de quien llamó al gestor
             # (terminal, app de Claude…), moriría con él.
             bwm_session.start_shell()
+
+        if cfg.get("is_plasma"):
+            subprocess.run(kde_bridge + ["start"], check=False)
 
         # Una sola restauración, después de la geometría; los hooks no reinician apps ni restauran focos antiguos.
         bwm_windows.restore_focus(focus)

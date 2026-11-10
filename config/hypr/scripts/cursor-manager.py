@@ -532,6 +532,10 @@ Gtk/CursorThemeSize {size}
         except Exception:
             pass
 
+    # Sincronizar con el escritorio de la skin activa (antes de la única recarga de este gestor).
+    import bwm_settings_hooks
+    bwm_settings_hooks.changed()
+
     # 8. Reload Hyprland and apply live cursor
     try:
         subprocess.run(["hyprctl", "reload"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

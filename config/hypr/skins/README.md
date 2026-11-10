@@ -55,6 +55,7 @@ y el hueco); al volver a una de mosaico, se rehace el mosaico. Hyprland recibe l
 | `look` | Fondo por defecto (de `~/Pictures/Wallpapers`), redondeo, borde, huecos del mosaico, btop |
 | `bar` | Alto, posición (`bottom`), esquinas y workspaces de la barra |
 | `fonts` | Fuentes de la skin (las de cada tema de Retro mandan sobre éstas) |
+| `hooks.settingsChanged` | Script relativo a la carpeta de la skin que recibe `export --no-reload` cuando un gestor común guarda un ajuste; no debe escribir la configuración del usuario |
 | `parts` | **Mapa de archivos** de la skin: QML, Hyprland, colores y scripts (rutas desde la raíz del repo; un test comprueba que existen) |
 | `requires`, `recommends`, `catalog` | Requisitos (ids del catálogo de `requirements.json`, o propios en `catalog`) |
 

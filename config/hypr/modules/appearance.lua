@@ -295,37 +295,7 @@ if hl.plugin and hl.plugin.breezebars then
             }
         })
 
-        -- Botones con la decoración Breeze real (iconos vectoriales "breeze:*"):
-        -- bg_color = círculo al pasar el ratón, fg_color = color del icono.
-        -- La barra solo aparece en ventanas que piden decoración al compositor;
-        -- las que traen sus propios botones (CSD) se detectan solas
-        -- (comprobar con: hyprctl hyprbars-csd).
-        if hl.plugin.breezebars.add_button then
-            -- Extremo derecho: Cerrar (círculo rojo Breeze #da4453 al pasar el ratón)
-            hl.plugin.breezebars.add_button({
-                bg_color = "0xffda4453",
-                fg_color = "0xfffcfcfc",
-                size = 20,
-                icon = "breeze:close",
-                action = "hyprctl dispatch \"hl.dsp.window.close()\""
-            })
-            -- Centro: Maximizar / Restaurar
-            hl.plugin.breezebars.add_button({
-                bg_color = "0xfffcfcfc",
-                fg_color = "0xfffcfcfc",
-                size = 20,
-                icon = "breeze:maximize",
-                action = "hyprctl dispatch \"hl.dsp.window.fullscreen({ mode = 1, action = 'toggle' })\""
-            })
-            -- Izquierda: Minimizar
-            hl.plugin.breezebars.add_button({
-                bg_color = "0xfffcfcfc",
-                fg_color = "0xfffcfcfc",
-                size = 20,
-                icon = "breeze:minimize",
-                action = "/home/sasel/.config/hypr/scripts/toggle-minimize.py min"
-            })
-        end
+        -- Botones y doble clic de kwinrc: skins/plasma/hypr/kwin.lua (puente F2).
     else
         hl.config({
             plugin = {
@@ -350,7 +320,7 @@ hl.config({
 -- (skins/<id>/hypr/placement.lua, Breeze) y modos de workspace
 -- (skins/<id>/hypr/workspace-modes.lua, Retro), consola desplegable (skins/<id>/hypr/qconsole.lua, Retro). Al final, para que lo suyo gane a lo común de arriba
 -- (p. ej. las barras de título de los workspaces flotantes de Retro).
-for _, part in ipairs({ { "lock", "Bloqueo" }, { "misc", "Opciones" }, { "placement", "Colocación de ventanas" },
+for _, part in ipairs({ { "lock", "Bloqueo" }, { "misc", "Opciones" }, { "kwin", "Configuración de KWin" }, { "placement", "Colocación de ventanas" },
                        { "workspace-modes", "Modos de workspace" }, { "qconsole", "Consola desplegable" } }) do
     local mod = "skins." .. anim_skin .. ".hypr." .. part[1]
     if package.searchpath and package.searchpath(mod, package.path) then

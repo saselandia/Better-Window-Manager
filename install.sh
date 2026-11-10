@@ -242,6 +242,11 @@ fi
 print_success "Bienvenida activada al iniciar sesión."
 
 # ==============================================================================
+# Si plasma-workspace está instalado, sus módulos de kded no deben competir con BWM.
+if [[ -f "$TARGET_CONFIG/hypr/skins/plasma/scripts/kde-config-bridge.py" ]]; then
+    python3 "$TARGET_CONFIG/hypr/skins/plasma/scripts/kde-config-bridge.py" guards
+fi
+
 # 6. Plugin breezebars de la skin Breeze (Kde plasma) (compilado para tu Hyprland)
 # ==============================================================================
 if [[ ${#SKINS[@]} -eq 0 || " ${SKINS[*]} " == *" plasma "* ]]; then

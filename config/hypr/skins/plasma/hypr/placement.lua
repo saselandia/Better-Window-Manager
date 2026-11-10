@@ -13,6 +13,7 @@
 local TITLEBAR = 30
 local EDGE_MARGIN = 10
 local GAP = 10
+local kwin = package.loaded["skins.plasma.hypr.kwin"] or {}
 
 -- Ventanas con su sitio propio (reglas de modules/rules.lua) o colocadas por otro mecanismo
 local KEEP_CLASSES = {
@@ -133,16 +134,34 @@ local function place(window)
             table.insert(others, frame(other))
         end
     end
-    if #others == 0 then
-        return
-    end
+    local policy = kwin.placement or "Smart"
+    if policy == "NoPlacement" or policy == "OnMainWindow" then return end
+    if #others == 0 and (policy == "Smart" or policy == "Default") then return end
 
     local area = work_area(monitor)
     local size = { w = window.size.x, h = window.size.y + TITLEBAR }
     if size.w > area.w or size.h > area.h then
         return
     end
-    local rect = best_position(size, area, others)
+    local rect
+    if policy == "Centered" then
+        rect = { x = area.x + (area.w - size.w) / 2, y = area.y + (area.h - size.h) / 2 }
+    elseif policy == "Random" then
+        rect = { x = area.x + math.random(0, math.floor(area.w - size.w)),
+                 y = area.y + math.random(0, math.floor(area.h - size.h)) }
+    elseif policy == "ZeroCornered" then
+        rect = { x = area.x, y = area.y }
+    elseif policy == "UnderMouse" then
+        local pos = hl.get_cursor_pos()
+        rect = { x = clamp(pos.x - size.w / 2, area.x, area.x + area.w - size.w),
+                 y = clamp(pos.y - size.h / 2, area.y, area.y + area.h - size.h) }
+    elseif policy == "Maximizing" then
+        hl.dispatch(hl.dsp.window.fullscreen({ window = window, mode = 1, action = "set" }))
+        return
+    else
+        -- Smart, Default y valores desconocidos: mínimo solapamiento.
+        rect = best_position(size, area, others)
+    end
     hl.dispatch(hl.dsp.window.move({
         x = math.floor(rect.x),
         y = math.floor(rect.y + TITLEBAR),

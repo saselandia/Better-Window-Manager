@@ -95,6 +95,7 @@ sin mezclar. Así una skin nueva o un cambio en una no rompe las demás.
 | Qué se carga en cada skin | `panelFamilies/IllogicalImpulseFamily.qml` (`extraCondition`) | — |
 | Selector de fondos (Alt+W) | `hypr/scripts/wallpaper-picker.sh` elige la skin | default: `modules/ii/wallpaperSelector`; Retro: `bar/omarchy/image-picker` + `hypr/skins/retro/scripts/wallpaper-picker.py` (fondos del tema, extras de Omarchy y `~/Pictures/Wallpapers`); Breeze: rofi |
 | Colores de Hyprland y apps | `hypr/modules/*.lua`, `matugen/` | `colors.lua` (default (end-4)), `retro_colors.lua` + `hypr/omarchy/` (Retro), `plasma_colors.lua` (Plasma) |
+| Sincronización de ajustes | `scripts/bwm_settings_hooks.py` (hook del manifiesto, llamado por los gestores comunes) | Breeze: `skins/plasma/scripts/kde-config-bridge.py` y `hypr/kwin.lua`; autoridad y límites en `docs/BREEZE_ARCH.md` §9 |
 | Plugins de Hyprland | — | `src/hyprbars` (Plasma) |
 
 En Retro, Configuración forma parte del menú de Omarchy: el catálogo y los editores viven en
@@ -130,3 +131,8 @@ instrucciones. Consulta la [guía del catálogo](SKIN_CATALOG.md).
 
 El instalador automático y la carga completa de módulos externos siguen pendientes.
 Detectar un manifiesto externo no equivale a cargar todo su escritorio.
+
+En Breeze, cursor/teclado/Kelvin/idioma/workspaces se exportan a los archivos de KDE. Sólo se
+importa lo propio de la skin (fuentes, temas, opciones de ventana); la configuración en texto del
+usuario sigue teniendo prioridad. El puente se detiene y retira sus exportaciones al salir.
+Los KCMs de pantallas de KWin no representan la sesión Hyprland: se usa el gestor común de BWM.

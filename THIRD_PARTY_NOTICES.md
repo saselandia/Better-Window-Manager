@@ -151,3 +151,8 @@ y `config/kde-material-you-colors/config.conf` proceden de end-4/dots-hyprland `
 (GPL-3.0); el primero se adapta al entorno de colores de BWM. `kde-material-you-colors`
 (GPL-3.0, de luisbocanegra) y `dbus-python` (MIT y GPL-2.0-or-later o AFL-2.1) se descargan con pip al instalar, con sus avisos;
 no se incluyen en el repositorio. `kde-shims/plasma-apply-colorscheme` es propio de BWM.
+
+Puente de configuración de Breeze (F2, 2026-11-11): `kde-config-bridge.py` y `hypr/kwin.lua`
+son código propio; los nombres de claves y señales se verificaron con los `.kcfg` de KDE Plasma
+v6.7.5 y KConfig v6.29.0. No se copió implementación KDE. Rutas y procedencia en
+`config/hypr/skins/plasma/scripts/README.md` y decisiones en `docs/BREEZE_ARCH.md` §9.

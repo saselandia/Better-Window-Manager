@@ -90,7 +90,7 @@ Cada carpeta portada lleva un `README.md` con el origen (proyecto, etiqueta y ru
 | `breezerc` | todo | KDE | Opciones de la decoración Breeze |
 | `kwinrulesrc` | todo | KDE | Reglas de ventana (F10) |
 | `kcminputrc` | `[Mouse] cursorTheme, cursorSize` | **BWM** | Cursor común: se exporta y **pisa** a `kdedefaults/kcminputrc` |
-| `kcminputrc` | `[Keyboard] RepeatDelay, RepeatRate` | **BWM** | De `modules/binds.lua` |
+| `kcminputrc` | `[Keyboard] RepeatDelay, RepeatRate` | **BWM** | Opciones efectivas del compositor (incluye la configuración del usuario); §9 |
 | `kxkbrc` | `[Layout]` | **BWM** | Distribución de teclado común |
 | `mimeapps.list` | — | **BWM** | Apps predeterminadas comunes (`default-apps.py`) |
 | `ksplashrc`, `kscreenlockerrc` | — | KDE | Tema global (sólo lo que Breeze use) |
@@ -99,7 +99,7 @@ Cada carpeta portada lleva un `README.md` con el origen (proyecto, etiqueta y ru
 | `kded5rc` | `[Module-*] autoload` | **BWM** | Módulos de kded desactivados (§6) |
 
 Al salir de Breeze, `kdeglobals` también lo leen default (plasma-integration) y Retro: la fase 2
-debe coordinarlo con `bwm_icons.write_kdeglobals`.
+lo coordina con `bwm_icons.write_kdeglobals` (ciclo de salida en §9).
 
 ## 6. Servicios que no deben arrancar o chocar
 
@@ -114,7 +114,7 @@ debe coordinarlo con `bwm_icons.write_kdeglobals`.
 | KWin, kscreenlocker, ksmserver, `plasma-login-sessions` (sesión «Plasma» en SDDM) | Instalados | No se ejecutan; el autologin sigue entrando en `hyprland.desktop` |
 
 `~/.config/kded5rc` y el servicio de D-Bus de usuario los creó la fase 0 a mano en este equipo. La
-fase 2 (`kde-config-bridge.py`) se encargará de crearlos y mantenerlos, y el instalador de crearlos
+fase 2 (`kde-config-bridge.py guards`) los mantiene, y el instalador los prepara
 si se instala plasma-workspace.
 
 ## 7. Cambios en `BREEZE_PLAN.md`
@@ -141,3 +141,90 @@ si se instala plasma-workspace.
 - `bluezqt` tras inicializarse del todo.
 - Escala fraccionaria y HiDPI en `bwm-decorator`, decoraciones C++ de terceros (Klassy…) y sombras.
 - Rendimiento del envío de la imagen de la decoración (memfd) al plugin durante un redimensionado.
+
+## 9. Fase 2: autoridad y sincronización de configuración
+
+Implementado el 2026-11-11. El código original sigue en KDE (`kwinrc`, `kdeglobals`, etc.);
+`~/.local/state/bwm/plasma/bridge-state.json` sólo guarda lo necesario para resolver cambios y
+retirar exportaciones. No es un formato de temas. El archivo Lua generado en ese directorio
+es una caché de traducción; `skins/plasma/hypr/kwin.lua` lo aplica antes de la configuración del
+usuario. Nunca se escribe `~/.config/bwm/user/*`.
+
+| Ajuste | Fuente BWM / equivalente KDE | Autoridad y dirección | Alcance real en F2 |
+| :--- | :--- | :--- | :--- |
+| Cursor y tamaño | `hypr/modules/cursor.lua` → `kcminputrc [Mouse] cursorTheme,cursorSize` | BWM → KDE; corrige cambios de un KCM/tema global | El valor local prevalece sobre `kdedefaults/kcminputrc`. Hook de `cursor-manager.py` antes de su recarga. No se aplica un cursor recibido de KDE. |
+| Kelvin y luz nocturna | `~/.local/state/bwm/nightlight.json`, `light.night.colorTemperature` → `kwinrc [NightColor] Active,Mode,NightTemperature,DayTemperature` | BWM → KDE | `Mode=0` (constante en Plasma 6.7.5), día a 6500 K. La programación y el motor siguen siendo de BWM: no arrancar el de KWin. Hook de `nightlight.py`; el archivo de usuario tiene prioridad sobre el Kelvin exportado. |
+| Distribuciones y opciones XKB | Opciones efectivas de Hyprland (`input:kb_layout,kb_variant,kb_model,kb_options`) → `kxkbrc [Layout] Use,LayoutList,VariantList,Model,Options,SwitchMode` | BWM → KDE | Se consulta el compositor, por lo que se ven los ajustes de `user/hyprland.lua`. No se ejecuta `setxkbmap` ni el KCM de teclado para aplicarlos. |
+| Repetición / Bloq Num | `input:repeat_rate,repeat_delay,numlock_by_default` → `kcminputrc [Keyboard] RepeatRate,RepeatDelay,KeyRepeat,NumLock` | BWM → KDE | `NumLock=0` activado, `1` desactivado; `KeyRepeat=repeat/none`. Valores de los `.kcfg` de plasma-desktop 6.7.5. Los cambios del archivo Lua común se observan con inotify. |
+| Apps predeterminadas | `mimeapps.list`, `default-apps.py`, `apps.terminal` → el mismo `mimeapps.list`, `kdeglobals [General] TerminalApplication,TerminalService` | Fuente XDG común; terminal BWM → KDE | Para navegador, archivos y editor KDE ya lee el mismo archivo XDG: no se crea una copia. Un KCM que edite `mimeapps.list` edita directamente la fuente común. No se importa `apps.*` desde un tema de KDE. Gestor de tareas sin equivalente KDE genérico. |
+| Pantallas, escala, giro, posición y duplicación | `monitor-manager.py`, `monitors.lua`, compositor → KScreen | BWM | KScreen Wayland necesita el protocolo de gestión de salidas de KWin; no tiene un archivo que represente fielmente esta sesión Hyprland. No se escribe un falso `kscreen/*` ni `kwinoutputconfig.json`, ni se inicia kded-kscreen. La página Pantallas de F11 usa el gestor común. Identidades persistentes `desc:`. |
+| Workspaces | `bar.workspaces.shown` → `kwinrc [Desktops] Number,Rows` | BWM → KDE | Numeración global; no se importan escritorios/actividades de KWin. `Rows=1` sólo describe la presentación. |
+| Idioma de interfaz | `language.ui` → `plasma-localerc [Translations] LANGUAGE` | BWM → KDE | `auto` quita la sobrescritura y deja el idioma del sistema. No cambia `LANG`, los formatos regionales ni `/etc/locale*`. El idioma del menú Omarchy sigue en su proveedor propio y no se importa a Breeze. |
+| Fuente general y mono | `appearance.fonts.main,monospace` ↔ `kdeglobals [General] font,fixed` | Bidireccional, propia de Breeze | Se conservan tamaño, estilo y resto de QFont al cambiar la familia desde BWM. Si cambian ambos a la vez gana KDE; `user/shell.jsonc` siempre gana al final y se refleja también en KDE. |
+| Fuente de lectura/título | `appearance.fonts.reading,title` ↔ `kdeglobals [General] menuFont`, `[WM] activeFont` | Igual que las anteriores | El título real está en `[WM] activeFont`, según `fontssettings.kcfg`. Otras fuentes de KDE (`toolBarFont`, `smallestReadableFont`) se conservan y las leen los componentes KDE. |
+| Iconos, esquema de color, acento, estilo Qt y tema global | `kdeglobals [Icons] Theme`, `[Colors:*]`, `[General] ColorScheme,AccentColor`, `[KDE] widgetStyle,LookAndFeelPackage` | KDE → Breeze | El vigilante llama a `plasma-theme.py sync` sólo cuando cambia la paleta/aspecto; las apps se recolorean sin reiniciarse. `bwm_icons.write_kdeglobals` sigue sin escribir en Breeze. |
+| Estilo de Plasma | `plasmarc [Theme] name` | KDE → Breeze | libplasma recibe `ConfigChanged`; `PlasmaTheme` también vigila el archivo. No se inventa una paleta de panel. |
+| Clic simple/doble para abrir archivos | `kdeglobals [KDE] SingleClick` | KDE, propio del aspecto/comportamiento Breeze | Las apps KDE lo leen directamente. No cambia el comportamiento de Nautilus ni las otras skins. Los lanzadores portados lo podrán consumir. |
+| Intervalo de doble clic | `kdeglobals [KDE] DoubleClickInterval` | KDE | Qt lo lee; el plugin actual tiene un intervalo fijo. El intervalo de la barra se completa en F6b/F8; no se presenta como soportado. |
+| Animaciones | `kdeglobals [KDE] AnimationDurationFactor` → `hl.config animations.enabled`, velocidades de las curvas Breeze | KDE → Hyprland | Cero desactiva; el factor escala duración, inverso de `speed`. Las animaciones de QML que no usan aún KDE se portan en F3–F5/F12. |
+| Política de foco | `kwinrc [Windows] FocusPolicy` → `input.follow_mouse` | KDE → Hyprland; usuario Lua al final | `ClickToFocus=0`; las políticas de seguimiento se aproximan con `1`. `AutoRaise`, `ClickRaise`, `DelayFocusInterval` y diferencias entre las tres políticas de seguimiento no tienen traducción exacta en F2 y se conservan. |
+| Colocación | `kwinrc [Windows] Placement` → `placement.lua` | KDE → Hyprland | Smart/mínimo solapamiento, Centered, ZeroCornered, UnderMouse, Random, Maximizing y NoPlacement. Diálogos de la misma app y ventanas con regla propia se conservan. OnMainWindow se delega a Hyprland. |
+| Encaje magnético | `kwinrc [Windows] BorderSnapZone,WindowSnapZone` → `general.snap.monitor_gap,window_gap` | KDE → Hyprland | Distancias enteras (la API Lua rechaza `19.0`). Ambos cero desactivan. `CenterSnapZone`, `SnapOnlyWhenOverlapping`, esquinas/zonas de mosaico y ElectricBorders quedan para F10. |
+| Doble clic de barra | `kwinrc [Windows] TitlebarDoubleClickCommand` → `plugin.breezebars.on_double_click` | KDE → plugin | Maximize, Minimize, Close y Nothing en barras del servidor. Acciones restantes y CSD se completan en F6/F8/F9. Las cadenas de KDE nunca se ejecutan como órdenes. |
+| Botones de barra | `kwinrc [org.kde.kdecoration2] ButtonsOnLeft,ButtonsOnRight` | KDE → plugin / auxiliar F6 | El plugin actual permite I/A/X en un solo banco (izquierdo si el derecho está vacío); orden y lado se traducen. Ambos bancos completos, menú, ayuda y demás botones permanecen en KDE y en la caché para F6a/F6b. No se recompila ni recarga el plugin en caliente. |
+| Decoración y reglas | `kwinrc [org.kde.kdecoration2] library,theme,BorderSize`, `breezerc`, `kwinrulesrc` | KDE | Se conservan: interpretación de decoraciones en F6 y reglas por ventana en F10. |
+| Red/Bluetooth, servicios, bloqueo/OSD, inicio automático y atajos | Gestores comunes y servicios BWM | BWM | No se importan desde temas KDE; F11 usa páginas comunes. No se usan KWin, kglobalacceld, ksmserver ni agentes duplicados para aplicarlos. |
+
+### Ciclo de vida y conflictos
+
+- `kde-config-bridge.py enter` inicia la sesión del puente después de que F1 devuelva el
+  `kdeglobals` de Breeze. `export` vuelca lo compartido; `import` sólo sincroniza fuentes propias
+  y traduce opciones de ventanas. Ambos son inocuos fuera de Breeze.
+- `watch` se lanza con `bwm_session.spawn()`, como hijo de Hyprland. Un candado evita duplicados.
+  inotify observa las carpetas reales, incluidos padres de carpetas aún inexistentes, para detectar
+  guardados con renombrado atómico. Agrupa cambios durante 300 ms y compara huellas: las escrituras
+  propias no vuelven a disparar trabajo. Un JSON incompleto se reintenta sin sobrescribirlo.
+- Las escrituras conservan comentarios, grupos anidados y claves desconocidas. Se preparan en un
+  archivo temporal, se sincronizan y se renombran sobre el destino real (conservando enlaces).
+  Si cambia el archivo durante la preparación, se aborta y reintenta; las operaciones del puente
+  tienen candado. Una carrera de otro proceso exactamente entre la última comprobación y el
+  `rename` no puede excluirse sin cooperación de ese escritor.
+- Cada archivo de KDE modificado emite la señal original de KConfig 6.29:
+  `org.kde.kconfig.notify.ConfigChanged(a{saay})`. Sólo una traducción distinta de `kwinrc` provoca
+  `hyprctl reload`; los gestores comunes ya tienen su recarga y usan `--no-reload` en el hook.
+- Al salir: se detiene el vigilante y se espera a que termine su escritura; se retiran sólo las
+  claves exportadas que todavía coinciden con lo escrito por el puente. No se deshace una edición
+  ajena posterior. Después F1 guarda el `kdeglobals` de Breeze y la skin entrante genera el suyo.
+  Pueden quedar cabeceras de grupos vacíos, sin efecto sobre KDE. Las protecciones de servicios
+  permanecen, porque los paquetes de KDE siguen instalados fuera de Breeze.
+- El hook genérico de los gestores comunes (`bwm_settings_hooks.py`) se obtiene del manifiesto
+  de la skin: `hooks.settingsChanged`. En Breeze apunta al puente. No hay lógica KDE en otras skins.
+- `guards` mantiene sólo las claves conocidas de `kded5rc` y el servicio de avisos que BWM creó
+  en F0; respeta un servicio propio del usuario. El instalador también lo llama. No descarga ni
+  arranca módulos kded; los módulos ya cargados se revisan aparte.
+
+`gtkrc`, `gtkrc-2.0` y `Trolltech.conf` son formatos heredados que krdb/`lookandfeeltool` pueden
+escribir. El puente guarda sus valores anteriores al entrar: en GTK1/2 repara sólo el bloque
+autogenerado que identifica a KDE Plasma y conserva líneas ajenas añadidas; en Trolltech restaura
+sólo las claves Qt4 de krdb (`font`, `GUIEffects`, `Palette`, `KWinPalette`, contraste), conservando
+las demás. Se prueba con archivos simulados. Las apps Qt 6 leen `kdeglobals` y GTK sigue las
+plantillas comunes. El aplicador de F1 ya evita esas exportaciones; F11 debe usarlo para temas
+globales. El puente no ejecuta scripts arbitrarios de paquetes.
+
+### Verificación de F2
+
+Pruebas aisladas en `tests/test_kde_config_bridge.py`: ida/vuelta, archivos y comentarios ajenos,
+conflictos entre fuentes, prioridad del usuario, JSON incompleto, enlaces, guardas, números Lua,
+inotify con renombrados y carpetas nuevas, ausencia de bucles y recarga sólo al cambiar ventanas.
+`tests/test_plasma_placement.py` prueba también Centered, ZeroCornered y NoPlacement.
+
+Prueba real: Retro → Breeze; cursor Miku de 48 a 40 mediante `cursor-manager.py` →
+`kcminputrc` mostró `miku-cursor-linux`, `40`. Una escritura KDE de otro cursor se corrigió sola.
+Un lote con política de foco y encaje provocó **una** recarga (evento `configreloaded`), el foco
+pasó a seguimiento y el encaje se comprobó en 19 después de corregir la conversión a entero.
+Después: tamaño 48, archivo `cursor.lua` original y vuelta a Retro; `kdeglobals` idéntico al
+inicial, vigilante parado, 11 ventanas con los mismos PID y foco conservado. No hubo capturas.
+
+Pendiente de validación visual: todas las opciones de colocación, botones con el plugin cargado
+en la próxima sesión, KCMs embebidos (F11), ajustes de Qt 6 con apps abiertas y un tema global
+aplicado directamente por un KCM en vez del aplicador BWM.

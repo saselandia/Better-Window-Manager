@@ -36,11 +36,8 @@ if ! (cd "$ADW" && python3 install.py "${args[@]}") >"$HOME/.local/state/bwm/ste
   exit 1
 fi
 
-# Steam only loads the skin at startup (this runs when its colours changed): restart it in
-# place, in the tray if it was there (bwm_omarchy.restart_steam). With a game open it waits for
-# the game to be closed. During a skin change it waits for the switch to finish first, so the
-# switch itself restarts nothing. Detached: the hook runners give each hook only a few seconds.
-args=()
-[[ "${BWM_SKIN_SWITCH:-0}" == "1" ]] && args=(--after-switch)
-env -u BWM_SKIN_SWITCH setsid python3 "$HOME/.config/hypr/scripts/bwm_omarchy.py" restart-steam \
-  "${args[@]}" >"$HOME/.local/state/bwm/steam/restart.log" 2>&1 </dev/null &
+# Steam carga el aspecto al arrancar. Durante cambios de skin (también los avisados por el
+# puente KDE) se deja preparado: regla 16, sin programar reinicios después de la transición.
+[[ "${BWM_SKIN_SWITCH:-0}" == "1" ]] && exit 0
+setsid python3 "$HOME/.config/hypr/scripts/bwm_omarchy.py" restart-steam \
+  >"$HOME/.local/state/bwm/steam/restart.log" 2>&1 </dev/null &

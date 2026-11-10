@@ -206,3 +206,9 @@ python3 "$HOME/.config/hypr/scripts/nightlight.py" --apply >/dev/null 2>&1 &
     hyprctl dispatch 'hl.dsp.focus({ workspace = 1 })' 2>/dev/null || true
 ) &
 
+
+# Puente KDE de la skin Breeze (sus archivos y demonio son propios de la skin).
+if [[ $(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null) == plasma ]]; then
+    python3 "$HOME/.config/hypr/skins/plasma/scripts/kde-config-bridge.py" enter
+    python3 "$HOME/.config/hypr/skins/plasma/scripts/kde-config-bridge.py" start
+fi

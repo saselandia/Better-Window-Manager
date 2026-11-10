@@ -419,6 +419,9 @@ def write_monitors_lua(monitors):
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         f.write(content)
 
+    import bwm_settings_hooks
+    bwm_settings_hooks.changed()
+
     # Recargar Hyprland
     subprocess.run(["hyprctl", "reload"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 

@@ -172,6 +172,8 @@ def cmd_set(kind, value):
             subprocess.run(["xdg-mime", "default", value, mime], check=False)
     else:
         sys.exit(f"tipo desconocido: {kind}")
+    import bwm_settings_hooks
+    bwm_settings_hooks.changed()
 
 
 if __name__ == "__main__":

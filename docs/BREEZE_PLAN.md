@@ -110,7 +110,7 @@ C++, F10 parte C++) comparten `src/breezebars/`: **nunca dos a la vez**.
 
 ## 4. Prompts
 
-> **Hechas: fase 0** (`docs/BREEZE_ARCH.md`) **y fase 1** (motor de temas, `BWM_CONTEXT.md` §3.139). `docs/BREEZE_ARCH.md` manda sobre lo que digan los
+> **Hechas: fases 0–2** (arquitectura en `docs/BREEZE_ARCH.md`; motor de temas y puente de configuración en `BWM_CONTEXT.md` §3.139–140). `docs/BREEZE_ARCH.md` manda sobre lo que digan los
 > prompts siguientes: lo que cambió está anotado en su §7, y F6 se ha partido en F6a y F6b.
 
 ### F0 · Viabilidad y arquitectura — **[HIGH]**
@@ -201,6 +201,10 @@ reales de KDE, y que cambie en vivo. Sustituye la paleta fija Breeze Dark (`BREE
 ```
 
 ### F2 · Puente de configuración BWM ↔ KDE — **[HIGH]**
+
+> Implementada: `docs/BREEZE_ARCH.md` §9 contiene el inventario, la autoridad por clave,
+> el ciclo de vida y los límites del plugin actual. F6 completa ambos bancos y todos los botones;
+> F10 completa las zonas de mosaico. F11 usa páginas comunes para pantallas/teclado/cursor.
 
 ```text
 Fase 2 de docs/BREEZE_PLAN.md (lee el plan, su sección 2 y docs/BREEZE_ARCH.md).
