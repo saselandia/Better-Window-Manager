@@ -96,6 +96,17 @@
     "bluez",
     "blueman",
     "swaync",
-    "mpvpaper"
+    "mpvpaper",
+    "ksvg",
+    "libplasma",
+    "plasma5support",
+    "kdecoration",
+    "breeze-decoration",
+    "aurorae",
+    "plasma-workspace",
+    "systemsettings",
+    "plasma-nm",
+    "plasma-pa",
+    "bluez-qt"
   ]
 }

@@ -503,6 +503,85 @@
       "why": "Vesktop, Spotify, Stremio… tematizados con overrides",
       "check": {"type": "cmd", "any": ["flatpak"]},
       "packages": {"gentoo": "sys-apps/flatpak", "arch": "flatpak", "fedora": "flatpak", "opensuse": "flatpak", "debian": "flatpak"}
+    },
+    "ksvg": {
+      "label": "KSvg (SVG de temas de Plasma)",
+      "referenceVersion": "6.29.0",
+      "why": "Pinta el panel, los popups y los controles de Breeze con el estilo de Plasma activo (desktoptheme)",
+      "check": {"type": "qml", "module": "org/kde/ksvg"},
+      "packages": {"gentoo": "kde-frameworks/ksvg", "arch": "ksvg", "fedora": "kf6-ksvg", "opensuse": null, "debian": null}
+    },
+    "libplasma": {
+      "label": "libplasma (PlasmaComponents 3)",
+      "referenceVersion": "6.7.5",
+      "why": "Controles de Plasma (botones, menús, deslizadores) con el tema de Plasma en el shell de Breeze",
+      "check": {"type": "qml", "module": "org/kde/plasma/components"},
+      "packages": {"gentoo": "kde-plasma/libplasma", "arch": "libplasma", "fedora": "libplasma", "opensuse": null, "debian": null},
+      "notes": {"gentoo": "Necesita kde-frameworks/kconfig con USE=qml (y prison/qtmultimedia con qml para plasma-workspace)."}
+    },
+    "plasma5support": {
+      "label": "Plasma5Support",
+      "referenceVersion": "6.7.5",
+      "why": "Fuentes de datos que usan los plasmoides portados (reloj, energía)",
+      "check": {"type": "qml", "module": "org/kde/plasma/plasma5support"},
+      "packages": {"gentoo": "kde-plasma/plasma5support", "arch": "plasma5support", "fedora": null, "opensuse": null, "debian": null}
+    },
+    "kdecoration": {
+      "label": "KDecoration3",
+      "referenceVersion": "6.7.5",
+      "why": "Biblioteca de decoraciones de KWin: BWM la usa para dibujar las barras de título del tema de Plasma activo",
+      "check": {"type": "path", "any": ["/usr/lib64/libkdecorations3.so.6", "/usr/lib/libkdecorations3.so.6", "/usr/lib/x86_64-linux-gnu/libkdecorations3.so.6"]},
+      "packages": {"gentoo": "kde-plasma/kdecoration", "arch": "kdecoration", "fedora": "kdecoration", "opensuse": null, "debian": null}
+    },
+    "breeze-decoration": {
+      "label": "Decoración y estilo Breeze",
+      "referenceVersion": "6.7.5",
+      "why": "Barras de título Breeze reales y estilo de widgets Breeze",
+      "check": {"type": "qtplugin", "path": "org.kde.kdecoration3/org.kde.breeze.so"},
+      "packages": {"gentoo": "kde-plasma/breeze", "arch": "breeze", "fedora": "plasma-breeze", "opensuse": null, "debian": "breeze"}
+    },
+    "aurorae": {
+      "label": "Aurorae (decoraciones SVG)",
+      "referenceVersion": "6.7.5",
+      "why": "Decoraciones de ventana de la KDE Store en formato Aurorae",
+      "check": {"type": "qtplugin", "path": "org.kde.kdecoration3/org.kde.kwin.aurorae.so"},
+      "packages": {"gentoo": "kde-plasma/aurorae", "arch": "aurorae", "fedora": "aurorae", "opensuse": null, "debian": null}
+    },
+    "plasma-workspace": {
+      "label": "plasma-workspace (herramientas de temas y KCMs)",
+      "referenceVersion": "6.7.5",
+      "why": "plasma-apply-*, lookandfeeltool, módulos de Preferencias (colores, estilo de Plasma, iconos, cursores, fuentes, tema global) y modelos de Kickoff/bandeja. Instala KWin, pero BWM no lo ejecuta",
+      "check": {"type": "cmd", "any": ["plasma-apply-colorscheme"]},
+      "packages": {"gentoo": "kde-plasma/plasma-workspace", "arch": "plasma-workspace", "fedora": "plasma-workspace", "opensuse": null, "debian": "plasma-workspace"},
+      "notes": {"gentoo": "USE recomendado: -semantic-desktop (evita baloo).", "all": "Sus servicios de kded que chocan con BWM se desactivan en ~/.config/kded5rc (docs/BREEZE_ARCH.md)."}
+    },
+    "systemsettings": {
+      "label": "Preferencias del sistema de KDE",
+      "referenceVersion": "6.7.5",
+      "why": "Base de las Preferencias del sistema de Breeze (KCMs con kcmshell6)",
+      "check": {"type": "cmd", "any": ["systemsettings"]},
+      "packages": {"gentoo": "kde-plasma/systemsettings", "arch": "systemsettings", "fedora": "plasma-systemsettings", "opensuse": null, "debian": "systemsettings"}
+    },
+    "plasma-nm": {
+      "label": "plasma-nm (applet de red)",
+      "referenceVersion": "6.7.5",
+      "why": "Modelos de red del applet de Plasma (org.kde.plasma.networkmanagement)",
+      "check": {"type": "qml", "module": "org/kde/plasma/networkmanagement"},
+      "packages": {"gentoo": "kde-plasma/plasma-nm", "arch": "plasma-nm", "fedora": "plasma-nm", "opensuse": null, "debian": "plasma-nm"}
+    },
+    "plasma-pa": {
+      "label": "plasma-pa (applet de sonido)",
+      "referenceVersion": "6.7.5",
+      "why": "Modelos de sonido del applet de Plasma (org.kde.plasma.private.volume)",
+      "check": {"type": "qml", "module": "org/kde/plasma/private/volume"},
+      "packages": {"gentoo": "kde-plasma/plasma-pa", "arch": "plasma-pa", "fedora": "plasma-pa", "opensuse": null, "debian": "plasma-pa"}
+    },
+    "bluez-qt": {
+      "label": "BluezQt",
+      "referenceVersion": "6.29.0",
+      "why": "Modelos de Bluetooth del applet de Plasma (org.kde.bluezqt)",
+      "check": {"type": "qml", "module": "org/kde/bluezqt"},
+      "packages": {"gentoo": "kde-frameworks/bluez-qt", "arch": "bluez-qt", "fedora": "kf6-bluez-qt", "opensuse": null, "debian": null}
     }
   }
 }
