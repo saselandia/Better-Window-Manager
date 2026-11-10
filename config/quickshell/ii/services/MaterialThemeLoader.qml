@@ -15,14 +15,33 @@ Singleton {
     id: root
     property string filePath: Directories.generatedMaterialThemePath
     property string retroFilePath: Directories.generatedRetroThemePath
-    // Static KDE Plasma Breeze Dark palette instead of the wallpaper colors.
+    // Breeze: the active Plasma colour scheme (kdeglobals) mapped onto the Material 3 roles by
+    // skins/plasma/scripts/plasma_palette.py, instead of the wallpaper colors.
+    property string plasmaFilePath: `${Directories.home}/.local/state/bwm/plasma/colors.json`
     // Only set by the Plasma settings app (its own process), not by the shell.
     property bool forceBreeze: false
 
     onForceBreezeChanged: if (forceBreeze) applyBreezeColors()
 
-    // Breeze Dark (Plasma 6) colour scheme mapped onto the Material 3 roles
     function applyBreezeColors() {
+        const text = plasmaThemeFileView.loaded ? plasmaThemeFileView.text() : "";
+        if (text) {
+            try {
+                const json = JSON.parse(text);
+                if (json.primary) {
+                    for (const key in json) {
+                        if (key === "darkmode" || key === "scheme" || typeof json[key] !== "string" || !json[key].startsWith("#"))
+                            continue;
+                        Appearance.m3colors["m3" + key.replace(/_([a-z])/g, g => g[1].toUpperCase())] = json[key];
+                    }
+                    Appearance.m3colors.darkmode = json.darkmode !== false;
+                    return;
+                }
+            } catch (e) {
+                console.log("[MaterialThemeLoader] Error parsing Plasma colors:", e);
+            }
+        }
+        // Not generated yet (first start): Breeze Dark, Plasma's default
         const c = {
             m3primary: "#3daee9", m3onPrimary: "#fcfcfc", m3primaryContainer: "#1e4f6a", m3onPrimaryContainer: "#fcfcfc",
             m3inversePrimary: "#3daee9", m3surfaceTint: "#3daee9",
@@ -204,6 +223,24 @@ Singleton {
             }
         }
         onLoadFailed: root.resetFilePathNextTime();
+    }
+
+    FileView {
+        id: plasmaThemeFileView
+        // Sólo en Breeze: fuera de ella no hace falta (ni existe hasta entrar la primera vez)
+        path: (root.forceBreeze || Appearance.isPlasma) ? root.plasmaFilePath : ""
+        watchChanges: true
+        onFileChanged: {
+            this.reload()
+            delayedPlasmaFileRead.start()
+        }
+        onLoadedChanged: if (root.forceBreeze || Appearance.isPlasma) root.applyBreezeColors()
+    }
+
+    Timer {
+        id: delayedPlasmaFileRead
+        interval: Config.options?.hacks?.arbitraryRaceConditionDelay ?? 100
+        onTriggered: if (root.forceBreeze || Appearance.isPlasma) root.applyBreezeColors()
     }
 
     FileView { 

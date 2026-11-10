@@ -142,7 +142,8 @@ siendo el nombre del escritorio original que imita Breeze.
 | Cambiar de estilo / ver qué hace al cambiar | `config/hypr/scripts/bwm-theme-manager.py` (`apply_theme`) |
 | Algo que sólo cargue en un estilo | `quickshell/ii/panelFamilies/IllogicalImpulseFamily.qml` (`extraCondition`) |
 | Colores/temas de Retro y sus apps | `scripts/bwm_omarchy.py` (`apply_retro_palette_colors`), `scripts/bwm_omarchy_apps.py`, `hypr/omarchy/themed/*.tpl` |
-| Colores de apps en default (end-4)/Plasma | `config/matugen/config.toml` + `templates/` (Plasma los rellena con Breeze en `bwm-theme-manager.py`) |
+| Colores de apps en default (end-4)/Plasma | `config/matugen/config.toml` + `templates/` (Plasma los rellena con el esquema de color de Plasma activo: `skins/plasma/scripts/plasma_palette.py`) |
+| Temas de Plasma en Breeze (esquemas, estilos, iconos, temas globales) | `skins/plasma/scripts/plasma-theme.py` (escribe kdeglobals/plasmarc/kwinrc con notificación; guarda y devuelve el kdeglobals de Breeze al cambiar de skin), `modules/plasma/theme/PlasmaTheme.qml` (lo lee el shell); plan del port en `docs/BREEZE_PLAN.md`, arquitectura en `docs/BREEZE_ARCH.md` |
 | GTK 3 / Qt / flatpaks | `scripts/gtk-theme.py`, `scripts/bwm_icons.py` (qt6ct, `kdeglobals`, overrides) |
 | Barra Retro (la de Omarchy), sus paneles y plugins | `quickshell/ii/omarchyShell/` (copia de `shell/` de Omarchy: `OmarchyShell.qml` = su anfitrión, `plugins/{bar,panels,agents,services}`), `~/.config/omarchy/shell.json`, `omarchy-bar`/`omarchy-plugin-*`; `bwm-plugin.sh` traduce las órdenes de Ajustes → Barra/Plugins y del menú |
 | Instalar/elegir temas y plugins | `modules/settings/{PluginsConfig,ThemesConfig}.qml`, `modules/settings/addons/`, `scripts/bwm-addons.py`, `scripts/bwm-plugin.sh`; detalle en `docs/OMARCHY_ADDONS.md` |
@@ -200,7 +201,7 @@ siendo el nombre del escritorio original que imita Breeze.
   `traditional` (titlebar, panel, edgeMargin, gap). `theme.lua` lleva `windows` y `rules.lua` lo usa.
   `tests/test_skins.py` valida los manifiestos y que existan las rutas de `parts`.
 - **Temas por defecto**: default (end-4) = Material You **dinámico** (matugen desde el fondo); Retro = paleta **dinámica**
-  en formato Omarchy (o uno de los 23 temas **estáticos** con Alt+R); Plasma = Breeze Dark **estático**.
+  en formato Omarchy (o uno de los 23 temas **estáticos** con Alt+R); Plasma = el tema de Plasma activo (Breeze Oscuro de entrada), **estático**: lo cambian los temas de Plasma, no el fondo.
 - **Bienvenida** (`bwm`): asistente tipo Calamares que se abre en cada inicio de sesión hasta desactivarlo
   (`bwm startup off`): gracias, skins instaladas en verde si tienen sus requisitos (desplegables, con comandos y
   «Activar»), «Añadir skins» → `docs/SKINS.md`. Ventana `qs -p` aparte: `pkill -x quickshell` no la cierra.

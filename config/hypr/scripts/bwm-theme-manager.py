@@ -8,7 +8,7 @@ themes, are "temas") between:
   2. Retro (Omarchy)
   3. Breeze (Kde plasma)
 Provides complete settings isolation (config-default.json, config-retro.json, config-plasma.json),
-dynamic wallpaper color adaptation (omitted in Plasma to maintain official Breeze Dark palette),
+dynamic wallpaper color adaptation (omitted in Plasma: Breeze follows the Plasma colour scheme),
 and Hyprland / Quickshell synchronization.
 """
 
@@ -546,128 +546,55 @@ inactive_border_color {cols[8]}
     except Exception:
         pass
 
+PLASMA_SCRIPTS = CONFIG_DIR / "hypr" / "skins" / "plasma" / "scripts"
+
+
+def _plasma_palette():
+    """The Plasma colour scheme in use (kdeglobals), read by the skin's own module."""
+    sys.path.insert(0, str(PLASMA_SCRIPTS))
+    import plasma_palette
+    return plasma_palette, plasma_palette.load()
+
+
 def apply_plasma_colors():
     """
-    Applies the official static KDE Plasma 6 Breeze Dark palette to Kitty,
-    Rofi, and Hyprland. Independent of wallpaper changes.
+    Breeze follows the active Plasma colour scheme (~/.config/kdeglobals, set with
+    skins/plasma/scripts/plasma-theme.py, Plasma's KCMs or a global theme): kitty, Hyprland, rofi
+    and every app themed by the matugen templates. Independent of wallpaper changes.
     """
-    # 1. Kitty Terminal Breeze Dark palette
-    kitty_content = """# KDE Plasma Breeze Dark Colors for Kitty (Fixed Palette)
-background #24292e
-foreground #eff0f1
-selection_background #3daee9
-selection_foreground #ffffff
-cursor #3daee9
-cursor_text_color #24292e
-url_color #3daee9
+    plasma_palette, scheme = _plasma_palette()
 
-# Tabs
-active_tab_background #3daee9
-active_tab_foreground #ffffff
-inactive_tab_background #31363b
-inactive_tab_foreground #bdc3c7
-
-# Normal colors (Breeze Dark Konsole)
-color0  #232629
-color1  #ed1515
-color2  #11d116
-color3  #f67400
-color4  #1d99f3
-color5  #9b59b6
-color6  #1abc9c
-color7  #eff0f1
-
-# Bright colors
-color8  #7f8c8d
-color9  #c0392b
-color10 #27ae60
-color11 #fdbc4b
-color12 #3daee9
-color13 #8e44ad
-color14 #16a085
-color15 #ffffff
-
-# Window borders
-active_border_color #31363b
-inactive_border_color #31363b
-"""
+    # 1. Kitty: Konsole's Breeze ANSI colours on the scheme's View background
     for target in [KITTY_COLORS_CONF, REPO_KITTY_COLORS_CONF]:
         try:
             target.parent.mkdir(parents=True, exist_ok=True)
-            with open(target, "w", encoding="utf-8") as f:
-                f.write(kitty_content)
+            target.write_text(plasma_palette.kitty(scheme), encoding="utf-8")
         except Exception as e:
             print(f"[Warning] No se pudo escribir en {target}: {e}", file=sys.stderr)
-
     try:
         subprocess.run([str(Path(__file__).resolve().parent / "kitty-recolor.sh")], check=False)
     except Exception:
         pass
 
     # 2. Hyprland plasma_colors.lua
-    lua_content = """-- Generado por bwm-theme-manager.py para el estilo KDE Plasma (Breeze Dark estático)
-local plasma_colors = {
-    accent = "rgba(3daee9ee)",
-    secondary = "rgba(3daee9ee)",
-    bg = "rgba(24292eee)",
-    border = "rgba(00000000)",
-    border_inactive = "rgba(00000000)",
-}
-return plasma_colors
-"""
     for target in [HYPR_PLASMA_COLORS_LUA, REPO_HYPR_PLASMA_COLORS_LUA]:
         try:
             target.parent.mkdir(parents=True, exist_ok=True)
-            with open(target, "w", encoding="utf-8") as f:
-                f.write(lua_content)
+            target.write_text(plasma_palette.hypr_lua(scheme), encoding="utf-8")
         except Exception as e:
             print(f"[Warning] Error guardando {target}: {e}", file=sys.stderr)
 
     # 3. Rofi plasma-colors.rasi
-    rofi_colors = """* {
-    accent: #3daee9;
-    secondary: #1d99f3;
-    bg: #24292ef4;
-    bg-card: #31363b;
-    bg-input: #1e2227;
-    fg: #eff0f1;
-    muted: #bdc3c7;
-    dim: #7f8c8d;
-    border: #3daee9;
-    bg-selected-text: #ffffff;
-}
-"""
     for target in [CONFIG_DIR / "rofi" / "plasma-colors.rasi", REPO_DIR / "config" / "rofi" / "plasma-colors.rasi"]:
         try:
             target.parent.mkdir(parents=True, exist_ok=True)
-            with open(target, "w", encoding="utf-8") as f:
-                f.write(rofi_colors)
+            target.write_text(plasma_palette.rofi(scheme), encoding="utf-8")
         except Exception as e:
             print(f"[Warning] Error guardando {target}: {e}", file=sys.stderr)
 
     # 4. Every other app themed by matugen (GTK, Vesktop, Spotify, Firefox, swaync, btop,
-    #    rofi pickers, Quickshell) gets Breeze Dark instead of the last wallpaper colors
-    apply_plasma_app_themes()
-
-# Breeze Dark (Plasma 6) colour scheme mapped onto the Material 3 roles used by the
-# matugen templates. Same mapping as MaterialThemeLoader.applyBreezeColors() in Quickshell.
-BREEZE_DARK_M3 = {
-    "primary": "#3daee9", "on_primary": "#fcfcfc", "primary_container": "#1e4f6a", "on_primary_container": "#fcfcfc",
-    "inverse_primary": "#3daee9", "surface_tint": "#3daee9",
-    "secondary": "#3daee9", "on_secondary": "#fcfcfc", "secondary_container": "#26404f", "on_secondary_container": "#fcfcfc",
-    "tertiary": "#1abc9c", "on_tertiary": "#fcfcfc", "tertiary_container": "#1d4a43", "on_tertiary_container": "#fcfcfc",
-    "background": "#202326", "on_background": "#fcfcfc",
-    "surface": "#202326", "surface_dim": "#1b1e20", "surface_bright": "#31363b",
-    "surface_container_lowest": "#141618", "surface_container_low": "#1b1e20", "surface_container": "#232629",
-    "surface_container_high": "#292c30", "surface_container_highest": "#31363b",
-    "on_surface": "#fcfcfc", "surface_variant": "#31363b", "on_surface_variant": "#a1a9b1",
-    "inverse_surface": "#fcfcfc", "inverse_on_surface": "#202326",
-    "outline": "#4d5257", "outline_variant": "#3c4148", "shadow": "#000000", "scrim": "#000000",
-    "error": "#da4453", "on_error": "#fcfcfc", "error_container": "#5a1d24", "on_error_container": "#fcfcfc",
-    "primary_fixed": "#3daee9", "primary_fixed_dim": "#2d8fc2", "on_primary_fixed": "#fcfcfc", "on_primary_fixed_variant": "#fcfcfc",
-    "secondary_fixed": "#3daee9", "secondary_fixed_dim": "#2d8fc2", "on_secondary_fixed": "#fcfcfc", "on_secondary_fixed_variant": "#fcfcfc",
-    "tertiary_fixed": "#1abc9c", "tertiary_fixed_dim": "#16a085", "on_tertiary_fixed": "#fcfcfc", "on_tertiary_fixed_variant": "#fcfcfc",
-}
+    #    rofi pickers, Quickshell, Steam, Stremio, Omacalc) with the scheme's Material 3 roles
+    apply_plasma_app_themes(plasma_palette.m3(scheme), scheme.dark)
 
 # matugen templates handled elsewhere in the Plasma skin: Hyprland reads plasma_colors.lua
 # and kitty gets the real Breeze/Konsole terminal palette from apply_plasma_colors()
@@ -677,9 +604,12 @@ PLASMA_SKIPPED_TEMPLATES = {"hyprland_colors", "kitty"}
 # GTK 4 windows that lose nothing on restart (GTK 3 recolours live: gtk-theme.py)
 GTK_RELAUNCH_APPS = ("pavucontrol",)
 
-def apply_plasma_app_themes():
-    """Renders the matugen templates with the Breeze Dark palette (no wallpaper colors) and
-    sets the GTK dark theme, so GTK, Qt and the themed apps all look the same in Plasma."""
+def apply_plasma_app_themes(m3: dict | None = None, dark: bool = True):
+    """Renders the matugen templates with the Plasma colour scheme's palette (no wallpaper colours)
+    and sets GTK light/dark like the scheme, so GTK, Qt and the themed apps look the same in Breeze."""
+    if m3 is None:
+        plasma_palette, scheme = _plasma_palette()
+        m3, dark = plasma_palette.m3(scheme), scheme.dark
     import re
     import tomllib
 
@@ -705,9 +635,9 @@ def apply_plasma_app_themes():
         if expr == "image":
             return wallpaper
         m = re.fullmatch(r"colors\.([a-z_]+)\.(?:default|dark|light)\.(hex|hex_stripped)", expr)
-        if not m or m.group(1) not in BREEZE_DARK_M3:
+        if not m or m.group(1) not in m3:
             return match.group(0)
-        value = BREEZE_DARK_M3[m.group(1)]
+        value = m3[m.group(1)]
         return value.lstrip("#") if m.group(2) == "hex_stripped" else value
 
     hooks = []
@@ -722,7 +652,7 @@ def apply_plasma_app_themes():
         try:
             rendered = re.sub(r"\{\{([^}]*)\}\}", fill, src.read_text(encoding="utf-8"))
             if name.startswith("vesktop"):
-                rendered = rendered.replace("@name BWM Material You", "@name BWM Breeze Dark")
+                rendered = rendered.replace("@name BWM Material You", "@name BWM Breeze")
             # The palette is static: skip unchanged files so their reload hooks (Spotify
             # relaunch, Nautilus reload...) don't run on every wallpaper change
             if dst.is_file() and dst.read_text(encoding="utf-8") == rendered:
@@ -738,11 +668,12 @@ def apply_plasma_app_themes():
         if tpl.get("post_hook"):
             hooks.append(tpl["post_hook"])
 
-    # Dark: GTK 3 through BWM's live-reloading theme (gtk-theme.py), libadwaita and Qt through
-    # color-scheme (the portal)
-    subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "gtk-theme.py"), "set", "dark"], check=False,
+    # Light or dark like the scheme: GTK 3 through BWM's live-reloading theme (gtk-theme.py),
+    # libadwaita and Qt through color-scheme (the portal)
+    mode = "dark" if dark else "light"
+    subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "gtk-theme.py"), "set", mode], check=False,
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "color-scheme", "prefer-dark"],
+    subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "color-scheme", f"prefer-{mode}"],
                    check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # GTK 4 only reads ~/.config/gtk-4.0/gtk.css at startup: reopen the stateless windows
@@ -894,6 +825,12 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         # 1. Guardar la configuración del tema actual antes de cambiar
         save_current_theme_config(curr_theme)
 
+        # kdeglobals es de Plasma en Breeze (esquema, iconos, fuentes de KDE) y de BWM en las demás
+        # skins (bwm_icons.write_kdeglobals): se guarda al salir de Breeze y se devuelve al entrar
+        plasma_theme = [sys.executable, str(PLASMA_SCRIPTS / "plasma-theme.py")]
+        if curr_theme == "plasma" and not cfg.get("is_plasma"):
+            subprocess.run(plasma_theme + ["save"], check=False)
+
         # Al salir de Retro: devolver Spicetify, btop y VSCodium a su tema (lo demás lo regenera
         # matugen en Default o la paleta Breeze en Plasma)
         if curr_theme == "retro" and not cfg.get("is_retro"):
@@ -905,6 +842,8 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
 
         # 2. Cargar el perfil de configuración aislado del tema seleccionado
         load_theme_config(theme_name, cfg)
+        if cfg.get("is_plasma"):
+            subprocess.run(plasma_theme + ["restore"], check=False)
 
         # 3. Actualizar configuraciones de Hyprland y btop
         update_hypr_theme_lua(theme_name, cfg)
@@ -1039,7 +978,7 @@ def main():
     col_parser = subparsers.add_parser("apply-wallpaper-colors", help="Aplicar colores vivos a partir del wallpaper (Retro)")
     col_parser.add_argument("wallpaper", help="Ruta al wallpaper")
 
-    subparsers.add_parser("apply-plasma-colors", help="Aplicar colores Breeze Dark estáticos (Plasma)")
+    subparsers.add_parser("apply-plasma-colors", help="Aplicar a las apps el esquema de color de Plasma activo (Breeze)")
     subparsers.add_parser("apply-user", help="Aplicar tus opciones en texto (~/.config/bwm/user/shell.jsonc)")
 
     retro_parser = subparsers.add_parser("retro-theme", help="Temas del estilo Retro: biblioteca de temas estáticos de Omarchy")

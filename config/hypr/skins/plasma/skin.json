@@ -1,9 +1,9 @@
 {
   "id": "plasma",
   "name": "Breeze (Kde plasma)",
-  "imitates": "KDE Plasma 6 (Breeze Dark)",
+  "imitates": "KDE Plasma 6 (Breeze)",
   "upstream": "https://kde.org/plasma-desktop/",
-  "description": "Panel flotante, Kickoff, applets de red/Bluetooth/audio/calendario/notificaciones, Alt+Tab de KWin, OSD Breeze y barras de título Breeze con snapping.",
+  "description": "Panel flotante, Kickoff, applets de red/Bluetooth/audio/calendario/notificaciones, Alt+Tab de KWin, OSD Breeze y barras de título Breeze con snapping. Sigue el tema de Plasma activo.",
   "preview": "assets/skin-previews/kde-plasma-6.png",
   "windows": "traditional",
   "traditional": {
@@ -19,11 +19,11 @@
   "defaultTheme": {
     "mode": "static",
     "name": "Breeze Dark",
-    "description": "Estático: la paleta Breeze Dark no cambia con el fondo."
+    "description": "Tema global Breeze Oscuro de Plasma; se cambia con los temas de Plasma (no con el fondo)."
   },
   "themes": {
-    "builtIn": "Breeze Dark (escritorio, GTK, Qt, kitty y apps).",
-    "compatibility": "Objetivo: esquemas de color y temas globales de Plasma de la KDE Store aplicados al panel, applets y apps (pendiente)."
+    "builtIn": "Temas globales Breeze, Breeze Oscuro y Breeze Crepúsculo de Plasma; esquemas de color, estilos de Plasma e iconos instalados.",
+    "compatibility": "Esquemas de color (.colors), estilos de Plasma, iconos y temas globales de Plasma y la KDE Store (Obtener nuevos…) con skins/plasma/scripts/plasma-theme.py; el esquema colorea el shell y todas las apps. Decoraciones y panel portado: fases siguientes de docs/BREEZE_PLAN.md."
   },
   "look": {
     "wallpaper": "plasma.png",
@@ -52,6 +52,7 @@
   },
   "parts": {
     "quickshell": [
+      "config/quickshell/ii/modules/plasma/theme",
       "config/quickshell/ii/modules/ii/plasmaLock",
       "config/quickshell/ii/modules/ii/bar/PlasmaBarContent.qml",
       "config/quickshell/ii/modules/ii/plasmaCommon",
@@ -77,6 +78,8 @@
       "config/matugen/templates"
     ],
     "scripts": [
+      "config/hypr/skins/plasma/scripts/plasma-theme.py",
+      "config/hypr/skins/plasma/scripts/plasma_palette.py",
       "config/hypr/scripts/quick-tile.py",
       "config/hypr/scripts/toggle-minimize.py",
       "src/hyprbars"
@@ -107,6 +110,7 @@
     "systemsettings",
     "plasma-nm",
     "plasma-pa",
-    "bluez-qt"
+    "bluez-qt",
+    "kvantum"
   ]
 }

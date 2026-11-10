@@ -34,18 +34,18 @@ Scope {
     property int selectedAppIndex: 0
     property var recentAppIds: []
 
-    // KDE Plasma Breeze Dark Palette
-    readonly property color colPanelBg: "#f024292e"
-    readonly property color colSidebarBg: "#191d21"
-    readonly property color colBorder: "#2e353b"
-    readonly property color colAccent: "#3daee9"
-    readonly property color colAccentHover: "#4fc3f7"
-    readonly property color colAccentSubtle: "#283daee9"
-    readonly property color colText: "#eff0f1"
-    readonly property color colTextMuted: "#a1a9b1"
-    readonly property color colHover: "#15ffffff"
-    readonly property color colActive: "#283daee9"
-    readonly property color colInputBg: "#1c2024"
+    // Colores del esquema de Plasma activo (Breeze → PlasmaTheme, fase 1)
+    readonly property color colPanelBg: Breeze.panelBg
+    readonly property color colSidebarBg: Qt.tint(Breeze.inputBg, Qt.rgba(Breeze.text.r, Breeze.text.g, Breeze.text.b, 0.02))
+    readonly property color colBorder: Breeze.border
+    readonly property color colAccent: Breeze.accent
+    readonly property color colAccentHover: Qt.lighter(Breeze.accent, 1.2)
+    readonly property color colAccentSubtle: Breeze.accentSubtle
+    readonly property color colText: Breeze.text
+    readonly property color colTextMuted: Breeze.textMuted
+    readonly property color colHover: Breeze.hover
+    readonly property color colActive: Breeze.accentSubtle
+    readonly property color colInputBg: Breeze.inputBg
 
     // Refined slim proportions (Sleek KDE Plasma Kickoff)
     readonly property int kickoffWidth: 460

@@ -39,7 +39,11 @@ local function end4_qt()
     return qt_plugin("platformthemes/KDEPlasmaPlatformTheme6.so")
 end
 
-if end4_qt() then
+-- Breeze (Kde plasma): como en Plasma, el plugin de KDE lee el esquema de color, los iconos y el
+-- estilo de kdeglobals (skins/plasma/scripts/plasma-theme.py) y repinta las apps en vivo
+local breeze_qt = skin == "plasma" and qt_plugin("platformthemes/KDEPlasmaPlatformTheme6.so")
+
+if end4_qt() or breeze_qt then
     hl.env("QT_QPA_PLATFORMTHEME", "kde")
 elseif skin == "retro" and qt_plugin("platformthemes/libqgtk3.so") then
     -- Como Omarchy (default/hypr/envs.lua): Fusion con la paleta del tema GTK, que BWM pinta con
@@ -49,4 +53,17 @@ elseif exists("/usr/bin/qt6ct") then
     hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
 else
     hl.env("QT_QPA_PLATFORMTHEME", "xdgdesktopportal")
+end
+
+-- Breeze: como startplasma, ~/.config/kdedefaults va delante en XDG_CONFIG_DIRS para que los
+-- valores por defecto de un tema global (lookandfeeltool, plasma-theme.py) se apliquen. En las
+-- demás skins se quita.
+do
+    local kdedefaults = os.getenv("HOME") .. "/.config/kdedefaults"
+    local dirs = {}
+    for dir in (os.getenv("XDG_CONFIG_DIRS") or "/etc/xdg"):gmatch("[^:]+") do
+        if dir ~= kdedefaults then table.insert(dirs, dir) end
+    end
+    if skin == "plasma" then table.insert(dirs, 1, kdedefaults) end
+    hl.env("XDG_CONFIG_DIRS", table.concat(dirs, ":"))
 end

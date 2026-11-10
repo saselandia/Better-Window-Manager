@@ -113,9 +113,30 @@ def build_papirus_variant(color: str, light: bool = False):
     return VARIANT
 
 
+def _active_skin() -> str:
+    try:
+        options = json.loads((HOME / ".config/illogical-impulse/config.json").read_text(encoding="utf-8"))
+        return options.get("appearance", {}).get("bwmTheme", "default")
+    except Exception:
+        return "default"
+
+
+def _plasma_icons() -> str:
+    """Breeze: el tema de iconos de Plasma ([Icons] Theme de kdeglobals, plasma-theme.py)."""
+    import configparser
+    parser = configparser.ConfigParser(interpolation=None, strict=False, delimiters=("=",))
+    try:
+        parser.read(KDEGLOBALS, encoding="utf-8")
+        if not parser.has_section("BWM"):
+            return parser.get("Icons", "Theme", fallback="breeze") or "breeze"
+    except configparser.Error:
+        pass
+    return "breeze-dark"
+
+
 def icon_theme_for(theme: str, accent: str = "", light: bool = False) -> str:
     if theme == "plasma":
-        return "breeze-dark"
+        return _plasma_icons()
     if theme == "retro":
         return build_papirus_variant(closest_folder_color(accent or "#7aa2f7"), light) or "Adwaita"
     return "Adwaita"
@@ -175,7 +196,10 @@ def _rgb(hex_color: str) -> str:
 def write_kdeglobals():
     """kdeglobals with the qt6ct palette (bwm.conf, the one of the active skin/theme): KDE apps and
     Qt flatpaks on the KDE runtime (Kate, ProtonUp-Qt...) read their colours from it, as they do
-    not see qt6ct. Only BWM's own kdeglobals is rewritten (marked [BWM]); a real one is kept."""
+    not see qt6ct. Only BWM's own kdeglobals is rewritten (marked [BWM]); a real one is kept.
+    In Breeze kdeglobals is Plasma's own (skins/plasma/scripts/plasma-theme.py): nothing to do."""
+    if _active_skin() == "plasma":
+        return
     try:
         text = QT6CT_COLORS.read_text(encoding="utf-8")
     except Exception:

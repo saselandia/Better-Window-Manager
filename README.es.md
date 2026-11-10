@@ -51,7 +51,7 @@ Es la finalidad del proyecto, así que la medimos. Son estimaciones del porcenta
 | :--- | :---: | :---: | :--- |
 | **Retro** (Omarchy) | **~90 %** | **~80 %** | Temas: se aplican `colors.toml`, fondos y los archivos de apps (Neovim, VS Code, btop…); no `hyprland.lua` del tema, `icons.theme` (Retro usa Papirus con el acento) ni el tema de Chromium (necesita root). Plugins: los de barra y servicios funcionan sin cambios; no los que sustituyen la barra, el bloqueo, overlays o paneles |
 | **default (end-4)** | **~90 %** | — | Cualquier fondo genera su paleta (100 %); plantillas de matugen de terceros se añaden a `matugen/config.toml`. end-4 no tiene catálogo de plugins |
-| **Breeze (Kde plasma)** | **~5 %** | **0 %** | Sólo Breeze Dark. De la KDE Store funcionan los cursores (compartidos por todas las skins); esquemas de color, temas globales, estilos de Plasma, Aurorae y plasmoides todavía no |
+| **Breeze (Kde plasma)** | **~25 %** | **0 %** | Esquemas de color, estilos de Plasma, iconos y temas globales de la KDE Store (los cursores, compartidos por todas las skins); el esquema colorea el shell y las apps. Aurorae, panel con el estilo de Plasma y plasmoides todavía no |
 
 ### Hacia un único compositor: Hyprland
 

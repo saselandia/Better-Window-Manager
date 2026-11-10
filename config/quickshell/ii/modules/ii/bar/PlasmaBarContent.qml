@@ -29,18 +29,22 @@ Item {
     readonly property int floatingGap: floating ? Appearance.sizes.plasmaFloatingGap : 0
     readonly property int panelRadius: floating ? 18 : 0
 
-    readonly property color colPanelBase: Config.options?.bar?.plasma?.color || "#24292e"
+    // Colores del esquema de Plasma activo (Breeze → PlasmaTheme, fase 1). bar.plasma.color sólo
+    // manda si el usuario eligió otro distinto del antiguo valor por defecto (#24292e).
+    readonly property string customPanelColor: Config.options?.bar?.plasma?.color ?? ""
+    readonly property color colPanelBase: (customPanelColor && customPanelColor.toLowerCase() !== "#24292e")
+        ? customPanelColor : Breeze.panelBg
     readonly property color colPanelBg: Qt.rgba(colPanelBase.r, colPanelBase.g, colPanelBase.b,
         panelStyle === "opaque" ? 1 : (Config.options?.bar?.plasma?.opacity ?? 0.91))
-    readonly property color colPanelBorder: "#31363b"
-    readonly property color colAccent: "#3daee9"
-    readonly property color colAccentHover: "#4fc3f7"
-    readonly property color colAccentSubtle: "#283daee9"
-    readonly property color colText: "#eff0f1"
-    readonly property color colTextMuted: "#bdc3c7"
-    readonly property color colHover: "#1affffff"
-    readonly property color colActive: "#2e3daee9"
-    readonly property color colDivider: "#383d44"
+    readonly property color colPanelBorder: Breeze.border
+    readonly property color colAccent: Breeze.accent
+    readonly property color colAccentHover: Qt.lighter(Breeze.accent, 1.2)
+    readonly property color colAccentSubtle: Breeze.accentSubtle
+    readonly property color colText: Breeze.text
+    readonly property color colTextMuted: Breeze.textMuted
+    readonly property color colHover: Breeze.hover
+    readonly property color colActive: Qt.rgba(Breeze.accent.r, Breeze.accent.g, Breeze.accent.b, 0.18)
+    readonly property color colDivider: Breeze.buttonBorder
 
     // Opens one of the Plasma applet popups anchored above `button`
     // (only one applet popup open at a time, like Plasma)

@@ -582,6 +582,12 @@
       "why": "Modelos de Bluetooth del applet de Plasma (org.kde.bluezqt)",
       "check": {"type": "qml", "module": "org/kde/bluezqt"},
       "packages": {"gentoo": "kde-frameworks/bluez-qt", "arch": "bluez-qt", "fedora": "kf6-bluez-qt", "opensuse": null, "debian": null}
+    },
+    "kvantum": {
+      "label": "Kvantum (estilo de widgets Qt)",
+      "why": "Muchos temas globales de la KDE Store (Sweet, Layan…) piden el estilo de aplicaciones Kvantum; sin él las apps Qt vuelven a Breeze/Fusion",
+      "check": {"type": "qtplugin", "path": "styles/libkvantum.so"},
+      "packages": {"gentoo": "x11-themes/kvantum", "arch": "kvantum", "fedora": "kvantum", "opensuse": null, "debian": null}
     }
   }
 }

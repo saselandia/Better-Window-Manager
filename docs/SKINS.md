@@ -44,7 +44,7 @@ una de mosaico, se rehace el mosaico. Detalle y ejemplo en
 | :--- | :--- | :--- | :--- | :--- |
 | `default` | default (end-4) | end-4 / illogical-impulse | Material You **dinámico** (matugen desde el fondo) | Plantillas de matugen, fondos |
 | `retro` | Retro | Omarchy 4 (`quattro`) | Paleta **dinámica** con formato de Omarchy; 23 temas **estáticos** de Omarchy | `colors.toml` de Omarchy, plugins del shell de Omarchy (Ajustes → Temas / Plugins) |
-| `plasma` | Breeze (Kde plasma) | Plasma 6 Breeze Dark | Breeze Dark **estático** | Esquemas de color y temas globales de Plasma (objetivo, pendiente) |
+| `plasma` | Breeze (Kde plasma) | Plasma 6 (Breeze) | Tema global Breeze Oscuro, **estático** | Esquemas de color, estilos de Plasma, iconos y temas globales de Plasma (`plasma-theme.py`, «Obtener nuevos…») |
 
 *Dinámico* = la paleta se genera del fondo de pantalla y cambia con él. *Estático* = colores fijos
 de un tema; cambiar el fondo no los toca.
@@ -55,7 +55,7 @@ de un tema; cambiar el fondo no los toca.
 | :--- | :---: | :---: | :--- |
 | Retro | ~90 % | ~80 % | `hyprland.lua` e `icons.theme` de los temas, tema de Chromium (root); plugins que sustituyen barra, bloqueo, overlays o paneles |
 | default (end-4) | ~90 % | — | Plantillas de matugen de terceros: se añaden a mano en `matugen/config.toml` |
-| Breeze (Kde plasma) | ~5 % | 0 % | Esquemas de color (`.colors`), temas globales, estilos de Plasma, Aurorae, plasmoides. Sólo funcionan los cursores |
+| Breeze (Kde plasma) | ~25 % | 0 % | Esquemas de color (`.colors`), estilos de Plasma, iconos y temas globales se aplican con `plasma-theme.py`, y el esquema colorea el shell y las apps (probado en configuraciones aisladas; falta probarlo en una sesión Breeze real). Faltan: panel y applets con el estilo de Plasma (SVG), decoraciones (Aurorae/Breeze reales), cambiador de ventanas, bloqueo, plasmoides (docs/BREEZE_PLAN.md) |
 
 Actualiza esta tabla y la del README cuando cambie el soporte.
 

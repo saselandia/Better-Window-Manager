@@ -206,12 +206,12 @@ Imita **Omarchy 4 (basecamp/omarchy, rama quattro)**. El shell de Omarchy: su ba
 
 ## Skin Breeze (Kde plasma)
 
-Imita **KDE Plasma 6 (Breeze Dark)**. Panel flotante, Kickoff, applets de red/Bluetooth/audio/calendario/notificaciones, Alt+Tab de KWin, OSD Breeze y barras de título Breeze con snapping.
+Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetooth/audio/calendario/notificaciones, Alt+Tab de KWin, OSD Breeze y barras de título Breeze con snapping. Sigue el tema de Plasma activo.
 
 * **Ventanas:** WM tradicional (ventanas flotantes)
-* **Tema por defecto:** Breeze Dark (estático). Estático: la paleta Breeze Dark no cambia con el fondo.
-* **Temas:** Breeze Dark (escritorio, GTK, Qt, kitty y apps).
-* **Compatibilidad:** Objetivo: esquemas de color y temas globales de Plasma de la KDE Store aplicados al panel, applets y apps (pendiente).
+* **Tema por defecto:** Breeze Dark (estático). Tema global Breeze Oscuro de Plasma; se cambia con los temas de Plasma (no con el fondo).
+* **Temas:** Temas globales Breeze, Breeze Oscuro y Breeze Crepúsculo de Plasma; esquemas de color, estilos de Plasma e iconos instalados.
+* **Compatibilidad:** Esquemas de color (.colors), estilos de Plasma, iconos y temas globales de Plasma y la KDE Store (Obtener nuevos…) con skins/plasma/scripts/plasma-theme.py; el esquema colorea el shell y todas las apps. Decoraciones y panel portado: fases siguientes de docs/BREEZE_PLAN.md.
 
 | Requisito | Para qué | Gentoo | Arch / CachyOS | Fedora | openSUSE | Debian / Ubuntu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -243,6 +243,7 @@ Imita **KDE Plasma 6 (Breeze Dark)**. Panel flotante, Kickoff, applets de red/Bl
 | plasma-nm (applet de red) | Modelos de red del applet de Plasma (org.kde.plasma.networkmanagement) | `kde-plasma/plasma-nm` | `plasma-nm` | `plasma-nm` | — | `plasma-nm` |
 | plasma-pa (applet de sonido) | Modelos de sonido del applet de Plasma (org.kde.plasma.private.volume) | `kde-plasma/plasma-pa` | `plasma-pa` | `plasma-pa` | — | `plasma-pa` |
 | BluezQt | Modelos de Bluetooth del applet de Plasma (org.kde.bluezqt) | `kde-frameworks/bluez-qt` | `bluez-qt` | `kf6-bluez-qt` | — | — |
+| Kvantum (estilo de widgets Qt) | Muchos temas globales de la KDE Store (Sweet, Layan…) piden el estilo de aplicaciones Kvantum; sin él las apps Qt vuelven a Breeze/Fusion | `x11-themes/kvantum` | `kvantum` | `kvantum` | — | — |
 
 ## Plugins de barras de título (Breeze (Kde plasma) y Retro)
 

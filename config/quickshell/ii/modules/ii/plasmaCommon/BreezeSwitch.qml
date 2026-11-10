@@ -1,4 +1,5 @@
 import QtQuick
+import qs.modules.plasma.theme
 
 // Breeze toggle switch
 MouseArea {
@@ -26,7 +27,7 @@ MouseArea {
             radius: 8
             anchors.verticalCenter: parent.verticalCenter
             x: sw.checked ? parent.width - width - 2 : 2
-            color: sw.checked ? "#fcfcfc" : "#bdc3c7"
+            color: sw.checked ? PlasmaTheme.selectionText : PlasmaTheme.inactiveText
             Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
         }
     }

@@ -1,32 +1,40 @@
 pragma Singleton
 
 import qs.modules.common
+import qs.modules.plasma.theme
 import QtQuick
 import Quickshell
 
 /**
- * Shared KDE Plasma Breeze Dark tokens for the Plasma-style applets
- * (Bluetooth, Networks…). Same palette as PlasmaKickoff / PlasmaBarContent.
+ * Tokens de los applets Breeze actuales (Bluetooth, red, audio, Kickoff, panel…). Desde la fase 1
+ * de docs/BREEZE_PLAN.md es una fachada sobre PlasmaTheme: los colores salen del esquema de color
+ * de Plasma activo, no de una paleta Breeze Dark fija. Los applets portados de Plasma (fases 3–5)
+ * usarán PlasmaTheme, Kirigami y KSvg directamente.
  */
 Singleton {
-    readonly property color panelBg: "#f024292e"
-    readonly property color headerBg: "#2a2e32"
-    readonly property color border: "#2e353b"
-    readonly property color accent: "#3daee9"
-    readonly property color accentSubtle: "#283daee9"
-    readonly property color accentBorder: "#803daee9"
-    readonly property color text: "#eff0f1"
-    readonly property color textMuted: "#a1a9b1"
-    readonly property color hover: "#15ffffff"
-    readonly property color buttonBg: "#31363b"
-    readonly property color buttonBorder: "#4d5257"
-    readonly property color inputBg: "#1c2024"
-    readonly property color negative: "#da4453"
-    readonly property color positive: "#27ae60"
-    readonly property color neutral: "#f67400"
-    readonly property string fontFamily: "Google Sans Flex"
+    function alpha(c, a) {
+        return Qt.rgba(c.r, c.g, c.b, a);
+    }
 
-    // Bundled Breeze Dark icons: assets/icons/breeze-dark/<group>/<name>.svg
+    readonly property color panelBg: alpha(PlasmaTheme.windowBackground, 0.94)
+    readonly property color headerBg: PlasmaTheme.headerBackground
+    readonly property color border: Qt.tint(PlasmaTheme.windowBackground, alpha(PlasmaTheme.windowText, 0.12))
+    readonly property color accent: PlasmaTheme.accent
+    readonly property color accentSubtle: alpha(PlasmaTheme.accent, 0.16)
+    readonly property color accentBorder: alpha(PlasmaTheme.accent, 0.5)
+    readonly property color text: PlasmaTheme.windowText
+    readonly property color textMuted: PlasmaTheme.inactiveText
+    readonly property color hover: alpha(PlasmaTheme.windowText, 0.08)
+    readonly property color buttonBg: PlasmaTheme.buttonBackground
+    readonly property color buttonBorder: Qt.tint(PlasmaTheme.buttonBackground, alpha(PlasmaTheme.buttonText, 0.25))
+    readonly property color inputBg: PlasmaTheme.viewBackground
+    readonly property color negative: PlasmaTheme.negative
+    readonly property color positive: PlasmaTheme.positive
+    readonly property color neutral: PlasmaTheme.neutral
+    readonly property string fontFamily: PlasmaTheme.fontMain
+
+    // Iconos Breeze incluidos: assets/icons/breeze-dark/<grupo>/<nombre>.svg (sólo la variante
+    // oscura; los applets portados usarán el tema de iconos de Plasma)
     function icon(group, name) {
         return "file://" + Directories.assetsPath + "/icons/breeze-dark/" + group + "/" + name + ".svg";
     }

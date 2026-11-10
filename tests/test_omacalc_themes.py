@@ -26,10 +26,11 @@ class OmacalcThemesTest(unittest.TestCase):
                 self.assertEqual(actual, {key: colors[key] for key in ("background", "foreground", "accent", "selection")})
 
     def test_breeze_uses_its_shared_palette(self):
-        spec = importlib.util.spec_from_file_location("omacalc_theme_manager", SCRIPTS / "bwm-theme-manager.py")
-        manager = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(manager)
-        palette = tomllib.loads(retro.render_matugen(TEMPLATE.read_text(), manager.BREEZE_DARK_M3, ""))
+        # Breeze sigue el esquema de color de Plasma; sin esquema, los valores de Breeze Oscuro
+        spec = importlib.util.spec_from_file_location("plasma_palette", ROOT / "config/hypr/skins/plasma/scripts/plasma_palette.py")
+        plasma = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(plasma)
+        palette = tomllib.loads(retro.render_matugen(TEMPLATE.read_text(), plasma.m3(plasma.Scheme({})), ""))
         self.assertEqual(palette["background"], "#202326")
         self.assertEqual(palette["accent"], "#3daee9")
 

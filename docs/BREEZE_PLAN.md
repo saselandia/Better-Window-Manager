@@ -88,29 +88,29 @@ F13 Limpieza final
 F3–F5 y F6–F8 pueden ir en paralelo (archivos distintos). Las fases del plugin (F6b, F7, F8 parte
 C++, F10 parte C++) comparten `src/breezebars/`: **nunca dos a la vez**.
 
-| Fase | Esfuerzo | Necesita reiniciar sesión |
-| :--- | :--- | :--- |
-| F0 Viabilidad y arquitectura | **high** | No |
-| F1 Motor de temas de Plasma | medium | No |
-| F2 Puente de configuración BWM ↔ KDE | **high** | No |
-| F3 Panel | medium | No |
-| F4 Kickoff | medium | No |
-| F5 Bandeja del sistema y applets | medium | No |
-| F6a Auxiliar de decoraciones `bwm-decorator` | **high** | No |
-| F6b Plugin `breezebars` con las decoraciones del auxiliar | **high** | Sí |
-| F7 Detección de CSD | **high** | Sí |
-| F8 Minimizar y maximizar como KWin | medium | Sí (si toca el plugin) |
-| F9 Menús de clic derecho | medium | Sí (menú de la barra de título) |
-| F10 Reglas de ventana y snapping | **high** | Sí |
-| F11 Preferencias del sistema | medium | No |
-| F12 Alt+Tab, OSD, bloqueo, KRunner | medium | No |
-| F13 Limpieza, documentación y prueba completa | medium | Sí |
+| Fase                                                      | Esfuerzo | Necesita reiniciar sesión       |
+| :-------------------------------------------------------- | :------- | :------------------------------ |
+| F0 Viabilidad y arquitectura                              | **high** | No                              |
+| F1 Motor de temas de Plasma                               | medium   | No                              |
+| F2 Puente de configuración BWM ↔ KDE                      | **high** | No                              |
+| F3 Panel                                                  | medium   | No                              |
+| F4 Kickoff                                                | medium   | No                              |
+| F5 Bandeja del sistema y applets                          | medium   | No                              |
+| F6a Auxiliar de decoraciones `bwm-decorator`              | **high** | No                              |
+| F6b Plugin `breezebars` con las decoraciones del auxiliar | **high** | Sí                              |
+| F7 Detección de CSD                                       | **high** | Sí                              |
+| F8 Minimizar y maximizar como KWin                        | medium   | Sí (si toca el plugin)          |
+| F9 Menús de clic derecho                                  | medium   | Sí (menú de la barra de título) |
+| F10 Reglas de ventana y snapping                          | **high** | Sí                              |
+| F11 Preferencias del sistema                              | medium   | No                              |
+| F12 Alt+Tab, OSD, bloqueo, KRunner                        | medium   | No                              |
+| F13 Limpieza, documentación y prueba completa             | medium   | Sí                              |
 
 ---
 
 ## 4. Prompts
 
-> **La fase 0 está hecha** (`docs/BREEZE_ARCH.md`). Ese documento manda sobre lo que digan los
+> **Hechas: fase 0** (`docs/BREEZE_ARCH.md`) **y fase 1** (motor de temas, `BWM_CONTEXT.md` §3.139). `docs/BREEZE_ARCH.md` manda sobre lo que digan los
 > prompts siguientes: lo que cambió está anotado en su §7, y F6 se ha partido en F6a y F6b.
 
 ### F0 · Viabilidad y arquitectura — **[HIGH]**

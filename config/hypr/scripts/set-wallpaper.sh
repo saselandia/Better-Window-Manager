@@ -133,7 +133,7 @@ fi
 
 # 3. Generar la paleta de colores según el estilo
 if [[ "$CURRENT_THEME" == "plasma" ]]; then
-    echo "Estilo Breeze (Kde plasma) activo: manteniendo paleta estática Breeze Dark (sin Matugen ni recoloreo)."
+    echo "Estilo Breeze (Kde plasma) activo: los colores son los del esquema de Plasma (sin Matugen); el fondo no los cambia."
     python3 /home/sasel/.config/hypr/scripts/bwm-theme-manager.py apply-plasma-colors 2>/dev/null || true
 elif [[ "$CURRENT_THEME" == "retro" ]]; then
     # Sin matugen: bwm_omarchy.py genera desde el fondo una paleta estilo Omarchy y rellena
