@@ -95,7 +95,7 @@ botón del menú se declara sólo como widget de barra. También de `18ac93c`, s
 `omarchy-hyprland-monitor-{layout,resolution,rotate,scaling,laptop}`, `omarchy-monitor-state` y
 `omarchy-hyprland-toggle-enabled`, `omarchy-toggle{,-enabled,-bar,-animations}`, `omarchy-hyprland-toggle`,
 `omarchy-hyprland-animations-off`, `omarchy-transcode-ascii` y `omarchy-file-select` (quattro `ec62d379`) en
-`hypr/scripts/omarchy-shims`, adaptados `omarchy-language` y `omarchy-branding-{about,screensaver}`; propios de BWM con su interfaz:
+`hypr/scripts/omarchy-shims`, adaptados `omarchy-language` y `omarchy-branding-{about,screensaver}`; reglas de ventana `default/hypr/apps/*.lua` (quattro `c18b00c5`, sin cambios) en `Commons/omarchy/default/hypr/apps/`; propios de BWM con su interfaz:
 `omarchy-hyprland-monitor-persist` (guarda con `monitor-manager.py`) y `omarchy-sudo-passwordless`
 (nunca activo). `Commons/omarchy/default/hypr/toggles/bar-glassy.lua` procede de
 `default/hypr/toggles/bar-glassy.lua` sin la llamada a su modo vidrio.

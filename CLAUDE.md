@@ -152,7 +152,7 @@ siendo el nombre del escritorio original que imita Breeze.
 | Configuración integrada de Retro | `modules/ii/omarchyMenu/omarchy/settings/` (catálogo, controlador y editores dentro de `Menu.qml`); `open-settings.sh [página]` → IPC `omarchyMenu.settings`. `retroSettings.qml` sólo redirige, sin ventana propia |
 | Un comando `omarchy-*` que falta | `config/hypr/scripts/omarchy-shims/` (+ enlace en `~/.local/bin`, `bwm-plugin.sh catalog`) |
 | Modo de cada workspace en Retro (mosaico, desplazamiento, flotante con barras) | `skins/retro/hypr/workspace-modes.lua` (port de Omarchy; modos en `~/.local/state/omarchy/workspace-layouts/`), shims `omarchy-hyprland-workspace-layout-*` y `bwm-workspace-layout-set`; barras con el plugin de Omarchy sin cambios (`src/omarchy-titlebars`), nada del de Breeze |
-| Reglas de ventana / juegos | `hypr/modules/rules.lua`, `scripts/window-guard.py` |
+| Reglas de ventana / juegos | `hypr/modules/rules.lua`, reglas por app de Omarchy (`Commons/omarchy/default/hypr/apps/`, cargadas por `modules/app_rules.lua`), `scripts/window-guard.py` |
 | Atajos | `keybinds.json` vía `keybinds-manager.py` |
 | Bloqueo / pantalla de inicio de cada skin | `modules/ii/lock/Lock.qml` elige: `lock/LockSurface.qml` (end-4, el desenfoque lo pinta `background/Background.qml` y necesita `session_lock_xray` de `skins/default/hypr/lock.lua`), `omarchyLock/` (Omarchy 4, Retro), `plasmaLock/` (KDE, Breeze); SDDM común entra solo (`install-boot-theme.sh`) |
 | Apagar, reiniciar, cerrar sesión, suspender | `config/hypr/scripts/bwm-power <acción> [--dry-run]` (común a todas las skins); los menús de cada skin sólo lo llaman |

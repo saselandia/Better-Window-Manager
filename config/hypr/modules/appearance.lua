@@ -158,6 +158,15 @@ end
 -- skin cambia en su misc.lua se repone aquí antes, para que no se quede al cambiar de skin
 hl.config({
     render = { cm_auto_hdr = (hl.get_config and hl.get_config("render.cm_auto_hdr") ~= nil) and 1 or nil },
+    general = { extend_border_grab_area = 15 },
+    misc = {
+        disable_splash_rendering   = false,
+        disable_scale_notification = false,
+        anr_missed_pings           = 5,
+        initial_workspace_tracking = 1,
+    },
+    cursor = { hide_on_key_press = false },
+    binds = { hide_special_on_workspace_change = false },
 })
 
 
@@ -229,6 +238,14 @@ hl.config({
         -- Como Omarchy: una app que pide activarse (enlace abierto desde Discord, etc.) toma el foco
         -- y te lleva a su workspace, en vez de quedar sólo marcada como urgente
         focus_on_activate       = true,
+        -- Como Omarchy (looknfeel.lua): si el shell muere con la pantalla bloqueada, el que lo
+        -- sustituye (window-guard.py lo relanza) puede retomar el bloqueo en vez de dejar la
+        -- pantalla roja de Hyprland
+        allow_session_lock_restore = true,
+        -- Como Omarchy (input.lua): una tecla o el ratón encienden las pantallas apagadas por
+        -- inactividad (modules/ii/idle/BwmIdle.qml)
+        key_press_enables_dpms   = true,
+        mouse_move_enables_dpms  = true,
     },
 })
 

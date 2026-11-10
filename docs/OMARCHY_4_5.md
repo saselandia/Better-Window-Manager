@@ -191,3 +191,52 @@ recupera los workspaces de un monitor al reconectarlo.
 
 **Atajos (anotado, sin implementar)**: ciclo de layout de workspace, Alt+Mayús+Tab, seleccionar todo universal,
 Super+coma sobre notificaciones, dictado, gestos de touchpad.
+
+## 6. Revisión completa del 2026-11-10 (upstream `quattro` `c18b00c5`)
+
+Comparado todo lo vendido con un clon de `basecamp/omarchy` (`quattro`, 2026-11-10 17:32): 53 commits desde
+`598e4eb` (lock, OSD y fondo), 32 desde `18ac93c` (barra y paneles). Sólo 11 de los 53 tocan algo que BWM usa; el
+resto es hardware (Snapdragon, ASUS), traducciones y modelos locales. Resumen de números: del `shell/` de Omarchy
+(283 archivos), 216 son idénticos a los nuestros, 53 difieren (la mayoría, adaptaciones «BWM» de lock, idle, batería,
+luz nocturna, fondo y `shell.qml`) y 14 no tienen equivalente por nombre. De sus 587 comandos `bin/`, 47 son iguales,
+53 sólo cambian la línea de procedencia, 65 están adaptados y 422 no existen aquí (Arch, hardware, instalación,
+migraciones). Los 23 temas están completos (más Jade Horse y nuestro Osaka Jade) y el `shell.json` por defecto es
+idéntico. Estado sano: 193 pruebas OK, `configerrors` vacío, 60 destinos IPC, `bwm check` de Retro correcto.
+
+**A. Lo vendido que ha cambiado en upstream (sin parches de BWM, bajo riesgo)** — notificaciones y colectores **hechos** (§3.134); queda Dropbox: notificaciones (`Store.js`,
+`Service.qml`, `Icons.js`: una sola tarjeta para avisos idénticos y glifo del remitente), panel de Dropbox (progreso y
+velocidad: `Model.js`, `Panel.qml`, `Service.qml`, `status.py`) con `Ui/PanelKeyCatcher.qml` (`activateRequested`
+lleva los modificadores) y los colectores de uso de agentes `deepseek`, `fireworks` (reescrito), `openrouter`.
+El panel de agentes cambia sólo por modelos locales (no aplica).
+
+**B. Opciones de Hyprland de Omarchy que no tenemos** — **hecho** (§3.134), salvo NVIDIA: (`default/hypr/looknfeel.lua` e `input.lua`; comprobado con
+`hyprctl getoption`): `misc.allow_session_lock_restore` (ahora `false`: si Quickshell muere con la pantalla bloqueada,
+un shell nuevo no puede retomar el bloqueo y queda la pantalla roja; BWM bloquea al arrancar y relanza el shell, así que
+es la más importante), `misc.key_press_enables_dpms` y `mouse_move_enables_dpms` (ahora `false`, y BWM apaga las
+pantallas por inactividad), `input.repeat_rate` 40 / `repeat_delay` 250 / `numlock_by_default`, `cursor.hide_on_key_press`,
+`misc.hide_special_on_workspace_change`, `disable_scale_notification`, `anr_missed_pings`, `extend_border_grab_area` 8,
+`disable_splash_rendering`, `initial_workspace_tracking` 0. Variables de NVIDIA para VA-API (`nvidia.lua`): sólo sirven
+con `nvidia-vaapi-driver`, que no está instalado.
+
+**C. Reglas de ventana por app** — **hecho** (§3.134): (`default/hypr/apps/*.lua`): BWM no trae casi ninguna: 1Password/Bitwarden
+(`no_screen_share`), imagen en imagen (flota, fija, 600×338 arriba a la derecha, también Meet), ventanas «is sharing» a
+`special silent`, portal cautivo, Steam (tamaño y lista de amigos), Telegram sin `focus_on_activate`, RetroArch y
+Moonlight a pantalla completa con inhibidor de reposo, DaVinci, LocalSend, superposición de webcam, Inkscape, JetBrains,
+`pop` (recentra al moverla de monitor), etiqueta `noidle`, Papers/NautilusPreviewer flotantes.
+
+**D. Menú de Retro:** el catálogo de upstream tiene 427 ids y BWM 186. Lo aplicable que falta: Estilo → Ventanas
+(esquinas tema/rectas/redondeadas y huecos: `corners-*.lua`, `window-no-gaps.lua`), Ajustes → Plugins (activar, desactivar,
+añadir, clonar y quitar desde el menú: `omarchy-menu-plugin`), Compartir (LocalSend/Tailscale), Transcodificar,
+Actualizar → temas extra, hora y zona horaria, Aprender → Comunidad/tmux/herdr. No aplican Instalar y Quitar (≈190 ids,
+paquetes de Arch, aunque sí podrían adaptarse web apps y TUIs), canales, hardware, firmware, claves ni Direct Boot.
+
+**E. Temas:** cinco temas traen su propio `hyprland.lua` (bordes con degradado, sombras de Lumon, borde de grupos:
+kanagawa, last-horizon, lumon, retro-82, solitude) y BWM no lo carga (`retro_colors.lua` lo genera de `colors.toml`),
+así que esos detalles no se ven. Omarchy 98 y Windows XP siguen sin ser accesibles (los repositorios dan 404).
+
+**F. Otros:** Omarchy pasó el tema de Qt de `gtk3` a `qtengine` (#18325); BWM sigue con `gtk3` (funciona, §3.80) y
+`qtengine` no está en el árbol de Gentoo que conocemos. El modo vidrio de Omarchy 4.5 ahora hace translúcida cada
+ventana (0,75) con desenfoque y capas `omarchy-*`; el nuestro (terminales 0,65 y GTK 80 %) es el anterior. Atajos
+anotados sin implementar: Super+L, Alt+Mayús+Tab, seleccionar todo, Super+coma, dictado, gestos, `pop`, ancho de
+ventana, mosaico a pantalla completa y consola desplegable (`qconsole.lua`, 202 líneas). Siguen sin portar web apps,
+TUIs, dictado, modelos locales, Install/Remove y compartir.

@@ -22,6 +22,32 @@ hl.config({
     },
 })
 
+-- Más de looknfeel.lua de Omarchy (quattro c18b00c5). modules/appearance.lua repone sus valores por
+-- defecto antes, para que no se queden al pasar a otra skin.
+hl.config({
+    general = {
+        -- Franja más estrecha para agarrar el borde y redimensionar
+        extend_border_grab_area = 8,
+    },
+    misc = {
+        -- Sin el texto de bienvenida sobre el fondo ni el aviso al cambiar la escala
+        disable_splash_rendering   = true,
+        disable_scale_notification = true,
+        -- Aviso de «la app no responde» tras 3 pings perdidos
+        anr_missed_pings           = 3,
+        -- Una app se abre en el workspace en el que estás, no en el que estaba al lanzarla
+        initial_workspace_tracking = 0,
+    },
+    cursor = {
+        -- El puntero se oculta al escribir
+        hide_on_key_press = true,
+    },
+    binds = {
+        -- Cambiar de workspace cierra el workspace especial abierto
+        hide_special_on_workspace_change = true,
+    },
+})
+
 -- Interruptores de Hyprland de Omarchy (omarchy-hyprland-toggle): cada uno es un archivo en
 -- ~/.local/state/omarchy/toggles/hypr/ que se copia de Commons/omarchy/default/hypr/toggles/ y recarga
 -- Hyprland. Omarchy lee esa carpeta entera; aquí sólo los que BWM admite (los demás, como window-glassy,

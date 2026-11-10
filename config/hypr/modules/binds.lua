@@ -23,6 +23,11 @@ hl.config({
 
         sensitivity = 0, -- -1.0 - 1.0, 0 means no modification.
 
+        -- Repetición de teclas y bloqueo numérico de Omarchy (default/hypr/input.lua)
+        repeat_rate        = 40,
+        repeat_delay       = 250,
+        numlock_by_default = true,
+
         touchpad = {
             natural_scroll = false,
         },

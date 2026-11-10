@@ -31,6 +31,7 @@ local menu        = "quickshell -c ii ipc call search toggle || rofi -show drun"
 require("modules.environment")
 require("modules.monitors")
 require("modules.rules")
+require("modules.app_rules")
 require("modules.autostart")
 require("modules.binds")
 require("modules.appearance")
