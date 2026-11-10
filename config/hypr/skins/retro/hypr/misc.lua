@@ -54,9 +54,39 @@ hl.config({
 -- necesitan piezas de Omarchy que BWM no tiene):
 --   bar-glassy    fondo «vidrio» de la barra (doble clic en su centro, o `omarchy-bar background glassy`)
 --   no-animations sin animaciones, desenfoque ni sombras (menú → Estilo → Animaciones)
+--   corners-sharp / corners-rounded  esquinas de las ventanas, sea cual sea el tema (Estilo → Ventanas)
+--   window-no-gaps  sin huecos ni bordes (Estilo → Ventanas)
 -- Va después de animations.lua, así que gana.
 local state_home = os.getenv("XDG_STATE_HOME") or ((os.getenv("HOME") or "") .. "/.local/state")
-for _, name in ipairs({ "bar-glassy", "no-animations" }) do
+
+-- El hyprland.lua del tema de Omarchy activo (bordes con degradado, sombras de Lumon, borde de los
+-- grupos…), que Omarchy carga después de sus valores por defecto y antes de los interruptores: lo trae
+-- el tema estático (kanagawa, last-horizon, lumon, retro-82, solitude) y bwm_omarchy_apps lo copia a
+-- ~/.local/state/bwm/omarchy/theme. Sin él, los colores de retro_colors.lua. Usa el `o.transparent_window`
+-- de Omarchy (sólo kanagawa), que aquí es una regla de opacidad.
+do
+    local theme_file = state_home .. "/omarchy/current/theme/hyprland.lua"
+    local file = io.open(theme_file, "r")
+    if file then
+        file:close()
+        local o = {
+            transparent_window = function(match, opacity)
+                hl.window_rule({
+                    match = type(match) == "string" and { class = match } or match,
+                    opacity = opacity or "0.985 0.96",
+                })
+            end,
+        }
+        local chunk, err = loadfile(theme_file, "t", setmetatable({ o = o }, { __index = _G }))
+        local ok = chunk ~= nil
+        if ok then ok, err = pcall(chunk) end
+        if not ok then
+            print("BWM: hyprland.lua del tema: " .. tostring(err))
+        end
+    end
+end
+
+for _, name in ipairs({ "bar-glassy", "no-animations", "corners-sharp", "corners-rounded", "window-no-gaps" }) do
     local toggle = state_home .. "/omarchy/toggles/hypr/" .. name .. ".lua"
     local file = io.open(toggle, "r")
     if file then

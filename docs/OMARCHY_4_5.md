@@ -224,17 +224,17 @@ con `nvidia-vaapi-driver`, que no está instalado.
 Moonlight a pantalla completa con inhibidor de reposo, DaVinci, LocalSend, superposición de webcam, Inkscape, JetBrains,
 `pop` (recentra al moverla de monitor), etiqueta `noidle`, Papers/NautilusPreviewer flotantes.
 
-**D. Menú de Retro:** el catálogo de upstream tiene 427 ids y BWM 186. Lo aplicable que falta: Estilo → Ventanas
+**D. Menú de Retro** — Ventanas, Plugins, Transcodificar, Compartir y Actualizar **hechos** (§3.135): el catálogo de upstream tiene 427 ids y BWM 186. Lo aplicable que falta: Estilo → Ventanas
 (esquinas tema/rectas/redondeadas y huecos: `corners-*.lua`, `window-no-gaps.lua`), Ajustes → Plugins (activar, desactivar,
 añadir, clonar y quitar desde el menú: `omarchy-menu-plugin`), Compartir (LocalSend/Tailscale), Transcodificar,
 Actualizar → temas extra, hora y zona horaria, Aprender → Comunidad/tmux/herdr. No aplican Instalar y Quitar (≈190 ids,
 paquetes de Arch, aunque sí podrían adaptarse web apps y TUIs), canales, hardware, firmware, claves ni Direct Boot.
 
-**E. Temas:** cinco temas traen su propio `hyprland.lua` (bordes con degradado, sombras de Lumon, borde de grupos:
+**E. Temas** — **hecho** (§3.135): cinco temas traen su propio `hyprland.lua` (bordes con degradado, sombras de Lumon, borde de grupos:
 kanagawa, last-horizon, lumon, retro-82, solitude) y BWM no lo carga (`retro_colors.lua` lo genera de `colors.toml`),
 así que esos detalles no se ven. Omarchy 98 y Windows XP siguen sin ser accesibles (los repositorios dan 404).
 
-**F. Otros:** Omarchy pasó el tema de Qt de `gtk3` a `qtengine` (#18325); BWM sigue con `gtk3` (funciona, §3.80) y
+**F. Otros** — vidrio y consola desplegable **hechos** (§3.135), Qt no: Omarchy pasó el tema de Qt de `gtk3` a `qtengine` (#18325); BWM sigue con `gtk3` (funciona, §3.80) y
 `qtengine` no está en el árbol de Gentoo que conocemos. El modo vidrio de Omarchy 4.5 ahora hace translúcida cada
 ventana (0,75) con desenfoque y capas `omarchy-*`; el nuestro (terminales 0,65 y GTK 80 %) es el anterior. Atajos
 anotados sin implementar: Super+L, Alt+Mayús+Tab, seleccionar todo, Super+coma, dictado, gestos, `pop`, ancho de

@@ -27,6 +27,24 @@ if state then
         },
     })
 
+    -- Retro, como Omarchy 4.5 (toggles/window-glassy.lua, quattro e56f833): cada ventana se desvanece
+    -- entera al 75 % (la mayoría de apps pintan su fondo opaco) y las capas de su shell desenfocan lo
+    -- que tienen detrás. Va antes de la regla de GTK de abajo, que se queda con su 80 % en esas apps.
+    local ok_theme, active_theme = pcall(require, "modules.theme")
+    if ok_theme and active_theme.name == "retro" then
+        hl.window_rule({
+            name    = "bwm-glass-all",
+            match   = { class = ".*" },
+            opacity = "0.75 0.75",
+        })
+        hl.layer_rule({
+            name         = "bwm-glass-omarchy-layers",
+            match        = { namespace = "^(omarchy-bar|omarchy-menu|omarchy-notifications|omarchy-osd|omarchy-polkit|omarchy-reminders|omarchy-clipboard|omarchy-emojis|omarchy-image-selector|omarchy-keyboard-panel|omarchy-network-qr)$" },
+            blur         = true,
+            ignore_alpha = 0.3,
+        })
+    end
+
     -- Las apps GTK pintan su fondo opaco: se atenúan enteras (los terminales tienen su
     -- propio fondo translúcido desde glass.sh, que deja el texto nítido)
     hl.window_rule({

@@ -1,4 +1,13 @@
-#!/usr/bin/env bash
-# BWM stand-in for Omarchy's timezone picker (middle click on the clock): BWM has none, so it
-# just tells which timezone is in use.
-notify-send -a Clock "Timezone" "$(timedatectl show -p Timezone --value 2>/dev/null || date +%Z)"
+#!/bin/bash
+# Adapted from Omarchy (basecamp/omarchy quattro e56f833, MIT). BWM: timedatectl pide la contraseña por polkit (el agente de Omarchy), sin sudo.
+
+# omarchy:summary=Select and set the system timezone
+# omarchy:group=menu
+# omarchy:name=timezone
+
+set -e
+
+timezone=$(timedatectl list-timezones | omarchy-menu-select "$(omarchy-i18n timezone.setTitle)" -- --width 520 --maxheight 520) || exit 1
+timedatectl set-timezone "$timezone"
+omarchy-shell -q omarchy.clock refresh
+omarchy-notification-send "$(omarchy-i18n timezone.changed "$timezone")"

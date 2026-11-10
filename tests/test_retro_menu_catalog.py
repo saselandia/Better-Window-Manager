@@ -177,10 +177,28 @@ class RetroToggleLoaderTests(unittest.TestCase):
         return out.split(",") if out else []
 
     def test_reads_the_toggles_bwm_supports(self):
-        self.assertEqual(self.loaded(["no-animations", "bar-glassy"]), ["bar-glassy", "no-animations"])
+        self.assertEqual(self.loaded(["no-animations", "bar-glassy", "window-no-gaps", "corners-sharp"]),
+                         ["bar-glassy", "no-animations", "corners-sharp", "window-no-gaps"])
+
+    def test_loads_the_active_themes_own_hyprland_lua_before_the_toggles(self):
+        home = tempfile.mkdtemp(prefix="bwm-test-")
+        self.addCleanup(shutil.rmtree, home, True)
+        theme = Path(home, ".local/state/omarchy/current/theme"); theme.mkdir(parents=True)
+        (theme / "hyprland.lua").write_text('LOADED[#LOADED + 1] = "theme"\no.transparent_window({ tag = "terminal" }, "0.99 0.985")\n')
+        flags = Path(home, ".local/state/omarchy/toggles/hypr"); flags.mkdir(parents=True)
+        (flags / "corners-sharp.lua").write_text('LOADED[#LOADED + 1] = "corners-sharp"\n')
+        script = (
+            f'HOME = {json.dumps(home)}\nLOADED = {{}}\nRULES = {{}}\n'
+            'os.getenv = (function(real) return function(k) if k == "HOME" then return HOME end if k == "XDG_STATE_HOME" then return nil end return real(k) end end)(os.getenv)\n'
+            'hl = { config = function() end, get_config = function() return nil end, window_rule = function(r) RULES[#RULES + 1] = r.opacity end }\n'
+            f'dofile({json.dumps(str(MISC))})\n'
+            'print(table.concat(LOADED, ",") .. "|" .. table.concat(RULES, ","))\n'
+        )
+        out = subprocess.run(["lua", "-e", script], capture_output=True, text=True, check=True).stdout.strip()
+        self.assertEqual(out, "theme,corners-sharp|0.99 0.985")
 
     def test_ignores_toggles_that_need_pieces_bwm_does_not_have(self):
-        self.assertEqual(self.loaded(["window-glassy", "window-no-gaps"]), [])
+        self.assertEqual(self.loaded(["window-glassy", "window-opaque"]), [])
 
 
 if __name__ == "__main__":

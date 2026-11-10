@@ -22,13 +22,13 @@
     "extraBackgroundTint": true,
     "fakeScreenRounding": 0,
     "fonts": {
-      "expressive": "JetBrains Mono NF",
+      "expressive": "Space Grotesk",
       "iconNerd": "JetBrains Mono NF",
-      "main": "JetBrains Mono NF",
+      "main": "Google Sans Flex",
       "monospace": "JetBrains Mono NF",
-      "numbers": "JetBrains Mono NF",
-      "reading": "JetBrains Mono NF",
-      "title": "JetBrains Mono NF"
+      "numbers": "Google Sans Flex",
+      "reading": "Readex Pro",
+      "title": "Google Sans Flex"
     },
     "palette": {
       "accentColor": "",
@@ -78,7 +78,7 @@
       "widgetsFactor": 1.2,
       "workspaceZoom": 1.07
     },
-    "thumbnailPath": "",
+    "thumbnailPath": "/home/sasel/Pictures/1736719369508933.jpg",
     "wallpaperPath": "/home/sasel/Pictures/1736719369508933.jpg",
     "widgets": {
       "clock": {
@@ -346,7 +346,7 @@
   "panelFamily": "ii",
   "policies": {
     "ai": 1,
-    "weeb": 0
+    "weeb": 1
   },
   "regionSelector": {
     "annotation": {
@@ -590,5 +590,12 @@
   "screensaver": {
     "enable": true,
     "timeoutMinutes": 5
+  },
+  "idle": {
+    "lock": 0,
+    "screen": 1200,
+    "screensaver": true,
+    "screensaverTime": 150,
+    "suspend": 0
   }
 }

@@ -1,0 +1,20 @@
+#!/bin/bash
+# Adapted from Omarchy (basecamp/omarchy quattro e56f833, MIT).
+
+# omarchy:summary=List the user-installed themes that came from a git clone
+# omarchy:examples=omarchy theme extras
+
+# Exits nonzero when there are none, so a caller can ask whether any exist
+# without reading the list. A symlinked theme is someone's working copy and a
+# `.git` file is a worktree pointing elsewhere; neither is ours to pull.
+status=1
+
+# BWM: los temas instalados por Ajustes → Temas (bwm-addons.py) viven en ~/.local/share/bwm/omarchy-themes;
+# ~/.config/omarchy/themes es aquí un enlace al repo.
+for theme in "${XDG_DATA_HOME:-$HOME/.local/share}"/bwm/omarchy-themes/* ~/.config/omarchy/themes/*; do
+  [[ ! -L $theme && -d $theme/.git ]] || continue
+  echo "$theme"
+  status=0
+done
+
+exit $status

@@ -216,6 +216,12 @@
       "check": {"type": "cmd", "any": ["songrec"]},
       "packages": {"gentoo": "guru:media-sound/songrec", "arch": "songrec", "fedora": null, "opensuse": null, "debian": null}
     },
+    "localsend": {
+      "label": "LocalSend",
+      "why": "Compartir portapapeles, archivos y carpetas desde el menú de Retro (Acciones → Compartir)",
+      "check": {"type": "cmd", "any": ["localsend"]},
+      "packages": {"gentoo": null, "arch": "localsend", "fedora": null, "opensuse": null, "debian": null}
+    },
     "procps": {
       "label": "procps-ng (pidwait)",
       "referenceVersion": "4.0.6",

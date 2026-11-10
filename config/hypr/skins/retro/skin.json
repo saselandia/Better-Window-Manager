@@ -99,6 +99,7 @@
     "omarchy-titlebars",
     "qt-gtk3",
     "qt-imageformats",
-    "owe"
+    "owe",
+    "localsend"
   ]
 }

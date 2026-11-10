@@ -48,6 +48,15 @@ hl.window_rule({
     float = true,
 })
 
+-- org.bwm.menu
+hl.window_rule({
+    name  = "persist_org_bwm_menu",
+    match = {
+        class = "^org\\.bwm\\.menu$",
+    },
+    float = true,
+})
+
 -- org.gnome.Nautilus
 hl.window_rule({
     name  = "persist_org_gnome_nautilus",

@@ -114,5 +114,13 @@
             "class": "^kitty$"
         },
         "float": true
+    },
+    "org_bwm_menu": {
+        "name": "persist_org_bwm_menu",
+        "description": "org.bwm.menu",
+        "match": {
+            "class": "^org\\.bwm\\.menu$"
+        },
+        "float": true
     }
 }
