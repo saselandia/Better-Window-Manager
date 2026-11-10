@@ -29,12 +29,11 @@ FocusScope {
     readonly property var rows: [
         {key:"monitor", label:"Pantalla"}, {key:"resolution", label:"Resolución"},
         {key:"rate", label:"Frecuencia"}, {key:"scale", label:"Escala"},
-        {key:"rotation", label:"Giro"}, {key:"enabled", label:"Pantalla activa"},
+        {key:"rotation", label:"Giro"}, {key:"enabled", label:"Activada"},
         {key:"mirror", label:"Duplicar"},
-        {key:"primary", label:"Pantalla principal"}, {key:"workspaces", label:"Espacios de trabajo"},
-        {key:"x", label:"Posición horizontal"}, {key:"y", label:"Posición vertical"},
-        {key:"apply", label:"Aplicar cambios"}, {key:"reload", label:"Restablecer / detectar pantallas"}
-    ]
+        {key:"workspaces", label:"Workspaces"},
+        {key:"apply", label:"Aplicar"}, {key:"reload", label:"Restablecer"}
+    ].filter(row => row.key !== "workspaces" || !currentMonitor?.mirrorOf)
     readonly property var frame: editingLayout && editingFrame ? editingFrame : Geometry.bounds(monitors, 100)
     activeFocusOnTab: true
     focus: true
@@ -69,7 +68,7 @@ FocusScope {
         if (busy) return;
         if (index !== undefined) selectedIndex = index;
         if (!currentMonitor || currentMonitor.disabled) { message = "Activa la pantalla antes de moverla"; return; }
-        if (currentMonitor.mirrorOf) { message = "Esta pantalla duplica a otra: no tiene sitio propio en el esquema"; messageIsError = false; return; }
+        if (currentMonitor.mirrorOf) { message = "Pantalla duplicada"; messageIsError = false; return; }
         rowIndex = 0;
         if (!editingLayout) editingFrame = Geometry.bounds(monitors, 100);
         editingLayout = true;
@@ -121,12 +120,12 @@ FocusScope {
                 return;
             }
             monitors = Geometry.setMirror(monitors, selectedIndex, Geometry.cycle(choices, m.mirrorOf || "", delta));
-        } else if ((key === "primary" || key === "workspaces" || key === "x" || key === "y") && m.mirrorOf) {
-            message = "Esta pantalla duplica a otra: no tiene espacios de trabajo ni posición propios";
+        } else if (key === "workspaces" && m.mirrorOf) {
+            message = "Pantalla duplicada";
             messageIsError = false;
-        } else if (key === "primary" || key === "workspaces") {
+        } else if (key === "workspaces") {
             const list = Geometry.copy(monitors);
-            const workspaces = key === "primary" ? (delta > 0 ? "1-9" : "10") : Geometry.cycle(["1-9","10","1-5","6-10"], m.workspaces || (m.is_primary ? "1-9" : "10"), delta);
+            const workspaces = Geometry.cycle(["1-9","10","1-5","6-10"], m.workspaces || (m.is_primary ? "1-9" : "10"), delta);
             list[selectedIndex].workspaces = workspaces;
             list[selectedIndex].is_primary = workspaces === "1-9";
             if (workspaces === "1-9") for (let i=0; i<list.length; i++) {
@@ -135,11 +134,11 @@ FocusScope {
                 if (list[i].workspaces === "1-9") list[i].workspaces = "10";
             }
             monitors = list;
-        } else if (key === "x" || key === "y") moveMonitor(key === "x" ? delta*40 : 0, key === "y" ? delta*40 : 0);
+        }
     }
     function value(key) {
         const m = currentMonitor;
-        if (key === "apply") return applyProcess.running ? "Aplicando…" : dirty ? "Guardar en Hyprland" : "Sin cambios";
+        if (key === "apply") return applyProcess.running ? "Aplicando…" : dirty ? "●" : "";
         if (key === "reload") return listProcess.running ? "Detectando…" : "";
         if (!m) return "";
         if (key === "monitor") return (selectedIndex+1) + " / " + monitors.length + " · " + name(m);
@@ -151,9 +150,8 @@ FocusScope {
             const source = Geometry.mirrorSource(monitors, m);
             return source ? "Copia de " + (monitors.indexOf(source)+1) + " · " + name(source) : "No";
         }
-        if (key === "primary") return m.is_primary ? "Sí · espacios 1–9" : "No";
         if (key === "workspaces") return m.mirrorOf ? "Ninguno (copia)" : m.workspaces || (m.is_primary ? "1-9" : "10");
-        if (key === "enabled") return m.disabled ? "Desactivada" : "Activada";
+        if (key === "enabled") return m.disabled ? "No" : "Sí";
         return String(m[key]);
     }
     function applyConfiguration() {
@@ -233,7 +231,7 @@ FocusScope {
             let data = {};
             try { data = JSON.parse(result); } catch (error) { }
             root.messageIsError = code !== 0 || data.status !== "success";
-            root.message = root.messageIsError ? "No se pudieron aplicar las pantallas" : "Cambios aplicados y guardados";
+            root.message = root.messageIsError ? "No se pudieron aplicar las pantallas" : "Guardado";
             if (!root.messageIsError) { root.monitors = Geometry.copy(root.appliedDraft); root.original = Geometry.copy(root.appliedDraft); }
         }
     }
@@ -257,7 +255,7 @@ FocusScope {
                 border.color: root.rowIndex === 0 ? Commons.Color.accent : Util.alpha(Commons.Color.menu.text,0.18)
                 Text {
                     x: Style.spacing.sm; y: Style.spacing.sm
-                    text: root.editingLayout ? "Editando · " + root.name(root.currentMonitor) : "Distribución de las pantallas"
+                    text: root.editingLayout ? root.name(root.currentMonitor) : "Distribución"
                     color: root.editingLayout ? Commons.Color.accent : Commons.Color.menu.text
                     font.family: Style.font.menuFamily
                     font.pixelSize: Style.font.bodySmall
@@ -329,7 +327,7 @@ FocusScope {
                     id: helpText
                     anchors.fill: parent
                     anchors.margins: Style.spacing.sm
-                    text: "Flechas: mover · Ctrl+flechas: resolución\nMayús: movimiento fino · Tab: otra pantalla · Intro / Esc / Borrar: terminar"
+                    text: "↑↓←→ mover · Mayús fino · Ctrl tamaño · Tab pantalla · Intro terminar"
                     wrapMode: Text.Wrap
                     color: Commons.Color.menu.text
                     font.family: Style.font.menuFamily

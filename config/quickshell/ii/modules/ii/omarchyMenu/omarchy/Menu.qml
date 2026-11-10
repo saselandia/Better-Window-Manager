@@ -17,14 +17,16 @@ Item {
   property var manifest: null
   // Optional native settings extension, owned by BWM's Retro host.
   property var settingsAdapter: null
-  readonly property bool settingsMenu: !dmenuActive && (activeMenu.startsWith("setup.settings") || editingSetting || settingsPage)
-  onSettingsMenuChanged: if (settingsMenu && settingsAdapter) settingsAdapter.refresh()
+  readonly property bool settingsMenu: !dmenuActive && ((settingsAdapter && settingsAdapter.isSettings(activeMenu)) || editingSetting || settingsPage)
+  onActiveMenuChanged: if (opened && settingsAdapter) settingsAdapter.enter(activeMenu)
   readonly property bool editingSetting: !!settingsAdapter && !!settingsAdapter.editing
   readonly property bool settingsPage: !!settingsAdapter && !!settingsAdapter.page
   onSettingsAdapterChanged: if (rowsLoaded) rebuildItemsFromSources(true)
   Connections {
     target: root.settingsAdapter
     function onChanged() { if (root.opened) root.rebuildDisplay(); }
+    function onCatalogChanged() { root.rebuildItemsFromSources(true); }
+    function onNavigate(route) { root.setActiveMenu(route, false); }
     function onFocusSearch() { root.disarmPointer(); Qt.callLater(function() { filterInput.forceActiveFocus(); }); }
     function onChoiceSaved(fieldId) {
       root.goBack()
@@ -143,7 +145,7 @@ Item {
   property var deleteTarget: null
   onOpenedChanged: {
     if (!opened) { deleteConfirmOpen = false; deleteTarget = null; pendingInitialMenu = ""; if (settingsAdapter) settingsAdapter.reset() }
-    else if (settingsMenu && settingsAdapter) settingsAdapter.refresh()
+    else if (settingsAdapter) settingsAdapter.enter(activeMenu)
   }
   // Bound to the central [menu] section in shell.toml via Commons.Color.qml.
   // Each color already includes its alpha companion (composed in the
@@ -175,9 +177,10 @@ Item {
   property int cardWidth: Math.min(root.dmenuActive ? Style.space(root.dmenuWidth) : (root.settingsPage ? Style.space(780) : root.settingsMenu ? Style.space(560) : ((root.activeMenu === "trigger.capture.screenrecord" || root.activeMenu === "appearance.font" || root.activeMenu === "update.kernel") ? Style.space(520) : Style.space(300))), panel.width - Style.gapsOut * 2)
   readonly property int settingsContentHeight: root.editingSetting ? settingEditor.implicitHeight : root.settingsPage ? Math.min(Style.space(560), Math.round(panel.height * 0.62)) : 0
   property int visibleRowsHeight: (root.editingSetting || root.settingsPage) ? settingsContentHeight : root.dmenuActive ? dmenuRowListHeight(layoutSerial, displayModel.count, filterText) : rowListHeight(layoutSerial, displayModel.count, filterText, searchDivider)
-  property int cardHeight: root.dmenuActive
+  readonly property int feedbackHeight: settingsAdapter?.feedback ? Style.font.bodySmall + Style.spacing.md : 0
+  property int cardHeight: feedbackHeight + (root.dmenuActive
     ? Math.min(contentMargin * 2 + headerHeight + (mode === "input" ? 0 : contentSpacing + visibleRowsHeight), panel.height - Style.gapsOut * 2)
-    : Math.min(contentMargin * 2 + headerHeight + contentSpacing + visibleRowsHeight, panel.height - Style.gapsOut * 2)
+    : Math.min(contentMargin * 2 + headerHeight + contentSpacing + visibleRowsHeight, panel.height - Style.gapsOut * 2))
 
   function finishRequest(selection) {
     if (!root.requestActive || !root.doneFile) {
@@ -336,7 +339,13 @@ Item {
     // "Go" label comes from the catalog's root entry; the merge only uses
     // it for the injected row, never over a user-supplied heading.
     var rootCatalog = root.menuCatalog.root
-    var settingsRows = root.settingsAdapter ? root.settingsAdapter.entries.map(function(row) { return root.normalizeItem(row.id, row) }) : []
+    var settingsRows = root.settingsAdapter ? root.settingsAdapter.entries.map(function(row) {
+      // Preserve guards, aliases and translated labels on catalog rows extended by settings.
+      var shipped = translatedDefaults.find(function(entry) { return entry.id === row.id })
+      var combined = Object.assign({}, shipped || {}, row)
+      if (shipped) combined.label = shipped.label
+      return root.normalizeItem(row.id, combined)
+    }) : []
     var mergedMenu = MenuModel.mergeMenuSources(translatedDefaults.concat(settingsRows), root.userMenuItems, rootCatalog && rootCatalog.label)
     root.providerRevision += 1
     root.providersLoaded = ({})
@@ -453,6 +462,7 @@ Item {
   function startProviderForMenu(id) {
     var entry = root.item(id)
     if (!entry || !entry.provider || root.providersLoaded[id]) return
+    if (entry.provider === "settings") { root.providersLoaded[id] = true; return }
     if (entry.provider === "apps") {
       root.providersLoaded[id] = true
       root.mergeAppRows()
@@ -544,7 +554,7 @@ Item {
     if (!entry || !entry.provider || root.providersLoaded[id]) return
 
     // Native providers don't touch providerProc, so they never need to queue.
-    if (entry.provider === "apps") {
+    if (entry.provider === "apps" || entry.provider === "settings") {
       root.startProviderForMenu(id)
       return
     }
@@ -594,6 +604,9 @@ Item {
   // provider-backed menus stay visible because their rows load on demand.
   function isVisible(entry) {
     if (root.settingsAdapter && !root.settingsAdapter.canEdit(entry.id)) return false
+    for (var parent = root.item(entry.parent), depth = 0; parent && depth < 32; parent = root.item(parent.parent), depth++) {
+      if (parent.when && root.whenResults[parent.id] === false) return false
+    }
     return MenuModel.isVisible(root.items, root.itemOrder, root.whenResults, entry)
   }
 
@@ -905,6 +918,7 @@ Item {
   function setFilter(nextFilter) {
     panel.freezeCardTop()
     root.filterText = nextFilter
+    if (root.settingsAdapter) root.settingsAdapter.search(nextFilter)
     root.selectedIndex = 0
     root.cursorActive = root.mode !== "input"
     root.disarmPointer()
@@ -913,6 +927,7 @@ Item {
   }
 
   function setActiveMenu(id, pushHistory, fromPointer, focusItemId) {
+    if (root.settingsAdapter) id = root.settingsAdapter.resolve(id)
     panel.freezeCardTop()
     if (!root.item(id)) id = "root"
     root.rememberSelection()
@@ -1076,6 +1091,7 @@ Item {
     root.disarmPointer()
     root.evaluateGuards()
     opened = true
+    if (root.settingsAdapter) root.settingsAdapter.enter(activeMenu)
     rebuildDisplay()
     invalidateVolatileProvider(activeMenu)
     loadProviderForMenu(activeMenu)
@@ -1126,6 +1142,7 @@ Item {
   // in JSONC (`power`, `reminder-set`). Unknown strings fall through to the
   // id-as-route behavior so misspellings still attempt to open the literal id.
   function resolveRoute(input) {
+    if (root.settingsAdapter) input = root.settingsAdapter.resolve(input)
     return MenuModel.resolveRoute(root.items, root.itemOrder, input)
   }
 
@@ -1136,6 +1153,11 @@ Item {
     // a leaf, e.g. `omarchy menu summon screenrecord-stop`), run it directly
     // instead of opening an action with no children.
     if (entry && entry.kind === "action" && entry.action) {
+      if (entry.action === ":" && root.settingsAdapter) {
+        root.openExistingMenu(entry.parent)
+        root.settingsAdapter.activate(id)
+        return "ok"
+      }
       root.cancel()
       root.runAction(entry.action)
       return "ok"
@@ -1552,7 +1574,7 @@ Item {
             anchors.left: settingsBack.right
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            text: root.settingsPage ? root.settingsAdapter.page[2] : "Configuración"
+            text: root.settingsPage ? root.settingsAdapter.page[2] : root.settingsAdapter?.editing?.label ?? ""
             color: root.foreground
             font.family: root.fontFamily
             font.pixelSize: Style.font.heading
@@ -1585,7 +1607,7 @@ Item {
             anchors.fill: filterInput
             verticalAlignment: Text.AlignVCenter
             visible: filterInput.visible && !root.filterText && !filterInput.preeditText
-            text: root.dmenuActive ? (root.dmenuPrompt + "…") : ((root.settingsMenu ? "Buscar en " : "") + (root.item(root.activeMenu) ? (root.item(root.activeMenu).title || root.item(root.activeMenu).label) : "Go") + "…")
+            text: root.dmenuActive ? (root.dmenuPrompt + "…") : (root.item(root.activeMenu) ? (root.item(root.activeMenu).title || root.item(root.activeMenu).label) : "Go") + "…"
             color: root.foreground
             opacity: 0.58
             font.family: root.fontFamily
@@ -1871,7 +1893,7 @@ Item {
 
             Text {
               textFormat: Text.PlainText
-              text: root.filterText ? Commons.I18n.t("common.noMatchesFor").arg(root.filterText) : Commons.I18n.t("menu.nothingHere")
+              text: root.settingsAdapter?.loading ? "Cargando…" : root.filterText ? Commons.I18n.t("common.noMatchesFor").arg(root.filterText) : Commons.I18n.t("menu.nothingHere")
               color: root.foreground
               opacity: 0.7
               font.family: root.fontFamily
@@ -1894,8 +1916,15 @@ Item {
             sourceComponent: Settings.SettingsPage { controller: root.settingsAdapter }
           }
         }
-
-
+        Text {
+          visible: root.feedbackHeight > 0
+          width: parent.width
+          text: root.settingsAdapter?.feedback ?? ""
+          color: root.foreground
+          font.family: root.fontFamily
+          font.pixelSize: Style.font.bodySmall
+          elide: Text.ElideRight
+        }
       }
     }
   }

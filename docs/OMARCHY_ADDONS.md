@@ -1,26 +1,32 @@
 # Temas y plugins de Omarchy en BWM
 
-Las páginas **Ajustes → Temas** y **Ajustes → Plugins** están separadas en las
-dos aplicaciones de Ajustes. Temas muestra miniaturas, paletas y el tema elegido.
-Plugins permite filtrar Todos/Activados/Desactivados, activar/desactivar y elegir
-la posición de cada widget en la barra Retro. El indicador
-«Elegido» muestra la paleta Retro guardada; si estás en otro estilo, Aplicar
-cambia a Retro. Cada página tiene las vistas Instalados y Descubrir.
+En **Retro**, todo se hace dentro del menú de Omarchy:
 
-En **Descubrir**, dentro de la página correspondiente, escribe un nombre,
-autor o palabra clave y pulsa Buscar. Cada resultado permite abrir su repositorio
-o instalarlo. También puedes abrir el catálogo web o pegar directamente una URL
-HTTPS de Git desde Instalar por URL. Descargar un tema no lo aplica: aparece en la lista para elegirlo.
-Los plugins se activan después de instalarlos.
+- **Estilo → Temas → Elegir tema** abre el carrusel nativo, con todos los temas
+  incluidos e instalados y la paleta dinámica del fondo.
+- **Ajustes → Plugins → Instalados** permite activar cada plugin y colocar sus
+  widgets en las seis zonas de la barra de Omarchy. **Estilo → Barra → Widgets**
+  lleva a la misma lista. Clonar y quitar conservan los selectores originales.
+- **Catálogo**, dentro de Temas o Plugins, muestra una lista con buscador de
+  teclado. Cada entrada permite ver el repositorio o instalar; las ya instaladas
+  llevan una marca. También se puede pegar una **URL de Git**.
+
+Intro abre o guarda, Espacio cambia un interruptor, Esc vuelve conservando la
+fila y la búsqueda. Los campos de un atajo o comando nuevo quedan en borrador
+hasta pulsar **Añadir**. Los errores de lectura o guardado se muestran en el menú.
+Pantallas conserva un esquema visual y sólo cambia la configuración al aplicar.
+Las páginas de catálogo con miniaturas siguen disponibles en Ajustes de Breeze;
+default (end-4) conserva sus ajustes propios.
 
 Las fuentes son la [galería de temas de Omarchy](https://omarchy.org/themes/) y
 el [catálogo del marketplace de plugins](https://github.com/omacom/omarchy-plugin-marketplace).
-El comportamiento de distribución por Git sigue el
-[manual de plugins de Omarchy](https://omarchy.org/manual/shell-plugins/).
-Los catálogos se guardan una hora en `~/.cache/bwm/addons`; Actualizar catálogo
-fuerza su renovación. Si falla la conexión se usa la última copia disponible.
-La búsqueda muestra los primeros 30 resultados e indica el total. **Mostrar más**
-carga las páginas siguientes; también se puede acotar con más palabras.
+Se comparten el motor de descarga, validación y caché de una hora de BWM
+(`~/.cache/bwm/addons`), con la última copia disponible si falla la conexión.
+En Retro la búsqueda consulta el catálogo completo guardado, también por autor
+y descripción, y muestra lotes de 60 entradas con **Mostrar más**. En Breeze
+la búsqueda conserva su paginación de 30 resultados.
+Descargar un tema no lo aplica: aparece en el carrusel para elegirlo. Los plugins
+se activan al instalarlos.
 
 ## Compatibilidad y archivos
 
@@ -39,13 +45,13 @@ carga las páginas siguientes; también se puede acotar con más palabras.
   No se admiten reemplazos completos de barra, bloqueo, overlays o paneles que
   el anfitrión de BWM no carga. Esto comprueba el formato y los módulos, no todas
   las dependencias de aplicaciones ni cada llamada de un plugin ajeno.
-- Los plugins descargados están en `~/.local/share/bwm/omarchy-plugins` y se
+- Los plugins descargados están en `~/.config/omarchy/plugins` y se
   validan en una carpeta temporal antes de publicarlos. Un id duplicado o un
   destino existente produce un error y conserva lo instalado.
 - Activación, posición y ajustes se guardan en
-  `~/.config/bwm/omarchy-plugins.json`. Mover un plugin conserva sus ajustes.
-  Desactivar uno también deja de cargar su servicio. Los widgets fijos del sistema
-  (bandeja, audio, red, etc.) se siguen ocultando en Ajustes → Barra.
+  `~/.config/omarchy/shell.json`. Mover un plugin conserva sus ajustes.
+  Desactivar uno también deja de cargar su servicio. Los widgets del sistema
+  (bandeja, audio, red, etc.) se gestionan en la misma lista de plugins.
 
 La lista de Ajustes, `omarchy-theme-list`, `omarchy-theme-dir`, el carrusel y el
 motor de colores usan el mismo catálogo de temas. Un tema sin `preview.png`

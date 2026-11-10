@@ -1,39 +1,55 @@
-// BWM's Retro settings use Omarchy's existing menu format and Config.options.
-// No second settings store: these paths are the same ones used by the shared pages.
+// Retro exposes only options consumed by its own shell or shared services.
+// Keep the existing managers and Omarchy's theme/plugin formats as the source of truth.
 var pages = [
-  ["bar", "setup.settings.look.bar", "Barra", "󰍜", "BarConfig.qml"],
-  ["background", "setup.settings.look.background", "Fondo", "󰋩", "BackgroundConfig.qml"],
-  ["interface", "setup.settings.look.interface", "Interfaz", "󰕮", "InterfaceConfig.qml"],
-  ["themes", "setup.settings.look.themes", "Temas", "󰏘", "ThemesConfig.qml"],
-  ["style", "setup.settings.look.style", "Estilo", "󰛖", "StyleConfig.qml"],
-  ["cursor", "setup.settings.look.cursor", "Cursor", "󰇀", "CursorConfig.qml"],
-  ["display", "setup.settings.desktop.display", "Pantallas", "󰍹", "DisplayConfig.qml"],
-  ["workspaces", "setup.settings.desktop.workspaces", "Workspaces", "󰕰", "WorkspaceConfig.qml"],
-  ["keybinds", "setup.settings.desktop.keybinds", "Atajos de teclado", "󰌌", "KeybindsConfig.qml"],
-  ["general", "setup.settings.system.general", "General", "󰒓", "GeneralConfig.qml"],
-  ["services", "setup.settings.system.services", "Servicios", "󰒋", "ServicesConfig.qml"],
-  ["autostart", "setup.settings.system.autostart", "Inicio automático", "󱓞", "AutostartConfig.qml"],
-  ["idle", "setup.settings.system.idle", "Inactividad", "󰒲", "IdleConfig.qml"],
-  ["defaultapps", "setup.settings.system.defaultapps", "Apps predeterminadas", "󰀻", "DefaultAppsConfig.qml"],
-  ["plugins", "setup.settings.system.plugins", "Plugins", "󰐱", "PluginsConfig.qml"],
-  ["about", "setup.settings.about", "Acerca de", "󰋼", "About.qml"]
+  ["interface", "setup.interface", "Interfaz", "󰕮", ""],
+  ["general", "setup.general", "Batería", "󰁹", ""],
+  ["services", "setup.services", "Servicios", "󰒋", ""],
+  ["idle", "setup.idle", "Inactividad", "󰒲", ""],
+  ["display", "setup.monitors", "Pantallas", "󰍹", "DisplaySettings.qml"],
+  ["cursor", "setup.cursor", "Cursor", "󰇀", ""],
+  ["defaultapps", "setup.default", "Apps predeterminadas", "󰀻", ""],
+  ["keybinds", "setup.keybindings", "Atajos de teclado", "󰌌", ""],
+  ["autostart", "setup.autostart", "Inicio automático", "󱓞", ""],
+  ["plugins", "setup.plugin.manage", "Instalados", "󰐱", ""],
+  ["plugin-catalog", "setup.plugin.catalog", "Catálogo", "󰐱", ""],
+  ["themes", "appearance.retro-palette.catalog", "Catálogo", "󰏘", ""]
 ];
 var groups = [
-  {page:"general", id:"battery", label:"Batería", icon:"󰁹", prefix:"battery."},
   {page:"interface", id:"overview", label:"Vista general", icon:"󰕰", prefix:"overview."},
   {page:"services", id:"weather", label:"Tiempo", icon:"󰖐", prefix:"bar.weather."}
 ];
+// External open-settings callers retain their page names and numeric indices.
 function page(key) {
   if (/^\d+$/.test(String(key))) key = ["general", "bar", "background", "interface", "keybinds", "services", "autostart", "display", "workspaces", "defaultapps", "plugins", "themes", "style", "cursor", "about", "idle"][Number(key)] || "all";
   var name = String(key || "").toLowerCase().replace(/[^a-z]/g, "");
-  if (name === "defaultapps" || name === "defaultapplications") name = "defaultapps";
+  if (name === "defaultapplications") name = "defaultapps";
+  if (name === "workspaces") name = "display";
   for (var i = 0; i < pages.length; i++) if (pages[i][0] === name || pages[i][1] === key) return pages[i];
   return null;
 }
-function route(key) { var p = page(key); return p ? p[1] : "setup.settings"; }
-function choice(label, value) { return {label: label, value: value}; }
+function route(key) {
+  var p = page(key);
+  if (p) return p[1];
+  return ({bar:"appearance.top-bar", background:"appearance.background", style:"appearance", about:"about"})[key] || "setup";
+}
+// Old IPC routes and user menu links still reach the replacement section.
+function resolve(id) {
+  var aliases = {
+    "setup.settings":"setup", "setup.settings.look":"appearance", "setup.settings.desktop":"setup", "setup.settings.system":"setup",
+    "setup.settings.look.bar":"appearance.top-bar", "setup.settings.look.background":"appearance.background",
+    "setup.settings.look.interface":"setup.interface", "setup.settings.look.themes":"appearance.retro-palette",
+    "setup.settings.look.style":"appearance", "setup.settings.look.cursor":"setup.cursor",
+    "setup.settings.desktop.display":"setup.monitors", "setup.settings.desktop.workspaces":"setup.monitors",
+    "setup.settings.desktop.keybinds":"setup.keybindings", "setup.settings.system.general":"setup.general",
+    "setup.settings.system.services":"setup.services", "setup.settings.system.autostart":"setup.autostart",
+    "setup.settings.system.idle":"setup.idle", "setup.settings.system.defaultapps":"setup.default",
+    "setup.settings.system.plugins":"setup.plugin.manage", "setup.settings.text":"setup.config", "setup.settings.about":"about"
+  };
+  return aliases[String(id).replace(/\.controls$/, "")] || id;
+}
+function choice(label, value) { return {label:label, value:value}; }
 function field(pageId, key, label, type, extra) {
-  var f = {id: route(pageId) + "." + key.replace(/\./g, "-"), parent: route(pageId), path: key, label: label, type: type, icon: key.startsWith("time.") ? "󰥔" : key.startsWith("battery.") ? "󰁹" : key.includes("weather") ? "󰖐" : key.includes("fonts.") ? "󰛖" : key.startsWith("search.") ? "󰍉" : key.includes("dock") ? "󰀻" : "󰒓"};
+  var f = {id:route(pageId) + "." + key.replace(/\./g, "-"), parent:route(pageId), path:key, label:label, type:type, icon:""};
   for (var k in extra || {}) f[k] = extra[k];
   return f;
 }
@@ -43,76 +59,58 @@ function fields() {
   function bool(p, path, label) { add(p, path, label, "bool"); }
   function num(p, path, label, min, max, step, unit) { add(p, path, label, "number", {min:min, max:max, step:step || 1, unit:unit || ""}); }
   function text(p, path, label, hint) { add(p, path, label, "text", {hint:hint || ""}); }
-  function select(p, path, label, values) { add(p, path, label, "choice", {choices:values.map(function(v) { return choice(v[0], v[1]); })}); }
-  bool("bar", "bar.bottom", "Barra en la parte inferior");
-  bool("bar", "bar.autoHide.enable", "Ocultar automáticamente la barra");
-  bool("bar", "bar.indicators.notifications.showUnreadCount", "Contador de notificaciones");
-  num("bar", "bar.workspaces.shown", "Número de workspaces", 1, 20, 1);
-  bool("bar", "tray.showItemId", "Identificador de iconos de bandeja");
-  select("bar", "bar.topLeftIcon", "Icono del lanzador", [["BWM", "spark"], ["Distribución", "distro"]]);
-  bool("background", "background.widgets.clock.enable", "Reloj en el fondo");
-  bool("background", "background.widgets.weather.enable", "Tiempo en el fondo");
-  bool("background", "background.widgets.clock.quote.enable", "Frase bajo el reloj");
-  text("background", "background.widgets.clock.quote.text", "Texto de la frase");
-  bool("interface", "dock.omarchy", "Dock de Omarchy");
-  bool("interface", "overview.enable", "Vista general");
-  bool("interface", "overview.centerIcons", "Centrar iconos de la vista general");
-  num("interface", "overview.rows", "Filas de la vista general", 1, 8);
-  num("interface", "overview.columns", "Columnas de la vista general", 1, 10);
-  bool("interface", "sidebar.translator.enable", "Traductor de pantalla");
-  bool("interface", "sidebar.cornerOpen.enable", "Abrir paneles desde las esquinas");
-  bool("interface", "sidebar.cornerOpen.clickless", "Abrir las esquinas al pasar el puntero");
+  bool("interface", "overview.enable", "Activar");
+  bool("interface", "overview.centerIcons", "Centrar iconos");
+  num("interface", "overview.rows", "Filas", 1, 8);
+  num("interface", "overview.columns", "Columnas", 1, 10);
+  bool("interface", "overview.orderRightLeft", "Columnas de derecha a izquierda");
+  bool("interface", "overview.orderBottomUp", "Filas de abajo arriba");
+  bool("interface", "lock.launchOnStartup", "Bloquear al iniciar sesión");
+  out.push({id:"appearance.dock.enabled", parent:"appearance.dock", path:"dock.omarchy", label:"Activar", type:"bool", icon:""});
   bool("idle", "idle.screensaver", "Salvapantallas");
   num("idle", "idle.screensaverTime", "Salvapantallas tras", 0, 7200, 30, "duration");
-  num("idle", "idle.screen", "Apagar los monitores tras", 0, 7200, 30, "duration");
+  num("idle", "idle.screen", "Apagar pantallas tras", 0, 7200, 30, "duration");
   num("idle", "idle.lock", "Bloquear tras", 0, 7200, 30, "duration");
   num("idle", "idle.suspend", "Suspender tras", 0, 14400, 60, "duration");
-  bool("workspaces", "overview.orderRightLeft", "Orden inverso de las columnas");
-  bool("workspaces", "overview.orderBottomUp", "Orden inverso de las filas");
-  num("workspaces", "bar.workspaces.shown", "Workspaces en la barra", 1, 20);
-  num("workspaces", "overview.rows", "Filas en la vista general", 1, 8);
-  num("workspaces", "overview.columns", "Columnas en la vista general", 1, 10);
-  select("general", "time.format", "Formato de la hora", [["24 horas", "hh:mm"], ["12 horas", "h:mm AP"]]);
-  bool("general", "time.secondPrecision", "Reloj con segundos");
-  text("general", "time.dateFormat", "Formato de la fecha", "Por ejemplo: ddd, dd/MM o dddd d MMMM.");
-  select("general", "language.ui", "Idioma de los ajustes", [["Automático", "auto"], ["English", "en_US"], ["Español", "es_ES"]]);
-  bool("general", "sounds.battery", "Avisos de batería con sonido");
-  bool("general", "sounds.pomodoro", "Avisos del temporizador con sonido");
-  num("general", "battery.low", "Aviso de batería baja", 0, 100, 5, "%");
-  num("general", "battery.critical", "Aviso de batería crítica", 0, 100, 5, "%");
+  bool("general", "sounds.battery", "Sonido de aviso");
+  num("general", "battery.low", "Batería baja", 0, 100, 5, "%");
+  num("general", "battery.critical", "Batería crítica", 0, 100, 5, "%");
+  num("general", "battery.full", "Carga completa", 0, 100, 5, "%");
   bool("general", "battery.automaticSuspend", "Suspender con batería baja");
-  num("general", "battery.suspend", "Nivel de batería para suspender", 0, 100, 1, "%");
-  select("general", "policies.ai", "Funciones de inteligencia artificial", [["Desactivadas", 0], ["Activadas", 1], ["Sólo locales", 2]]);
-  // Retro: la barra de Omarchy (plugins de tiempo) sólo lee la ciudad y las unidades; el buscador, el
-  // monitor de recursos y el GPS son de la barra/vista general de default (end-4)
-  text("services", "bar.weather.city", "Ciudad del tiempo", "Nombre de la ciudad; vacío para detección automática.");
+  num("general", "battery.suspend", "Suspender al", 0, 100, 1, "%");
+  text("services", "bar.weather.city", "Ciudad", "Vacío: automática");
   bool("services", "bar.weather.useUSCS", "Unidades imperiales");
   text("services", "screenRecord.savePath", "Carpeta de grabaciones");
   text("services", "screenSnip.savePath", "Carpeta de capturas");
-  num("services", "musicRecognition.timeout", "Tiempo para reconocer música", 1, 120, 1, "s");
-  add("bar", "shell-language", "Idioma del menú y los paneles", "choice", {backend:"language", choices:[choice("English", "en"), choice("Español (México)", "es-MX")]});
-  var widgets = [
-    ["omarchy.media", "Multimedia", true], ["omarchy.system-update", "Actualizaciones"],
-    ["omarchy.tray", "Bandeja del sistema"], ["omarchy.keyboard-layout", "Distribución del teclado"],
-    ["omarchy.agents", "Agentes de IA"], ["omarchy.tailscale", "Tailscale"],
-    ["omarchy.bluetooth", "Bluetooth"], ["omarchy.network", "Red"], ["omarchy.audio", "Audio"],
-    ["omarchy.monitor", "Pantallas"], ["omarchy.power", "Energía"]
-  ];
-  for (var w = 0; w < widgets.length; w++) {
-    var widget = widgets[w];
-    out.push({id:route("bar") + ".widgets." + widget[0].slice(8), parent:route("bar") + ".widgets", label:widget[1], type:"bool", backend:"widget", widget:widget[0], hiddenByDefault:!!widget[2], icon:"󰒓"});
-  }
   for (var g = 0; g < groups.length; g++) {
     var group = groups[g];
     for (var n = 0; n < out.length; n++) {
       var f = out[n];
-      if (f.parent === route(group.page) && !f.backend && f.path.startsWith(group.prefix)) {
+      if (f.parent === route(group.page) && f.path.startsWith(group.prefix)) {
         f.parent = route(group.page) + "." + group.id;
         f.id = f.parent + "." + f.path.slice(group.prefix.length).replace(/\./g, "-");
       }
     }
   }
   return out;
+}
+function fieldEntries(all) {
+  var rows = [];
+  for (var i = 0; i < all.length; i++) {
+    var f = all[i];
+    rows.push({id:f.id, parent:f.parent, label:f.label, icon:f.icon || "", searchTerms:f.searchTerms || [], action:f.type === "choice" ? "" : ":"});
+    if (f.choices) for (var c = 0; c < f.choices.length; c++) rows.push({id:f.id + ".value" + c, parent:f.id, label:f.choices[c].label, icon:"", action:":"});
+  }
+  return rows;
+}
+function entries() {
+  var rows = [];
+  for (var p = 0; p < pages.length; p++) {
+    var pg = pages[p];
+    rows.push({id:pg[1], label:pg[2], icon:pg[3], action:pg[4] ? ":" : "", provider:!pg[4] && !["interface", "general", "services", "idle"].includes(pg[0]) ? "settings" : ""});
+  }
+  for (var g = 0; g < groups.length; g++) rows.push({id:route(groups[g].page) + "." + groups[g].id, label:groups[g].label, icon:groups[g].icon});
+  return rows.concat(fieldEntries(fields()));
 }
 function read(options, path) {
   var obj = options;
@@ -172,28 +170,8 @@ function validate(field, text) {
 }
 function summary(field, value) {
   if (value === undefined) return "No disponible";
-  if (field.type === "bool") return value ? "Activado" : "Desactivado";
+  if (field.type === "bool") return value ? "Sí" : "No";
   if (field.choices) for (var i = 0; i < field.choices.length; i++) if (field.choices[i].value === value) return field.choices[i].label;
   if (field.unit === "duration") return durationLabel(value);
   return (String(value) || "Sin definir") + (field.unit ? " " + field.unit : "");
-}
-function entries() {
-  var rows = [];
-  var all = fields();
-  for (var p = 0; p < pages.length; p++) {
-    var pg = pages[p];
-    var hasFields = all.some(function(f) { return f.parent === pg[1]; });
-    rows.push({id:pg[1], label:pg[2], icon:pg[3], action:hasFields ? "" : ":"});
-    if (pg[0] === "bar") rows.push({id:pg[1] + ".widgets", label:"Widgets de la barra", icon:"󰐱"});
-    for (var i = 0; i < all.length; i++) {
-      var f = all[i];
-      if (f.parent !== pg[1] && !f.parent.startsWith(pg[1] + ".")) continue;
-      rows.push({id:f.id, label:f.label, icon:f.icon, action:f.type === "choice" ? "" : ":", parent:f.parent, aliases:[f.label.normalize("NFD").replace(/[\u0300-\u036f]/g, "")]});
-      if (f.choices) for (var c = 0; c < f.choices.length; c++) rows.push({id:f.id + ".value" + c, label:f.choices[c].label, icon:"", action:":"});
-    }
-    for (var g = 0; g < groups.length; g++) if (groups[g].page === pg[0]) rows.push({id:pg[1] + "." + groups[g].id, label:groups[g].label, icon:groups[g].icon});
-    if (pg[0] === "style") rows.push({id:pg[1] + ".font", label:"Fuente del sistema", icon:"󰛖", target:"appearance.font"});
-    if (hasFields) rows.push({id:pg[1] + ".controls", label:"Más opciones…", icon:"󰒓", action:":"});
-  }
-  return rows;
 }

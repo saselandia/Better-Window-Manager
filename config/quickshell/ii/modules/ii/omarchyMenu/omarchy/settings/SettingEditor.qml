@@ -32,16 +32,8 @@ Item {
         spacing: Style.spacing.md
         Text {
             Layout.fillWidth: true
-            text: root.field?.label ?? ""
-            color: Commons.Color.menu.text
-            font.family: Style.font.menuFamily
-            font.pixelSize: Style.font.heading
-            wrapMode: Text.Wrap
-        }
-        Text {
-            Layout.fillWidth: true
             visible: !!text
-            text: root.field?.hint || (root.field?.unit === "duration" ? "Minutos:segundos, p. ej. 5:00; un número solo son minutos; 0 = nunca" : root.field?.type === "number" ? "Entre " + root.field.min + " y " + root.field.max + (root.field.unit ? " " + root.field.unit : "") : "Los cambios se aplican al guardar.")
+            text: root.field?.hint || (root.field?.unit === "duration" ? "min:s · 0 = nunca" : root.field?.type === "number" ? root.field.min + "–" + root.field.max + (root.field.unit ? " " + root.field.unit : "") : "")
             color: Commons.Color.menu.text
             opacity: 0.65
             font.family: Style.font.menuFamily

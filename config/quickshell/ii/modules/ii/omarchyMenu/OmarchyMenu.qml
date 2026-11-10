@@ -52,11 +52,7 @@ Scope {
     function openSettings(page) {
         root.closeApps();
         const route = settingsController.route(page);
-        const nativeList = settingsController.fields.some(f => f.parent === route);
-        if (route !== "setup.settings" && !nativeList) {
-            menu.open(JSON.stringify({ menu: route.slice(0, route.lastIndexOf(".")), select: route }));
-            settingsController.activate(route);
-        } else menu.open(JSON.stringify({ menu: route }));
+        menu.open(JSON.stringify({ menu: route }));
     }
 
     // The part of omarchy-shell the menu talks to

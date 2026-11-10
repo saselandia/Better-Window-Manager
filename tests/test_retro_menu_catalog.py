@@ -55,7 +55,7 @@ class CatalogTests(unittest.TestCase):
         bar = self.catalog
         self.assertEqual({k for k in bar if k.startswith("appearance.top-bar.") and k.count(".") == 2},
                          {"appearance.top-bar.hide", "appearance.top-bar.show", "appearance.top-bar.position",
-                          "appearance.top-bar.background", "appearance.top-bar.indicators", "appearance.top-bar.settings"})
+                          "appearance.top-bar.background", "appearance.top-bar.indicators", "appearance.top-bar.widgets"})
         for position in ("top", "bottom", "left", "right"):
             self.assertIn(f"omarchy-bar position {position}", bar[f"appearance.top-bar.position.{position}"]["action"])
         for background, command in (("opaque", "opaque"), ("glassy", "glassy"), ("clear", "none")):
@@ -83,6 +83,24 @@ class CatalogTests(unittest.TestCase):
 
     def test_language_comes_from_the_languages_provider(self):
         self.assertEqual(self.catalog["setup.language"]["provider"], "languages")
+
+    def test_retro_has_one_control_for_glass_and_no_legacy_settings_tree(self):
+        self.assertIn("appearance.windows.glass", self.catalog)
+        self.assertNotIn("appearance.windows.transparent", self.catalog)
+        self.assertNotIn("appearance.windows.opaque", self.catalog)
+        self.assertFalse(any(k.startswith("setup.settings") for k in self.catalog))
+        self.assertNotIn("trigger.capture.screenrecord.bwm", self.catalog)
+
+    def test_menu_actions_and_guards_are_valid_bash(self):
+        for item_id, entry in self.catalog.items():
+            for key in ("action", "when", "checked", "disabled"):
+                if key not in entry:
+                    continue
+                result = subprocess.run(["bash", "-n", "-c", entry[key]], capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, f"{item_id}: {result.stderr}")
+        for item_id, entry in self.catalog.items():
+            if "gpu-screen-recorder|wf-recorder" in entry.get("action", ""):
+                self.assertIn("'gpu-screen-recorder|wf-recorder'", entry["action"], item_id)
 
 
 class ShimTests(unittest.TestCase):

@@ -25,9 +25,12 @@ conservan la procedencia y licencia MIT del menú y la cuadrícula de Omarchy qu
 vendorizados. BWM sustituye la entrada de texto limitada por editores Qt, ajusta la cuadrícula
 y añade navegación de teclado. La apertura de Apps pasa al shell nativo y se retiran los
 pies de ruta/atajos del menú y la cuadrícula. La extensión de BWM en `omarchyMenu/omarchy/settings/`
-añade configuración dentro del menú mediante sus componentes originales `qs.Ui`; `SettingsPage.qml`
-y `modules/settings/retro/SettingsStyle.qml` integran las páginas de illogical-impulse con los colores de `colors.toml`/`shell.toml` de
-Omarchy; las correcciones de sus controles compartidos conservan la GPL de ese componente.
+añade configuración dentro del menú mediante sus componentes originales `qs.Ui`.
+Desde 2026-11-10, Retro usa filas nativas y `hypr/skins/retro/scripts/settings.py`
+(código de BWM) sobre los gestores existentes; `SettingsPage.qml` sólo aloja el
+esquema de monitores. No carga las páginas de illogical-impulse ni cambia su paleta
+para mostrarlas. `modules/settings/retro/SettingsStyle.qml` se conserva para los
+consumidores anteriores y las pruebas de sus controles, con la GPL de ese componente.
 La versión vendorizada previa y estas modificaciones se pueden consultar en el historial Git
 de cada archivo; no se ha actualizado el código de terceros a otra revisión upstream.
 

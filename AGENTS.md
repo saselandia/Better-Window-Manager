@@ -150,7 +150,7 @@ siendo el nombre del escritorio original que imita Breeze.
 | About de Ajustes / detección de distro | `modules/settings/About.qml`, `services/SystemInfo.qml` y `SystemInfoData.js` (os-release sin ejecutar shell); enlaces propios de BWM |
 | Entrada del menú de Retro | `config/hypr/omarchy/bwm-menu.jsonc` (`when`/`checked` en bash) |
 | Configuración del usuario en texto (manda sobre BWM) | `scripts/bwm-user-config` (`list/edit/apply/path`), `~/.config/bwm/user/{hyprland.lua,shell.jsonc}`, `~/.config/omarchy/shell.toml`, `~/.config/bwm/extensions/menu.jsonc`; `hyprland.lua` la carga al final con `pcall`; `bwm-theme-manager.py apply-user` y al cambiar de skin |
-| Configuración integrada de Retro | `modules/ii/omarchyMenu/omarchy/settings/` (catálogo, controlador y editores dentro de `Menu.qml`); `open-settings.sh [página]` → IPC `omarchyMenu.settings`. `retroSettings.qml` sólo redirige, sin ventana propia |
+| Configuración integrada de Retro | `modules/ii/omarchyMenu/omarchy/settings/` (filas nativas y editor de pantallas dentro de `Menu.qml`) + `skins/retro/scripts/settings.py` (listas sobre los gestores comunes); `open-settings.sh [página]` → IPC `omarchyMenu.settings`. `retroSettings.qml` sólo redirige, sin ventana propia |
 | Un comando `omarchy-*` que falta | `config/hypr/scripts/omarchy-shims/` (+ enlace en `~/.local/bin`, `bwm-plugin.sh catalog`) |
 | Modo de cada workspace en Retro (mosaico, desplazamiento, flotante con barras) | `skins/retro/hypr/workspace-modes.lua` (port de Omarchy; modos en `~/.local/state/omarchy/workspace-layouts/`), shims `omarchy-hyprland-workspace-layout-*` y `bwm-workspace-layout-set`; barras con el plugin de Omarchy sin cambios (`src/omarchy-titlebars`), nada del de Breeze |
 | Reglas de ventana / juegos | `hypr/modules/rules.lua`, reglas por app de Omarchy (`Commons/omarchy/default/hypr/apps/`, cargadas por `modules/app_rules.lua`), `scripts/window-guard.py` |
@@ -183,7 +183,7 @@ siendo el nombre del escritorio original que imita Breeze.
     mover la barra a cualquier borde, doble clic para el fondo, módulos propios; se configura en
     `~/.config/omarchy/shell.json` (formato de Omarchy) con `omarchy-bar`/`omarchy-plugin-*`. Plugins de terceros en
     `~/.config/omarchy/plugins` y los preinstalados de BWM en `omarchy-plugins/`. Parches «BWM» mínimos (workspaces
-    con numeración global, servicios de BWM, menú y capas de `OmarchyPlugins`). Idioma en Ajustes → Barra.
+    con numeración global, servicios de BWM, menú y capas de `OmarchyPlugins`). Idioma en Ajustes → Idioma.
   - Menú (Super) `omarchyMenu` + `bwm-menu.jsonc`; cuadrícula Apps (Alt+Espacio o Super+Espacio, `AppGrid.qml`); dock opcional
     (`omarchyDock`, `dock.omarchy`, apagado; Super+M); notificaciones, OSD, polkit, recordatorios, bloqueo
     hyprlock, captura omasnap, portapapeles (Super+V), emojis (Super+.), salvapantallas, glass, transparencia.

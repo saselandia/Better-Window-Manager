@@ -4,6 +4,7 @@ Run in the BWM session: BWM_RUN_QML_TESTS=1 python3 -m unittest discover -s test
 The regular shell is never started or restarted. No user configuration files are edited.
 """
 import json
+import importlib.util
 import base64
 import os
 from pathlib import Path
@@ -58,7 +59,7 @@ HARNESS = r'''
     property string qaLaunched: ""
     property string qaSummoned: ""
     Source.AppLibrary { id: qaLibrary }
-    Native.SettingsController { id: qaSettings }
+    Native.SettingsController { id: qaSettings; managerScript: "@MANAGER@" }
     function prepareNativeSettings() {
         const data = {};
         for (const field of qaSettings.fields) {
@@ -105,7 +106,7 @@ HARNESS = r'''
         }
         function nativeRoute(route: string, select: string): void { root.qaMenu.open(JSON.stringify({menu:route, select:select})); }
         function nativeState(): string {
-            return JSON.stringify({menu:root.qaMenu.activeMenu, selected:root.qaMenu.selectedItemId(), editing:qaSettings.editing?.id ?? "", page:qaSettings.page?.[0] ?? "", pageLoaded:!!root.qaMenu.qaDetails?.pageItem, section:root.qaMenu.qaDetails?.sectionIndex ?? -1, controlFocused:root.qaMenu.qaDetails?.controlFocused ?? false, value:qaSettings.editing ? qaSettings.value(qaSettings.editing) : null, draft:root.qaMenu.qaEditor?.inputItem.text ?? "", option:qaSettings.options.time?.secondPrecision, format:qaSettings.options.time?.format, date:qaSettings.options.time?.dateFormat, battery:qaSettings.options.battery?.low, productionOption:Config.options.time.secondPrecision});
+            return JSON.stringify({menu:root.qaMenu.activeMenu, selected:root.qaMenu.selectedItemId(), editing:qaSettings.editing?.id ?? "", page:qaSettings.page?.[0] ?? "", pageLoaded:!!root.qaMenu.qaDetails?.pageItem, currentMenu:qaSettings.currentMenu, loading:qaSettings.loading, busy:qaSettings.busy, feedback:qaSettings.feedback, fields:qaSettings.fields, drafts:qaSettings.drafts, value:qaSettings.editing ? qaSettings.value(qaSettings.editing) : null, draft:root.qaMenu.qaEditor?.inputItem.text ?? "", option:qaSettings.options.idle?.screensaver, battery:qaSettings.options.battery?.low, city:qaSettings.options.bar?.weather?.city, productionOption:Config.options.idle.screensaver});
         }
         function displayFixture(payload: string): void {
             const fixture = JSON.parse(Qt.atob(payload));
@@ -141,8 +142,16 @@ HARNESS = r'''
         function missingFields(): string {
             return JSON.stringify(qaSettings.fields.filter(f => { if (f.backend) return false; let obj = Config.options; for (const key of f.path.split(".")) obj = obj?.[key]; return obj === undefined; }).map(f => f.path));
         }
-        function nativeSection(index: int): void { root.qaMenu.qaDetails.goSection(index); }
         function delayedRoute(route: string): void { root.qaMenu.items = ({}); root.qaMenu.open(JSON.stringify({menu:route})); root.qaMenu.rebuildItemsFromSources(true); }
+        function guardedSettings(): bool {
+            const menu = root.qaMenu;
+            if (!menu.item("setup.general")?.when) return false;
+            const previous = menu.whenResults;
+            menu.whenResults = Object.assign({}, previous, {"setup.general":false});
+            const visible = menu.isVisible(menu.item("setup.general.battery-low"));
+            menu.whenResults = previous;
+            return !visible;
+        }
         function nativeSearch(text: string): void { root.qaMenu.setFilter(text); }
         function nativeValue(path: string): string { let obj = qaSettings.options; for (const key of path.split(".")) obj = obj?.[key]; return JSON.stringify(obj); }
         function state(): string {
@@ -156,6 +165,7 @@ HARNESS = r'''
                 menu: root.qaGrid?.menuEntry !== null && !!root.qaGrid?.menuEntry, menuIndex: root.qaGrid?.menuIndex ?? -1, launched: root.qaLaunched, summoned: root.qaSummoned, palette: String(Appearance.m3colors.m3onBackground), fg: String(root.fg)});
         }
         function editor(): void { qaText.forceActiveFocus(); }
+        function rendered(): bool { return qaDriver.waitForRendering(qaDriver.parent, 2000); }
         function number(): void { qaNumber.contentItem.children[0].forceActiveFocus(); }
         function key(name: string, modifiers: int): void { qaDriver.keyClick(Qt[name], modifiers, 1); }
         function type(text: string): void { for (const ch of text) qaDriver.keyClick(ch, Qt.NoModifier, 1); }
@@ -204,11 +214,49 @@ class RetroUiTests(unittest.TestCase):
             ('AppGrid', grid, 'searchInput'), ('Menu', menu, 'filterInput')
         ]:
             text = (SHELL / f'modules/ii/omarchyMenu/omarchy/{source}.qml').read_text()
+            if source == 'Menu':
+                text = text.replace('Util.execDetached(command)', 'console.log("QA blocked menu action", command)')
+                text = text.replace('command: root.dmenuOnChange.concat([JSON.stringify(selected)])', 'command: ["true"]')
+                assert 'Util.execDetached(' not in text
+                assert 'command: root.dmenuOnChange' not in text
             text = text.replace('"MenuModel.js"', '"modules/ii/omarchyMenu/omarchy/MenuModel.js"').replace('import "settings" as Settings', 'import "modules/ii/omarchyMenu/omarchy/settings" as Settings')
             text = text.replace('  id: root', f'  id: root\n  property alias qaInput: {input_id}\n  property alias qaPanel: panel\n  property alias qaCard: card\n  property alias qaEditor: settingEditor.item\n  property alias qaDetails: detailLoader.item', 1)
             if source == 'AppGrid': text = text.replace('  property alias qaEditor: settingEditor.item', '').replace('  property alias qaDetails: detailLoader.item', '')
             target.write_text(text)
-        harness = HARNESS.replace('@GRID@', grid.name).replace('@MENU@', menu.name)
+        cls.manager_dir = tempfile.TemporaryDirectory(prefix='bwm-retro-manager-test-')
+        manager_dir = Path(cls.manager_dir.name)
+        spec = importlib.util.spec_from_file_location('retro_test_manager', ROOT / 'config/hypr/skins/retro/scripts/settings.py')
+        manager = importlib.util.module_from_spec(spec); spec.loader.exec_module(manager)
+        data = {
+            'cursor': manager.cursor_rows({'theme':'Test', 'size':24}, [{'id':'Test', 'name':'Test'}, {'id':'Other', 'name':'Other'}]),
+            'autostart': manager.autostart_rows([{'file':'test.desktop', 'name':'Test app', 'enabled':True, 'workspace':'3'}], []),
+            'keybinds': manager.keybind_rows([dict(id='qa', description='QA shortcut', mods=['SUPER'], key='X', action_type='exec', exec='/usr/bin/true', enabled=True, is_default=False)]),
+            'defaultapps': manager.default_rows({kind:{'current':'a', 'options':[{'id':'a', 'name':'App A'}, {'id':'b', 'name':'App B'}]} for kind in ['terminal','browser','files','editor','taskmanager']}),
+            'plugins': manager.plugin_rows([dict(id='test.plugin', name='Test widget', enabled=True, canDisable=True, kinds=['bar-widget'])], {'centerBegin':[{'id':'test.plugin'}]}),
+            'themes': manager.addon_rows('themes', [dict(name=f'Theme {i}', url=f'https://example.org/theme-{i}') for i in range(75)], set()),
+            'themes-search': manager.addon_rows('themes', [dict(name='Theme 74', url='https://example.org/theme-74')], set()),
+            'themes-more': manager.addon_rows('themes', [dict(name=f'Theme {i}', url=f'https://example.org/theme-{i}') for i in range(75)], set(), limit=120),
+            'plugin-catalog': manager.addon_rows('plugin-catalog', [], set()),
+        }
+        cls.manager_fixture = manager_dir / 'data.json'
+        cls.manager_fixture.write_text(json.dumps(data))
+        cls.manager_capture = manager_dir / 'saved.json'
+        backend = manager_dir / 'manager.py'
+        backend.write_text('import json,sys\nfrom pathlib import Path\n'
+            + f'p=Path({str(cls.manager_fixture)!r}); data=json.loads(p.read_text())\n'
+            + 'if sys.argv[1] == "list":\n'
+            + ' key=sys.argv[2]\n'
+            + ' if key == "themes" and len(sys.argv)>3 and sys.argv[3]: key="themes-search"\n'
+            + ' elif key == "themes" and len(sys.argv)>4 and int(sys.argv[4])>60: key="themes-more"\n'
+            + ' print(json.dumps(data[key]))\n'
+            + 'else:\n'
+            + ' f,value,draft=[json.loads(x) for x in sys.argv[2:5]]\n'
+            + f' Path({str(cls.manager_capture)!r}).write_text(json.dumps(dict(field=f,value=value,draft=draft)))\n'
+            + ' if value == "reject": print(json.dumps(dict(ok=False,message="No se pudo guardar"))); sys.exit(1)\n'
+            + ' for field in data[f["category"]]["fields"]:\n'
+            + '  if field["id"] == f["id"]: field["value"]=value\n'
+            + ' p.write_text(json.dumps(data)); print(json.dumps(dict(ok=True)))\n')
+        harness = HARNESS.replace('@GRID@', grid.name).replace('@MENU@', menu.name).replace('@MANAGER@', str(backend))
         settings.write_text(ROOT_QML.replace('@HARNESS@', harness))
         cls.display_files = {path:path.read_bytes() for path in (ROOT / 'config/hypr/modules/monitors.lua', ROOT / 'config/hypr/monitors_layout.json', ROOT / 'config/hypr/workspace_rules.json')}
         cls.command = ['qs', '-p', str(settings), 'ipc', 'call', 'retroRegression']
@@ -259,6 +307,7 @@ class RetroUiTests(unittest.TestCase):
             except subprocess.TimeoutExpired:
                 cls.proc.kill()
                 cls.proc.wait()
+        if getattr(cls, 'manager_dir', None): cls.manager_dir.cleanup()
         for path in getattr(cls, 'paths', []):
             path.unlink(missing_ok=True)
         subprocess.run(['hyprctl', 'reload'], capture_output=True)
@@ -361,6 +410,7 @@ class RetroUiTests(unittest.TestCase):
         self.call('openMode', 'menu')
         self.wait_for(lambda s: s['opened'])
         self.call('nativeRoute', route, selected)
+        self.assertEqual(self.call('rendered'), 'true')
 
     def native_state(self):
         return json.loads(self.call('nativeState'))
@@ -369,7 +419,7 @@ class RetroUiTests(unittest.TestCase):
         return json.loads(self.call('displayState'))
 
     def display(self):
-        route = 'setup.settings.desktop.display'
+        route = 'setup.monitors'
         self.native(route.rsplit('.', 1)[0], route)
         self.key('Return')
         deadline = time.monotonic() + 5
@@ -461,7 +511,7 @@ class RetroUiTests(unittest.TestCase):
         self.key('Down'); self.key('Down'); self.key('Left')
         self.assertFalse(self.capture.exists())
         self.key('End'); self.key('Up')
-        self.assertEqual(self.display_state()['row'], 12)
+        self.assertEqual(self.display_state()['row'], 9)
         self.key('Return')
         deadline = time.monotonic() + 5
         while time.monotonic() < deadline and self.display_state()['dirty']:
@@ -558,42 +608,11 @@ class RetroUiTests(unittest.TestCase):
         self.assertFalse(state['opened'])
         self.assertEqual(state['command'], ['fake-program','only-captured'])
 
-    def test_native_complex_pages_use_the_existing_layer(self):
+    def test_native_display_uses_the_existing_layer(self):
         before = sum(c['pid'] == self.proc.pid for c in json.loads(subprocess.check_output(['hyprctl', 'clients', '-j'])))
-        for route, name in [
-            ('setup.settings.look.bar.controls', 'bar'), ('setup.settings.look.background.controls', 'background'),
-            ('setup.settings.look.interface.controls', 'interface'), ('setup.settings.look.style.controls', 'style'),
-            ('setup.settings.desktop.workspaces.controls', 'workspaces'),
-            ('setup.settings.system.general.controls', 'general'), ('setup.settings.system.services.controls', 'services'),
-            ('setup.settings.look.themes', 'themes'), ('setup.settings.look.cursor', 'cursor'),
-            ('setup.settings.desktop.display', 'display'), ('setup.settings.desktop.keybinds', 'keybinds'),
-            ('setup.settings.system.autostart', 'autostart'), ('setup.settings.system.defaultapps', 'defaultapps'),
-            ('setup.settings.system.plugins', 'plugins'), ('setup.settings.about', 'about')]:
-            with self.subTest(page=name):
-                self.native(route.rsplit('.', 1)[0], route)
-                self.key('Return')
-                deadline = time.monotonic() + 5
-                while time.monotonic() < deadline and not self.native_state()['pageLoaded']:
-                    time.sleep(.05)
-                self.assertTrue(self.native_state()['pageLoaded'])
-                self.assertEqual(self.native_state()['page'], name)
-                after = sum(c['pid'] == self.proc.pid for c in json.loads(subprocess.check_output(['hyprctl', 'clients', '-j'])))
-                self.assertEqual(after, before)
-                self.key('Escape')
-                self.assertEqual(self.native_state()['page'], '')
-
-    def test_native_section_jump_moves_focus_to_new_controls(self):
-        route = 'setup.settings.system.general'
-        self.native(route, route + '.controls')
-        self.key('Return')
-        deadline = time.monotonic() + 5
-        while time.monotonic() < deadline and not self.native_state()['pageLoaded']:
-            time.sleep(.05)
-        time.sleep(.1)
-        self.call('nativeSection', 1)
-        time.sleep(.1)
-        self.assertEqual(self.native_state()['section'], 1)
-        self.assertTrue(self.native_state()['controlFocused'])
+        self.display()
+        after = sum(c['pid'] == self.proc.pid for c in json.loads(subprocess.check_output(['hyprctl', 'clients', '-j'])))
+        self.assertEqual(after, before)
         self.key('Escape')
         self.assertEqual(self.native_state()['page'], '')
 
@@ -616,8 +635,8 @@ class RetroUiTests(unittest.TestCase):
         self.assertEqual(json.loads(self.call('missingFields')), [])
 
     def test_native_toggle_stays_in_menu_without_touching_live_config(self):
-        route = 'setup.settings.system.general'
-        selected = route + '.time-secondPrecision'
+        route = 'setup.idle'
+        selected = route + '.idle-screensaver'
         self.native(route, selected)
         before = self.native_state()
         self.key('Return')
@@ -627,21 +646,9 @@ class RetroUiTests(unittest.TestCase):
         self.assertEqual(after['option'], not before['option'])
         self.assertEqual(after['productionOption'], before['productionOption'])
 
-    def test_native_choice_returns_to_selected_option(self):
-        route = 'setup.settings.system.general'
-        selected = route + '.time-format'
-        self.native(route, selected)
-        self.key('Return')
-        self.assertEqual(self.native_state()['menu'], selected)
-        self.key('Down')
-        self.key('Return')
-        self.assertEqual(self.native_state()['menu'], route)
-        self.assertEqual(self.native_state()['selected'], selected)
-        self.assertEqual(self.native_state()['format'], 'h:mm AP')
-
     def test_native_editor_commits_and_cancels_in_same_menu(self):
-        route = 'setup.settings.system.general'
-        selected = route + '.time-dateFormat'
+        route = 'setup.services.weather'
+        selected = route + '.city'
         self.native(route, selected)
         self.key('Return')
         self.assertEqual(self.native_state()['editing'], selected)
@@ -649,55 +656,122 @@ class RetroUiTests(unittest.TestCase):
         self.key('Home'); self.key('Right'); self.key('Delete')
         self.assertEqual(self.native_state()['draft'], 'acdef')
         self.key('Return')
-        self.assertEqual(self.native_state()['date'], 'acdef')
+        self.assertEqual(self.native_state()['city'], 'acdef')
         self.assertEqual(self.native_state()['selected'], selected)
         self.key('Return')
         self.edit('discard this')
         self.key('Escape')
-        self.assertEqual(self.native_state()['date'], 'acdef')
+        self.assertEqual(self.native_state()['city'], 'acdef')
         self.assertEqual(self.native_state()['editing'], '')
 
-    def test_native_search_context_survives_choice_and_back(self):
-        route = 'setup.settings'
-        self.native(route, '')
-        self.call('nativeSearch', 'Formato de la hora')
-        selected = 'setup.settings.system.general.time-format'
-        self.assertEqual(self.native_state()['selected'], selected)
-        self.key('Return')
-        self.key('Down'); self.key('Return')
-        self.assertEqual(self.native_state()['menu'], route)
-        self.assertEqual(self.native_state()['selected'], selected)
-        self.assertEqual(self.state()['text'], 'Formato de la hora')
-
     def test_native_request_waits_for_menu_sources(self):
-        self.native('setup.settings', '')
-        self.call('delayedRoute', 'setup.settings.system.general')
-        self.assertEqual(self.native_state()['menu'], 'setup.settings.system.general')
+        self.native('setup', '')
+        self.call('delayedRoute', 'setup.idle')
+        self.assertEqual(self.native_state()['menu'], 'setup.idle')
 
     def test_native_link_returns_to_original_entry(self):
-        self.native('appearance.top-bar', 'appearance.top-bar.settings')
+        self.native('appearance.top-bar', 'appearance.top-bar.widgets')
         self.key('Return')
-        self.assertEqual(self.native_state()['menu'], 'setup.settings.look.bar')
+        self.assertEqual(self.native_state()['menu'], 'setup.plugin.manage')
         self.key('Escape')
         self.assertEqual(self.native_state()['menu'], 'appearance.top-bar')
-        self.assertEqual(self.native_state()['selected'], 'appearance.top-bar.settings')
+        self.assertEqual(self.native_state()['selected'], 'appearance.top-bar.widgets')
+
+    def manager_menu(self, route):
+        self.native(route, '')
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline and self.native_state()['loading']:
+            time.sleep(.02)
+        self.assertFalse(self.native_state()['loading'])
+
+    def test_dynamic_pages_remain_visible_before_their_first_load(self):
+        self.native('setup', 'setup.cursor')
+        self.assertEqual(self.native_state()['selected'], 'setup.cursor')
+        self.key('Return')
+        self.assertEqual(self.native_state()['menu'], 'setup.cursor')
+        self.manager_menu('setup.cursor')
+        self.assertTrue(any(f['id'] == 'setup.cursor.size' for f in self.native_state()['fields']))
+
+    def test_manager_choice_uses_fake_backend_and_returns_to_selected_row(self):
+        self.manager_menu('setup.default')
+        self.call('nativeRoute', 'setup.default', 'setup.default.browser')
+        self.key('Return'); self.key('Down'); self.key('Return')
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline and (self.native_state()['busy'] or self.native_state()['loading']):
+            time.sleep(.02)
+        self.assertEqual(self.native_state()['menu'], 'setup.default')
+        self.assertEqual(self.native_state()['selected'], 'setup.default.browser')
+        saved = json.loads(self.manager_capture.read_text())
+        self.assertEqual(saved['field']['category'], 'defaultapps')
+        self.assertEqual(saved['value'], 'b')
+
+    def test_new_shortcut_is_a_draft_until_add_and_escape_cancels_text(self):
+        self.manager_menu('setup.keybindings')
+        self.call('nativeRoute', 'setup.keybindings.new', 'setup.keybindings.new.description')
+        before = self.manager_capture.read_bytes() if self.manager_capture.exists() else None
+        self.key('Return'); self.edit('My shortcut'); self.key('Return')
+        self.assertEqual(self.native_state()['drafts']['keybinds']['description'], 'My shortcut')
+        self.assertEqual(self.manager_capture.read_bytes() if self.manager_capture.exists() else None, before)
+        self.key('Return'); self.edit('discard'); self.key('Escape')
+        self.assertEqual(self.native_state()['drafts']['keybinds']['description'], 'My shortcut')
+
+    def test_native_options_have_no_shared_page_escape_hatches(self):
+        for route in ['setup.interface', 'setup.idle', 'setup.services', 'setup.cursor', 'setup.autostart', 'setup.keybindings']:
+            self.manager_menu(route)
+            texts = json.loads(self.call('visibleTexts', 'menu'))
+            self.assertNotIn('Más opciones…', texts)
+            self.assertEqual(self.native_state()['page'], '')
+
+    def test_catalog_search_loads_matches_beyond_first_page(self):
+        self.manager_menu('appearance.retro-palette.catalog')
+        self.call('nativeSearch', 'Theme 74')
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline and self.native_state()['loading']:
+            time.sleep(.02)
+        texts = json.loads(self.call('visibleTexts', 'menu'))
+        self.assertIn('Theme 74', texts)
+
+    def test_manager_failure_is_visible_and_does_not_change_the_value(self):
+        self.manager_menu('setup.keybindings')
+        parent = 'setup.keybindings.' + b'qa'.hex()
+        self.call('nativeRoute', parent, parent + '.description')
+        self.key('Return'); self.edit('reject'); self.key('Return')
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline and self.native_state()['busy']:
+            time.sleep(.02)
+        self.assertEqual(self.native_state()['feedback'], 'No se pudo guardar')
+        field = next(f for f in self.native_state()['fields'] if f['id'] == parent + '.description')
+        self.assertEqual(field['value'], 'QA shortcut')
+        self.assertIn('No se pudo guardar', json.loads(self.call('visibleTexts', 'menu')))
+
+    def test_hardware_guards_survive_the_settings_merge_and_cover_search_results(self):
+        self.native('setup', '')
+        self.assertEqual(self.call('guardedSettings'), 'true')
+
+    def test_reopening_the_same_section_keeps_its_settings_controller_active(self):
+        self.manager_menu('appearance.retro-palette.catalog')
+        self.call('nativeRoute', 'appearance.retro-palette.catalog', '')
+        self.assertEqual(self.native_state()['currentMenu'], 'appearance.retro-palette.catalog')
+        self.call('nativeSearch', 'Theme 74')
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline and self.native_state()['loading']:
+            time.sleep(.02)
+        self.assertIn('Theme 74', json.loads(self.call('visibleTexts', 'menu')))
 
     def test_native_number_validates_before_commit(self):
-        route = 'setup.settings.system.general.battery'
-        selected = route + '.low'
+        route = 'setup.interface.overview'
+        selected = route + '.rows'
         self.native(route, selected)
         self.key('Return')
-        before = self.native_state()['battery']
-        self.edit('999')
-        self.key('Return')
+        before = json.loads(self.call('nativeValue', 'overview.rows'))
+        self.edit('999'); self.key('Return')
         self.assertEqual(self.native_state()['editing'], selected)
-        self.assertEqual(self.native_state()['battery'], before)
-        self.edit('35')
-        self.key('Up')
-        self.assertEqual(self.native_state()['draft'], '40')
-        self.assertEqual(self.native_state()['battery'], before)
+        self.assertEqual(json.loads(self.call('nativeValue', 'overview.rows')), before)
+        self.edit('3'); self.key('Up')
+        self.assertEqual(self.native_state()['draft'], '4')
+        self.assertEqual(json.loads(self.call('nativeValue', 'overview.rows')), before)
         self.key('Return')
-        self.assertEqual(self.native_state()['battery'], 40)
+        self.assertEqual(json.loads(self.call('nativeValue', 'overview.rows')), 4)
         self.assertEqual(self.native_state()['editing'], '')
 
     def test_z_no_runtime_errors(self):
