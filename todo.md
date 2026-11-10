@@ -1,9 +1,6 @@
 
 
 
-añadir lo nuevo de omarchy
-
-un menu BWMenu para cuando crashee, ver la version, en que version estan las dependencias y si es la correcta, las skins instaladas y como aplicar una skin etc
 
 
 agregar el las kde plasma settings y hacer que coincidan con las settings que tenemos y las respeten, para la skin breeze
@@ -43,3 +40,5 @@ cambiar de nautilus a dolphin, dejar nautilus en omarchy y añadirle los plugins
 - Vigila las carpetas que contienen los archivos, porque las aplicaciones pueden sustituirlos al guardar; agrupa los avisos próximos para no trabajar varias veces por una sola edición.
 - Conserva las entradas especiales de KDE y los datos que no tengan equivalente en GTK. Si detecta cambios simultáneos que no pueda conciliar con seguridad, conserva la información y vuelve a intentar la sincronización.
 
+
+hacer que bwmenu salga como app para buscarla en el lanzador

@@ -56,7 +56,7 @@ case $action in
 esac
 
 close_all_windows() {
-  local clients pids waiter=""
+  local clients pids waiter="" pid exe firefox_pids=","
   clients=$(hyprctl clients -j 2>/dev/null) || return 0
   # Los procesos se apuntan antes de que desaparezcan sus ventanas: cerrar la ventana no
   # significa que la app haya terminado de guardar
@@ -78,7 +78,22 @@ close_all_windows() {
     fi
     waiter=$!
   fi
-  jq -r '.[].address' <<<"$clients" | while read -r addr; do
+  # Firefox debe salir como aplicación: cerrar cada ventana la convierte en una
+  # ventana descartada y al iniciar sólo restaura la última. SIGTERM solicita su
+  # cierre de sesión completo, como en restart_app(). Una señal por proceso aunque
+  # tenga varias ventanas; comprobar el ejecutable antes de enviarla.
+  while read -r pid; do
+    exe=$(readlink "/proc/$pid/exe" 2>/dev/null) || continue
+    case ${exe##*/} in
+      firefox|firefox-bin|"firefox (deleted)"|"firefox-bin (deleted)")
+        if kill -TERM "$pid" 2>/dev/null; then
+          firefox_pids+="$pid,"
+        fi
+        ;;
+    esac
+  done < <(jq -r '[.[] | select(.pid > 0) | select(.class | ascii_downcase | contains("firefox")) | .pid] | unique[]' <<<"$clients")
+  jq -r --arg pids "$firefox_pids" \
+    '.[] | . as $client | select(($pids | contains("," + ($client.pid | tostring) + ",")) | not) | .address' <<<"$clients" | while read -r addr; do
     hyprctl dispatch "hl.dsp.window.close({ window = \"address:$addr\" })" >/dev/null 2>&1
   done
   [[ -n $waiter ]] && wait "$waiter"
