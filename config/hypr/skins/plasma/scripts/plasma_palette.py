@@ -117,7 +117,8 @@ class Scheme:
     @property
     def name(self) -> str:
         general = self.sections.get("General", {})
-        return general.get("ColorScheme") or general.get("Name") or ""
+        # KConfig no escribe el valor por defecto: sin ColorScheme, kdeglobals es Breeze Claro
+        return general.get("ColorScheme") or general.get("Name") or "BreezeLight"
 
     @property
     def accent(self):
