@@ -116,6 +116,12 @@ def get_monitors(with_brightness=False):
     monitor_workspaces = ws_cfg.get("monitor_workspaces", {})
 
     connected_names = [m.get("name") for m in data]
+    # Hyprland reports `mirrorOf` as "none" or the mirrored monitor (name or id); the editors
+    # identify screens by description, so hand that over
+    description_of = {}
+    for m in data:
+        description_of[str(m.get("name"))] = m.get("description", "")
+        description_of[str(m.get("id"))] = m.get("description", "")
     if primary_name not in connected_names and connected_names:
         primary_name = "DP-2" if "DP-2" in connected_names else connected_names[0]
 
@@ -190,6 +196,7 @@ def get_monitors(with_brightness=False):
             "transform": cur_transform,
             "focused": m.get("focused", False),
             "disabled": m.get("disabled", False),
+            "mirrorOf": description_of.get(str(m.get("mirrorOf")), "") if str(m.get("mirrorOf", "none")) != "none" else "",
             "is_primary": is_prim,
             "workspaces": assigned_ws,
             "resolutions": res_list,
@@ -219,10 +226,64 @@ def parse_workspace_range(ws_str):
                 pass
     return parts
 
+def mirror_source(monitors, m):
+    """The monitor `m` duplicates, or None: it must exist, be on, be another screen and not be a copy itself."""
+    wanted = m.get("mirrorOf") or ""
+    if not wanted or m.get("disabled"):
+        return None
+    for other in monitors:
+        if other is m or other.get("description") != wanted and monitor_selector(other) != wanted:
+            continue
+        if other.get("disabled") or other.get("mirrorOf"):
+            return None
+        return other
+    return None
+
+def sanitize_mirrors(monitors):
+    """Drops a duplication that cannot work (the screen it copies is off, missing or a copy itself) and
+    keeps the rest; what a mirror copies is stored as the description of that screen."""
+    for m in monitors:
+        source = mirror_source(monitors, m)
+        m["mirrorOf"] = source.get("description", "") if source else ""
+    # a screen that is copied cannot also be a copy: sources are resolved once more after clearing
+    for m in monitors:
+        source = mirror_source(monitors, m)
+        m["mirrorOf"] = source.get("description", "") if source else ""
+    return monitors
+
+def set_mirror(monitors, screen, source):
+    """Makes `screen` a copy of `source` (a monitor dict) or, with None, an independent screen again.
+    A copy owns no workspaces: when it held 1-9 they go to the screen it copies."""
+    if source is None:
+        screen["mirrorOf"] = ""
+        if not screen.get("workspaces"):
+            screen["workspaces"] = "10"
+        return
+    if source is screen:
+        raise ValueError("Una pantalla no puede duplicarse a sí misma")
+    if source.get("disabled") or screen.get("disabled"):
+        raise ValueError("Las dos pantallas deben estar activas")
+    if source.get("mirrorOf"):
+        raise ValueError("La pantalla elegida ya es una copia de otra")
+    if any(o is not screen and (o.get("mirrorOf") or "") in (screen.get("description"), monitor_selector(screen)) for o in monitors):
+        raise ValueError("Otra pantalla ya duplica a esta")
+    if screen.get("is_primary") or screen.get("workspaces") == "1-9":
+        for o in monitors:
+            o["is_primary"] = o is source
+        source["workspaces"] = "1-9"
+    screen["mirrorOf"] = source.get("description", "")
+    screen["is_primary"] = False
+    screen["workspaces"] = ""
+
 def write_monitors_lua(monitors):
     ws_cfg = load_workspace_config()
     layout_cfg = load_layout_config()
-    active_monitors = [m for m in monitors if not m.get("disabled")]
+    sanitize_mirrors(monitors)
+    # a mirrored screen shows another one: it has no workspaces and cannot be the primary
+    for m in monitors:
+        if m.get("mirrorOf"):
+            m["is_primary"] = False
+    active_monitors = [m for m in monitors if not m.get("disabled") and not m.get("mirrorOf")]
     
     primary_candidate = next((m["name"] for m in active_monitors if m.get("is_primary")), None)
     if primary_candidate:
@@ -256,7 +317,8 @@ def write_monitors_lua(monitors):
             "refreshRate": m.get("refreshRate", 60.0),
             "scale": m.get("scale", 1.0),
             "transform": m.get("transform", 0),
-            "disabled": m.get("disabled", False)
+            "disabled": m.get("disabled", False),
+            "mirrorOf": m.get("mirrorOf", "")
         }
     save_layout_config(layout_cfg)
 
@@ -299,6 +361,9 @@ def write_monitors_lua(monitors):
         lines.append(f'    scale    = "{scale_str}",')
         if transform:
             lines.append(f'    transform = {transform},')
+        source = mirror_source(monitors, m)
+        if source:
+            lines.append(f'    mirror   = "{monitor_selector(source)}",')
         lines.append("})")
         lines.append("")
 
@@ -394,6 +459,10 @@ def main():
     toggle_parser = subparsers.add_parser("toggle-enable", help="Activa o desactiva un monitor")
     toggle_parser.add_argument("monitor", help="Nombre o descripción del monitor")
     toggle_parser.add_argument("state", nargs="?", choices=["enable", "disable", "toggle"], default="toggle")
+
+    mirror_parser = subparsers.add_parser("set-mirror", help="Duplica una pantalla en otra (espejo) o la vuelve independiente")
+    mirror_parser.add_argument("monitor", help="Nombre o descripción de la pantalla que será la copia")
+    mirror_parser.add_argument("source", help="Nombre o descripción de la pantalla que se copia, o «none» para dejar de duplicar")
 
     set_prim_parser = subparsers.add_parser("set-primary", help="Establece el monitor principal (workspaces 1-9)")
     set_prim_parser.add_argument("monitor", help="Nombre del monitor principal")
@@ -508,11 +577,29 @@ def main():
         write_monitors_lua(mons)
         print(json.dumps({"status": "success", "monitor": target["name"], "disabled": new_disabled}))
 
+    elif args.command == "set-mirror":
+        mons = get_monitors(with_brightness=False)
+        screen = find_target_monitor(mons, args.monitor)
+        source = None if args.source.lower() == "none" else find_target_monitor(mons, args.source)
+        if not screen or (args.source.lower() != "none" and not source):
+            print(json.dumps({"status": "error", "message": "Monitor no encontrado"}), file=sys.stderr)
+            sys.exit(1)
+        try:
+            set_mirror(mons, screen, source)
+        except ValueError as e:
+            print(json.dumps({"status": "error", "message": str(e)}), file=sys.stderr)
+            sys.exit(1)
+        write_monitors_lua(mons)
+        print(json.dumps({"status": "success", "monitor": screen["name"], "mirrorOf": screen.get("mirrorOf", "")}))
+
     elif args.command == "set-primary":
         mons = get_monitors(with_brightness=False)
         target = find_target_monitor(mons, args.monitor)
         if not target:
             print(json.dumps({"status": "error", "message": f"Monitor '{args.monitor}' no encontrado"}), file=sys.stderr)
+            sys.exit(1)
+        if target.get("mirrorOf"):
+            print(json.dumps({"status": "error", "message": "Una pantalla duplicada no puede ser la principal"}), file=sys.stderr)
             sys.exit(1)
         for m in mons:
             if m["name"] == target["name"]:

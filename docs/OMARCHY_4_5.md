@@ -173,7 +173,7 @@ recupera los workspaces de un monitor al reconectarlo.
 * ~~**Introducciones de fondo**~~ (#16875, #16877, #16884): **hecho** (§3.116), con OWE en Retro.
 * **Panel de pantallas**: una pantalla cada vez con mapa de distribución, girar desde el mapa, Extender |
   Duplicar y frecuencias (#17159…#17232). Comparado (§3.116): el editor de BWM (§3.67) ya tiene mapa,
-  giro, frecuencias, escala, principal y apagar. Falta **Duplicar** (espejo); pendiente.
+  giro, frecuencias, escala, principal y apagar. **Duplicar** (espejo): **hecho** (§3.130).
 * ~~**Motion rules**~~ (#16889): **revisado** (§3.116): curvas, animaciones y reglas de capa de Retro iguales a
   `quattro` `18ac93c`; lo que no está son las reglas de su modo vidrio, que BWM tiene propio.
 * **Menú**: Apariencia como menú principal con las opciones de Estilo, Barra con Ocultar/Mostrar,

@@ -885,5 +885,9 @@
   "Translucent windows with blur": "Ventanas translúcidas con desenfoque",
   "Like Omarchy's glass mode: terminals at 65 %, dimmed GTK apps and\nfrosted blur behind the bar and menus. For every skin.": "Como el modo glass de Omarchy: terminales al 65 %, apps GTK atenuadas y\nbarra y menús con desenfoque esmerilado detrás. Para todas las skins.",
   "Neutral terminal": "Terminal neutra",
-  "Fixed palette (end-4 base) that never changes with the wallpaper or theme": "Paleta fija (la base de end-4) que no cambia con el fondo ni con el tema"
+  "Fixed palette (end-4 base) that never changes with the wallpaper or theme": "Paleta fija (la base de end-4) que no cambia con el fondo ni con el tema",
+  "Duplicate display": "Duplicar pantalla",
+  "Shows on this display what another one shows. Its workspaces go to the display it copies.": "Muestra en esta pantalla lo que muestra otra. Sus espacios de trabajo pasan a la pantalla que copia.",
+  "Copy of %1": "Copia de %1",
+  "No, independent display": "No, pantalla independiente"
 }

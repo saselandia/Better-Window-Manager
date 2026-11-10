@@ -461,7 +461,7 @@ class RetroUiTests(unittest.TestCase):
         self.key('Down'); self.key('Down'); self.key('Left')
         self.assertFalse(self.capture.exists())
         self.key('End'); self.key('Up')
-        self.assertEqual(self.display_state()['row'], 11)
+        self.assertEqual(self.display_state()['row'], 12)
         self.key('Return')
         deadline = time.monotonic() + 5
         while time.monotonic() < deadline and self.display_state()['dirty']:
@@ -473,6 +473,39 @@ class RetroUiTests(unittest.TestCase):
         self.assertEqual(applied[0]['description'], 'TEST Monitor A')
         self.assertEqual(applied[0]['x'], 0)
         self.assertEqual(applied[1]['x'], 1600)
+
+    def test_display_mirror_makes_a_copy_that_takes_no_room(self):
+        self.display()
+        for _ in range(7): self.key('Down')  # Duplicar
+        self.key('Right')
+        state = self.display_state()
+        self.assertEqual(state['monitors'][0]['mirrorOf'], 'TEST Monitor B')
+        self.assertEqual(state['monitors'][0]['workspaces'], '')
+        self.assertTrue(state['dirty'])
+        self.key('Right')  # there is nothing else to copy: stays
+        self.assertEqual(self.display_state()['monitors'][0]['mirrorOf'], 'TEST Monitor B')
+        self.key('End'); self.key('Up'); self.key('Return')
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline and self.display_state()['dirty']:
+            time.sleep(.05)
+        self.assertFalse(self.display_state()['dirty'], self.display_state())
+        applied = json.loads(self.capture.read_text())
+        self.assertEqual(applied[0]['mirrorOf'], 'TEST Monitor B')
+        self.assertEqual(applied[1].get('mirrorOf', ''), '')
+        self.key('Home'); [self.key('Down') for _ in range(7)]
+        self.key('Left')
+        self.assertEqual(self.display_state()['monitors'][0]['mirrorOf'], '')
+        self.assertEqual(self.display_state()['monitors'][0]['workspaces'], '10')
+
+    def test_display_a_copy_cannot_be_moved_in_the_layout(self):
+        self.display()
+        for _ in range(7): self.key('Down')
+        self.key('Right')
+        self.key('Home')
+        self.key('Return')
+        state = self.display_state()
+        self.assertFalse(state['editing'])
+        self.assertIn('duplica', state['message'])
 
     def test_display_overlapping_layout_is_rejected(self):
         self.display()

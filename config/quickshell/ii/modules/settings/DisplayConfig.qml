@@ -7,6 +7,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import "../ii/omarchyMenu/omarchy/settings/display/Layout.js" as Geometry
 
 ContentPage {
     id: root
@@ -709,6 +710,30 @@ ContentPage {
             }
         }
 
+        // Duplicate (mirror) another display. A copy takes no room in the layout and owns no workspaces.
+        ContentSubsection {
+            title: Translation.tr("Duplicate display")
+            tooltip: Translation.tr("Shows on this display what another one shows. Its workspaces go to the display it copies.")
+            Layout.fillWidth: true
+
+            StyledComboBox {
+                id: mirrorCombo
+                Layout.fillWidth: true
+                buttonIcon: "content_copy"
+                textRole: "name"
+                readonly property var choices: Geometry.mirrorChoices(root.monitors, root.selectedIndex)
+                model: choices.map(function(description) {
+                    const source = root.monitors.find(function(m) { return m.description === description; });
+                    return { name: source ? Translation.tr("Copy of %1").arg(source.model || source.name) : Translation.tr("No, independent display"), value: description };
+                })
+                currentIndex: Math.max(0, choices.indexOf(root.currentMonitor ? (root.currentMonitor.mirrorOf || "") : ""))
+                onActivated: function(index) {
+                    if (!model || !model[index]) return;
+                    root.monitors = Geometry.setMirror(root.monitors, root.selectedIndex, model[index].value);
+                }
+            }
+        }
+
         // Enable / Disable monitor switch
         ConfigSwitch {
             buttonIcon: "power_settings_new"
@@ -718,7 +743,7 @@ ContentPage {
                 if (root.currentMonitor) {
                     let updated = JSON.parse(JSON.stringify(root.monitors));
                     updated[root.selectedIndex].disabled = !checked;
-                    root.monitors = updated;
+                    root.monitors = Geometry.sanitize(updated);
                 }
             }
         }

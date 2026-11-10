@@ -5,7 +5,64 @@ function size(m) {
     var rotated = Number(m.transform || 0) % 2 !== 0;
     return {width: (rotated ? m.height : m.width) / scale, height: (rotated ? m.width : m.height) / scale};
 }
-function bounds(monitors, padding) {
+// A screen that duplicates another (mirrorOf = description of the screen it copies) takes no room
+// in the layout: it shows what its source shows and owns no workspaces.
+function solid(monitors) { return monitors.filter(function(m) { return !m.mirrorOf; }); }
+function mirrorSource(monitors, m) {
+    if (!m || !m.mirrorOf || m.disabled) return null;
+    for (var i = 0; i < monitors.length; i++) {
+        var o = monitors[i];
+        if (o === m || o.description !== m.mirrorOf) continue;
+        return (o.disabled || o.mirrorOf) ? null : o;
+    }
+    return null;
+}
+function copiedBy(monitors, m) {
+    return monitors.some(function(o) { return o !== m && o.mirrorOf && o.mirrorOf === m.description; });
+}
+// "" (own screen) followed by the screens this one could copy
+function mirrorChoices(monitors, index) {
+    var m = monitors[index], choices = [""];
+    if (!m || m.disabled || copiedBy(monitors, m)) return choices;
+    for (var i = 0; i < monitors.length; i++) {
+        var o = monitors[i];
+        if (i !== index && !o.disabled && !o.mirrorOf) choices.push(o.description);
+    }
+    return choices;
+}
+// Makes the screen at `index` a copy of the one with that description, or its own screen again with "".
+// A copy owns no workspaces: when it held 1-9 they go to the screen it copies (as monitor-manager.py does).
+function setMirror(monitors, index, description) {
+    var list = copy(monitors), m = list[index];
+    if (!m) return list;
+    if (!description) {
+        m.mirrorOf = "";
+        if (!m.workspaces) m.workspaces = "10";
+        return list;
+    }
+    var source = null;
+    for (var i = 0; i < list.length; i++) if (list[i].description === description) source = list[i];
+    if (!source || source === m || source.disabled || source.mirrorOf || m.disabled || copiedBy(list, m)) return list;
+    if (m.is_primary || m.workspaces === "1-9") {
+        for (var j = 0; j < list.length; j++) list[j].is_primary = list[j] === source;
+        source.workspaces = "1-9";
+    }
+    m.mirrorOf = description; m.is_primary = false; m.workspaces = "";
+    return list;
+}
+// Drops duplications that cannot work any more (its source was switched off, say)
+function sanitize(monitors) {
+    var list = copy(monitors);
+    for (var i = 0; i < list.length; i++) {
+        if (list[i].mirrorOf && !mirrorSource(list, list[i])) {
+            list[i].mirrorOf = "";
+            if (!list[i].workspaces) list[i].workspaces = "10";
+        }
+    }
+    return list;
+}
+function bounds(allMonitors, padding) {
+    var monitors = solid(allMonitors);
     var list = monitors.length ? monitors : [{x:0,y:0,width:1920,height:1080,scale:1}];
     var left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
     for (var i = 0; i < list.length; i++) {
@@ -18,7 +75,7 @@ function bounds(monitors, padding) {
 }
 function normalize(monitors) {
     var list = copy(monitors);
-    var active = list.filter(function(m) { return !m.disabled; });
+    var active = list.filter(function(m) { return !m.disabled && !m.mirrorOf; });
     if (!active.length) return list;
     var minX = Math.min.apply(null, active.map(function(m) { return m.x; }));
     var minY = Math.min.apply(null, active.map(function(m) { return m.y; }));
@@ -27,7 +84,7 @@ function normalize(monitors) {
 }
 function move(monitors, index, dx, dy, frame) {
     var list = copy(monitors), m = list[index];
-    if (!m || m.disabled) return list;
+    if (!m || m.disabled || m.mirrorOf) return list;
     var s = size(m);
     m.x = Math.round(m.x + dx); m.y = Math.round(m.y + dy);
     if (frame) {
@@ -38,11 +95,11 @@ function move(monitors, index, dx, dy, frame) {
 }
 function snap(monitors, index, tolerance) {
     var list = copy(monitors), target = list[index];
-    if (!target || target.disabled) return list;
+    if (!target || target.disabled || target.mirrorOf) return list;
     var originalX = target.x, originalY = target.y;
     var s = size(target), bestX = tolerance + 1, bestY = tolerance + 1;
     for (var i = 0; i < list.length; i++) {
-        if (i === index || list[i].disabled) continue;
+        if (i === index || list[i].disabled || list[i].mirrorOf) continue;
         var other = list[i], os = size(other);
         var xs = [other.x, other.x + os.width, other.x - s.width, other.x + os.width - s.width];
         var ys = [other.y, other.y + os.height, other.y - s.height, other.y + os.height - s.height];
@@ -75,7 +132,7 @@ function setResolution(monitors, index, value) {
     m.refreshRate = available.reduce(function(best,hz) { return Math.abs(hz-current) < Math.abs(best-current) ? hz : best; }, available[0]);
     // Keep an attached right/bottom edge attached when the selected screen shrinks.
     for (var i = 0; i < list.length; i++) {
-        if (i === index || list[i].disabled) continue;
+        if (i === index || list[i].disabled || list[i].mirrorOf) continue;
         var other = list[i];
         if (Math.abs(originalX + before.width - other.x) < 1 && originalY < other.y + size(other).height && originalY + before.height > other.y) m.x = Math.round(other.x - after.width);
         if (Math.abs(originalY + before.height - other.y) < 1 && originalX < other.x + size(other).width && originalX + before.width > other.x) m.y = Math.round(other.y - after.height);
@@ -103,8 +160,10 @@ function cycle(values, current, delta) {
     return values[Math.max(0,Math.min(values.length-1,index+delta))];
 }
 function validate(monitors) {
-    var active = monitors.filter(function(m) { return !m.disabled; });
+    var active = monitors.filter(function(m) { return !m.disabled && !m.mirrorOf; });
     if (!active.length) return "Debe quedar al menos una pantalla activa";
+    for (var c = 0; c < monitors.length; c++)
+        if (monitors[c].mirrorOf && !mirrorSource(monitors, monitors[c])) return "La pantalla que se duplica debe estar activa y no ser a su vez una copia";
     var ids = [];
     for (var i = 0; i < monitors.length; i++) {
         var m = monitors[i], id = String(m.description || "").trim();

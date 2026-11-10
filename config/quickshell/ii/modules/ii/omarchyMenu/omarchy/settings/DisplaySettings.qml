@@ -30,6 +30,7 @@ FocusScope {
         {key:"monitor", label:"Pantalla"}, {key:"resolution", label:"Resolución"},
         {key:"rate", label:"Frecuencia"}, {key:"scale", label:"Escala"},
         {key:"rotation", label:"Giro"}, {key:"enabled", label:"Pantalla activa"},
+        {key:"mirror", label:"Duplicar"},
         {key:"primary", label:"Pantalla principal"}, {key:"workspaces", label:"Espacios de trabajo"},
         {key:"x", label:"Posición horizontal"}, {key:"y", label:"Posición vertical"},
         {key:"apply", label:"Aplicar cambios"}, {key:"reload", label:"Restablecer / detectar pantallas"}
@@ -68,6 +69,7 @@ FocusScope {
         if (busy) return;
         if (index !== undefined) selectedIndex = index;
         if (!currentMonitor || currentMonitor.disabled) { message = "Activa la pantalla antes de moverla"; return; }
+        if (currentMonitor.mirrorOf) { message = "Esta pantalla duplica a otra: no tiene sitio propio en el esquema"; messageIsError = false; return; }
         rowIndex = 0;
         if (!editingLayout) editingFrame = Geometry.bounds(monitors, 100);
         editingLayout = true;
@@ -110,6 +112,18 @@ FocusScope {
         else if (key === "enabled") {
             if (delta < 0 && monitors.filter(m => !m.disabled).length <= 1 && !m.disabled) { message = "Debe quedar al menos una pantalla activa"; messageIsError = true; return; }
             setValue("disabled", delta < 0);
+            monitors = Geometry.sanitize(monitors);
+        } else if (key === "mirror") {
+            const choices = Geometry.mirrorChoices(monitors, selectedIndex);
+            if (choices.length < 2) {
+                message = m.disabled ? "Activa la pantalla antes de duplicarla" : Geometry.copiedBy(monitors, m) ? "Otra pantalla ya duplica a esta" : "No hay otra pantalla activa que duplicar";
+                messageIsError = false;
+                return;
+            }
+            monitors = Geometry.setMirror(monitors, selectedIndex, Geometry.cycle(choices, m.mirrorOf || "", delta));
+        } else if ((key === "primary" || key === "workspaces" || key === "x" || key === "y") && m.mirrorOf) {
+            message = "Esta pantalla duplica a otra: no tiene espacios de trabajo ni posición propios";
+            messageIsError = false;
         } else if (key === "primary" || key === "workspaces") {
             const list = Geometry.copy(monitors);
             const workspaces = key === "primary" ? (delta > 0 ? "1-9" : "10") : Geometry.cycle(["1-9","10","1-5","6-10"], m.workspaces || (m.is_primary ? "1-9" : "10"), delta);
@@ -133,8 +147,12 @@ FocusScope {
         if (key === "rate") return m.refreshRate + " Hz";
         if (key === "scale") return Math.round(m.scale*100) + " %";
         if (key === "rotation") return ["Normal", "90°", "180°", "270°"][m.transform || 0];
+        if (key === "mirror") {
+            const source = Geometry.mirrorSource(monitors, m);
+            return source ? "Copia de " + (monitors.indexOf(source)+1) + " · " + name(source) : "No";
+        }
         if (key === "primary") return m.is_primary ? "Sí · espacios 1–9" : "No";
-        if (key === "workspaces") return m.workspaces || (m.is_primary ? "1-9" : "10");
+        if (key === "workspaces") return m.mirrorOf ? "Ninguno (copia)" : m.workspaces || (m.is_primary ? "1-9" : "10");
         if (key === "enabled") return m.disabled ? "Desactivada" : "Activada";
         return String(m[key]);
     }
@@ -259,12 +277,15 @@ FocusScope {
                             id: screenRect
                             required property int index
                             readonly property var modelData: root.monitors[index]
-                            readonly property var logicalSize: Geometry.size(modelData)
+                            readonly property var source: Geometry.mirrorSource(root.monitors, modelData)
+                            readonly property var box: source ?? modelData
+                            readonly property real inset: source ? 6 : 0
+                            readonly property var logicalSize: Geometry.size(box)
                             readonly property bool selected: index === root.selectedIndex
-                            x: viewport.offsetX+(modelData.x-root.frame.x)*viewport.ratio
-                            y: viewport.offsetY+(modelData.y-root.frame.y)*viewport.ratio
-                            width: logicalSize.width*viewport.ratio
-                            height: logicalSize.height*viewport.ratio
+                            x: viewport.offsetX+(box.x-root.frame.x)*viewport.ratio+inset
+                            y: viewport.offsetY+(box.y-root.frame.y)*viewport.ratio+inset
+                            width: Math.max(1, logicalSize.width*viewport.ratio-inset*2)
+                            height: Math.max(1, logicalSize.height*viewport.ratio-inset*2)
                             color: selected ? Util.alpha(Commons.Color.accent,root.editingLayout ? 0.25 : 0.12) : Util.alpha(Commons.Color.menu.text,0.07)
                             border.width: selected ? 2 : 1
                             border.color: selected ? Commons.Color.accent : Util.alpha(Commons.Color.menu.text,0.4)
@@ -272,7 +293,7 @@ FocusScope {
                             Column {
                                 anchors.centerIn: parent
                                 width: parent.width-8
-                                Text { width: parent.width; text: (screenRect.index+1)+" · "+root.name(screenRect.modelData); horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight; color: Commons.Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.caption }
+                                Text { width: parent.width; text: (screenRect.index+1)+" · "+root.name(screenRect.modelData)+(screenRect.source ? " ⧉" : ""); horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight; color: Commons.Color.menu.text; font.family: Style.font.menuFamily; font.pixelSize: Style.font.caption }
                                 Text { width: parent.width; text: screenRect.modelData.width+"×"+screenRect.modelData.height; horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight; color: Commons.Color.menu.text; opacity:0.7; font.family: Style.font.menuFamily; font.pixelSize: Style.font.caption }
                             }
                             MouseArea {
