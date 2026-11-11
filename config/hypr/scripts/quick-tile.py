@@ -134,9 +134,14 @@ def drag_monitor(monitors, point, direction):
                  and b[1] <= y < b[1] + b[3])(monitor_box(m))), None)
 
 
-def content_geometry(x, y, width, height, titlebar):
-    """La previsualización mide el marco completo; Hyprland mueve/redimensiona el contenido."""
-    return int(x), int(y + titlebar), int(width), max(1, int(height - titlebar))
+def content_geometry(x, y, width, height, decoration):
+    """Outer preview to client geometry, including every real KDE frame edge."""
+    from bwm_windows import normalized_extents
+    # The numeric form remains supported for callers of this pure helper, not live detection.
+    borders = normalized_extents(decoration if isinstance(decoration, dict) else {"top": decoration})
+    return (int(x + borders["left"]), int(y + borders["top"]),
+            max(1, int(width - borders["left"] - borders["right"])),
+            max(1, int(height - borders["top"] - borders["bottom"])))
 
 
 def main(argv=None):
@@ -187,15 +192,8 @@ def main(argv=None):
     same_monitor = target_mon["id"] == mon_id
     workspace = target_win["workspace"]["id"] if same_monitor else target_mon["activeWorkspace"]["id"]
     place_workspace = f"hl.dispatch(hl.dsp.window.move({{ workspace = {workspace}, follow = false, window = win }}))"
-    titlebar = 0
-    if is_plasma_active():
-        try:
-            from bwm_windows import titlebars, has_titlebar
-            if has_titlebar(target_win, titlebars()):
-                opt = json.loads(subprocess.check_output(["hyprctl", "getoption", "plugin:breezebars:bar_height", "-j"]))
-                titlebar = max(0, opt.get("int", 30))
-        except (OSError, ValueError, subprocess.SubprocessError):
-            titlebar = 30
+    from bwm_windows import decoration_extents, titlebars
+    borders = decoration_extents(target_win, titlebars()) if is_plasma_active() else {side: 0 for side in ("left", "top", "right", "bottom")}
 
     tags = target_win.get("tags", [])
     is_snapped = "snapped" in tags
@@ -215,7 +213,7 @@ def main(argv=None):
         elif is_fullscreen and not is_snapped:
             lua = f"""(function()
                 local win = hl.get_window("address:{addr}")
-                if not win then return hl.dsp.no_op() end
+                if not win or win.pid ~= {int(target_win.get("pid") or 0)} then return hl.dsp.no_op() end
                 hl.dispatch(hl.dsp.window.fullscreen({{ mode = 1, action = 'unset', window = win }}))
                 hl.dispatch(hl.dsp.window.fullscreen({{ mode = 0, action = 'unset', window = win }}))
                 return hl.dsp.no_op()
@@ -229,7 +227,7 @@ def main(argv=None):
         target_y = usable_y + (usable_h - target_h) // 2
         lua = f"""(function()
             local win = hl.get_window("address:{addr}")
-            if not win then return hl.dsp.no_op() end
+            if not win or win.pid ~= {int(target_win.get("pid") or 0)} then return hl.dsp.no_op() end
             hl.dispatch(hl.dsp.window.fullscreen({{ mode = 1, action = 'unset', window = win }}))
             hl.dispatch(hl.dsp.window.fullscreen({{ mode = 0, action = 'unset', window = win }}))
             {place_workspace}
@@ -242,11 +240,11 @@ def main(argv=None):
         run_lua(lua)
 
     def apply_snap(dir_name: str, x: int, y: int, w: int, h: int):
-        x, y, w, h = content_geometry(x, y, w, h, titlebar)
+        x, y, w, h = content_geometry(x, y, w, h, borders)
         float_cmd = "hl.dispatch(hl.dsp.window.float({ action = 'enable', window = win }))"
         lua = f"""(function()
             local win = hl.get_window("address:{addr}")
-            if not win then return hl.dsp.no_op() end
+            if not win or win.pid ~= {int(target_win.get("pid") or 0)} then return hl.dsp.no_op() end
             {float_cmd}
             hl.dispatch(hl.dsp.window.fullscreen({{ mode = 1, action = 'unset', window = win }}))
             hl.dispatch(hl.dsp.window.fullscreen({{ mode = 0, action = 'unset', window = win }}))
@@ -287,8 +285,9 @@ def main(argv=None):
     cur_at = target_win.get("at", [0, 0])
     cur_sz = target_win.get("size", [0, 0])
     cur_x, cur_y = cur_at[0], cur_at[1]
-    cur_w, cur_h = cur_sz[0], cur_sz[1] + titlebar
-    cur_y -= titlebar
+    cur_w, cur_h = cur_sz[0] + borders["left"] + borders["right"], cur_sz[1] + borders["top"] + borders["bottom"]
+    cur_x -= borders["left"]
+    cur_y -= borders["top"]
 
     # Precise detection of current snapped position (via tags or geometry)
     is_top_left = "snapped_top-left" in tags or "snapped_up-left" in tags or (abs(cur_x - usable_x) <= 25 and abs(cur_y - usable_y) <= 25 and cur_w <= half_w + 35 and cur_h <= half_h + 35)

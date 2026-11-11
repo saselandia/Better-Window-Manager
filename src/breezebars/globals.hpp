@@ -47,6 +47,7 @@ struct SGlobalState {
     CHyprSignalListener       pActiveListener;
     CHyprSignalListener       pTitleListener;
     SP<SHyprCtlCommand>       csdCommand;
+    SP<SHyprCtlCommand>       breezeCsdCommand;
 
     struct {
         SP<Config::Values::CColorValue>  barColor, textColor, inactiveButtonColor, inactiveBarColor, inactiveTextColor;

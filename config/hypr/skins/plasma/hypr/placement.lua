@@ -10,7 +10,6 @@
 -- el margen y el hueco del bloque «traditional» de skins/plasma/skin.json.
 -- -----------------------------------------------------
 
-local TITLEBAR = 30
 local EDGE_MARGIN = 10
 local GAP = 10
 local kwin = package.loaded["skins.plasma.hypr.kwin"] or {}
@@ -49,9 +48,25 @@ local function work_area(monitor)
     }
 end
 
--- Rectángulo exterior (con la barra de título encima del contenido)
-local function frame(window)
-    return { x = window.at.x, y = window.at.y - TITLEBAR, w = window.size.x, h = window.size.y + TITLEBAR }
+-- F7: same committed frame as IPC/quick-tile, queried in-process without class heuristics.
+local function borders(window)
+    local zero = { left = 0, top = 0, right = 0, bottom = 0 }
+    local query = hl.plugin and hl.plugin.breezebars and hl.plugin.breezebars.decoration
+    if not query then return zero end
+    local ok, state = pcall(query, window.address, window.pid)
+    if not ok or not state then return zero end
+    if state.ready == false then return nil end
+    if not state.visible then return zero end
+    for side in pairs(zero) do
+        local n = state.borders and state.borders[side]
+        if type(n) == "number" and n == n and n < math.huge then zero[side] = math.max(0, n) end
+    end
+    return zero
+end
+local function clamp(value, low, high) return math.max(low, math.min(value, high)) end
+local function frame(window, border)
+    return { x = window.at.x - border.left, y = window.at.y - border.top,
+             w = window.size.x + border.left + border.right, h = window.size.y + border.top + border.bottom }
 end
 
 local function overlap(a, b)
@@ -115,6 +130,8 @@ local function place(window)
     if not window.floating or (window.fullscreen or 0) ~= 0 or window.pinned then
         return
     end
+    local own_border = borders(window)
+    if not own_border then return false end -- wait for the initial X11 reply / xdg commit
     local workspace, monitor = window.workspace, window.monitor
     if not workspace or not workspace.id or workspace.id < 1 or not monitor or not monitor.width then
         return
@@ -131,7 +148,9 @@ local function place(window)
             if other.pid == window.pid then
                 return
             end
-            table.insert(others, frame(other))
+            local other_border = borders(other)
+            if not other_border then return false end
+            table.insert(others, frame(other, other_border))
         end
     end
     local policy = kwin.placement or "Smart"
@@ -139,7 +158,7 @@ local function place(window)
     if #others == 0 and (policy == "Smart" or policy == "Default") then return end
 
     local area = work_area(monitor)
-    local size = { w = window.size.x, h = window.size.y + TITLEBAR }
+    local size = { w = window.size.x + own_border.left + own_border.right, h = window.size.y + own_border.top + own_border.bottom }
     if size.w > area.w or size.h > area.h then
         return
     end
@@ -163,16 +182,19 @@ local function place(window)
         rect = best_position(size, area, others)
     end
     hl.dispatch(hl.dsp.window.move({
-        x = math.floor(rect.x),
-        y = math.floor(rect.y + TITLEBAR),
+        x = math.floor(rect.x + own_border.left),
+        y = math.floor(rect.y + own_border.top),
         relative = false,
         window = window,
     }))
 end
 
-hl.on("window.open", function(window)
-    local ok, err = pcall(place, window)
-    if not ok then
-        print("BWM placement: " .. tostring(err))
+local function on_open(window, attempt, address, pid)
+    if not window or window.address ~= address or window.pid ~= pid or window.mapped == false then return end
+    local ok, result = pcall(place, window)
+    if not ok then print("BWM placement: " .. tostring(result))
+    elseif result == false and attempt < 10 and hl.timer then
+        hl.timer(function() on_open(window, attempt + 1, address, pid) end, { type = "oneshot", timeout = 30 })
     end
-end)
+end
+hl.on("window.open", function(window) on_open(window, 0, window.address, window.pid) end)

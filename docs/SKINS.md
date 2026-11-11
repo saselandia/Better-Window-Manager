@@ -57,6 +57,11 @@ de un tema; cambiar el fondo no los toca.
 | default (end-4) | ~90 % | — | Plantillas de matugen de terceros: se añaden a mano en `matugen/config.toml` |
 | Breeze (Kde plasma) | ~45 % | 0 % | Esquemas/estilos/iconos/temas globales, panel SVG, Kickoff y bandeja/applets portados (varios reducidos). Faltan decoraciones reales, bloqueo/cambiador, plasmoides externos y funciones avanzadas de applets; arquitectura §10–11 y README de cada carpeta. |
 
+F6b (decoraciones KDE) y F7 (negociación CSD/SSD sin listas de clases y geometría con el marco
+real) están preparados para la próxima sesión de Breeze. Su compilación y pruebas automáticas
+no suben esta estimación: falta validar el plugin dentro de Hyprland tras reiniciar sesión.
+Matriz de apps y pasos en [BREEZE_CSD_RESULTS.md](BREEZE_CSD_RESULTS.md).
+
 Actualiza esta tabla y la del README cuando cambie el soporte.
 
 ## Qué se conserva entre skins

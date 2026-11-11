@@ -14,24 +14,45 @@ package.loaded["skins.plasma.hypr.kwin"] = { placement = policy }
 local moved = "null"
 local monitor = { x = 0, y = 0, width = 1920, height = 1080, scale = 1, transform = 0,
                   reserved = { left = 0, top = 24, right = 0, bottom = 0 } }
+local records, timers = {}, {}
 local function window(spec, address)
-    return { address = address, pid = spec.pid or 100, class = spec.class or "app", title = spec.title or "",
+    local object = { address = address, pid = spec.pid or 100, class = spec.class or "app", title = spec.title or "",
              floating = true, fullscreen = 0, pinned = false, mapped = true, hidden = false,
              at = { x = spec.x, y = spec.y }, size = { x = spec.w, y = spec.h },
              workspace = { id = 1 }, monitor = monitor }
+    records[address] = { object = object, spec = spec, queries = 0 }
+    return object
 end
 local list = {}
 for i, spec in ipairs(others) do list[i] = window(spec, "0x" .. i) end
 local handler
 hl = {
     on = function(_, f) handler = f end,
+    timer = function(fn) table.insert(timers, fn) end,
+    plugin = { breezebars = { decoration = function(address, pid)
+        local r = records[address]
+        if not r or r.object.pid ~= pid then return nil end
+        r.queries = r.queries + 1
+        return { visible = r.spec.visible ~= false, ready = not r.spec.pending or r.queries > 2,
+                 borders = { left = r.spec.left or 0, top = r.spec.bar or 30,
+                             right = r.spec.right or 0, bottom = r.spec.bottom or 0 } }
+    end } },
     get_workspace_windows = function() return list end,
     dispatch = function(d) moved = string.format('{"x": %d, "y": %d}', d.x, d.y) end,
     dsp = { window = { move = function(args) return args end } },
 }
 dofile(PLACEMENT)
 if new.pid == nil then new.pid = 200 end
-handler(window(new, "0xnew"))
+if new.noPlugin then hl.plugin = nil end
+local opening = window(new, "0xnew")
+handler(opening)
+if new.reuse then opening.pid = opening.pid + 1 end
+local iterations = 0
+while #timers > 0 and iterations < 20 do
+    iterations = iterations + 1
+    local callback = table.remove(timers, 1)
+    callback()
+end
 print(moved)
 """
 
@@ -71,6 +92,15 @@ class PlasmaPlacementTests(unittest.TestCase):
         self.assertEqual(place([], new, "ZeroCornered"), {"x": 10, "y": 64})
         self.assertIsNone(place([], new, "NoPlacement"))
 
+    def test_csd_and_missing_plugin_have_no_phantom_titlebar(self):
+        for flags in [{"bar":0},{"visible":False},{"noPlugin":True}]:
+            new={"x":10,"y":64,"w":800,"h":500,**flags}
+            self.assertEqual(place([],new,"ZeroCornered"),{"x":10,"y":34})
+    def test_kde_edges_and_delayed_reply_use_same_frame(self):
+        new={"x":10,"y":64,"w":800,"h":500,"left":4,"right":4,"bar":28,"bottom":4}
+        self.assertEqual(place([],new,"ZeroCornered"),{"x":14,"y":62})
+        self.assertEqual(place([],{**new,"pending":True},"ZeroCornered"),{"x":14,"y":62})
+        self.assertIsNone(place([],{**new,"pending":True,"reuse":True},"ZeroCornered"))
     def test_file_dialogs_keep_their_rule(self):
         self.assertIsNone(place([{"x": 10, "y": 64, "w": 900, "h": 900}],
                                 {"x": 510, "y": 240, "w": 400, "h": 300, "title": "Abrir archivo"}))

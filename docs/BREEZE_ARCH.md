@@ -45,7 +45,7 @@ Están declarados en `config/hypr/skins/requirements.json` y como `recommends` d
 | **Tema (F1)** | Archivos reales de KDE (`kdeglobals`, `plasmarc`, `kwinrc`, `breezerc`, look-and-feel) escritos con `plasma-apply-*`/`lookandfeeltool` o KConfig con notificación. El shell los lee con Kirigami, KSvg y PC3. | Es el formato original; se recarga en vivo (prueba b). |
 | **Panel, Kickoff, bandeja y applets (F3–F5)** | **Portar el QML** de plasma-desktop y plasma-workspace (v6.7.5) a `modules/plasma/…` dentro de Quickshell, usando KSvg, PC3 y Kirigami reales. El attached `Plasmoid` se sustituye por un objeto propio (`PlasmoidShim.qml`: `configuration`, `location`, `formFactor`, `expanded`, `status`, `title`, `icon`…) con el mínimo de cambios marcados `// BWM:`. **Datos:** los módulos de KDE que funcionan (volume, networkmanagement, mpris, bluezqt; kicker si la fase 4 lo hace funcionar) y, donde dependen de KWin o de plasmashell, los servicios de BWM y Quickshell (tareas y ventanas desde Hyprland, avisos con el servidor de BWM, bandeja con `SystemTray` de Quickshell). | Prueba c: los plasmoides no corren como shell, pero su QML y sus datos sí son reutilizables. |
 | **Decoraciones (F6)** | Proceso auxiliar **`bwm-decorator`** (C++/Qt, en `src/bwm-decorator/`) que implementa `DecorationBridge` y carga **cualquier** decoración de KDecoration3 (Breeze, Aurorae y C++ de terceros como Klassy) según `kwinrc [org.kde.kdecoration2]`. Para cada ventana recibe el estado (tamaño, escala, activa, título, clase o icono, maximizada, bordes de pantalla, eventos de puntero) y devuelve bordes, zonas de redimensionado, la imagen de la decoración (memoria compartida memfd + daños), la sombra y las peticiones de los botones (cerrar, maximizar, minimizar, menú, tooltip, mantener encima o debajo, en todos los escritorios). El plugin **`breezebars`** se queda en pegamento del compositor: reserva el espacio, compone la textura, reenvía el puntero, ejecuta las peticiones y dibuja la sombra. Nada de Qt dentro de Hyprland (regla 1). Si el auxiliar no está, el plugin dibuja una barra plana con el título (el código cairo actual) y lo relanza con `bwm_session.spawn()`. Durante un redimensionado reutiliza la última imagen estirando el centro hasta que llega la nueva. | Prueba d: compatibilidad total con las decoraciones de la KDE Store; pintar cuesta ~1 ms. Reimplementar Breeze en cairo sólo cubriría Breeze y Aurorae. |
-| **CSD (F7)** | En el plugin y el compositor, la misma decisión que KWin: preferir server-side en xdg-decoration y kde-server-decoration, client-side si la app lo pide o no habla el protocolo, `_MOTIF_WM_HINTS` y `_GTK_FRAME_EXTENTS` en XWayland, y reglas de `kwinrulesrc` («sin barra ni borde»). Una sola respuesta expuesta (`hyprctl breezebars-csd`) que usan también `placement.lua`, `quick-tile.py` y `bwm_windows`. | Sin cambios respecto al plan; no hay prueba propia en F0. |
+| **CSD (F7)** | Política de KWin por negociación Wayland/hints X11, con la excepción GTK de F7 (§12). JSON `hyprctl -j breezebars-csd` y API Lua comparten el marco aplicado con `placement.lua`, `quick-tile.py` y `bwm_windows`. Overrides no_bar/decorate; traducción de NoBorder en F10. | Implementado, compilado e instalado; pruebas de lógica/geometría pasan. Pendiente de sesión nueva y matriz visual (§12). |
 | **Ventanas: min/max, menús, reglas, snapping (F8–F10)** | Módulo de la skin que traduce las acciones de KWin (`useractions.cpp`, `kwinbindings.cpp`, `rules.cpp`, quick tiling y tiles de Plasma 6) a Hyprland. El menú de ventana es QML con PC3 (se abre por IPC desde el plugin o el auxiliar). Las reglas de `kwinrulesrc` se traducen al cargar. | Sin cambios respecto al plan. |
 | **Preferencias del sistema (F11)** | Nuestra ventana estilo systemsettings, con los **KCMs reales** de la tabla de la prueba e embebidos (KCMUtils o `kcmshell6`) para Apariencia y parte de Gestión de ventanas. Páginas comunes de BWM para lo compartido (pantallas, atajos, inicio automático, apps predeterminadas, inactividad, red, Bluetooth, sonido). Sin `kcm_kscreen`, `kcm_lookandfeel` con disposición de escritorio, actividades, efectos ni scripts de KWin, KWin X11, móvil ni teclado virtual. | Prueba e: cargan sin KWin; falta comprobarlos a la vista. |
 | **Alt+Tab, OSD, bloqueo (F12)** | Port del QML de `kwin/src/tabbox/switchers` y del paquete look-and-feel Breeze (plasma-workspace `lookandfeel/`), con el que traiga el tema global si lo hay. | Paquetes look-and-feel instalados: `org.kde.breeze(dark,twilight).desktop`. |
@@ -319,3 +319,54 @@ virtuales y tipos dinámicos; la carga real complementa el análisis. El host de
 PlasmaCore explícitamente para inicializar el ImageSet de KSvg también en qs -p aislado. Se mantiene
 Retro; no se cambió a Breeze ni se reinició el shell. Para incorporar los Loader nuevos, usar
 bwm-theme-manager.py set plasma --restart-shell al activar Breeze.
+
+## 12. Fase 7: negociación y fuente única del marco (2026-11-11)
+
+F6b y F7 están preparados juntos para la próxima sesión de Breeze. La parte compilada no prueba
+que el nuevo plugin funcione dentro del compositor; la matriz visual sigue pendiente.
+
+**Hallazgo en las fuentes:** KWin 6.7.5 decide por negociación Wayland o hints X11, mientras
+Hyprland 0.56.2 responde Server incluso a Client y limita a cuatro peticiones KDE. El detector
+anterior leía lo pedido, no lo aplicado: podía ocultar la barra cuando el cliente ya había
+renunciado a la suya. `src/breezebars/CSDDetect.cpp` ahora envuelve los callbacks de creación de
+decoraciones y negocia Client/Server; `CSDLogic.hpp` separa la política y el estado puro.
+Sin protocolo Wayland no hay barra; sin preferencia se ofrece Server. El modo xdg se aplica
+tras ack+commit, incluido el commit vacío inicial; KDE antiguo conserva None y aplica tras
+commit sin el límite de cuatro cambios. Si hay ambos, manda xdg. Callbacks originales fuera de
+Breeze; hooks específicos de la ABI comprobada del binario 0.56.2, restaurados al finalizar.
+Detalles y rutas de las fuentes en `src/breezebars/README.md`.
+
+**XWayland:** Motif decorations=0 o presencia de GTK_FRAME_EXTENTS válido → CSD. Por requisito
+F7 cuenta un hint GTK con cuatro ceros; KWin literalmente comprueba valores no nulos: esta
+excepción está declarada, no se presenta como igualdad exacta. Conexión XCB separada y asíncrona,
+eventos de cambio de propiedades, sin esperas de respuestas dentro del render o IPC. Datos
+incompletos → pendiente/sin barra hasta resolverlos. Cache ligada a ventana y PID.
+
+**Overrides:** no_bar=true, decorate=false y fullscreen suprimen el marco; false restaura el
+automático, nunca fuerza doble barra. F10 sigue pendiente para traducir NoBorder de kwinrulesrc.
+No se crea una lista de clases. Las expresiones de apps de csd-audit.py sólo etiquetan pruebas.
+
+**Consumidores:** `hyprctl -j breezebars-csd` (alias hyprbars-csd, API 1) y
+`hl.plugin.breezebars.decoration(address,pid)` comparten visibilidad, motivo, estado y los cuatro
+bordes efectivos de F6. Python enlaza dirección+PID; placement consulta dentro del proceso y
+espera brevemente si el modo inicial aún no está aplicado. traditional_box y quick-tile dejan de
+inventar 30 px y cuentan todos los bordes, también Aurorae. Sin plugin: marco cero.
+
+**Requisitos y límites:** no se añaden programas ni bibliotecas ajenas al sistema (XCB ya usado,
+libdl del sistema); el script de auditoría se declara en parts del manifiesto. No se ejecuta Qt
+en Hyprland, no cambia el plugin de Retro ni se escriben archivos bwm/user. No se arrancan
+servicios KDE adicionales ni se cambia la sesión para probar. El auxiliar F6 sigue siendo el
+único proceso Qt de decoraciones. La negociación con clientes reales, hooks en ejecución,
+fullscreens y geometría con ambos temas/monitores sólo podrán validarse tras reiniciar sesión.
+
+Pruebas de política/estado, hints X11, ABI exportada, JSON, identidad, cuatro bordes y colocación
+con datos simulados pasan. La suite general incluye las comprobaciones de compilación de F6.
+Estado y pasos de prueba real: `docs/BREEZE_CSD_RESULTS.md`; herramienta de lectura:
+`config/hypr/skins/plasma/scripts/csd-audit.py`. No se tomaron capturas en F7.
+
+Validación automática F7: suite general de 297 pruebas, 53 opcionales omitidas; nueve pruebas
+específicas de detección/auditoría pasan. Compilación e instalación con `make install` y
+`-fno-gnu-unique`; Python y Lua válidos, `Hyprland --verify-config` correcto, `configerrors`
+vacío y `bwm check --skin plasma` correcto. El log del shell existente en Retro conserva avisos
+previos (entre ellos propiedades de pantalla nula en Lock.qml); F7 no cambia QML. Ninguna de
+estas comprobaciones equivale a cargar el plugin F7 en el compositor.

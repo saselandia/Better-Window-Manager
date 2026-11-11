@@ -66,7 +66,7 @@ class SkinSwitchTests(unittest.TestCase):
                    {**base, 'address': '0x4', 'workspace': {'id': -1}}]
         mon = {'id': 1, 'x': 0, 'y': 0, 'width': 1920, 'height': 1080, 'scale': 1}
         with patch.object(bwm_windows, 'hypr_json', return_value=[mon]), \
-                patch.object(bwm_windows, 'titlebars', return_value=set()), \
+                patch.object(bwm_windows, 'titlebars', return_value={}), \
                 patch.object(bwm_windows, 'dispatch') as dispatch:
             self.assertEqual(bwm_windows.float_in_place('plasma', clients), 1)
         lua = dispatch.call_args.args[0][0]

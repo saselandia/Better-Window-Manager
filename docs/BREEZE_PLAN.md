@@ -112,6 +112,7 @@ C++, F10 parte C++) comparten `src/breezebars/`: **nunca dos a la vez**.
 
 > **Hechas: fases 0–5, 6a y 6b** (6b compilada e instalada, pendiente de probar al iniciar sesión) (arquitectura en `docs/BREEZE_ARCH.md`; motor de temas, puente de configuración, panel, Kickoff, applets, auxiliar de decoraciones y plugin en `BWM_CONTEXT.md` §3.139–145; protocolo para F6b en `src/bwm-decorator/PROTOCOL.md`). `docs/BREEZE_ARCH.md` manda sobre lo que digan los
 > prompts siguientes: lo que cambió está anotado en su §7, y F6 se ha partido en F6a y F6b.
+> **F7 implementada, compilada e instalada; validación real pendiente de reiniciar sesión**, junto con F6b. Arquitectura §12 y matriz `docs/BREEZE_CSD_RESULTS.md`.
 
 ### F0 · Viabilidad y arquitectura — **[HIGH]**
 
@@ -388,6 +389,11 @@ Objetivo: barras de título idénticas a KWin con el tema activo, dibujadas por 
 
 ### F7 · Detección de apps con botones propios (CSD) — **[HIGH]**
 
+Implementación en §12 de la arquitectura: negociación real, ack/commit y hints X11 asíncronos;
+JSON/Lua comparten marco y dirección+PID con geometría. `no_bar=false` vuelve al automático.
+La traducción de NoBorder se conserva para F10. Matriz pendiente en `BREEZE_CSD_RESULTS.md`:
+no dar F7 por validada visualmente antes de reiniciar sesión en Breeze.
+
 ```text
 Fase 7 de docs/BREEZE_PLAN.md (lee el plan, su sección 2, BWM_CONTEXT §3.10 y el estado de F6).
 
@@ -397,7 +403,7 @@ listas de clases.
 1. Estudia cómo decide KWin (invent.kde.org/plasma/kwin v6.7.5: `src/xdgshellwindow.cpp`,
    `xdgdecorationv1`, `serverdecorationmanager`/org_kde_kwin_server_decoration, `x11window.cpp`
    con _MOTIF_WM_HINTS y _GTK_FRAME_EXTENTS) y cómo lo resuelve Hyprland (su implementación de
-   xdg-decoration en el código de Hyprland 0.56.2 y en `src/hyprbars/CSDDetect.cpp`).
+   xdg-decoration en el código de Hyprland 0.56.2 y en `src/breezebars/CSDDetect.cpp`).
 2. Reglas: Wayland — si la app no habla xdg-decoration ni kde-server-decoration → CSD (libadwaita,
    Firefox con CSD); si pide client-side → CSD; si pide server-side o acepta el modo preferido →
    barra. Prefiere server-side como KWin (responder `server_side` a quien no impone modo).

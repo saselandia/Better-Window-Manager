@@ -75,7 +75,7 @@ static void onNewWindow(PHLWINDOW window) {
     if (!g_pGlobalState || !Desktop::View::validMapped(window))
         return;
 
-    if (std::ranges::any_of(window->m_windowDecorations, [](const auto& d) { return d->getDisplayName() == "Hyprbar"; }))
+    if (std::ranges::any_of(window->m_windowDecorations, [](const auto& d) { return d->getDisplayName() == "Breezebar"; }))
         return;
 
     auto bar = makeUnique<CHyprBar>(window);
@@ -87,25 +87,64 @@ static void onNewWindow(PHLWINDOW window) {
     HyprlandAPI::addWindowDecoration(PHANDLE, window, makeUnique<CBreezeShadow>(window, weak));
 }
 
-// hyprctl hyprbars-csd: qué ha detectado el plugin para cada ventana y por qué
-static std::string csdReport(eHyprCtlOutputFormat, std::string) {
-    std::string out = std::format("bwm-decorator: {}\n", g_pDecoClient ? g_pDecoClient->status() : "sin cliente");
-    for (auto& w : Desktop::windowState()->windows()) {
-        if (!w->m_isMapped)
-            continue;
-        const auto det = detectDecorations(w);
-        bool       bar = false;
-        for (auto& b : g_pGlobalState->bars)
-            if (b && b->getOwner() == w)
-                bar = !b->m_hidden;
-        std::string kind = "-";
-        for (auto& b : g_pGlobalState->bars)
-            if (b && b->getOwner() == w && !b->m_hidden)
-                kind = b->remoteActive() ? "kde" : "plana";
-        out += std::format("{} | {} | barra={} ({}) | xdg={} kde={} | {}\n", w->m_class, w->m_title.substr(0, 40), bar ? "si" : "no", kind, det.xdgRequested,
-                           det.kdeRequested, det.reason);
+// F7: one authoritative frame snapshot for IPC and placement.lua. Addresses always carry PID.
+struct SFrameSnapshot {
+    SDecoDetection detection;
+    bool visible=false;
+    double left=0,top=0,right=0,bottom=0;
+    std::string kind="none";
+};
+static SFrameSnapshot frameSnapshot(PHLWINDOW w) {
+    SFrameSnapshot s;s.detection=detectDecorations(w);
+    if(!g_pGlobalState||!g_pGlobalState->config.enabled->value())return s;
+    for(auto& b:g_pGlobalState->bars)if(b&&b->getOwner()==w) {
+        b->updateRules();s.visible=!b->m_hidden;
+        if(s.visible) {
+            const auto info=b->getPositioningInfo();
+            s.left=info.desiredExtents.topLeft.x;s.top=info.desiredExtents.topLeft.y;
+            s.right=info.desiredExtents.bottomRight.x;s.bottom=info.desiredExtents.bottomRight.y;
+            s.kind=b->remoteActive()?"kde":"flat";
+        }
+        break;
     }
+    return s;
+}
+static std::string csdReport(eHyprCtlOutputFormat format,std::string) {
+    const bool json=format==FORMAT_JSON;
+    std::string out=json?"{\"version\":1,\"api\":\"breezebars-csd\",\"enabled\":"+std::string(g_pGlobalState->config.enabled->value()?"true":"false")+",\"windows\":[":std::format("bwm-decorator: {} | csd-api=1\n",g_pDecoClient?g_pDecoClient->status():"no client");
+    bool first=true;
+    for(auto& w:Desktop::windowState()->windows()) {
+        if(!w->m_isMapped)continue;
+        auto s=frameSnapshot(w);const auto& d=s.detection;
+        const auto address=std::format("0x{:x}",reinterpret_cast<uintptr_t>(w.get()));
+        auto reason=!g_pGlobalState->config.enabled->value()?"skin inactive: breezebars disabled":d.reason;
+        if(json) {
+            if(!first)out+=",";first=false;
+            out+=std::format(R"({{"address":"{}","pid":{},"class":"{}","title":"{}","visible":{},"ready":{},"reason":"{}","kind":"{}","xdgRequested":{},"kdeRequested":{},"sent":{},"applied":{},"observed":{{"x11":{},"xdg":{},"kde":{},"kdeExplicit":{},"gtkFrameExtents":{},"motifNoBorder":{},"special":{},"noBar":{},"decorate":{},"fullscreen":{}}},"borders":{{"left":{},"top":{},"right":{},"bottom":{}}}}})",
+                address,w->getPID(),escapeJSONStrings(w->m_class),escapeJSONStrings(w->m_title),s.visible,d.ready,escapeJSONStrings(reason),s.kind,d.xdgRequested,d.kdeRequested,d.sent,d.applied,d.observed.x11,d.observed.xdg,d.observed.kde,d.observed.kdeExplicit,d.observed.gtkFrameExtents,d.observed.motifNoBorder,d.observed.overrideRedirect||d.observed.x11Special,d.observed.noBar,d.observed.decorate,d.observed.fullscreen,s.left,s.top,s.right,s.bottom);
+        } else out+=std::format("{} | {} | barra={} ({}) | address={} pid={} | xdg={} kde={} sent={} applied={} | {}\n",w->m_class,w->m_title.substr(0,40),s.visible?"si":"no",s.kind,address,w->getPID(),d.xdgRequested,d.kdeRequested,d.sent,d.applied,reason);
+    }
+    if(json)out+="]}";
     return out;
+}
+static int luaDecoration(lua_State* L) {
+    const std::string address=luaL_checkstring(L,1);
+    const pid_t pid=lua_gettop(L)>1?luaL_checkinteger(L,2):0;
+    for(auto& w:Desktop::windowState()->windows()) {
+        if(!w->m_isMapped||std::format("0x{:x}",reinterpret_cast<uintptr_t>(w.get()))!=address||(pid&&w->getPID()!=pid))continue;
+        // Lua window.open listeners may run before the plugin's open listener. Attach once first.
+        onNewWindow(w);
+        auto s=frameSnapshot(w);
+        lua_newtable(L);
+        lua_pushboolean(L,s.visible);lua_setfield(L,-2,"visible");
+        lua_pushboolean(L,s.detection.ready);lua_setfield(L,-2,"ready");
+        lua_pushinteger(L,w->getPID());lua_setfield(L,-2,"pid");
+        lua_pushstring(L,s.detection.reason.c_str());lua_setfield(L,-2,"reason");
+        lua_newtable(L);
+        for(auto [key,value]:{std::pair{"left",s.left},{"top",s.top},{"right",s.right},{"bottom",s.bottom}}) {lua_pushnumber(L,value);lua_setfield(L,-2,key);}
+        lua_setfield(L,-2,"borders");return 1;
+    }
+    lua_pushnil(L);return 1;
 }
 
 static void onPreConfigReload() {
@@ -574,8 +613,13 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     else
         HyprlandAPI::addLuaFunction(PHANDLE, "breezebars", "add_button", ::newLuaButton);
     g_pGlobalState->csdCommand = HyprlandAPI::registerHyprCtlCommand(PHANDLE, SHyprCtlCommand{.name = "hyprbars-csd", .exact = true, .fn = csdReport});
+    g_pGlobalState->breezeCsdCommand = HyprlandAPI::registerHyprCtlCommand(PHANDLE, SHyprCtlCommand{.name="breezebars-csd",.exact=true,.fn=csdReport});
+    HyprlandAPI::addLuaFunction(PHANDLE,"breezebars","decoration",luaDecoration);
     g_pGlobalState->pPreReloadListener = Event::bus()->m_events.config.preReload.listen([] { onPreConfigReload(); });
     g_pGlobalState->pReloadedListener  = Event::bus()->m_events.config.reloaded.listen([] { onConfigReloaded(); });
+
+    // F7: install negotiation callbacks before attaching decorations.
+    try { initDecorationDetection(); } catch (...) { closeDecorationDetection(); throw; }
 
     // add deco to existing windows
     for (auto& w : Desktop::windowState()->windows()) {
@@ -619,6 +663,7 @@ APICALL EXPORT void PLUGIN_EXIT() {
         if (g_pGlobalState->csdCommand)
             HyprlandAPI::unregisterHyprCtlCommand(PHANDLE, g_pGlobalState->csdCommand);
 
+        if(g_pGlobalState->breezeCsdCommand)HyprlandAPI::unregisterHyprCtlCommand(PHANDLE,g_pGlobalState->breezeCsdCommand);
         Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->barColorRuleIdx);
         Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->titleColorRuleIdx);
         Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->nobarRuleIdx);

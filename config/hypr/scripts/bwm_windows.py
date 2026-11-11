@@ -6,11 +6,12 @@ Cada skin dice en su skin.json (config/hypr/skins/<id>/skin.json) cómo gestiona
 variable "windows": "tiling" (mosaico: Default, Retro) o "traditional" (WM tradicional, ventanas
 flotantes con barra de título: KDE Plasma). Al pasar de una de mosaico a una tradicional, cada ventana
 se queda en el mismo sitio: el mismo rectángulo, contando la barra de título que la skin le pone encima
-("traditional.titlebar") si la lleva, dentro del área útil (sin el panel, "panel") con un margen sutil
+con los bordes reales que devuelve breezebars si la lleva, dentro del área útil (sin el panel, "panel") con un margen sutil
 con los bordes ("edgeMargin") y un hueco entre ventanas ("gap"), para que se note que ya no están en
 mosaico. Los datos los da bwm_skins.py.
 """
 import json
+import math
 import os
 import re
 import subprocess
@@ -63,22 +64,47 @@ def monitor_for(at, size, monitors: list):
     return monitors[0] if monitors else None
 
 
-def titlebars() -> set:
-    """(clase, título[:40]) de las ventanas a las que hyprbars pone barra (`hyprctl hyprbars-csd`)."""
-    out = subprocess.run(["hyprctl", "hyprbars-csd"], capture_output=True, text=True).stdout
-    bars = set()
-    for line in out.splitlines():
-        parts = [p.strip() for p in line.split(" | ")]
-        if len(parts) >= 3 and parts[2] == "barra=si":
-            bars.add((parts[0], parts[1]))
-    return bars
+def titlebars() -> dict:
+    """F7: authoritative frame records keyed by (address, PID), never class/title."""
+    try:
+        res = subprocess.run(["hyprctl", "-j", "breezebars-csd"], capture_output=True, text=True, timeout=3)
+        if res.returncode != 0:
+            return {}
+        data = json.loads(res.stdout)
+        if data.get("version") != 1 or data.get("api") != "breezebars-csd":
+            return {}
+        records = {}
+        for item in data.get("windows", []):
+            if not isinstance(item, dict) or not item.get("address") or not isinstance(item.get("pid"), int):
+                continue
+            records[(item["address"], item["pid"])] = item
+        return records
+    except (OSError, ValueError, TypeError, AttributeError, subprocess.SubprocessError):
+        return {}  # No plugin => no actual plugin frame; never invent a 30 px bar.
 
 
-def has_titlebar(client: dict, bars: set) -> bool:
-    return (client.get("class", ""), client.get("title", "")[:40].strip()) in bars
+def decoration_extents(client: dict, records: dict) -> dict:
+    record = records.get((client.get("address"), client.get("pid")), {}) if isinstance(records, dict) else {}
+    raw = record.get("borders", {}) if record.get("visible") is True else {}
+    return normalized_extents(raw)
 
 
-def traditional_box(at, size, mon: dict, titlebar: bool, win: dict) -> tuple:
+def normalized_extents(raw) -> dict:
+    result = {side: 0 for side in ("left", "top", "right", "bottom")}
+    if not isinstance(raw, dict):
+        return result
+    for side in result:
+        value = raw.get(side, 0)
+        if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
+            result[side] = max(0, math.ceil(value))
+    return result
+
+
+def has_titlebar(client: dict, records: dict) -> bool:
+    return decoration_extents(client, records)["top"] > 0
+
+
+def traditional_box(at, size, mon: dict, decoration, win: dict) -> tuple:
     """Posición y tamaño (del contenido) de una ventana flotante que ocupe el rectángulo `at`/`size`
     que tenía en mosaico, separada de las vecinas (`gap`) y dentro del área útil de la skin
     tradicional `win` (su bloque "traditional")."""
@@ -98,10 +124,11 @@ def traditional_box(at, size, mon: dict, titlebar: bool, win: dict) -> tuple:
     right, bottom = mx + mw - reserve["right"] - margin, my + mh - reserve["bottom"] - margin
     x0, y0 = max(at[0] + half_gap, left), max(at[1] + half_gap, top)
     x1, y1 = min(at[0] + size[0] - half_gap, right), min(at[1] + size[1] - half_gap, bottom)
-    bar = win.get("titlebar", 0) if titlebar else 0
-    w, h = max(MIN_W, x1 - x0), max(MIN_H, y1 - y0 - bar)
-    x = min(x0, right - w)
-    y = min(y0 + bar, bottom - h)
+    frame = normalized_extents(decoration)
+    w = max(MIN_W, x1 - x0 - frame["left"] - frame["right"])
+    h = max(MIN_H, y1 - y0 - frame["top"] - frame["bottom"])
+    x = min(x0 + frame["left"], right - w - frame["right"])
+    y = min(y0 + frame["top"], bottom - h - frame["bottom"])
     return int(x), int(y), int(w), int(h)
 
 
@@ -144,7 +171,7 @@ def float_in_place(skin: str, clients: list = None):
             or monitor_for(c["at"], c["size"], monitors)
         if not mon:
             continue
-        box = traditional_box(c["at"], c["size"], mon, has_titlebar(c, bars), win)
+        box = traditional_box(c["at"], c["size"], mon, decoration_extents(c, bars), win)
         blocks.append(place_lua(c["address"], box=box, make_floating=True))
     dispatch(blocks)
     return len(blocks)
@@ -162,7 +189,7 @@ def restored_box(record: dict, client: dict):
         return None
     monitors = hypr_json("monitors")
     mon = monitor_for(record["at"], record["size"], monitors)
-    return traditional_box(record["at"], record["size"], mon, has_titlebar(client, titlebars()),
+    return traditional_box(record["at"], record["size"], mon, decoration_extents(client, titlebars()),
                         windowing(skin)) if mon else None
 
 

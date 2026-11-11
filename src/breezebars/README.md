@@ -41,6 +41,50 @@ Compilar e instalar: `make && make install` (copia temporal + `mv` atómico a
 `config/hypr/plugins/breezebars.so`). Nunca `cp` sobre el `.so` cargado ni cargarlo/descargarlo en
 caliente: se carga al iniciar sesión en Breeze (`autostart.sh`).
 
+## Detección y negociación CSD/SSD (F7)
+
+`CSDLogic.hpp` contiene la política y el estado comprobables sin compositor. `CSDDetect.cpp`
+integra esa política con los protocolos de Hyprland **0.56.2**, commit
+`efb50993780079460b0cbed1363e2166a2de1d9f`. Referencias leídas de KWin **v6.7.5**:
+`src/xdgshellwindow.cpp`, `src/wayland/xdgdecoration_v1.cpp`,
+`src/wayland/server_decoration.cpp` y `src/x11window.cpp`. Es una implementación propia de la
+política, sin copiar C++ de KWin. El auxiliar Qt de F6 sigue fuera de Hyprland.
+
+- Wayland sin protocolo de decoración: CSD. Con xdg-decoration: petición client-side → CSD;
+  server-side o sin preferencia → SSD. El modo visible cambia tras **ack_configure y commit**,
+  asociando el primer configure al commit vacío inicial; no se reserva la barra por la petición
+  antes de que el cliente haya aplicado el modo. Si existen ambos protocolos, manda xdg.
+- El protocolo KDE antiguo respeta None/Client/Server; sin petición explícita prefiere Server.
+  Aplica al siguiente commit (no tiene ack) y admite más de cuatro cambios consecutivos.
+- Hyprland responde siempre Server de origen y limita las peticiones KDE antiguas. Dos hooks
+  sobre los setters de callbacks de las fábricas generadas sustituyen esa política sólo con
+  Breeze habilitado. Se verificaron sus símbolos exportados y llamadas en el binario 0.56.2;
+  no se interceptan funciones pequeñas que el compilador integra en sus llamadores. Si falla
+  un hook, la inicialización falla y restaura los callbacks; no continúa con negociación falsa.
+  Esta integración es específica de la ABI de Hyprland: recompilar y revisar al actualizarlo.
+- XWayland: `_MOTIF_WM_HINTS` con flag decorations y decorations=0, o un
+  `_GTK_FRAME_EXTENTS` válido de cuatro CARDINAL, implica CSD. **También cuenta el hint GTK con
+  ceros**, como exige F7; KWin 6.7.5 comprueba valores no nulos. Ventanas override-redirect o
+  especiales no llevan barra. XCB usa otra conexión, respuestas asíncronas y PropertyNotify;
+  no espera respuestas en el render ni en las consultas IPC. Mientras faltan hints: pendiente.
+- `breezebars:no_bar=true`, `decorate=false` y fullscreen suprimen el marco. `no_bar=false`
+  vuelve al automático: no fuerza otra barra sobre un CSD. La traducción de NoBorder desde
+  `kwinrulesrc` sigue siendo F10. Destruir/recrear protocolos y cambiar sus modos recalcula el marco.
+
+Diagnóstico humano: `hyprctl breezebars-csd`; el alias `hyprbars-csd` se conserva.
+`hyprctl -j breezebars-csd` devuelve API versión 1 con dirección **y PID**, petición, respuesta,
+modo aplicado, hints/overrides, motivo, estado pendiente y los cuatro bordes visibles. La API Lua
+`hl.plugin.breezebars.decoration(address, pid)` devuelve el mismo marco para `placement.lua`.
+`bwm_windows.py` y `quick-tile.py` consumen el JSON; nunca adivinan por clase/título ni añaden
+30 px si falta el plugin. Se cuentan todos los bordes reales de F6, también con Aurorae.
+
+Pruebas: `tests/csd_logic_test.cpp`, `tests/test_csd_detection.py`,
+`tests/test_plasma_placement.py` y las de F6. Incluyen ack/commit, seriales que desbordan,
+cambios de modo, propiedades X11, identidad reutilizada y geometría del marco en cuatro lados.
+`skins/plasma/scripts/csd-audit.py` prepara una tabla de sólo lectura sin guardar títulos.
+**Pendiente de ejecutar dentro de Hyprland tras reiniciar sesión entrando en Breeze**:
+ver `docs/BREEZE_CSD_RESULTS.md`. No cargar/descargar el plugin en caliente.
+
 ---
 
 Texto original de hyprbars:

@@ -62,7 +62,7 @@ static CHyprColor configColor(Config::INTEGER color) {
 
 // La ventana trae sus propios botones: no se le dibuja barra (pero se sigue
 // gestionando su arrastre CSD para el snapping).
-static bool isKnownCSD(PHLWINDOW window) {
+static bool shouldHideBar(PHLWINDOW window) {
     return detectDecorations(window).clientDraws;
 }
 
@@ -122,7 +122,8 @@ CHyprColor CHyprBar::currentTextColor() {
 
 CHyprBar::CHyprBar(PHLWINDOW pWindow) : IHyprWindowDecoration(pWindow) {
     m_pWindow = pWindow;
-    m_hidden  = isKnownCSD(pWindow);
+    m_hidden  = shouldHideBar(pWindow);
+    if(auto surface=pWindow->resource())m_pDecorationCommit=surface->m_events.commit.listen([this]{updateRules();});
 
     const auto PMONITOR         = pWindow->m_monitor.lock();
     PMONITOR->m_scheduledRecalc = true;
@@ -216,7 +217,7 @@ void CHyprBar::onPositioningReply(const SDecorationPositioningReply& reply) {
 }
 
 std::string CHyprBar::getDisplayName() {
-    return "Hyprbar";
+    return "Breezebar";
 }
 
 bool CHyprBar::inputIsValid() {
@@ -859,6 +860,7 @@ void CHyprBar::renderBarButtonsText(CBox* barBox, const float scale, const float
 }
 
 void CHyprBar::draw(PHLMONITOR pMonitor, const float& a) {
+    updateRules();
     const auto ENABLED = g_pGlobalState->config.enabled->value();
 
     syncRemote();
@@ -1037,6 +1039,7 @@ eDecorationType CHyprBar::getDecorationType() {
 }
 
 void CHyprBar::updateWindow(PHLWINDOW pWindow) {
+    updateRules();
     damageEntire();
 }
 
@@ -1109,11 +1112,9 @@ void CHyprBar::updateRules() {
 
     m_bForcedBarColor   = std::nullopt;
     m_bForcedTitleColor = std::nullopt;
-    m_hidden            = isKnownCSD(PWINDOW);
+    m_hidden            = shouldHideBar(PWINDOW);
 
     if (PWINDOW->m_ruleApplicator) {
-        if (PWINDOW->m_ruleApplicator->m_otherProps.props.contains(g_pGlobalState->nobarRuleIdx))
-            m_hidden = truthy(PWINDOW->m_ruleApplicator->m_otherProps.props.at(g_pGlobalState->nobarRuleIdx)->effect);
         if (PWINDOW->m_ruleApplicator->m_otherProps.props.contains(g_pGlobalState->barColorRuleIdx))
             m_bForcedBarColor = CHyprColor(Config::ParserUtils::parseColor(PWINDOW->m_ruleApplicator->m_otherProps.props.at(g_pGlobalState->barColorRuleIdx)->effect).value_or(0));
         if (PWINDOW->m_ruleApplicator->m_otherProps.props.contains(g_pGlobalState->titleColorRuleIdx))

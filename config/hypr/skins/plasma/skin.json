@@ -86,7 +86,8 @@
       "config/hypr/scripts/toggle-minimize.py",
       "src/breezebars",
       "src/bwm-decorator",
-      "config/hypr/skins/plasma/scripts/decorator.py"
+      "config/hypr/skins/plasma/scripts/decorator.py",
+      "config/hypr/skins/plasma/scripts/csd-audit.py"
     ]
   },
   "requires": [
