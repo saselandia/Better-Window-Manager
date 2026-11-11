@@ -256,6 +256,7 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | BluezQt | Modelos de Bluetooth del applet de Plasma (org.kde.bluezqt) | `kde-frameworks/bluez-qt` | `bluez-qt` | `kf6-bluez-qt` | — | — |
 | Kvantum (estilo de widgets Qt) | Muchos temas globales de la KDE Store (Sweet, Layan…) piden el estilo de aplicaciones Kvantum; sin él las apps Qt vuelven a Breeze/Fusion | `x11-themes/kvantum` | `kvantum` | `kvantum` | — | — |
 | Gestor de actividades de KDE | Favoritos y recientes del Kickoff de Breeze (KActivities, el formato de Plasma) | `kde-plasma/kactivitymanagerd` | `kactivitymanagerd` | `kactivitymanagerd` | — | `kactivitymanagerd` |
+| Auxiliar de decoraciones de BWM (bwm-decorator) | Dibuja las decoraciones reales de KDE (Breeze, Aurorae, de terceros) para las barras de título de Breeze | — | — | — | — | — |
 
 ## Plugins de barras de título (Breeze (Kde plasma) y Retro)
 

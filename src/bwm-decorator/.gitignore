@@ -1,0 +1,4 @@
+bwm-decorator
+*.o
+moc_*.cpp
+poc

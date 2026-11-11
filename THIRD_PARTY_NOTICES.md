@@ -180,6 +180,15 @@ los menús QMenu y las acciones de sesión, sin cambiar los modelos de Kicker. `
 `KickoffI18n.qml` y `KickoffWindow.qml` son propios de BWM (GPL-2.0-or-later). Adaptación en el
 README de la carpeta; [texto de licencia](licenses/KDE-GPL-2.0-or-later.txt).
 
+Auxiliar de decoraciones de Breeze (F6a, 2026-11-11): `src/bwm-decorator/palette.{h,cpp}` es
+`src/decorations/decorationpalette.{h,cpp}` de [KWin](https://invent.kde.org/plasma/kwin/-/tree/v6.7.5)
+**v6.7.5** (GPL-2.0-or-later; Martin Gräßlin, Hugo Pereira Da Costa, Mika Allan Rauhala, Carson
+Black), sin cambios de lógica. La lectura de ajustes y la carga de plugins de `decorator.cpp` siguen
+`settings.cpp` y `decorationbridge.cpp` de la misma versión (Martin Gräßlin). El resto es propio de
+BWM (GPL-2.0-or-later). Enlaza con KDecoration3 (LGPL) y carga en tiempo de ejecución los plugins de
+decoración instalados (Breeze, Aurorae y los del usuario), con sus licencias. Detalle en
+`src/bwm-decorator/README.md`; [texto de licencia](licenses/KDE-GPL-2.0-or-later.txt).
+
 ### KDE Plasma: bandeja y applets F5 (2026-11-11)
 
 Fuentes v6.7.5 de invent.kde.org/plasma: plasma-workspace (applets/systemtray, mediacontroller,

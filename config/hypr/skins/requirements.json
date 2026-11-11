@@ -658,6 +658,14 @@
         "opensuse": null,
         "debian": "plasma-workspace"
       }
+    },
+    "bwm-decorator": {
+      "label": "Auxiliar de decoraciones de BWM (bwm-decorator)",
+      "why": "Dibuja las decoraciones reales de KDE (Breeze, Aurorae, de terceros) para las barras de título de Breeze",
+      "check": {"type": "path", "any": ["~/.local/share/bwm/bin/bwm-decorator"]},
+      "provider": "build",
+      "build": "make -C {repo}/src/bwm-decorator install",
+      "notes": {"all": "Necesita kdecoration, breeze y las cabeceras de Qt 6 y KF6 (Config, ColorScheme, CoreAddons, Service). Proceso aparte: no se carga en Hyprland."}
     }
   }
 }

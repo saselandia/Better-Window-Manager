@@ -211,4 +211,6 @@ python3 "$HOME/.config/hypr/scripts/nightlight.py" --apply >/dev/null 2>&1 &
 if [[ $(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null) == plasma ]]; then
     python3 "$HOME/.config/hypr/skins/plasma/scripts/kde-config-bridge.py" enter
     python3 "$HOME/.config/hypr/skins/plasma/scripts/kde-config-bridge.py" start
+    # Auxiliar que dibuja las decoraciones de KDE para breezebars (F6a)
+    python3 "$HOME/.config/hypr/skins/plasma/scripts/decorator.py" start
 fi

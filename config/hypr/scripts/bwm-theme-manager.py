@@ -830,6 +830,8 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         if curr_theme == "plasma" and not cfg.get("is_plasma"):
             subprocess.run(kde_bridge + ["import", "--no-reload"], check=True)
             subprocess.run(kde_bridge + ["leave"], check=True)
+            # Auxiliar de decoraciones de KDE (F6a): sólo en Breeze
+            subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "decorator.py"), "stop"], check=False)
 
         # 1. Guardar la configuración del tema actual antes de cambiar
         save_current_theme_config(curr_theme)
@@ -964,6 +966,7 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
 
         if cfg.get("is_plasma"):
             subprocess.run(kde_bridge + ["start"], check=False)
+            subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "decorator.py"), "start"], check=False)
 
         # Una sola restauración, después de la geometría; los hooks no reinician apps ni restauran focos antiguos.
         bwm_windows.restore_focus(focus)

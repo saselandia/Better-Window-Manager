@@ -84,7 +84,9 @@
       "config/hypr/skins/plasma/scripts/plasma_palette.py",
       "config/hypr/scripts/quick-tile.py",
       "config/hypr/scripts/toggle-minimize.py",
-      "src/hyprbars"
+      "src/hyprbars",
+      "src/bwm-decorator",
+      "config/hypr/skins/plasma/scripts/decorator.py"
     ]
   },
   "requires": [
@@ -119,6 +121,7 @@
     "systemsettings",
     "bluez-qt",
     "kvantum",
-    "kactivitymanagerd"
+    "kactivitymanagerd",
+    "bwm-decorator"
   ]
 }
