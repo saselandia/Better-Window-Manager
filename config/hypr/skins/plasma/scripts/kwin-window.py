@@ -347,13 +347,10 @@ def open_menu(client: dict):
 
 
 def open_rules(client: dict, kind: str):
-    """«Configurar ajustes especiales de la ventana/aplicación…»: el editor de reglas de F10 por IPC; si
-    aún no existe en la sesión, el módulo de KDE (kcm_kwinrules)."""
-    out = subprocess.run(["qs", "-c", "ii", "ipc", "call", "plasmaWindowRules", "open", client["address"], kind],
-                         capture_output=True, text=True)
-    if out.returncode != 0 or "not found" in (out.stdout + out.stderr).lower():
-        subprocess.Popen(["kcmshell6", "kcm_kwinrules"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                         start_new_session=True)
+    """F10 uses the original editor. KWin's UUID-based preselection needs its D-Bus service,
+    so class/title are selected manually; never send a Hyprland address as a KWin UUID."""
+    subprocess.Popen(["kcmshell6", "kcm_kwinrules"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     start_new_session=True)
 
 
 def main(argv=None) -> int:

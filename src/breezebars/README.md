@@ -198,3 +198,39 @@ windowrule {
     hyprbars:bar_color = rgb(ff0000)
 }
 ```
+
+## Reglas y encaje de KWin (F10)
+
+`KWinSnap.hpp` sustituye al antiguo `SnapHelper.hpp`. `SnapGeometry.hpp` concentra la geometría
+pura de encaje, imanes, márgenes del mosaico y vecinos para poder probarla sin el compositor.
+Referencia: KWin **v6.7.5**, `src/workspace.cpp`, `src/window.cpp`, `src/tiles/{quicktile,tile,
+customtile,tilemanager}.cpp` y `src/plugins/tileseditor/`. Implementación C++ propia (BSD-3-Clause),
+sin copiar C++ de KWin. El outline QML portado conserva su licencia KDE por separado.
+
+- `hl.plugin.breezebars.snap_config({border,window,center,overlapOnly,cornerRatio,quickTile,maximize})`
+  recibe kwinrc desde la skin, antes del Lua del usuario. El magnetismo de Hyprland se desactiva
+  sólo en Breeze con este API presente para no competir con él. Se usa el marco completo de F7,
+  también CSD sin marco y los cuatro bordes de Aurorae, en unidades lógicas con reserved real.
+- Bordes laterales → mitades; esquinas → cuartos; arriba → maximizado de F8. El destino es el
+  monitor del puntero. Se entrega a `kwin-tiles.py apply` la descripción, PID y rectángulo exacto
+  de la previsualización; transfiere workspace primero, comprueba otra vez el PID y sólo entonces
+  aplica geometría. Si cambió el área útil, rechaza un marco que ya no cabe en vez de adivinar otro.
+- Imanes a bordes del área útil, ventanas del mismo workspace y centro, con Border/Window/Center
+  SnapZone y SnapOnlyWhenOverlapping. Cálculo después del movimiento nativo del puntero. La
+  redimensión de una ventana encajada mueve el borde compartido de vecinas también encajadas;
+  conserva el borde lejano, comprueba mínimos/máximos nativos y termina al soltar. No persiste
+  ese ajuste como proporción del árbol de mosaico ni reproduce todos los grupos de KWin.
+- `snap_tiles(...)` recibe hojas del JSON original de KWin leído por `kwin_tiles.py`. Mayús al
+  arrastrar selecciona una hoja y aplica el padding original (medio entre vecinas). El editor
+  reducido está en `modules/plasma/tiling`; Meta+T lo abre, Ctrl+flechas queda igual.
+- El plugin ya no pinta el outline azul con OpenGL: envía `plasmaOutline display <JSON>` / `hide <sequence>`
+  al port de `src/qml/outline/plasma/outline.qml`, con KSvg y el tema de Plasma activo.
+- La API CSD v1 añade `kdeMetadata` (rol X11, tipo NET y padre; Wayland normal/diálogo según
+  transient). El puente F2 la usa para reglas; no se infiere el tipo por clases de aplicaciones.
+  No están disponibles resourceName/WM_CLASS completo ni todos los tipos de shell de KWin.
+
+El arranque genera primero la configuración de la skin y después carga el plugin, cuyo reload
+inicial ya encuentra esos archivos. El vigilante único de F2 aplica/recuerda las reglas y agrupa
+cambios de KCMs; no se añade un demonio. El antiguo override de CSD por clases de autostart se retira.
+La lógica y compilación están verificadas; ratón/Wayland real con este plugin siguen pendientes de
+**reiniciar sesión entrando en Breeze**. Ver `docs/BREEZE_F10_CHECKLIST.md` y arquitectura §13.

@@ -133,6 +133,8 @@ Son las versiones registradas en el entorno local de BWM, no las últimas public
 | Decoración y estilo Breeze | 6.7.5 | — |
 | Aurorae (decoraciones SVG) | 6.7.5 | — |
 | plasma-workspace (herramientas de temas y KCMs) | 6.7.5 | — |
+| Anfitrión de módulos de configuración KDE 6 | 6.29.0 | — |
+| Editor original de reglas de KWin | 6.7.5 | — |
 | Preferencias del sistema de KDE | 6.7.5 | — |
 | plasma-nm (applet de red) | 6.7.5 | — |
 | plasma-pa (applet de sonido) | 6.7.5 | — |
@@ -259,6 +261,8 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | Kvantum (estilo de widgets Qt) | Muchos temas globales de la KDE Store (Sweet, Layan…) piden el estilo de aplicaciones Kvantum; sin él las apps Qt vuelven a Breeze/Fusion | `x11-themes/kvantum` | `kvantum` | `kvantum` | — | — |
 | Gestor de actividades de KDE | Favoritos y recientes del Kickoff de Breeze (KActivities, el formato de Plasma) | `kde-plasma/kactivitymanagerd` | `kactivitymanagerd` | `kactivitymanagerd` | — | `kactivitymanagerd` |
 | Auxiliar de decoraciones de BWM (bwm-decorator) | Dibuja las decoraciones reales de KDE (Breeze, Aurorae, de terceros) para las barras de título de Breeze | — | — | — | — | — |
+| Anfitrión de módulos de configuración KDE 6 | Abrir el editor original de reglas de KWin desde los menús de Breeze | `kde-frameworks/kcmutils` | `kcmutils` | `kf6-kcmutils` | `kf6-kcmutils` | `libkf6kcmutils-bin` |
+| Editor original de reglas de KWin | Editar kwinrulesrc con kcm_kwinrules; el compositor KWin no se ejecuta | `kde-plasma/kwin` | `kwin` | `kwin` | — | `kwin-common` |
 
 ## Plugins de barras de título (Breeze (Kde plasma) y Retro)
 

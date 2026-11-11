@@ -111,6 +111,7 @@ if active_skin == "plasma" then hl.bind("SUPER + Next", hl.dsp.exec_cmd("python3
 if active_skin == "plasma" then hl.bind("SUPER + D", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py show-desktop"), { description = "Ventanas: Echar un vistazo al escritorio (KDE: Meta+D)" }) end
 if active_skin == "plasma" then hl.bind("ALT + F4", hl.dsp.window.close(), { description = "Ventanas: Cerrar ventana (KDE: Alt+F4)" }) end
 if active_skin == "plasma" then hl.bind("ALT + F3", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py menu"), { description = "Ventanas: Menú de la ventana (KDE: Alt+F3)" }) end
+if active_skin == "plasma" then hl.bind("SUPER + T", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/kwin-tiles.py open"), { description = "Ventanas: Editor de mosaico (Breeze)" }) end
 
 -- BWMenu: dos teclas normales a la vez, independiente de Quickshell; cualquier orden
 hl.bind("plus + minus", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm menu --open"), { ignore_mods = true, description = "General: BWMenu (+ y - a la vez)" })

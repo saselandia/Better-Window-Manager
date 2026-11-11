@@ -139,28 +139,7 @@ hl.window_rule({
 ---- KDE PLASMA RULES ----------
 --------------------------------
 
-local ok_theme, active_theme = pcall(require, "modules.theme")
-local is_plasma = ok_theme and (active_theme.name == "plasma" or (active_theme.name and string.find(active_theme.name, "plasma") ~= nil))
--- Skins de WM tradicional ("windows": "traditional" en config/hypr/skins/<id>/skin.json): todo flota
-local is_traditional = ok_theme and (active_theme.windows == "traditional" or is_plasma)
-
-if is_traditional then
-    -- 1. Todas las ventanas en modo flotante individual (sin mosaico ni estela gris)
-    hl.window_rule({
-        name        = "plasma-float-all",
-        match       = { class = ".*" },
-        float       = true,
-        no_shadow   = true,
-        no_blur     = true,
-        border_size = 0,
-    })
-
-    -- 2. Barras de título: hyprbars detecta solo qué ventanas traen sus propios
-    --    botones (xdg-decoration / kde-server-decoration / _MOTIF_WM_HINTS).
-    --    Forzar a mano solo si hiciera falta:
-    --      ["breezebars:no_bar"] = true   -> quitar barra
-    --      ["breezebars:no_bar"] = false  -> forzar barra
-end
+-- Traditional defaults belong to the skin (skins/plasma/hypr/rules.lua).
 
 --------------------------------
 ---- ELECTRON / BROWSER RULES --
@@ -173,33 +152,6 @@ hl.window_rule({
         class = "^(vesktop|dev\\.vencord\\.Vesktop|discord|armcord|webcord|google-chrome.*|chromium.*|brave-browser|zen.*|firefox.*|code|Code|code-oss|vscodium|cursor|antigravity-ide|obsidian|spotify|claude|claude-desktop|com.anthropic.Claude|codex|codex-desktop|chatgpt|ChatGPT)$",
     },
     render_unfocused = true,
-})
-
--- Bordes cuadrados al maximizar o snapear ventanas (Estilo KDE Plasma)
-hl.window_rule({
-    name     = "plasma-maximized-square",
-    match    = { fullscreen = true },
-    rounding = 0,
-})
-
--- Maximizado de Breeze (kwin-window.py, F8): esquinas rectas como en KWin
-hl.window_rule({
-    name     = "plasma-kwin-maximized-square",
-    match    = { tag = "bwm-maximized" },
-    rounding = 0,
-})
-
--- «Ocultar de capturas y grabaciones» del menú de la ventana de Breeze (kwin-window.py no-capture, F9)
-hl.window_rule({
-    name            = "plasma-kwin-no-capture",
-    match           = { tag = "bwm-no-capture" },
-    no_screen_share = true,
-})
-
-hl.window_rule({
-    name     = "plasma-snapped-square",
-    match    = { tag = "snapped" },
-    rounding = 0,
 })
 
 -- Terminal flotante de los plugins de Omarchy (omarchy-shims/omarchy-launch-floating-terminal-

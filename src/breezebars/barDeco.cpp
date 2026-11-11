@@ -1,7 +1,7 @@
 
 #include "barDeco.hpp"
 #include "CSDDetect.hpp"
-#include "SnapHelper.hpp"
+#include "KWinSnap.hpp"
 
 #include <hyprland/src/desktop/state/WindowState.hpp>
 #include <hyprland/src/desktop/state/ViewState.hpp>
@@ -64,9 +64,7 @@ static CHyprColor configColor(Config::INTEGER color) {
 // La ventana trae sus propios botones: no se le dibuja barra (pero se sigue
 // gestionando su arrastre CSD para el snapping).
 static bool shouldHideBar(PHLWINDOW window) {
-    // «Sin barra de título ni marco» del menú de la ventana (F9, kwin-window.py no-border)
-    if (window && window->m_ruleApplicator && window->m_ruleApplicator->m_tagKeeper.isTagged("bwm-no-border"))
-        return true;
+    // F10: the skin maps no-border to native decorate=false, so later user rules still win.
     return detectDecorations(window).clientDraws;
 }
 
@@ -432,7 +430,8 @@ void CHyprBar::onMouseMove(Vector2D coords) {
                 g_pHyprRenderer->damageWindow(PWINDOW, true);
             }
         }
-        updateSnapPreview(currentMouse);
+        applyKWinMagnet(PWINDOW,currentMouse);
+        updateSnapPreview(currentMouse,PWINDOW);
         return;
     }
 
@@ -445,7 +444,7 @@ void CHyprBar::onMouseMove(Vector2D coords) {
 
     m_bDragPending = false;
     handleMovement();
-    updateSnapPreview(g_pInputManager->getMouseCoordsInternal());
+    updateSnapPreview(g_pInputManager->getMouseCoordsInternal(),m_pWindow.lock());
 }
 
 void CHyprBar::onTouchMove(Event::SCallbackInfo& info, ITouch::SMotionEvent e) {

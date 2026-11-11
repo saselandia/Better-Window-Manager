@@ -470,6 +470,12 @@ Objetivo: los mismos menús contextuales que Plasma, con su estilo.
 
 ### F10 · Reglas de ventana y snapping — **[HIGH]**
 
+Implementación F10 en arquitectura §13. Ctrl+flechas se conserva por decisión del usuario;
+Meta+T abre un editor de mosaico reducido con el formato de KWin. Cobertura/omisiones de reglas
+en `skins/plasma/scripts/KWIN_RULES.md`. No equivalencia completa del RuleBook ni del efecto
+editor de KWin. Plugin compilado e instalado; validación con ratón pendiente de reiniciar sesión:
+`docs/BREEZE_F10_CHECKLIST.md`.
+
 ```text
 Fase 10 de docs/BREEZE_PLAN.md (lee el plan, su sección 2, reglas 4 y 17 de CLAUDE.md, BWM_CONTEXT
 §3.4, §3.8, §3.58, §3.115; y lo hecho en F6–F8).

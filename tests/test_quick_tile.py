@@ -93,3 +93,19 @@ class QuickTileTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+class KWinGeometryTests(unittest.TestCase):
+    def test_kwin_geometry_without_compositor(self):
+        import os, subprocess, tempfile
+        root=SCRIPTS.parents[2]
+        with tempfile.TemporaryDirectory() as folder:
+            binary=Path(folder)/'geometry'
+            result=subprocess.run([os.environ.get('CXX','g++'),'-std=c++23','-Wall','-Wextra','-I',str(root/'src/breezebars'),str(root/'tests/snap_geometry_test.cpp'),'-o',str(binary)],capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
+            result=subprocess.run([str(binary)],capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertIn('adjacency',result.stdout)
+    def test_snapping_does_not_clear_user_tags(self):
+        lua,_=QuickTileTests().exercise(['right','0xabc','--monitor','desc:HP principal','--pid','17','--edge'])
+        self.assertNotIn('clear_tags',lua.call_args.args[0])
+        self.assertIn('-snapped_right',lua.call_args.args[0])

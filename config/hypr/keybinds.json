@@ -1496,5 +1496,24 @@
       "plasma"
     ],
     "is_modified": false
+  },
+  {
+    "id": "plasma_tiles_editor",
+    "category": "Ventanas",
+    "description": "Editor de mosaico (Breeze)",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "T",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/kwin-tiles.py open",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ]
   }
 ]

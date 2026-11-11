@@ -4,15 +4,27 @@ local state = (os.getenv("XDG_STATE_HOME") or (os.getenv("HOME") .. "/.local/sta
 local ok, settings = pcall(dofile, state)
 local k = ok and type(settings) == "table" and settings or {}
 local follows = k.focus ~= nil and k.focus ~= "ClickToFocus"
+local native_snap = not (hl.plugin and hl.plugin.breezebars and hl.plugin.breezebars.snap_config)
 hl.config({
     input = { follow_mouse = follows and 1 or 0 },
     general = { snap = {
-        enabled = (k.borderSnap or 10) > 0 or (k.windowSnap or 10) > 0,
+        enabled = native_snap and ((k.borderSnap or 10) > 0 or (k.windowSnap or 10) > 0),
         monitor_gap = k.borderSnap or 10,
         window_gap = k.windowSnap or 10,
     } },
     animations = { enabled = (k.animationFactor or 1) > 0 },
 })
+-- F10: KWin magnets use the complete KDE frame. Disable the competing native magnet above.
+if not native_snap then
+    hl.plugin.breezebars.snap_config({ border = k.borderSnap or 10, window = k.windowSnap or 10,
+        center = k.centerSnap or 0, overlapOnly = k.snapOnlyOverlapping or false,
+        quickTile = k.quickTile ~= false, maximize = k.edgeMaximize ~= false, cornerRatio = k.cornerRatio or 0.25 })
+    local tiles = io.open((os.getenv("XDG_STATE_HOME") or os.getenv("HOME") .. "/.local/state") .. "/bwm/plasma/kwintiles.lua", "r")
+    if tiles then
+        tiles:close()
+        dofile((os.getenv("XDG_STATE_HOME") or os.getenv("HOME") .. "/.local/state") .. "/bwm/plasma/kwintiles.lua")
+    end
+end
 
 -- Hyprland expresa speed como inverso de duración. Conservamos las curvas de Breeze.
 local factor = k.animationFactor or 1

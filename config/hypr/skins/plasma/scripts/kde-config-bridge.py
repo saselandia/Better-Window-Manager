@@ -7,6 +7,7 @@ Linux inotify se usa a través de libc (sin dependencia Python adicional).
 """
 import argparse
 import contextlib
+import errno
 import ctypes
 import fcntl
 import hashlib
@@ -22,6 +23,10 @@ import subprocess
 import sys
 import tempfile
 import time
+import types
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import kwin_rules
+import kwin_tiles
 
 CONFIG = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
 STATE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "bwm/plasma"
@@ -300,6 +305,11 @@ def kwin_settings():
         "wheel": w.get("MouseBindings", {}).get("CommandTitlebarWheel", "Nothing"),
         "borderSnap": int(number(win.get("BorderSnapZone"), 10, 0, 1000)),
         "windowSnap": int(number(win.get("WindowSnapZone"), 10, 0, 1000)),
+        "centerSnap": int(number(win.get("CenterSnapZone"), 0, 0, 1000)),
+        "snapOnlyOverlapping": win.get("SnapOnlyWhenOverlapping", "false").lower() == "true",
+        "quickTile": win.get("ElectricBorderTiling", "true").lower() == "true",
+        "edgeMaximize": win.get("ElectricBorderMaximize", "true").lower() == "true",
+        "cornerRatio": number(win.get("ElectricBorderCornerRatio"), 0.25, 0, 0.5),
         "buttonsLeft": decor.get("ButtonsOnLeft", "M"),
         "buttonsRight": decor.get("ButtonsOnRight", "IAX"),
         "animationFactor": number(kde.get("AnimationDurationFactor"), 1, 0, 20),
@@ -318,8 +328,13 @@ def lua(value):
 
 def generate_kwin():
     settings = kwin_settings()
-    return atomic(KWIN_STATE, "-- Generado por kde-config-bridge.py; KDE es la fuente.\nreturn {\n" +
+    changed = atomic(KWIN_STATE, "-- Generado por kde-config-bridge.py; KDE es la fuente.\nreturn {\n" +
                   "".join(f"    {key} = {lua(value)},\n" for key, value in settings.items()) + "}\n")
+    # Both files share the bridge debounce and at most one compositor reload.
+    bridge = types.SimpleNamespace(**globals())
+    changed_rules = kwin_rules.generate(bridge)
+    changed_tiles = kwin_tiles.generate(bridge)
+    return changed or changed_rules or changed_tiles
 
 
 def import_breeze(meta):
@@ -521,8 +536,8 @@ def watched_files():
             CONFIG / "hypr/modules/monitors.lua", CONFIG / "hypr/monitors_layout.json",
             CONFIG / "bwm/user/shell.jsonc", CONFIG / "bwm/user/hyprland.lua",
             CONFIG / "bwm/default-apps.json", CONFIG / "mimeapps.list",
-            STATE.parent / "nightlight.json", *[CONFIG / f for f in
-                ("kdeglobals", "kcminputrc", "kxkbrc", "kwinrc", "plasmarc", "breezerc", "plasma-localerc",
+            STATE.parent / "nightlight.json", STATE / "tiling-outputs.json", *[CONFIG / f for f in
+                ("kdeglobals", "kcminputrc", "kxkbrc", "kwinrc", "kwinrulesrc", "plasmarc", "breezerc", "plasma-localerc",
                  "gtkrc", "gtkrc-2.0", "Trolltech.conf")],
             *[CONFIG / "kdedefaults" / f for f in ("kdeglobals", "kcminputrc", "kwinrc", "plasmarc")]]
 
@@ -535,8 +550,10 @@ class Inotify:
     def __init__(self):
         self.lib = ctypes.CDLL(None, use_errno=True)
         self.fd = self.lib.inotify_init1(os.O_NONBLOCK | os.O_CLOEXEC)
-        if self.fd < 0:
+        if self.fd < 0 and ctypes.get_errno() not in (errno.EMFILE, errno.ENOSPC):
             raise OSError(ctypes.get_errno(), "inotify_init1")
+        # A busy session can exhaust the user's inotify quota. Keep the bridge alive by polling.
+        self.previous = signatures()
         self.dirs = set()
         self.refresh()
 
@@ -548,12 +565,22 @@ class Inotify:
             while not folder.exists():
                 folder = folder.parent
             if folder not in self.dirs:
+                if self.fd < 0:
+                    self.dirs.add(folder)
+                    continue
                 wd = self.lib.inotify_add_watch(self.fd, os.fsencode(folder), 0xFCe)  # write/move/create/delete
                 if wd < 0:
                     raise OSError(ctypes.get_errno(), str(folder))
                 self.dirs.add(folder)
 
     def wait(self, timeout):
+        if self.fd < 0:
+            time.sleep(timeout)
+            current = signatures()
+            events = current != self.previous
+            self.previous = current
+            self.refresh()
+            return events
         events = bool(select.select([self.fd], [], [], timeout)[0])
         if events:
             while True:
@@ -565,7 +592,8 @@ class Inotify:
         return events
 
     def close(self):
-        os.close(self.fd)
+        if self.fd >= 0:
+            os.close(self.fd)
 
 
 def watch():
@@ -586,6 +614,7 @@ def watch():
         signal.signal(signal.SIGTERM, shutdown)
         watcher = Inotify()
         previous, deadline = signatures(), None
+        rules = kwin_rules.Runtime(types.SimpleNamespace(**globals()))
         try:
             while not stopping:
                 try:
@@ -605,8 +634,16 @@ def watch():
                     except (Conflict, ValueError, OSError) as exc:
                         print(f"kde-config-bridge: reintentar: {exc}", file=sys.stderr, flush=True)
                         deadline = time.monotonic() + 1
+                if deadline is None:
+                    try:
+                        rules.tick()
+                    except (Conflict, ValueError, OSError) as exc:
+                        print(f"kde-config-bridge: reglas: {exc}", file=sys.stderr, flush=True)
         finally:
-            watcher.close()
+            try:
+                rules.close()
+            finally:
+                watcher.close()
 
 
 def main():

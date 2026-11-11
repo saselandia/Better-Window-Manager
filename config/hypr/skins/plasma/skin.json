@@ -65,7 +65,8 @@
       "config/quickshell/ii/modules/ii/altTab/PlasmaSwitcher.qml",
       "config/quickshell/ii/plasmaSettings.qml",
       "config/quickshell/ii/modules/plasma/tray",
-      "config/quickshell/ii/modules/plasma/applets"
+      "config/quickshell/ii/modules/plasma/applets",
+      "config/quickshell/ii/modules/plasma/tiling"
     ],
     "hyprland": [
       "config/hypr/modules/plasma_colors.lua",
@@ -73,7 +74,9 @@
       "config/hypr/skins/plasma/hypr/animations.lua",
       "config/hypr/skins/plasma/hypr/misc.lua",
       "config/hypr/skins/plasma/hypr/kwin.lua",
-      "config/hypr/skins/plasma/hypr/placement.lua"
+      "config/hypr/skins/plasma/hypr/placement.lua",
+      "config/hypr/skins/plasma/hypr/rules.lua",
+      "config/hypr/skins/plasma/hypr/kwinrules.lua"
     ],
     "colors": [
       "config/matugen/templates"
@@ -89,7 +92,10 @@
       "src/breezebars",
       "src/bwm-decorator",
       "config/hypr/skins/plasma/scripts/decorator.py",
-      "config/hypr/skins/plasma/scripts/csd-audit.py"
+      "config/hypr/skins/plasma/scripts/csd-audit.py",
+      "config/hypr/skins/plasma/scripts/kwin_rules.py",
+      "config/hypr/skins/plasma/scripts/kwin_tiles.py",
+      "config/hypr/skins/plasma/scripts/kwin-tiles.py"
     ]
   },
   "requires": [
@@ -127,6 +133,8 @@
     "bluez-qt",
     "kvantum",
     "kactivitymanagerd",
-    "bwm-decorator"
+    "bwm-decorator",
+    "kcmshell6",
+    "kwin-rules-kcm"
   ]
 }

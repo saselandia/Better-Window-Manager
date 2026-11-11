@@ -6,7 +6,7 @@
 #include "barDeco.hpp"
 #include "barRemote.hpp"
 #include "DecoClient.hpp"
-#include "SnapHelper.hpp"
+#include "KWinSnap.hpp"
 
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/config/shared/actions/ConfigActions.hpp>
@@ -526,6 +526,7 @@ bool CHyprBar::remoteMouseButton(Event::SCallbackInfo& info, const IPointer::SBu
         m_remote.press->released = true;
 
     if (button == 1 && m_bResizing) {
+        syncAdjacentResize(true);
         if (g_layoutManager->dragController()->target())
             g_layoutManager->endDragTarget();
         m_bResizing = false;

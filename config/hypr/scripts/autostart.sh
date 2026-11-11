@@ -178,10 +178,15 @@ fi
     sleep 1
     # hypr-csd retired in favor of native hyprbars
     if [ -f "/home/sasel/.config/hypr/modules/theme.lua" ] && grep -q 'name = "plasma"' "/home/sasel/.config/hypr/modules/theme.lua" 2>/dev/null; then
+        # Compile the original KDE files before the plugin's initial configuration reload.
+        python3 "$HOME/.config/hypr/skins/plasma/scripts/kde-config-bridge.py" enter
         if ! hyprctl plugin list 2>/dev/null | grep -q "Plugin breezebars"; then
             hyprctl plugin load "/home/sasel/.config/hypr/plugins/breezebars.so" 2>/dev/null || true
         fi
-        hyprctl keyword windowrulev2 "plugin:breezebars:nobar, class:^(steam|steamwebhelper|firefox|firefox-bin|google-chrome.*|chromium.*|brave-browser|zen.*|vesktop|discord|armcord|webcord|spotify|antigravity|antigravity-ide|code|Code|code-oss|vscodium|cursor|claude|claude-desktop|com.anthropic.Claude|org.gnome..*|nautilus|pavucontrol|easyeffects|gamescope|signal|telegram-desktop|org.telegram.desktop|baobab|evince|loupe)$" 2>/dev/null || true
+        # F10: the plugin reloads configuration once at initialization, using those files.
+        # Subsequent changes are debounced by the single F2 bridge.
+        python3 "$HOME/.config/hypr/skins/plasma/scripts/kde-config-bridge.py" start
+        python3 "$HOME/.config/hypr/skins/plasma/scripts/decorator.py" start
     fi
 ) &
 
@@ -207,10 +212,4 @@ python3 "$HOME/.config/hypr/scripts/nightlight.py" --apply >/dev/null 2>&1 &
 ) &
 
 
-# Puente KDE de la skin Breeze (sus archivos y demonio son propios de la skin).
-if [[ $(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null) == plasma ]]; then
-    python3 "$HOME/.config/hypr/skins/plasma/scripts/kde-config-bridge.py" enter
-    python3 "$HOME/.config/hypr/skins/plasma/scripts/kde-config-bridge.py" start
-    # Auxiliar que dibuja las decoraciones de KDE para breezebars (F6a)
-    python3 "$HOME/.config/hypr/skins/plasma/scripts/decorator.py" start
-fi
+# The Breeze bridge/decorator start in block 9, after loading its plugin (F10).

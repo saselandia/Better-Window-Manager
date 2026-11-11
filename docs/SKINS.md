@@ -62,6 +62,10 @@ real) están preparados para la próxima sesión de Breeze. Su compilación y pr
 no suben esta estimación: falta validar el plugin dentro de Hyprland tras reiniciar sesión.
 Matriz de apps y pasos en [BREEZE_CSD_RESULTS.md](BREEZE_CSD_RESULTS.md).
 
+F10 añade lectura de kwinrulesrc, mosaicos en el formato de KWin, editor reducido y outline KSvg.
+Su validación dentro del compositor queda pendiente de reiniciar sesión; no cambia la estimación.
+Cobertura y límites en arquitectura §13; lista de ratón en [BREEZE_F10_CHECKLIST.md](BREEZE_F10_CHECKLIST.md).
+
 Actualiza esta tabla y la del README cuando cambie el soporte.
 
 ## Qué se conserva entre skins

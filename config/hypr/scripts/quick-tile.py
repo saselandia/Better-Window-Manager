@@ -196,6 +196,9 @@ def main(argv=None):
     borders = decoration_extents(target_win, titlebars()) if is_plasma_active() else {side: 0 for side in ("left", "top", "right", "bottom")}
 
     tags = target_win.get("tags", [])
+    # F10: preserve user/rule tags. Only leave BWM's tile/maximize state.
+    clear_state = " ".join('hl.dispatch(hl.dsp.window.tag({tag=' + json.dumps('-' + str(t).rstrip('*')) + ',window=win}))'
+                           for t in tags if not str(t).endswith('*') and (str(t) == 'snapped' or str(t).startswith(('snapped_', 'bwm-max'))))
     is_snapped = "snapped" in tags
     is_fullscreen = target_win.get("fullscreen", 0) > 0 or target_win.get("fullscreenClient", 0) > 0
 
@@ -231,7 +234,7 @@ def main(argv=None):
             hl.dispatch(hl.dsp.window.fullscreen({{ mode = 1, action = 'unset', window = win }}))
             hl.dispatch(hl.dsp.window.fullscreen({{ mode = 0, action = 'unset', window = win }}))
             {place_workspace}
-            hl.dispatch(hl.dsp.window.clear_tags({{ window = win }}))
+            {clear_state}
             hl.dispatch(hl.dsp.window.float({{ action = 'enable', window = win }}))
             hl.dispatch(hl.dsp.window.resize({{ x = {int(target_w)}, y = {int(target_h)}, relative = false, window = win }}))
             hl.dispatch(hl.dsp.window.move({{ x = {int(target_x)}, y = {int(target_y)}, relative = false, window = win }}))
@@ -249,7 +252,7 @@ def main(argv=None):
             hl.dispatch(hl.dsp.window.fullscreen({{ mode = 1, action = 'unset', window = win }}))
             hl.dispatch(hl.dsp.window.fullscreen({{ mode = 0, action = 'unset', window = win }}))
             {place_workspace}
-            hl.dispatch(hl.dsp.window.clear_tags({{ window = win }}))
+            {clear_state}
             hl.dispatch(hl.dsp.window.tag({{ tag = "snapped", window = win }}))
             hl.dispatch(hl.dsp.window.tag({{ tag = "snapped_{dir_name}", window = win }}))
             hl.dispatch(hl.dsp.window.resize({{ x = {int(w)}, y = {int(h)}, relative = false, window = win }}))

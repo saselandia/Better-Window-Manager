@@ -320,7 +320,7 @@ hl.config({
 -- (skins/<id>/hypr/placement.lua, Breeze) y modos de workspace
 -- (skins/<id>/hypr/workspace-modes.lua, Retro), consola desplegable (skins/<id>/hypr/qconsole.lua, Retro). Al final, para que lo suyo gane a lo común de arriba
 -- (p. ej. las barras de título de los workspaces flotantes de Retro).
-for _, part in ipairs({ { "lock", "Bloqueo" }, { "misc", "Opciones" }, { "kwin", "Configuración de KWin" }, { "placement", "Colocación de ventanas" },
+for _, part in ipairs({ { "lock", "Bloqueo" }, { "misc", "Opciones" }, { "kwin", "Configuración de KWin" }, { "rules", "Reglas de ventana" }, { "kwinrules", "Reglas de KWin" }, { "placement", "Colocación de ventanas" },
                        { "workspace-modes", "Modos de workspace" }, { "qconsole", "Consola desplegable" } }) do
     local mod = "skins." .. anim_skin .. ".hypr." .. part[1]
     if package.searchpath and package.searchpath(mod, package.path) then

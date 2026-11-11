@@ -36,7 +36,10 @@
 #include "barDeco.hpp"
 #include "CSDDetect.hpp"
 #include "SquareTop.hpp"
-#include "SnapHelper.hpp"
+#include "KWinSnap.hpp"
+#include <hyprland/src/xwayland/XWayland.hpp>
+#include <hyprland/src/xwayland/XSurface.hpp>
+#include <hyprland/src/protocols/XDGShell.hpp>
 #include <hyprland/src/config/shared/actions/ConfigActions.hpp>
 #include <hyprland/src/managers/KeybindManager.hpp>
 #include <hyprland/src/managers/input/InputManager.hpp>
@@ -112,6 +115,27 @@ static SFrameSnapshot frameSnapshot(PHLWINDOW w) {
     }
     return s;
 }
+// Metadata is read from native objects, never inferred from an application-name list.
+static std::string kdeMetadata(PHLWINDOW w) {
+    std::string role;bool known=false,parent=false;uint32_t mask=1;
+    if(w->m_isX11) {
+        if(auto x=w->m_xwaylandSurface.lock()) {
+            known=true;parent=x->m_transient||bool(x->m_parent);role=x->m_role;
+            const std::pair<const char*,uint32_t> types[]={
+                {"NORMAL",1},{"DESKTOP",2},{"DOCK",4},{"TOOLBAR",8},{"MENU",16},{"DIALOG",32},
+                {"OVERRIDE",64},{"TOPMENU",128},{"UTILITY",256},{"SPLASH",512},
+                {"DROPDOWN_MENU",1024},{"POPUP_MENU",2048},{"TOOLTIP",4096},{"NOTIFICATION",8192},
+                {"COMBO",16384},{"DND",32768}};
+            for(auto [name,bit]:types) {
+                auto it=HYPRATOMS.find(std::string("_NET_WM_WINDOW_TYPE_")+name);
+                if(it!=HYPRATOMS.end()&&std::ranges::find(x->m_atoms,it->second)!=x->m_atoms.end()){mask=bit;break;}
+            }
+        }
+    } else if(auto surf=w->m_xdgSurface.lock())if(auto top=surf->m_toplevel.lock()) {
+        known=true;parent=bool(top->m_parent);mask=parent?32:1;
+    }
+    return std::format("{{\"known\":{},\"role\":\"{}\",\"parent\":{},\"typeMask\":{}}}",known,escapeJSONStrings(role),parent,mask);
+}
 static std::string csdReport(eHyprCtlOutputFormat format,std::string) {
     const bool json=format==FORMAT_JSON;
     std::string out=json?"{\"version\":1,\"api\":\"breezebars-csd\",\"enabled\":"+std::string(g_pGlobalState->config.enabled->value()?"true":"false")+",\"windows\":[":std::format("bwm-decorator: {} | csd-api=1\n",g_pDecoClient?g_pDecoClient->status():"no client");
@@ -125,10 +149,36 @@ static std::string csdReport(eHyprCtlOutputFormat format,std::string) {
             if(!first)out+=",";first=false;
             out+=std::format(R"({{"address":"{}","pid":{},"class":"{}","title":"{}","visible":{},"ready":{},"reason":"{}","kind":"{}","xdgRequested":{},"kdeRequested":{},"sent":{},"applied":{},"observed":{{"x11":{},"xdg":{},"kde":{},"kdeExplicit":{},"gtkFrameExtents":{},"motifNoBorder":{},"special":{},"noBar":{},"decorate":{},"fullscreen":{}}},"borders":{{"left":{},"top":{},"right":{},"bottom":{}}}}})",
                 address,w->getPID(),escapeJSONStrings(w->m_class),escapeJSONStrings(w->m_title),s.visible,d.ready,escapeJSONStrings(reason),s.kind,d.xdgRequested,d.kdeRequested,d.sent,d.applied,d.observed.x11,d.observed.xdg,d.observed.kde,d.observed.kdeExplicit,d.observed.gtkFrameExtents,d.observed.motifNoBorder,d.observed.overrideRedirect||d.observed.x11Special,d.observed.noBar,d.observed.decorate,d.observed.fullscreen,s.left,s.top,s.right,s.bottom);
+            out.pop_back();out+=",\"kdeMetadata\":"+kdeMetadata(w)+"}";
         } else out+=std::format("{} | {} | barra={} ({}) | address={} pid={} | xdg={} kde={} sent={} applied={} | {}\n",w->m_class,w->m_title.substr(0,40),s.visible?"si":"no",s.kind,address,w->getPID(),d.xdgRequested,d.kdeRequested,d.sent,d.applied,reason);
     }
     if(json)out+="]}";
     return out;
+}
+static int luaSnapConfig(lua_State* L) {
+    luaL_checktype(L,1,LUA_TTABLE);
+    auto number=[&](const char* key,double fallback,double low,double high){lua_getfield(L,1,key);double n=lua_isnumber(L,-1)?lua_tonumber(L,-1):fallback;lua_pop(L,1);return std::isfinite(n)?std::clamp(n,low,high):fallback;};
+    auto boolean=[&](const char* key,bool fallback){lua_getfield(L,1,key);bool b=lua_isboolean(L,-1)?lua_toboolean(L,-1):fallback;lua_pop(L,1);return b;};
+    g_kwinSnapZones={number("border",10,0,1000),number("window",10,0,1000),number("center",0,0,1000),boolean("overlapOnly",false)};
+    g_kwinCornerRatio=number("cornerRatio",.25,0,.5);
+    g_kwinQuickTile=boolean("quickTile",true);g_kwinMaximize=boolean("maximize",true);
+    return 0;
+}
+static int luaSnapTiles(lua_State* L) {
+    luaL_checktype(L,1,LUA_TTABLE);g_kwinCustomTiles.clear();
+    size_t count=std::min<size_t>(lua_rawlen(L,1),4096);
+    for(size_t i=1;i<=count;i++) {
+        lua_rawgeti(L,1,i);
+        if(!lua_istable(L,-1)){lua_pop(L,1);continue;}
+        SCustomTile tile;
+        lua_getfield(L,-1,"description");if(lua_isstring(L,-1))tile.description=lua_tostring(L,-1);lua_pop(L,1);
+        auto num=[&](const char* field,double def){lua_getfield(L,-1,field);double n=lua_isnumber(L,-1)?lua_tonumber(L,-1):def;lua_pop(L,1);return n;};
+        tile.workspace=num("workspace",1);tile.rect={num("x",0),num("y",0),num("width",1),num("height",1)};tile.padding=num("padding",4);
+        auto r=tile.rect;
+        if(std::isfinite(r.x)&&std::isfinite(r.y)&&std::isfinite(r.w)&&std::isfinite(r.h)&&r.x>=0&&r.y>=0&&r.w>0&&r.h>0&&r.right()<=1.00001&&r.bottom()<=1.00001&&tile.padding>=0&&tile.padding<=100&&tile.workspace>0)g_kwinCustomTiles.push_back(tile);
+        lua_pop(L,1);
+    }
+    return 0;
 }
 static int luaDecoration(lua_State* L) {
     const std::string address=luaL_checkstring(L,1);
@@ -154,6 +204,10 @@ static void onPreConfigReload() {
     if (!g_pGlobalState)
         return;
     g_pGlobalState->buttons.clear();
+    hideSnapPreview();
+    clearKWinTarget();
+    g_kwinResizeWindow.reset();
+    g_kwinAfterInput.reset();
 }
 
 static void onConfigReloaded() {
@@ -341,6 +395,7 @@ static void onGlobalMouseMove(const Vector2D& coords) {
         }
     }
 
+    queueKWinAfterInput(draggedWin);
     if (Desktop::View::validMapped(draggedWin)) {
         if (s_bHasLastDraggedBox)
             g_pHyprRenderer->damageBox(s_lastDraggedBox);
@@ -351,7 +406,8 @@ static void onGlobalMouseMove(const Vector2D& coords) {
         s_lastDraggedBox     = curBox;
         s_bHasLastDraggedBox = true;
 
-        updateSnapPreview(mousePos);
+        applyKWinMagnet(draggedWin,mousePos);
+        updateSnapPreview(mousePos,draggedWin);
     } else {
         if (s_bHasLastDraggedBox) {
             g_pHyprRenderer->damageBox(s_lastDraggedBox);
@@ -402,6 +458,7 @@ static std::string interactiveCommand(eHyprCtlOutputFormat, std::string request)
 }
 
 static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent e) {
+    if(e.state==WL_POINTER_BUTTON_STATE_RELEASED)syncAdjacentResize(true);
     if (s_interactiveDrag || s_swallowRelease) {
         if (s_interactiveDrag && e.state == WL_POINTER_BUTTON_STATE_PRESSED) {
             if (g_layoutManager->dragController()->target())
@@ -673,6 +730,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g_pGlobalState->breezeCsdCommand = HyprlandAPI::registerHyprCtlCommand(PHANDLE, SHyprCtlCommand{.name="breezebars-csd",.exact=true,.fn=csdReport});
     g_pGlobalState->interactiveCommand = HyprlandAPI::registerHyprCtlCommand(PHANDLE, SHyprCtlCommand{.name = "breezebars-interactive", .exact = false, .fn = interactiveCommand});
     HyprlandAPI::addLuaFunction(PHANDLE,"breezebars","decoration",luaDecoration);
+    HyprlandAPI::addLuaFunction(PHANDLE,"breezebars","snap_config",luaSnapConfig);
+    HyprlandAPI::addLuaFunction(PHANDLE,"breezebars","snap_tiles",luaSnapTiles);
     g_pGlobalState->pPreReloadListener = Event::bus()->m_events.config.preReload.listen([] { onPreConfigReload(); });
     g_pGlobalState->pReloadedListener  = Event::bus()->m_events.config.reloaded.listen([] { onConfigReloaded(); });
 
@@ -695,6 +754,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 }
 
 APICALL EXPORT void PLUGIN_EXIT() {
+    g_kwinAfterInput.reset();
     g_pDecoClient.reset();
     clearDecorationToolTip();
     hideSnapPreview();
@@ -703,7 +763,7 @@ APICALL EXPORT void PLUGIN_EXIT() {
         m->m_scheduledRecalc = true;
 
     g_pHyprRenderer->m_renderPass.removeAllOfType("CBarPassElement");
-    g_pHyprRenderer->m_renderPass.removeAllOfType("CSnapPreviewPassElement");
+
     g_pHyprRenderer->m_renderPass.removeAllOfType("CBreezeShadowPassElement");
     g_pHyprRenderer->m_renderPass.removeAllOfType("CBreezeToolTipPassElement");
     removeSquareTopElements();

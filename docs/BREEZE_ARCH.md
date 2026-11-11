@@ -370,3 +370,80 @@ específicas de detección/auditoría pasan. Compilación e instalación con `ma
 vacío y `bwm check --skin plasma` correcto. El log del shell existente en Retro conserva avisos
 previos (entre ellos propiedades de pantalla nula en Lock.qml); F7 no cambia QML. Ninguna de
 estas comprobaciones equivale a cargar el plugin F7 en el compositor.
+
+
+## 13. Fase 10: reglas de KWin y snapping (2026-11-11)
+
+**Implementado; pendiente de validar el plugin con ratón tras reiniciar sesión.** No se aumenta
+la estimación de compatibilidad por compilación o pruebas con datos simulados.
+
+El puente F2 incorpora `skins/plasma/scripts/kwin_rules.py` y `kwin_tiles.py`. kwinrulesrc se
+lee en su formato original (lista ordenada UUID, grupos numéricos antiguos y Enabled). La primera
+regla fija cada propiedad; DontAffect bloquea las posteriores. Se generan reglas nativas por
+etiqueta en `~/.local/state/bwm/plasma/kwinrules.lua`, cargadas por la skin antes del Lua del
+usuario. El mismo vigilante F2 resuelve clase/título/rol/tipo y aplica estados iniciales o forzados,
+con identidad dirección+PID. La marca de mapa inicial evita recolocar ventanas preexistentes al
+cambiar de skin o reiniciar el puente. Remember escribe sólo claves conocidas al cerrar/salir,
+conservando texto ajeno y comprobando conflictos. Las escrituras se agrupan con las de F2;
+mientras hay un lote pendiente se suspende la aplicación de reglas. Sin cuota inotify se usan
+firmas, sin un segundo servicio. El estado vigilado converge aproximadamente en 250 ms.
+
+**Cobertura y límites:** posición/tamaño del marco, workspace, pantalla por descripción estable,
+NoBorder, opacidades activa/inactiva, foco, min/maxsize, minimizado, maximizado por ejes,
+fullscreen y ocultar de capturas. Modos Apply/Force/Remember. X11 tiene rol y máscara NET;
+Wayland normal/diálogo según padre. Expresiones regulares compatibles con Python. Las condiciones
+no representables se omiten sin ampliar la coincidencia. Sin WM_CLASS completo, clientmachine,
+Above/Below persistentes, ApplyNow, ForceTemporarily, actividades ni todos los tipos de KWin.
+Desktop+Screen se reduce al workspace; no se simulan varios escritorios por ventana. Diagnóstico:
+kwinrules-report.json. Matriz completa, prioridad y opt-out para reglas del usuario en
+`config/hypr/skins/plasma/scripts/KWIN_RULES.md`. Force de geometría requiere excluir la ventana
+con bwm-ignore-kwin-rules si se quiere controlarla desde el Lua del usuario; no se edita ese Lua.
+
+Las reglas de flotación/estados visuales de Breeze salen del rules.lua común y viven en
+`skins/plasma/hypr/rules.lua`. El Loader opcional de reglas está en appearance.lua antes de
+placement y antes de bwm/user. Placement global sigue leyendo kwinrc; no se porta Placement por
+regla. El KCM original `kcmshell6 kcm_kwinrules` está instalado y carga sin KWin (se probó con
+configuración XDG aparte en workspace 9). No funciona su detección de ventanas por D-Bus KWin;
+el menú abre el editor general. No se reclama org.kde.KWin. kcmshell6/KCM declarados como
+recomendaciones y en el catálogo; no fue necesario instalar paquetes.
+
+**Snapping:** `KWinSnap.hpp` sustituye SnapHelper.hpp; `SnapGeometry.hpp` separa cálculos puros.
+Imanes de KWin por marco completo y reservas reales: BorderSnapZone, WindowSnapZone,
+CenterSnapZone y SnapOnlyWhenOverlapping. Se desactiva el imán nativo de Hyprland sólo en Breeze
+cuando existe el API nuevo. ElectricBorderTiling/Maximize/CornerRatio controlan bordes y esquinas.
+Laterales → mitades; esquinas → cuartos; arriba → F8 maximizado. Se consume el destino que se
+mostró, incluido su monitor y la elección Mayús, y `kwin-tiles.py` recibe descripción, PID y
+marco exacto. Workspace primero, PID otra vez y geometría después. Redimensión de bordes
+compartidos entre vecinas encajadas con límites nativos; no persiste las proporciones del grupo.
+Ctrl+flechas se conserva por decisión expresa del usuario. Se preservan etiquetas ajenas.
+
+**Mosaico y aspecto:** Mayús+arrastre sobre las hojas del JSON Tiling de KWin. Editor reducido
+Meta+T para dividir/unir/repartir, padding y pantalla. Árbol original horizontal/vertical/flotante,
+grupo `[Tiling][desktop UUID][output UUID]`. Los UUID de pantalla de KWin no se publican en
+Hyprland: asociación en estado de máquina tiling-outputs.json por descripción; se elige al
+importar una distribución. No hay un formato de layout propio ni identificadores DP-N. Sin datos,
+las tres columnas originales 25/50/25. El editor no es el efecto original (requiere KWin), ni
+permite dibujar zonas flotantes o arrastrar divisores. README en modules/plasma/tiling.
+
+El outline GL azul desaparece. `Outline.qml` porta el QML de KWin v6.7.5 con su licencia, KSvg
+widgets/translucentbackground y bordes según el área útil; capas sin entrada y sólo en Breeze.
+Los dos Loader nuevos requieren reinicio del shell; el reinicio de sesión necesario del plugin
+lo incorpora. autostart genera los archivos antes de cargar el plugin: su reload inicial ya los
+encuentra. Se retira el override CSD antiguo por lista de clases. Sin Qt dentro de Hyprland,
+sin cambios en el plugin de Retro, sin servicios KDE nuevos ni escrituras en bwm/user.
+
+**Comprobado:** política/orden/modos, conflictos, identidad, árboles de KWin, aplicación exacta
+al monitor de previsualización, geometría lógica/reservas, imanes y vecinos con datos simulados;
+carga de los dos QML y de sus delegados en qs -p, e inspección de tres zonas a través del proceso
+real de lectura. KCM con XDG temporal, sin guardar. Sin capturas. El resto sigue pendiente de
+la lista de ratón `docs/BREEZE_F10_CHECKLIST.md`; no se ha cambiado a Breeze ni cargado el plugin
+nuevo en caliente para declararlo probado.
+
+Verificación final F10: **339 pruebas generales, 60 opcionales omitidas**, y las **dos pruebas
+QML de F10 activadas pasan** (lector real del editor y orden del IPC del outline, sin capas visibles).
+El IPC usa display/hide con una secuencia: las órdenes antiguas no reviven una previsualización.
+Se evitó el nombre show, reservado por el CLI de Quickshell. Plugin compilado con
+-fno-gnu-unique e instalado con make install; fuente/binario instalado coinciden. Parser real de
+Hyprland acepta las reglas generadas (incluyendo opacidad compuesta y límites); configuración
+actual válida, configerrors vacío y bwm check de Plasma correcto. qmllint ejecutado con avisos por
+imports qs, metadatos de Quickshell/KSvg y tipos dinámicos; se complementa con carga real.

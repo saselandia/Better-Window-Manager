@@ -85,5 +85,8 @@ Scope {
     // F9: menús contextuales de Plasma (ventana, tareas, escritorio, panel) y el clic derecho en el fondo
     PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/menus/MenuHost.qml"):"" }
     PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/menus/DesktopCatcher.qml"):"" }
+    // F10: KSvg outline and KWin-format custom tiling editor, Breeze only.
+    PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/tiling/Outline.qml"):"" }
+    PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/tiling/TileEditor.qml"):"" }
     PanelLoader { component: PlasmaThemePicker {} }
 }

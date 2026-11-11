@@ -555,6 +555,21 @@
       "packages": {"gentoo": "kde-plasma/plasma-workspace", "arch": "plasma-workspace", "fedora": "plasma-workspace", "opensuse": null, "debian": "plasma-workspace"},
       "notes": {"gentoo": "USE recomendado: -semantic-desktop (evita baloo).", "all": "Sus servicios de kded que chocan con BWM se desactivan en ~/.config/kded5rc (docs/BREEZE_ARCH.md)."}
     },
+    "kcmshell6": {
+      "label": "Anfitrión de módulos de configuración KDE 6",
+      "referenceVersion": "6.29.0",
+      "why": "Abrir el editor original de reglas de KWin desde los menús de Breeze",
+      "check": {"type": "cmd", "all": ["kcmshell6"]},
+      "packages": {"gentoo": "kde-frameworks/kcmutils", "arch": "kcmutils", "fedora": "kf6-kcmutils", "opensuse": "kf6-kcmutils", "debian": "libkf6kcmutils-bin"}
+    },
+    "kwin-rules-kcm": {
+      "label": "Editor original de reglas de KWin",
+      "referenceVersion": "6.7.5",
+      "why": "Editar kwinrulesrc con kcm_kwinrules; el compositor KWin no se ejecuta",
+      "check": {"type": "qtplugin", "path": "plasma/kcms/systemsettings/kcm_kwinrules.so"},
+      "packages": {"gentoo": "kde-plasma/kwin", "arch": "kwin", "fedora": "kwin", "opensuse": null, "debian": "kwin-common"},
+      "notes": {"all": "Sólo se usa el KCM: no iniciar kwin_wayland/kwin_x11 ni sus servicios. Requiere Plasma 6 (no el módulo de Qt 5)."}
+    },
     "systemsettings": {
       "label": "Preferencias del sistema de KDE",
       "referenceVersion": "6.7.5",
