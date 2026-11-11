@@ -53,3 +53,24 @@ Hyprland todavía pertenece a la sesión anterior y no tiene plugins cargados: l
 ratón siguen pendientes. Se corrigieron dos errores QML detectados en el registro (import de
 GlobalStates en PanelState y listas de la bandeja aún sin inicializar), con prueba aislada real.
 El usuario autorizó cerrar sesión; después deberá autenticarse en SDDM.
+
+
+### Caída encontrada tras el reinicio del 2026-11-11
+
+El primer diagnóstico vio el plugin sin ventanas, pero Hyprland abortó después al mapear una.
+Los dos informes coinciden en `CBreezeShadow::getPositioningInfo`: `lock()` sobre una referencia
+débil a una barra de propietario único. Corregidos los cuatro usos en la sombra; prueba de
+regresión reproduce el aborto anterior y pasa con el arreglo. Cuatro pruebas del plugin correctas,
+binario recompilado e instalado atómicamente. Las sesiones recuperadas están en modo seguro y sin
+plugins. **El arranque completo con el arreglo y las comprobaciones de ratón siguen pendientes**;
+no se da F10 por validada por aquel diagnóstico inicial. No se vuelve a cerrar la sesión ni se
+carga el plugin en caliente para comprobarlo.
+
+### Validación del arreglo en un Hyprland anidado (2026-11-11)
+
+Sin cerrar la sesión recuperada ni cargar nada en ella: el plugin instalado se cargó en un Hyprland
+anidado desechable con la configuración real de Breeze y su propio `bwm-decorator`. Decoraciones
+KDE, maximizar/restaurar, cerrar, recargar, encajar, minimizar, «sin barra» y la caída del auxiliar
+funcionan sin caídas; la versión anterior, compilada aparte, reproduce el aborto de los informes.
+Detalle en `BWM_CONTEXT.md` §3.151. **Sigue pendiente** el inicio de sesión normal y esta lista
+completa con el ratón.

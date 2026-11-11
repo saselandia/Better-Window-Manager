@@ -41,6 +41,69 @@ class BreezebarsLogicTest(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
+    def test_shadow_positioning_with_unique_owned_bar(self):
+        """Run the real shadow positioning method with Hyprutils' actual ownership types.
+
+        Window decorations belong to UniquePtr. Calling lock() on their WeakPtr aborts
+        the compositor even before the remote helper has supplied a frame.
+        """
+        source = (PLUGIN / "barRemote.cpp").read_text()
+        method = source.split("SDecorationPositioningInfo CBreezeShadow::getPositioningInfo() {", 1)[1]
+        method = "SDecorationPositioningInfo CBreezeShadow::getPositioningInfo() {" + method.split(
+            "void CBreezeShadow::onPositioningReply", 1)[0]
+        harness = r'''
+#include <memory>
+#include <optional>
+#include <cassert>
+#include <hyprutils/memory/UniquePtr.hpp>
+#include <hyprutils/memory/WeakPtr.hpp>
+#include "DecoWire.hpp"
+using namespace Hyprutils::Memory;
+struct Vec { double x=0, y=0; };
+struct Extents { Vec topLeft, bottomRight; };
+struct SDecorationPositioningInfo { int policy=0, edges=0; bool reserved=false; Extents desiredExtents; };
+constexpr int DECORATION_POSITION_ABSOLUTE=0, DECORATION_EDGE_TOP=1,
+              DECORATION_EDGE_BOTTOM=2, DECORATION_EDGE_LEFT=4, DECORATION_EDGE_RIGHT=8;
+struct Geometry { BwmDeco::SExtents borders; };
+struct Shadow { BwmDeco::SExtents padding; };
+struct CHyprBar {
+    bool active=false;
+    struct { std::optional<Geometry> geometry; std::optional<Shadow> shadow; } m_remote;
+    bool remoteActive() { return active; }
+};
+struct CBreezeShadow {
+    CWeakPointer<CHyprBar> m_bar;
+    std::optional<BwmDeco::SExtents> m_positioned;
+    SDecorationPositioningInfo getPositioningInfo();
+};
+'''
+        checks = r'''
+int main() {
+    CUniquePointer<CHyprBar> owner(new CHyprBar);
+    CBreezeShadow shadow{owner};
+    auto empty=shadow.getPositioningInfo();
+    assert(!empty.reserved && empty.edges==15 && empty.desiredExtents.topLeft.y==0);
+    owner->active=true;
+    owner->m_remote.geometry=Geometry{{1,30,2,3}};
+    owner->m_remote.shadow=Shadow{{8,9,10,11}};
+    auto frame=shadow.getPositioningInfo();
+    assert(frame.desiredExtents.topLeft.x==9 && frame.desiredExtents.topLeft.y==39);
+    assert(frame.desiredExtents.bottomRight.x==12 && frame.desiredExtents.bottomRight.y==14);
+    assert(shadow.m_positioned && shadow.m_positioned->top==9);
+    owner = CUniquePointer<CHyprBar>{};
+    auto expired=shadow.getPositioningInfo();
+    assert(expired.desiredExtents.topLeft.y==0 && !shadow.m_positioned);
+}
+'''
+        path = self.tmp / "shadow_ownership.cpp"
+        path.write_text(harness + method + checks)
+        binary = self.tmp / "shadow_ownership"
+        result = subprocess.run([os.environ.get("CXX", "g++"), "-std=c++2b", "-I", str(PLUGIN),
+                                 str(path), "-lhyprutils", "-o", str(binary)], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        result = subprocess.run([str(binary)], capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_logic_without_helper(self):
         res = subprocess.run([str(self.binary)], capture_output=True, text=True, timeout=30)
         self.assertEqual(res.returncode, 0, res.stdout + res.stderr)

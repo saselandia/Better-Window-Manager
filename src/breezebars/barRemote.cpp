@@ -684,7 +684,9 @@ SDecorationPositioningInfo CBreezeShadow::getPositioningInfo() {
     info.edges    = DECORATION_EDGE_TOP | DECORATION_EDGE_BOTTOM | DECORATION_EDGE_LEFT | DECORATION_EDGE_RIGHT;
     info.reserved = false;
     m_positioned.reset();
-    if (auto bar = m_bar.lock(); bar && bar->remoteActive() && bar->m_remote.shadow) {
+    // Hyprland owns CHyprBar with a UniquePtr: its weak references cannot be locked.
+    // Keep a checked weak reference, as the global bars list does (single event thread).
+    if (auto bar = m_bar; bar && bar->remoteActive() && bar->m_remote.shadow) {
         // Las extensiones se cuentan desde el contenido: bordes del marco + relleno de la sombra
         const auto& b = bar->m_remote.geometry->borders;
         const auto& p = bar->m_remote.shadow->padding;
@@ -697,7 +699,7 @@ SDecorationPositioningInfo CBreezeShadow::getPositioningInfo() {
 void CBreezeShadow::onPositioningReply(const SDecorationPositioningReply&) {}
 
 std::optional<CBox> CBreezeShadow::outerBox() {
-    auto bar = m_bar.lock();
+    auto bar = m_bar;
     if (!bar || !bar->remoteActive() || !bar->m_remote.shadow)
         return std::nullopt;
     auto frame = bar->frameBoxGlobal(true);
@@ -708,7 +710,7 @@ std::optional<CBox> CBreezeShadow::outerBox() {
 }
 
 void CBreezeShadow::draw(PHLMONITOR, float const& a) {
-    auto bar = m_bar.lock();
+    auto bar = m_bar;
     auto PW  = m_window.lock();
     if (!bar || !Desktop::View::validMapped(PW) || !bar->remoteActive() || !bar->m_remote.shadow)
         return;
@@ -718,7 +720,7 @@ void CBreezeShadow::draw(PHLMONITOR, float const& a) {
 }
 
 void CBreezeShadow::renderPass(PHLMONITOR pMonitor, float a) {
-    if (auto bar = m_bar.lock())
+    if (auto bar = m_bar)
         bar->renderShadow(pMonitor, a);
 }
 
