@@ -44,6 +44,7 @@ enum ServerMessage : uint16_t {
     Reconfigured = 107, // string plugin, string tema
     Pong = 108,
     SectionUnderMouse = 109, // u32 Qt::WindowFrameSection (para mover o redimensionar)
+    PointerResult = 110,     // u32 kind, u32 accepted, u32 section, u32 button (respuesta a pulsar/soltar/rueda)
 };
 
 // Banderas de WindowState

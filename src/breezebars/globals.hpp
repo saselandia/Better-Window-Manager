@@ -44,6 +44,8 @@ struct SGlobalState {
     CHyprSignalListener       pRenderListener;
     CHyprSignalListener       pPreReloadListener;
     CHyprSignalListener       pReloadedListener;
+    CHyprSignalListener       pActiveListener;
+    CHyprSignalListener       pTitleListener;
     SP<SHyprCtlCommand>       csdCommand;
 
     struct {
@@ -53,7 +55,7 @@ struct SGlobalState {
         SP<Config::Values::CIntValue>    barPadding;
         SP<Config::Values::CIntValue>    barButtonPadding;
         SP<Config::Values::CBoolValue>   barBlur, barTitleEnabled, barPartOfWindow, barPrecedenceOverBorder, enabled, iconOnHover;
-        SP<Config::Values::CStringValue> barTextFont, barTextAlign, barButtonsAlignment, onDoubleClick;
+        SP<Config::Values::CStringValue> barTextFont, barTextAlign, barButtonsAlignment, onDoubleClick, onWheel;
     } config;
 };
 

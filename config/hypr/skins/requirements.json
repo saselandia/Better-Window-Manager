@@ -319,12 +319,12 @@
       "check": {"type": "path", "any": ["/usr/share/icons/breeze-dark/index.theme"]},
       "packages": {"gentoo": "kde-frameworks/breeze-icons", "arch": "breeze-icons", "fedora": "breeze-icon-theme", "opensuse": "breeze6-icons", "debian": "breeze-icon-theme"}
     },
-    "hyprbars-plasma": {
+    "breezebars": {
       "label": "Plugin breezebars de BWM (barras de título Breeze)",
       "why": "Barras de título Breeze y snapping con previsualización; debe estar compilado para el Hyprland que usas",
-      "check": {"type": "hyprland-plugin", "path": "config/hypr/plugins/hyprbars-plasma.so", "source": "src/hyprbars"},
+      "check": {"type": "hyprland-plugin", "path": "config/hypr/plugins/breezebars.so", "source": "src/breezebars"},
       "provider": "build",
-      "build": "cd {repo}/src/hyprbars && make clean && make && make install",
+      "build": "cd {repo}/src/breezebars && make clean && make && make install",
       "notes": {"all": "Se carga al iniciar sesión en Breeze. Nunca copies el .so a mano ni lo descargues ni lo recargues en caliente."}
     },
     "omarchy-titlebars": {

@@ -469,20 +469,32 @@ void Window::pointer(uint32_t kind, QPointF pos, uint32_t button, uint32_t butto
     }
     case Press:
     case Release: {
+        // Como KWin (Window::processDecorationButtonPress): la decoración recibe el evento sin
+        // aceptar; si un botón no lo acepta, es del compositor (mover, menú, doble clic).
         QMouseEvent event(kind == Press ? QEvent::MouseButtonPress : QEvent::MouseButtonRelease, pos, pos, pos,
                           Qt::MouseButton(button), Qt::MouseButtons(int(buttons)), mods);
+        event.setAccepted(false);
         QCoreApplication::sendEvent(m_decoration, &event);
+        sendPointerResult(kind, event.isAccepted(), button);
         break;
     }
     case Wheel: {
         QWheelEvent event(pos, pos, QPoint(), QPoint(0, int(angleDeltaY)), Qt::MouseButtons(int(buttons)), mods,
                           Qt::NoScrollPhase, false);
+        event.setAccepted(false);
         QCoreApplication::sendEvent(m_decoration, &event);
+        sendPointerResult(kind, event.isAccepted(), 0);
         break;
     }
     default:
         break;
     }
+}
+
+void Window::sendPointerResult(uint32_t kind, bool accepted, uint32_t button)
+{
+    const uint32_t section = m_decoration ? uint32_t(m_decoration->sectionUnderMouse()) : 0;
+    m_connection->send(Writer(PointerResult, m_id).u32(kind).u32(accepted ? 1 : 0).u32(section).u32(button).finish());
 }
 
 void Window::request(uint32_t kind, uint32_t arg, const QRectF &rect, const QString &text)
@@ -510,6 +522,8 @@ void Window::sendGeometry()
     msg.rect(m_decoration->titleBar());
     msg.u32(m_decoration->isOpaque() ? 1 : 0);
     msg.f64(outline.thickness()).u32(outline.color().rgba());
+    const KDecoration3::BorderRadius oRadius = outline.radius();
+    msg.f64(oRadius.topLeft()).f64(oRadius.topRight()).f64(oRadius.bottomRight()).f64(oRadius.bottomLeft());
     m_connection->send(msg.finish());
 }
 

@@ -266,7 +266,7 @@ hl.config({
     }
 })
 
--- plugin.breezebars (barras de título Breeze, src/hyprbars): habilitar en Plasma y deshabilitar en las
+-- plugin.breezebars (barras de título Breeze, src/breezebars): habilitar en Plasma y deshabilitar en las
 -- demás skins. Las barras de los workspaces flotantes de Retro son otro plugin, el de Omarchy
 -- (hyprbars), que configura skins/retro/hypr/workspace-modes.lua.
 if hl.plugin and hl.plugin.breezebars then

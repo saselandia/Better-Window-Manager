@@ -42,6 +42,8 @@
 #include <hyprland/src/managers/input/InputManager.hpp>
 #include <hyprland/src/desktop/state/FocusState.hpp>
 #include "globals.hpp"
+#include "DecoClient.hpp"
+#include "barRemote.hpp"
 
 extern "C" {
 #include <lua.h>
@@ -79,12 +81,15 @@ static void onNewWindow(PHLWINDOW window) {
     auto bar = makeUnique<CHyprBar>(window);
     g_pGlobalState->bars.emplace_back(bar);
     bar->m_self = bar;
+    WP<CHyprBar> weak = bar;
     HyprlandAPI::addWindowDecoration(PHANDLE, window, std::move(bar));
+    // Sombra de la decoración de KDE (sólo se dibuja con bwm-decorator)
+    HyprlandAPI::addWindowDecoration(PHANDLE, window, makeUnique<CBreezeShadow>(window, weak));
 }
 
 // hyprctl hyprbars-csd: qué ha detectado el plugin para cada ventana y por qué
 static std::string csdReport(eHyprCtlOutputFormat, std::string) {
-    std::string out;
+    std::string out = std::format("bwm-decorator: {}\n", g_pDecoClient ? g_pDecoClient->status() : "sin cliente");
     for (auto& w : Desktop::windowState()->windows()) {
         if (!w->m_isMapped)
             continue;
@@ -93,8 +98,12 @@ static std::string csdReport(eHyprCtlOutputFormat, std::string) {
         for (auto& b : g_pGlobalState->bars)
             if (b && b->getOwner() == w)
                 bar = !b->m_hidden;
-        out += std::format("{} | {} | barra={} | xdg={} kde={} | {}\n", w->m_class, w->m_title.substr(0, 40), bar ? "si" : "no", det.xdgRequested, det.kdeRequested,
-                           det.reason);
+        std::string kind = "-";
+        for (auto& b : g_pGlobalState->bars)
+            if (b && b->getOwner() == w && !b->m_hidden)
+                kind = b->remoteActive() ? "kde" : "plana";
+        out += std::format("{} | {} | barra={} ({}) | xdg={} kde={} | {}\n", w->m_class, w->m_title.substr(0, 40), bar ? "si" : "no", kind, det.xdgRequested,
+                           det.kdeRequested, det.reason);
     }
     return out;
 }
@@ -495,6 +504,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
         if (stage == RENDER_POST_WINDOWS)
             squareBarredWindowTops();
         renderSnapPreviewOverlay(stage);
+        renderDecorationToolTip(stage);
     });
 
     g_pGlobalState->config.barColor            = makeShared<Config::Values::CColorValue>("plugin:breezebars:bar_color", "Change the bar color", 0x88333333);
@@ -521,6 +531,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g_pGlobalState->config.enabled             = makeShared<Config::Values::CBoolValue>("plugin:breezebars:enabled", "Whether bars are enabled", true);
     g_pGlobalState->config.iconOnHover         = makeShared<Config::Values::CBoolValue>("plugin:breezebars:icon_on_hover", "Whether to use an icon on hover of the buttons", false);
     g_pGlobalState->config.onDoubleClick       = makeShared<Config::Values::CStringValue>("plugin:breezebars:on_double_click", "Action to execute on double click of the bar", "");
+    g_pGlobalState->config.onWheel             = makeShared<Config::Values::CStringValue>(
+        "plugin:breezebars:on_wheel", "Mouse wheel on the title bar, as kwinrc CommandTitlebarWheel (Raise/Lower, Maximize/Restore, Previous/Next Desktop, Nothing)", "Nothing");
 
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.barColor);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.textColor);
@@ -541,6 +553,21 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.enabled);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.iconOnHover);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.onDoubleClick);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.onWheel);
+
+    // Conexión con bwm-decorator (decoraciones de KDE). Nunca bloquea: si no está, barra plana.
+    g_pDecoClient = std::make_unique<CDecoClient>();
+    // Cambiar de ventana activa o de título repinta las barras (y así se envía el estado nuevo)
+    g_pGlobalState->pActiveListener = Event::bus()->m_events.window.active.listen([](PHLWINDOW, Desktop::eFocusReason) {
+        for (auto& b : g_pGlobalState->bars)
+            if (b)
+                b->damageEntire();
+    });
+    g_pGlobalState->pTitleListener = Event::bus()->m_events.window.title.listen([](PHLWINDOW w) {
+        for (auto& b : g_pGlobalState->bars)
+            if (b && b->getOwner() == w)
+                b->damageEntire();
+    });
 
     if (Config::mgr()->type() == Config::CONFIG_LEGACY)
         HyprlandAPI::addConfigKeyword(PHANDLE, "plugin:breezebars:breezebars-button", onNewButton, Hyprlang::SHandlerOptions{});
@@ -566,6 +593,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 }
 
 APICALL EXPORT void PLUGIN_EXIT() {
+    g_pDecoClient.reset();
+    clearDecorationToolTip();
     hideSnapPreview();
     closeDecorationDetection();
     for (auto& m : State::monitorState()->monitors())
@@ -573,6 +602,8 @@ APICALL EXPORT void PLUGIN_EXIT() {
 
     g_pHyprRenderer->m_renderPass.removeAllOfType("CBarPassElement");
     g_pHyprRenderer->m_renderPass.removeAllOfType("CSnapPreviewPassElement");
+    g_pHyprRenderer->m_renderPass.removeAllOfType("CBreezeShadowPassElement");
+    g_pHyprRenderer->m_renderPass.removeAllOfType("CBreezeToolTipPassElement");
     removeSquareTopElements();
 
     if (g_pGlobalState) {
@@ -583,6 +614,8 @@ APICALL EXPORT void PLUGIN_EXIT() {
         g_pGlobalState->pRenderListener.reset();
         g_pGlobalState->pPreReloadListener.reset();
         g_pGlobalState->pReloadedListener.reset();
+        g_pGlobalState->pActiveListener.reset();
+        g_pGlobalState->pTitleListener.reset();
         if (g_pGlobalState->csdCommand)
             HyprlandAPI::unregisterHyprCtlCommand(PHANDLE, g_pGlobalState->csdCommand);
 

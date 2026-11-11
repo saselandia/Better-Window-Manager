@@ -1,3 +1,50 @@
+# breezebars (BWM)
+
+Plugin de Hyprland de la skin Breeze de BWM, fork de hyprbars (hyprwm/hyprland-plugins,
+BSD-3-Clause, ver `LICENSE`). Se registra como `breezebars` (`plugin:breezebars:*`, reglas
+`breezebars:*`) para poder convivir con el de Omarchy de Retro, que se llama `hyprbars`.
+
+## Decoraciones de KDE (F6b de `docs/BREEZE_PLAN.md`)
+
+Las barras las dibuja **bwm-decorator** (`src/bwm-decorator`, protocolo en su `PROTOCOL.md`) con la
+decoración de KWin activa (Breeze, Aurorae, de terceros). El plugin es el pegamento:
+
+- `DecoClient.{hpp,cpp}`: socket `SOCK_SEQPACKET` no bloqueante, leído desde el bucle de eventos de
+  Wayland; envíos con `MSG_DONTWAIT` (nunca bloquea a Hyprland). Si el auxiliar no está, lo lanza
+  (`decorator.py start`, como mucho cada 15 s) y reintenta; mientras tanto, la barra plana de siempre.
+- `barRemote.{hpp,cpp}`: por ventana, estado (tamaño, escala, activa, maximizada, fijada, bordes de
+  pantalla, título, app) enviado sólo si cambia; bordes reservados en los cuatro lados
+  (`DECORATION_POSITION_ABSOLUTE`); una textura con el búfer del auxiliar copiado al recibirlo y
+  subida sólo en los rectángulos dañados; la última imagen se estira mientras llega la del tamaño
+  nuevo; contorno del tema; sombra de nueve trozos como KWin en una decoración aparte
+  (`CBreezeShadow`, sin reservar espacio); redondeo del contenido = radio inferior de la decoración
+  (prioridad mínima, las reglas del usuario mandan; arriba lo cuadra `SquareTop.cpp`).
+- Puntero como KWin: movimiento, pulsar, soltar y rueda van a la decoración sin aceptar; lo que
+  ningún botón acepta (`PointerResult`) es del compositor: mover desde la barra (con el snapping de
+  siempre), redimensionar desde los bordes que diga la decoración, doble clic (`on_double_click`,
+  de `kwinrc [Windows] TitlebarDoubleClickCommand`), rueda (`on_wheel`, de `kwinrc [MouseBindings]
+  CommandTitlebarWheel`) y menú de la ventana con el botón derecho.
+- Peticiones: cerrar, maximizar (izquierdo: ambos ejes; central: vertical; derecho: horizontal),
+  minimizar (`toggle-minimize.py` hasta F8), menú de la ventana por IPC a Quickshell
+  (`qs -c ii ipc call plasmaWindowMenu open <dirección> <x> <y>`, lo dibuja F9), tooltip (con los
+  colores `[Colors:Tooltip]` de `kdeglobals`) y fijar en todos los escritorios. Encima/debajo,
+  enrollar, ayuda contextual y menú de aplicación no existen en Hyprland: no hacen nada.
+- `DecoWire.hpp` y `DecoLogic.hpp` no dependen de Hyprland: los prueba
+  `tests/breezebars_wire_test.cpp` (vía `tests/test_breezebars.py`), también contra el auxiliar real.
+  La sombra sigue el algoritmo de `generateShadowQuads` de KWin v6.7.5 (`src/scene/shadowitem.cpp`),
+  reescrito, sin copiar su código.
+
+`hyprctl hyprbars-csd` dice si hay conexión con el auxiliar y, por ventana, si lleva barra de KDE
+(`kde`), la plana (`plana`) o ninguna.
+
+Compilar e instalar: `make && make install` (copia temporal + `mv` atómico a
+`config/hypr/plugins/breezebars.so`). Nunca `cp` sobre el `.so` cargado ni cargarlo/descargarlo en
+caliente: se carga al iniciar sesión en Breeze (`autostart.sh`).
+
+---
+
+Texto original de hyprbars:
+
 # hyprbars
 
 Adds simple title bars to windows.

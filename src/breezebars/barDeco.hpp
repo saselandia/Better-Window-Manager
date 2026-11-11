@@ -12,6 +12,7 @@
 #include <hyprland/src/helpers/time/Time.hpp>
 #include <hyprland/src/helpers/signal/Signal.hpp>
 #include "globals.hpp"
+#include "barRemote.hpp"
 
 #define private public
 #include <hyprland/src/managers/input/InputManager.hpp>
@@ -57,6 +58,21 @@ class CHyprBar : public IHyprWindowDecoration {
     bool                               m_hidden = false;
     bool                               inputIsValid();
     bool                               isDragging() const;
+
+    // bwm-decorator (F6b): la barra la dibuja la decoración de KDE activa; sin auxiliar, la plana de siempre
+    uint32_t                           remoteId() const {
+        return m_remote.id;
+    }
+    bool                               remoteActive();
+    void                               onRemoteReady();
+    void                               onRemoteLost();
+    void                               onRemoteReconfigured();
+    void                               onRemoteMessage(const BwmDeco::SMessage& msg, int fd);
+    const SRemoteState&                remote() const {
+        return m_remote;
+    }
+    std::optional<CBox>                frameBoxGlobal(bool forRender);
+    void                               renderShadow(PHLMONITOR pMonitor, float a);
 
   private:
     SBoxExtents                m_seExtents;
@@ -128,7 +144,35 @@ class CHyprBar : public IHyprWindowDecoration {
     // for dynamic updates
     int    m_iLastHeight = 0;
 
+    // bwm-decorator
+    SRemoteState        m_remote;
+    bool                m_bResizing = false;
+    Time::steady_tp     m_lastTitleClick;
+    CHyprSignalListener m_pAxisCallback;
+
+    void                syncRemote();
+    void                destroyRemote();
+    BwmDeco::SWindowState currentRemoteState();
+    void                updateRemotePositioning();
+    void                renderRemote(PHLMONITOR pMonitor, float a);
+    void                uploadRemoteTexture();
+    bool                remoteInputAllowed();
+    bool                remoteHit(const Vector2D& mouse, Vector2D* local);
+    bool                remoteMouseButton(Event::SCallbackInfo& info, const IPointer::SButtonEvent& e);
+    void                remoteMouseMove(const Vector2D& mouse);
+    void                onAxis(Event::SCallbackInfo& info, const IPointer::SAxisEvent& e);
+    void                handlePointerResult(const BwmDeco::SPointerResult& r);
+    void                handleRequest(const BwmDeco::SRequest& r);
+    void                runDoubleClickAction();
+    void                toggleAxisMaximize(BwmDeco::eMaximizeAxis axis);
+    void                showWindowMenu(const Vector2D& global);
+    void                spawnMinimize();
+    std::optional<CBox> contentBoxGlobal(bool forRender);
+    void                applyRoundingOverride(int value);
+    void                releaseRemoteBuffers();
+
     size_t getVisibleButtonCount(Config::INTEGER barButtonPadding, Config::INTEGER barPadding, const Vector2D& bufferSize, const float scale);
 
     friend class CBarPassElement;
+    friend class CBreezeShadow;
 };

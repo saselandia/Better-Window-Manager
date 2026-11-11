@@ -297,6 +297,7 @@ def kwin_settings():
         "focus": win.get("FocusPolicy", "ClickToFocus"),
         "placement": win.get("Placement", "Smart"),
         "doubleClick": win.get("TitlebarDoubleClickCommand", "Maximize"),
+        "wheel": w.get("MouseBindings", {}).get("CommandTitlebarWheel", "Nothing"),
         "borderSnap": int(number(win.get("BorderSnapZone"), 10, 0, 1000)),
         "windowSnap": int(number(win.get("WindowSnapZone"), 10, 0, 1000)),
         "buttonsLeft": decor.get("ButtonsOnLeft", "M"),

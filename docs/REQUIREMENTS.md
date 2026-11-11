@@ -260,7 +260,7 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 
 ## Plugins de barras de título (Breeze (Kde plasma) y Retro)
 
-Breeze usa `breezebars` (`src/hyprbars`, fork de hyprbars con decoraciones Breeze, detección de las
+Breeze usa `breezebars` (`src/breezebars`, fork de hyprbars con decoraciones Breeze, detección de las
 apps que traen su propia barra y snapping). Retro usa en sus workspaces flotantes el plugin de
 Omarchy sin cambios, omarchy-hyprland-titlebars (`src/omarchy-titlebars`), que se registra como
 `hyprbars` igual que en Omarchy. Tienen nombres distintos, así que pueden estar cargados a la vez.

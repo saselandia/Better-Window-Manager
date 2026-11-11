@@ -51,7 +51,7 @@ siendo el nombre del escritorio original que imita Breeze.
 
 ## 2. Reglas que NO se pueden romper
 
-1. **Plugins C++ de Hyprland** (`src/hyprbars`, `src/csd-minimize`): compilar con `-fno-gnu-unique` y desplegar
+1. **Plugins C++ de Hyprland** (`src/breezebars`, `src/csd-minimize`): compilar con `-fno-gnu-unique` y desplegar
    SOLO con `make install` (copia temporal + `mv` atómico). Nunca `cp` sobre un `.so` cargado ni
    `hyprctl plugin unload/load` en caliente → SIGBUS, crash, safe mode.
 2. **Nunca arrancar Quickshell (`qs -c ii`) dos veces.** Reinicios de mantenimiento con `bwm-theme-manager.py set <estilo-actual> --restart-shell`
@@ -66,7 +66,7 @@ siendo el nombre del escritorio original que imita Breeze.
    Incidente 2026-10-23: un initramfs con `amdgpu` cambió los conectores y superpuso los monitores.
 4. Campos `breezebars:*` de `hl.window_rule` (sólo existen con el plugin de Breeze cargado): dentro de
    `if hl.plugin and hl.plugin.breezebars then … end`, o sale «Your config has errors» en los otros estilos.
-   **Dos plugins de barras, separados:** Breeze = `breezebars` (`src/hyprbars`, `hyprbars-plasma.so`: Breeze, CSD,
+   **Dos plugins de barras, separados:** Breeze = `breezebars` (`src/breezebars`, `breezebars.so`: Breeze, CSD,
    snapping); Retro = el de Omarchy sin cambios (`src/omarchy-titlebars`, `omarchy-titlebars.so`, se registra como
    `hyprbars`). No mezcles funciones de uno en el otro sin que lo pida el usuario.
 5. Puede haber **otra sesión de IA trabajando a la vez**: en los commits añade sólo tus archivos (revisa el
@@ -146,7 +146,7 @@ siendo el nombre del escritorio original que imita Breeze.
 | Temas de Plasma en Breeze (esquemas, estilos, iconos, temas globales) | `skins/plasma/scripts/plasma-theme.py` (escribe kdeglobals/plasmarc/kwinrc con notificación; guarda y devuelve el kdeglobals de Breeze al cambiar de skin), `modules/plasma/theme/PlasmaTheme.qml` (lo lee el shell); plan del port en `docs/BREEZE_PLAN.md`, arquitectura en `docs/BREEZE_ARCH.md` |
 | Panel de Plasma (Breeze) | modules/plasma/panel (SVG, tareas, reloj, edición); bar.plasma; Loader por ruta sólo en Breeze en IllogicalImpulseFamily.qml. README de esa carpeta y docs/BREEZE_ARCH.md §10. Reinicio de mantenimiento para archivos nuevos. Bandeja/applets en modules/plasma/{tray,applets} (F5, ports y límites en sus README) |
 | Kickoff de Plasma (Breeze) | `modules/plasma/kickoff` (QML original de Plasma 6.7.5 con los modelos de Kicker; `Plasmoid.qml` sustituye al attached, `KickoffWindow.qml` al diálogo, menús con `PC3.Menu` porque QMenu no abre desde layer-shell); config `bar.plasma.kickoff`; traducciones con `plasma-theme.py translations`; prueba `tests/test_plasma_kickoff_ui.py` |
-| Decoraciones de KDE (Breeze) | `src/bwm-decorator` (auxiliar Qt/KDecoration3 fuera de Hyprland; `PROTOCOL.md` para el plugin), supervisor `skins/plasma/scripts/decorator.py build|start|stop|status`; pruebas `tests/test_bwm_decorator.py` |
+| Decoraciones de KDE (Breeze) | `src/bwm-decorator` (auxiliar Qt/KDecoration3 fuera de Hyprland; `PROTOCOL.md`), supervisor `skins/plasma/scripts/decorator.py build|start|stop|status`; plugin `src/breezebars` (`DecoClient`, `barRemote`; README); pruebas `tests/test_bwm_decorator.py`, `tests/test_breezebars.py`; `hyprctl hyprbars-csd` |
 | Configuración KDE ↔ BWM en Breeze | `skins/plasma/scripts/kde-config-bridge.py` (export/import/watch, ciclo enter/leave), `skins/plasma/hypr/kwin.lua`; inventario y autoridad en `docs/BREEZE_ARCH.md` §9. Gestores comunes avisan por `scripts/bwm_settings_hooks.py` (hook del manifiesto). Usuario Lua al final; nunca escribir `bwm/user/*` |
 | GTK 3 / Qt / flatpaks | `scripts/gtk-theme.py`, `scripts/bwm_icons.py` (qt6ct, `kdeglobals`, overrides) |
 | Barra Retro (la de Omarchy), sus paneles y plugins | `quickshell/ii/omarchyShell/` (copia de `shell/` de Omarchy: `OmarchyShell.qml` = su anfitrión, `plugins/{bar,panels,agents,services}`), `~/.config/omarchy/shell.json`, `omarchy-bar`/`omarchy-plugin-*`; `bwm-plugin.sh` traduce las órdenes de Ajustes → Barra/Plugins y del menú |

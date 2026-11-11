@@ -184,6 +184,33 @@ class BwmDecoratorTest(unittest.TestCase):
         self.assertEqual(pressed[0]["arg"], dc.LEFT_BUTTON)
         self.assertTrue(any(r["kind"] == "showToolTip" and r["text"] for r in w.requests), "sin tooltip")
 
+    def test_pointer_result_like_kwin(self):
+        """Pulsar la barra (no un botón): sin aceptar y sección 9 → el compositor mueve; un botón la acepta."""
+        h = self.helper(kdeglobals=scheme("BreezeDark"))
+        w = h.client.create(1, width=800, height=500)
+        h.client.wait_frame(1)
+        h.client.settle()
+        tx, ty, tw, th = w.geometry["titleBar"]
+        h.client.click(1, tx + tw * 0.3, ty + th / 2)
+        h.client.settle(0.2)
+        press = [r for r in w.results if r[0] == dc.PRESS]
+        self.assertEqual(press[-1][:3], (dc.PRESS, 0, 9), w.results)
+        w.results.clear()
+        x, request = self.find_button(h, 1, from_right=True)
+        self.assertEqual(request and request["kind"], "close")
+        self.assertIn((dc.PRESS, 1), [r[:2] for r in w.results])
+        # Debajo del marco, en la franja sólo para redimensionar: sección inferior
+        left, top, right, bottom = w.geometry["borders"]
+        extra = w.geometry["resizeOnly"][3]
+        self.assertGreater(extra + bottom, 0, w.geometry)
+        w.results.clear()
+        y = top + 500 + bottom + max(extra, 1) / 2
+        h.client.pointer(1, dc.LEAVE, -1, -1)
+        h.client.pointer(1, dc.MOTION, 400, y)
+        h.client.pointer(1, dc.PRESS, 400, y, dc.LEFT_BUTTON, dc.LEFT_BUTTON)
+        h.client.settle(0.2)
+        self.assertEqual([r[2] for r in w.results if r[0] == dc.PRESS], [7], w.results)
+
     def test_button_layout_from_kwinrc(self):
         h = self.helper(kdeglobals=scheme("BreezeDark"), left="XIA", right="")
         w = h.client.create(1)

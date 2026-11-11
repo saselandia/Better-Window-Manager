@@ -96,7 +96,7 @@ sin mezclar. Así una skin nueva o un cambio en una no rompe las demás.
 | Selector de fondos (Alt+W) | `hypr/scripts/wallpaper-picker.sh` elige la skin | default: `modules/ii/wallpaperSelector`; Retro: `bar/omarchy/image-picker` + `hypr/skins/retro/scripts/wallpaper-picker.py` (fondos del tema, extras de Omarchy y `~/Pictures/Wallpapers`); Breeze: rofi |
 | Colores de Hyprland y apps | `hypr/modules/*.lua`, `matugen/` | `colors.lua` (default (end-4)), `retro_colors.lua` + `hypr/omarchy/` (Retro), `plasma_colors.lua` (Plasma) |
 | Sincronización de ajustes | `scripts/bwm_settings_hooks.py` (hook del manifiesto, llamado por los gestores comunes) | Breeze: `skins/plasma/scripts/kde-config-bridge.py` y `hypr/kwin.lua`; autoridad y límites en `docs/BREEZE_ARCH.md` §9 |
-| Plugins de Hyprland | — | `src/hyprbars` (Plasma) |
+| Plugins de Hyprland | — | `src/breezebars` (Plasma) |
 
 En Retro, Configuración forma parte del menú de Omarchy: el catálogo y los editores viven en
 `modules/ii/omarchyMenu/omarchy/settings/`. `SettingsPage.qml` aloja los controles compartidos

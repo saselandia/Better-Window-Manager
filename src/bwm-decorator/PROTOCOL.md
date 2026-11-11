@@ -54,6 +54,14 @@ capturas.
 `angleDeltaY` (120 = un paso, como Qt). El doble clic en la barra **no** lo trata la decoración: es
 del compositor (`kwinrc [Windows] TitlebarDoubleClickCommand`).
 
+Como en KWin, la decoración recibe pulsar, soltar y rueda **sin aceptar**; si ningún botón suyo los
+acepta, son del compositor. El auxiliar responde a cada uno con `PointerResult`: `accepted` = 1 si
+la decoración lo usó (un botón), y `section` = la sección bajo el puntero en ese momento
+(`Qt::WindowFrameSection`: 0 ninguna, 1 izquierda, 2 arriba-izquierda, 3 arriba, 4 arriba-derecha,
+5 derecha, 6 abajo-derecha, 7 abajo, 8 abajo-izquierda, 9 barra de título). Con una pulsación no
+aceptada el compositor mueve (barra), redimensiona (bordes), abre el menú (botón derecho) o aplica la
+acción de doble clic o de rueda de `kwinrc`.
+
 ## Auxiliar → cliente
 
 | Tipo | Nombre | Carga útil |
@@ -67,11 +75,14 @@ del compositor (`kwinrc [Windows] TitlebarDoubleClickCommand`).
 | 107 | Reconfigured | cadena plugin, cadena tema (otro plugin o tema: las decoraciones se recrean y llega Geometry y Frame nuevos) |
 | 108 | Pong | — |
 | 109 | SectionUnderMouse | `u32 Qt::WindowFrameSection` bajo el puntero (barra de título = mover, bordes = redimensionar) |
+| 110 | PointerResult | `u32 kind`, `u32 accepted`, `u32 section`, `u32 button`: respuesta a cada pulsar, soltar y rueda |
 
 **Geometry**, cada vez que cambia: `f64 left, top, right, bottom` (bordes del marco),
 `f64 left, top, right, bottom` (bordes **sólo para redimensionar**, fuera del marco visible),
 `f64 topLeft, topRight, bottomRight, bottomLeft` (radios de las esquinas), `f64 x, y, w, h` (barra de
-título), `u32 opaque`, `f64` grosor del contorno, `u32` color del contorno (ARGB).
+título), `u32 opaque`, `f64` grosor del contorno, `u32` color del contorno (ARGB),
+`f64 topLeft, topRight, bottomRight, bottomLeft` (radios del contorno). El contorno
+(`KDecoration3::BorderOutline`) lo dibuja el compositor por fuera del marco, como KWin.
 
 **Frame**: `u32 serial`, `u32 buffer` (0 o 1), `u32 hasFd`, `f64 scale`, `u32 width`, `u32 height`,
 `u32 stride` (bytes), `u32 capacity` (tamaño del memfd); luego 4 piezas (arriba, abajo, izquierda,

@@ -251,14 +251,14 @@ fi
 # ==============================================================================
 if [[ ${#SKINS[@]} -eq 0 || " ${SKINS[*]} " == *" plasma "* ]]; then
     PLUGIN_STATE="$(python3 "$REQUIREMENTS" check --skin plasma --json 2>/dev/null \
-        | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next((r["status"] for s in d["skins"] for r in s["requires"] if r["id"]=="hyprbars-plasma"), ""))' 2>/dev/null || true)"
+        | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next((r["status"] for s in d["skins"] for r in s["requires"] if r["id"]=="breezebars"), ""))' 2>/dev/null || true)"
     if [[ "$PLUGIN_STATE" == "build" ]]; then
-        print_step "6. Compilando el plugin hyprbars para tu versión de Hyprland..."
+        print_step "6. Compilando el plugin breezebars para tu versión de Hyprland..."
         # make install instala con un renombrado atómico: nunca sobrescribe el .so cargado
-        if (cd "$SCRIPT_DIR/src/hyprbars" && make clean >/dev/null && make >/dev/null && make install >/dev/null); then
+        if (cd "$SCRIPT_DIR/src/breezebars" && make clean >/dev/null && make >/dev/null && make install >/dev/null); then
             print_success "Plugin compilado. Se carga al volver a iniciar sesión en la skin KDE Plasma."
         else
-            print_warn "No se pudo compilar. Repítelo con: cd $SCRIPT_DIR/src/hyprbars && make && make install"
+            print_warn "No se pudo compilar. Repítelo con: cd $SCRIPT_DIR/src/breezebars && make && make install"
         fi
     fi
 fi

@@ -5,9 +5,9 @@ CXXFLAGS += -shared -fPIC -fno-gnu-unique -std=c++2b -Wno-narrowing
 INCLUDES = `pkg-config --cflags pixman-1 libdrm hyprland libinput libudev wayland-server xkbcommon lua5.4`
 LIBS = -lxcb
 
-SRC = main.cpp barDeco.cpp BarPassElement.cpp CSDDetect.cpp SquareTop.cpp
-HEADERS = $(wildcard *.hpp)
-TARGET = hyprbars.so
+SRC = main.cpp barDeco.cpp barRemote.cpp DecoClient.cpp BarPassElement.cpp CSDDetect.cpp SquareTop.cpp
+HEADERS = $(wildcard *.hpp) ../bwm-decorator/protocol.h
+TARGET = breezebars.so
 
 all: $(TARGET)
 
@@ -20,7 +20,7 @@ $(TARGET): $(SRC) $(HEADERS)
 # directorio sin tocar el inodo en uso. Hyprland sigue con el plugin viejo hasta
 # reiniciar la sesión (no hacer unload/load en caliente: también provoca segfaults).
 PLUGIN_DIR ?= ../../config/hypr/plugins
-INSTALL_NAME ?= hyprbars-plasma.so
+INSTALL_NAME ?= breezebars.so
 
 install: $(TARGET)
 	install -m755 $(TARGET) $(PLUGIN_DIR)/.$(INSTALL_NAME).tmp

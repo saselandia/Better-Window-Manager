@@ -177,6 +177,7 @@ public:
 
     void setState(const WindowState &state);
     void pointer(uint32_t kind, QPointF pos, uint32_t button, uint32_t buttons, double angleDeltaY);
+    void sendPointerResult(uint32_t kind, bool accepted, uint32_t button);
     void recreateDecoration();
     void request(uint32_t kind, uint32_t arg = 0, const QRectF &rect = {}, const QString &text = {});
 

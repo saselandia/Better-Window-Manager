@@ -44,6 +44,11 @@ if hl.plugin and hl.plugin.breezebars then
         bar_buttons_alignment = on_left and "left" or "right",
         on_double_click = actions[k.doubleClick or "Maximize"] or "",
     } } })
+    -- Rueda sobre la barra (kwinrc [MouseBindings] CommandTitlebarWheel); la interpreta el plugin.
+    -- Sólo con un breezebars que la conozca (F6b): una opción desconocida daría error de configuración.
+    if hl.plugin.breezebars.add_button and k.wheel then
+        pcall(hl.config, { plugin = { breezebars = { on_wheel = k.wheel } } })
+    end
     if hl.plugin.breezebars.add_button then
         local definitions = {
             X = { "close", actions.Close, "0xffda4453" },

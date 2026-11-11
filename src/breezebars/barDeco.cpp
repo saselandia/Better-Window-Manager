@@ -31,6 +31,7 @@
 
 #include "globals.hpp"
 #include "BarPassElement.hpp"
+#include "DecoClient.hpp"
 #include <hyprland/src/protocols/XDGShell.hpp>
 #include <hyprland/src/xwayland/XSurface.hpp>
 
@@ -134,6 +135,9 @@ CHyprBar::CHyprBar(PHLWINDOW pWindow) : IHyprWindowDecoration(pWindow) {
     // move events
     m_pTouchMoveCallback = Event::bus()->m_events.input.touch.motion.listen([&](ITouch::SMotionEvent e, Event::SCallbackInfo& info) { onTouchMove(info, e); });
     m_pMouseMoveCallback = Event::bus()->m_events.input.mouse.move.listen([&](Vector2D c, Event::SCallbackInfo& info) { onMouseMove(c); });
+    m_pAxisCallback      = Event::bus()->m_events.input.mouse.axis.listen([&](IPointer::SAxisEvent e, Event::SCallbackInfo& info) { onAxis(info, e); });
+    if (g_pDecoClient)
+        m_remote.id = g_pDecoClient->newId();
 
     Animation::mgr()->createAnimation(configColor(g_pGlobalState->config.barColor->value()), m_cRealBarColor, Config::animationTree()->getAnimationPropertyConfig("border"),
                                          pWindow, AVARDAMAGE_NONE);
@@ -163,6 +167,16 @@ CHyprBar::CHyprBar(PHLWINDOW pWindow) : IHyprWindowDecoration(pWindow) {
 }
 
 CHyprBar::~CHyprBar() {
+    // Sin recolocar nada: la ventana puede estar destruyéndose
+    if (m_remote.created && g_pDecoClient)
+        g_pDecoClient->send(BwmDeco::destroyWindow(m_remote.id));
+    releaseRemoteBuffers();
+    if (m_bResizing && g_layoutManager && g_layoutManager->dragController()->target())
+        g_layoutManager->endDragTarget();
+    if (m_remote.roundingOverride >= 0) {
+        if (auto PW = m_pWindow.lock(); PW && PW->m_ruleApplicator)
+            PW->m_ruleApplicator->rounding().unset(Desktop::Types::PRIORITY_LAYOUT);
+    }
     if (m_bDraggingCSD && m_bDragInitiated) {
         Pointer::Cursor::overrideController->unsetOverride(Pointer::Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
     }
@@ -176,6 +190,16 @@ SDecorationPositioningInfo CHyprBar::getPositioningInfo() {
     const auto                 PRECEDENCE = g_pGlobalState->config.barPrecedenceOverBorder->value();
 
     SDecorationPositioningInfo info;
+    if (remoteActive()) {
+        // Los bordes que pide la decoración de KDE, en los cuatro lados, reservados como el marco de KWin
+        const auto& b       = m_remote.geometry->borders;
+        info.policy         = DECORATION_POSITION_ABSOLUTE;
+        info.edges          = DECORATION_EDGE_TOP | DECORATION_EDGE_BOTTOM | DECORATION_EDGE_LEFT | DECORATION_EDGE_RIGHT;
+        info.priority       = PRECEDENCE ? 10005 : 5000;
+        info.reserved       = true;
+        info.desiredExtents = {{b.left, b.top}, {b.right, b.bottom}};
+        return info;
+    }
     info.policy         = m_hidden ? DECORATION_POSITION_ABSOLUTE : DECORATION_POSITION_STICKY;
     info.edges          = DECORATION_EDGE_TOP;
     info.priority       = PRECEDENCE ? 10005 : 5000;
@@ -244,6 +268,13 @@ bool CHyprBar::inputIsValid() {
 
 
 void CHyprBar::onMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent e) {
+    if (!m_hidden && (remoteActive() || m_remote.buttons)) {
+        if (remoteMouseButton(info, e))
+            return;
+        // Con la decoración de KDE, la barra plana no recibe nada (sus botones no están ahí)
+        if (remoteActive() && !m_bDraggingThis && !m_bDragPending)
+            return;
+    }
     if (e.button != BTN_LEFT)
         return;
 
@@ -303,6 +334,8 @@ void CHyprBar::onTouchUp(Event::SCallbackInfo& info, ITouch::SUpEvent e) {
 }
 
 void CHyprBar::onMouseMove(Vector2D coords) {
+    if (!m_hidden && remoteActive())
+        remoteMouseMove(g_pInputManager->getMouseCoordsInternal());
     if (m_hidden) {
         if (!m_bDraggingCSD)
             return;
@@ -399,7 +432,7 @@ void CHyprBar::onMouseMove(Vector2D coords) {
     }
 
     // ensure proper redraws of button icons on hover when using hardware cursors
-    if (!m_hidden && g_pGlobalState->config.iconOnHover->value())
+    if (!m_hidden && !remoteActive() && g_pGlobalState->config.iconOnHover->value())
         damageOnButtonHover();
 
     if (!m_bDragPending || m_bTouchEv || !Desktop::View::validMapped(m_pWindow) || m_touchId != 0)
@@ -828,6 +861,9 @@ void CHyprBar::renderBarButtonsText(CBox* barBox, const float scale, const float
 void CHyprBar::draw(PHLMONITOR pMonitor, const float& a) {
     const auto ENABLED = g_pGlobalState->config.enabled->value();
 
+    syncRemote();
+    updateRemotePositioning();
+
     if (m_bLastEnabledState != ENABLED) {
         m_bLastEnabledState = ENABLED;
         g_pDecorationPositioner->repositionDeco(this);
@@ -847,6 +883,11 @@ void CHyprBar::draw(PHLMONITOR pMonitor, const float& a) {
 
 void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
     const auto  PWINDOW = m_pWindow.lock();
+
+    if (remoteActive()) {
+        renderRemote(pMonitor, a);
+        return;
+    }
 
     static auto PENABLEBLURGLOBAL = CConfigValue<Config::BOOL>("decoration:blur:enabled");
     const auto  BARCOLOR          = g_pGlobalState->config.barColor->value();
@@ -1009,6 +1050,13 @@ void CHyprBar::onConfigReloaded() {
 }
 
 void CHyprBar::damageEntire() {
+    if (remoteActive()) {
+        if (auto frame = frameBoxGlobal(true)) {
+            const double outline = m_remote.geometry->outlineThickness + 2;
+            g_pHyprRenderer->damageBox(frame->copy().expand(outline));
+        }
+        return;
+    }
     g_pHyprRenderer->damageBox(assignedBoxGlobal());
 }
 
@@ -1027,6 +1075,14 @@ uint64_t CHyprBar::getDecorationFlags() {
 CBox CHyprBar::assignedBoxGlobal() {
     if (!Desktop::View::validMapped(m_pWindow))
         return {};
+
+    if (remoteActive()) {
+        // La barra de título de la decoración: la franja de arriba del marco
+        auto frame = frameBoxGlobal(false);
+        if (!frame)
+            return {};
+        return CBox{frame->x, frame->y, frame->w, m_remote.geometry->borders.top};
+    }
 
     CBox box = m_bAssignedBox;
     box.translate(g_pDecorationPositioner->getEdgeDefinedPoint(DECORATION_EDGE_TOP, m_pWindow.lock()));

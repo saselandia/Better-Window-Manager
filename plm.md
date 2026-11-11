@@ -21,7 +21,7 @@ Documento sintético para traspaso y continuidad entre agentes de IA.
 * **Idioma:** Español en toda comunicación, comentarios y documentación.
 * **Monitores:** LG UltraFine 4K (`1920x0`, 60 Hz) y HP X24ih 1080p@144 (`0x1080`, principal). **Identificar SIEMPRE por `desc:`**, jamás por `DP-N` (el orden de inicialización de GPU NVIDIA / AMD iGPU altera los conectores).
 * **Arranque y Kernel:** `/boot` en disco cifrado con LUKS y llave en initramfs (`dracut --hostonly`). **NUNCA ejecutar `grub-mkconfig`** (la línea `rd.luks...` no está en `/etc/default/grub`). Temas SDDM/Plymouth solo mediante `config/hypr/scripts/install-boot-theme.sh`.
-* **Plugins C++ de Hyprland (`src/hyprbars`, `src/csd-minimize`):**
+* **Plugins C++ de Hyprland (`src/breezebars`, `src/csd-minimize`):**
   - Compilar con `-fno-gnu-unique`.
   - Desplegar **ÚNICAMENTE con `make install`** (copia temporal + `mv` atómico).
   - **NUNCA `cp` directo sobre un `.so` cargado** ni `hyprctl plugin unload/load` en caliente (provoca SIGBUS, cuelgue y *safe mode*).
@@ -39,7 +39,7 @@ Documento sintético para traspaso y continuidad entre agentes de IA.
 * **Compositor:** Hyprland 0.55.4 (`v0.55.4`, commit `a0136d8c`), configurado enteramente en Lua (`config/hypr/hyprland.lua` y `modules/*.lua`).
 * **Shell Gráfico:** Quickshell (Qt 6 / QML / C++), configuración `ii` (derivada de illogical-impulse de end-4).
 * **Plugins C++ Propios:**
-  - `hyprbars-plasma`: Soporte de barras de ventana Breeze con detección de CSD nativa (`CSDDetect.cpp` vía `xdg-decoration` y `_MOTIF_WM_HINTS`), y renderizado de previsualización traslúcida de snapping (`SnapHelper.hpp`, `CRenderPass`).
+  - `breezebars`: Soporte de barras de ventana Breeze con detección de CSD nativa (`CSDDetect.cpp` vía `xdg-decoration` y `_MOTIF_WM_HINTS`), y renderizado de previsualización traslúcida de snapping (`SnapHelper.hpp`, `CRenderPass`).
   - `csd-minimize`: Minimizado de ventanas para integración con paneles.
 * **Motor de Tematización:**
   - `bwm-theme-manager.py`: Orquestador de estilos, perfiles de Quickshell (`config-<estilo>.json`) y recargas.
@@ -74,7 +74,7 @@ Documento sintético para traspaso y continuidad entre agentes de IA.
   - `modules/settings/`: Páginas de configuración (`ThemesConfig.qml`, `PluginsConfig.qml`, `About.qml`, `addons/`).
   - `modules/ii/bar/RetroBarContent.qml`: Barra Retro con widgets fijos y plugins dinámicos.
   - `modules/ii/plasma*/`: Componentes visuales y applets del estilo Plasma.
-* `src/hyprbars/`: Código C++ del plugin de barras Breeze y snapping.
+* `src/breezebars/`: Código C++ del plugin de barras Breeze y snapping.
 * Enlaces externos en `~/.config`: `hypr`, `quickshell`, `illogical-impulse`, `rofi`, `kitty`, `matugen`, `swaync`, `gtk-3.0`, `gtk-4.0`, `xdg-desktop-portal`, `nvim` apuntan directamente a este repositorio.
 
 ---
@@ -134,7 +134,7 @@ omarchy-theme-set tokyo-night
 omarchy-theme-current
 
 # Compilación segura de plugins C++ (aplican al reiniciar sesión)
-cd src/hyprbars && make clean && make && make install
+cd src/breezebars && make clean && make && make install
 
 # Diagnóstico de decoraciones CSD en Plasma
 hyprctl hyprbars-csd

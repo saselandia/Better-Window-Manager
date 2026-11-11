@@ -20,6 +20,7 @@ HEADER = struct.Struct("<IHHII")
 
 HELLO, CREATE, UPDATE, DESTROY, POINTER, PING = 1, 2, 3, 4, 5, 6
 HELLO_ACK, GEOMETRY, FRAME, SHADOW, REQUEST, ERROR, RECONFIGURED, PONG, SECTION = range(101, 110)
+POINTER_RESULT = 110
 
 ACTIVE, MAX_H, MAX_V, ALL_DESKTOPS, KEEP_ABOVE, KEEP_BELOW, SHADED = (1 << i for i in range(7))
 CLOSEABLE, MAXIMIZEABLE, MINIMIZEABLE, MOVEABLE, RESIZEABLE, SHADEABLE = (1 << i for i in range(7, 13))
@@ -77,6 +78,7 @@ class Window:
     shadow: dict | None = None
     requests: list = field(default_factory=list)
     sections: list = field(default_factory=list)
+    results: list = field(default_factory=list)  # PointerResult: (kind, accepted, section, button)
     buffers: dict = field(default_factory=dict)  # índice → mmap
 
 
@@ -178,9 +180,12 @@ class Client:
         elif kind == GEOMETRY and w:
             v = r.take("d" * 16)
             w.geometry = {"borders": v[0:4], "resizeOnly": v[4:8], "radius": v[8:12], "titleBar": v[12:16],
-                          "opaque": bool(r.take("I")), "outline": (r.take("d"), r.take("I"))}
+                          "opaque": bool(r.take("I")), "outline": (r.take("d"), r.take("I")),
+                          "outlineRadius": r.take("dddd")}
         elif kind == SECTION and w:
             w.sections.append(r.take("I"))
+        elif kind == POINTER_RESULT and w:
+            w.results.append(r.take("IIII"))
         elif kind == REQUEST and w:
             k, arg = r.take("II")
             rect = r.take("dddd")

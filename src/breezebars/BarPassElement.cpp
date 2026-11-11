@@ -15,6 +15,8 @@ std::vector<UP<IPassElement>> CBarPassElement::draw() {
 }
 
 bool CBarPassElement::needsLiveBlur() {
+    if (data.deco->remoteActive())
+        return false;
     static auto PENABLEBLURGLOBAL = CConfigValue<Config::BOOL>("decoration:blur:enabled");
 
     CHyprColor  color = data.deco->m_bForcedBarColor.value_or(CHyprColor{static_cast<uint64_t>(g_pGlobalState->config.barColor->value())});
@@ -25,6 +27,12 @@ bool CBarPassElement::needsLiveBlur() {
 }
 
 std::optional<CBox> CBarPassElement::boundingBox() {
+    if (data.deco->remoteActive()) {
+        auto frame = data.deco->frameBoxGlobal(true);
+        if (!frame)
+            return std::nullopt;
+        return frame->translate(-g_pHyprRenderer->m_renderData.pMonitor->m_position).expand(4);
+    }
     // Temporary fix: expand the bar bb a bit, otherwise occlusion gets too aggressive.
     return data.deco->assignedBoxGlobal().translate(-g_pHyprRenderer->m_renderData.pMonitor->m_position).expand(10);
 }

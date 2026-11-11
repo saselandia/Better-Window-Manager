@@ -69,7 +69,7 @@
     ],
     "hyprland": [
       "config/hypr/modules/plasma_colors.lua",
-      "config/hypr/plugins/hyprbars-plasma.so",
+      "config/hypr/plugins/breezebars.so",
       "config/hypr/skins/plasma/hypr/animations.lua",
       "config/hypr/skins/plasma/hypr/misc.lua",
       "config/hypr/skins/plasma/hypr/kwin.lua",
@@ -84,7 +84,7 @@
       "config/hypr/skins/plasma/scripts/plasma_palette.py",
       "config/hypr/scripts/quick-tile.py",
       "config/hypr/scripts/toggle-minimize.py",
-      "src/hyprbars",
+      "src/breezebars",
       "src/bwm-decorator",
       "config/hypr/skins/plasma/scripts/decorator.py"
     ]
@@ -92,7 +92,7 @@
   "requires": [
     "hyprpolkitagent",
     "breeze-icons",
-    "hyprbars-plasma",
+    "breezebars",
     "ksvg",
     "libplasma",
     "kirigami",

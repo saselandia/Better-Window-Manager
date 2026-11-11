@@ -10,7 +10,7 @@ all: $(TARGET)
 $(TARGET): $(SRC)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(INCLUDES) $^ -o $@
 
-# Despliegue atómico (ver src/hyprbars/Makefile): cp sobre un .so cargado = SIGBUS.
+# Despliegue atómico (ver src/breezebars/Makefile): cp sobre un .so cargado = SIGBUS.
 PLUGIN_DIR ?= ../../config/hypr/plugins
 
 install: $(TARGET)
