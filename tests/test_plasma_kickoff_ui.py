@@ -38,24 +38,30 @@ import qs.modules.plasma.kickoff as K
 ShellRoot {
     id: shell
     property var results: ({})
+    readonly property var kickoff: loader.item
     function report(key, value) { results[key] = value; console.log("KICKOFFTEST " + JSON.stringify({ key: key, value: value })); }
 
     PanelWindow {
         id: win
         screen: Quickshell.screens.find(s => s.name === "@SCREEN@") ?? Quickshell.screens[0]
         anchors { top: true; left: true }
-        implicitWidth: kickoff.implicitWidth
-        implicitHeight: kickoff.implicitHeight
+        implicitWidth: kickoff ? kickoff.implicitWidth : 700
+        implicitHeight: kickoff ? kickoff.implicitHeight : 500
         color: "#202326"
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.namespace: "bwm-test-kickoff"
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
-        K.Kickoff {
-            id: kickoff
+        // Asíncrono, como el PanelLoader del shell: una propiedad requerida sin dar aborta la
+        // creación sólo así (de forma síncrona es un aviso)
+        Loader {
+            id: loader
             anchors.fill: parent
+            asynchronous: true
             focus: true
+            sourceComponent: K.Kickoff { focus: true }
+            onStatusChanged: if (status === Loader.Error) shell.report("loaderError", true)
         }
 
         TestCase {
@@ -92,7 +98,7 @@ ShellRoot {
         id: tick
         interval: 400
         repeat: true
-        running: true
+        running: loader.status === Loader.Ready
         onTriggered: shell.next()
     }
 
@@ -253,6 +259,8 @@ class PlasmaKickoffUiTest(unittest.TestCase):
         cls.tmp.cleanup()
 
     def test_models_load(self):
+        self.assertNotIn("loaderError", self.results)
+        self.assertNotIn("was not initialized", self.log)
         self.assertTrue(self.results.get("done"), self.log[-2000:])
         self.assertGreater(self.results["rootRows"], 3)
         self.assertGreater(self.results["allApps"], 0)

@@ -212,6 +212,10 @@ Item {
         description: "asdf"
         action: null
         indicator: null
+        // BWM: propiedad requerida que el original no da. Plasma crea esto de forma síncrona y sólo
+        // avisa; en la carga asíncrona del Loader de Quickshell aborta la creación de Kickoff (y al
+        // destruir lo ya creado, KSvg tiraba el shell)
+        isMultilineText: false
     }
 
     // Used to show smaller Kickoff on small screens

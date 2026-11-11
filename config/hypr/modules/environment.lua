@@ -67,3 +67,11 @@ do
     if skin == "plasma" then table.insert(dirs, 1, kdedefaults) end
     hl.env("XDG_CONFIG_DIRS", table.concat(dirs, ":"))
 end
+
+-- Como startplasma: el menú de aplicaciones de Plasma (plasma-applications.menu, de plasma-workspace).
+-- Sin él, Kickoff (modelos de Kicker) no tiene categorías. Va en todas las skins si existe: KService
+-- guarda la caché (ksycoca) en el mismo archivo sea cual sea el prefijo, así que un proceso de otra
+-- skin sin él la reconstruiría sin categorías. Las otras skins no usan menús XDG.
+if exists("/etc/xdg/menus/plasma-applications.menu") then
+    hl.env("XDG_MENU_PREFIX", "plasma-")
+end

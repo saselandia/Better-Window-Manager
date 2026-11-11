@@ -12,7 +12,8 @@ cambiar archivos nuevos del módulo hace falta un reinicio de mantenimiento del 
 No se sustituye ningún modelo: son los de `org.kde.plasma.private.kicker` (plasma-workspace),
 que funcionan fuera de Plasma una vez que se llama a `rootModel.refresh()`, como hace el original.
 
-- Aplicaciones y categorías: `Kicker.RootModel` sobre KService y el menú `plasma-applications.menu`.
+- Aplicaciones y categorías: `Kicker.RootModel` sobre KService y el menú `plasma-applications.menu`
+  (necesita `XDG_MENU_PREFIX=plasma-`, que pone `hypr/modules/environment.lua` como startplasma).
 - Búsqueda: `Kicker.RunnerModel` (KRunner con los runners instalados: aplicaciones, ajustes,
   archivos recientes, lugares, calculadora, órdenes…).
 - Favoritos y recientes: KActivities (`kactivitymanagerd`), en el formato de Plasma, cliente
