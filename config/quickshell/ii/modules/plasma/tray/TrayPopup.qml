@@ -77,7 +77,7 @@ PopupWindow {
                     model:trayWindow.tray.hiddenApplets
                     PC3.ToolButton { required property var modelData;Layout.fillWidth:true;Layout.preferredHeight:64;icon.name:modelData.icon;text:modelData.title;display:PC3.AbstractButton.TextBesideIcon;onClicked:trayWindow.tray.openApplet(modelData.id) }
                 }
-                PC3.Label { visible:trayWindow.tray.hiddenItems.length+trayWindow.tray.hiddenApplets.length===0;text:qsTr("No hidden items") }
+                PC3.Label { visible:(trayWindow.tray.hiddenItems?.length??0)+(trayWindow.tray.hiddenApplets?.length??0)===0;text:qsTr("No hidden items") }
             }
         }
         Loader {

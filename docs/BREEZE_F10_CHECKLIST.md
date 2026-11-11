@@ -45,3 +45,11 @@ el ratón. F6b–F9 tienen también sus comprobaciones pendientes; consultar sus
 Límites y opt-out para el Lua del usuario: [KWIN_RULES.md](../config/hypr/skins/plasma/scripts/KWIN_RULES.md).
 No hacen falta capturas del escritorio completo. Si se aporta una captura, limitarla a la ventana
 implicada y borrarla tras revisar. No usar plugin unload/load para ejecutar esta lista.
+
+## Comprobación previa del 2026-11-11
+
+Breeze activo; requisitos y configuración correctos. IPC de menús, editor y outline presentes.
+Hyprland todavía pertenece a la sesión anterior y no tiene plugins cargados: los puntos de
+ratón siguen pendientes. Se corrigieron dos errores QML detectados en el registro (import de
+GlobalStates en PanelState y listas de la bandeja aún sin inicializar), con prueba aislada real.
+El usuario autorizó cerrar sesión; después deberá autenticarse en SDDM.
