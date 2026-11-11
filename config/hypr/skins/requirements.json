@@ -693,6 +693,14 @@
       "provider": "build",
       "build": "make -C {repo}/src/bwm-decorator install",
       "notes": {"all": "Necesita kdecoration, breeze y las cabeceras de Qt 6 y KF6 (Config, ColorScheme, CoreAddons, Service). Proceso aparte: no se carga en Hyprland."}
+    },
+    "bwm-kcmhost": {
+      "label": "Módulo QML org.bwm.kcm (bwm-kcmhost)",
+      "why": "Incrusta los KCM reales de Plasma (colores, estilo, decoraciones, tema global, iconos, fuentes…) en las Preferencias del sistema de Breeze",
+      "check": {"type": "path", "any": ["~/.local/share/bwm/qml/org/bwm/kcm/libbwmkcmplugin.so"]},
+      "provider": "build",
+      "build": "make -C {repo}/src/bwm-kcmhost install",
+      "notes": {"all": "Necesita las cabeceras de Qt 6 (Quick, Qml) y KF6 KCMUtils. Sólo lo carga la ventana de Preferencias (proceso qs -p aparte), nunca la barra."}
     }
   }
 }

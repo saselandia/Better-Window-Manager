@@ -1,0 +1,216 @@
+/*
+   SPDX-FileCopyrightText: 2017 Marco Martin <mart@kde.org>
+
+   SPDX-License-Identifier: LGPL-2.0-only
+*/
+
+pragma ComponentBehavior: Bound
+
+import QtQuick 2.15
+import QtQuick.Controls 2.5 as QQC2
+import QtQuick.Layouts 1.1
+
+import org.kde.kirigami 2.5 as Kirigami
+
+// BWM: models from SettingsState (Catalog.js) instead of org.kde.systemsettings (C++)
+
+Kirigami.ScrollablePage {
+    id: subCategoryColumn
+    title: SettingsState.subCategoryTitle
+
+    Kirigami.Theme.colorSet: Kirigami.Theme.View
+    Kirigami.Theme.inherit: false
+
+    header: Kirigami.AbstractApplicationHeader {
+        id: pageHeader
+
+        contentItem: RowLayout {
+            id: rowLayout
+            // FIXME: left and right anchors shouldn't be needed here, but if
+            // they're removed, the layout doesn't span the full width
+            anchors.fill: parent
+            spacing: Kirigami.Units.smallSpacing
+
+            Keys.onDownPressed: event => {
+                subCategoryView.currentIndex = 0;
+                event.accepted = false; // Pass to KeyNavigation.down
+            }
+
+            // Show a back Button when only one column is visible
+            QQC2.ToolButton {
+                id: backButton
+
+                implicitHeight: hamburgerMenuButton.implicitHeight
+                visible: !applicationWindow().wideScreen
+
+                Layout.fillWidth: true
+                padding: Kirigami.Units.smallSpacing
+
+                // Uncomment once QQC2.ToolButton can force-left-align its contents
+                // text: subCategoryColumn.title
+                // icon.name: LayoutMirroring.enabled ? "go-previous-symbolic-rtl" : "go-previous-symbolic"
+                onClicked: {
+                    root.pageStack.currentIndex = 0;
+                }
+
+                Accessible.name: buttonLabel.text
+
+                // Need a custom content item to left-align everything, because
+                // ToolButtons center everything when you force the width to be
+                // higher than normal, which looks bad here
+                contentItem: RowLayout {
+                    Kirigami.Icon {
+                        id: backIcon
+                        source: LayoutMirroring.enabled ? "go-previous-symbolic-rtl" : "go-previous-symbolic"
+                        Layout.leftMargin: Kirigami.Units.smallSpacing
+                        Layout.preferredWidth: Kirigami.Units.iconSizes.smallMedium
+                        Layout.preferredHeight: Kirigami.Units.iconSizes.smallMedium
+                        Layout.alignment: Qt.AlignCenter
+                    }
+                    QQC2.Label {
+                        id: buttonLabel
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        text: SettingsI18n.i18nc("@action:button go back", "Back")
+                        verticalAlignment: Text.AlignVCenter
+                        elide: Text.ElideRight
+                        textFormat: Text.PlainText
+                    }
+                }
+
+                KeyNavigation.right: hamburgerMenuButton
+                KeyNavigation.down: subCategoryView
+                KeyNavigation.tab: KeyNavigation.right
+                // BWM: no C++ focus chain (systemsettings.focusPrevious)
+                Keys.onDownPressed: event => {
+                    rowLayout.Keys.downPressed(event);
+                }
+            }
+
+            // Show a non-interactive heading when both columns are visible
+            Kirigami.Heading {
+                visible: !backButton.visible
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                // Don't be too short when the back and burger buttons aren't visible
+                Layout.minimumHeight: Math.max(backButton.implicitHeight, hamburgerMenuButton.implicitHeight)
+                Layout.leftMargin: backIcon.visible ? 0 : Kirigami.Units.smallSpacing
+                level: 3
+                text: subCategoryColumn.title
+                verticalAlignment: Text.AlignVCenter
+                elide: Text.ElideRight
+                textFormat: Text.PlainText
+            }
+
+            HamburgerMenuButton {
+                id: hamburgerMenuButton
+
+                visible: !applicationWindow().wideScreen
+
+                KeyNavigation.left: backButton
+                KeyNavigation.down: subCategoryView
+                KeyNavigation.backtab: KeyNavigation.left
+                KeyNavigation.tab: KeyNavigation.down
+
+                Keys.onDownPressed: event => {
+                    rowLayout.Keys.downPressed(event);
+                }
+            }
+        }
+    }
+
+    ListView {
+        id: subCategoryView
+
+        anchors.fill: parent
+        model: SettingsState.subCategoryModel
+        currentIndex: SettingsState.activeSubCategoryRow
+        activeFocusOnTab: true
+        keyNavigationWraps: true
+        Accessible.role: Accessible.List
+
+        KeyNavigation.up: backButton
+        KeyNavigation.backtab: hamburgerMenuButton
+
+        Keys.onUpPressed: event => {
+            if (subCategoryView.currentIndex === 0) {
+                subCategoryView.currentIndex = -1;
+            }
+            event.accepted = false; // Pass to KeyNavigation.up
+        }
+        // BWM: Tab moves on to the module view through the normal focus chain
+
+        onCountChanged: {
+            if (count > 1) {
+                if (root.pageStack.depth < 2) {
+                    root.pageStack.push(subCategoryColumn);
+                }
+            } else {
+                root.pageStack.pop(mainColumn)
+            }
+        }
+
+        Connections {
+            target: SettingsState
+            function onActiveSubCategoryRowChanged() {
+                subCategoryView.currentIndex = SettingsState.activeSubCategoryRow
+                if (SettingsState.activeSubCategoryRow >= 0) {
+                    if (subCategoryView.count > 1) {
+                        subCategoryView.forceActiveFocus();
+                    }
+                    root.pageStack.currentIndex = 1;
+                } else if (root.pageStack.currentIndex > 0) {
+                    root.pageStack.currentIndex = 0;
+                    if (root.pageStack.depth > 1) {
+                        root.pageStack.pop();
+                    }
+                }
+            }
+        }
+
+        delegate: CategoryItem {
+            id: delegate
+
+            required property int index
+            required property var model
+            required property int depth
+            required property string iconName
+
+            text: model.display
+            icon.name: model.iconName
+
+            // Indent items that are children of other KCMs within the same group
+            leadingPadding: depth > 2 ? (( depth - 2 ) * Kirigami.Units.iconSizes.smallMedium) + Kirigami.Units.largeSpacing : 0
+
+            highlighted: ListView.isCurrentItem
+
+            onClicked: {
+                SettingsState.loadModule(subCategoryView.model.get(index)); // BWM: row data
+            }
+            onFocusChanged: {
+                if (focus) {
+                    onCurrentIndexChanged: subCategoryView.positionViewAtIndex(index, ListView.Contain);
+                }
+            }
+            Keys.onEnterPressed: clicked();
+            Keys.onReturnPressed: clicked();
+
+            Keys.onEscapePressed: root.pageStack.currentIndex = 0;
+
+            Keys.onLeftPressed: {
+                if (LayoutMirroring.enabled) {
+                    clicked();
+                } else {
+                    root.pageStack.currentIndex = 0;
+                }
+            }
+            Keys.onRightPressed: {
+                if (!LayoutMirroring.enabled) {
+                    clicked();
+                } else {
+                    root.pageStack.currentIndex = 0;
+                }
+            }
+        }
+    }
+}

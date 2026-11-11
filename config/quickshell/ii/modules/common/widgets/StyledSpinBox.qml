@@ -14,6 +14,16 @@ SpinBox {
     property real innerButtonRadius: Appearance.rounding.unsharpen
     editable: true
 
+    // The same paddings and size as QtQuick.Controls.Basic, so the buttons never cover the number
+    // under another Controls style (Breeze's settings use org.kde.desktop, which puts its own
+    // indicators on the right and leaves no room on the left).
+    leftPadding: root.mirrored ? (up.indicator?.width ?? 0) : (down.indicator?.width ?? 0)
+    rightPadding: root.mirrored ? (down.indicator?.width ?? 0) : (up.indicator?.width ?? 0)
+    topPadding: 0
+    bottomPadding: 0
+    implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
+    implicitHeight: root.baseHeight
+
     opacity: root.enabled ? 1 : 0.4
 
     background: Rectangle {

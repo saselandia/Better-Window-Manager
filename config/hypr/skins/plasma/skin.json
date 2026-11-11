@@ -64,6 +64,7 @@
       "config/quickshell/ii/modules/ii/plasmaThemePicker",
       "config/quickshell/ii/modules/ii/altTab/PlasmaSwitcher.qml",
       "config/quickshell/ii/plasmaSettings.qml",
+      "config/quickshell/ii/modules/plasma/settings",
       "config/quickshell/ii/modules/plasma/tray",
       "config/quickshell/ii/modules/plasma/applets",
       "config/quickshell/ii/modules/plasma/tiling"
@@ -91,6 +92,7 @@
       "config/hypr/skins/plasma/scripts/task-recents.py",
       "src/breezebars",
       "src/bwm-decorator",
+      "src/bwm-kcmhost",
       "config/hypr/skins/plasma/scripts/decorator.py",
       "config/hypr/skins/plasma/scripts/csd-audit.py",
       "config/hypr/skins/plasma/scripts/kwin_rules.py",
@@ -134,6 +136,7 @@
     "kvantum",
     "kactivitymanagerd",
     "bwm-decorator",
+    "bwm-kcmhost",
     "kcmshell6",
     "kwin-rules-kcm"
   ]

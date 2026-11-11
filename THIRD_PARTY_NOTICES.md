@@ -181,6 +181,18 @@ los menús QMenu y las acciones de sesión, sin cambiar los modelos de Kicker. `
 `KickoffI18n.qml` y `KickoffWindow.qml` son propios de BWM (GPL-2.0-or-later). Adaptación en el
 README de la carpeta; [texto de licencia](licenses/KDE-GPL-2.0-or-later.txt).
 
+Preferencias del sistema de Breeze (F11, 2026-11-11): `config/quickshell/ii/modules/plasma/settings`
+porta la barra lateral de [systemsettings](https://invent.kde.org/plasma/systemsettings/-/tree/v6.7.5/app/qml)
+**v6.7.5** (`Main.qml`, `SideBarItem.qml`, `CategoriesPage.qml`, `SubCategoryPage.qml`,
+`CategoryItem.qml`, `HamburgerMenuButton.qml`; LGPL-2.0-only, © Marco Martin, ivan tkachenko,
+Jan Blackquill) con sus cabeceras SPDX; los cambios llevan `// BWM:` (modelos de C++ sustituidos por
+`SettingsState.qml`). Las categorías y su orden siguen `categories/settings-*.desktop`. Las cadenas
+usan el catálogo instalado `systemsettings`. `ModuleView.qml` reescribe en QML la parte de
+`app/ModuleView.cpp` (botones y aviso de cambios sin aplicar); el resto de la carpeta, las páginas y
+`src/bwm-kcmhost` (módulo QML que carga los KCM con KCMUtils) son propios de BWM
+(GPL-2.0-or-later). Los KCM son los instalados de Plasma, no se copian.
+[Texto de licencia](licenses/KDE-LGPL-2.0-only.txt).
+
 Menús contextuales de Breeze (F9, 2026-11-11): `config/quickshell/ii/modules/plasma/menus` porta la
 estructura y los textos de `src/useractions.cpp` de [KWin](https://invent.kde.org/plasma/kwin/-/tree/v6.7.5),
 `applets/taskmanager/qml/ContextMenu.qml` de [plasma-desktop](https://invent.kde.org/plasma/plasma-desktop/-/tree/v6.7.5)

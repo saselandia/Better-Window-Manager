@@ -1,0 +1,11 @@
+singleton SettingsState 1.0 SettingsState.qml
+singleton SettingsI18n 1.0 SettingsI18n.qml
+Main 1.0 Main.qml
+SideBarItem 1.0 SideBarItem.qml
+CategoriesPage 1.0 CategoriesPage.qml
+SubCategoryPage 1.0 SubCategoryPage.qml
+CategoryItem 1.0 CategoryItem.qml
+HamburgerMenuButton 1.0 HamburgerMenuButton.qml
+ModuleView 1.0 ModuleView.qml
+KcmPage 1.0 KcmPage.qml
+KdeSettingsStore 1.0 KdeSettingsStore.qml

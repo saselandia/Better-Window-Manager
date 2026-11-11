@@ -648,11 +648,15 @@ def watch():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("enter", "export", "import", "watch", "start", "stop", "leave", "guards"))
+    parser.add_argument("action", choices=("enter", "export", "import", "watch", "start", "stop", "leave", "guards",
+                                           "kwin-settings"))
     parser.add_argument("--no-reload", action="store_true")
     args = parser.parse_args()
     try:
-        if args.action in ("export", "import"):
+        if args.action == "kwin-settings":
+            # F11: las páginas de comportamiento leen los mismos valores efectivos que aplica el puente
+            print(json.dumps(kwin_settings()))
+        elif args.action in ("export", "import"):
             reconcile(do_import=args.action == "import", reload=not args.no_reload)
         else:
             globals()[args.action]()

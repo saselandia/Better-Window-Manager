@@ -18,6 +18,10 @@ RowLayout {
     property real from: slider.from
     property real to: slider.to
     property real textWidth: 120
+    // Like a Slider: step and the user-only `moved` signal (writing on valueChanged would also fire
+    // when the bound value is set from the configuration)
+    property alias stepSize: slider.stepSize
+    signal moved()
 
     RowLayout {
         id: row
@@ -43,5 +47,6 @@ RowLayout {
         value: root.value
         from: root.from
         to: root.to
+        onMoved: root.moved()
     }
 }
