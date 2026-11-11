@@ -57,9 +57,6 @@ struct SRemoteState {
     bool                                    positionedRemote = false;
     int                                     roundingOverride = -1;
 
-    // Maximizado sólo en un eje (botón central o derecho de maximizar, como KWin)
-    bool                                    maxV = false, maxH = false;
-    CBox                                    restoreV, restoreH;
 };
 
 // Sombra de la decoración de KDE: otra decoración de Hyprland para que sus bordes cuenten en los daños

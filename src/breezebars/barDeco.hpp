@@ -165,7 +165,7 @@ class CHyprBar : public IHyprWindowDecoration {
     void                handlePointerResult(const BwmDeco::SPointerResult& r);
     void                handleRequest(const BwmDeco::SRequest& r);
     void                runDoubleClickAction();
-    void                toggleAxisMaximize(BwmDeco::eMaximizeAxis axis);
+    void                runKWinWindow(const std::string& args);
     void                showWindowMenu(const Vector2D& global);
     void                spawnMinimize();
     std::optional<CBox> contentBoxGlobal(bool forRender);

@@ -175,7 +175,10 @@ Scope {
         const minimized = target.workspace?.name === "special:minimized" || (target.workspace?.id ?? 0) === 99;
         // minimized window: restore it first
         if (minimized)
-            Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/toggle-minimize.py", "restore", target.address]);
+            // Breeze: el módulo de ventanas de KWin (F8); el resto, el script común
+            Quickshell.execDetached(Appearance.isPlasma
+                ? ["/home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py", "unminimize", target.address]
+                : ["/home/sasel/.config/hypr/scripts/toggle-minimize.py", "restore", target.address]);
         else
             root.focusAndRaise(target.address);
         // The switcher layer still holds the keyboard until it unmaps; focus again once it is gone

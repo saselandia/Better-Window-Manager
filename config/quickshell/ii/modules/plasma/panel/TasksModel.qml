@@ -32,14 +32,14 @@ QtObject {
     function launch(appId) { entry(appId)?.execute(); }
     function activate(top) {
         if(!top) return;
-        if(minimized(top)) Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/toggle-minimize.py","restore",address(top)]);
+        if(minimized(top)) Quickshell.execDetached(["/home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py","unminimize",address(top)]); // kwin-window.py (F8)
         else top.activate();
     }
     function click(group) {
         const tops=group.toplevels;
         if(!tops.length) { launch(group.appId); return; }
         if(tops.length===1 && tops[0].activated) {
-            Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/toggle-minimize.py","min",address(tops[0])]);
+            Quickshell.execDetached(["/home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py","minimize",address(tops[0])]);
         } else cycle(group,1);
     }
     function cycle(group,step) {

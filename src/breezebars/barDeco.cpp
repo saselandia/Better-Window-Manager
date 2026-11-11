@@ -49,7 +49,8 @@ static void clearSnapTags(PHLWINDOW window) {
     for (auto tag : window->m_ruleApplicator->m_tagKeeper.getTags()) {
         if (tag.ends_with('*'))
             continue; // las de reglas no se quitan a mano
-        if (tag == "snapped" || tag.starts_with("snapped_"))
+        // y las de maximizado de kwin-window.py (F8): mover una ventana maximizada la restaura, como KWin
+        if (tag == "snapped" || tag.starts_with("snapped_") || tag.starts_with("bwm-max"))
             snapTags.push_back(tag);
     }
     for (const auto& tag : snapTags)
@@ -361,7 +362,7 @@ void CHyprBar::onMouseMove(Vector2D coords) {
             Pointer::Cursor::overrideController->setOverride("grabbing", Pointer::Cursor::CURSOR_OVERRIDE_SPECIAL_ACTION);
 
             bool wasFullscreen = Fullscreen::controller()->isFullscreen(PWINDOW);
-            bool wasSnapped = PWINDOW->m_ruleApplicator && PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
+            bool wasSnapped = PWINDOW->m_ruleApplicator && (PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("snapped") || PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("bwm-max-v") || PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("bwm-max-h"));
             float curW = PWINDOW->layoutTarget()->position().w;
 
             g_pHyprRenderer->damageWindow(PWINDOW, true);
@@ -576,6 +577,8 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
         if (ON_DOUBLE_CLICK == "fullscreen 1" || ON_DOUBLE_CLICK.find("window.fullscreen") != std::string::npos) {
             if (Desktop::View::validMapped(PWINDOW))
                 Fullscreen::controller()->setFullscreenMode(PWINDOW, Fullscreen::controller()->isFullscreen(PWINDOW) ? Fullscreen::FSMODE_NONE : Fullscreen::FSMODE_MAXIMIZED);
+        } else if (ON_DOUBLE_CLICK.find("kwin-window.py") != std::string::npos && ON_DOUBLE_CLICK.find("0x") == std::string::npos) {
+            Config::Supplementary::executor()->spawn(ON_DOUBLE_CLICK + std::format(" 0x{:x}", (uintptr_t)PWINDOW.get()));
         } else {
             Config::Supplementary::executor()->spawn(ON_DOUBLE_CLICK);
         }
@@ -619,7 +622,7 @@ void CHyprBar::handleMovement() {
     if (Desktop::View::validMapped(PWINDOW)) {
         CBox curBox = PWINDOW->layoutTarget()->position();
         bool wasFullscreen = Fullscreen::controller()->isFullscreen(PWINDOW);
-        bool wasSnapped = PWINDOW->m_ruleApplicator && PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
+        bool wasSnapped = PWINDOW->m_ruleApplicator && (PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("snapped") || PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("bwm-max-v") || PWINDOW->m_ruleApplicator->m_tagKeeper.isTagged("bwm-max-h"));
 
         damageEntire();
         g_pHyprRenderer->damageWindow(PWINDOW, true);
@@ -679,7 +682,7 @@ bool CHyprBar::doButtonPress(Config::INTEGER barPadding, Config::INTEGER barButt
                     return true;
                 }
             }
-            if (cmd.find("toggle-minimize.py min") != std::string::npos && PW) {
+            if ((cmd.find("toggle-minimize.py min") != std::string::npos || cmd.find("kwin-window.py") != std::string::npos) && cmd.find("0x") == std::string::npos && PW) {
                 cmd += " " + std::format("0x{:x}", (uintptr_t)PW.get());
             }
             g_pKeybindManager->m_dispatchers["exec"](cmd);

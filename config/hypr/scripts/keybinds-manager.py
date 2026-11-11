@@ -162,7 +162,9 @@ DEFAULT_KEYBINDS: List[Dict[str, Any]] = [
         "dispatcher_arg": None,
         "options": {},
         "is_default": True,
-        "enabled": True
+        "enabled": True,
+        # Breeze: Alt+Enter maximiza como KWin (kwin-window.py, entrada propia con "skins")
+        "skins_except": ["plasma"]
     },
     {
         "id": "single_window_aspect",
@@ -788,8 +790,13 @@ def generate_lua(binds: List[Dict[str, Any]]) -> str:
         # "skins": ["retro"] → the bind only exists in those skins (the key reaches the apps in
         # the others); Hyprland reloads once on every skin change
         skins = [str(x) for x in (b.get("skins") or []) if str(x).strip()]
+        # "skins_except": ["plasma"] → every skin but those (that skin binds the key to its own action)
+        except_skins = [str(x) for x in (b.get("skins_except") or []) if str(x).strip()]
         if skins:
             cond = " or ".join(f"active_skin == {to_lua_string(x)}" for x in skins)
+            lines.append(f"if {cond} then {bind_line} end")
+        elif except_skins:
+            cond = " and ".join(f"active_skin ~= {to_lua_string(x)}" for x in except_skins)
             lines.append(f"if {cond} then {bind_line} end")
         else:
             lines.append(bind_line)

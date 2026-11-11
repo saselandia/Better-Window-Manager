@@ -31,9 +31,13 @@ end
 -- El plugin actual sólo admite un banco de botones y los glifos I/A/X. El estado conserva ambos
 -- bancos completos para F6a/F6b; no se finge que menú, ayuda o enrollar ya están portados.
 if hl.plugin and hl.plugin.breezebars then
+    -- Minimizar y maximizar: kwin-window.py (F8), con la semántica de KWin; el plugin añade la dirección
+    local kw = "python3 " .. os.getenv("HOME") .. "/.config/hypr/skins/plasma/scripts/kwin-window.py "
     local actions = {
-        Maximize = 'hyprctl dispatch "hl.dsp.window.fullscreen({ mode = 1, action = \'toggle\' })"',
-        Minimize = os.getenv("HOME") .. "/.config/hypr/scripts/toggle-minimize.py min",
+        Maximize = kw .. "maximize --mode toggle",
+        ["Maximize (vertical only)"] = kw .. "maximize --mode vertical",
+        ["Maximize (horizontal only)"] = kw .. "maximize --mode horizontal",
+        Minimize = kw .. "minimize",
         Close = 'hyprctl dispatch "hl.dsp.window.close()"',
         Nothing = "",
     }

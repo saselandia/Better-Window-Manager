@@ -37,12 +37,12 @@ Singleton {
     }
 
     function toggleShowDesktop() {
-        Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/toggle-minimize.py", "show-desktop"]);
+        Quickshell.execDetached(["/home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py", "show-desktop"]); // kwin-window.py (F8)
     }
     // A window appeared: leave the mode and bring the hidden windows back behind it (KWin)
     function endShowDesktop() {
         root.showingDesktop = false;
-        Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/toggle-minimize.py", "show-desktop", "leave"]);
+        Quickshell.execDetached(["/home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py", "show-desktop", "leave"]);
     }
 
     FileView {

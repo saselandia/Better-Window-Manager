@@ -23,7 +23,7 @@ hl.bind("ALT + W", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/wallpaper-p
 hl.bind("ALT + X", hl.dsp.window.close(), { description = "Ventanas: Cerrar ventana activa" })
 hl.bind("ALT + Q", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/toggle-float-persistent.py"), { description = "Ventanas: Recordar regla flotante persistente" })
 hl.bind("ALT + J", hl.dsp.layout("togglesplit"), { description = "Ventanas: Alternar división horizontal/vertical (Split)" })
-hl.bind("ALT + RETURN", hl.dsp.window.fullscreen({ mode = fullscreen_mode, action = "toggle" }), { description = "Ventanas: Alternar pantalla completa" })
+if active_skin ~= "plasma" then hl.bind("ALT + RETURN", hl.dsp.window.fullscreen({ mode = fullscreen_mode, action = "toggle" }), { description = "Ventanas: Alternar pantalla completa" }) end
 hl.bind("SUPER + RETURN", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/toggle-single-window-aspect.sh"), { description = "Ventanas: Alternar proporción cuadrada para ventana única (Omarchy)" })
 hl.bind("ALT + TAB", hl.dsp.exec_cmd("quickshell -c ii ipc call altTab next"), { description = "Ventanas: Selector visual de ventanas (Alt+Tab)", repeating = true })
 -- [Navegación]
@@ -104,6 +104,12 @@ if active_skin == "default" then hl.bind("CTRL + SUPER + T", hl.dsp.exec_cmd("qu
 if active_skin == "default" then hl.bind("CTRL + SUPER + ALT + T", hl.dsp.exec_cmd("quickshell -c ii ipc call wallpaperSelector random"), { description = "General: Fondo aleatorio de la carpeta (end-4)" }) end
 -- [Lanzadores]
 if active_skin == "plasma" then hl.bind("ALT + F1", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/app-launcher.sh"), { description = "Lanzadores: Lanzador de aplicaciones (Kickoff de Breeze)" }) end
+-- [Ventanas]
+if active_skin == "plasma" then hl.bind("ALT + RETURN", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py maximize --mode toggle"), { description = "Ventanas: Maximizar o restaurar (KDE)" }) end
+if active_skin == "plasma" then hl.bind("SUPER + Prior", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py maximize --mode full"), { description = "Ventanas: Maximizar ventana (KDE: Meta+RePág)" }) end
+if active_skin == "plasma" then hl.bind("SUPER + Next", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py minimize"), { description = "Ventanas: Minimizar ventana (KDE: Meta+AvPág)" }) end
+if active_skin == "plasma" then hl.bind("SUPER + D", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py show-desktop"), { description = "Ventanas: Echar un vistazo al escritorio (KDE: Meta+D)" }) end
+if active_skin == "plasma" then hl.bind("ALT + F4", hl.dsp.window.close(), { description = "Ventanas: Cerrar ventana (KDE: Alt+F4)" }) end
 
 -- BWMenu: dos teclas normales a la vez, independiente de Quickshell; cualquier orden
 hl.bind("plus + minus", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm menu --open"), { ignore_mods = true, description = "General: BWMenu (+ y - a la vez)" })

@@ -169,7 +169,10 @@
     "options": {},
     "is_default": true,
     "enabled": true,
-    "is_modified": false
+    "is_modified": false,
+    "skins_except": [
+      "plasma"
+    ]
   },
   {
     "id": "single_window_aspect",
@@ -1365,6 +1368,106 @@
     "action_type": "exec",
     "exec": "/home/sasel/.config/hypr/scripts/app-launcher.sh",
     "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "breeze_maximize_toggle",
+    "category": "Ventanas",
+    "description": "Maximizar o restaurar (KDE)",
+    "mods": [
+      "ALT"
+    ],
+    "key": "RETURN",
+    "action_type": "exec",
+    "exec": "python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py maximize --mode toggle",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "breeze_maximize",
+    "category": "Ventanas",
+    "description": "Maximizar ventana (KDE: Meta+RePág)",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "Prior",
+    "action_type": "exec",
+    "exec": "python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py maximize --mode full",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "breeze_minimize",
+    "category": "Ventanas",
+    "description": "Minimizar ventana (KDE: Meta+AvPág)",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "Next",
+    "action_type": "exec",
+    "exec": "python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py minimize",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "breeze_show_desktop",
+    "category": "Ventanas",
+    "description": "Echar un vistazo al escritorio (KDE: Meta+D)",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "D",
+    "action_type": "exec",
+    "exec": "python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py show-desktop",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "breeze_close",
+    "category": "Ventanas",
+    "description": "Cerrar ventana (KDE: Alt+F4)",
+    "mods": [
+      "ALT"
+    ],
+    "key": "F4",
+    "action_type": "dispatcher",
+    "exec": null,
+    "dispatcher": "window.close",
     "dispatcher_arg": null,
     "options": {},
     "is_default": false,

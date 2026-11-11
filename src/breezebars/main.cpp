@@ -59,7 +59,8 @@ static void clearSnapTags(PHLWINDOW window) {
     for (auto tag : window->m_ruleApplicator->m_tagKeeper.getTags()) {
         if (tag.ends_with('*'))
             continue; // las de reglas no se quitan a mano
-        if (tag == "snapped" || tag.starts_with("snapped_"))
+        // y las de maximizado de kwin-window.py (F8): mover una ventana maximizada la restaura, como KWin
+        if (tag == "snapped" || tag.starts_with("snapped_") || tag.starts_with("bwm-max"))
             snapTags.push_back(tag);
     }
     for (const auto& tag : snapTags)
@@ -379,7 +380,7 @@ static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEve
 
                     CBox curBox = pWindow->layoutTarget()->position();
                     bool wasFullscreen = Fullscreen::controller()->isFullscreen(pWindow);
-                    bool wasSnapped = pWindow->m_ruleApplicator && pWindow->m_ruleApplicator->m_tagKeeper.isTagged("snapped");
+                    bool wasSnapped = pWindow->m_ruleApplicator && (pWindow->m_ruleApplicator->m_tagKeeper.isTagged("snapped") || pWindow->m_ruleApplicator->m_tagKeeper.isTagged("bwm-max-v") || pWindow->m_ruleApplicator->m_tagKeeper.isTagged("bwm-max-h"));
 
                     g_pHyprRenderer->damageWindow(pWindow, true);
 

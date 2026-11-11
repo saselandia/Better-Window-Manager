@@ -182,6 +182,13 @@ hl.window_rule({
     rounding = 0,
 })
 
+-- Maximizado de Breeze (kwin-window.py, F8): esquinas rectas como en KWin
+hl.window_rule({
+    name     = "plasma-kwin-maximized-square",
+    match    = { tag = "bwm-maximized" },
+    rounding = 0,
+})
+
 hl.window_rule({
     name     = "plasma-snapped-square",
     match    = { tag = "snapped" },

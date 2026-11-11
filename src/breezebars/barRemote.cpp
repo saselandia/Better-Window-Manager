@@ -135,10 +135,12 @@ SWindowState CHyprBar::currentRemoteState() {
     uint32_t flags = Closeable | Maximizeable | Minimizeable | Moveable | Resizeable;
     if (PW == Desktop::focusState()->window())
         flags |= Active;
-    const bool FS = Fullscreen::controller()->isFullscreen(PW);
-    if (FS || m_remote.maxH)
+    // Modo de maximizado de kwin-window.py (F8), en etiquetas de la ventana; el de Hyprland cuenta como completo
+    const bool FS   = Fullscreen::controller()->isFullscreen(PW);
+    const auto TAGS = PW->m_ruleApplicator ? &PW->m_ruleApplicator->m_tagKeeper : nullptr;
+    if (FS || (TAGS && TAGS->isTagged("bwm-max-h")))
         flags |= MaximizedHorizontally;
-    if (FS || m_remote.maxV)
+    if (FS || (TAGS && TAGS->isTagged("bwm-max-v")))
         flags |= MaximizedVertically;
     if (PW->m_pinned)
         flags |= OnAllDesktops;
@@ -561,14 +563,8 @@ void CHyprBar::handlePointerResult(const SPointerResult& r) {
             return;
         switch (wheelAction(g_pGlobalState->config.onWheel->value(), m_remote.lastWheel)) {
             case eWheelAction::RAISE: Desktop::windowState()->raise(PW); break;
-            case eWheelAction::MAXIMIZE:
-                if (!Fullscreen::controller()->isFullscreen(PW))
-                    Fullscreen::controller()->setFullscreenMode(PW, Fullscreen::FSMODE_MAXIMIZED);
-                break;
-            case eWheelAction::RESTORE:
-                if (Fullscreen::controller()->isFullscreen(PW))
-                    Fullscreen::controller()->setFullscreenMode(PW, Fullscreen::FSMODE_NONE);
-                break;
+            case eWheelAction::MAXIMIZE: runKWinWindow("maximize --mode full"); break;
+            case eWheelAction::RESTORE: runKWinWindow("maximize --mode restore"); break;
             case eWheelAction::PREVIOUS_DESKTOP:
                 Config::Supplementary::executor()->spawn(std::format("python3 {}/.config/hypr/scripts/cycle-workspace.py prev", homeDir()));
                 break;
@@ -611,9 +607,15 @@ void CHyprBar::handlePointerResult(const SPointerResult& r) {
 
 // ───────────────────────────────────────────────────────── peticiones de la decoración
 
-void CHyprBar::spawnMinimize() {
+// Minimizar y maximizar viven en kwin-window.py (F8): la misma lógica para botones, panel y atajos
+void CHyprBar::runKWinWindow(const std::string& args) {
     if (auto PW = m_pWindow.lock())
-        Config::Supplementary::executor()->spawn(std::format("{}/.config/hypr/scripts/toggle-minimize.py min {}", homeDir(), windowAddress(PW)));
+        Config::Supplementary::executor()->spawn(
+            std::format("python3 {}/.config/hypr/skins/plasma/scripts/kwin-window.py {} {}", homeDir(), args, windowAddress(PW)));
+}
+
+void CHyprBar::spawnMinimize() {
+    runKWinWindow("minimize");
 }
 
 // Menú de operaciones de la ventana: lo dibuja Quickshell (F9) por IPC
@@ -638,47 +640,9 @@ void CHyprBar::runDoubleClickAction() {
         Config::Actions::closeWindow(PW);
         return;
     }
-    if (cmd.find("toggle-minimize.py min") != std::string::npos && cmd.find("0x") == std::string::npos)
+    if ((cmd.find("toggle-minimize.py min") != std::string::npos || cmd.find("kwin-window.py") != std::string::npos) && cmd.find("0x") == std::string::npos)
         cmd += " " + windowAddress(PW);
     Config::Supplementary::executor()->spawn(cmd);
-}
-
-// Maximizar sólo en vertical u horizontal (botón central o derecho, como KWin). Hyprland no lo
-// tiene: se fija la geometría flotante dentro del área útil y se recuerda la anterior.
-void CHyprBar::toggleAxisMaximize(eMaximizeAxis axis) {
-    auto PW = m_pWindow.lock();
-    if (!Desktop::View::validMapped(PW) || !PW->m_isFloating || Fullscreen::controller()->isFullscreen(PW))
-        return;
-    const auto MON = PW->m_monitor.lock();
-    if (!MON)
-        return;
-    const CBox area = MON->m_reservedArea.apply(CBox{MON->m_position, MON->m_size});
-    CBox       box  = PW->layoutTarget()->position();
-    if (axis == eMaximizeAxis::VERTICAL) {
-        if (m_remote.maxV) {
-            box.y = m_remote.restoreV.y;
-            box.h = m_remote.restoreV.h;
-        } else {
-            m_remote.restoreV = box;
-            box.y             = area.y;
-            box.h             = area.h;
-        }
-        m_remote.maxV = !m_remote.maxV;
-    } else {
-        if (m_remote.maxH) {
-            box.x = m_remote.restoreH.x;
-            box.w = m_remote.restoreH.w;
-        } else {
-            m_remote.restoreH = box;
-            box.x             = area.x;
-            box.w             = area.w;
-        }
-        m_remote.maxH = !m_remote.maxH;
-    }
-    PW->layoutTarget()->setPositionGlobal(box);
-    g_layoutManager->setTargetGeom(box, PW->layoutTarget());
-    PW->updateWindowDecos();
-    damageEntire();
 }
 
 void CHyprBar::handleRequest(const SRequest& r) {
@@ -688,12 +652,9 @@ void CHyprBar::handleRequest(const SRequest& r) {
     switch (r.kind) {
         case Close: Config::Actions::closeWindow(PW); break;
         case ToggleMaximization: {
+            // Izquierdo: completo; central: vertical; derecho: horizontal (como KWin)
             const auto axis = maximizeAxis(r.arg);
-            if (axis == eMaximizeAxis::BOTH) {
-                m_remote.maxV = m_remote.maxH = false;
-                Fullscreen::controller()->setFullscreenMode(PW, Fullscreen::controller()->isFullscreen(PW) ? Fullscreen::FSMODE_NONE : Fullscreen::FSMODE_MAXIMIZED);
-            } else
-                toggleAxisMaximize(axis);
+            runKWinWindow(axis == eMaximizeAxis::VERTICAL ? "maximize --mode vertical" : axis == eMaximizeAxis::HORIZONTAL ? "maximize --mode horizontal" : "maximize --mode toggle");
             break;
         }
         case Minimize: spawnMinimize(); break;

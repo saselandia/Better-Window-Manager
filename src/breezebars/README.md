@@ -24,8 +24,9 @@ decoración de KWin activa (Breeze, Aurorae, de terceros). El plugin es el pegam
   siempre), redimensionar desde los bordes que diga la decoración, doble clic (`on_double_click`,
   de `kwinrc [Windows] TitlebarDoubleClickCommand`), rueda (`on_wheel`, de `kwinrc [MouseBindings]
   CommandTitlebarWheel`) y menú de la ventana con el botón derecho.
-- Peticiones: cerrar, maximizar (izquierdo: ambos ejes; central: vertical; derecho: horizontal),
-  minimizar (`toggle-minimize.py` hasta F8), menú de la ventana por IPC a Quickshell
+- Peticiones: cerrar, maximizar (izquierdo: ambos ejes; central: vertical; derecho: horizontal) y
+  minimizar con `skins/plasma/scripts/kwin-window.py` (F8; el modo de maximizado de la decoración sale
+  de las etiquetas `bwm-max-v`/`bwm-max-h`), menú de la ventana por IPC a Quickshell
   (`qs -c ii ipc call plasmaWindowMenu open <dirección> <x> <y>`, lo dibuja F9), tooltip (con los
   colores `[Colors:Tooltip]` de `kdeglobals`) y fijar en todos los escritorios. Encima/debajo,
   enrollar, ayuda contextual y menú de aplicación no existen en Hyprland: no hacen nada.

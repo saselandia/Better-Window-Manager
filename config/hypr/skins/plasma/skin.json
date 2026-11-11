@@ -84,6 +84,7 @@
       "config/hypr/skins/plasma/scripts/plasma_palette.py",
       "config/hypr/scripts/quick-tile.py",
       "config/hypr/scripts/toggle-minimize.py",
+      "config/hypr/skins/plasma/scripts/kwin-window.py",
       "src/breezebars",
       "src/bwm-decorator",
       "config/hypr/skins/plasma/scripts/decorator.py",

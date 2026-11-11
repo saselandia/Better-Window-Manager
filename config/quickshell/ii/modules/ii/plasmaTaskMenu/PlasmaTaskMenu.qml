@@ -21,7 +21,7 @@ Scope {
 
     readonly property real barHeight: Appearance.sizes.baseBarHeight
     readonly property real edgeGap: Appearance.sizes.plasmaFloatingGap
-    readonly property string minimizeScript: "/home/sasel/.config/hypr/scripts/toggle-minimize.py"
+    readonly property string minimizeScript: "/home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py" // F8
 
     function entryFor(appId) {
         return TaskbarApps.apps.find(a => a.appId === appId) ?? null;
@@ -36,7 +36,7 @@ Scope {
     function activateWindow(toplevel) {
         if (!toplevel) return;
         if (root.isMinimized(toplevel))
-            Quickshell.execDetached([root.minimizeScript, "restore", "0x" + root.addressOf(toplevel)]);
+            Quickshell.execDetached([root.minimizeScript, "unminimize", "0x" + root.addressOf(toplevel)]);
         toplevel.activate();
     }
     function closeMenu() { GlobalStates.plasmaTaskMenuOpen = false; }
