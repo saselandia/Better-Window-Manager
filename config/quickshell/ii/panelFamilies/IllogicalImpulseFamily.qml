@@ -28,7 +28,7 @@ import qs.modules.ii.verticalBar
 import qs.modules.ii.wallpaperSelector
 import qs.modules.ii.altTab
 import qs.modules.ii.omarchyMenu
-import qs.modules.ii.plasmaKickoff
+import qs.modules.plasma.kickoff as PlasmaKickoffPort
 import qs.modules.ii.idle
 import qs.modules.ii.screenshotPreview
 import qs.modules.ii.omarchyNotifications
@@ -83,7 +83,7 @@ Scope {
     PanelLoader { component: WallpaperSelector {} }
     PanelLoader { component: AltTab {} }
     PanelLoader { component: OmarchyMenu {} }
-    PanelLoader { component: PlasmaKickoff {} }
+    PanelLoader { extraCondition: Appearance.isPlasma; component: PlasmaKickoffPort.KickoffWindow {} } // F4: Kickoff de Plasma 6.7.5 portado
     PanelLoader { component: BwmIdle {} }
     PanelLoader { component: PlasmaBluetooth {} }
     PanelLoader { component: PlasmaNetwork {} }

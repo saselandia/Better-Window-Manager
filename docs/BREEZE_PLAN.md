@@ -110,7 +110,7 @@ C++, F10 parte C++) comparten `src/breezebars/`: **nunca dos a la vez**.
 
 ## 4. Prompts
 
-> **Hechas: fases 0–3** (arquitectura en `docs/BREEZE_ARCH.md`; motor de temas y puente de configuración en `BWM_CONTEXT.md` §3.139–141). `docs/BREEZE_ARCH.md` manda sobre lo que digan los
+> **Hechas: fases 0–4** (arquitectura en `docs/BREEZE_ARCH.md`; motor de temas, puente de configuración, panel y Kickoff en `BWM_CONTEXT.md` §3.139–142). `docs/BREEZE_ARCH.md` manda sobre lo que digan los
 > prompts siguientes: lo que cambió está anotado en su §7, y F6 se ha partido en F6a y F6b.
 
 ### F0 · Viabilidad y arquitectura — **[HIGH]**

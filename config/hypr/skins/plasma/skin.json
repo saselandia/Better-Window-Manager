@@ -56,10 +56,10 @@
   "parts": {
     "quickshell": [
       "config/quickshell/ii/modules/plasma/theme",
+      "config/quickshell/ii/modules/plasma/kickoff",
       "config/quickshell/ii/modules/ii/plasmaLock",
       "config/quickshell/ii/modules/plasma/panel",
       "config/quickshell/ii/modules/ii/plasmaCommon",
-      "config/quickshell/ii/modules/ii/plasmaKickoff",
       "config/quickshell/ii/modules/ii/plasmaAudio",
       "config/quickshell/ii/modules/ii/plasmaBluetooth",
       "config/quickshell/ii/modules/ii/plasmaNetwork",
@@ -118,6 +118,7 @@
     "plasma-nm",
     "plasma-pa",
     "bluez-qt",
-    "kvantum"
+    "kvantum",
+    "kactivitymanagerd"
   ]
 }

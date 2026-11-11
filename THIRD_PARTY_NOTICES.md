@@ -169,3 +169,13 @@ Sebastian Kügler, Martin Klapetek y David Edmundson en los archivos derivados. 
 anfitrión, datos y acciones a Quickshell/Hyprland, reduce las representaciones compactas y
 sustituye la configuración attached de Plasma. Fuente correspondiente incluida y adaptación en
 el README de la carpeta; [texto de licencia](licenses/KDE-GPL-2.0-or-later.txt).
+
+Kickoff de Breeze (F4, 2026-11-11): config/quickshell/ii/modules/plasma/kickoff es el Kickoff de
+[plasma-desktop](https://invent.kde.org/plasma/plasma-desktop/-/tree/v6.7.5/applets/kickoff)
+**v6.7.5** (GPL-2.0-or-later) y sus traducciones originales (`po/`, del paquete publicado
+plasma-desktop-6.7.5.tar.xz). Se conservan las cabeceras SPDX de Martin Gräßlin, Gregor Taetzner,
+Marco Martin, David Edmundson, Eike Hein, Mikel Johnson, Noah Davis, ivan tkachenko y demás
+autores. BWM sustituye el anfitrión de Plasma (PlasmoidItem, attached Plasmoid, Dialog e i18n),
+los menús QMenu y las acciones de sesión, sin cambiar los modelos de Kicker. `Plasmoid.qml`,
+`KickoffI18n.qml` y `KickoffWindow.qml` son propios de BWM (GPL-2.0-or-later). Adaptación en el
+README de la carpeta; [texto de licencia](licenses/KDE-GPL-2.0-or-later.txt).

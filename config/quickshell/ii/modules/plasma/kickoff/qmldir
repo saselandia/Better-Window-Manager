@@ -1,0 +1,29 @@
+module qs.modules.plasma.kickoff
+singleton Plasmoid 1.0 Plasmoid.qml
+singleton KickoffI18n 1.0 KickoffI18n.qml
+singleton KickoffSingleton 1.0 KickoffSingleton.qml
+singleton ActionMenu 1.0 ActionMenu.qml
+Kickoff 1.0 Kickoff.qml
+KickoffWindow 1.0 KickoffWindow.qml
+AbstractKickoffItemDelegate 1.0 AbstractKickoffItemDelegate.qml
+ApplicationsPage 1.0 ApplicationsPage.qml
+BasePage 1.0 BasePage.qml
+DropAreaGridView 1.0 DropAreaGridView.qml
+DropAreaListView 1.0 DropAreaListView.qml
+EmptyPage 1.0 EmptyPage.qml
+Footer 1.0 Footer.qml
+FullRepresentation 1.0 FullRepresentation.qml
+Header 1.0 Header.qml
+HorizontalStackView 1.0 HorizontalStackView.qml
+KickoffDropArea 1.0 KickoffDropArea.qml
+KickoffGridDelegate 1.0 KickoffGridDelegate.qml
+KickoffGridView 1.0 KickoffGridView.qml
+KickoffListDelegate 1.0 KickoffListDelegate.qml
+KickoffListView 1.0 KickoffListView.qml
+LeaveButtons 1.0 LeaveButtons.qml
+ListOfGridsViewDelegate 1.0 ListOfGridsViewDelegate.qml
+ListOfGridsView 1.0 ListOfGridsView.qml
+NormalPage 1.0 NormalPage.qml
+PlacesPage 1.0 PlacesPage.qml
+SectionView 1.0 SectionView.qml
+VerticalStackView 1.0 VerticalStackView.qml

@@ -125,8 +125,8 @@ si se instala plasma-workspace.
 - **F2:** el puente es dueño de `kded5rc`, del servicio de D-Bus de avisos y de la tabla de §5.
 - **F3–F5:** port del QML con `PlasmoidShim`; datos de los módulos de KDE probados; nunca módulos de
   kded ni el servidor de avisos de Plasma.
-- **F4:** investigar por qué `Kicker.RootModel` sale vacío; si no se resuelve, usar AppSearch con
-  categorías del menú `plasma-applications.menu`.
+- **F4 (hecha):** `Kicker.RootModel` funciona: hay que llamar a `refresh()`, como Kickoff. Se usan
+  los modelos reales de Kicker; los menús `PlasmaExtras.Menu` (QMenu) no sirven desde layer-shell.
 - **F6:** pasa a ser `bwm-decorator` (auxiliar con KDecoration3) + `breezebars` como pegamento,
   en lugar de reimplementar Breeze en cairo. Es la fase más grande: conviene partirla en F6a
   (auxiliar y protocolo, probados sin Hyprland) y F6b (plugin, con reinicio de sesión).
@@ -137,7 +137,6 @@ si se instala plasma-workspace.
 - Captura de los controles de Plasma dentro de una ventana real de Quickshell (sólo carga y
   valores). La imagen se comprobó con `qml6` sin pantalla.
 - Ver los KCMs abiertos y aplicar cambios desde ellos.
-- `Kicker.RootModel` con apps (vacío en la prueba) y `RunnerModel`.
 - `bluezqt` tras inicializarse del todo.
 - Escala fraccionaria y HiDPI en `bwm-decorator`, decoraciones C++ de terceros (Klassy…) y sombras.
 - Rendimiento del envío de la imagen de la decoración (memfd) al plugin durante un redimensionado.

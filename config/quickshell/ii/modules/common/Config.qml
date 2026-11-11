@@ -264,6 +264,27 @@ Singleton {
                     property string color: "#24292e" // Panel background (Breeze Dark by default)
                     property real opacity: 0.91 // Panel opacity in translucent style
                     property bool centerTasks: false // Center the task manager icons like Plasma's "centered" option
+                    // Kickoff (modules/plasma/kickoff): the same keys and defaults as Plasma's
+                    // applets/kickoff/main.xml, which the ported QML reads as Plasmoid.configuration
+                    property JsonObject kickoff: JsonObject {
+                        property string icon: "start-here-kde-symbolic"
+                        property string menuLabel: ""
+                        property int appNameFormat: 2
+                        property list<string> favorites: ["preferred://browser", "org.gnome.Nautilus.desktop", "kitty.desktop", "systemsettings.desktop"] // Kicker resuelve preferred://filemanager al navegador
+                        property list<string> systemFavorites: ["suspend", "hibernate", "reboot", "shutdown"]
+                        property int primaryActions: 0
+                        property bool favoritesPortedToKAstats: false
+                        property list<string> systemApplications: ["systemsettings.desktop"]
+                        property bool paneSwap: false
+                        property int favoritesDisplay: 0
+                        property int applicationsDisplay: 1
+                        property bool alphaSort: false
+                        property bool pin: false
+                        property bool showActionButtonCaptions: true
+                        property bool compactMode: false
+                        property bool switchCategoryOnHover: false
+                        property bool highlightNewlyInstalledApps: true
+                    }
                 }
                 property JsonObject resources: JsonObject {
                     property bool alwaysShowSwap: true

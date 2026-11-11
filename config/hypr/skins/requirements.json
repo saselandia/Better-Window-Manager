@@ -603,6 +603,13 @@
       "why": "Fuente de hora del reloj digital portado de Plasma",
       "check": {"type": "qml", "module": "org/kde/plasma/clock"},
       "packages": {"gentoo": "kde-plasma/plasma-workspace", "arch": "plasma-workspace", "fedora": "plasma-workspace", "opensuse": null, "debian": "plasma-workspace"}
+    },
+    "kactivitymanagerd": {
+      "label": "Gestor de actividades de KDE",
+      "referenceVersion": "6.7.5",
+      "why": "Favoritos y recientes del Kickoff de Breeze (KActivities, el formato de Plasma)",
+      "check": {"type": "path", "any": ["/usr/libexec/kactivitymanagerd", "/usr/lib/kactivitymanagerd", "/usr/lib/x86_64-linux-gnu/libexec/kactivitymanagerd"]},
+      "packages": {"gentoo": "kde-plasma/kactivitymanagerd", "arch": "kactivitymanagerd", "fedora": "kactivitymanagerd", "opensuse": null, "debian": "kactivitymanagerd"}
     }
   }
 }

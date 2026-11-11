@@ -53,9 +53,13 @@ Item {
         id:kickoffComponent
         PC3.ToolButton {
             implicitWidth:40; implicitHeight:40
-            icon.name:"start-here-kde"
+            icon.name:Config.options.bar.plasma.kickoff?.icon || "start-here-kde-symbolic"
+            checked:GlobalStates.plasmaKickoffOpen
+            // F4: el Kickoff portado (modules/plasma/kickoff) se abre junto a este botón, como el plasmoide
             onClicked: {
-                Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/app-launcher.sh"]);
+                if (GlobalStates.plasmaKickoffOpen) { GlobalStates.plasmaKickoffOpen=false; return; }
+                PanelState.anchor(this,"plasmaKickoff");
+                GlobalStates.plasmaKickoffOpen=true;
             }
         }
     }

@@ -65,6 +65,11 @@ Singleton {
     property real plasmaCalendarAnchorX: -1
     property string plasmaCalendarScreen: ""
 
+    // Kickoff (modules/plasma/kickoff): -1 = anclado al inicio del panel
+    property bool plasmaKickoffOpen: false
+    property real plasmaKickoffAnchorX: -1
+    property string plasmaKickoffScreen: ""
+
     onSidebarRightOpenChanged: {
         if (GlobalStates.sidebarRightOpen) {
             Notifications.timeoutAll();

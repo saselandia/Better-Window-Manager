@@ -1353,5 +1353,25 @@
       "default"
     ],
     "is_modified": false
+  },
+  {
+    "id": "custom_1794354569_77",
+    "category": "Lanzadores",
+    "description": "Lanzador de aplicaciones (Kickoff de Breeze)",
+    "mods": [
+      "ALT"
+    ],
+    "key": "F1",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/scripts/app-launcher.sh",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
   }
 ]

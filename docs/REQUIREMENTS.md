@@ -139,6 +139,7 @@ Son las versiones registradas en el entorno local de BWM, no las últimas public
 | BluezQt | 6.29.0 | — |
 | Kirigami (componentes KDE) | 6.29.0 | — |
 | Reloj de Plasma | 6.7.5 | — |
+| Gestor de actividades de KDE | 6.7.5 | — |
 
 ## Skin default (end-4)
 
@@ -248,6 +249,7 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | plasma-pa (applet de sonido) | Modelos de sonido del applet de Plasma (org.kde.plasma.private.volume) | `kde-plasma/plasma-pa` | `plasma-pa` | `plasma-pa` | — | `plasma-pa` |
 | BluezQt | Modelos de Bluetooth del applet de Plasma (org.kde.bluezqt) | `kde-frameworks/bluez-qt` | `bluez-qt` | `kf6-bluez-qt` | — | — |
 | Kvantum (estilo de widgets Qt) | Muchos temas globales de la KDE Store (Sweet, Layan…) piden el estilo de aplicaciones Kvantum; sin él las apps Qt vuelven a Breeze/Fusion | `x11-themes/kvantum` | `kvantum` | `kvantum` | — | — |
+| Gestor de actividades de KDE | Favoritos y recientes del Kickoff de Breeze (KActivities, el formato de Plasma) | `kde-plasma/kactivitymanagerd` | `kactivitymanagerd` | `kactivitymanagerd` | — | `kactivitymanagerd` |
 
 ## Plugins de barras de título (Breeze (Kde plasma) y Retro)
 

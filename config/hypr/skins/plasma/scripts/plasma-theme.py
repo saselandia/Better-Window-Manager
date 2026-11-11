@@ -10,6 +10,7 @@
   plasma-theme.py cursor <tema>              no: el cursor es común a todas las skins (regla 14)
   plasma-theme.py save | restore             guarda/devuelve el kdeglobals de Breeze al salir/entrar
   plasma-theme.py sync                       regenera la paleta de las apps desde el esquema activo
+  plasma-theme.py translations               compila los catálogos de lo portado (Kickoff…) en locale/
 
 Escribe los mismos archivos que Plasma (kdeglobals, plasmarc, kwinrc, ksplashrc) con notificación
 de KConfig, así el shell (libplasma, Kirigami) y las apps KDE cambian en vivo. Usa plasma-apply-*
@@ -276,6 +277,32 @@ def current() -> dict:
     }
 
 
+# ───────────────────────────────────────────────────────────── traducciones de lo portado
+# Catálogos originales de plasma-desktop 6.7.5 incluidos con el QML portado (plasma-desktop no se
+# instala: sólo sus .po). KLocalizedString los busca en <datos>/locale/<idioma>/LC_MESSAGES.
+PORTED_CATALOGS = {
+    "plasma_applet_org.kde.plasma.kickoff": Path(__file__).resolve().parents[4] / "quickshell/ii/modules/plasma/kickoff/po",
+}
+
+
+def install_translations() -> int:
+    if not _which("msgfmt"):
+        return 0
+    for domain, po_dir in PORTED_CATALOGS.items():
+        for po in sorted(po_dir.glob("*.po")):
+            target = DATA / "locale" / po.stem / "LC_MESSAGES" / f"{domain}.mo"
+            if target.is_file() and target.stat().st_mtime >= po.stat().st_mtime:
+                continue
+            target.parent.mkdir(parents=True, exist_ok=True)
+            tmp = target.with_suffix(".tmp")
+            if subprocess.run(["msgfmt", "-o", str(tmp), str(po)], stdout=subprocess.DEVNULL,
+                              stderr=subprocess.DEVNULL).returncode == 0:
+                os.replace(tmp, target)
+            else:
+                tmp.unlink(missing_ok=True)
+    return 0
+
+
 # ───────────────────────────────────────────────────────────── kdeglobals de Breeze
 def _is_bwm_kdeglobals() -> bool:
     try:
@@ -294,6 +321,7 @@ def save() -> int:
 
 def restore() -> int:
     """Al entrar en Breeze: el kdeglobals que tenía, o el tema global Breeze Oscuro la primera vez."""
+    install_translations()
     saved = STATE / "kdeglobals"
     if saved.is_file():
         tmp = KDEGLOBALS.with_suffix(".bwm-tmp")
@@ -374,8 +402,8 @@ def main(argv: list[str]) -> int:
             print(__doc__)
             return 1
         return handlers[cmd](args[0])
-    if cmd in ("save", "restore", "sync"):
-        return {"save": save, "restore": restore, "sync": sync}[cmd]()
+    if cmd in ("save", "restore", "sync", "translations"):
+        return {"save": save, "restore": restore, "sync": sync, "translations": install_translations}[cmd]()
     print(__doc__)
     return 1
 
