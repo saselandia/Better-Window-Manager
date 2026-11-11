@@ -150,6 +150,22 @@ class PlasmaThemeTest(unittest.TestCase):
         (cfg / "config.json").write_text(json.dumps({"appearance": {"bwmTheme": skin}}))
 
     # ── paleta
+    def test_native_global_theme_defaults_are_read_with_local_overrides(self):
+        system = self.config.parent / "system"
+        system.mkdir()
+        (system / "kdeglobals").write_text("[General]\nColorScheme=System\n[Icons]\nTheme=system-icons\n")
+        defaults = self.config / "kdedefaults"
+        defaults.mkdir()
+        (defaults / "kdeglobals").write_text("[General]\nColorScheme=FromGlobalTheme\n[Icons]\nTheme=global-icons\n")
+        (self.config / "kdeglobals").write_text("[Icons]\nTheme=explicit-user-icons\n")
+        with mock.patch.dict(os.environ, {"XDG_CONFIG_DIRS": str(system)}):
+            palette = self.mod.plasma_palette
+            scheme = palette.load()
+            self.assertEqual(scheme.name, "FromGlobalTheme")
+            self.assertEqual(scheme.sections["Icons"]["Theme"], "explicit-user-icons")
+            self.assertEqual(palette.load(palette.KDEGLOBALS).name, "FromGlobalTheme")
+            self.assertEqual(palette.load(self.data / "color-schemes/TestLight.colors").name, "TestLight")
+
     def test_palette_follows_scheme(self):
         pal = self.mod.plasma_palette
         dark = pal.load(self.data / "color-schemes" / "TestDark.colors")

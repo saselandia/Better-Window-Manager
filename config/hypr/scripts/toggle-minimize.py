@@ -27,7 +27,7 @@ MINIMIZED_WS = "special:minimized"
 TAG_PREFIX = "omarchy-minimized-from-"
 LEGACY_WS_ID = 99            # older versions: workspace 99 + from_ws_<n>
 LEGACY_TAG_PREFIX = "from_ws_"
-# Windows hidden by "Show Desktop", read by Quickshell (PlasmaPanelState) to dock the panel.
+# Windows hidden by Show Desktop, read by the Breeze panel DesktopState.
 # Quickshell empties it as soon as a window shows up again, which ends the mode like KWin.
 SHOW_DESKTOP_STATE = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "bwm-show-desktop.json")
 # Exact geometry of minimized floating windows: moving between workspaces (and monitors, on

@@ -30,32 +30,10 @@ Singleton {
     property bool superReleaseMightTrigger: true
     property bool wallpaperSelectorOpen: false
     property bool workspaceShowNumbers: false
-    // KDE Plasma Bluetooth applet (opened from the Plasma taskbar)
-    property bool plasmaBluetoothOpen: false
-    property real plasmaPopupAnchorY: -1
-    property real plasmaBluetoothAnchorX: -1
-    property string plasmaBluetoothScreen: ""
-    // KDE Plasma Networks applet (opened from the Plasma taskbar)
-    property bool plasmaNetworkOpen: false
-    property real plasmaNetworkAnchorX: -1
-    property string plasmaNetworkScreen: ""
-    // KDE Plasma audio applet (opened from the Plasma taskbar volume button)
-    property bool plasmaAudioOpen: false
-    property real plasmaAudioAnchorX: -1
-    property string plasmaAudioScreen: ""
-    // KDE Plasma global theme picker (opened from the Plasma taskbar palette button)
-    property bool plasmaThemePickerOpen: false
-    property real plasmaThemePickerAnchorX: -1
-    property string plasmaThemePickerScreen: ""
-    // KDE Plasma task manager: right-click menu, hover window list and window peek
-    // KDE Plasma notifications applet (opened from the bell in the Plasma taskbar tray)
+    // TrayState exposes the notification history state to the common notification server.
     property bool plasmaNotificationsOpen: false
-    property real plasmaNotificationsAnchorX: -1
-    property string plasmaNotificationsScreen: ""
-    // KDE Plasma digital clock calendar (opened from the Plasma taskbar clock)
-    property bool plasmaCalendarOpen: false
-    property real plasmaCalendarAnchorX: -1
-    property string plasmaCalendarScreen: ""
+    // Anchor shared by the panel and the ported Kickoff surface.
+    property real plasmaPopupAnchorY: -1
 
     // Kickoff (modules/plasma/kickoff): -1 = anclado al inicio del panel
     property bool plasmaKickoffOpen: false

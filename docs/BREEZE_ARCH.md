@@ -328,8 +328,8 @@ bwm-theme-manager.py set plasma --restart-shell al activar Breeze.
 
 ## 12. Fase 7: negociación y fuente única del marco (2026-11-11)
 
-F6b y F7 están preparados juntos para la próxima sesión de Breeze. La parte compilada no prueba
-que el nuevo plugin funcione dentro del compositor; la matriz visual sigue pendiente.
+F6b/F7 ya se cargan en la sesión de Breeze y la decoración de sesión responde; sigue pendiente
+la matriz física completa de negociación CSD/SSD. El cierre y las correcciones están en §15.
 
 **Hallazgo en las fuentes:** KWin 6.7.5 decide por negociación Wayland o hints X11, mientras
 Hyprland 0.56.2 responde Server incluso a Client y limita a cuatro peticiones KDE. El detector
@@ -380,7 +380,7 @@ estas comprobaciones equivale a cargar el plugin F7 en el compositor.
 
 ## 13. Fase 10: reglas de KWin y snapping (2026-11-11)
 
-**Implementado; pendiente de validar el plugin con ratón tras reiniciar sesión.** No se aumenta
+**Implementado y cargado; pendiente de la lista física de ratón.** No se aumenta
 la estimación de compatibilidad por compilación o pruebas con datos simulados.
 
 El puente F2 incorpora `skins/plasma/scripts/kwin_rules.py` y `kwin_tiles.py`. kwinrulesrc se
@@ -489,8 +489,40 @@ del QML original completo de thumbnail_grid a través del adaptador. Vista de bl
 mediante grabToImage del propio elemento (sin capturar otras ventanas), corregido un solapamiento
 del reloj/avatar y eliminada la imagen. Suite general final: 358 pruebas, 65 omitidas. qmllint ejecutado con avisos por metadatos/imports dinámicos, complementado con carga QML real.
 
-**Pendiente real:** volver a cargar el shell para los Loader/módulo nuevo; Alt+Tab físico y capturas
-en vivo de apps, OSD con teclado/hardware, PAM/huella/bloqueo real y autenticación polkit KDE al
-entrar en Breeze. La sesión está en Retro: su agente ha conservado el registro y un intento de
-registrar KDE fue rechazado por PolicyKit; no se sustituyó. No se cerró sesión ni se probó una
-operación privilegiada. Las pruebas con acciones simuladas no certifican estos puntos.
+**Estado actualizado en F13:** el shell ya carga las interfaces; OSD y bandeja se corrigieron
+tras el primer uso. Polkit KDE registró su agente. Faltan las pruebas físicas de Alt+Tab/OSD,
+PAM/huella y autenticación privilegiada; el fallo histórico bajo Retro no describe el estado actual.
+
+## 15. Cierre F13 y límites actuales
+
+Código QML de Breeze únicamente en modules/plasma; eliminados los controles plasmaCommon,
+el selector artesanal y los iconos locales sin consumidores. DesktopState mantiene Mostrar
+escritorio en el panel. Alt+T usa BWMenu, sin confundir skin con tema global de KDE.
+Se retira la paleta fija de reserva del cargador Material y su OSD antiguo. Se mantiene la
+conversión desde el esquema activo para los widgets comunes y las ramas de selección necesarias.
+Requisitos y parts revisados; quick-tile/toggle-minimize conservan consumidores en otras skins.
+
+PlasmaTheme y plasma_palette fusionan la cascada XDG_CONFIG_DIRS → kdedefaults → archivos
+locales: la aplicación nativa de Sweet probó que no bastaba con leer el archivo local.
+Cambios en vivo y prioridad del usuario comprobados en pruebas Python/QML.
+
+kded registra en cola los nombres de servicios de todos sus plugins, independientemente de
+autoload=false. Al recargar el shell podía tomar StatusNotifierWatcher sin crear su objeto.
+bwm-shell-conflicts --repair-stale sólo retira esa reserva rota con mismo PID/usuario y ningún
+módulo cargado salvo ktimezoned. Conflictos funcionales siguen requiriendo la decisión del diálogo.
+No se detienen módulos ajenos ni se reclama un nombre falso con otro demonio.
+
+Integración: diez ventanas y siete flujos de audio conservados en la secuencia completa de skins,
+sin saltos de workspace/configerrors, una instancia ii y geometría final conservada. Sweet
+instalado con KNS y aplicado desde el KCM: colores, SVG, iconos y Aurorae efectivos; cursor
+común intacto. Datos instalados fuera del repo; configuración anterior restaurada.
+Evidencia y alcance, licencias, estimación prudente ~50 % y lista manual definitiva en
+[BREEZE_F13_RESULTS.md](BREEZE_F13_RESULTS.md). La compilación o las pruebas simuladas no
+sustituyen la matriz física CSD, snapping o autenticación. No se promete equivalencia completa.
+
+La repetición final detectó un intercambio de posiciones en el orden de inserción de dwindle:
+bwm_windows recuerda las ventanas libres al salir de una skin tradicional y recupera su marco
+al volver. La caché es de sesión/skin en XDG_RUNTIME_DIR (no un archivo de tema): valida dirección,
+PID/inicio, workspace y descripción/geometría de monitor. Descarta modos especiales y cambios
+de workspace/salida. Las etiquetas del usuario y de reglas se preservan al salir de Breeze.
+La secuencia final recupera las diez geometrías y conserva siete flujos de audio.

@@ -225,7 +225,7 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 * **Ventanas:** WM tradicional (ventanas flotantes)
 * **Tema por defecto:** Breeze Dark (estático). Tema global Breeze Oscuro de Plasma; se cambia con los temas de Plasma (no con el fondo).
 * **Temas:** Temas globales Breeze, Breeze Oscuro y Breeze Crepúsculo de Plasma; esquemas de color, estilos de Plasma e iconos instalados.
-* **Compatibilidad:** Esquemas de color (.colors), estilos de Plasma, iconos y temas globales de Plasma y la KDE Store (Obtener nuevos…) con skins/plasma/scripts/plasma-theme.py; el esquema colorea el shell y todas las apps. Decoraciones y panel portado: fases siguientes de docs/BREEZE_PLAN.md.
+* **Compatibilidad:** Formatos originales de Plasma: esquemas, estilos SVG, iconos, decoraciones KDecoration/Aurorae y temas globales. Cursor común controlado por BWM. Límites y comprobaciones: docs/BREEZE_F13_RESULTS.md.
 
 | Requisito | Para qué | Gentoo | Arch / CachyOS | Fedora | openSUSE | Debian / Ubuntu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |

@@ -4,6 +4,8 @@ import json
 import os
 from pathlib import Path
 import signal
+import shlex
+import time
 import subprocess
 import sys
 
@@ -47,10 +49,47 @@ def resolve(group):
             pass
 
 
+def repair_stale_tray():
+    """kded queues module service names even with autoload=false (KF6 kded.cpp).
+
+    Retire only a stale reservation with no functional watcher and only the harmless
+    timezone module. A real watcher or other active KDE modules still needs a decision.
+    """
+    owner = conflict('trays')
+    if not owner:
+        return False
+    try:
+        args = ['busctl', '--user', '--auto-start=no', '--timeout=1']
+        env = dict(os.environ, LC_ALL='C')
+        probe = subprocess.run(args + ['get-property', SERVICES['trays'][0],
+            '/StatusNotifierWatcher', SERVICES['trays'][0], 'RegisteredStatusNotifierItems'],
+            capture_output=True, text=True, timeout=2, env=env)
+        if probe.returncode == 0 or not any(reason in probe.stderr for reason in ('No such object', 'UnknownObject')):
+            return False
+        modules = subprocess.run(args + ['call', 'org.kde.kded6', '/kded',
+            'org.kde.kded6', 'loadedModules'], capture_output=True, text=True,
+            timeout=2, check=True, env=env)
+        values = shlex.split(modules.stdout)
+        if values[:1] != ['as'] or int(values[1]) != len(values[2:]) or set(values[2:]) - {'ktimezoned'}:
+            return False
+        if conflict('trays') != owner:
+            return False
+        os.kill(owner['pid'], signal.SIGTERM)
+        for _ in range(100):
+            if conflict('trays') != owner:
+                return True
+            time.sleep(0.02)
+    except (OSError, ValueError, IndexError, subprocess.SubprocessError):
+        pass
+    return False
+
+
 def main():
     if len(sys.argv) == 3 and sys.argv[1] == 'resolve' and sys.argv[2] in SERVICES:
         resolve(sys.argv[2])
     else:
+        if '--repair-stale' in sys.argv[1:]:
+            repair_stale_tray()
         print(json.dumps({group: conflict(group) for group in SERVICES}))
 
 

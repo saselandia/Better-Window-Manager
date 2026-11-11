@@ -15,7 +15,7 @@ import Quickshell
 import org.kde.kirigami as Kirigami
 import qs.services
 import qs.modules.common
-import qs.modules.ii.plasmaCommon
+import qs.modules.plasma.theme
 import "modules/plasma/settings"
 
 QQC2.ApplicationWindow {
@@ -43,7 +43,7 @@ QQC2.ApplicationWindow {
         Appearance.rounding.verylarge = 8;
         Appearance.rounding.windowRounding = 8;
         for (const f of ["main", "title", "numbers", "reading", "expressive"])
-            Appearance.font.family[f] = Breeze.fontFamily;
+            Appearance.font.family[f] = PlasmaTheme.fontMain;
         Config.readWriteDelay = 0; // one option at a time
         if (!SettingsState.openPage(Quickshell.env("SETTINGS_PAGE")))
             SettingsState.select("globaltheme", true);

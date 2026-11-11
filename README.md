@@ -51,7 +51,7 @@ This is the point of the project, so we measure it. Estimated share of the origi
 | :--- | :---: | :---: | :--- |
 | **Retro** (Omarchy) | **~90 %** | **~80 %** | Themes: `colors.toml`, wallpapers and app files (Neovim, VS Code, btop…) are applied; not the theme's `hyprland.lua`, `icons.theme` (Retro uses Papirus with the accent) or the Chromium theme (needs root). Plugins: bar widgets and services work unchanged; not those replacing the bar, lock screen, overlays or panels |
 | **default (end-4)** | **~90 %** | — | Any wallpaper builds its palette (100 %); third-party matugen templates are added to `matugen/config.toml`. end-4 has no plugin catalogue |
-| **Breeze (Kde plasma)** | **~45 %** | **0 %** | Plasma themes, SVG panel, Kickoff and ported tray/applets. Native decorations, lock/switcher, external plasmoids and advanced applet features remain pending; limits in docs/BREEZE_ARCH.md. |
+| **Breeze (Kde plasma)** | **~50 %** | **0 %** | Sweet installed through KDE Get New and applied in Preferences: colours, SVG style, icons and Aurorae; BWM cursor preserved. External plasmoids, effects and full physical CSD/snapping/authentication checks remain pending. [F13 results](docs/BREEZE_F13_RESULTS.md). |
 
 ### Towards a single compositor: Hyprland
 
@@ -147,7 +147,7 @@ The full list with each distribution's package names is in [docs/REQUIREMENTS.md
 | **Core** (every skin) | Hyprland ≥ 0.55 (Lua config), Quickshell (tested with 0.3.1), Qt ≥ 6.10 with 5Compat and SVG, Python ≥ 3.11 with Pillow, jq, swww (or awww), wl-clipboard, cliphist, kitty, grim, slurp, libnotify, GLib, fontconfig, PipeWire/WirePlumber, adw-gtk3. Fonts (Material Symbols, Google Sans Flex, JetBrainsMono Nerd Font) are installed by BWM |
 | **default (end-4)** | matugen, rofi (Wayland), hyprpolkitagent |
 | **Retro** | ImageMagick 7 (`magick`). Polkit, notifications and OSD are drawn by Quickshell |
-| **Breeze (Kde plasma)** | hyprpolkitagent, KSvg, libplasma, Kirigami, plasma-workspace (Clock), plasma-nm, plasma-pa, Breeze icons and BWM's hyprbars plugin **built for your Hyprland version** (the installer builds it if you have the Hyprland headers, `make` and a C++ compiler) |
+| **Breeze (Kde plasma)** | polkit-kde-agent, KRunner/Milou, KSvg, libplasma, Kirigami, plasma-workspace (Clock), plasma-nm, plasma-pa, Breeze icons and BWM's breezebars plugin **built for your Hyprland version** (the installer builds it if you have the Hyprland headers, `make` and a C++ compiler) |
 
 Optional: desktop portals (hyprland, gtk), NetworkManager, BlueZ, qt6ct, socat, git, Nautilus, Firefox, Flatpak (Vesktop, Spotify, Stremio), btop, fastfetch, Papirus, hyprsunset, SDDM and Plymouth.
 

@@ -74,3 +74,8 @@ intersecciones/filtrado de ventanas, orden y área útil con reserved real.
 Sesión real: Breeze/default y Sweet de KDE Store, cuatro bordes por estilo, imágenes recortadas
 al panel y reserva exacta de 44 px sólo en el borde elegido. AutoHide/Dodge/WindowsGoBelow
 reservan cero; el último queda visible. Capturas borradas al finalizar.
+
+F13 retira plasmaCommon: DesktopState.qml (código propio BWM, GPL-2.0-or-later) mantiene
+Mostrar escritorio sobre el estado común de minimizar; el panel ya tiene su propia lógica
+SVG/geometría y no necesita las antiguas heurísticas de flotación. Informe final en
+`docs/BREEZE_F13_RESULTS.md`.

@@ -11,6 +11,7 @@ con los bordes ("edgeMargin") y un hueco entre ventanas ("gap"), para que se not
 mosaico. Los datos los da bwm_skins.py.
 """
 import json
+import hashlib
 import math
 import os
 import re
@@ -142,10 +143,11 @@ def traditional_box(at, size, mon: dict, decoration, win: dict) -> tuple:
     return int(x), int(y), int(w), int(h)
 
 
-def place_lua(addr: str, workspace=None, box=None, make_floating=False) -> str:
+def place_lua(addr: str, workspace=None, box=None, make_floating=False, pid=None) -> str:
     """Lua de Hyprland 0.55+ que mueve una ventana a su workspace y, con `box`, la deja flotante
     en esa posición/tamaño."""
-    lua = f"local w = hl.get_window('address:{addr}'); if w then "
+    identity = f" and w.pid == {int(pid)}" if pid is not None else ""
+    lua = f"local w = hl.get_window('address:{addr}'); if w{identity} then "
     if workspace is not None:
         target = workspace if str(workspace).lstrip("-").isdigit() else json.dumps(str(workspace))
         lua += f"hl.dispatch(hl.dsp.window.move({{ workspace = {target}, follow = false, window = w }})) "
@@ -165,6 +167,82 @@ def dispatch(lua_blocks: list):
     subprocess.run(["hyprctl", "dispatch", code], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
+def skin_state_tags(client: dict) -> list:
+    """Only mutable tags owned by BWM's traditional window state, never user/rule tags."""
+    return [tag for tag in client.get("tags", []) if isinstance(tag, str) and not tag.endswith("*")
+            and (tag == "snapped" or tag.startswith(("snapped_", "bwm-max")))]
+
+
+def traditional_cache(skin: str) -> Path:
+    """Session-local geometry, never user configuration or cross-session window identity."""
+    session = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", os.environ.get("XDG_SESSION_ID", ""))
+    token = hashlib.sha256((session + ":" + skin).encode()).hexdigest()[:16]
+    return Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")) / ("bwm-window-geometry-" + token + ".json")
+
+
+def process_generation(pid) -> str:
+    try:
+        return (Path("/proc") / str(int(pid)) / "stat").read_text().split(") ", 1)[1].split()[19]
+    except (OSError, ValueError, IndexError, TypeError):
+        return ""
+
+
+def free_window(client: dict) -> bool:
+    return bool(client.get("mapped", True) and not client.get("hidden")
+                and not client.get("fullscreen", 0) and not client.get("pinned")
+                and client.get("workspace", {}).get("id", 0) > 0
+                and not any(str(tag).startswith(("bwm-max", "snapped")) for tag in client.get("tags", [])))
+
+
+def remember_traditional(skin: str, clients: list):
+    """Remember free floating windows before tiling can rearrange their insertion order."""
+    if not is_traditional(skin):
+        return
+    monitors, records, saved = hypr_json("monitors"), titlebars(), {}
+    for c in clients:
+        if not free_window(c) or not c.get("floating") or not c.get("address"):
+            continue
+        generation = process_generation(c.get("pid"))
+        mon = next((m for m in monitors if m.get("id") == c.get("monitor")), None)
+        if not generation or not mon or not mon.get("description"):
+            continue
+        frame = decoration_extents(c, records)
+        x, y = c.get("at", [0, 0]); w, h = c.get("size", [0, 0])
+        if w < MIN_W or h < MIN_H:  # Do not remember transient menus/tooltips.
+            continue
+        saved[c["address"]] = {"pid": c["pid"], "generation": generation,
+            "workspace": c["workspace"]["id"], "monitor": mon["description"],
+            "monitorBox": monitor_box(mon),
+            "frame": [x-frame["left"], y-frame["top"], w+frame["left"]+frame["right"], h+frame["top"]+frame["bottom"]]}
+    path = traditional_cache(skin)
+    temporary = path.with_suffix(".tmp")
+    try:
+        temporary.write_text(json.dumps(saved), encoding="utf-8")
+        temporary.replace(path)
+    except OSError:
+        temporary.unlink(missing_ok=True)
+
+
+def remembered_box(saved: dict, client: dict, mon: dict, borders: dict):
+    """Do not follow a moved window to another workspace/monitor or restore a reused address."""
+    item = saved.get(client.get("address"), {})
+    if (not isinstance(item, dict) or not item or not free_window(client) or item.get("pid") != client.get("pid")
+            or item.get("generation") != process_generation(client.get("pid"))
+            or item.get("workspace") != client.get("workspace", {}).get("id")
+            or item.get("monitor") != mon.get("description")
+            or item.get("monitorBox") != list(monitor_box(mon))):
+        return None
+    frame = item.get("frame", [])
+    if not isinstance(frame, (list, tuple)) or len(frame) != 4 or not all(isinstance(v, (int, float)) and math.isfinite(v) for v in frame):
+        return None
+    x, y, w, h = frame
+    # New decoration/theme extents must remain inside the same remembered outer frame.
+    cw, ch = w-borders["left"]-borders["right"], h-borders["top"]-borders["bottom"]
+    if cw < MIN_W or ch < MIN_H:
+        return None
+    return int(x+borders["left"]), int(y+borders["top"]), int(cw), int(ch)
+
+
 def float_in_place(skin: str, clients: list = None):
     """Al entrar en una skin tradicional, las ventanas en mosaico pasan a flotar en su mismo sitio
     (con su barra de título, el margen y el hueco de la skin)."""
@@ -172,6 +250,11 @@ def float_in_place(skin: str, clients: list = None):
     clients = clients if clients is not None else hypr_json("clients")
     monitors = hypr_json("monitors")
     bars = titlebars()
+    try:
+        saved = json.loads(traditional_cache(skin).read_text())
+        if not isinstance(saved, dict): saved = {}
+    except (OSError, ValueError):
+        saved = {}
     blocks = []
     for c in clients:
         if (c.get("floating") or c.get("fullscreen", 0) or c.get("pinned") or not c.get("address")
@@ -181,8 +264,9 @@ def float_in_place(skin: str, clients: list = None):
             or monitor_for(c["at"], c["size"], monitors)
         if not mon:
             continue
-        box = traditional_box(c["at"], c["size"], mon, decoration_extents(c, bars), win)
-        blocks.append(place_lua(c["address"], box=box, make_floating=True))
+        borders = decoration_extents(c, bars)
+        box = remembered_box(saved, c, mon, borders) or traditional_box(c["at"], c["size"], mon, borders, win)
+        blocks.append(place_lua(c["address"], box=box, make_floating=True, pid=c.get("pid")))
     dispatch(blocks)
     return len(blocks)
 

@@ -55,18 +55,13 @@ de un tema; cambiar el fondo no los toca.
 | :--- | :---: | :---: | :--- |
 | Retro | ~90 % | ~80 % | `hyprland.lua` e `icons.theme` de los temas, tema de Chromium (root); plugins que sustituyen barra, bloqueo, overlays o paneles |
 | default (end-4) | ~90 % | — | Plantillas de matugen de terceros: se añaden a mano en `matugen/config.toml` |
-| Breeze (Kde plasma) | ~50 % | 0 % | Esquemas/estilos/iconos/temas globales, panel SVG, Kickoff y bandeja/applets portados (varios reducidos). Preferencias del sistema con los KCM reales de Apariencia y «Obtener nuevos…» (F11). F12 añade rejilla original de Alt+Tab, OSD y controles de bloqueo de KDE, temas QML alojados por BWM y KRunner nativo. Pruebas con contextos simulados; autenticación real y temas externos adicionales pendientes. Persisten límites de plasmoides externos y applets; arquitectura y README de cada carpeta. |
+| Breeze (Kde plasma) | ~50 % | 0 % | Sweet instalado por KNS y aplicado desde Preferencias: colores, estilo SVG, candy-icons y Aurorae; cursor común conservado. Panel, Kickoff, applets y vistas de sesión portados. Faltan plasmoides externos, efectos/disposición y pruebas físicas completas de CSD, snapping y autenticación. [Resultados F13](BREEZE_F13_RESULTS.md). |
 
-F6b (decoraciones KDE) y F7 (negociación CSD/SSD sin listas de clases y geometría con el marco
-real) están preparados para la próxima sesión de Breeze. Su compilación y pruebas automáticas
-no suben esta estimación: falta validar el plugin dentro de Hyprland tras reiniciar sesión.
-Matriz de apps y pasos en [BREEZE_CSD_RESULTS.md](BREEZE_CSD_RESULTS.md).
-
-F10 añade lectura de kwinrulesrc, mosaicos en el formato de KWin, editor reducido y outline KSvg.
-Su validación dentro del compositor queda pendiente de reiniciar sesión; no cambia la estimación.
-Cobertura y límites en arquitectura §13; lista de ratón en [BREEZE_F10_CHECKLIST.md](BREEZE_F10_CHECKLIST.md).
-
-Actualiza esta tabla y la del README cuando cambie el soporte.
+Estimación prudente de cobertura, no porcentaje medido de paquetes de la Store. Las pruebas con
+Sweet no certifican todos los temas privados ni equivalencia con Plasma completo. La sesión ya
+carga el plugin; siguen pendientes la matriz de apps y ratón en
+[BREEZE_CSD_RESULTS.md](BREEZE_CSD_RESULTS.md) y [BREEZE_F10_CHECKLIST.md](BREEZE_F10_CHECKLIST.md).
+F13 no modifica el binario del plugin ni necesita otra salida de sesión por sí misma.
 
 ## Qué se conserva entre skins
 
@@ -100,7 +95,7 @@ sin mezclar. Así una skin nueva o un cambio en una no rompe las demás.
 | :--- | :--- | :--- |
 | Manifiesto, aspecto y requisitos | `hypr/skins/requirements.json` | `hypr/skins/<id>/skin.json` |
 | Ajustes de Quickshell | Secciones comunes de `config.json` | `illogical-impulse/config-<id>.json` (secciones propias) |
-| Interfaz QML | `quickshell/ii/modules/common`, `services`, `modules/settings` | default (end-4): `modules/ii/*` de illogical-impulse; Retro: `modules/ii/omarchy*`, `modules/ii/bar/omarchy`, `Commons`, `Ui`, `omarchy-plugins`; Plasma: modules/plasma/panel y theme; temporalmente también `modules/ii/plasma*`, `plasmaCommon` |
+| Interfaz QML | `quickshell/ii/modules/common`, `services`, `modules/settings` | default (end-4): `modules/ii/*` de illogical-impulse; Retro: `modules/ii/omarchy*`, `modules/ii/bar/omarchy`, `Commons`, `Ui`, `omarchy-plugins`; Plasma: `modules/plasma/{theme,panel,kickoff,tray,applets,menus,tiling,settings,switcher,osd,lock,runtime}` |
 | Qué se carga en cada skin | `panelFamilies/IllogicalImpulseFamily.qml` (`extraCondition`) | — |
 | Selector de fondos (Alt+W) | `hypr/scripts/wallpaper-picker.sh` elige la skin | default: `modules/ii/wallpaperSelector`; Retro: `bar/omarchy/image-picker` + `hypr/skins/retro/scripts/wallpaper-picker.py` (fondos del tema, extras de Omarchy y `~/Pictures/Wallpapers`); Breeze: rofi |
 | Colores de Hyprland y apps | `hypr/modules/*.lua`, `matugen/` | `colors.lua` (default (end-4)), `retro_colors.lua` + `hypr/omarchy/` (Retro), `plasma_colors.lua` (Plasma) |

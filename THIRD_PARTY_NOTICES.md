@@ -17,7 +17,6 @@ Los binarios existentes deben corresponder a su código fuente y avisos antes de
 | Cursores `assets/cursors/Bibata-Modern-{Classic,Ice}` | [Bibata Cursor](https://github.com/ful1e5/Bibata_Cursor/tree/v2.0.6), GPL-3.0; `COPYING` junto a cada tema | Los `index.theme` indican v2.0.6; se incluyen XCursors y versiones Hyprcursor. Véase `SOURCE.md` en cada carpeta. La correspondencia de cada binario y la generación de Hyprcursor siguen pendientes de verificar. |
 | Pywalfox, `config/firefox/extensions/pywalfox@frewacom.org.xpi` | [Frewacom/pywalfox](https://github.com/Frewacom/pywalfox/tree/v2.1.1), MPL-2.0; [texto](licenses/pywalfox-MPL-2.0.txt) | El manifiesto del XPI indica versión 2.1.1 (SHA-256 `b7a7a86d1d49a8309758ce1d38492975abe07a61e3788e2d913c70a4d07758b4`). El código publicado de esa versión está en la etiqueta enlazada; no se ha comprobado que el binario sea reproducible desde ella ni si contiene dependencias adicionales. |
 | Fuentes `assets/fonts/` | Google Sans Flex, Readex Pro, Space Grotesk y JetBrains Mono Nerd Font: OFL-1.1. Material Symbols: fuente de la familia [Material Design Icons](https://github.com/google/material-design-icons), Apache-2.0 | Avisos por familia y licencias de Nerd Fonts 3.4.0 y 3.5.1 en `assets/fonts/licenses/`. Google Sans Flex: Copyright 2015 Google LLC según el TTF distribuido. JetBrains Mono: Copyright 2020 The JetBrains Mono Project Authors. La procedencia exacta de cada glifo añadido por Nerd Fonts y de la compilación de Material Symbols aún requiere cotejo. |
-| Iconos Breeze en `config/quickshell/ii/assets/icons/breeze-dark/` | El proyecto [KDE/breeze-icons](https://github.com/KDE/breeze-icons), Copyright 2014 Uri Herrera y colaboradores, usa LGPL-3.0-or-later para sus iconos; [aviso de KDE](licenses/KDE-Breeze-COPYING-ICONS.txt), [LGPL](licenses/LGPL-3.0.txt) | Los archivos SVG distribuidos son su formato fuente. Debe confirmarse la procedencia y revisión exacta de cada icono incluido, así como cualquier excepción individual. |
 | Iconos Fluent en `config/quickshell/ii/assets/icons/fluent/` | Joshua Oghenekaro Okwe, Windows 11 en Figma, CC BY 4.0 | [Aviso original](config/quickshell/ii/assets/icons/fluent/README.md) indica fuente y modificaciones. Verificar las condiciones de cada recurso descargado antes de distribuirlo. |
 | Formas de `config/quickshell/ii/modules/common/widgets/shapes/` | Apache-2.0 | Texto en ese directorio; revisar procedencia y cualquier aviso `NOTICE` de la versión original. |
 
@@ -67,8 +66,8 @@ animaciones y reglas de capa de Omarchy quattro `598e4eb` (`default/hypr/looknfe
 (`hypr/hyprland/general.lua` y `rules.lua`, GPL-3.0, como el resto del shell derivado).
 
 Bloqueo de Retro (2026-11-08): `modules/ii/omarchyLock/LockView.qml` es `shell/plugins/lock/LockView.qml` de
-Omarchy quattro `598e4eb` (MIT) sin cambios. `modules/ii/plasmaLock/` es diseño propio que imita la
-pantalla de bloqueo Breeze de Plasma 6, sin código de KDE; usa el icono `go-next` de breeze-icons.
+Omarchy quattro `598e4eb` (MIT) sin cambios. El bloqueo artesanal de Breeze fue sustituido
+por el port de KScreenLocker descrito en F12 al final de este archivo.
 
 Modos de workspace de Retro (2026-11-08): `hypr/skins/retro/hypr/workspace-modes.lua` y los shims
 `omarchy-hyprland-workspace-layout-{toggle,default,current}` portan `default/hypr/workspace-modes.lua`,
@@ -120,8 +119,6 @@ No se declara que los siguientes recursos estén cubiertos por MIT ni por una li
 * `assets/skin-previews/kde-plasma-6.png` y `end4-illogical-impulse.png`: su origen figura en
   `assets/skin-previews/README.md`, pero la licencia específica de las capturas debe verificarse.
   Las imágenes de temas de Omarchy también pueden tener autores o condiciones distintas del código.
-* Iconos Breeze incluidos en `config/quickshell/ii/assets/icons/breeze-dark/`: verificar versión,
-  autores y licencias de los archivos concretos; no basta el nombre del tema.
 * Los binarios `config/hypr/plugins/hypr-csd.so`, `src/csd-minimize/hypr-csd.so` y
   `config/hypr/plugins/hyprbars.so`: identificar versión, fuentes exactas y licencias de cualquier
   código incorporado, o dejar de distribuirlos como binarios.
@@ -258,3 +255,17 @@ https://invent.kde.org/plasma/kscreenlocker/-/tree/v6.7.5/greeter/fallbacktheme.
 Los README de `modules/plasma/{switcher,osd,lock,runtime}` detallan versiones, adaptaciones y
 límites. El QML portado y la fuente de los adaptadores están incluidos; KRunner, Milou y el
 agente polkit de KDE se usan desde los paquetes de la distribución, sin incorporar sus binarios.
+
+### Limpieza F13 y recursos de prueba
+
+Se retiran los 152 SVG Breeze locales y los módulos artesanales sustituidos; los iconos actuales
+proceden del paquete de la distribución o del tema del usuario y no se incorporan aquí.
+DesktopState y la reparación D-Bus son implementación propia de BWM (GPL-2.0-or-later);
+la política de registro en cola se estudió en frameworks/kded v6.29.0 src/kded.cpp, sin copiarlo.
+
+Sweet/variantes, candy-icons, Aurorae y Sweet-cursors descargados para F13 permanecen fuera del
+repositorio, con sus avisos originales. No se redistribuyen ni se añaden como requisitos de BWM.
+Los metadatos del tema global Sweet declaran GPL 3+; no se extiende esa declaración a todos los
+recursos de sus dependencias. Las fuentes/copias portadas de F3–F12 y sus textos de licencia
+siguen identificadas arriba y en cada README. La lista de auditoría de release de este archivo
+continúa abierta para los recursos y binarios ajenos a este cierre; F13 no la declara resuelta.

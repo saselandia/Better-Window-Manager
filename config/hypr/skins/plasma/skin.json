@@ -23,7 +23,7 @@
   },
   "themes": {
     "builtIn": "Temas globales Breeze, Breeze Oscuro y Breeze Crepúsculo de Plasma; esquemas de color, estilos de Plasma e iconos instalados.",
-    "compatibility": "Esquemas de color (.colors), estilos de Plasma, iconos y temas globales de Plasma y la KDE Store (Obtener nuevos…) con skins/plasma/scripts/plasma-theme.py; el esquema colorea el shell y todas las apps. Decoraciones y panel portado: fases siguientes de docs/BREEZE_PLAN.md."
+    "compatibility": "Formatos originales de Plasma: esquemas, estilos SVG, iconos, decoraciones KDecoration/Aurorae y temas globales. Cursor común controlado por BWM. Límites y comprobaciones: docs/BREEZE_F13_RESULTS.md."
   },
   "look": {
     "wallpaper": "plasma.png",
@@ -58,9 +58,7 @@
       "config/quickshell/ii/modules/plasma/theme",
       "config/quickshell/ii/modules/plasma/kickoff",
       "config/quickshell/ii/modules/plasma/panel",
-      "config/quickshell/ii/modules/ii/plasmaCommon",
       "config/quickshell/ii/modules/plasma/menus",
-      "config/quickshell/ii/modules/ii/plasmaThemePicker",
       "config/quickshell/ii/plasmaSettings.qml",
       "config/quickshell/ii/modules/plasma/settings",
       "config/quickshell/ii/modules/plasma/tray",

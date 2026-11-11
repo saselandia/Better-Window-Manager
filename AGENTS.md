@@ -152,6 +152,7 @@ siendo el nombre del escritorio original que imita Breeze.
 | Menús contextuales de Breeze (ventana, tareas, escritorio, panel) | `quickshell/ii/modules/plasma/menus/` (PC3.Menu, README), IPC `plasmaWindowMenu`; acciones en `kwin-window.py`; traducciones `menus/po` (`extract.py`); pruebas `tests/test_plasma_menus_ui.py` |
 | Detección CSD/SSD de Breeze | `src/breezebars/CSDLogic.hpp` y `CSDDetect.cpp` (negociación aplicada, X11 asíncrono); `hyprctl -j breezebars-csd` / Lua `hl.plugin.breezebars.decoration(address,pid)` dan el marco real para Python y placement. Auditoría `skins/plasma/scripts/csd-audit.py`; matriz `docs/BREEZE_CSD_RESULTS.md`. Sólo probar plugin nuevo tras reiniciar sesión |
 | Interfaces de Plasma (F12) | `modules/plasma/{switcher,osd,lock,runtime}`; `interface-theme.py` lee LayoutName/LookAndFeelPackage y adapta QML en caché. ThemeHost en `src/bwm-kcmhost` (API 2, motores separados; Qt.quit de un tema no cierra el shell). Controlador MRU común intacto. KRunner nativo en Alt+Espacio sólo Breeze; agente polkit desde manifiesto vía `bwm_polkit.py` (KDE en Breeze, Omarchy embebido en Retro) |
+| Cierre del port Breeze y pruebas de integración | `docs/BREEZE_F13_RESULTS.md` (limpieza, Sweet/KNS, cambios de skin y lista manual); `scripts/bwm-shell-conflicts.py` repara sólo reservas de bandeja rotas de kded sin módulos activos salvo ktimezoned |
 | Reglas y encaje de KWin (Breeze, F10) | `skins/plasma/scripts/kwin_rules.py`, `kwin_tiles.py`, `kwin-tiles.py`; vigilante único F2 y Lua generado, `skins/plasma/hypr/{rules,kwinrules}.lua`; plugin `KWinSnap.hpp`/`SnapGeometry.hpp`; outline/editor `modules/plasma/tiling`. Ctrl+flechas conservado; Meta+T editor reducido. Cobertura y opt-out en `skins/plasma/scripts/KWIN_RULES.md`, lista tras reinicio en `docs/BREEZE_F10_CHECKLIST.md` |
 | Configuración KDE ↔ BWM en Breeze | `skins/plasma/scripts/kde-config-bridge.py` (export/import/watch, ciclo enter/leave), `skins/plasma/hypr/kwin.lua`; inventario y autoridad en `docs/BREEZE_ARCH.md` §9. Gestores comunes avisan por `scripts/bwm_settings_hooks.py` (hook del manifiesto). Usuario Lua al final; nunca escribir `bwm/user/*` |
 | GTK 3 / Qt / flatpaks | `scripts/gtk-theme.py`, `scripts/bwm_icons.py` (qt6ct, `kdeglobals`, overrides) |
@@ -173,7 +174,7 @@ siendo el nombre del escritorio original que imita Breeze.
 | Inactividad (salvapantallas, apagar monitores, bloqueo, suspender) | `modules/ii/idle/BwmIdle.qml` (común) con `idle.screensaver/screensaverTime/screen/lock/suspend` comunes a todas las skins; página Ajustes → Inactividad (`modules/settings/IdleConfig.qml`, también en el menú de Retro); salvapantallas sólo en Retro (`skins/retro/scripts/launch-screensaver.sh`: el nativo de Omarchy si se compiló con `install-screensaver.sh`, si no el de terminal); opciones de Hyprland propias de una skin en `skins/<id>/hypr/misc.lua` |
 | Actualizaciones de Gentoo / Flatpak | `BWM_CONTEXT.md` §2.7; shims `omarchy-update` y `omarchy-update-available` |
 | Reiniciar una app conservando sus ventanas | `bwm_omarchy.restart_app()` (Firefox, Vesktop, Steam, Stremio) + `scripts/bwm_windows.py` (`quiet_activation`: sin `focus_on_activate` mientras se reinicia, o te lleva a su workspace) |
-| Dónde quedan las ventanas al cambiar de skin | `scripts/bwm_windows.py` (`float_in_place`, `traditional_box`, `restored_box`, `hold_new_windows`), `bwm_transition.py`, `sync_floating_windows`; familia de la skin en `skins/<id>.json` → `windowing` (`tiling`/`stacking`) |
+| Dónde quedan las ventanas al cambiar de skin | `scripts/bwm_windows.py` (`remember_traditional` guarda geometría libre por sesión/skin y dirección+PID/inicio; `float_in_place`, `traditional_box`, `restored_box`, `hold_new_windows`), `bwm_transition.py`, `sync_floating_windows`; familia de la skin en `skins/<id>.json` → `windowing` (`tiling`/`stacking`) |
 
 ## 4. Estilos y piezas clave
 
@@ -181,11 +182,11 @@ siendo el nombre del escritorio original que imita Breeze.
   `illogical-impulse/config-<estilo>.json` (secciones propias: appearance, background, bar, dock, panelFamily,
   waffles; dentro de `bar` se comparten `workspaces.shown`, `weather` y `topLeftIcon`); el resto se comparte.
 - **default (end-4)**: Material You con matugen desde el fondo (`scripts/set-wallpaper.sh`).
-- **Breeze (Kde plasma)** (`quickshell/ii/modules/ii/plasma*`, comunes en `plasmaCommon/`: `Breeze.qml`, `BreezePopupWindow` —se
-  desliza con un offset y respeta `bar.bottom`, `passBarClicks`—, `BreezeSlider`…): panel flotante, Kickoff
-  (Super), applets Bluetooth/red/audio/calendario/notificaciones, menú de tareas con miniaturas y «peek»,
-  selector «Estilo global» (Alt+T), Alt+Tab de KDE (el foco cambia al soltar Alt), OSD Breeze, hyprbars con
-  barras Breeze y snapping. Redondeo 12 px.
+- **Breeze (Kde plasma):** port KDE en `quickshell/ii/modules/plasma/` (panel, Kickoff,
+  bandeja/applets, menús, temas, Preferencias, cambiador, OSD y bloqueo); no queda modules/ii/plasma*.
+  Lee formatos reales KDE y kdedefaults; `bwm-decorator` renderiza KDecoration/Aurorae fuera de
+  Hyprland y `breezebars` los compone. Cursor y servicios comunes siguen a BWM. Alt+T abre BWMenu;
+  temas globales en Preferencias. Informe y límites: `docs/BREEZE_F13_RESULTS.md` (~50 %).
 - **Retro = Omarchy 4** (repo `basecamp/omarchy`, rama `quattro`, MIT; investigación en `docs/OMARCHY_INVESTIGACION.md`):
   - Librerías de Omarchy en `quickshell/ii/Commons` y `Ui` (`qs.Commons`, `qs.Ui`; cambios BWM en `Commons/README.md`):
     `Color.qml` vigila `~/.local/state/bwm/omarchy/{colors,shell}.toml`, `I18n.qml` con cadenas incluidas (en, es-MX),

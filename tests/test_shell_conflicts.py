@@ -41,3 +41,22 @@ class ShellConflictsTest(unittest.TestCase):
         with mock.patch.object(helper, 'conflict', side_effect=[owner, None]), mock.patch.object(helper.os, 'kill') as kill:
             helper.resolve('trays')
             kill.assert_not_called()
+
+
+class StaleTrayTest(unittest.TestCase):
+    def test_retire_only_missing_object_and_harmless_modules(self):
+        owner = {'pid': 123, 'name': 'kded6'}
+        probe = mock.Mock(returncode=1, stderr='No such object path')
+        modules = mock.Mock(stdout='as 1 "ktimezoned"')
+        with mock.patch.object(helper, 'conflict', side_effect=[owner, owner, None]), mock.patch.object(helper.subprocess, 'run', side_effect=[probe, modules]), mock.patch.object(helper.os, 'kill') as kill:
+            self.assertTrue(helper.repair_stale_tray())
+            kill.assert_called_once_with(123, helper.signal.SIGTERM)
+        for active in ('as 1 "networkmanagement"', 'as 2 "ktimezoned" "other"'):
+            with mock.patch.object(helper, 'conflict', return_value=owner), mock.patch.object(helper.subprocess, 'run', side_effect=[probe, mock.Mock(stdout=active)]), mock.patch.object(helper.os, 'kill') as kill:
+                self.assertFalse(helper.repair_stale_tray())
+                kill.assert_not_called()
+
+    def test_working_watcher_is_never_automatically_stopped(self):
+        with mock.patch.object(helper, 'conflict', return_value={'pid': 123, 'name': 'kded6'}), mock.patch.object(helper.subprocess, 'run', return_value=mock.Mock(returncode=0)), mock.patch.object(helper.os, 'kill') as kill:
+            self.assertFalse(helper.repair_stale_tray())
+            kill.assert_not_called()

@@ -104,15 +104,16 @@ C++, F10 parte C++) comparten `src/breezebars/`: **nunca dos a la vez**.
 | F10 Reglas de ventana y snapping                          | **high** | Sí                              |
 | F11 Preferencias del sistema                              | medium   | No                              |
 | F12 Alt+Tab, OSD, bloqueo, KRunner                        | medium   | No                              |
-| F13 Limpieza, documentación y prueba completa             | medium   | Sí                              |
+| F13 Limpieza, documentación y prueba completa             | medium   | No: no cambia el plugin; lista manual pendiente |
 
 ---
 
 ## 4. Prompts
 
-> **Hechas: fases 0–5, 6a, 6b, 7, 8 y 9** (6b, 8 y 9 sin probar aún dentro de Breeze) (arquitectura en `docs/BREEZE_ARCH.md`; motor de temas, puente de configuración, panel, Kickoff, applets, auxiliar de decoraciones, plugin, minimizar/maximizar y menús en `BWM_CONTEXT.md` §3.139–147; protocolo para F6b en `src/bwm-decorator/PROTOCOL.md`). `docs/BREEZE_ARCH.md` manda sobre lo que digan los
-> prompts siguientes: lo que cambió está anotado en su §7, y F6 se ha partido en F6a y F6b.
-> **F7 implementada, compilada e instalada; validación real pendiente de reiniciar sesión**, junto con F6b. Arquitectura §12 y matriz `docs/BREEZE_CSD_RESULTS.md`.
+> **F0–F13 implementadas y limpieza final ejecutada.** El resultado comprobado y lo que aún
+> necesita interacción física están en `docs/BREEZE_F13_RESULTS.md`; la arquitectura vigente
+> está en `docs/BREEZE_ARCH.md`. Los prompts siguientes conservan el objetivo original, no son
+> una certificación de equivalencia completa ni del cumplimiento de todas las pruebas manuales.
 
 ### F0 · Viabilidad y arquitectura — **[HIGH]**
 
@@ -180,23 +181,38 @@ reales de KDE, y que cambie en vivo. Sustituye la paleta fija Breeze Dark (`BREE
 
 1. `modules/plasma/theme/PlasmaTheme.qml` (singleton, según la arquitectura de F0): esquema de
    color de `kdeglobals` (todos los grupos: Window, View, Button, Selection, Tooltip, Complementary,
-   Header, WM) con KColorScheme/KConfig QML si F0 lo validó; desktoptheme de `plasmarc`; iconos;
+   Header, WM) con KColFase 13 (última) de docs/BREEZE_PLAN.md (lee el plan y los commits de las fases anteriores).
+
+2. Elimina lo que quede de la Breeze hecha a mano: `modules/ii/plasma*` sustituidos, colores fijos
+   BREEZE_DARK_M3, `isPlasma` en módulos comunes que ya no hagan falta (`grep -rn isPlasma`),
+   reglas de `rules.lua` movidas a la skin, partes de `quick-tile.py`/`toggle-minimize.py` que ya
+   no use nadie (comprueba que default/Retro no las usan). Actualiza `parts`, requisitos y tests.
+3. Cambio de skin (regla 16): default → Breeze → Retro → Breeze con apps abiertas y algo sonando;
+   ventanas en su sitio, sin saltos de workspace, sin reinicios de apps, sin «Your config has
+   errors» en las otras skins (regla 4).
+4. Prueba con temas reales: un tema global completo de la KDE Store (colores + estilo de Plasma +
+   Aurorae + iconos + cursor) instalado con «Obtener nuevos…» y aplicado desde Preferencias; mide
+   qué parte del escritorio cambia y actualiza la compatibilidad estimada en `docs/SKINS.md`,
+   README.md y README.es.md (sólo lo comprobado).
+5. Documentación: §2.4 de BWM_CONTEXT reescrito, sección nueva en §3, `docs/BREEZE_ARCH.md` al día,
+   tabla «Dónde tocar» de AGENTS.md/CLAUDE.md (iguales), THIRD_PARTY_NOTICES.md completo.
+6. Lista final para mí de lo que requiere reiniciar sesión y qué comprobar a mano.orScheme/KConfig QML si F0 lo validó; desktoptheme de `plasmarc`; iconos;
    fuentes de `kdeglobals [General]`; vigilancia de cambios (KConfigWatcher o FileView).
    `Breeze.qml` pasa a ser una fachada sobre él para no romper los applets actuales.
-2. Aplicador `config/hypr/skins/plasma/scripts/plasma-theme.py` con el formato de Plasma:
+7. Aplicador `config/hypr/skins/plasma/scripts/plasma-theme.py` con el formato de Plasma:
    `colors <esquema>` (equivalente a plasma-apply-colorscheme: copia grupos a kdeglobals, notifica
    `KGlobalSettings.notifyChange`; reutiliza o sustituye `skins/default/scripts/kde-shims/
    plasma-apply-colorscheme`), `desktoptheme <tema>`, `icons`, `cursor` (ojo regla 14: el cursor es
    común; lo manda BWM), `lookandfeel <id>` (lee `contents/defaults` del paquete y aplica cada
    parte, como lookandfeeltool), `list`. Si `plasma-apply-*` reales están instalados, úsalos.
-3. Que el resto del escritorio siga el esquema activo: colores de Hyprland (`plasma_colors.lua`),
+8. Que el resto del escritorio siga el esquema activo: colores de Hyprland (`plasma_colors.lua`),
    GTK (`gtk-theme.py`, plantillas de matugen rellenadas desde el esquema en vez de BREEZE_DARK_M3
    en `bwm-theme-manager.py`), Qt (`QT_QPA_PLATFORMTHEME=kde` en Breeze si plasma-integration está,
    como default), kitty, Vesktop, Firefox/Pywalfox, Steam, Stremio, Omacalc: la misma tubería que hoy
    usa la paleta fija. Temas claros (Breeze Light) deben poner las apps en claro.
-4. KNewStuff: comprobar que «Obtener nuevos…» (knewstuff, ya instalado) descarga esquemas,
+9. KNewStuff: comprobar que «Obtener nuevos…» (knewstuff, ya instalado) descarga esquemas,
    estilos de Plasma, decoraciones Aurorae y temas globales a las carpetas estándar.
-5. Pruebas: Breeze Dark, Breeze Light y al menos un esquema y un estilo de Plasma de la KDE Store
+10. Pruebas: Breeze Dark, Breeze Light y al menos un esquema y un estilo de Plasma de la KDE Store
    (en el scratchpad o vía knewstuff), cambiados en vivo sin reiniciar el shell. Pruebas unitarias
    del aplicador con un HOME temporal. Actualiza `defaultTheme`/`themes` de skin.json.
 ```
@@ -565,6 +581,10 @@ Objetivo: el resto de interfaces de Plasma, con el tema global activo.
 ```
 
 ### F13 · Limpieza, documentación y prueba completa
+
+> Limpieza y pruebas de integración terminadas: véase `docs/BREEZE_F13_RESULTS.md`.
+> No se modifica el plugin en F13; el reinicio de mantenimiento del shell ya se hizo.
+> Pendientes de comprobación física detallados al final del informe, sin cerrar sesión automáticamente.
 
 ```text
 Fase 13 (última) de docs/BREEZE_PLAN.md (lee el plan y los commits de las fases anteriores).

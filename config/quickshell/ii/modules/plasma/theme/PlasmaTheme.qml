@@ -128,19 +128,40 @@ Singleton {
     readonly property string fontSmall: fontFamily(general.smallestReadableFont, fontMain)
     readonly property real fontSmallSize: fontSize(general.smallestReadableFont, 8)
 
-    FileView {
-        path: `${root.configDir}/kdeglobals`
-        watchChanges: true
-        onFileChanged: reload()
-        onLoaded: root.groups = root.parseIni(text())
-        onLoadFailed: root.groups = {}
+    // BWM F13: same KConfig cascade as native KCMs (which write kdedefaults).
+    readonly property var configSources: {
+        const bases = (Quickshell.env("XDG_CONFIG_DIRS") || "/etc/xdg").split(":").filter(p => p).reverse();
+        bases.push(root.configDir + "/kdedefaults", root.configDir);
+        const sources = [];
+        // Preserve the highest-precedence occurrence if kdedefaults is also in XDG_CONFIG_DIRS.
+        for (let i = 0; i < bases.length; ++i) {
+            if (bases.lastIndexOf(bases[i]) !== i) continue;
+            sources.push(bases[i] + "/kdeglobals", bases[i] + "/plasmarc");
+        }
+        return sources;
     }
-
-    FileView {
-        path: `${root.configDir}/plasmarc`
-        watchChanges: true
-        onFileChanged: reload()
-        onLoaded: root.plasmarc = root.parseIni(text())
-        onLoadFailed: root.plasmarc = {}
+    property var sourceData: ({})
+    function updateSource(path, value) {
+        sourceData = Object.assign({}, sourceData, {[path]: value});
+        const colors = {}, style = {};
+        for (const file of configSources) {
+            const target = file.endsWith("/kdeglobals") ? colors : style;
+            const ini = sourceData[file] || {};
+            for (const group in ini) target[group] = Object.assign({}, target[group] || {}, ini[group]);
+        }
+        root.groups = colors;
+        root.plasmarc = style;
+    }
+    Variants {
+        model: root.configSources
+        delegate: FileView {
+            required property string modelData
+            path: modelData
+            watchChanges: true
+            printErrors: false
+            onFileChanged: reload()
+            onLoaded: root.updateSource(modelData, root.parseIni(text()))
+            onLoadFailed: root.updateSource(modelData, {})
+        }
     }
 }

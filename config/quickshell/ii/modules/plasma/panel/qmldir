@@ -1,5 +1,6 @@
 module qs.modules.plasma.panel
 singleton PanelState 1.0 PanelState.qml
+singleton DesktopState 1.0 DesktopState.qml
 Panel 1.0 Panel.qml
 PanelContent 1.0 PanelContent.qml
 PanelBackground 1.0 PanelBackground.qml

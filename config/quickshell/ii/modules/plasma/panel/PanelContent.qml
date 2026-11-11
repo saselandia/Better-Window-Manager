@@ -8,7 +8,7 @@ import qs
 import qs.services
 import qs.modules.common
 import qs.modules.plasma.tray as PlasmaTray
-import qs.modules.ii.plasmaCommon
+import "." as PanelLocal
 import qs.modules.plasma.menus
 import org.kde.plasma.components as PC3
 Item {
@@ -136,7 +136,7 @@ Item {
         id:desktopComponent
         PC3.ToolButton {
             implicitWidth:root.vertical?32:20; implicitHeight:root.vertical?20:32
-            icon.name:"user-desktop"; onClicked:PlasmaPanelState.toggleShowDesktop()
+            icon.name:"user-desktop"; onClicked:PanelLocal.DesktopState.toggle()
         }
     }
 }

@@ -10,3 +10,12 @@ hl.window_rule({ name = "breeze-no-capture", match = { tag = "bwm-no-capture" },
 -- Native no-border also removes compositor borders/shadows; CSD negotiation stays automatic.
 hl.window_rule({ name = "breeze-no-border", match = { tag = "bwm-no-border" },
     decorate = false, border_size = 0, no_shadow = true })
+
+-- Sin barra de título; el campo sólo existe con el plugin breezebars cargado (Breeze)
+if hl.plugin and hl.plugin.breezebars then
+    hl.window_rule({
+        name  = "bwm-screensaver-nobar",
+        match = { class = "^org\\.bwm\\.screensaver$" },
+        ["breezebars:no_bar"] = true,
+    })
+end

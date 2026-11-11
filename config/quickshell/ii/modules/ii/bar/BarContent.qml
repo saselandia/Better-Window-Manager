@@ -37,7 +37,7 @@ Item { // Bar content region
     // Background (Only for Default Material You theme; Retro has Omarchy's own bar, omarchyShell/)
     Rectangle {
         id: barBackground
-        visible: !Appearance.isRetro && !Appearance.isPlasma
+        visible: !Appearance.isRetro
         anchors {
             fill: parent
             margins: Config.options.bar.cornerStyle === 1 ? (Appearance.sizes.hyprlandGapsOut) : 0 // idk why but +1 is needed
@@ -50,7 +50,7 @@ Item { // Bar content region
 
     FocusedScrollMouseArea { // Left side | scroll to change brightness
         id: barLeftSideMouseArea
-        visible: !Appearance.isRetro && !Appearance.isPlasma
+        visible: !Appearance.isRetro
 
         anchors {
             top: parent.top
@@ -103,7 +103,7 @@ Item { // Bar content region
 
     Row { // Middle section
         id: middleSection
-        visible: !Appearance.isRetro && !Appearance.isPlasma
+        visible: !Appearance.isRetro
         anchors {
             top: parent.top
             bottom: parent.bottom
@@ -192,7 +192,7 @@ Item { // Bar content region
 
     FocusedScrollMouseArea { // Right side | scroll to change volume
         id: barRightSideMouseArea
-        visible: !Appearance.isRetro && !Appearance.isPlasma
+        visible: !Appearance.isRetro
 
         anchors {
             top: parent.top

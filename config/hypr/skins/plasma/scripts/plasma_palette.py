@@ -57,10 +57,15 @@ def _ini() -> configparser.ConfigParser:
 
 def read_scheme(path: Path | None = None) -> dict:
     """Secciones del esquema (o de kdeglobals) como dict; las claves se conservan tal cual."""
-    path = Path(path) if path else KDEGLOBALS
+    # Native global-theme KCM writes defaults here and removes matching local keys.
+    # An explicit .colors input is standalone; only the active kdeglobals uses the cascade.
+    paths = [Path(path)] if path is not None and Path(path) != KDEGLOBALS else [
+        *[Path(base) / "kdeglobals" for base in reversed(os.environ.get("XDG_CONFIG_DIRS", "/etc/xdg").split(":")) if base],
+        KDEGLOBALS.parent / "kdedefaults/kdeglobals", KDEGLOBALS,
+    ]
     parser = _ini()
     try:
-        parser.read(path, encoding="utf-8")
+        parser.read(paths, encoding="utf-8")
     except (configparser.Error, OSError):
         pass
     return {s: dict(parser[s]) for s in parser.sections()}

@@ -9,6 +9,7 @@ import Quickshell.Io
 Singleton {
     id: root
 
+    readonly property string conflictHelper: FileUtils.trimFileProtocol(Quickshell.shellPath("../..")) + "/hypr/scripts/bwm-shell-conflicts.py"
     property string killDialogQmlPath: FileUtils.trimFileProtocol(Quickshell.shellPath("killDialog.qml"))
 
     function load() {
@@ -24,7 +25,7 @@ Singleton {
 
     Process {
         id: checkConflictsProc
-        command: ["python3", FileUtils.trimFileProtocol(Quickshell.shellPath("../..")) + "/hypr/scripts/bwm-shell-conflicts.py"]
+        command: ["python3", root.conflictHelper, "--repair-stale"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const conflicts = JSON.parse(this.text);
@@ -33,11 +34,11 @@ Singleton {
                 var openDialog = false;
                 if (conflictingTrays) {
                     if (!Config.options.conflictKiller.autoKillTrays) openDialog = true;
-                    else Quickshell.execDetached([...checkConflictsProc.command, "resolve", "trays"])
+                    else Quickshell.execDetached(["python3", root.conflictHelper, "resolve", "trays"])
                 }
                 if (conflictingNotifications) {
                     if (!Config.options.conflictKiller.autoKillNotificationDaemons) openDialog = true;
-                    else Quickshell.execDetached([...checkConflictsProc.command, "resolve", "notifications"])
+                    else Quickshell.execDetached(["python3", root.conflictHelper, "resolve", "notifications"])
                 }
                 if (openDialog) {
                     Quickshell.execDetached(["qs", "-p", root.killDialogQmlPath])

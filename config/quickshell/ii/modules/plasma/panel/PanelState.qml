@@ -22,14 +22,6 @@ Singleton {
         GlobalStates[name+"AnchorX"] = p.x;
         GlobalStates[name+"Screen"] = button.QsWindow.window?.screen?.name ?? "";
     }
-    function popup(name, button) {
-        const wasOpen = GlobalStates[name+"Open"];
-        for (const other of ["plasmaBluetooth","plasmaNetwork","plasmaCalendar","plasmaNotifications","plasmaThemePicker","plasmaAudio"])
-            GlobalStates[other+"Open"]=false;
-        if (wasOpen) return;
-        anchor(button,name);
-        GlobalStates[name+"Open"]=true;
-    }
     Timer {
         interval:700; repeat:true; running:Appearance.isPlasma
         onTriggered: { HyprlandData.updateWindowList(); HyprlandData.updateMonitors(); }

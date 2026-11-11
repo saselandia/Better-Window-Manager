@@ -767,7 +767,8 @@ def sync_floating_windows(skin: str, previous_skin=None, original_clients=None):
             continue  # bwm_windows.float_in_place, abajo
         else:
             # Al salir de plasma: limpiar tags de snap y restaurar mosaico si no es flotante persistente
-            lua_cmds.append(f'do local win = hl.get_window("address:{addr}"); if win then hl.dispatch(hl.dsp.window.clear_tags({{ window = win }})) end end')
+            for tag in bwm_windows.skin_state_tags(client):
+                lua_cmds.append(f'do local win = hl.get_window("address:{addr}"); if win and win.pid == {int(client.get("pid") or 0)} then hl.dispatch(hl.dsp.window.tag({{ tag = {json.dumps("-" + tag)}, window = win }})) end end')
             is_persistent = False
             for p_cls in persistent_float_classes:
                 if p_cls.lower() in cls.lower():
@@ -823,6 +824,8 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         import bwm_session  # demonios como hijos de Hyprland, no de quien llama al gestor
         focus = bwm_windows.snapshot_focus()
         original_clients = bwm_windows.hypr_json("clients")  # antes de que las reglas cambien floating/geometría
+        if bwm_windows.is_traditional(curr_theme) and not bwm_windows.is_traditional(theme_name):
+            bwm_windows.remember_traditional(curr_theme, original_clients)
 
         # El puente se detiene y retira sus exportaciones antes de guardar kdeglobals y de
         # que otra skin escriba el suyo. Sólo restaura claves que siguen teniendo su valor.

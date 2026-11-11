@@ -136,12 +136,6 @@ hl.window_rule({
 })
 
 --------------------------------
----- KDE PLASMA RULES ----------
---------------------------------
-
--- Traditional defaults belong to the skin (skins/plasma/hypr/rules.lua).
-
---------------------------------
 ---- ELECTRON / BROWSER RULES --
 --------------------------------
 
@@ -191,11 +185,3 @@ hl.window_rule({
     float      = true,
     animation  = "slide",
 })
--- Sin barra de título; el campo sólo existe con el plugin breezebars cargado (Breeze)
-if hl.plugin and hl.plugin.breezebars then
-    hl.window_rule({
-        name  = "bwm-screensaver-nobar",
-        match = { class = "^org\\.bwm\\.screensaver$" },
-        ["breezebars:no_bar"] = true,
-    })
-end

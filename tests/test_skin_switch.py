@@ -1,5 +1,7 @@
 """Regresiones del cambio de skin: no interrumpir apps ni cambiar el foco sin necesidad."""
 import importlib.util
+import json
+import tempfile
 import os
 import sys
 import unittest
@@ -31,6 +33,10 @@ class SkinSwitchTests(unittest.TestCase):
                 popen.assert_not_called()
                 kill.assert_not_called()
         self.assertEqual(os.environ.get('BWM_SKIN_SWITCH'), previous)
+
+    def test_leaving_breeze_preserves_user_and_rule_tags(self):
+        client = {'tags': ['user-rule', 'bwm-max-v', 'snapped', 'snapped_left', 'snapped_static*', 'omarchy-floating-workspace']}
+        self.assertEqual(bwm_windows.skin_state_tags(client), ['bwm-max-v', 'snapped', 'snapped_left'])
 
     def test_unchanged_session_does_not_refocus_monitors(self):
         mon = {'name': 'test-output', 'description': 'test monitor', 'focused': True,
@@ -74,6 +80,56 @@ class SkinSwitchTests(unittest.TestCase):
         self.assertIn('address:0x1', lua)
         self.assertNotIn('address:0x2', lua)
         self.assertNotIn('follow = true', lua)
+
+
+class TraditionalGeometryTests(unittest.TestCase):
+    def setUp(self):
+        self.mon = {'id': 1, 'description': 'Stable monitor', 'x': 0, 'y': 0,
+                    'width': 1920, 'height': 1080, 'scale': 1}
+        self.client = {'address': '0x11', 'pid': 31, 'mapped': True, 'floating': True,
+                       'monitor': 1, 'workspace': {'id': 3}, 'at': [250, 180], 'size': [800, 600]}
+        self.borders = {'left': 4, 'top': 28, 'right': 4, 'bottom': 4}
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.path = Path(self.directory.name) / 'geometry.json'
+        for patcher in (patch.object(bwm_windows, 'traditional_cache', return_value=self.path),
+                        patch.object(bwm_windows, 'process_generation', return_value='generation-one'),
+                        patch.object(bwm_windows, 'hypr_json', return_value=[self.mon]),
+                        patch.object(bwm_windows, 'titlebars', return_value={}),
+                        patch.object(bwm_windows, 'decoration_extents', return_value=self.borders)):
+            patcher.start(); self.addCleanup(patcher.stop)
+        bwm_windows.remember_traditional('plasma', [self.client])
+        self.saved = json.loads(self.path.read_text())
+
+    def test_return_from_tiling_recovers_the_same_window_frame(self):
+        tiled = dict(self.client, floating=False, at=[1000, 20], size=[600, 900])
+        with patch.object(bwm_windows, 'dispatch') as dispatch:
+            self.assertEqual(bwm_windows.float_in_place('plasma', [tiled]), 1)
+        code = dispatch.call_args.args[0][0]
+        self.assertIn('w.pid == 31', code)
+        self.assertIn('x = 250, y = 180', code)
+        self.assertIn('x = 800, y = 600', code)
+        self.assertNotIn('workspace =', code)
+        # An Aurorae/Breeze change adjusts content while preserving the saved outer frame.
+        changed = dict(self.borders, top=34)
+        self.assertEqual(bwm_windows.remembered_box(self.saved,tiled,self.mon,changed),(250,186,800,594))
+
+    def test_reused_address_or_process_generation_is_never_restored(self):
+        self.assertIsNone(bwm_windows.remembered_box(self.saved,dict(self.client,pid=99),self.mon,self.borders))
+        with patch.object(bwm_windows, 'process_generation', return_value='generation-two'):
+            self.assertIsNone(bwm_windows.remembered_box(self.saved,self.client,self.mon,self.borders))
+
+    def test_user_workspace_monitor_and_output_changes_take_precedence(self):
+        self.assertIsNone(bwm_windows.remembered_box(self.saved,dict(self.client,workspace={'id': 4}),self.mon,self.borders))
+        for mon in (dict(self.mon,description='Other'),dict(self.mon,width=2560)):
+            self.assertIsNone(bwm_windows.remembered_box(self.saved,self.client,mon,self.borders))
+
+    def test_fullscreen_minimized_pinned_and_maximized_are_not_overwritten(self):
+        for override in ({'fullscreen': 2},{'workspace': {'id': -98}},{'pinned': True},{'tags': ['bwm-max-v']}):
+            client = dict(self.client,**override)
+            self.assertIsNone(bwm_windows.remembered_box(self.saved,client,self.mon,self.borders))
+            bwm_windows.remember_traditional('plasma',[client])
+            self.assertEqual(json.loads(self.path.read_text()),{})
 
 
 if __name__ == '__main__':

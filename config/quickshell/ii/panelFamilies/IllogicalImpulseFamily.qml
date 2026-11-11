@@ -33,7 +33,6 @@ import qs.modules.ii.idle
 import qs.modules.ii.screenshotPreview
 import qs.modules.ii.omarchyNotifications
 import qs.omarchyShell
-import qs.modules.ii.plasmaThemePicker
 
 Scope {
     // Retro: Omarchy's own bar, inside omarchy-shell's host (omarchyShell/), with its panels and plugins
@@ -88,5 +87,4 @@ Scope {
     // F10: KSvg outline and KWin-format custom tiling editor, Breeze only.
     PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/tiling/Outline.qml"):"" }
     PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/tiling/TileEditor.qml"):"" }
-    PanelLoader { component: PlasmaThemePicker {} }
 }

@@ -101,29 +101,40 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 * **Modo de cada workspace (§3.106):** mosaico, desplazamiento o flotante como en Omarchy 4.5 (`skins/retro/hypr/workspace-modes.lua`, modos guardados en `~/.local/state/omarchy/workspace-layouts/` con su formato). Un workspace flotante es un escritorio tradicional: ventanas que flotan al abrirse a 1100×760 como máximo, en cascada, con barra de título en todas (también las que traen la suya, con el nombre de la app; el plugin de Omarchy sin cambios, `src/omarchy-titlebars`, cargado la primera vez que algo flota, §3.108), clic para enfocar y sombras. Se cambia pulsando el glifo del workspace activo en la barra o en el menú → Estilo → Layout de workspace (sin Super+L). El dock de Omarchy sale sólo en workspaces flotantes, como en Omarchy.
 * Idioma del shell de Omarchy: menú → Ajustes → Idioma, con el proveedor original de Omarchy; no hay segundo selector de idioma en ajustes generales.
 
-### 2.4 Breeze (Kde plasma) (Quickshell + hyprbars)
-* **Interfaces de Plasma (F12, §3.156):** `modules/plasma/{switcher,osd,lock,runtime}`; rejilla/OSD/controles de bloqueo originales de KDE, carga de temas con ThemeHost (API 2), KRunner nativo en Alt+Espacio sólo Breeze y agente polkit KDE desde el manifiesto. Ver arquitectura §14 para pruebas y límites; cargado con reinicio de mantenimiento y correcciones de bandeja/OSD en §3.157, sin cargar plugins en caliente.
-Panel flotante/pegado, Kickoff, applets Bluetooth/red/audio/calendario/notificaciones, menú de tareas con miniaturas y «peek», Alt+Tab de KWin, OSD Breeze, «Mostrar escritorio», snapping con Ctrl+flechas y cuartos de pantalla, barras de título Breeze sólo donde la app no trae las suyas (`hyprctl hyprbars-csd`), con el plugin `breezebars` (`src/breezebars`, §3.108). Clic para enfocar como KWin (`skins/plasma/hypr/misc.lua`, §3.106). Ventanas nuevas en el hueco libre, como «Mínimo solapamiento» de KWin (`skins/plasma/hypr/placement.lua`, §3.115).
+### 2.4 Breeze (Kde plasma): port sobre Hyprland
 
-* **Decoraciones de KDE (§3.144–145, F6a/F6b):** `src/bwm-decorator` (instalado en `~/.local/share/bwm/bin`) dibuja la decoración de `kwinrc` (Breeze, Aurorae, de terceros) fuera de KWin y la envía por `$XDG_RUNTIME_DIR/bwm-decorator.sock` (protocolo en su `PROTOCOL.md`). `skins/plasma/scripts/decorator.py` lo lanza sólo en Breeze y lo relanza si cae. El plugin `breezebars` (`src/breezebars`, `config/hypr/plugins/breezebars.so`) compone sus imágenes, sombra y contorno, le pasa el puntero y ejecuta sus peticiones; sin auxiliar dibuja la barra plana de antes. F6b compilado e instalado; **pendiente de probar al volver a iniciar sesión en Breeze**.
-* **Minimizar/maximizar como KWin (§3.146, F8):** `skins/plasma/scripts/kwin-window.py`: maximizado por ejes con la restauración de KWin, modo en etiquetas `bwm-max-v/h`/`bwm-maximized`, minimizar con el formato común de `toggle-minimize.py`. Lo usan el plugin, el panel, Alt+Tab y los atajos de Breeze (Alt+Intro, Meta+RePág/AvPág, Meta+D, Alt+F4).
-* **Menús contextuales (§3.147, F9):** `modules/plasma/menus/`: ventana (KWin, Alt+F3 y barra de título), gestor de tareas, escritorio y panel, con PC3 y el tema de Plasma; acciones en `kwin-window.py`; catálogo de traducciones `bwm_plasma_menus`.
-* **CSD/SSD (F7, §3.146):** negociación xdg/KDE y estado aplicado al commit, hints X11 asíncronos y cambios en vivo sin listas de clases. `hyprctl -j breezebars-csd` (alias hyprbars-csd) y Lua `hl.plugin.breezebars.decoration(address,pid)` dan el mismo marco de cuatro bordes a Python/placement/quick-tile, sin altura fija de 30 px. `no_bar=false` vuelve al automático. **Pendiente de validar tras reiniciar sesión en Breeze**, junto con F6b; tabla y pasos en `docs/BREEZE_CSD_RESULTS.md`.
-* **Reglas y snapping F10 (§3.148):** kwinrulesrc original con prioridad por propiedad y Apply/Force/Remember en el puente F2, sin otro demonio; límites en `skins/plasma/scripts/KWIN_RULES.md`. `KWinSnap.hpp`/`SnapGeometry.hpp` calculan mitades/cuartos, imanes y vecinos por marco real; el outline es KSvg de KWin. Mayús+arrastre a hojas de Tiling de kwinrc, editor reducido con Meta+T. Se conserva Ctrl+flechas. **Pendiente de sesión nueva en Breeze**: `docs/BREEZE_F10_CHECKLIST.md`.
-* **Preferencias del sistema (§3.154, F11):** `plasmaSettings.qml` (Super+I, `open-settings.sh [página]`) con la barra lateral de systemsettings 6.7.5 portada (`modules/plasma/settings`: categorías de Plasma, búsqueda, «Resaltar las preferencias modificadas») y los **KCM reales** incrustados con el módulo QML `org.bwm.kcm` (`src/bwm-kcmhost`, `make install`): tema global, colores, estilo de Plasma, decoraciones, iconos, estilo de aplicaciones, fuentes, reglas de ventana y sonido, con «Obtener nuevos…». Páginas comunes de BWM para cursor, pantallas, escritorios virtuales, atajos, inicio automático, apps predeterminadas, energía, General, servicios, arranque y Acerca de; propias de Breeze (escriben kwinrc/kdeglobals que aplica el puente F2): comportamiento general, comportamiento de ventanas y fondo. Red y Bluetooth abren su app de `apps.*`. Fuera: Interfaz (end-4), Plugins/Temas (Omarchy) y el fondo de end-4.
-* **Kickoff portado (§3.142):** `modules/plasma/kickoff` es el Kickoff de Plasma 6.7.5 con los modelos reales de Kicker (apps y categorías, búsqueda KRunner, favoritos y recientes en KActivities, lugares), sus traducciones y el estilo de Plasma activo; sustituye a `modules/ii/plasmaKickoff`. Se abre con el botón del panel (anclado), Super, Alt+F1 e IPC `plasmaKickoff`; sesión y apagado por `bwm-power`. Sólo se carga en Breeze.
-* **Panel portado (§3.141):** modules/plasma/panel sustituye PlasmaBarContent.qml. KSvg dibuja fondo y sombras del estilo de Plasma; controles PC3/Kirigami, reloj de Plasma y tareas agrupadas sobre Quickshell con miniaturas. Cuatro bordes, longitud/alineación/grosor, flotante, opacidad y visibilidad; edición de widgets incluidos. bar.plasma guarda la configuración; workspaces y hora siguen comunes. Sólo carga por ruta en Breeze; requiere reinicio de mantenimiento al incorporar el módulo. Ancladas en dock.pinnedApps del perfil, orden en bar.plasma.taskOrder. Kickoff y bandeja/applets portados en F4/F5 se anclan al nuevo borde. El área útil usa reserved real, sin panel fijo de 44 px en bwm_windows.
-* **Bandeja/applets (§3.143):** modules/plasma/{tray,applets} sustituye las cinco vistas antiguas de red/Bluetooth/audio/avisos/calendario. SNI de Quickshell y Auto/Shown/Hidden por ID en bar.plasma.trayItems, popup único por monitor activo, páginas originales con AppletHost; Bluetooth/historial/clipboard reducidos. Datos KDE compatibles o proveedores comunes; sin kded/servidores de Plasma. Toasts de Plasma con servidor BWM; Retro conserva Omarchy. Límites en arquitectura §11 y README de esas carpetas.
-* **Tema de Plasma (§3.139):** los colores de Breeze salen del esquema de Plasma de `~/.config/kdeglobals`, no de una paleta fija. `skins/plasma/scripts/plasma-theme.py colors|desktoptheme|icons|lookandfeel|list|current` aplica con los formatos y herramientas de Plasma (con notificación de KConfig: cambia en vivo); `plasma_palette.py` saca del esquema la paleta de kitty, Hyprland, rofi y las plantillas de matugen (GTK claro/oscuro, Vesktop, Firefox/Pywalfox, Steam, Stremio, Omacalc, Quickshell en `~/.local/state/bwm/plasma/colors.json`). El shell lo lee con `modules/plasma/theme/PlasmaTheme.qml`; `plasmaCommon/Breeze.qml` es una fachada sobre él. Al salir de Breeze se guarda su kdeglobals (`~/.local/state/bwm/plasma/kdeglobals`) y al entrar se devuelve, porque las otras skins escriben el suyo. En Breeze, Qt usa el plugin de KDE y `~/.config/kdedefaults` va en `XDG_CONFIG_DIRS`, como en Plasma. El cursor no lo cambia un tema de Plasma (regla 14).
-* **Puente KDE (§3.140):** `skins/plasma/scripts/kde-config-bridge.py enter/export/import/watch/leave` exporta lo común (cursor, teclado efectivo, Kelvin, idioma, terminal y workspaces), importa fuentes propias y traduce `kwinrc` a Hyprland. Arranca sólo en Breeze con `bwm_session.spawn`; inotify agrupa cambios, conserva claves ajenas y retira las exportaciones al salir. `skins/plasma/hypr/kwin.lua` se carga antes de tu Lua. Los gestores comunes usan `bwm_settings_hooks.py` y `hooks.settingsChanged` del manifiesto. Tabla completa y límites en `docs/BREEZE_ARCH.md` §9: KScreen no controla Hyprland, y ambos bancos/todos los botones de la decoración se completan en F6.
-* **En reescritura (§3.138):** plan para portar KDE Plasma de verdad en `docs/BREEZE_PLAN.md`, arquitectura comprobada en `docs/BREEZE_ARCH.md` (fase 0 hecha; lo de arriba sigue siendo lo que corre). Con plasma-workspace instalado, `~/.config/kded5rc` y el servicio de D-Bus de usuario de los avisos evitan que kded6 o Plasma choquen con BWM.
-
-* **Snapping (§3.58):** `quick-tile.py` recibe monitor de previsualización (`--monitor desc:…`), `--edge`
-  y PID. Con el plugin antiguo (sólo dirección+address) usa el borde bajo el cursor para evitar elegir
-  el monitor al que ya pasó el centro de la ventana. Transferir workspace antes de mover/redimensionar.
-  Escala/rotación y reserved reales; la barra hyprbars forma parte del marco. No alternar/restaurar al
-  repetir un arrastre al mismo borde. Python activo; nuevo plugin instalado atómicamente, pendiente de
-  volver a iniciar sesión: preview 12 % opacidad, borde de 1 px al 65 %, radio 2 px, inset 1 px.
+* **Estado F0–F13 (§3.139–158):** interfaces en `modules/plasma/`, scripts/Lua en
+  `skins/plasma/`. Retirados todos los `modules/ii/plasma*`, su selector artesanal, 152 SVG
+  locales sin uso y la paleta fija de reserva. Informe final: `docs/BREEZE_F13_RESULTS.md`.
+* **Tema original:** `PlasmaTheme` y `plasma_palette.py` leen la cascada KDE
+  XDG_CONFIG_DIRS → kdedefaults → archivos locales; cambios en vivo. `plasma-theme.py`
+  aplica esquemas/estilos/iconos/temas globales y sincroniza las plantillas comunes de apps.
+  Cursor, Kelvin, pantallas y demás configuración común siguen bajo autoridad de BWM.
+* **Panel/Kickoff/applets:** `modules/plasma/{panel,kickoff,tray,applets}` usan KSvg/PC3 y
+  fuentes de datos KDE o servicios comunes. Panel en bar.plasma, cuatro bordes/reserva real,
+  seis widgets incluidos. DesktopState gestiona Mostrar escritorio sobre el minimizado común.
+  No hay anfitrión completo de plasmoides externos; límites de applets en sus README.
+* **Ventanas:** `breezebars` compone las imágenes de KDecoration/Aurorae de `bwm-decorator`
+  fuera de Hyprland; CSD negociado sin listas de clases y marco real por dirección+PID.
+  `kwin-window.py` proporciona minimizar/maximizar/restaurar; `modules/plasma/menus` los menús.
+  Reglas originales kwinrulesrc y Tiling de kwinrc vía puente F2/F10, Ctrl+flechas conservado,
+  Meta+T editor reducido. Comprobaciones físicas pendientes en las listas F7/F10.
+* **Interfaces de sesión F12:** rejilla Alt+Tab original con controlador MRU común, OSD y
+  bloqueo KDE sobre LockContext. ThemeHost (API 2) aloja QML de temas en motores separados;
+  no emula todas las APIs privadas. KRunner nativo en Alt+Espacio sólo Breeze.
+* **Preferencias F11:** `plasmaSettings.qml`/`modules/plasma/settings` con KCM reales mediante
+  org.bwm.kcm. Páginas comunes de BWM para lo compartido. Alt+T abre BWMenu para elegir skin;
+  los temas globales de Plasma se eligen dentro de Preferencias. KNS descarga a rutas estándar.
+* **Servicios:** único servidor de avisos de BWM, agente polkit KDE en Breeze/Omarchy en Retro.
+  bwm-shell-conflicts comprueba al dueño D-Bus. Kded reserva nombres en cola aun con módulos
+  desactivados; sólo se retira automáticamente su reserva de bandeja rota si no tiene objeto
+  y sus módulos son ninguno/ktimezoned. No se detienen otros módulos o un watcher funcional.
+* **Comprobado F13:** diez ventanas y siete flujos de audio conservados en default → Breeze →
+  Retro → Breeze, sin saltos de workspace ni errores de config, una instancia ii y geometría
+  final conservada. Sweet instalado por KNS desde el KCM y aplicado desde Preferencias:
+  colores, SVG, candy-icons y Aurorae; cursor BWM intacto. Restituida la configuración anterior.
+  Estimación prudente ~50 %, no compatibilidad universal. Pendientes: sesión inicial completa,
+  ratón/CSD/snapping, PAM/huella/polkit reales y más temas privados. F13 no modifica el plugin.
 
 ### 2.5 Ventanas, juegos y sistema
 * `window-guard.py watch` (autostart): primary de XWayland = monitor del workspace 1, ventanas fuera de pantalla de vuelta, juegos sin bordes a pantalla completa, y fondo repuesto en los monitores que swww/awww deja en negro al reconectarse (§3.81; `window-guard.py wallpaper` lo hace a mano). También relanza Quickshell si desaparece (~20 s, §3.105). Los demonios de sesión se lanzan con `bwm_session.spawn()` (hijos de Hyprland, no de quien llama). Regla `games-main-monitor` (HP, foco al activarse, inhibir reposo).
@@ -133,7 +144,7 @@ Panel flotante/pegado, Kickoff, applets Bluetooth/red/audio/calendario/notificac
 * `focus_on_activate = true`, `xwayland.force_zero_scaling = true`, `on_focus_under_fullscreen` por defecto (2), `allow_session_lock_restore` y encender pantallas con teclado/ratón (§3.134). Reglas por app de Omarchy en todas las skins con `modules/app_rules.lua` (§3.134).
 * Las apps no pueden solicitar maximizado (`suppress-maximize-events`, global); incluye botones CSD. El maximizado/pantalla completa se controla con Alt+Enter (Plasma: maximizado, otros estilos: fullscreen), y fullscreen solicitado por juegos/vídeo sigue permitido. Kitty tiene `remember_window_size no` para no restaurar tamaño/estado maximizado de su caché. Véase §3.48.
 * Atajos en `config/hypr/keybinds.json` → `keybinds-manager.py` → `modules/user_binds.lua`.
-* **Pantalla de inicio y bloqueo (§3.97):** SDDM (común, de BWM) entra solo en todas las skins y el bloqueo de la skin activa pide la contraseña al arrancar y al bloquear: default (end-4) el de end-4 con el fondo desenfocado de `Background.qml`, Retro el de Omarchy 4 (`modules/ii/omarchyLock`, su `LockView.qml` sin cambios) y Breeze uno como el de KDE (`modules/ii/plasmaLock`). Tras cambiar `install-boot-theme.sh` hay que repetir `sudo …/install-boot-theme.sh --sddm --auto`.
+* **Pantalla de inicio y bloqueo (§3.97):** SDDM (común, de BWM) entra solo en todas las skins y el bloqueo de la skin activa pide la contraseña al arrancar y al bloquear: default (end-4) el de end-4 con el fondo desenfocado de `Background.qml`, Retro el de Omarchy 4 (`modules/ii/omarchyLock`, su `LockView.qml` sin cambios) y Breeze uno como el de KDE (`modules/plasma/lock`). Tras cambiar `install-boot-theme.sh` hay que repetir `sudo …/install-boot-theme.sh --sddm --auto`.
 * **Apagado común (§3.95):** `scripts/bwm-power shutdown|reboot|firmware|logout|suspend|hibernate|lock [--dry-run]`. Lo llaman el menú de sesión y el bloqueo de end-4 (`Session.qml`), Kickoff de Breeze, el menú Sistema de Retro y Alt+M. Avisa, cierra las ventanas y espera hasta 5 s a que sus procesos terminen antes de apagar, desde un servicio `systemd-run --user`.
 * **Inactividad (§3.96, §3.98):** `modules/ii/idle/BwmIdle.qml`, común, con página propia Ajustes → Inactividad (`modules/settings/IdleConfig.qml`; en el menú de Retro, Ajustes → Inactividad). Tiempos independientes y comunes a todas las skins: salvapantallas `idle.screensaverTime` 150 s (sólo skins que lo traen: Retro; `idle.screensaver` lo activa), apagar monitores `idle.screen` 300 (DPMS; también cierra el salvapantallas), bloqueo `idle.lock` 600 y suspensión `idle.suspend` 0 = nunca. Respeta inhibidores y «mantener despierto»; un reproductor MPRIS sonando impide salvapantallas y suspensión.
 * Kelvin común a todas las skins: `nightlight.py --temperature` lo copia a `light.night.colorTemperature` (servicio `Hyprsunset.qml` de default (end-4)/Plasma) y este llama a `nightlight.py --remember K` al cambiarlo.
@@ -154,7 +165,7 @@ Panel flotante/pegado, Kickoff, applets Bluetooth/red/audio/calendario/notificac
 * Qt sin recarga en vivo sólo con qt6ct (Breeze (Kde plasma) y el respaldo sin plugins); default con el plugin de KDE y Retro con el de GTK sí repintan (§3.79, §3.80). Chromium sin tema (necesita política root).
 * Entorno de pruebas aparte (Hyprland anidado + usuario + rama `dev`), antes cambiar `/home/sasel` fijos por `$HOME`.
 * El actualizador Retro no sincroniza los repositorios ni gestiona noticias, `dispatch-conf` o `@preserved-rebuild`; los perfiles default (end-4)/Plasma aún conservan un `apps.update` heredado con `pacman`. Adaptar ese acceso a Gentoo.
-* Compatibilidad con temas del original (finalidad del proyecto): Plasma aún sólo tiene Breeze Dark; falta aplicar esquemas de color (`.colors`) y temas globales de la KDE Store. default (end-4): plantillas de matugen de terceros sin probar.
+* Compatibilidad con temas del original (finalidad del proyecto): Breeze admite esquemas, SVG, Aurorae, iconos y temas globales; faltan plasmoides externos, efectos y las comprobaciones físicas de F13. default (end-4): plantillas de matugen de terceros sin probar.
 * Skins de la comunidad: el comprobador ya lee `~/.local/share/bwm/skins/*.json`, pero falta definir paquete, instalación y cómo cargan su QML/Lua sin tocar el repo.
 * `hyprbars-plasma.so` porteado y compilado para Hyprland 0.56.2, cargado y probado en sesión real (§3.52). Pendientes pruebas de botones, snapping y arrastre con ratón.
 * Al volver de Plasma, los workspaces con 3+ ventanas pueden cambiar el reparto del mosaico (§3.53).
@@ -1522,6 +1533,34 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 * **Sesión:** retirado el kded6 con registro obsoleto. Quickshell recuperó la bandeja y devolvió el elemento de Steam. Activado otra vez kded6 por D-Bus: sólo ktimezoned, sin conflicto ni pérdida del dueño Quickshell. Polkit KDE registró correctamente su agente en esta sesión; no se probó ninguna autenticación privilegiada.
 * **OSD:** importación local explícita de OsdItem, necesaria al cargar Osd.qml desde otro módulo. Reinicio de mantenimiento con el gestor en plasma, una única instancia de shell; desapareció «OsdItem is not a type» y la llamada IPC de texto al OSD respondió correctamente. No se cerró sesión ni se recargaron plugins.
 * **Pruebas:** cuatro pruebas unitarias de propiedad D-Bus/resolución dirigida pasan. La carga real del shell confirma ausencia de errores del detector y disponibilidad de la bandeja/OSD. Siguen pendientes las pruebas físicas de F12 descritas en §156.
+
+### 158. F13: limpieza, tema real y prueba de cambio de skins (2026-11-11)
+
+* Retirados modules/ii/plasmaCommon, plasmaThemePicker y sus 152 iconos sin consumidores;
+  rama antigua del OSD y paleta fija del cargador. DesktopState vive en el panel; Alt+T usa
+  BWMenu. parts actualizado y regla de barra del salvapantallas movida a la skin con guarda.
+  quick-tile/toggle-minimize se conservan porque default/Retro/controladores aún los usan.
+* La prueba de cambios descubrió que kded registra servicios en cola independientemente de
+  autoload (fuente frameworks/kded v6.29.0). Reparación limitada de la reserva rota de bandeja:
+  objeto ausente, mismo PID/usuario y sólo ktimezoned/ningún módulo. Se conserva el diálogo
+  para conflictos funcionales. Seis pruebas específicas pasan; no hay killall general.
+* Una repetición detectó tres intercambios de posición por dwindle. El gestor ahora recuerda
+  geometría libre tradicional antes de salir, en caché de sesión/skin (XDG_RUNTIME_DIR), y
+  restaura el marco al volver sólo para dirección+PID+inicio, workspace y monitor coincidentes.
+  Cambios de salida y modos especiales invalidan la entrada; no se toca configuración del usuario.
+  Se preservan etiquetas ajenas al retirar estado BWM. Cinco regresiones nuevas pasan.
+* Secuencia repetida default → Breeze → Retro → Breeze: diez ventanas con el mismo PID/inicio,
+  cero saltos de workspace, siete flujos de audio intactos, una instancia ii, configerrors vacío
+  y geometría final conservada. No se cerró sesión ni se cargaron/descargaron plugins.
+* Sweet instalado desde Obtener nuevos del KCM real, con dependencias a rutas del usuario,
+  y aplicado desde Preferencias mediante sonda (no clics físicos). Colores/SVG/candy-icons y
+  Aurorae efectivos; imagen del auxiliar y recorte del panel revisados y borrados. Cursor
+  miku 48 intacto aunque Sweet-cursors queda instalado. Configuración KDE anterior restaurada.
+* La aplicación nativa expuso lecturas incompletas de kdedefaults: corregida la cascada en QML
+  y Python. Pruebas de prioridad y cambio en vivo pasan. Suite final 371 pruebas, 65 omitidas;
+  qmllint con avisos de metadatos/imports, verificación Hyprland correcta. Detalle, limitaciones
+  de licencia y lista manual en docs/BREEZE_F13_RESULTS.md. Requisitos/docs actualizados;
+  estimación conservadora ~50 % en SKINS y ambos README. No se declara equivalencia total.
 
 ## 4. 📂 Estructura del repositorio
 
