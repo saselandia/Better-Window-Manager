@@ -1,0 +1,97 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: kk\n"
+
+msgid "&Desktops"
+msgstr "&Барлық үстелдер"
+
+msgid "&All Desktops"
+msgstr "&Барлық үстелдер"
+
+msgid "Desktop %1"
+msgstr "%1-үстел"
+
+msgid "Move to %1"
+msgstr "Э&кранға жылжыту"
+
+msgid "Move to &Screen"
+msgstr "Э&кранға жылжыту"
+
+msgid "Ma&ximize"
+msgstr "&Қең жаю"
+
+msgid "Mi&nimize"
+msgstr "&Түю"
+
+msgid "Keep &Above Others"
+msgstr "Барлығының &алдында ұстау"
+
+msgid "&More Actions"
+msgstr "Қ&осымша әрекеттер"
+
+msgid "&Move"
+msgstr "&Жылжыту"
+
+msgid "&Resize"
+msgstr "Өлшемді ө&згерту"
+
+msgid "Keep &Below Others"
+msgstr "Барлығының а&ртында ұстау"
+
+msgid "&Fullscreen"
+msgstr "&Толық экранды"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Терезенің а&рнайы параметрлері..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Қолданбаның а&рнайы параметрлері..."
+
+msgid "&Close"
+msgstr "&Жабу"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "&Жаңа Үстел"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "&Үстелге жылжыту"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "&%1-экраны"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Үстелі бойынша"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Үстелі бойынша"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "Үстелі бойынша"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "Үстелі бойынша"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Экранды бұғаттау"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Экранды бұғаттау"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Үстелді &жаңарту"
+
+msgid "Open Wallpaper Image"
+msgstr "Тұсқағаздың кескінін ашу"

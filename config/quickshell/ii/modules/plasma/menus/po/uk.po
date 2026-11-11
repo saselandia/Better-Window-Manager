@@ -1,0 +1,199 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: uk\n"
+
+msgid "&Desktops"
+msgstr "С&тільниці"
+
+msgid "&All Desktops"
+msgstr "&Всі стільниці"
+
+msgid "Desktop %1"
+msgstr "Стільниця %1"
+
+msgid "Move to %1"
+msgstr "Пересунути до %1"
+
+msgid "Move to &Screen"
+msgstr "Пересунути на &екран"
+
+msgid "Ma&ximize"
+msgstr "&Максимізувати"
+
+msgid "Mi&nimize"
+msgstr "Мін&імізувати"
+
+msgid "Keep &Above Others"
+msgstr "Утримувати &понад іншими"
+
+msgid "&More Actions"
+msgstr "&Додаткові дії"
+
+msgid "&Move"
+msgstr "&Пересунути"
+
+msgid "&Resize"
+msgstr "Змінити &розмір"
+
+msgid "Keep &Below Others"
+msgstr "Утримувати п&ід іншими"
+
+msgid "&Fullscreen"
+msgstr "&На весь екран"
+
+msgid "&No Titlebar and Frame"
+msgstr "&Без смужки заголовка і рамки"
+
+msgid "&Hide from Screenshots and Screen Recordings"
+msgstr "&Приховати на знімках екрана та записах з екрана"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Налаштувати с&пеціальні параметри вікна…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Налаштувати сп&еціальні параметри програми…"
+
+msgid "&Close"
+msgstr "&Закрити"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Додати на &нову стільницю"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Пересунути на нову стільницю"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Екран &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Нещодавні файли"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Дії"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Попередня композиція"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Пауза"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Пуск"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Наступна композиція"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Стоп"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Відкрити нове вікно"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Пересунути на с&тільницю"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Пересунути &на поточну стільницю"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Всі стільниці"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "С&творити стільницю"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Пришпилити до панелі керування завданнями"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Відшпилити від панелі керування завданнями"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Інше"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Пересунути"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "Змінити &розмір"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "М&аксимізувати"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "&Мінімізувати"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "&На весь екран"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "&Без смужки заголовка і рамки"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "При&ховати на записі з екрана"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "З&акрити усе"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Закрити"
+
+msgid "Open Terminal"
+msgstr "Відкрити термінал"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Заблокувати екран"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Показати вікно виходу"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Налаштування дисплея"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Стільниця і фонове зображення"
+
+msgid "Open Wallpaper Image"
+msgstr "Відкрити зображення тла стільниці"
+
+msgid "Enter Edit Mode"
+msgstr "Увійти до режиму редагування"
+
+msgid "Exit Edit Mode"
+msgstr "Вийти з режиму редагування"
+
+msgid "Add or Manage Widgets…"
+msgstr "Додати віджети або керувати ними…"

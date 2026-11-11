@@ -110,7 +110,7 @@ C++, F10 parte C++) comparten `src/breezebars/`: **nunca dos a la vez**.
 
 ## 4. Prompts
 
-> **Hechas: fases 0–5, 6a, 6b, 7 y 8** (6b y 8 sin probar aún dentro de Breeze) (arquitectura en `docs/BREEZE_ARCH.md`; motor de temas, puente de configuración, panel, Kickoff, applets, auxiliar de decoraciones, plugin y minimizar/maximizar en `BWM_CONTEXT.md` §3.139–146; protocolo para F6b en `src/bwm-decorator/PROTOCOL.md`). `docs/BREEZE_ARCH.md` manda sobre lo que digan los
+> **Hechas: fases 0–5, 6a, 6b, 7, 8 y 9** (6b, 8 y 9 sin probar aún dentro de Breeze) (arquitectura en `docs/BREEZE_ARCH.md`; motor de temas, puente de configuración, panel, Kickoff, applets, auxiliar de decoraciones, plugin, minimizar/maximizar y menús en `BWM_CONTEXT.md` §3.139–147; protocolo para F6b en `src/bwm-decorator/PROTOCOL.md`). `docs/BREEZE_ARCH.md` manda sobre lo que digan los
 > prompts siguientes: lo que cambió está anotado en su §7, y F6 se ha partido en F6a y F6b.
 > **F7 implementada, compilada e instalada; validación real pendiente de reiniciar sesión**, junto con F6b. Arquitectura §12 y matriz `docs/BREEZE_CSD_RESULTS.md`.
 

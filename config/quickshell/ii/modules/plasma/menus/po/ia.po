@@ -1,0 +1,199 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ia\n"
+
+msgid "&Desktops"
+msgstr "&Scriptorios"
+
+msgid "&All Desktops"
+msgstr "&Omne Scriptorios"
+
+msgid "Desktop %1"
+msgstr "Scriptorio %1"
+
+msgid "Move to %1"
+msgstr "Move a %1"
+
+msgid "Move to &Screen"
+msgstr "Move a &Schermo"
+
+msgid "Ma&ximize"
+msgstr "Ma&ximiza"
+
+msgid "Mi&nimize"
+msgstr "Mi&nimisa"
+
+msgid "Keep &Above Others"
+msgstr "Mantene  Super &Alteres"
+
+msgid "&More Actions"
+msgstr "&Altere actiones"
+
+msgid "&Move"
+msgstr "&Move"
+
+msgid "&Resize"
+msgstr "Redimen&siona"
+
+msgid "Keep &Below Others"
+msgstr "Mantene  Su&b Alteres"
+
+msgid "&Fullscreen"
+msgstr "Sc&hermo plen"
+
+msgid "&No Titlebar and Frame"
+msgstr "&Nulle barra de titulo e quadro"
+
+msgid "&Hide from Screenshots and Screen Recordings"
+msgstr "Cela ab capturas de sc&hermo e registrationes de schermo"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Configura &Preferentias de fenestra special ..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Configura Preferentias de Applicationes s&pecial ..."
+
+msgid "&Close"
+msgstr "&Claude"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Adde  &Nove scriptorio"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Move a Nove Scriptorio"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Schermo &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Files recente"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Actiones"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Previe tracia"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Pausa"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Reproduce"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Proxime tracia"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Stoppa"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Aperi nove fenestra"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Move a &scriptorio"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Move &a le scriptorio currente"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Omne Scriptorios"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&Nove scriptorio"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "Attac&ha a Gerente de carga"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Deattacha ex Gerente de carga"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Plus"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Move"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "Redimen&siona"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Ma&ximiza"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Mi&nimisa"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "Sc&hermo plen"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "&Nulle barra de titulo e quadro"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "&Cela ab Screencast"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&Claude omne"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Claude"
+
+msgid "Open Terminal"
+msgstr "Aperi terminal"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Bloca schermo"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Monstra Schermo de clausura de session"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Configuration  de monstrator"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Scriptorio e Fundo de schermo"
+
+msgid "Open Wallpaper Image"
+msgstr "Aperi imagine de fundo de schermo"
+
+msgid "Enter Edit Mode"
+msgstr "Entra modo de modificar"
+
+msgid "Exit Edit Mode"
+msgstr "Exi modo de modificar"
+
+msgid "Add or Manage Widgets…"
+msgstr "Adde o Gere Widgets…"

@@ -1,0 +1,86 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: bn_IN\n"
+
+msgid "&Desktops"
+msgstr "সকল ডেস্কটপে (&A)"
+
+msgid "&All Desktops"
+msgstr "সকল ডেস্কটপে (&A)"
+
+msgid "Desktop %1"
+msgstr "ডেস্কটপ %1"
+
+msgid "Move to %1"
+msgstr "চিহ্নিত ডেস্কটপে স্থানান্তর (&D)"
+
+msgid "Move to &Screen"
+msgstr "চিহ্নিত ডেস্কটপে স্থানান্তর (&D)"
+
+msgid "Ma&ximize"
+msgstr "বড় করুন (&x)"
+
+msgid "Mi&nimize"
+msgstr "আড়াল করুন (&n)"
+
+msgid "Keep &Above Others"
+msgstr "সকল উইন্ডোর উপরে স্থাপন (&A)"
+
+msgid "&Move"
+msgstr "স্থানান্তরণ (&M)"
+
+msgid "&Resize"
+msgstr "মাপ পরিবর্তন (&s)"
+
+msgid "Keep &Below Others"
+msgstr "সকল উইন্ডোর নীচে স্থাপন (&B)"
+
+msgid "&Fullscreen"
+msgstr "সম্পূর্ণ পর্দায় প্রদর্শন (&F)"
+
+msgid "Configure Special &Window Settings…"
+msgstr "উইন্ডো সংক্রান্ত বিশেষ বৈশিষ্ট্য...(&S)"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "অ্যাপ্লিকেশন সংক্রান্ত বিশেষ বৈশিষ্ট্য...(&S)"
+
+msgid "&Close"
+msgstr "বন্ধ করুন (&C)"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "চিহ্নিত ডেস্কটপে স্থানান্তর (&D)"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "চিহ্নিত ডেস্কটপে স্থানান্তর (&D)"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "পর্দা ১-এ উইন্ডো স্থানান্তর করুন"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "ডেস্কটপ অনুযায়ী"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "ডেস্কটপ অনুযায়ী"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "ডেস্কটপ অনুযায়ী"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "ডেস্কটপ অনুযায়ী"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "ওয়াল-পেপার রূপে নির্ধারণ করুন (&W)"
+
+msgid "Open Wallpaper Image"
+msgstr "পটভূমির জন্য ছবির ফাইল নির্বাচন করুন"

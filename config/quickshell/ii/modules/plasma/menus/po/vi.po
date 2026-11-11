@@ -1,0 +1,181 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: vi\n"
+
+msgid "&Desktops"
+msgstr "&Bàn làm việc"
+
+msgid "&All Desktops"
+msgstr "&Tất cả các bàn làm việc"
+
+msgid "Desktop %1"
+msgstr "Bàn làm việc %1"
+
+msgid "Move to %1"
+msgstr "Chuyển đến %1"
+
+msgid "Move to &Screen"
+msgstr "Chuyển đến màn &hình"
+
+msgid "Ma&ximize"
+msgstr "&Phóng to"
+
+msgid "Mi&nimize"
+msgstr "Th&u nhỏ"
+
+msgid "Keep &Above Others"
+msgstr "Giữ &trên các cửa sổ khác"
+
+msgid "&More Actions"
+msgstr "Các hành động &khác"
+
+msgid "&Move"
+msgstr "Di chu&yển"
+
+msgid "&Resize"
+msgstr "Đổi &cỡ"
+
+msgid "Keep &Below Others"
+msgstr "Giữ &dưới các cửa sổ khác"
+
+msgid "&Fullscreen"
+msgstr "T&oàn màn hình"
+
+msgid "&No Titlebar and Frame"
+msgstr "&Không có thanh tiêu đề và khung"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Cấu hình các thiết &lập cửa sổ đặc biệt..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Cấu hình các thiết lập ứ&ng dụng đặc biệt..."
+
+msgid "&Close"
+msgstr "Đón&g"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Thêm vào bàn làm việc &mới"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Chuyển đến bàn làm việc mới"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Màn hình &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Tệp gần đây"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Hành động"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Bài trước"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Tạm dừng"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Phát"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Bài sau"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Dừng"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Mở cửa sổ mới"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Di chuyển đến &bàn làm việc"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Di chu&yển đến bàn làm việc hiện tại"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Tất cả các bàn làm việc"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "Bàn làm việc &mới"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "Ghim vào Trình &quản lí tác vụ"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Bỏ ghim ở Trình quản lí tác vụ"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Thêm"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "Di chu&yển"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "Đổi &cỡ"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "&Phóng to"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Th&u nhỏ"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "T&oàn màn hình"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "Đón&g"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "Đón&g"
+
+msgid "Open Terminal"
+msgstr "Mở dòng lệnh"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Khoá màn hình"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Khoá màn hình"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Cấu hình bàn làm việc và phông nền…"
+
+msgid "Open Wallpaper Image"
+msgstr "Mở ảnh phông nền"
+
+msgid "Enter Edit Mode"
+msgstr "Đi vào Chế độ Sửa"
+
+msgid "Exit Edit Mode"
+msgstr "Thoát khỏi chế độ sửa"

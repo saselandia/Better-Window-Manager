@@ -64,6 +64,9 @@ static CHyprColor configColor(Config::INTEGER color) {
 // La ventana trae sus propios botones: no se le dibuja barra (pero se sigue
 // gestionando su arrastre CSD para el snapping).
 static bool shouldHideBar(PHLWINDOW window) {
+    // «Sin barra de título ni marco» del menú de la ventana (F9, kwin-window.py no-border)
+    if (window && window->m_ruleApplicator && window->m_ruleApplicator->m_tagKeeper.isTagged("bwm-no-border"))
+        return true;
     return detectDecorations(window).clientDraws;
 }
 

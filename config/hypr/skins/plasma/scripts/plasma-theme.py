@@ -282,6 +282,9 @@ def current() -> dict:
 # instala: sólo sus .po). KLocalizedString los busca en <datos>/locale/<idioma>/LC_MESSAGES.
 PORTED_CATALOGS = {
     "plasma_applet_org.kde.plasma.kickoff": Path(__file__).resolve().parents[4] / "quickshell/ii/modules/plasma/kickoff/po",
+    # F9: menús de ventana, tareas, escritorio y panel (cadenas de kwin, plasma-desktop, plasma-workspace
+    # y libplasma en un catálogo propio, modules/plasma/menus/po/extract.py)
+    "bwm_plasma_menus": Path(__file__).resolve().parents[4] / "quickshell/ii/modules/plasma/menus/po",
 }
 
 

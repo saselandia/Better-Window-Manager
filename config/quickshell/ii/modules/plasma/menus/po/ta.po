@@ -1,0 +1,196 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ta\n"
+
+msgid "&Desktops"
+msgstr "&பணிமேடைகள்"
+
+msgid "&All Desktops"
+msgstr "&அனைத்து பணிமேடைகளிலும்"
+
+msgid "Desktop %1"
+msgstr "பணிமேடை %1"
+
+msgid "Move to %1"
+msgstr "%1-க்கு நகர்த்து"
+
+msgid "Move to &Screen"
+msgstr "&காட்சிக் கருவிக்கு நகர்த்து"
+
+msgid "Ma&ximize"
+msgstr "அதிகபட்ச பெ&ரிதாக்கு"
+
+msgid "Mi&nimize"
+msgstr "&ஒதுக்கு"
+
+msgid "Keep &Above Others"
+msgstr "மற்றவற்றிற்கு &மேலே வை"
+
+msgid "&More Actions"
+msgstr "&மேலும் செயல்கள்"
+
+msgid "&Move"
+msgstr "&நகர்த்து"
+
+msgid "&Resize"
+msgstr "&அளவுமாற்று"
+
+msgid "Keep &Below Others"
+msgstr "மற்றவற்றிற்கு &கீழே வை"
+
+msgid "&Fullscreen"
+msgstr "&முழுத்திரை"
+
+msgid "&No Titlebar and Frame"
+msgstr "&விளிம்பும் தலைப்புப்பட்டையும் வேண்டாம்"
+
+msgid "Configure Special &Window Settings…"
+msgstr "&சாளரத்திற்கான தனிப்பட்ட அமைப்புகளை அமை…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "செய&லிக்கான தனிப்பட்ட அமைப்புகளை அமை…"
+
+msgid "&Close"
+msgstr "மூ&டு"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "&புதிய பணிமேடையிலும் காட்டு"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "புதிய பணிமேடைக்கு நகர்த்து"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "காட்சிக் கருவி &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "சமீப கோப்புகள்"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "செயல்கள்"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "முந்தைய பாடல்"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "பொறு"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "இயக்கு"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "அடுத்த பாடல்"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "நிறுத்து"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "புதிய சாளரத்தை திற"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "பணிமேடைக்கு நகர்த்து"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "தற்போதைய பணிமேடைக்கு நகர்த்து"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "அனைத்து பணிமேடைகள்"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "புதிய பணிமேடை"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "பணி மேலாளியில் தக்கவை"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "பணி மேலாளியில் தக்கவைக்க வேண்டாம்"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "மேலும்"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "நகர்த்து"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "அளவுமாற்று"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "அதிகபட்ச பெரிதாக்கு"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "ஒதுக்கு"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "முழுத்திரை"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "&விளிம்பும் தலைப்புப்பட்டையும் வேண்டாம்"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "திரைப்பகிர்விலிருந்து மறை"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "அனைத்தையும் மூடு"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "மூடு"
+
+msgid "Open Terminal"
+msgstr "முனையத்தைத் திற"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "திரையைப் பூட்டு"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "வெளியேற்ற திரையை காட்டு"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "திரை அமைப்புகள்"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "பின்புலமும் பணிமேடையும்"
+
+msgid "Open Wallpaper Image"
+msgstr "பின்புல படத்தை திற"
+
+msgid "Enter Edit Mode"
+msgstr "திருத்தும் பயன்முறையில் நுழை"
+
+msgid "Exit Edit Mode"
+msgstr "திருத்தும் பயன்முறையிலிருந்து வெளியேறு"
+
+msgid "Add or Manage Widgets…"
+msgstr "பிளாஸ்மாய்டுகளை சேர் அல்லது நிர்வகி…"

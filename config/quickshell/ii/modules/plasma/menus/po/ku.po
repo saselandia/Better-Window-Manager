@@ -1,0 +1,86 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ku\n"
+
+msgid "&Desktops"
+msgstr "&Hemû Sermaseyan"
+
+msgid "&All Desktops"
+msgstr "&Hemû Sermaseyan"
+
+msgid "Desktop %1"
+msgstr "Sermaseya %1"
+
+msgid "Move to %1"
+msgstr "Jê &Sermasê re"
+
+msgid "Move to &Screen"
+msgstr "Jê &Sermasê re"
+
+msgid "Ma&ximize"
+msgstr "&Mezintirîn"
+
+msgid "Mi&nimize"
+msgstr "&Biçûktirîn"
+
+msgid "Keep &Above Others"
+msgstr "Li &ser yên Din Bigire"
+
+msgid "&Move"
+msgstr "&Guhestin"
+
+msgid "&Resize"
+msgstr "Mezinahî Bi&guherîne"
+
+msgid "Keep &Below Others"
+msgstr "Li &bin yên Din Bigire"
+
+msgid "&Fullscreen"
+msgstr "Dîmender &Tije"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Mîhengên Paceyê yên &Taybet..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Mîhengên Sepanê yên &Taybet..."
+
+msgid "&Close"
+msgstr "&Dadan"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Izxere ya Sermasê Nîşan Bide"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Jê &Sermasê re"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Paceyê bibe Dîmena 1ê"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Bi Sermasê"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Bi Sermasê"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "Bi Sermasê"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "Bi Sermasê"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "&Bike wêneyê rûerdê"
+
+msgid "Open Wallpaper Image"
+msgstr "Pelê Wêneyê Zemînê Hilbijêre"

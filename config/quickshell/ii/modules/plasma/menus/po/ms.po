@@ -1,0 +1,94 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ms\n"
+
+msgid "&Desktops"
+msgstr "Semu&a Ruang Kerja"
+
+msgid "&All Desktops"
+msgstr "Semu&a Ruang Kerja"
+
+msgid "Desktop %1"
+msgstr "Ruang Kerja %1"
+
+msgid "Move to %1"
+msgstr "Ke Ruang Ke&rja"
+
+msgid "Move to &Screen"
+msgstr "Ke Ruang Ke&rja"
+
+msgid "Ma&ximize"
+msgstr "Mak&simumkan"
+
+msgid "Mi&nimize"
+msgstr "Keci&lkan"
+
+msgid "Keep &Above Others"
+msgstr "Kekalkan &Atas Lain"
+
+msgid "&Move"
+msgstr "&Pindah"
+
+msgid "&Resize"
+msgstr "Ulang&saiz"
+
+msgid "Keep &Below Others"
+msgstr "Kekalkan &Bawah Lain"
+
+msgid "&Fullscreen"
+msgstr "&Skrin Penuh"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Tetapan Tetingkap Kha&s..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Tetapan Aplikasi Kha&s..."
+
+msgid "&Close"
+msgstr "&Tutup"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Papar Desktop"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Ke Ruang Ke&rja"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Tetingkap ke Skrin 1"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Mengikut Desktop"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Mengikut Desktop"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "Mengikut Desktop"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "Mengikut Desktop"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Kunci Skrin"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Kunci Skrin"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Tetapkan sebagai Kertas &Dinding"
+
+msgid "Open Wallpaper Image"
+msgstr "Imej"

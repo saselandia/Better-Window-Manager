@@ -1,0 +1,86 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: be@latin\n"
+
+msgid "&Desktops"
+msgstr "&Na ŭsich stałach"
+
+msgid "&All Desktops"
+msgstr "&Na ŭsich stałach"
+
+msgid "Desktop %1"
+msgstr "Stoł %1"
+
+msgid "Move to %1"
+msgstr "Na &stoł"
+
+msgid "Move to &Screen"
+msgstr "Na &stoł"
+
+msgid "Ma&ximize"
+msgstr "Zma&ksymalizuj"
+
+msgid "Mi&nimize"
+msgstr "Ź&minimalizuj"
+
+msgid "Keep &Above Others"
+msgstr "&Uźnimi nad inšymi"
+
+msgid "&Move"
+msgstr "&Pierasuń"
+
+msgid "&Resize"
+msgstr "&Źmiani pamiery"
+
+msgid "Keep &Below Others"
+msgstr "&Źniž pad inšyja"
+
+msgid "&Fullscreen"
+msgstr "&Na ŭvieś ekran"
+
+msgid "Configure Special &Window Settings…"
+msgstr "&Asablivyja nałady akna..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "&Asablivyja nałady aplikacyi..."
+
+msgid "&Close"
+msgstr "&Začyni"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Sietka stała"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Na &stoł"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Akno na ekran „1”"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Pavodle stałoŭ"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Pavodle stałoŭ"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "Pavodle stałoŭ"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "Pavodle stałoŭ"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "&Aktualizuj stoł"
+
+msgid "Open Wallpaper Image"
+msgstr "Vybiery fajł z špalerami"

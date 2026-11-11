@@ -1,0 +1,185 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: az\n"
+
+msgid "&Desktops"
+msgstr "İş &Masaları"
+
+msgid "&All Desktops"
+msgstr "Bütün &İş Masaları"
+
+msgid "Desktop %1"
+msgstr "İş masası %1"
+
+msgid "Move to %1"
+msgstr "Buraya köçürün: %1 %2"
+
+msgid "Move to &Screen"
+msgstr "&Ekrana köçürmək"
+
+msgid "Ma&ximize"
+msgstr "&Genişləndirmək"
+
+msgid "Mi&nimize"
+msgstr "&Yığmaq"
+
+msgid "Keep &Above Others"
+msgstr "Digərilərinin üzərində &tutmaq"
+
+msgid "&More Actions"
+msgstr "&Daha çox fəaliyyətlər"
+
+msgid "&Move"
+msgstr "&köçürün"
+
+msgid "&Resize"
+msgstr "&Ölçüsünü dəyişmək"
+
+msgid "Keep &Below Others"
+msgstr "Arxa &planda tutmaq"
+
+msgid "&Fullscreen"
+msgstr "&Tam ekran"
+
+msgid "&No Titlebar and Frame"
+msgstr "Başlıqsız və çərçivəsiz"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Xüsusi &pəncərə ayarlarını tənzimləmək..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Xüsusi &tətbiq ayarlarını tənzimləmək..."
+
+msgid "&Close"
+msgstr "&Bağlayın"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "&Yeni İş masasına əlavə edin"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Yeni İş masasına &köşürün"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "&%1 Ekranı (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Sonuncu fayllar"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Fəaliyyətlər"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Əvvəlki fayla keçid"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Fasilə"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Səsləndirmək"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Növbəti fayl"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Dayandırmaq"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Yeni pəncərə açın"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "İş masasına &köşürmək"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "&Cari İş masasına köçürmək"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "Bütün &İş Masaları"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&Yeni İş masası"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "Tapşırıq panelinə &bərkitmək"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Tapşırıq menecerindən ayırmaq"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Daha çox"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&köçürün"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "&Ölçüsünü dəyişmək"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "&Genişləndirmək"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "&Yığmaq"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "&Tam ekran"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&Hamısını bağla"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Bağlayın"
+
+msgid "Open Terminal"
+msgstr "Terminalı aç"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Ekranı Kilidləmək"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Çıxış ekranını göstərmək"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Ekran tənzimləməsi"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "İş masası və fonu tənzimləyin…"
+
+msgid "Open Wallpaper Image"
+msgstr "Divar kağızı şəklini açın"
+
+msgid "Enter Edit Mode"
+msgstr "Düzəliş rejimi"
+
+msgid "Exit Edit Mode"
+msgstr "Düzəliş rejimindən çıxın"

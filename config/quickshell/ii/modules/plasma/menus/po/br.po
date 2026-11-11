@@ -1,0 +1,67 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: br\n"
+
+msgid "&Desktops"
+msgstr "&An holl vurevioù"
+
+msgid "&All Desktops"
+msgstr "&An holl vurevioù"
+
+msgid "Desktop %1"
+msgstr "Burev %1"
+
+msgid "Move to %1"
+msgstr "D'ar &burev"
+
+msgid "Move to &Screen"
+msgstr "D'ar &burev"
+
+msgid "Ma&ximize"
+msgstr "&Astenn"
+
+msgid "Mi&nimize"
+msgstr "&Izelaat"
+
+msgid "Keep &Above Others"
+msgstr "Mirout a-&us an holl re"
+
+msgid "&Move"
+msgstr "&Dilec'hiañ"
+
+msgid "&Resize"
+msgstr "Ad&ventañ"
+
+msgid "Keep &Below Others"
+msgstr "Mirout a-&is an holl re"
+
+msgid "&Fullscreen"
+msgstr "Skramm &leun"
+
+msgid "Configure Special &Window Settings…"
+msgstr "&Berradenn ar prenestr ..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "&Berradenn ar prenestr ..."
+
+msgid "&Close"
+msgstr "&Serriñ"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Gwintañ da Burev 1"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "D'ar &burev"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Prenestr ouzh ar burev 1"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Kefluniañ an drekleur ..."

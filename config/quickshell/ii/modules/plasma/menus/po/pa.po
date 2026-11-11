@@ -1,0 +1,190 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: pa\n"
+
+msgid "&Desktops"
+msgstr "ਡੈਸਕਟਾਪ(&D)"
+
+msgid "&All Desktops"
+msgstr "ਸਭ ਡੈਸਕਟਾਪ(&A)"
+
+msgid "Desktop %1"
+msgstr "ਡੈਸਕਟਾਪ %1"
+
+msgid "Move to %1"
+msgstr "%1 %2 ਉੱਤੇ ਭੇਜੋ"
+
+msgid "Move to &Screen"
+msgstr "ਸਕਰੀਨ ਉੱਤੇੇ ਭੇਜੋ(&S)"
+
+msgid "Ma&ximize"
+msgstr "ਵੱਧੋ ਤੋਂ ਵੱਧ(&x)"
+
+msgid "Mi&nimize"
+msgstr "ਘੱਟੋ-ਘੱਟ(&n)"
+
+msgid "Keep &Above Others"
+msgstr "ਸਭ ਤੋਂ ਉੱਤੇ ਰੱਖੋ(&A)"
+
+msgid "&More Actions"
+msgstr "ਹੋਰ ਕਾਰਵਾਈਆਂ(&M)"
+
+msgid "&Move"
+msgstr "ਏਧਰ-ਓਧਰ ਕਰੋ(&M)"
+
+msgid "&Resize"
+msgstr "ਮੁੜ-ਆਕਾਰ ਕਰੋ(&R)"
+
+msgid "Keep &Below Others"
+msgstr "ਸਭ ਤੋਂ ਹੇਠਾਂ ਰੱਖੋ(&B)"
+
+msgid "&Fullscreen"
+msgstr "ਪੂਰੀ ਸਕਰੀਨ(&F)"
+
+msgid "Configure Special &Window Settings…"
+msgstr "ਖਾਸ ਵਿੰਡੋ ਸੈਟਿੰਗਾਂ ਦੀ ਸੰਰਚਨਾ(&W)..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "ਖਾਸ ਐਪਲੀਕੇਸ਼ਨ ਸੈਟਿੰਗਾਂ(&p)..."
+
+msgid "&Close"
+msgstr "ਬੰਦ ਕਰੋ(&C)"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "ਨਵੇਂ ਡੈਸਕਟਾਪ ਉੱਤੇ ਜੋੜੋ(&N)"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "ਨਵੇਂ ਡੈਸਕਟਾਪ ਉੱਤੇ ਭੇਜੋ"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "ਸਕਰੀਨ &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "ਸੱਜਰੀਆਂ ਫਾਇਲ"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "ਕਾਰਵਾਈਆਂ"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "ਪਿਛਲਾ ਟਰੈਕ"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "ਵਿਰਾਮ"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "ਚਲਾਓ"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "ਅਗਲਾ ਟਰੈਕ"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "ਰੋਕੋ"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "ਨਵੀਂ ਵਿੰਡੋ ਨੂੰ ਖੋਲ੍ਹੋ"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "ਡੈਸਕਟਾਪ ਵਿੱਚ ਭੇਜੋ(&D)"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "ਮੌਜੂਦਾ ਡੈਸਕਟਾਪ ਉੱਤੇ ਭੇਜੋ(&T)"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "ਸਭ ਡੈਸਕਟਾਪ(&A)"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "ਨਵਾਂ ਡੈਸਕਟਾਪ(&N)"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "ਟਾਸਕ ਮੈਨੇਜਰ ਵਿੱਚ ਟੰਗੋ(&P)"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "ਟਾਸਕ ਮੈਨੇਜਰ ਤੋਂ ਲਾਹੋ"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "ਹੋਰ"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "ਭੇਜੋ(&M)"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "ਮੁੜ-ਆਕਾਰ(&s)"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "ਵੱਧੋ-ਵੱਧ(&x)"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "ਘੱਟੋ-ਘੱਟ(&n)"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "ਪੂਰੀ ਸਕਰੀਨ(&F)"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "ਕੋਈ ਟਾਈਟਲ-ਪੱਟੀ ਅਤੇ ਫਰੇਮ ਨਹੀਂ(&N)"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "ਸਕਰੀਨਕਾਸਟ ਤੋਂ ਓਹਲੇ(&H)"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "ਸਭ ਨੂੰ ਬੰਦ ਕਰੋ(&C)"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "ਬੰਦ ਕਰੋ(&C)"
+
+msgid "Open Terminal"
+msgstr "ਟਰਮੀਨਲ ਨੂੰ ਖੋਲ੍ਹੋ"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "ਸਕਰੀਨ ਲਾਕ ਕਰੋ"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "ਲਾਗ-ਆਉਟ ਸਕਰੀਨ ਵੇਖਾਓ"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "ਡਿਸਪਲੇਅ ਦੀ ਸੰਰਚਨਾ"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "ਡੈਸਕਟਾਪ ਅਤੇ ਵਾਲਪੇਪਰ"
+
+msgid "Open Wallpaper Image"
+msgstr "ਵਾਲਪੇਪਰ ਚਿੱਤਰ ਖੋਲ੍ਹੋ"
+
+msgid "Enter Edit Mode"
+msgstr "ਸੋਧ ਢੰਗ ਵਿੱਚ ਜਾਓ"
+
+msgid "Exit Edit Mode"
+msgstr "ਸੋਧ ਢੰਗ ਤੋਂ ਬਾਹਰ"

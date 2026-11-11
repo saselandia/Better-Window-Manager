@@ -1,0 +1,199 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: zh_CN\n"
+
+msgid "&Desktops"
+msgstr "桌面(&D)"
+
+msgid "&All Desktops"
+msgstr "全部桌面(&A)"
+
+msgid "Desktop %1"
+msgstr "桌面 %1"
+
+msgid "Move to %1"
+msgstr "移动到 %1"
+
+msgid "Move to &Screen"
+msgstr "移动到屏幕(&S)"
+
+msgid "Ma&ximize"
+msgstr "最大化(&X)"
+
+msgid "Mi&nimize"
+msgstr "最小化(&N)"
+
+msgid "Keep &Above Others"
+msgstr "置顶(&A)"
+
+msgid "&More Actions"
+msgstr "更多操作(&M)"
+
+msgid "&Move"
+msgstr "移动(&M)"
+
+msgid "&Resize"
+msgstr "调整大小(&R)"
+
+msgid "Keep &Below Others"
+msgstr "置底(&B)"
+
+msgid "&Fullscreen"
+msgstr "全屏(&F)"
+
+msgid "&No Titlebar and Frame"
+msgstr "无标题栏和边框(&N)"
+
+msgid "&Hide from Screenshots and Screen Recordings"
+msgstr "在截图和录屏中隐藏(&H)"
+
+msgid "Configure Special &Window Settings…"
+msgstr "配置特殊窗口设置(&W)…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "配置特殊应用程序设置(&P)…"
+
+msgid "&Close"
+msgstr "关闭(&C)"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "添加到新建桌面(&N)"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "移动到新建桌面"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "屏幕 &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "最近文件"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "操作"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "上一首"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "暂停"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "播放"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "下一首"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "停止"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "打开新窗口"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "移动到桌面(&D)"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "移动到当前桌面(&T)"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "全部桌面(&A)"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "新建桌面(&N)"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "固定到任务栏(&P)"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "取消固定到任务栏"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "更多"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "移动(&M)"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "调整大小(&S)"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "最大化(&X)"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "最小化(&N)"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "全屏(&F)"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "无标题栏和边框(&N)"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "在录屏中隐藏(&H)"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "关闭全部(&C)"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "关闭(&C)"
+
+msgid "Open Terminal"
+msgstr "打开终端"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "锁屏"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "显示注销屏幕"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "显示配置"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "桌面和壁纸"
+
+msgid "Open Wallpaper Image"
+msgstr "打开壁纸图像"
+
+msgid "Enter Edit Mode"
+msgstr "进入编辑模式"
+
+msgid "Exit Edit Mode"
+msgstr "退出编辑模式"
+
+msgid "Add or Manage Widgets…"
+msgstr "添加或管理小部件…"

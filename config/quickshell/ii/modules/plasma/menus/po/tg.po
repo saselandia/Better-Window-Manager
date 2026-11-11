@@ -1,0 +1,42 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: tg\n"
+
+msgid "Move to %1"
+msgstr "Ҷой ивазкунии Тиреза"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Тиреза ва Мизи корӣ"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Тиреза ва Мизи корӣ"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Ҷойҳо"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Қулфи экран"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Қулфи экран"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Танзимоти мизи корӣ ва тасвири замина..."
+
+msgid "Open Wallpaper Image"
+msgstr "Кушодани тавсири замина"
+
+msgid "Enter Edit Mode"
+msgstr "Гузариш ба реҷаи тағйирдиҳӣ"
+
+msgid "Exit Edit Mode"
+msgstr "Баромад аз реҷаи тағйирдиҳӣ"

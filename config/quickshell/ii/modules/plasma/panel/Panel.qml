@@ -6,6 +6,7 @@ import Quickshell.Io
 import qs
 import qs.services
 import qs.modules.common
+import qs.modules.plasma.menus
 import qs.modules.plasma.tray as PlasmaTray
 import "PanelLogic.js" as Logic
 Scope {
@@ -55,7 +56,15 @@ Scope {
                 hoverEnabled:true; acceptedButtons:Qt.RightButton
                 onEntered: { closeDelay.stop(); win.revealed=true; }
                 onExited:closeDelay.restart()
-                onClicked:PanelState.setEditing(win.screen.name,!win.editing)
+                // F9: menú del panel de Plasma (Añadir elementos, modo de edición)
+                onClicked:mouse=>PlasmaMenus.openLocal("panel",win.screen.name,
+                    mouse.x+hitArea.x+(win.geo.edge==="right"?win.screen.width-win.width:0),
+                    mouse.y+hitArea.y+(win.geo.edge==="bottom"?win.screen.height-win.height:0),
+                    {panelScreen:win.screen.name,editing:win.editing,edge:win.geo.edge})
+            }
+            Connections {
+                target:PlasmaMenus
+                function onEditModeRequested(name,value) { if(name===win.screen.name) PanelState.setEditing(name,value); }
             }
             Timer { id:closeDelay; interval:500; onTriggered:if(!panelHover.hovered) win.revealed=false }
             Item {

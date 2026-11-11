@@ -1,0 +1,196 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ug\n"
+
+msgid "&Desktops"
+msgstr "ئۈستەلئۈستى(&D)"
+
+msgid "&All Desktops"
+msgstr "بارلىق ئۈستەلئۈستى(&A)"
+
+msgid "Desktop %1"
+msgstr "%1-ئۈستەلئۈستى‎‏"
+
+msgid "Move to %1"
+msgstr "%1 غا يۆتكە"
+
+msgid "Move to &Screen"
+msgstr "ئېكرانغا يۆتكە(&S)"
+
+msgid "Ma&ximize"
+msgstr "چوڭايت(&X)"
+
+msgid "Mi&nimize"
+msgstr "كىچىكلەت(&N)"
+
+msgid "Keep &Above Others"
+msgstr "ئەڭ ئۈستىدە(&A)"
+
+msgid "&More Actions"
+msgstr "تېخىمۇ كۆپ مەشغۇلات(&M)"
+
+msgid "&Move"
+msgstr "يۆتكە(&M)"
+
+msgid "&Resize"
+msgstr "چوڭلۇقىنى ئۆزگەرت(&R)"
+
+msgid "Keep &Below Others"
+msgstr "ئەڭ ئاستىدا(&B)"
+
+msgid "&Fullscreen"
+msgstr "پۈتۈن ئېكران(&F)"
+
+msgid "&No Titlebar and Frame"
+msgstr "ماۋزۇ بالداق ۋە كاندۇك يوق(&N)"
+
+msgid "Configure Special &Window Settings…"
+msgstr "ئالاھىدە كۆزنەك تەڭشىكى سەپلىمىسى(&W)…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "ئالاھىدە پىروگرامما تەڭشىكى سەپلىمىسى(&P)…"
+
+msgid "&Close"
+msgstr "ياپ(&C)"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "يېڭى ئۈستەلئۈستىگە قوش(&N)"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "يېڭى ئۈستەلئۈستىگە يۆتكە"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "ئېكران &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "يېقىنقى ھۆججەت"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "مەشغۇلات"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "ئالدىنقى نەغمە"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "ۋاقىتلىق توختا"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "ياڭرات"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "كېيىنكى نەغمە"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "توختا"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "يېڭى كۆزنەك ئاچ"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "ئۈستەلئۈستىگە يۆتكە(&D)"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "نۆۋەتتىكى ئۈستەلئۈستىگە يۆتكە(&T)"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "بارلىق ئۈستەلئۈستى(&A)"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "يېڭى ئۈستەلئۈستى(&N)"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "ۋەزىپە باشقۇرغۇچقا مىخلا(&P)"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "ۋەزىپە باشقۇرغۇچتىن قومۇر"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "تېخىمۇ كۆپ"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "يۆتكە(&M)"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "چوڭلۇقىنى ئۆزگەرت(&S)"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "چوڭايت(&X)"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "كىچىكلەت(&N)"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "پۈتۈن ئېكران(&F)"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "ماۋزۇ بالداق ۋە كاندۇك يوق(&N)"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "ئېكران تارقىتىشتىن يوشۇر(&H)"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "ھەممىنى ياپ(&C)"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "ياپ(&C)"
+
+msgid "Open Terminal"
+msgstr "تېرمىنال ئاچ"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "ئېكراننى قۇلۇپلا"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "تىزىمدىن چىقىش ئېكرانىنى كۆرسەت"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "سەپلىمە كۆرسەت"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "ئۈستەلئۈستى ۋە تام قەغەز"
+
+msgid "Open Wallpaper Image"
+msgstr "تام قەغەز سۈرىتىنى ئاچ"
+
+msgid "Enter Edit Mode"
+msgstr "تەھرىرلەش ھالىتىگە كىرىدۇ"
+
+msgid "Exit Edit Mode"
+msgstr "تەھرىرلەش ھالىتىدىن چېكىنىدۇ"
+
+msgid "Add or Manage Widgets…"
+msgstr "ئەپچە قوش ياكى باشقۇر…"

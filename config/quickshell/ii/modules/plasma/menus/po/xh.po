@@ -1,0 +1,64 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: xh\n"
+
+msgid "&Desktops"
+msgstr "&Zonke ii Desktops"
+
+msgid "&All Desktops"
+msgstr "&Zonke ii Desktops"
+
+msgid "Desktop %1"
+msgstr "Desktop %1"
+
+msgid "Move to %1"
+msgstr "&Kwi Desktop"
+
+msgid "Move to &Screen"
+msgstr "&Kwi Desktop"
+
+msgid "Ma&ximize"
+msgstr "&Yandisa"
+
+msgid "Mi&nimize"
+msgstr "&Nciphisa"
+
+msgid "Keep &Above Others"
+msgstr "Ukuhamba kwe Window"
+
+msgid "&Move"
+msgstr "&Shukuma"
+
+msgid "&Resize"
+msgstr "&Ubungakanani"
+
+msgid "Keep &Below Others"
+msgstr "Window Esezantsi"
+
+msgid "&Fullscreen"
+msgstr "Udubulo lwekhusi Lwefestile"
+
+msgid "Configure Special &Window Settings…"
+msgstr "&Izicwangciso Zendawo Yokugcina"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "&Izicwangciso Zendawo Yokugcina"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Tshintsha kwi Desktop 1"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "&Kwi Desktop"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Window kwi Desktop 1"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Isiqalo"

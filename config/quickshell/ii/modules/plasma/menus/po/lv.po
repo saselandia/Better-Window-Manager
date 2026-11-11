@@ -1,0 +1,196 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: lv\n"
+
+msgid "&Desktops"
+msgstr "&Visas darbvirsmas"
+
+msgid "&All Desktops"
+msgstr "Vis&as darbvirsmas"
+
+msgid "Desktop %1"
+msgstr "%1. darbvirsma"
+
+msgid "Move to %1"
+msgstr "Pārvietot uz %1"
+
+msgid "Move to &Screen"
+msgstr "Uz &ekrānu"
+
+msgid "Ma&ximize"
+msgstr "Ma&ksimizēt"
+
+msgid "Mi&nimize"
+msgstr "Mi&nimizēt"
+
+msgid "Keep &Above Others"
+msgstr "Paturēt &virs citiem"
+
+msgid "&More Actions"
+msgstr "&Vairāk darbību"
+
+msgid "&Move"
+msgstr "&Pārvietot"
+
+msgid "&Resize"
+msgstr "Mainīt &izmēru"
+
+msgid "Keep &Below Others"
+msgstr "Paturēt &zem citiem"
+
+msgid "&Fullscreen"
+msgstr "&Pilnekrāna režīms"
+
+msgid "&No Titlebar and Frame"
+msgstr "&Bez virsrakstjoslas un ietvara"
+
+msgid "Configure Special &Window Settings…"
+msgstr "&Konfigurēt speciālos loga iestatījumus…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "&Konfigurēt speciālos programmas iestatījumus…"
+
+msgid "&Close"
+msgstr "&Aizvērt"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Pievienot &jaunai darbvirsmai"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Pārvietot uz jaunu darbvirsmu"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "&%1. ekrāns („%2“)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Nesenās datnes"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Darbības"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Iepriekšējais celiņš"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Pauze"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Atskaņot"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Nākamais celiņš"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Apturēt"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Atvērt jaunu logu"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Pārvietot uz &darbvirsmu"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Pārvietot uz &pašreizējo darbvirsmu"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Uz visām darbvirsmām"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "Uz &jaunu darbvirsmu"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Piespraust uzdevumu pārvaldniekam"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Noņemt no uzdevumu pārvaldnieka"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Vairāk"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Pārvietot"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "&Mainīt izmēru"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "M&aksimizēt"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Minimi&zēt"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "Piln&ekrāna"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "&Bez virsrakstjoslas un ietvara"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "Slēpt no ekrāna &ierakstīšanas"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&Aizvērt visus"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Aizvērt"
+
+msgid "Open Terminal"
+msgstr "Atvērt termināli"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Slēgt ekrānu"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Rādīt izrakstīšanās ekrānu"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Displeja konfigurācija"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Darbvirsma un darbvirsmas tapete"
+
+msgid "Open Wallpaper Image"
+msgstr "Atvērt tapetes attēlu"
+
+msgid "Enter Edit Mode"
+msgstr "Ieslēgt rediģēšanas režīmu"
+
+msgid "Exit Edit Mode"
+msgstr "Iziet no rediģēšanas režīma"
+
+msgid "Add or Manage Widgets…"
+msgstr "Pievienot vai pārvaldīt logdaļas…"

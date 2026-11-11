@@ -1,0 +1,36 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: se\n"
+
+msgid "&All Desktops"
+msgstr "&Buot čállinbevddiide"
+
+msgid "Desktop %1"
+msgstr "Cállinbeavdi %1"
+
+msgid "Ma&ximize"
+msgstr "Ma&ksimere"
+
+msgid "Mi&nimize"
+msgstr "Mi&nimere"
+
+msgid "Keep &Above Others"
+msgstr "Čá&jet earáid bajábealde"
+
+msgid "&Move"
+msgstr "&Sirdde"
+
+msgid "&Resize"
+msgstr "&Rievdat sturrodaga"
+
+msgid "Keep &Below Others"
+msgstr "Čájet &earáid vuolábealde"
+
+msgid "&Fullscreen"
+msgstr "&Deavasšearbma"
+
+msgid "&Close"
+msgstr "&Gidde"

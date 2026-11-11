@@ -1476,5 +1476,25 @@
       "plasma"
     ],
     "is_modified": false
+  },
+  {
+    "id": "breeze_window_menu",
+    "category": "Ventanas",
+    "description": "Menú de la ventana (KDE: Alt+F3)",
+    "mods": [
+      "ALT"
+    ],
+    "key": "F3",
+    "action_type": "exec",
+    "exec": "python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py menu",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
   }
 ]

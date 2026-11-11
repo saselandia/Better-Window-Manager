@@ -1,0 +1,83 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: hne\n"
+
+msgid "&Desktops"
+msgstr "सब्बो डेस्कटाप (&A)"
+
+msgid "&All Desktops"
+msgstr "सब्बो डेस्कटाप (&A)"
+
+msgid "Desktop %1"
+msgstr "डेस्कटाप %1"
+
+msgid "Move to %1"
+msgstr "डेस्कटाप मं (&D)"
+
+msgid "Move to &Screen"
+msgstr "डेस्कटाप मं (&D)"
+
+msgid "Ma&ximize"
+msgstr "सबसे बड़े करव (&x)"
+
+msgid "Mi&nimize"
+msgstr "सबसे छोटे करव (&n)"
+
+msgid "Keep &Above Others"
+msgstr "दूसर के ऊपर रखव (&A)"
+
+msgid "&Move"
+msgstr "खिसकाव (&M) "
+
+msgid "&Resize"
+msgstr "नवा आकार (&s)"
+
+msgid "Keep &Below Others"
+msgstr "दूसर के नीचे रखव (&B)"
+
+msgid "&Fullscreen"
+msgstr "पूरा स्क्रीन (&F)"
+
+msgid "Configure Special &Window Settings…"
+msgstr "विसिस्ट विंडो सेटिंग...(&S)"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "विसिस्ट अनुपरयोग सेटिंग... (&S)"
+
+msgid "&Close"
+msgstr "बंद करव (&C)"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "डेस्कटाप ग्रिड देखाव"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "डेस्कटाप मं (&D)"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "विंडो से स्क्रीन 1"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "डेस्कटाप के आधार मं"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "डेस्कटाप के आधार मं"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "डेस्कटाप के आधार मं"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "डेस्कटाप के आधार मं"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "डेस्कटाप ताजा करव (&R)"

@@ -1,0 +1,189 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: id\n"
+
+msgid "&Desktops"
+msgstr "&Desktop"
+
+msgid "&All Desktops"
+msgstr "&Semua Desktop"
+
+msgid "Desktop %1"
+msgstr "Desktop %1"
+
+msgid "Move to %1"
+msgstr "Pindah ke %1: %2"
+
+msgid "Move to &Screen"
+msgstr "Pindah ke &Layar"
+
+msgid "Ma&ximize"
+msgstr "Ma&ksimalkan"
+
+msgid "Mi&nimize"
+msgstr "Mi&nimalkan"
+
+msgid "Keep &Above Others"
+msgstr "Jaga di &Atas Lainnya"
+
+msgid "&More Actions"
+msgstr "&Aksi Selebihnya"
+
+msgid "&Move"
+msgstr "&Pindah"
+
+msgid "&Resize"
+msgstr "Ubah U&kuran"
+
+msgid "Keep &Below Others"
+msgstr "Jaga di &Bawah Lainnya"
+
+msgid "&Fullscreen"
+msgstr "&Layar Penuh"
+
+msgid "&No Titlebar and Frame"
+msgstr "Tanpa bilah judul dan kerangka"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Konfigurasikan Pengaturan &Jendela Spesial..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Konfigurasikan Pengaturan Aplikasi S&pesial..."
+
+msgid "&Close"
+msgstr "&Tutup"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Tambahkan ke Desktop &Baru"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Pindah ke Desktop &Baru"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Layar &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "File Baru-baru Ini"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Aksi"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Trek Sebelumnya"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Jeda"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Putarkan"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Trek Selanjutnya"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Hentikan"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Buka Jendela Baru"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Pindah ke &Desktop"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Pindah &Ke Desktop Saat Ini"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Semua Desktop"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&Desktop Baru"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Sematkan ke Pengelola Tugas"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Lepas sematan dari Task Manager"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Selebihnya"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Pindah"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "&Ubah Ukuran"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Ma&ksimalkan"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Mi&nimalkan"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "&Layar Penuh"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "&Tanpa Bilah Judul dan Kerangka"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&Tutup Semua"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Tutup"
+
+msgid "Open Terminal"
+msgstr "Buka Terminal"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Layar Kunci"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Tampilkan Layar Keluar Log"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Konfigurasi Tampilan"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Desktop dan Wallpaper"
+
+msgid "Open Wallpaper Image"
+msgstr "Buka Gambar Wallpaper"
+
+msgid "Enter Edit Mode"
+msgstr "Masuki Mode Edit"
+
+msgid "Exit Edit Mode"
+msgstr "Keluarkan Mode Edit"

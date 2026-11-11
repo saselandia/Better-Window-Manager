@@ -1,0 +1,97 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: bs\n"
+
+msgid "&Desktops"
+msgstr "&Sve površi"
+
+msgid "&All Desktops"
+msgstr "&Sve površi"
+
+msgid "Desktop %1"
+msgstr "Površ %1"
+
+msgid "Move to %1"
+msgstr "Pomjeri na &ekran"
+
+msgid "Move to &Screen"
+msgstr "Pomjeri na &ekran"
+
+msgid "Ma&ximize"
+msgstr "M&aksimizuj"
+
+msgid "Mi&nimize"
+msgstr "M&inimizuj"
+
+msgid "Keep &Above Others"
+msgstr "Drži iz&nad ostalih"
+
+msgid "&More Actions"
+msgstr "&Više akcija"
+
+msgid "&Move"
+msgstr "Po&mjeri"
+
+msgid "&Resize"
+msgstr "&Promijeni veličinu"
+
+msgid "Keep &Below Others"
+msgstr "Drži is&pod ostalih"
+
+msgid "&Fullscreen"
+msgstr "Preko &cijelog ekrana"
+
+msgid "Configure Special &Window Settings…"
+msgstr "&Posebne postavke prozora..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Pose&bne postavke programa..."
+
+msgid "&Close"
+msgstr "&Zatvori"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "&Nova radna površina"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Pomjeri na ra&dnu površinu"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Ekran &%1"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Po radnoj površini"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Po radnoj površini"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "Po radnoj površini"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "Po radnoj površini"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Zaključaj ekran"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Zaključaj ekran"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Prikaži direktorij radne površi"
+
+msgid "Open Wallpaper Image"
+msgstr "Sljedeća tapetna slika"

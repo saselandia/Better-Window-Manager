@@ -1,0 +1,199 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: lt\n"
+
+msgid "&Desktops"
+msgstr "&Darbalaukiai"
+
+msgid "&All Desktops"
+msgstr "&Visi darbalaukiai"
+
+msgid "Desktop %1"
+msgstr "Darbalaukis %1"
+
+msgid "Move to %1"
+msgstr "Perkelti į %1"
+
+msgid "Move to &Screen"
+msgstr "Perkelti į &ekraną"
+
+msgid "Ma&ximize"
+msgstr "&Išskleisti"
+
+msgid "Mi&nimize"
+msgstr "&Suskleisti"
+
+msgid "Keep &Above Others"
+msgstr "Laikyti &virš kitų"
+
+msgid "&More Actions"
+msgstr "&Daugiau veiksmų"
+
+msgid "&Move"
+msgstr "Perke&lti"
+
+msgid "&Resize"
+msgstr "Keisti &dydį"
+
+msgid "Keep &Below Others"
+msgstr "Laikyti &po kitais"
+
+msgid "&Fullscreen"
+msgstr "Visas &ekranas"
+
+msgid "&No Titlebar and Frame"
+msgstr "&Be antraštės juostos ir rėmelio"
+
+msgid "&Hide from Screenshots and Screen Recordings"
+msgstr "&Slėpti, kai daromos ekrano kopijos ir filmuojamas ekranas"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Konfigūruoti specialias lango nu&ostatas…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Konfigūruoti s&pecialias programos nuostatas…"
+
+msgid "&Close"
+msgstr "&Užverti"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Pridėti į &naują darbalaukį"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Perkelti į naują darbalaukį"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Ekranas &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Paskiausiai naudoti failai"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Veiksmai"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Ankstesnis takelis"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Pristabdyti"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Atkurti"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Kitas takelis"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Stabdyti"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Atverti naują langą"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Perkelti į &darbalaukį"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Perkelti į da&bartinį darbalaukį"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Visi darbalaukiai"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&Naujas darbalaukis"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Prisegti prie užduočių tvarkytuvės"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Atsegti nuo užduočių tvarkytuvės"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Daugiau"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Perkelti"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "Keisti &dydį"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "&Išskleisti"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "&Suskleisti"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "&Visas ekranas"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "&Be antraštės juostos ir rėmelio"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "&Slėpti, kai filmuojamas ekranas"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&Užverti visus"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Užverti"
+
+msgid "Open Terminal"
+msgstr "Atverti terminalą"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Užrakinti ekraną"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Rodyti atsijungimo ekraną"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Ekrano konfigūracija"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Darbalaukis ir darbalaukio fonas"
+
+msgid "Open Wallpaper Image"
+msgstr "Atverti darbalaukio fono paveikslą"
+
+msgid "Enter Edit Mode"
+msgstr "Įjungti taisymo veikseną"
+
+msgid "Exit Edit Mode"
+msgstr "Išjungti taisymo veikseną"
+
+msgid "Add or Manage Widgets…"
+msgstr "Pridėti ar tvarkyti valdiklius…"

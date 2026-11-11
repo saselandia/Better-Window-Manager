@@ -1,0 +1,154 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ga\n"
+
+msgid "&Desktops"
+msgstr "&Deasca"
+
+msgid "&All Desktops"
+msgstr "G&ach Deasc"
+
+msgid "Desktop %1"
+msgstr "Deasc %1"
+
+msgid "Ma&ximize"
+msgstr "&Uasmhéadaigh"
+
+msgid "Mi&nimize"
+msgstr "Íos&laghdaigh"
+
+msgid "Keep &Above Others"
+msgstr "Coimeád &Os Cionn"
+
+msgid "&Move"
+msgstr "&Bog"
+
+msgid "Keep &Below Others"
+msgstr "Coimeád &Faoi Chinn Eile"
+
+msgid "&Fullscreen"
+msgstr "&Lánscáileán"
+
+msgid "&Close"
+msgstr "&Dún"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Scáileán &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Comhaid Le Déanaí"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Gníomhartha"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "An Rian Roimhe Seo"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Sos"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Seinn"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "An Chéad Rian Eile"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Stop"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Oscail Fuinneog Nua"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Bog go dtí &Deasc"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Bog go &dtí an Deasc Reatha"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Gach Deasc"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "Deasc &Nua"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Pionáil chuig Bainisteoir Tascanna"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Díphionáil ón mBainisteoir Tascanna"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Tuilleadh"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Bog"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "Athraigh méid"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Uasmhéadaigh"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Íoslaghdaigh"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "&Lánscáileán"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "Gan Barra Teidil ná Fráma"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "&Folaigh ón gCraoladh Scáileáin"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&Dún Gach Rud"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Dún"
+
+msgid "Open Terminal"
+msgstr "Oscail Teirminéal"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Cuir an Scáileán Faoi Ghlas"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Taispeáin an Scáileán Logála Isteach"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Deasc agus Cúlbhrat"
+
+msgid "Open Wallpaper Image"
+msgstr "Oscail Íomhá Chúlbhrait"

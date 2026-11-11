@@ -1,0 +1,199 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fr\n"
+
+msgid "&Desktops"
+msgstr "&Bureaux"
+
+msgid "&All Desktops"
+msgstr "Tous les bure&aux"
+
+msgid "Desktop %1"
+msgstr "Bureau %1"
+
+msgid "Move to %1"
+msgstr "Déplacer vers %1"
+
+msgid "Move to &Screen"
+msgstr "Déplacer ver&s l'écran"
+
+msgid "Ma&ximize"
+msgstr "Ma&ximiser"
+
+msgid "Mi&nimize"
+msgstr "Réd&uire"
+
+msgid "Keep &Above Others"
+msgstr "Conserver &au-dessus des autres"
+
+msgid "&More Actions"
+msgstr "Actions supplé&mentaires"
+
+msgid "&Move"
+msgstr "&Déplacer"
+
+msgid "&Resize"
+msgstr "&Re-dimensionner"
+
+msgid "Keep &Below Others"
+msgstr "Conserver au-de&ssous des autres"
+
+msgid "&Fullscreen"
+msgstr "P&lein écran"
+
+msgid "&No Titlebar and Frame"
+msgstr "Aucu&ne barre de titre et bordure"
+
+msgid "&Hide from Screenshots and Screen Recordings"
+msgstr "&Masquer des captures et des enregistrements d'écran"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Configurer les paramètres spécifiques de la &fenêtre..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Configurer les &paramètres spéciaux de l'application…"
+
+msgid "&Close"
+msgstr "&Fermer"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Ajouter à un &nouveau bureau"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Déplacer vers le nouveau bureau"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Écran &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Fichiers récents"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Actions"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Piste précédente"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Pause"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Lecture"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Piste suivante"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Arrêter"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Ouvrir une nouvelle fenêtre"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "&Déplacer vers le bureau"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Déplacer vers le bureau couran&t"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Tous les bureaux"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&Nouveau bureau"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "É&pingler au gestionnaire de tâches"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Désépingler du gestionnaire de tâches"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Plus"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Déplacer"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "Re&dimensionner"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Ma&ximiser"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Mi&nimiser"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "&Plein écran"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "Aucu&ne barre de titre et aucun cadre"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "&Masquer dans l'enregistrement de l'écran"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&Tout fermer"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Fermer"
+
+msgid "Open Terminal"
+msgstr "Ouvrir un terminal"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Verrouiller l'écran"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Afficher l'écran de déconnexion"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Configuration d'affichage"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Bureau et fond d'écran"
+
+msgid "Open Wallpaper Image"
+msgstr "Ouvrir l'image de fond d'écran"
+
+msgid "Enter Edit Mode"
+msgstr "Démarrer en mode d'édition"
+
+msgid "Exit Edit Mode"
+msgstr "Quitter le mode d'édition"
+
+msgid "Add or Manage Widgets…"
+msgstr "Ajouter ou gérer des composants graphiques…"

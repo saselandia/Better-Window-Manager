@@ -1,0 +1,57 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: te\n"
+
+msgid "&Desktops"
+msgstr "(&A)అన్ని రంగస్థలాలు"
+
+msgid "&All Desktops"
+msgstr "(&A)అన్ని రంగస్థలాలు"
+
+msgid "Desktop %1"
+msgstr "రంగస్థలము %1"
+
+msgid "Move to %1"
+msgstr "(&D) రంగస్థలానికి"
+
+msgid "Move to &Screen"
+msgstr "(&D) రంగస్థలానికి"
+
+msgid "Ma&ximize"
+msgstr "(&x) పెద్దగా చేయి"
+
+msgid "Mi&nimize"
+msgstr "(&n) చిన్నగా చేయి"
+
+msgid "Keep &Above Others"
+msgstr "(&A) వేరేవాటి పైన పెట్టండి"
+
+msgid "&Move"
+msgstr "(&M)జరుపు"
+
+msgid "Keep &Below Others"
+msgstr "(&B) వేరేవాటి క్రింద పెట్టండి"
+
+msgid "&Fullscreen"
+msgstr "(&F) పూర్తి తెర"
+
+msgid "&Close"
+msgstr "(&C) మూసివేయి"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "(&D) రంగస్థలానికి"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "(&D) రంగస్థలానికి"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "అన్నిటిని ఎంపికచేయుము"
+
+msgid "Open Wallpaper Image"
+msgstr "చిత్రాలు"

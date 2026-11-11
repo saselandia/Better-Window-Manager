@@ -1,0 +1,112 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ast\n"
+
+msgid "&Desktops"
+msgstr "&Escritorios"
+
+msgid "&All Desktops"
+msgstr "&Tolos escritorios"
+
+msgid "&More Actions"
+msgstr "&Más aiciones"
+
+msgid "&Close"
+msgstr "&Zarrar"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Ficheros de recién"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Aiciones"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Pista anterior"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Posar"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Reproducir"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Pista siguiente"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Parar"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Abrir una ventana nueva"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Mover al &escritoriu"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Mover &al escritoriu actual"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Tolos escritorios"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "Escritoriu &nuevu"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Fixar nel xestor de xeres"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Soltar del xestor de xeres"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Más"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Mover"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "Re&dimensionar"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Ma&ximizar"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Mi&nimizar"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&Zarrar too"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Zarrar"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Escritoriu y fondu de pantalla"
+
+msgid "Enter Edit Mode"
+msgstr "Entrar nel mou d'edición"
+
+msgid "Exit Edit Mode"
+msgstr "Colar del mou d'edición"

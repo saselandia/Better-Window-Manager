@@ -1,0 +1,94 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ml\n"
+
+msgid "&Desktops"
+msgstr "&എല്ലാ ഡസ്ക്ടോപ്പുകളും"
+
+msgid "&All Desktops"
+msgstr "&എല്ലാ ഡസ്ക്ടോപ്പുകളും"
+
+msgid "Desktop %1"
+msgstr "പണിയിടം %1"
+
+msgid "Move to %1"
+msgstr "&പണിയിടത്തിലേയ്ക്കു്"
+
+msgid "Move to &Screen"
+msgstr "&പണിയിടത്തിലേയ്ക്കു്"
+
+msgid "Ma&ximize"
+msgstr "വലു&താക്കുക"
+
+msgid "Mi&nimize"
+msgstr "ചെറു&nതാക്കുക"
+
+msgid "Keep &Above Others"
+msgstr "എല്ലാറ്റിനും &മുകളിലാക്കുക"
+
+msgid "&Move"
+msgstr "&നീക്കുക"
+
+msgid "&Resize"
+msgstr "വലിപ്പം &മാറ്റുക"
+
+msgid "Keep &Below Others"
+msgstr "എല്ലാറ്റിനും &താഴെയാക്കുക"
+
+msgid "&Fullscreen"
+msgstr "&സ്ക്രീന്‍ പൂര്‍ണ്ണവലിപ്പത്തിലാക്കുക"
+
+msgid "Configure Special &Window Settings…"
+msgstr "ജാലകത്തിനുള്ള &പ്രത്യേക സജ്ജീകരണങ്ങള്‍..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "പ്രയോഗത്തിനുള്ള &പ്രത്യേക സജ്ജീകരണങ്ങള്‍..."
+
+msgid "&Close"
+msgstr "&അടയ്ക്കുക"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "പണിയിടം ഗ്രിഡ് കാണിക്കുക"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "&പണിയിടത്തിലേയ്ക്കു്"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "ജാലകത്തില്‍ നിന്നും സ്ക്രീന്‍ 1-ലേക്കു്"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "പണിയിടം അനുസരിച്ച്"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "പണിയിടം അനുസരിച്ച്"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "പണിയിടം അനുസരിച്ച്"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "പണിയിടം അനുസരിച്ച്"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "സ്ക്രീൻ പൂട്ടുക"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "സ്ക്രീൻ പൂട്ടുക"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "പണിയിടം ക്രമീകരിക്കുക"
+
+msgid "Open Wallpaper Image"
+msgstr "പശ്ചാത്തലചിത്രം തുറക്കുക"

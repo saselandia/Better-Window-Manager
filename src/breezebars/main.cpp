@@ -42,6 +42,8 @@
 #include <hyprland/src/managers/input/InputManager.hpp>
 #include <hyprland/src/desktop/state/FocusState.hpp>
 #include "globals.hpp"
+#include <hyprland/src/pointer/PointerController.hpp>
+#include <hyprland/src/layout/LayoutManager.hpp>
 #include "DecoClient.hpp"
 #include "barRemote.hpp"
 
@@ -360,7 +362,61 @@ static void onGlobalMouseMove(const Vector2D& coords) {
     }
 }
 
+// «Mover» y «Redimensionar» del menú de la ventana (F9, KWin UnrestrictedMoveOp/ResizeOp): la ventana
+// sigue al puntero hasta el siguiente clic. hyprctl breezebars-interactive move|resize <dirección>
+static bool s_interactiveDrag = false, s_swallowRelease = false;
+
+static std::string interactiveCommand(eHyprCtlOutputFormat, std::string request) {
+    Hyprutils::String::CVarList vars(request, 0, ' ');
+    if (vars.size() < 3)
+        return "uso: breezebars-interactive move|resize <dirección>";
+    const auto op = vars[1], addr = vars[2];
+    PHLWINDOW  target;
+    for (auto& w : Desktop::windowState()->windows())
+        if (w && w->m_isMapped && std::format("0x{:x}", (uintptr_t)w.get()) == addr)
+            target = w;
+    if (!Desktop::View::validMapped(target) || Fullscreen::controller()->isFullscreen(target) || g_layoutManager->dragController()->target())
+        return "no se puede";
+    if (Desktop::focusState()->window() != target)
+        Desktop::focusState()->fullWindowFocus(target, Desktop::FOCUS_REASON_CLICK);
+    Desktop::windowState()->raise(target);
+    const CBox box = target->getWindowMainSurfaceBox();
+    if (op == "resize") {
+        Pointer::pointerController()->warpTo(Vector2D{box.x + box.w - 2, box.y + box.h - 2}, true);
+        g_layoutManager->beginDragTarget(target->layoutTarget(), MBIND_RESIZE, Layout::CORNER_BOTTOMRIGHT);
+    } else {
+        // Al centro de la barra de título (encima del contenido)
+        double top = 0;
+        for (auto& b : g_pGlobalState->bars)
+            if (b && b->getOwner() == target && !b->m_hidden) {
+                if (auto frame = b->frameBoxGlobal(false))
+                    top = box.y - frame->y;
+                if (top <= 0)
+                    top = g_pGlobalState->config.barHeight->value();
+            }
+        Pointer::pointerController()->warpTo(Vector2D{box.x + box.w / 2, box.y - std::max(1.0, top / 2)}, true);
+        g_layoutManager->beginDragTarget(target->layoutTarget(), MBIND_MOVE);
+    }
+    s_interactiveDrag = true;
+    return "ok";
+}
+
 static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent e) {
+    if (s_interactiveDrag || s_swallowRelease) {
+        if (s_interactiveDrag && e.state == WL_POINTER_BUTTON_STATE_PRESSED) {
+            if (g_layoutManager->dragController()->target())
+                g_layoutManager->endDragTarget();
+            s_interactiveDrag = false;
+            s_swallowRelease  = true;
+            info.cancelled    = true;
+            return;
+        }
+        if (s_swallowRelease && e.state != WL_POINTER_BUTTON_STATE_PRESSED) {
+            s_swallowRelease = false;
+            info.cancelled   = true;
+            return;
+        }
+    }
     const auto MODS = g_pInputManager->getModsFromAllKBs();
     const auto ALTMASK = g_pKeybindManager->stringToModMask("ALT");
     const auto SUPERMASK = g_pKeybindManager->stringToModMask("SUPER");
@@ -615,6 +671,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
         HyprlandAPI::addLuaFunction(PHANDLE, "breezebars", "add_button", ::newLuaButton);
     g_pGlobalState->csdCommand = HyprlandAPI::registerHyprCtlCommand(PHANDLE, SHyprCtlCommand{.name = "hyprbars-csd", .exact = true, .fn = csdReport});
     g_pGlobalState->breezeCsdCommand = HyprlandAPI::registerHyprCtlCommand(PHANDLE, SHyprCtlCommand{.name="breezebars-csd",.exact=true,.fn=csdReport});
+    g_pGlobalState->interactiveCommand = HyprlandAPI::registerHyprCtlCommand(PHANDLE, SHyprCtlCommand{.name = "breezebars-interactive", .exact = false, .fn = interactiveCommand});
     HyprlandAPI::addLuaFunction(PHANDLE,"breezebars","decoration",luaDecoration);
     g_pGlobalState->pPreReloadListener = Event::bus()->m_events.config.preReload.listen([] { onPreConfigReload(); });
     g_pGlobalState->pReloadedListener  = Event::bus()->m_events.config.reloaded.listen([] { onConfigReloaded(); });
@@ -665,6 +722,8 @@ APICALL EXPORT void PLUGIN_EXIT() {
             HyprlandAPI::unregisterHyprCtlCommand(PHANDLE, g_pGlobalState->csdCommand);
 
         if(g_pGlobalState->breezeCsdCommand)HyprlandAPI::unregisterHyprCtlCommand(PHANDLE,g_pGlobalState->breezeCsdCommand);
+        if (g_pGlobalState->interactiveCommand)
+            HyprlandAPI::unregisterHyprCtlCommand(PHANDLE, g_pGlobalState->interactiveCommand);
         Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->barColorRuleIdx);
         Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->titleColorRuleIdx);
         Desktop::Rule::windowEffects()->unregisterEffect(g_pGlobalState->nobarRuleIdx);

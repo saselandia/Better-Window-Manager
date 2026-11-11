@@ -1,0 +1,199 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: nl\n"
+
+msgid "&Desktops"
+msgstr "&Bureaubladen"
+
+msgid "&All Desktops"
+msgstr "&Alle bureaubladen"
+
+msgid "Desktop %1"
+msgstr "Bureaublad %1"
+
+msgid "Move to %1"
+msgstr "Verplaatsen naar %1"
+
+msgid "Move to &Screen"
+msgstr "Naar &scherm verplaatsen"
+
+msgid "Ma&ximize"
+msgstr "Ma&ximaliseren"
+
+msgid "Mi&nimize"
+msgstr "&Minimaliseren"
+
+msgid "Keep &Above Others"
+msgstr "Altijd op &voorgrond"
+
+msgid "&More Actions"
+msgstr "&Meer acties"
+
+msgid "&Move"
+msgstr "Ver&plaatsen"
+
+msgid "&Resize"
+msgstr "G&rootte wijzigen"
+
+msgid "Keep &Below Others"
+msgstr "Altijd op &achtergrond"
+
+msgid "&Fullscreen"
+msgstr "Venster &schermvullend"
+
+msgid "&No Titlebar and Frame"
+msgstr "Gee&n titelbalk en rand"
+
+msgid "&Hide from Screenshots and Screen Recordings"
+msgstr "&Verbergen voor schermafdrukken en schermvideo-opnamen"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Speciale &vensterinstellingen configureren…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "S&peciale programmainstellingen configureren…"
+
+msgid "&Close"
+msgstr "Sl&uiten"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Aan &nieuw bureaublad toevoegen"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Naar nieuw bureaublad verplaatsen"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Scherm &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Recente bestanden"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Acties"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Vorige track"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Pauzeren"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Afspelen"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Volgende track"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Stoppen"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Nieuw venster openen"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Naar bureaubla&d verplaatsen"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "&Naar huidig bureaublad verplaatsen"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Alle bureaubladen"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&Nieuw bureaublad"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Pin naar takenbeheerder"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Unpin uit takenbeheerder"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Meer"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Verplaatsen"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "&Grootte wijzigen"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Ma&ximaliseren"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Mi&nimaliseren"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "&Volledig scherm"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "Gee&n titelbalk en rand"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "&Verbergen van schermvideo"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "Alles &sluiten"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "Sl&uiten"
+
+msgid "Open Terminal"
+msgstr "Terminal openen"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Scherm vergrendelen"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Afmeldscherm tonen"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Configuratie van het scherm"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Bureaublad en achtergrond"
+
+msgid "Open Wallpaper Image"
+msgstr "Achtergrondafbeelding openen"
+
+msgid "Enter Edit Mode"
+msgstr "Bewerkingsmodus ingaan"
+
+msgid "Exit Edit Mode"
+msgstr "Bewerkingsmodus sluiten"
+
+msgid "Add or Manage Widgets…"
+msgstr "Widgets toevoegen of beheren…"

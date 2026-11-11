@@ -1,0 +1,199 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: tr\n"
+
+msgid "&Desktops"
+msgstr "M&asaüstleri"
+
+msgid "&All Desktops"
+msgstr "Tüm M&asaüstlerine"
+
+msgid "Desktop %1"
+msgstr "Masaüstü %1"
+
+msgid "Move to %1"
+msgstr "%1 Konumuna Taşı"
+
+msgid "Move to &Screen"
+msgstr "&Ekrana Taşı"
+
+msgid "Ma&ximize"
+msgstr "Ekranı &Kapla"
+
+msgid "Mi&nimize"
+msgstr "Simge Durumu&na Küçült"
+
+msgid "Keep &Above Others"
+msgstr "&Diğerlerinin Üzerinde Tut"
+
+msgid "&More Actions"
+msgstr "&Daha Fazla Eylem"
+
+msgid "&Move"
+msgstr "&Taşı"
+
+msgid "&Resize"
+msgstr "Yeniden Boyu&tlandır"
+
+msgid "Keep &Below Others"
+msgstr "Diğ&erlerinin Altında Tut"
+
+msgid "&Fullscreen"
+msgstr "Tam &Ekran"
+
+msgid "&No Titlebar and Frame"
+msgstr "Başlık Çubuğu ve Çerçeve &Yok"
+
+msgid "&Hide from Screenshots and Screen Recordings"
+msgstr "&Ekran Görüntülerinden ve Kayıtlarından Gizle"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Özel &Pencere Ayarlarını Yapılandır…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Özel Uygulama Ayarlarını &Yapılandır…"
+
+msgid "&Close"
+msgstr "&Kapat"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Yeni Ma&saüstüne Ekle"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "&Yeni Masaüstüne Taşı"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Ekran &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Son Kullanılan Dosyalar"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Eylemler"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Önceki Parça"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Duraklat"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Oynat"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Sonraki Parça"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Durdur"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Yeni Pencere Aç"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Masaüstüne &Taşı"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "&Geçerli Masaüstüne Taşı"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Tüm Masaüstleri"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&Yeni Masaüstü"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Görev Yöneticisine Sabitle"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Görev Yöneticisinden Kaldır"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Daha Fazla"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Taşı"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "&Yeniden Boyutlandır"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Ekranı &Kapla"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Simge &Durumuna Küçült"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "Tam &Ekran"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "Başlık Ç&ubuğu ve Çerçeve Yok"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "Ekran Yayınından &Gizle"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "Tümünü &Kapat"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Kapat"
+
+msgid "Open Terminal"
+msgstr "Uçbirimi Aç"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Ekranı Kilitle"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Oturumu Kapat Ekranını Göster"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Görüntü Yapılandırması"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Masaüstü ve Duvar Kâğıdı"
+
+msgid "Open Wallpaper Image"
+msgstr "Duvar Kâğıdı Görselini Aç"
+
+msgid "Enter Edit Mode"
+msgstr "Düzenleme Kipine Gir"
+
+msgid "Exit Edit Mode"
+msgstr "Düzenleme Kipinden Çık"
+
+msgid "Add or Manage Widgets…"
+msgstr "Araç Takımları Ekle veya Yönet…"

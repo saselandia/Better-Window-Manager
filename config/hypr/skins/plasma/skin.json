@@ -60,7 +60,7 @@
       "config/quickshell/ii/modules/ii/plasmaLock",
       "config/quickshell/ii/modules/plasma/panel",
       "config/quickshell/ii/modules/ii/plasmaCommon",
-      "config/quickshell/ii/modules/ii/plasmaTaskMenu",
+      "config/quickshell/ii/modules/plasma/menus",
       "config/quickshell/ii/modules/ii/plasmaThemePicker",
       "config/quickshell/ii/modules/ii/altTab/PlasmaSwitcher.qml",
       "config/quickshell/ii/plasmaSettings.qml",
@@ -85,6 +85,7 @@
       "config/hypr/scripts/quick-tile.py",
       "config/hypr/scripts/toggle-minimize.py",
       "config/hypr/skins/plasma/scripts/kwin-window.py",
+      "config/hypr/skins/plasma/scripts/task-recents.py",
       "src/breezebars",
       "src/bwm-decorator",
       "config/hypr/skins/plasma/scripts/decorator.py",
@@ -107,6 +108,8 @@
     "kde-notificationmanager"
   ],
   "recommends": [
+    "gio",
+    "xdg-open",
     "omacalc",
     "omacalc-build",
     "qt6ct",

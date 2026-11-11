@@ -35,6 +35,10 @@ decoración de KWin activa (Breeze, Aurorae, de terceros). El plugin es el pegam
   La sombra sigue el algoritmo de `generateShadowQuads` de KWin v6.7.5 (`src/scene/shadowitem.cpp`),
   reescrito, sin copiar su código.
 
+`hyprctl breezebars-interactive move|resize <dirección>` (F9, «Mover»/«Redimensionar» del menú de la
+ventana): la ventana sigue al puntero hasta el siguiente clic, como KWin. La etiqueta `bwm-no-border`
+(«Sin barra de título ni marco») quita la barra.
+
 `hyprctl hyprbars-csd` dice si hay conexión con el auxiliar y, por ventana, si lleva barra de KDE
 (`kde`), la plana (`plana`) o ninguna.
 

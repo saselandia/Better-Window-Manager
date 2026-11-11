@@ -1,0 +1,192 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: da\n"
+
+msgid "&Desktops"
+msgstr "&Skriveborde"
+
+msgid "&All Desktops"
+msgstr "&Alle skriveborde"
+
+msgid "Desktop %1"
+msgstr "Skrivebord %1"
+
+msgid "Move to %1"
+msgstr "Flyt til %1"
+
+msgid "Move to &Screen"
+msgstr "Flyt til &skærm"
+
+msgid "Ma&ximize"
+msgstr "Ma&ksimér"
+
+msgid "Mi&nimize"
+msgstr "Mi&nimér"
+
+msgid "Keep &Above Others"
+msgstr "Hold &over andre"
+
+msgid "&More Actions"
+msgstr "&Flere handlinger"
+
+msgid "&Move"
+msgstr "&Flyt"
+
+msgid "&Resize"
+msgstr "Ænd&r størrelse"
+
+msgid "Keep &Below Others"
+msgstr "Hold &under andre"
+
+msgid "&Fullscreen"
+msgstr "&Fuldskærm"
+
+msgid "&No Titlebar and Frame"
+msgstr "&Ingen titellinje og ramme"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Konfigurér specielle &vinduesindstillinger…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Konfigurér s&pecielle programindstillinger…"
+
+msgid "&Close"
+msgstr "&Luk"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Tilføj til &nyt skrivebord"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Flyt til nyt skrivebord"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Skærm &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Nylige filer"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Handlinger"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Forrige spor"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Pause"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Afspil"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Næste spor"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Stop"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Åbn nyt vindue"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Flyt til skrivebor&d"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Flyt &til aktuelt skrivebord"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Alle skriveborde"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&Nyt skrivebord"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Fastgør til opgavelinje"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Frigør fra opgavelinje"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Mere"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Flyt"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "Ændr &størrelse"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Ma&ksimér"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Mi&nimér"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "&Fuldskærm"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "&Ingen titellinje og ramme"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&Luk alle"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Luk"
+
+msgid "Open Terminal"
+msgstr "Åbn terminal"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Lås skærmen"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Vis log ud-skærmen"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Skærmkonfiguration"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Skrivebord og baggrund"
+
+msgid "Open Wallpaper Image"
+msgstr "Åbn baggrundsbillede"
+
+msgid "Enter Edit Mode"
+msgstr "Skift til redigeringstilstand"
+
+msgid "Exit Edit Mode"
+msgstr "Afslut redigeringstilstand"
+
+msgid "Add or Manage Widgets…"
+msgstr "Tilføj eller administrér widgets…"

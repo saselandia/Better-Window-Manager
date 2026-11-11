@@ -1,0 +1,199 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: he\n"
+
+msgid "&Desktops"
+msgstr "שולחנות &עבודה"
+
+msgid "&All Desktops"
+msgstr "&כל שולחנות העבודה"
+
+msgid "Desktop %1"
+msgstr "שולחן עבודה %1"
+
+msgid "Move to %1"
+msgstr "העברה אל %1"
+
+msgid "Move to &Screen"
+msgstr "העברה למ&סך"
+
+msgid "Ma&ximize"
+msgstr "ה&גדלה"
+
+msgid "Mi&nimize"
+msgstr "מ&זעור"
+
+msgid "Keep &Above Others"
+msgstr "ריחוף &מעל כולם"
+
+msgid "&More Actions"
+msgstr "פעולות &נוספות"
+
+msgid "&Move"
+msgstr "ה&עברה"
+
+msgid "&Resize"
+msgstr "&שינוי גודל"
+
+msgid "Keep &Below Others"
+msgstr "צלילה מ&תחת לכולם"
+
+msgid "&Fullscreen"
+msgstr "מ&סך מלא"
+
+msgid "&No Titlebar and Frame"
+msgstr "&ללא שורת כותרת ומסגרת"
+
+msgid "&Hide from Screenshots and Screen Recordings"
+msgstr "ה&סתרה מצילומי והסרטות מסך"
+
+msgid "Configure Special &Window Settings…"
+msgstr "ה&גדרת תצורת חלון מיוחדת…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "ה&גדרת תצורת יישום מיוחדת…"
+
+msgid "&Close"
+msgstr "&סגירה"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "הוספה ל&שולחן עבודה חדש"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "העברה לשולחן עבודה חדש"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "מסך &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "קבצים אחרונים"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "פעולות"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "הרצועה הקודמת"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "השהיה"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "נגינה"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "הרצועה הבאה"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "עצירה"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "פתיחת חלון חדש"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "העברה ל&שולחן עבודה"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "העברה לשולחן העבודה ה&נוכחי"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&כל שולחנות העבודה"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "שולחן עבודה &חדש"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "ה&צמדה למנהל המשימות"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "שחרור נעיצה ממנהל המשימות"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "עוד"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "ה&עברה"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "שינוי &גודל"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "הג&דלה"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "מ&זעור"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "מסך מ&לא"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "&ללא שורת כותרת ומסגרת"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "הסתרה מהסר&טת מסך"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "לסגור ה&כול"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&סגירה"
+
+msgid "Open Terminal"
+msgstr "פתיחת מסוף"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "נעילת המסך"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "הצגת מסך יציאה"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "הגדרות תצוגה"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "שולחן עבודה ותמונת רקע"
+
+msgid "Open Wallpaper Image"
+msgstr "פתיחת תמונת רקע"
+
+msgid "Enter Edit Mode"
+msgstr "כניסה למצב עריכה"
+
+msgid "Exit Edit Mode"
+msgstr "יציאה ממצב עריכה"
+
+msgid "Add or Manage Widgets…"
+msgstr "הוספת או ניהול יישומונים…"

@@ -1,0 +1,199 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: bg\n"
+
+msgid "&Desktops"
+msgstr "&Работни плотове"
+
+msgid "&All Desktops"
+msgstr "&Всички работни плотове"
+
+msgid "Desktop %1"
+msgstr "Работен плот %1"
+
+msgid "Move to %1"
+msgstr "Преместване към %1"
+
+msgid "Move to &Screen"
+msgstr "Преместване на &Екран"
+
+msgid "Ma&ximize"
+msgstr "Ма&ксимизиране"
+
+msgid "Mi&nimize"
+msgstr "Ми&нимизиране"
+
+msgid "Keep &Above Others"
+msgstr "Задържане &над другите"
+
+msgid "&More Actions"
+msgstr "&Допълнителни действия"
+
+msgid "&Move"
+msgstr "&Преместване"
+
+msgid "&Resize"
+msgstr "&Преоразмеряване"
+
+msgid "Keep &Below Others"
+msgstr "Задържане &под другите"
+
+msgid "&Fullscreen"
+msgstr "Пълен &екран"
+
+msgid "&No Titlebar and Frame"
+msgstr "&Без заглавна лента и рамка"
+
+msgid "&Hide from Screenshots and Screen Recordings"
+msgstr "&Скриване от екранни снимки и записи на екрана"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Конфигуриране на &специални настройки на прозореца…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Конфигуриране на специални настройки на &приложение…"
+
+msgid "&Close"
+msgstr "&Затваряне"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Добавяне към новия работен плот"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Преместване в &Работен плот"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Екран &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Скорошни файлове"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Действия"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Предишен запис"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Пауза"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Изпълнение"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Следващ запис"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Стоп"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Отваряне на нов прозорец"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Преместване в &Работен плот"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Преместване в &текущия работен плот"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Всички работни плотове"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&Нов работен плот"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Закачане в диспечера на задачите"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Откачане от диспечера на задачите"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Още"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Преместване"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "Пре&оразмеряване"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Ма&ксимизиране"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Ми&нимизиране"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "Пълен &екран"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "&Без заглавна лента и рамка"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "&Скриване от предаване на екрана"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "Затваряне на вси&чки"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Затваряне"
+
+msgid "Open Terminal"
+msgstr "Отваряне на терминал"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Заключване на екран"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Показване на екран за напускане на сесията"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Конфигурация на екрана"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Работен плот и тапет…"
+
+msgid "Open Wallpaper Image"
+msgstr "Отваряне на изображение за тапет"
+
+msgid "Enter Edit Mode"
+msgstr "Влизане в режим на редактиране"
+
+msgid "Exit Edit Mode"
+msgstr "Излизане от режима за редактиране"
+
+msgid "Add or Manage Widgets…"
+msgstr "Добавяне или управление на уиджети…"

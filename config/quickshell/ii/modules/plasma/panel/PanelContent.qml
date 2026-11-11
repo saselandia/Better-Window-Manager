@@ -9,6 +9,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.plasma.tray as PlasmaTray
 import qs.modules.ii.plasmaCommon
+import qs.modules.plasma.menus
 import org.kde.plasma.components as PC3
 Item {
     id:root
@@ -18,9 +19,9 @@ Item {
     readonly property var config:Config.options.bar.plasma
     readonly property var widgets:config.widgets ?? ["kickoff","tasks","tray","clock","desktop"]
     TasksModel { id:modelAdapter }
-    function menuFor(app,button) {
-        GlobalStates.plasmaTaskMenuApp=app;
-        PanelState.popup("plasmaTaskMenu",button);
+    // F9: el menú del gestor de tareas de Plasma (modules/plasma/menus/TaskMenu.qml)
+    function menuFor(group,button) {
+        PlasmaMenus.openFor("task",button,root.edge,{group:group});
     }
     GridLayout {
         anchors.fill:parent; rowSpacing:2; columnSpacing:2
@@ -47,6 +48,11 @@ Item {
             Layout.preferredWidth:32; Layout.preferredHeight:32
             icon.name:"configure"; onClicked:editor.visible=!editor.visible
             PanelEditor { id:editor; anchor.item:parent; edge:root.edge }
+            // F9: «Añadir o gestionar elementos gráficos…» del menú del panel abre el editor
+            Connections {
+                target:PlasmaMenus
+                function onWidgetsRequested(name) { if(name===root.panelWindow.screen.name) Qt.callLater(()=>editor.visible=true); }
+            }
         }
     }
     Component {
@@ -93,7 +99,7 @@ Item {
                 group:modelData; tasksModel:modelAdapter; edge:root.edge
                 width:root.vertical?list.width:Math.min(52,list.height+4)
                 height:root.vertical?Math.min(52,list.width+4):list.height
-                onContextRequested:button=>root.menuFor(modelData.appId,button)
+                onContextRequested:button=>root.menuFor(modelData,button)
             }
         }
     }

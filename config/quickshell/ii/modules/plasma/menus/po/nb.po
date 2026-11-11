@@ -1,0 +1,196 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: nb\n"
+
+msgid "&Desktops"
+msgstr "&Skrivebord"
+
+msgid "&All Desktops"
+msgstr "&Alle skrivebord"
+
+msgid "Desktop %1"
+msgstr "Skrivebord %1"
+
+msgid "Move to %1"
+msgstr "Flytt til %1"
+
+msgid "Move to &Screen"
+msgstr "Flytt til &skjerm"
+
+msgid "Ma&ximize"
+msgstr "Ma&ksimer"
+
+msgid "Mi&nimize"
+msgstr "Mi&nimer"
+
+msgid "Keep &Above Others"
+msgstr "Hold &over andre"
+
+msgid "&More Actions"
+msgstr "&Flere handlinger"
+
+msgid "&Move"
+msgstr "&Flytt"
+
+msgid "&Resize"
+msgstr "&Endre størrelse"
+
+msgid "Keep &Below Others"
+msgstr "Hold &under andre"
+
+msgid "&Fullscreen"
+msgstr "&Fullskjerm"
+
+msgid "&No Titlebar and Frame"
+msgstr "&Ingen tittellinje eller ramme"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Sett opp spesielle &vindusinnstillinger …"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Sett opp s&pesielle programinnstillinger …"
+
+msgid "&Close"
+msgstr "&Lukk"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Legg til på %nytt skrivebord"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Flytt til nytt skrivebord"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Skjerm &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Nylig brukte filer"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Handlinger"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Forrige spor"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Pause"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Spill"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Neste spor"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Stopp"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Åpne nytt vindu"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Flytt til &skrivebord"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Flytt &til dette skrivebordet"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Alle skrivebord"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&Nytt skrivebord"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Fest til oppgavelinja"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Løs fra oppgavelinje"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Mer"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Flytt"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "Endre &størrelse"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Ma&ksimer"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Mi&nimer"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "&Fullskjerm"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "&Ingen tittellinje eller ramme"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "&Skjul fra skjermdeling"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&Lukk alle"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Lukk"
+
+msgid "Open Terminal"
+msgstr "Åpne terminal"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Lås skjermen"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Vis utloggingsvalg"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Skjermoppsett"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Skrivebord og bakgrunn"
+
+msgid "Open Wallpaper Image"
+msgstr "Åpne bakgrunnsbilde"
+
+msgid "Enter Edit Mode"
+msgstr "Start tilpasning"
+
+msgid "Exit Edit Mode"
+msgstr "Avslutt tilpasning"
+
+msgid "Add or Manage Widgets…"
+msgstr "Legg til eller håndter elementer …"

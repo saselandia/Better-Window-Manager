@@ -189,6 +189,13 @@ hl.window_rule({
     rounding = 0,
 })
 
+-- «Ocultar de capturas y grabaciones» del menú de la ventana de Breeze (kwin-window.py no-capture, F9)
+hl.window_rule({
+    name            = "plasma-kwin-no-capture",
+    match           = { tag = "bwm-no-capture" },
+    no_screen_share = true,
+})
+
 hl.window_rule({
     name     = "plasma-snapped-square",
     match    = { tag = "snapped" },

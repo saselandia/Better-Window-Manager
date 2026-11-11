@@ -1,0 +1,101 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: th\n"
+
+msgid "&Desktops"
+msgstr "ทุ&กพื้นที่ทำงาน"
+
+msgid "&All Desktops"
+msgstr "ทุ&กพื้นที่ทำงาน"
+
+msgid "Desktop %1"
+msgstr "เดสก์ท็อป %1"
+
+msgid "Move to %1"
+msgstr "ไปยังพื้&นที่ทำงาน"
+
+msgid "Move to &Screen"
+msgstr "ไปยังพื้&นที่ทำงาน"
+
+msgid "Ma&ximize"
+msgstr "ขยายใหญ่&สุด"
+
+msgid "Mi&nimize"
+msgstr "ย่อเ&ล็กสุด"
+
+msgid "Keep &Above Others"
+msgstr "ให้หน้าต่างอยู่เห&นือหน้าต่างอื่น"
+
+msgid "&Move"
+msgstr "&ย้าย"
+
+msgid "&Resize"
+msgstr "ปรับ&ขนาด"
+
+msgid "Keep &Below Others"
+msgstr "ให้หน้าต่างอยู่ใ&ต้หน้าต่างอื่น"
+
+msgid "&Fullscreen"
+msgstr "เต็ม&จอภาพ"
+
+msgid "Configure Special &Window Settings…"
+msgstr "ตั้งค่าให้กับหน้าต่างเป็น&พิเศษ..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "ตั้งค่า&พิเศษให้กับโปรแกรม..."
+
+msgid "&Close"
+msgstr "&ปิด"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "แสดงพื้นที่ทำงาน"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "ไปยังพื้&นที่ทำงาน"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "ปรับหน้าต่างไปยังจอภาพ 1"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "ตามพื้นที่ทำงาน"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "ตามพื้นที่ทำงาน"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "ตามพื้นที่ทำงาน"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "ตามพื้นที่ทำงาน"
+
+msgid "Open Terminal"
+msgstr "เปิดเทอร์มินัล"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "ล็อคหน้าจอ"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "แสดงหน้าจอออกจากระบบ"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "การกําหนดค่าหน้าจอ"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "&ปรับปรุงพื้นที่ทำงานอีกครั้ง"
+
+msgid "Open Wallpaper Image"
+msgstr "เปิดภาพพื้นหลัง"

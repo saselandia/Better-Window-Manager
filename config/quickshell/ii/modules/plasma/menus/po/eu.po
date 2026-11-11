@@ -1,0 +1,199 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: eu\n"
+
+msgid "&Desktops"
+msgstr "&Mahaigainak"
+
+msgid "&All Desktops"
+msgstr "Mahaigain guzti&ak"
+
+msgid "Desktop %1"
+msgstr "%1 mahaigaina"
+
+msgid "Move to %1"
+msgstr "Eraman %1(e)ra"
+
+msgid "Move to &Screen"
+msgstr "Eraman &pantailara"
+
+msgid "Ma&ximize"
+msgstr "&Maximizatu"
+
+msgid "Mi&nimize"
+msgstr "&Ikonotu"
+
+msgid "Keep &Above Others"
+msgstr "Mantendu &besteen gainean"
+
+msgid "&More Actions"
+msgstr "E&kintza gehiago"
+
+msgid "&Move"
+msgstr "Le&kuz aldatu"
+
+msgid "&Resize"
+msgstr "Handie&ra aldatu"
+
+msgid "Keep &Below Others"
+msgstr "Mantendu &besteen azpian"
+
+msgid "&Fullscreen"
+msgstr "&Pantaila-osoa"
+
+msgid "&No Titlebar and Frame"
+msgstr "Titulu-barrarik eta markorik e&z"
+
+msgid "&Hide from Screenshots and Screen Recordings"
+msgstr "Pantaila-argazkietan eta -grabazioetan e&zkutatu"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Konfiguratu &leihoaren ezarpen bereziak…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Konfiguratu aplikazioaren ezarpen &bereziak…"
+
+msgid "&Close"
+msgstr "It&xi"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Gehitu mahaigain &berrira"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Eraman mahaigain berrira"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Pantaila &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Azkenaldiko fitxategiak"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Ekintzak"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Aurreko pista"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Eten"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Jo"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Hurrengo pista"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Gelditu"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Ireki leiho berria"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Eraman &mahaigainera"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Eraman &uneko mahaigainera"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "Mahaigain &guztietan"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "Mahaigain &berria"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Iltzatu Ataza Kudeatzailean"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Iltzagetu ataza kudeatzailean"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Gehiago"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Mugitu"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "&Handiera aldatu"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Ma&ximizatu"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "I&konotu"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "&Pantaila-osoa"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "E&z titulu-barrarik ez markorik"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "E&zkutatu pantaila-grabaziotik"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&Itxi dena"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "It&xi"
+
+msgid "Open Terminal"
+msgstr "Ireki terminala"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Giltzatu pantaila"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Erakutsi saioa-ixteko pantaila"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Bistaratze konfigurazioa"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Mahaigaina eta Horma-papera"
+
+msgid "Open Wallpaper Image"
+msgstr "Ireki horma-paper irudia"
+
+msgid "Enter Edit Mode"
+msgstr "Sartu editatzeko modura"
+
+msgid "Exit Edit Mode"
+msgstr "Irten editatzeko modutik"
+
+msgid "Add or Manage Widgets…"
+msgstr "Trepetak gehitu edo kudeatu..."

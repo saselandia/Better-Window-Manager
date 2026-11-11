@@ -1,0 +1,63 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: as\n"
+
+msgid "&Desktops"
+msgstr "সকলো ডেষ্কট'পলৈ (&A)"
+
+msgid "&All Desktops"
+msgstr "সকলো ডেষ্কট'পলৈ (&A)"
+
+msgid "Desktop %1"
+msgstr "ডেস্কট'প %1"
+
+msgid "Move to %1"
+msgstr "চিহ্নিত ডেষ্কট'পলৈ স্থানান্তৰ (&D)"
+
+msgid "Move to &Screen"
+msgstr "চিহ্নিত ডেষ্কট'পলৈ স্থানান্তৰ (&D)"
+
+msgid "Ma&ximize"
+msgstr "ডাঙৰ কৰক (&x)"
+
+msgid "Mi&nimize"
+msgstr "সৰু কৰক (&n)"
+
+msgid "Keep &Above Others"
+msgstr "সকলো সংযোগক্ষেত্ৰৰ ওপৰত স্থাপন (&A)"
+
+msgid "&Move"
+msgstr "লৰাওক (&M)"
+
+msgid "&Resize"
+msgstr "মাপ পৰিবৰ্তন (&s)"
+
+msgid "Keep &Below Others"
+msgstr "সকল সংযোগক্ষেত্ৰৰ তলত স্থাপন (&B)"
+
+msgid "&Fullscreen"
+msgstr "সম্পূৰ্ণ পৰ্দ্দাত প্ৰদৰ্শন (&F)"
+
+msgid "Configure Special &Window Settings…"
+msgstr "সংযোগক্ষেত্ৰৰ বিশেষ বৈশিষ্ট্য...(&S)"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "অনুপ্ৰয়োগ সংক্ৰান্ত বিশেষ বৈশিষ্ট্য...(&S)"
+
+msgid "&Close"
+msgstr "বন্ধ কৰক (&C)"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Desktop Grid দেখুৱাওক"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "চিহ্নিত ডেষ্কট'পলৈ স্থানান্তৰ (&D)"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "পৰ্দ্দা ১ লৈ সংযোগক্ষেত্ৰ স্থানান্তৰ কৰক"

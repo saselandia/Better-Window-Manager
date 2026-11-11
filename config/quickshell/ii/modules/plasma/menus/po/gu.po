@@ -1,0 +1,94 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: gu\n"
+
+msgid "&Desktops"
+msgstr "બધા ડેસ્કટોપ્સ (&A)"
+
+msgid "&All Desktops"
+msgstr "બધા ડેસ્કટોપ્સ (&A)"
+
+msgid "Desktop %1"
+msgstr "ડેસ્કટોપ %1"
+
+msgid "Move to %1"
+msgstr "ડેસ્કટોપ પર (&D)"
+
+msgid "Move to &Screen"
+msgstr "ડેસ્કટોપ પર (&D)"
+
+msgid "Ma&ximize"
+msgstr "મહત્તમ (&x)"
+
+msgid "Mi&nimize"
+msgstr "ન્યૂનતમ (&n)"
+
+msgid "Keep &Above Others"
+msgstr "બીજાઓની ઉપર રાખો (&A)"
+
+msgid "&Move"
+msgstr "ખસેડો (&M)"
+
+msgid "&Resize"
+msgstr "માપ ફેરફાર (&s)"
+
+msgid "Keep &Below Others"
+msgstr "બીજાઓની નીચે રાખો (&B)"
+
+msgid "&Fullscreen"
+msgstr "પૂર્ણસ્ક્રિન (&F)"
+
+msgid "Configure Special &Window Settings…"
+msgstr "ખાસ વિન્ડો ગોઠવણીઓ (&S)..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "ખાસ કાર્યક્રમ ગોઠવણીઓ (&S)..."
+
+msgid "&Close"
+msgstr "બંધ (&C)"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "ડેસ્કટોપ બતાવો"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "ડેસ્કટોપ પર (&D)"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "વિન્ડો સ્ક્રિન ૧ પર"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "ડેસ્કટોપ વડે"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "ડેસ્કટોપ વડે"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "ડેસ્કટોપ વડે"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "ડેસ્કટોપ વડે"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "સ્ક્રીનને તાળુ મારો"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "સ્ક્રીનને તાળુ મારો"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "ડેસ્કટોપ તાજું કરો (&R)"
+
+msgid "Open Wallpaper Image"
+msgstr "વોલપેપર ચિત્ર ખોલો"

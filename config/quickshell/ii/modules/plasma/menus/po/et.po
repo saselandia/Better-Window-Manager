@@ -1,0 +1,178 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: et\n"
+
+msgid "&Desktops"
+msgstr "Tööl&auad"
+
+msgid "&All Desktops"
+msgstr "&Kõik töölauad"
+
+msgid "Desktop %1"
+msgstr "Töölaud %1"
+
+msgid "Move to %1"
+msgstr "Liiguta &ekraanile"
+
+msgid "Move to &Screen"
+msgstr "Liiguta &ekraanile"
+
+msgid "Ma&ximize"
+msgstr "Ma&ksimeeri"
+
+msgid "Mi&nimize"
+msgstr "Mi&nimeeri"
+
+msgid "Keep &Above Others"
+msgstr "Aken teiste &peal"
+
+msgid "&More Actions"
+msgstr "Veel toimin&guid"
+
+msgid "&Move"
+msgstr "Lii&guta"
+
+msgid "&Resize"
+msgstr "Muuda suu&rust"
+
+msgid "Keep &Below Others"
+msgstr "Aken te&iste all"
+
+msgid "&Fullscreen"
+msgstr "Täisek&raan"
+
+msgid "&No Titlebar and Frame"
+msgstr "Tiitliriba ja raamita"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Mää&ra spetsiaalsed aknareeglid..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Määra &spetsiaalsed rakenduse reeglid..."
+
+msgid "&Close"
+msgstr "&Sulge"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Lisa uuele töölauale"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Liiguta uuele töölauale"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Ekraan &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Viimati kasutatud failid"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Toimingud"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Eelmine pala"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Paus"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Esita"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Järgmine pala"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Peata"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Ava uus aken"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Liiguta &töölauale"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Liiguta &aktiivsele töölauale"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "Kõik tööl&auad"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&Uus töölaud"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "K&innista tegumihaldurile"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Eemalda tegumihaldurilt"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Rohkem"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "Lii&guta"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "&Muuda suurust"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Ma&ksimeeri"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Mi&nimeeri"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "Täisek&raan"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&Sulge"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Sulge"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Lukusta ekraan"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Lukusta ekraan"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Seadista töölauda ja taustapilti ..."
+
+msgid "Open Wallpaper Image"
+msgstr "Ava taustapilt"
+
+msgid "Enter Edit Mode"
+msgstr "Sisene kohandamisrežiimi"
+
+msgid "Exit Edit Mode"
+msgstr "Välju kohandamisrežiimist"

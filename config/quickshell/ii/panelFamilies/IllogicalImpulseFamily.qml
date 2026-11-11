@@ -33,7 +33,6 @@ import qs.modules.ii.idle
 import qs.modules.ii.screenshotPreview
 import qs.modules.ii.omarchyNotifications
 import qs.omarchyShell
-import qs.modules.ii.plasmaTaskMenu
 import qs.modules.ii.plasmaThemePicker
 
 Scope {
@@ -83,6 +82,8 @@ Scope {
     // F5: KDE applet interfaces, BWM data/services; no Plasma notification server.
     PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/tray/TrayController.qml"):"" }
     PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/applets/NotificationPopups.qml"):"" }
-    PanelLoader { component: PlasmaTaskMenu {} }
+    // F9: menús contextuales de Plasma (ventana, tareas, escritorio, panel) y el clic derecho en el fondo
+    PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/menus/MenuHost.qml"):"" }
+    PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/menus/DesktopCatcher.qml"):"" }
     PanelLoader { component: PlasmaThemePicker {} }
 }

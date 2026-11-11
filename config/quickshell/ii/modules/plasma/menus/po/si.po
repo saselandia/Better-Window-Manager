@@ -1,0 +1,78 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: si\n"
+
+msgid "&Desktops"
+msgstr "සියලු වැඩතලවල (&A)"
+
+msgid "&All Desktops"
+msgstr "සියලු වැඩතලවල (&A)"
+
+msgid "Desktop %1"
+msgstr "%1 වැඩතලය"
+
+msgid "Move to %1"
+msgstr "වැඩතලයට (&D)"
+
+msgid "Move to &Screen"
+msgstr "වැඩතලයට (&D)"
+
+msgid "Ma&ximize"
+msgstr "විශාල කරන්න (&x)"
+
+msgid "Mi&nimize"
+msgstr "කුඩා කරන්න (&n)"
+
+msgid "Keep &Above Others"
+msgstr "අනික්වාට ඉහළින් තබන්න (&A)"
+
+msgid "&Move"
+msgstr "ගෙනයන්න (&M)"
+
+msgid "&Resize"
+msgstr "ප්‍රමාණය යළි සකසන්න (&s)"
+
+msgid "Keep &Below Others"
+msgstr "අනික්වාට පහතින් තබන්න (&B)"
+
+msgid "&Fullscreen"
+msgstr "පූර්‍ණ තිරය (&F)"
+
+msgid "Configure Special &Window Settings…"
+msgstr "විශේෂ කවුළු සැකසුම්... (&S)"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "විශේෂ යෙදුම් සැකසුම්... (&S)"
+
+msgid "&Close"
+msgstr "වසන්න (&C)"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "වැඩතලය පෙන්වන්න"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "වැඩතලයට (&D)"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "කවුළුව 1 වන තිරයට"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "තිරය අඟුලු දමන්න"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "තිරය අඟුලු දමන්න"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "වැඩතලය නැවුම් කරන්න (&R)"
+
+msgid "Open Wallpaper Image"
+msgstr "පිංතූර"

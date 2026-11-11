@@ -180,6 +180,18 @@ los menús QMenu y las acciones de sesión, sin cambiar los modelos de Kicker. `
 `KickoffI18n.qml` y `KickoffWindow.qml` son propios de BWM (GPL-2.0-or-later). Adaptación en el
 README de la carpeta; [texto de licencia](licenses/KDE-GPL-2.0-or-later.txt).
 
+Menús contextuales de Breeze (F9, 2026-11-11): `config/quickshell/ii/modules/plasma/menus` porta la
+estructura y los textos de `src/useractions.cpp` de [KWin](https://invent.kde.org/plasma/kwin/-/tree/v6.7.5),
+`applets/taskmanager/qml/ContextMenu.qml` de [plasma-desktop](https://invent.kde.org/plasma/plasma-desktop/-/tree/v6.7.5)
+y `containmentactions/contextmenu/menu.cpp` de [plasma-workspace](https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5),
+todos **v6.7.5** (GPL-2.0-or-later; Matthias Ettrich, Lubos Lunak, Eike Hein, Kai Uwe Broulik, Chani
+Armitage y demás autores, cabeceras conservadas). El catálogo `po/<idioma>.po` (dominio propio
+`bwm_plasma_menus`) recoge las traducciones originales de esas cadenas de kwin, plasma-desktop,
+plasma-workspace y libplasma 6.7.5 (GPL-2.0-or-later / LGPL-2.1-or-later), extraídas con `po/extract.py`.
+Anfitrión, ayudantes y acciones (`MenuHost.qml`, `PlasmaMenus.qml`, `DynamicItems.qml`,
+`DesktopCatcher.qml`, `kwin-window.py`, `task-recents.py`) son propios de BWM (GPL-2.0-or-later).
+Detalle en el README de la carpeta; [texto de licencia](licenses/KDE-GPL-2.0-or-later.txt).
+
 Auxiliar de decoraciones de Breeze (F6a, 2026-11-11): `src/bwm-decorator/palette.{h,cpp}` es
 `src/decorations/decorationpalette.{h,cpp}` de [KWin](https://invent.kde.org/plasma/kwin/-/tree/v6.7.5)
 **v6.7.5** (GPL-2.0-or-later; Martin Gräßlin, Hugo Pereira Da Costa, Mika Allan Rauhala, Carson

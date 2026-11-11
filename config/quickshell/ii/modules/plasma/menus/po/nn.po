@@ -1,0 +1,199 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: nn\n"
+
+msgid "&Desktops"
+msgstr "&Skrivebord"
+
+msgid "&All Desktops"
+msgstr "&Alle skrivebord"
+
+msgid "Desktop %1"
+msgstr "Skrivebord %1"
+
+msgid "Move to %1"
+msgstr "Flytt til %1"
+
+msgid "Move to &Screen"
+msgstr "Flytt til &skjerm"
+
+msgid "Ma&ximize"
+msgstr "Ma&ksimer"
+
+msgid "Mi&nimize"
+msgstr "Mi&nimer"
+
+msgid "Keep &Above Others"
+msgstr "Vis &over andre vindauge"
+
+msgid "&More Actions"
+msgstr "&Fleire handlingar"
+
+msgid "&Move"
+msgstr "&Flytt"
+
+msgid "&Resize"
+msgstr "&Endra storleik"
+
+msgid "Keep &Below Others"
+msgstr "Vis &under andre vindauge"
+
+msgid "&Fullscreen"
+msgstr "&Fullskjerm"
+
+msgid "&No Titlebar and Frame"
+msgstr "&Inga tittellinje og ramme"
+
+msgid "&Hide from Screenshots and Screen Recordings"
+msgstr "&Gøym frå skrivebord og skjermopptak"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Set opp spesielle &vindaugsinnstillingar …"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Set opp s&pesielle programinnstillingar …"
+
+msgid "&Close"
+msgstr "&Lukk"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Legg til på &nytt skrivebord"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Flytt til nytt skrivebord"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Skjerm &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Nyleg brukte filer"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Handlingar"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Førre spor"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Pause"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Spel"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Neste spor"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Stopp"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Opna nytt vindauge"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Flytt til &skrivebord"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Flytt &til dette skrivebordet"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Alle skrivebord"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&Nytt skrivebord"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Fest til oppgåvelinja"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Løys frå oppgåvelinje"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Meir"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Meir"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "&Endra storleik"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Ma&ksimer"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Mi&nimer"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "&Fullskjerm"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "&Inga tittellinje og ramme"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "&Gøym frå skjermdeling"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "Lu&kk alle"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Lukk"
+
+msgid "Open Terminal"
+msgstr "Opna terminal"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Lås skjermen"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Vis utloggingsval"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Skjermoppsett"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Skrivebord og bakgrunn"
+
+msgid "Open Wallpaper Image"
+msgstr "Opna bakgrunnsbilete"
+
+msgid "Enter Edit Mode"
+msgstr "Start tilpassing"
+
+msgid "Exit Edit Mode"
+msgstr "Avslutt tilpassing"
+
+msgid "Add or Manage Widgets…"
+msgstr "Legg til eller juster element …"

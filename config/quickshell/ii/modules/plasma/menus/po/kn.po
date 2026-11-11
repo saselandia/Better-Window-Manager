@@ -1,0 +1,91 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: kn\n"
+
+msgid "&Desktops"
+msgstr "ಎಲ್ಲಾ ಗಣಕತೆರೆಗಳು(&A)"
+
+msgid "&All Desktops"
+msgstr "ಎಲ್ಲಾ ಗಣಕತೆರೆಗಳು(&A)"
+
+msgid "Desktop %1"
+msgstr "ಗಣಕತೆರೆ %1"
+
+msgid "Move to %1"
+msgstr "ಗಣಕತೆರೆಗೆ(&D)"
+
+msgid "Move to &Screen"
+msgstr "ಗಣಕತೆರೆಗೆ(&D)"
+
+msgid "Ma&ximize"
+msgstr "ಗರಿಷ್ಠೀಕರಿಸು(&x)"
+
+msgid "Mi&nimize"
+msgstr "ಕನಿಷ್ಠೀಕರಿಸು(&n)"
+
+msgid "Keep &Above Others"
+msgstr "ಇತರರಿಗಿಂತ ಮೇಲೆ ಇರಿಸು (&A)"
+
+msgid "&Move"
+msgstr "ಜರುಗಿಸು(&M)"
+
+msgid "&Resize"
+msgstr "ಗಾತ್ರ ಬದಲಾಯಿಸು(&s)"
+
+msgid "Keep &Below Others"
+msgstr "ಇತರರಿಗಿಂತ ಕೆಳಗೆ ಇರಿಸು (&B)"
+
+msgid "&Fullscreen"
+msgstr "ಪೂರ್ಣತೆರೆ(&F)"
+
+msgid "Configure Special &Window Settings…"
+msgstr "ವಿಶೇಷವಾದ ಕಿಟಕಿ ಸಂಯೋಜನೆಗಳು (&S)..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "ವಿಶೇಷವಾದ ಅನ್ವಯ ಸಂಯೋಜನೆಗಳು(&p)..."
+
+msgid "&Close"
+msgstr "ಮುಚ್ಚು(&C)"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "ಗಣಕತೆರೆಯನ್ನು ತೋರಿಸು"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "ಗಣಕತೆರೆಗೆ(&D)"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "%1 ನೇ ತೆರೆಗೆ ಕಿಟಕಿ"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "ಗಣಕತೆರೆಯಿಂದ"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "ಗಣಕತೆರೆಯಿಂದ"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "ಗಣಕತೆರೆಯಿಂದ"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "ಗಣಕತೆರೆಯಿಂದ"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "ತೆರೆಯನ್ನು ಲಾಕ್‌ ಮಾಡು"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "ತೆರೆಯನ್ನು ಲಾಕ್‌ ಮಾಡು"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "ಗಣಕತೆರೆಯನ್ನು ಪುನಶ್ಚೇತನಗೊಳಿಸು(&R)"

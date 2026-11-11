@@ -1,0 +1,10 @@
+module qs.modules.plasma.menus
+singleton PlasmaMenus 1.0 PlasmaMenus.qml
+singleton MenuI18n 1.0 MenuI18n.qml
+MenuHost 1.0 MenuHost.qml
+DesktopCatcher 1.0 DesktopCatcher.qml
+WindowMenu 1.0 WindowMenu.qml
+TaskMenu 1.0 TaskMenu.qml
+DesktopMenu 1.0 DesktopMenu.qml
+PanelMenu 1.0 PanelMenu.qml
+DynamicItems 1.0 DynamicItems.qml

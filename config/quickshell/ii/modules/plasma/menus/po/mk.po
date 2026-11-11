@@ -1,0 +1,86 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: mk\n"
+
+msgid "&Desktops"
+msgstr "&Сите површини"
+
+msgid "&All Desktops"
+msgstr "&Сите површини"
+
+msgid "Desktop %1"
+msgstr "Површина %1"
+
+msgid "Move to %1"
+msgstr "К&он површина"
+
+msgid "Move to &Screen"
+msgstr "К&он површина"
+
+msgid "Ma&ximize"
+msgstr "&Рашири"
+
+msgid "Mi&nimize"
+msgstr "&Спушти"
+
+msgid "Keep &Above Others"
+msgstr "Задржи &над другите"
+
+msgid "&Move"
+msgstr "&Премести"
+
+msgid "&Resize"
+msgstr "Смени &големина"
+
+msgid "Keep &Below Others"
+msgstr "Задржи &под другите"
+
+msgid "&Fullscreen"
+msgstr "Преку цел &екран"
+
+msgid "Configure Special &Window Settings…"
+msgstr "&Специјални поставувања за прозорец..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "&Специјални поставувања за апликација..."
+
+msgid "&Close"
+msgstr "&Затвори"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Прикажи раб. површина"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "К&он површина"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Прозорецот на екран 1"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Според раб. површина"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Според раб. површина"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "Според раб. површина"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "Според раб. површина"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Освежи &раб. површина"
+
+msgid "Open Wallpaper Image"
+msgstr "Избирање слика за подлога"

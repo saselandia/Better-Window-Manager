@@ -562,6 +562,18 @@
       "check": {"type": "cmd", "any": ["systemsettings"]},
       "packages": {"gentoo": "kde-plasma/systemsettings", "arch": "systemsettings", "fedora": "plasma-systemsettings", "opensuse": null, "debian": "systemsettings"}
     },
+    "gio": {
+      "label": "gio (GLib)",
+      "why": "Abrir un archivo reciente con su aplicación desde el menú del gestor de tareas de Breeze",
+      "check": {"type": "cmd", "any": ["gio"]},
+      "packages": {"gentoo": "dev-libs/glib", "arch": "glib2", "fedora": "glib2", "opensuse": "glib2-tools", "debian": "libglib2.0-bin"}
+    },
+    "xdg-open": {
+      "label": "xdg-open (xdg-utils)",
+      "why": "Abrir la imagen de fondo desde el menú del escritorio de Breeze",
+      "check": {"type": "cmd", "any": ["xdg-open"]},
+      "packages": {"gentoo": "x11-misc/xdg-utils", "arch": "xdg-utils", "fedora": "xdg-utils", "opensuse": "xdg-utils", "debian": "xdg-utils"}
+    },
     "plasma-nm": {
       "label": "plasma-nm (applet de red)",
       "referenceVersion": "6.7.5",

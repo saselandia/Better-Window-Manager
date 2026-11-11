@@ -9,6 +9,13 @@
   kwin-window.py show-desktop [leave]
   kwin-window.py state [dirección]          (JSON: modo, geometría de restauración, bordes)
 
+Acciones del menú de la ventana (F9, useractions.cpp de KWin), todas con la dirección:
+  kwin-window.py menu [dirección]           abre el menú de la ventana (Alt+F3) sobre su barra
+  kwin-window.py interactive move|resize    mover o redimensionar con el ratón hasta el clic (breezebars)
+  kwin-window.py fullscreen | no-border | no-capture | pin | close
+  kwin-window.py to-desktop <n> | to-screen <desc:monitor>
+  kwin-window.py rules window|application   ajustes especiales (editor de reglas de F10)
+
 Maximizar sigue a XdgToplevelWindow::maximize de kwin v6.7.5 (src/xdgshellwindow.cpp): el modo
 tiene dos ejes (vertical, horizontal; los dos = completo), el marco ocupa el área útil en los ejes
 maximizados, y al dejar de maximizar un eje se vuelve a su tamaño y centro de antes
@@ -41,6 +48,8 @@ HORIZONTAL = 2
 FULL = VERTICAL | HORIZONTAL
 
 TAG_V, TAG_H, TAG_FULL = "bwm-max-v", "bwm-max-h", "bwm-maximized"
+# «Sin barra de título ni marco» y «Ocultar de capturas»: etiquetas que leen breezebars y rules.lua
+TAG_NO_BORDER, TAG_NO_CAPTURE = "bwm-no-border", "bwm-no-capture"
 SNAP_TAGS = ("snapped",)
 STATE = Path(os.environ.get("XDG_RUNTIME_DIR") or "/tmp") / "bwm-kwin-windows.json"
 
@@ -284,6 +293,69 @@ def focus(client: dict):
     end)()""")
 
 
+def has_tag(client: dict, tag: str) -> bool:
+    return tag in {str(t).rstrip("*") for t in client.get("tags", []) or []}
+
+
+def window_lua(client: dict, body: str) -> str:
+    """Una acción sobre la ventana, comprobando el PID (Hyprland reutiliza direcciones)."""
+    return f"""(function()
+        local w = hl.get_window("address:{client['address']}")
+        if not w or w.pid ~= {int(client.get('pid') or 0)} then return hl.dsp.no_op() end
+        {body}
+        return hl.dsp.no_op()
+    end)()"""
+
+
+def toggle_tag(client: dict, tag: str):
+    sign = "-" if has_tag(client, tag) else "+"
+    run_lua(window_lua(client, f'hl.dispatch(hl.dsp.window.tag({{ tag = "{sign}{tag}", window = w }}))'))
+
+
+def to_screen(client: dict, monitor: str):
+    """Mover a otra pantalla conservando la posición relativa (como KWin sendToOutput)."""
+    monitors = hypr_json("monitors") or []
+    target = next((m for m in monitors if "desc:" + m.get("description", "") == monitor or m.get("name") == monitor), None)
+    source = next((m for m in monitors if m.get("id") == client.get("monitor")), None)
+    if not target or not source or target is source:
+        return
+    from bwm_windows import monitor_box
+    sx, sy, sw, sh = monitor_box(source)
+    tx, ty, tw, th = monitor_box(target)
+    (x, y), (w, h) = client.get("at", [sx, sy]), client.get("size", [1, 1])
+    nx = tx + (x - sx) * tw / max(1, sw)
+    ny = ty + (y - sy) * th / max(1, sh)
+    w, h = min(w, tw), min(h, th)
+    nx = max(tx, min(nx, tx + tw - w))
+    ny = max(ty, min(ny, ty + th - h))
+    ws = target.get("activeWorkspace", {}).get("id")
+    geometry = ""
+    if client.get("floating"):
+        geometry = (f"hl.dispatch(hl.dsp.window.resize({{ x = {int(w)}, y = {int(h)}, relative = false, window = w }})) "
+                    f"hl.dispatch(hl.dsp.window.move({{ x = {int(nx)}, y = {int(ny)}, relative = false, window = w }}))")
+    # El workspace antes que la geometría (regla 17)
+    run_lua(window_lua(client, f"hl.dispatch(hl.dsp.window.move({{ workspace = {ws}, follow = false, window = w }})) {geometry}"))
+
+
+def open_menu(client: dict):
+    """Alt+F3: el menú de la ventana bajo el borde izquierdo de su barra de título."""
+    borders = window_borders(client)
+    x, y, w, h = frame_from_client(client, borders)
+    top = borders["top"] or 0
+    subprocess.Popen(["qs", "-c", "ii", "ipc", "call", "plasmaWindowMenu", "open", client["address"], str(int(x + 4)),
+                      str(int(y + top))], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def open_rules(client: dict, kind: str):
+    """«Configurar ajustes especiales de la ventana/aplicación…»: el editor de reglas de F10 por IPC; si
+    aún no existe en la sesión, el módulo de KDE (kcm_kwinrules)."""
+    out = subprocess.run(["qs", "-c", "ii", "ipc", "call", "plasmaWindowRules", "open", client["address"], kind],
+                         capture_output=True, text=True)
+    if out.returncode != 0 or "not found" in (out.stdout + out.stderr).lower():
+        subprocess.Popen(["kcmshell6", "kcm_kwinrules"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                         start_new_session=True)
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -295,6 +367,20 @@ def main(argv=None) -> int:
     for name in ("unminimize", "activate"):
         sub.add_parser(name).add_argument("address")
     sub.add_parser("show-desktop").add_argument("leave", nargs="?", choices=["leave"])
+    for name in ("menu", "fullscreen", "no-border", "no-capture", "pin", "close"):
+        sub.add_parser(name).add_argument("address", nargs="?")
+    p = sub.add_parser("interactive")
+    p.add_argument("operation", choices=["move", "resize"])
+    p.add_argument("address", nargs="?")
+    p = sub.add_parser("to-desktop")
+    p.add_argument("workspace", type=int)
+    p.add_argument("address", nargs="?")
+    p = sub.add_parser("to-screen")
+    p.add_argument("monitor")
+    p.add_argument("address", nargs="?")
+    p = sub.add_parser("rules")
+    p.add_argument("kind", choices=["window", "application"])
+    p.add_argument("address", nargs="?")
     args = parser.parse_args(argv)
 
     if args.cmd == "show-desktop":
@@ -325,6 +411,30 @@ def main(argv=None) -> int:
             tm.minimize_win(client)
         else:
             focus(client)
+    elif args.cmd == "menu":
+        open_menu(client)
+    elif args.cmd == "interactive":
+        subprocess.run(["hyprctl", "breezebars-interactive", f"{args.operation} {client['address']}"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    elif args.cmd == "fullscreen":
+        run_lua(window_lua(client, "hl.dispatch(hl.dsp.window.fullscreen({ mode = 0, action = 'toggle', window = w }))"))
+    elif args.cmd == "no-border":
+        toggle_tag(client, TAG_NO_BORDER)
+    elif args.cmd == "no-capture":
+        toggle_tag(client, TAG_NO_CAPTURE)
+    elif args.cmd == "pin":
+        if not client.get("floating"):
+            run_lua(window_lua(client, "hl.dispatch(hl.dsp.window.float({ action = 'enable', window = w }))"))
+        run_lua(window_lua(client, "hl.dispatch(hl.dsp.window.pin({ action = 'toggle', window = w }))"))
+    elif args.cmd == "close":
+        run_lua(window_lua(client, "hl.dispatch(hl.dsp.window.close({ window = w }))"))
+    elif args.cmd == "to-desktop":
+        if args.workspace >= 1:
+            run_lua(window_lua(client, f"hl.dispatch(hl.dsp.window.move({{ workspace = {args.workspace}, follow = false, window = w }}))"))
+    elif args.cmd == "to-screen":
+        to_screen(client, args.monitor)
+    elif args.cmd == "rules":
+        open_rules(client, args.kind)
     elif args.cmd == "state":
         borders = window_borders(client)
         print(json.dumps({"address": client["address"], "mode": mode_from_tags(client.get("tags")),

@@ -1,0 +1,199 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: hu\n"
+
+msgid "&Desktops"
+msgstr "&Asztalok"
+
+msgid "&All Desktops"
+msgstr "Az összes &asztalra"
+
+msgid "Desktop %1"
+msgstr "%1. asztal"
+
+msgid "Move to %1"
+msgstr "Áthelyezés ide: %1"
+
+msgid "Move to &Screen"
+msgstr "Áthelye&zés képernyőre"
+
+msgid "Ma&ximize"
+msgstr "Ma&ximalizálás"
+
+msgid "Mi&nimize"
+msgstr "Mi&nimalizálás"
+
+msgid "Keep &Above Others"
+msgstr "Az ablak a többi &fölé kerüljön"
+
+msgid "&More Actions"
+msgstr "&További műveletek"
+
+msgid "&Move"
+msgstr "&Mozgatás"
+
+msgid "&Resize"
+msgstr "Át&méretezés"
+
+msgid "Keep &Below Others"
+msgstr "Az ablak a többi a&lá kerüljön"
+
+msgid "&Fullscreen"
+msgstr "Teljes képernyős &ablak"
+
+msgid "&No Titlebar and Frame"
+msgstr "&Nincs címsor és keret"
+
+msgid "&Hide from Screenshots and Screen Recordings"
+msgstr "Elre&jtés a képernyőképekből és a képernyőfelvételekből"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Spe&ciális ablakbeállítások módosítása…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Spe&ciális alkalmazásbeállítások módosítása…"
+
+msgid "&Close"
+msgstr "&Bezárás"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Hozzáadás ú&j asztalhoz"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Áthelyezés új asztalra"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "&%1. képernyő (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Legutóbbi fájlok"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Műveletek"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Előző szám"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Szünet"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Lejátszás"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Következő szám"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Leállítás"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Új ablak megnyitása"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Áthelyezés másik &asztalra"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Áthelyezés a &jelenlegi asztalra"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "Az összes &asztalra"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "Ú&j asztalra"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Rögzítés a panelen"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Levétel a panelről"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Több"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "Á&thelyezés"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "Átméretezé&s"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Ma&ximalizálás"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Mi&nimalizálás"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "&Teljes képernyő"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "&Nincs címsor és keret"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "Elre&jtés a képernyőátjátszásból"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "Össz&es bezárása"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Bezárás"
+
+msgid "Open Terminal"
+msgstr "Terminál megnyitása"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Képernyő zárolása"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Kijelentkező képernyő megjelenítése"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Kijelzőbeállítás"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Asztal és háttérkép"
+
+msgid "Open Wallpaper Image"
+msgstr "Háttérkép megnyitása"
+
+msgid "Enter Edit Mode"
+msgstr "Belépés a szerkesztőmódba"
+
+msgid "Exit Edit Mode"
+msgstr "Kilépés a szerkesztőmódból"
+
+msgid "Add or Manage Widgets…"
+msgstr "Elemek hozzáadása vagy kezelése…"

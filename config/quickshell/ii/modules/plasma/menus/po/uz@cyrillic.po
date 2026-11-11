@@ -1,0 +1,72 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: uz@cyrillic\n"
+
+msgid "&Desktops"
+msgstr "&Ҳамма иш столлари"
+
+msgid "&All Desktops"
+msgstr "&Ҳамма иш столлари"
+
+msgid "Desktop %1"
+msgstr "Иш столи %1"
+
+msgid "Move to %1"
+msgstr "&Иш столига"
+
+msgid "Move to &Screen"
+msgstr "&Иш столига"
+
+msgid "Ma&ximize"
+msgstr "Ёй&иш"
+
+msgid "Mi&nimize"
+msgstr "&Йиғиш"
+
+msgid "Keep &Above Others"
+msgstr "Энг &юқорида"
+
+msgid "&Move"
+msgstr "Кўчи&риш"
+
+msgid "&Resize"
+msgstr "Ўл&чамини ўзгартириш"
+
+msgid "Keep &Below Others"
+msgstr "&Энг пастда"
+
+msgid "&Fullscreen"
+msgstr "&Бутун экранга"
+
+msgid "Configure Special &Window Settings…"
+msgstr "&Махсус ойна мосламалари"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Махсус &дастур мосламалари"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "1 Иш столига ўтиш"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "&Иш столига"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Ойнани 1 иш столига"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Экранни қулфлаш"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Экранни қулфлаш"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Орқа фонни мослаш"

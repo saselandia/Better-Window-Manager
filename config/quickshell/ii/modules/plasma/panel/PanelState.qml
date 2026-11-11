@@ -23,7 +23,7 @@ Singleton {
     }
     function popup(name, button) {
         const wasOpen = GlobalStates[name+"Open"];
-        for (const other of ["plasmaBluetooth","plasmaNetwork","plasmaCalendar","plasmaNotifications","plasmaTaskMenu","plasmaThemePicker","plasmaAudio"])
+        for (const other of ["plasmaBluetooth","plasmaNetwork","plasmaCalendar","plasmaNotifications","plasmaThemePicker","plasmaAudio"])
             GlobalStates[other+"Open"]=false;
         if (wasOpen) return;
         anchor(button,name);

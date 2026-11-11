@@ -1,0 +1,196 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fi\n"
+
+msgid "&Desktops"
+msgstr "&Työpöydät"
+
+msgid "&All Desktops"
+msgstr "Näytä k&aikilla työpöydillä"
+
+msgid "Desktop %1"
+msgstr "Työpöytä %1"
+
+msgid "Move to %1"
+msgstr "Siirrä → %1"
+
+msgid "Move to &Screen"
+msgstr "&Siirrä näytölle"
+
+msgid "Ma&ximize"
+msgstr "S&uurenna"
+
+msgid "Mi&nimize"
+msgstr "P&ienennä"
+
+msgid "Keep &Above Others"
+msgstr "Pidä &ylinnä"
+
+msgid "&More Actions"
+msgstr "&Lisää toimintoja"
+
+msgid "&Move"
+msgstr "S&iirrä"
+
+msgid "&Resize"
+msgstr "&Muuta kokoa"
+
+msgid "Keep &Below Others"
+msgstr "Pidä &alinna"
+
+msgid "&Fullscreen"
+msgstr "&Koko näyttö"
+
+msgid "&No Titlebar and Frame"
+msgstr "&Ei otsikkopalkkia eikä kehystä"
+
+msgid "Configure Special &Window Settings…"
+msgstr "&Ikkunakohtaiset erityisasetukset…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "&Sovelluskohtaiset erityisasetukset…"
+
+msgid "&Close"
+msgstr "&Sulje"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Lisää &uudelle työpöydälle"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Siirrä uudelle työpöydälle"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Näyttö &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Viimeisimmät tiedostot"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Toiminnot"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Edellinen kappale"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Tauko"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Toista"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Seuraava kappale"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Pysäytä"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Avaa uusi ikkuna"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Siirrä &työpöydälle"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Siirrä n&ykyiselle työpöydälle"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "K&aikille työpöydille"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&Uudelle työpöydälle"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Kiinnitä tehtävienhallintaan"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Poista kiinnitys tehtävienhallinnasta"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Lisää"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Siirrä"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "&Muuta kokoa"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "&Suurenna"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "&Pienennä"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "K&oko näyttö"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "&Ei otsikkopalkkia eikä kehystä"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "P&iilota ruutulähetyksestä"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "Sulje k&aikki"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Sulje"
+
+msgid "Open Terminal"
+msgstr "Avaa pääte"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Lukitse näyttö"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Näytä sammutusvalinnat"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Näyttöasetukset"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Työpöytä ja tausta"
+
+msgid "Open Wallpaper Image"
+msgstr "Avaa taustakuvatiedosto"
+
+msgid "Enter Edit Mode"
+msgstr "Siirry muokkaustilaan"
+
+msgid "Exit Edit Mode"
+msgstr "Poistu muokkaustilasta"
+
+msgid "Add or Manage Widgets…"
+msgstr "Lisää tai hallitse sovelmia…"

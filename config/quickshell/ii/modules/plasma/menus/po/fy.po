@@ -1,0 +1,67 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fy\n"
+
+msgid "&Desktops"
+msgstr "&Alle buroblêden"
+
+msgid "&All Desktops"
+msgstr "&Alle buroblêden"
+
+msgid "Desktop %1"
+msgstr "Buroblêd %1"
+
+msgid "Move to %1"
+msgstr "Nei buroblê&d"
+
+msgid "Move to &Screen"
+msgstr "Nei buroblê&d"
+
+msgid "Ma&ximize"
+msgstr "Ma&ksimalisearje"
+
+msgid "Mi&nimize"
+msgstr "Mi&nimalisearje"
+
+msgid "Keep &Above Others"
+msgstr "Altyd op &foargrûn"
+
+msgid "&Move"
+msgstr "Fer&pleatse"
+
+msgid "&Resize"
+msgstr "Grutte &Feroarje"
+
+msgid "Keep &Below Others"
+msgstr "Altyd op &eftergrûn"
+
+msgid "&Fullscreen"
+msgstr "F&olslein skerm"
+
+msgid "Configure Special &Window Settings…"
+msgstr "&Spesjale finsterynstellings..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "&Spesjale applikaasje ynstellings..."
+
+msgid "&Close"
+msgstr "S&lúte"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Buroblêd sjen litte"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Nei buroblê&d"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Finster nei skerm 1"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Ynstelle as eftergrûnôf&bylding"

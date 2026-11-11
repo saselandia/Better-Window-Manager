@@ -1,0 +1,199 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: sk\n"
+
+msgid "&Desktops"
+msgstr "&Plochy"
+
+msgid "&All Desktops"
+msgstr "&Všetky plochy"
+
+msgid "Desktop %1"
+msgstr "Plocha %1"
+
+msgid "Move to %1"
+msgstr "Presunúť na %1"
+
+msgid "Move to &Screen"
+msgstr "Presunúť na &obrazovku"
+
+msgid "Ma&ximize"
+msgstr "Ma&ximalizovať"
+
+msgid "Mi&nimize"
+msgstr "Mi&nimalizovať"
+
+msgid "Keep &Above Others"
+msgstr "Držať na&d ostatnými"
+
+msgid "&More Actions"
+msgstr "Viac akcií"
+
+msgid "&Move"
+msgstr "&Presunúť"
+
+msgid "&Resize"
+msgstr "&Zmeniť veľkosť"
+
+msgid "Keep &Below Others"
+msgstr "Držať &pod ostatnými"
+
+msgid "&Fullscreen"
+msgstr "&Na celú obrazovku"
+
+msgid "&No Titlebar and Frame"
+msgstr "Žiadne záhlavie a rám"
+
+msgid "&Hide from Screenshots and Screen Recordings"
+msgstr "&Skryť pred snímkami a nahrávkami obrazovky"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Nastaviť š&peciálne nastavenie okna…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Nastaviť šp&eciálne nastavenie aplikácie…"
+
+msgid "&Close"
+msgstr "&Zavrieť"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Pridať novú na novú plochu"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Presunúť na novú plochu"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Obrazovka &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Nedávne súbory"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Akcie"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Predchádzajúca skladba"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Pozastaviť"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Prehrať"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Nasledujúca skladba"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Zastaviť"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Otvoriť nové okno"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Presunúť na &plochu"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Presunúť na a&ktuálnu plochu"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&Všetky pracovné plochy"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "Nová pracovná plocha"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Pripnúť k správcovi úloh"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Odopnúť od správcu úloh"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Viac"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Presunúť"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "Z&meniť veľkosť"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Ma&ximalizovať"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Mi&nimalizovať"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "&Na celú obrazovku"
+
+msgctxt "@action:inmenu"
+msgid "&No Titlebar and Frame"
+msgstr "Žiadne záhlavie a rám"
+
+msgctxt "@action:inmenu"
+msgid "&Hide from Screencast"
+msgstr "Skryť zo Screencastu"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "Zavrieť všetko"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Zavrieť"
+
+msgid "Open Terminal"
+msgstr "Otvoriť terminál"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Zamknúť obrazovku"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Zobraziť obrazovku na odhlásenie sa"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Nastavenie obrazovky"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Pracovná plocha a tapeta"
+
+msgid "Open Wallpaper Image"
+msgstr "Otvoriť obrázok tapety"
+
+msgid "Enter Edit Mode"
+msgstr "Prejsť do režimu úprav"
+
+msgid "Exit Edit Mode"
+msgstr "Ukončiť režim úprav"
+
+msgid "Add or Manage Widgets…"
+msgstr "Pridať alebo spravovať miniaplikácie..."

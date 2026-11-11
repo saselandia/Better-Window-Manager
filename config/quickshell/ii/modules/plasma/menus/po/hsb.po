@@ -1,0 +1,83 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: hsb\n"
+
+msgid "&Desktops"
+msgstr "&Wšitke dźěłowe powjerchi"
+
+msgid "&All Desktops"
+msgstr "&Wšitke dźěłowe powjerchi"
+
+msgid "Desktop %1"
+msgstr "Dźěłowy powjerch %1"
+
+msgid "Move to %1"
+msgstr "Na &dźěłowy powjerch"
+
+msgid "Move to &Screen"
+msgstr "Na &dźěłowy powjerch"
+
+msgid "Ma&ximize"
+msgstr "Ma&ksimizować"
+
+msgid "Mi&nimize"
+msgstr "&Minimizować"
+
+msgid "Keep &Above Others"
+msgstr "Dźerž &nad druhimi"
+
+msgid "&Move"
+msgstr "&Přesunyć"
+
+msgid "&Resize"
+msgstr "&Wulkosć změnić"
+
+msgid "Keep &Below Others"
+msgstr "Dźerž &pod druhimi"
+
+msgid "&Fullscreen"
+msgstr "Přez &cyłu wobrazowku"
+
+msgid "Configure Special &Window Settings…"
+msgstr "&Specielne woknowe nastajenja..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "&Specielne nastajenja za aplikaciju..."
+
+msgid "&Close"
+msgstr "&Začinić"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Na &dźěłowy powjerch"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Na &dźěłowy powjerch"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Wokno na wobrazowku 1"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Po dźěłowych powjerchach"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Po dźěłowych powjerchach"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "Po dźěłowych powjerchach"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "Po dźěłowych powjerchach"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "&Dźěłowy powjerch aktualizować"

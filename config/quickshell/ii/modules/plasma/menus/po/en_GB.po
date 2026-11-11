@@ -1,0 +1,188 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: en_GB\n"
+
+msgid "&Desktops"
+msgstr "&Desktops"
+
+msgid "&All Desktops"
+msgstr "&All Desktops"
+
+msgid "Desktop %1"
+msgstr "Desktop %1"
+
+msgid "Move to %1"
+msgstr "Move to %1"
+
+msgid "Move to &Screen"
+msgstr "Move to &Screen"
+
+msgid "Ma&ximize"
+msgstr "Ma&ximise"
+
+msgid "Mi&nimize"
+msgstr "Mi&nimise"
+
+msgid "Keep &Above Others"
+msgstr "Keep &Above Others"
+
+msgid "&More Actions"
+msgstr "&More Actions"
+
+msgid "&Move"
+msgstr "&Move"
+
+msgid "&Resize"
+msgstr "&Resize"
+
+msgid "Keep &Below Others"
+msgstr "Keep &Below Others"
+
+msgid "&Fullscreen"
+msgstr "&Fullscreen"
+
+msgid "&No Titlebar and Frame"
+msgstr "&No Titlebar and Frame"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Configure Special &Window Settings…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Configure S&pecial Application Settings…"
+
+msgid "&Close"
+msgstr "&Close"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Add to &New Desktop"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Move to New Desktop"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Screen &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Recent Files"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Actions"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Previous Track"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Pause"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Play"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Next Track"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Stop"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Open New Window"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Move to &Desktop"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Move &To Current Desktop"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "All Desktops"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "New Desktop"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Pin to Task Manager"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Unpin from Task Manager"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "More"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "Move"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "Resize"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Maximise"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Minimise"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "Fullscreen"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&Close All"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "Close"
+
+msgid "Open Terminal"
+msgstr "Open Terminal"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Lock Screen"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Show Logout Screen"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Display Configuration"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Desktop and Wallpaper"
+
+msgid "Open Wallpaper Image"
+msgstr "Open Wallpaper Image"
+
+msgid "Enter Edit Mode"
+msgstr "Enter Edit Mode"
+
+msgid "Exit Edit Mode"
+msgstr "Exit Edit Mode"
+
+msgid "Add or Manage Widgets…"
+msgstr "Add or Manage Widgets…"

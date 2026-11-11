@@ -1,0 +1,153 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: sr@ijekavian\n"
+
+msgid "&Desktops"
+msgstr "&Све површи"
+
+msgid "&All Desktops"
+msgstr "&Све површи"
+
+msgid "Desktop %1"
+msgstr "Површ %1"
+
+msgid "Move to %1"
+msgstr "Премести на &екран"
+
+msgid "Move to &Screen"
+msgstr "Премести на &екран"
+
+msgid "Ma&ximize"
+msgstr "М&аксимизуј"
+
+msgid "Mi&nimize"
+msgstr "М&инимизуј"
+
+msgid "Keep &Above Others"
+msgstr "Држи из&над осталих"
+
+msgid "&More Actions"
+msgstr "&Више радњи"
+
+msgid "&Move"
+msgstr "По&мјери"
+
+msgid "&Resize"
+msgstr "&Промијени величину"
+
+msgid "Keep &Below Others"
+msgstr "Држи ис&под осталих"
+
+msgid "&Fullscreen"
+msgstr "Преко &цијелог екрана"
+
+msgid "Configure Special &Window Settings…"
+msgstr "&Посебне поставке прозора..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Посе&бне поставке програма..."
+
+msgid "&Close"
+msgstr "&Затвори"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "&Нова површ"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Премести на &површ"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "екран &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Заборави недавне документе"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Више радњи"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Претходна нумера"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Паузирај"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Пусти"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Следећа нумера"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Заустави"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Премести на &површ"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Премести на &текућу површ"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&све површи"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&нова површ"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Премести"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "Промени &величину"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Ма&ксимизуј"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "Ми&нимизуј"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "Преко &целог екрана"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&Затвори"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Затвори"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Закључај екран"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Закључај екран"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Подеси површ"
+
+msgid "Open Wallpaper Image"
+msgstr "Отвори тапетну слику"

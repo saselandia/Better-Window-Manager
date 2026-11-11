@@ -239,6 +239,8 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 
 | Requisito | Para qué | Gentoo | Arch / CachyOS | Fedora | openSUSE | Debian / Ubuntu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| gio (GLib) | Abrir un archivo reciente con su aplicación desde el menú del gestor de tareas de Breeze | `dev-libs/glib` | `glib2` | `glib2` | `glib2-tools` | `libglib2.0-bin` |
+| xdg-open (xdg-utils) | Abrir la imagen de fondo desde el menú del escritorio de Breeze | `x11-misc/xdg-utils` | `xdg-utils` | `xdg-utils` | `xdg-utils` | `xdg-utils` |
 | Omacalc (calculadora de Omarchy) | Calculadora con los colores de cada skin, recarga en vivo y fuente iA Writer Mono incluida | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
 | Compilar Omacalc (Qt 6) | Sólo durante la instalación: BWM compila la calculadora original con soporte para sus paletas | `dev-qt/qtbase` `dev-qt/qtdeclarative` `dev-vcs/git` `sys-devel/patch` | `base-devel` `qt6-base` `qt6-declarative` `git` | `gcc-c++` `make` `qt6-qtbase-devel` `qt6-qtdeclarative-devel` `git` `patch` | `gcc-c++` `make` `qt6-base-devel` `qt6-declarative-devel` `git` `patch` | `build-essential` `qt6-base-dev` `qt6-declarative-dev` `qmake6` `git` `patch` |
 | qt6ct | Paleta de la skin en las apps Qt | `gui-apps/qt6ct` | `qt6ct` | `qt6ct` | `qt6ct` | `qt6ct` |

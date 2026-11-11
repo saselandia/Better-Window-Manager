@@ -1,0 +1,188 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: sa\n"
+
+msgid "&Desktops"
+msgstr "&डेस्कटॉप्स"
+
+msgid "&All Desktops"
+msgstr "&सर्व डेस्कटॉप्"
+
+msgid "Desktop %1"
+msgstr "डेस्कटॉप %1"
+
+msgid "Move to %1"
+msgstr "%1 प्रति गच्छन्तु"
+
+msgid "Move to &Screen"
+msgstr "&Screen इत्यत्र गच्छन्तु"
+
+msgid "Ma&ximize"
+msgstr "मा&ximize इति"
+
+msgid "Mi&nimize"
+msgstr "मि&निमिज इति"
+
+msgid "Keep &Above Others"
+msgstr "Keep &Above Others"
+
+msgid "&More Actions"
+msgstr "&अधिक क्रिया"
+
+msgid "&Move"
+msgstr "&चलनम्"
+
+msgid "&Resize"
+msgstr "&आकारं परिवर्तयतु"
+
+msgid "Keep &Below Others"
+msgstr "अन्येभ्यः &अधः स्थापयन्तु"
+
+msgid "&Fullscreen"
+msgstr "&पूर्णपर्दे"
+
+msgid "&No Titlebar and Frame"
+msgstr "&कोऽपि Titlebar and Frame नास्ति"
+
+msgid "Configure Special &Window Settings…"
+msgstr "विशेष &विण्डो सेटिंग्स् विन्यस्तं कुर्वन्तु..."
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "S&pecial Application सेटिंग्स् विन्यस्तं कुर्वन्तु..."
+
+msgid "&Close"
+msgstr "&पिधानं करोतु"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "&New Desktop इत्यत्र योजयतु"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "New Desktop इत्यत्र गच्छन्तु"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "स्क्रीन &%1 (%2) 1.1."
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "अद्यतनसञ्चिकाः"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "कर्माणि"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "पूर्व Track"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "विराम"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "क्रीडतु"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "अग्रिमः Track"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "विरमतु"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "New Window उद्घाटयन्तु"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "&Desktop इत्यत्र गच्छन्तु"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "&To Current Desktop"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "&सर्व डेस्कटॉप्"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&नव डेस्कटॉप"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&कार्यप्रबन्धकं प्रति पिन कुर्वन्तु"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "कार्यप्रबन्धकात् अनपिन्"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "अधिकः"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&चलनम्"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "पुनः&आकारः"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "मा&ximize इति"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "मि&निमिज इति"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "&पूर्णपर्दे"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&सर्वं बन्दं कुरुत"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&पिधानं करोतु"
+
+msgid "Open Terminal"
+msgstr "टर्मिनल् उद्घाटयन्तु"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "लॉक स्क्रीन"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Logout Screen दर्शयतु"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "प्रदर्शन विन्यास"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "डेस्कटॉप तथा वॉलपेपर"
+
+msgid "Open Wallpaper Image"
+msgstr "वॉलपेपर इमेज उद्घाटयन्तु"
+
+msgid "Enter Edit Mode"
+msgstr "सम्पादनविधिं प्रविशन्तु"
+
+msgid "Exit Edit Mode"
+msgstr "सम्पादन विधितः निर्गच्छन्तु"
+
+msgid "Add or Manage Widgets…"
+msgstr "विजेट् योजयन्तु वा प्रबन्धयन्तु वा..."

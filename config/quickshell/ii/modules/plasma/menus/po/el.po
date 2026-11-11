@@ -1,0 +1,185 @@
+# Catálogo de los menús portados de Breeze (BWM, F9). Cadenas y traducciones de KDE 6.7.5:
+# kwin, plasma-desktop, plasma-workspace y libplasma (GPL-2.0-or-later / LGPL); generado por extract.py.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: el\n"
+
+msgid "&Desktops"
+msgstr "&Επιφάνειες εργασίας"
+
+msgid "&All Desktops"
+msgstr "Ό&λες τις επιφάνειες εργασίας"
+
+msgid "Desktop %1"
+msgstr "Επιφάνεια εργασίας %1"
+
+msgid "Move to %1"
+msgstr "Μετακίνη&ση σε %1"
+
+msgid "Move to &Screen"
+msgstr "Μετακίνη&ση στην οθόνη"
+
+msgid "Ma&ximize"
+msgstr "Με&γιστοποίηση"
+
+msgid "Mi&nimize"
+msgstr "&Ελαχιστοποίηση"
+
+msgid "Keep &Above Others"
+msgstr "Διατήρηση &πάνω από τα άλλα"
+
+msgid "&More Actions"
+msgstr "Π&ερισσότερες ενέργειες"
+
+msgid "&Move"
+msgstr "&Μετακίνηση"
+
+msgid "&Resize"
+msgstr "Αλλαγή μεγέ&θους"
+
+msgid "Keep &Below Others"
+msgstr "Διατήρηση &κάτω από τα άλλα"
+
+msgid "&Fullscreen"
+msgstr "&Πλήρης οθόνη"
+
+msgid "Configure Special &Window Settings…"
+msgstr "Διαμόρφωση ειδικών ρυθμίσεων &παραθύρου…"
+
+msgid "Configure S&pecial Application Settings…"
+msgstr "Διαμόρφωση &ειδικών ρυθμίσεων εφαρμογής…"
+
+msgid "&Close"
+msgstr "&Κλείσιμο"
+
+msgctxt "Create a new desktop and add the window to that desktop"
+msgid "Add to &New Desktop"
+msgstr "Προσθήκη σε &νέα επιφάνεια εργασίας"
+
+msgctxt "Create a new desktop and move the window to that desktop"
+msgid "Move to New Desktop"
+msgstr "Μετακίνηση στην νέα επιφάνεια εργασίας"
+
+msgctxt "@item:inmenu List of all Screens to send a window to. First argument is a number, second the output identifier. E.g. Screen 1 (HDMI1)"
+msgid "Screen &%1 (%2)"
+msgstr "Οθόνη &%1 (%2)"
+
+msgctxt "@title:group for section of menu items"
+msgid "Recent Files"
+msgstr "Πρόσφατα αρχεία"
+
+msgctxt "@title:group for section of menu items"
+msgid "Actions"
+msgstr "Ενέργειες"
+
+msgctxt "Play previous track"
+msgid "Previous Track"
+msgstr "Προηγούμενο κομμάτι"
+
+msgctxt "Pause playback"
+msgid "Pause"
+msgstr "Παύση"
+
+msgctxt "Start playback"
+msgid "Play"
+msgstr "Αναπαραγωγή"
+
+msgctxt "Play next track"
+msgid "Next Track"
+msgstr "Επόμενο κομμάτι"
+
+msgctxt "Stop playback"
+msgid "Stop"
+msgstr "Διακοπή"
+
+msgctxt "action:inmenu"
+msgid "Open New Window"
+msgstr "Άνοιγμα νέου παραθύρου"
+
+msgctxt "action:inmenu"
+msgid "Move to &Desktop"
+msgstr "Μετακίνηση στην &επιφάνεια εργασίας"
+
+msgctxt "action:inmenu"
+msgid "Move &To Current Desktop"
+msgstr "Μετακίνηση &στην τρέχουσα επιφάνεια εργασίας"
+
+msgctxt "action:inmenu"
+msgid "&All Desktops"
+msgstr "Όλες οι επιφάνειες ε&ργασίας"
+
+msgctxt "action:inmenu"
+msgid "&New Desktop"
+msgstr "&Νέα επιφάνεια εργασίας"
+
+msgctxt "action:inmenu"
+msgid "&Pin to Task Manager"
+msgstr "&Καρφίτσωμα στον διαχειριστή εργασιών"
+
+msgctxt "action:inmenu"
+msgid "Unpin from Task Manager"
+msgstr "Ξεκαρφίτσωμα από τον διαχειριστή εργασιών"
+
+msgctxt "item:inmenu opens submenu"
+msgid "More"
+msgstr "Περισσότερα"
+
+msgctxt "action:inmenu"
+msgid "&Move"
+msgstr "&Μετακίνηση"
+
+msgctxt "action:inmenu"
+msgid "Re&size"
+msgstr "&Αλλαγή μεγέθους"
+
+msgctxt "action:inmenu"
+msgid "Ma&ximize"
+msgstr "Με&γιστοποίηση"
+
+msgctxt "action:inmenu"
+msgid "Mi&nimize"
+msgstr "&Ελαχιστοποίηση"
+
+msgctxt "action:inmenu"
+msgid "&Fullscreen"
+msgstr "&Πλήρης οθόνη"
+
+msgctxt "@action:inmenu"
+msgid "&Close All"
+msgstr "&Κλείσιμο όλων"
+
+msgctxt "@action:inmenu"
+msgid "&Close"
+msgstr "&Κλείσιμο"
+
+msgid "Open Terminal"
+msgstr "Άνοιγμα τερματικού"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Lock Screen"
+msgstr "Κλείδωμα οθόνης"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Show Logout Screen"
+msgstr "Εμφάνιση οθόνης αποσύνδεσης"
+
+msgctxt "plasma_containmentactions_contextmenu"
+msgid "Display Configuration"
+msgstr "Διαμόρφωση οθόνης"
+
+msgctxt "@action:inmenu opens config dialog"
+msgid "Desktop and Wallpaper"
+msgstr "Επιφάνεια και ταπετσαρία"
+
+msgid "Open Wallpaper Image"
+msgstr "Άνοιγμα εικόνας ταπετσαρίας"
+
+msgid "Enter Edit Mode"
+msgstr "Έναρξη επεξεργασίας"
+
+msgid "Exit Edit Mode"
+msgstr "Έξοδος επεξεργασίας"
+
+msgid "Add or Manage Widgets…"
+msgstr "Προσθήκη συστατικών…"

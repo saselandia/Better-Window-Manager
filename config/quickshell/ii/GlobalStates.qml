@@ -48,14 +48,6 @@ Singleton {
     property real plasmaThemePickerAnchorX: -1
     property string plasmaThemePickerScreen: ""
     // KDE Plasma task manager: right-click menu, hover window list and window peek
-    property bool plasmaTaskMenuOpen: false
-    property real plasmaTaskMenuAnchorX: -1
-    property string plasmaTaskMenuScreen: ""
-    property string plasmaTaskMenuApp: ""
-    property string plasmaTaskHoverApp: ""
-    property real plasmaTaskHoverX: -1
-    property string plasmaTaskHoverScreen: ""
-    property string plasmaTaskPeek: ""   // Hyprland address (no 0x) of the window being peeked
     // KDE Plasma notifications applet (opened from the bell in the Plasma taskbar tray)
     property bool plasmaNotificationsOpen: false
     property real plasmaNotificationsAnchorX: -1
