@@ -1640,3 +1640,11 @@ git status; git log --oneline -5; git push origin main
 * Retro estático: cambiar el fondo no cambia la paleta.
 * Puede haber otra sesión de IA en el repo: commits sólo con tus archivos, salvo petición explícita de incluir todo; revisa cada diff.
 * Mantenimiento de Gentoo: §2.7. Usar `sudo eselect news read`, revisar cada configuración y no dar por terminada la actualización sin evidencia.
+
+### 152. Bloqueo de Breeze: el campo de contraseña perdía el foco en cada letra (2026-11-11)
+
+* **Petición:** al iniciar sesión en Breeze, tras pulsar el campo y escribir una letra se deseleccionaba y había que volver a pulsarlo para cada letra.
+* **Causa:** `plasmaLock/PlasmaLockSurface.qml` daba el foco con `password.forceActiveFocus()`, pero `password` es el `Rectangle` de `BreezeTextField`, no su `TextInput`. Cada letra llama a `wake()` (para mostrar el formulario y alargar el reposo), que pasaba el foco al rectángulo y dejaba el campo sin teclado.
+* **Hecho:** el foco va siempre a `password.input` (al cargar, en `wake()` sólo si no lo tiene y en `shouldReFocus`). El formulario ya no se oculta en reposo (sólo opacidad 0): un elemento invisible no puede tener el foco. Quitado el `Keys.onPressed` del rectángulo (no recibía nada).
+* **Comprobado:** `tests/test_plasma_lock_ui.py` (opcional, `BWM_RUN_QML_TESTS=1 BWM_LOCK_TEST_WORKSPACE=<visible>`): `qs -p` aparte con la superficie y un `LockContext` real (sin llamar a PAM) en una ventana pequeña del workspace visible unos segundos, mover el ratón y teclas reales de QtTest: escribe «abc1» entero con el arreglo y nada con el código anterior; después devuelve el foco a la ventana que lo tenía.
+* **No probado:** un bloqueo real de la sesión ni escribir en reposo sin mover antes el ratón (en la ventana de prueba nadie tiene el foco al cargar).

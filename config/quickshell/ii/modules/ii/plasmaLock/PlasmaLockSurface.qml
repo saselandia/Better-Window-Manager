@@ -25,18 +25,19 @@ MouseArea {
         root.uiShown = true;
         hideTimer.restart();
         root.context.resetClearTimer();
-        Qt.callLater(() => password.forceActiveFocus());
+        if (!password.input.activeFocus)
+            Qt.callLater(() => password.input.forceActiveFocus());
     }
 
     hoverEnabled: true
     onPositionChanged: root.wake()
     onPressed: root.wake()
-    Component.onCompleted: password.forceActiveFocus()
+    Component.onCompleted: password.input.forceActiveFocus()
 
     Connections {
         target: root.context
         function onShouldReFocus() {
-            password.forceActiveFocus();
+            password.input.forceActiveFocus();
         }
         function onCurrentTextChanged() {
             if (password.text !== root.context.currentText)
@@ -125,7 +126,8 @@ MouseArea {
         anchors.topMargin: root.height * 0.07
         spacing: 14
         opacity: root.uiShown ? 1 : 0
-        visible: opacity > 0
+        // Sólo se atenúa, nunca se oculta: un elemento invisible pierde el foco y la primera
+        // tecla en reposo no llegaría al campo (en Plasma ya escribe la contraseña).
         Behavior on opacity { NumberAnimation { duration: 250 } }
 
         Rectangle {
@@ -199,7 +201,6 @@ MouseArea {
                 }
                 onAccepted: if (text.length > 0) root.context.tryUnlock(false)
                 onEscapePressed: root.context.currentText = ""
-                Keys.onPressed: event => root.wake()
             }
 
             Rectangle {
