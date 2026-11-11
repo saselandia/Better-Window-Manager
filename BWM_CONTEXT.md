@@ -1496,6 +1496,14 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 * **Observado, sin investigar:** pavucontrol (GTK 4) negocia la decoración KDE `server-side` y su contenido queda recortado por la derecha a 500 y a 800 px de ancho. Revisar en la sesión real si pasa también sin el plugin.
 * **No probado:** el arranque normal completo (dos monitores, puente F2, Quickshell, autostart) y todo lo de ratón de `docs/BREEZE_F10_CHECKLIST.md`. La sesión recuperada sigue en modo seguro: hace falta que el usuario vuelva a iniciar sesión (o reinicie) por su cuenta.
 
+### 155. F11: aplicación de KCM, descargas KNewStuff y sonido (2026-11-11)
+
+* **Petición:** ejecutar las pruebas que Claude dejó pendientes de F11. Informe y límites en `docs/BREEZE_F11_CHECKS.md`.
+* **Comprobado:** copias temporales de plasmaSettings.qml con ModuleView/KcmPage/KcmHost reales, qs -p en workspace 9 sin foco, XDG temporal (sin cambiar HOME), Config.blockWrites y D-Bus privado para apariencia. KCM de iconos (breeze-dark), fuentes (Noto Sans 12), decoración (borde Large no automático), estilo Qt (Breeze/Fusion), estilo de Plasma (breeze-light) y tema global (Breeze Dark, sólo piezas de apariencia seleccionadas) aplican y guardan los archivos KDE esperados. El tema global escribe también kdedefaults, como KDE; no basta con buscar las claves explícitas de kdeglobals.
+* **KNewStuff:** acciones originales de los KCM abren diálogos válidos de iconos, decoraciones, estilo de Plasma y tema global; descarga real desde el KCM de colores de Sweet Dark Blu (1689224), y desde el de estilo de Plasma de Sweet KDE (1294174), a XDG_DATA_HOME temporal con sus registros KNewStuff. Sin instalar recursos en el repo ni en los datos personales. Avisos upstream de transientParent/OverlayDrawer al construir los diálogos, sin impedir esas descargas; no se ocultan en el informe.
+* **Sonido:** KCM real y su SinkModel sobre PipeWire/PulseAudio real; salida virtual temporal bwm_f11_check, seleccionada únicamente por nombre exacto. Volumen al 50 % y silencio comprobados externamente con pactl. Volúmenes/silencio físicos y dispositivos predeterminados intactos; salida eliminada y estado completo restaurado. Es un KCM de aplicación inmediata, sin save()/Aplicar.
+* **Limpieza/límites:** archivos KDE reales iguales byte a byte a sus copias iniciales; sondas borradas, regla temporal retirada, configerrors vacío. Tres pruebas de catálogo pasan (dos pruebas generales opcionales omitidas); sin cambios de código de producto ni suite completa repetida, sin capturas ni reinicios. Esto prueba aplicación/persistencia en configuración aislada y sonido real sobre dispositivo de prueba, no propagación en vivo de toda la apariencia ni pulsación física de Super+I. F11 §154 conserva sus pruebas reales de colores y sus restantes límites.
+
 ## 4. 📂 Estructura del repositorio
 
 ```
