@@ -101,5 +101,6 @@
     "qt-imageformats",
     "owe",
     "localsend"
-  ]
+  ],
+  "polkitEmbedded": true
 }

@@ -58,7 +58,7 @@ Scope {
     PanelLoader { component: OnScreenKeyboard {} }
     PanelLoader { component: Overlay {} }
     PanelLoader { component: Overview {} }
-    PanelLoader { extraCondition: !Appearance.isRetro; component: Polkit {} }
+    PanelLoader { extraCondition: !Appearance.isRetro && !Appearance.isPlasma; component: Polkit {} }
     // Retro: Omarchy's polkit dialog (BWM's agent in services/PolkitService.qml is off there)
     PanelLoader { extraCondition: Config.ready && Appearance.isRetro; component: OmarchyPolkit {} }
     // Retro: Omarchy's dock, on workspaces without tiled windows (modules/ii/omarchyDock); optional,

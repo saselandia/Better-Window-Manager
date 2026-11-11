@@ -232,3 +232,29 @@ OR LGPL-3.0-only OR LicenseRef-KDE-Accepted-LGPL. Textos originales y referencia
 copiados en licenses/KDE-*.txt. Cada cabecera de archivo prevalece sobre este resumen.
 La fuente correspondiente está incluida en QML adaptado y disponible en los repositorios citados,
 etiqueta v6.7.5; las bibliotecas enlazadas las proporciona la distribución.
+
+
+### Interfaces de Plasma (F12)
+
+- `modules/plasma/switcher/ThumbnailGrid.qml`: port de KWin v6.7.5
+  `src/tabbox/switchers/thumbnail_grid/contents/ui/main.qml`, Chris Holland (2020) y
+  Nate Graham (2023), GPL-2.0-or-later. BWM sustituye la ventana/modelo de KWin por
+  layer-shell, su controlador MRU y ScreencopyView; conserva disposición y controles.
+- `modules/plasma/osd/OsdItem.qml`: plasma-workspace v6.7.5 `shell/qml/OsdItem.qml`,
+  Martin Klapetek (2014) y Kai Uwe Broulik (2019), GPL-2.0-or-later. Formato porcentual
+  adaptado a Qt.locale; el anfitrión BWM sustituye OsdWindow, sin copiar el C++ de plasmashell.
+- `modules/plasma/lock/Greeter.qml`: KScreenLocker v6.7.5
+  `greeter/fallbacktheme/Greeter.qml`, Martin Gräßlin (2011) y Nate Graham (2023),
+  GPL-2.0-or-later. BWM conecta controles/mensajes a LockContext mediante un adaptador,
+  retira cambio de usuario y terminación del proceso. Clock, avatar, SessionManagementScreen
+  y ActionButton son los componentes Breeze instalados, con sus avisos LGPL-2.0-or-later.
+- Adaptadores, resolución de paquetes, wrappers y ThemeHost de BWM: GPL-2.0-or-later.
+  Los temas de terceros permanecen fuera del repo: sólo se adaptan copias de caché local,
+  conservando las cabeceras originales; no se redistribuyen en este cambio.
+
+Fuentes correspondientes: https://invent.kde.org/plasma/kwin/-/tree/v6.7.5/src/tabbox/switchers,
+https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5/shell/qml y
+https://invent.kde.org/plasma/kscreenlocker/-/tree/v6.7.5/greeter/fallbacktheme.
+Los README de `modules/plasma/{switcher,osd,lock,runtime}` detallan versiones, adaptaciones y
+límites. El QML portado y la fuente de los adaptadores están incluidos; KRunner, Milou y el
+agente polkit de KDE se usan desde los paquetes de la distribución, sin incorporar sus binarios.

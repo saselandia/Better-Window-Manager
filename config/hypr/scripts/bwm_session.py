@@ -15,8 +15,10 @@ import shlex
 import signal
 import subprocess
 import sys
+from pathlib import Path
 
-SHELL_CMD = ["quickshell", "-n", "-c", "ii"]
+_qml_path = str(Path(os.environ.get("XDG_DATA_HOME", Path.home()/".local/share"))/"bwm/qml")
+SHELL_CMD = ["env", "QML_IMPORT_PATH=" + _qml_path + (":" + os.environ["QML_IMPORT_PATH"] if os.environ.get("QML_IMPORT_PATH") else ""), "quickshell", "-n", "-c", "ii"]
 SHELL_LOG = f"/run/user/{os.getuid()}/quickshell-session.log"
 THEME_LOCK = "/tmp/bwm-theme-manager.lock"
 

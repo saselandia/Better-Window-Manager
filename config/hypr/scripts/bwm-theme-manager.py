@@ -934,18 +934,12 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         except Exception:
             pass
 
-        # 6.2 Agente polkit: en Retro el de Omarchy (dentro de Quickshell, modules/ii/omarchyPolkit);
-        #     polkit sólo admite uno por sesión, así que hyprpolkitagent se para antes de reiniciar
-        #     Quickshell y vuelve en los otros estilos
+        # One external agent selected by the skin; Retro keeps its embedded agent.
         try:
-            if theme_name == "retro":
-                subprocess.run(["pkill", "-x", "hyprpolkitagent"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            elif subprocess.run(["pidof", "hyprpolkitagent"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
-                agent = shutil.which("hyprpolkitagent") or ("/usr/libexec/hyprpolkitagent" if os.access("/usr/libexec/hyprpolkitagent", os.X_OK) else None)
-                if agent:
-                    bwm_session.spawn([agent])
-        except Exception:
-            pass
+            import bwm_polkit
+            bwm_polkit.configure(theme_name)
+        except Exception as error:
+            print(f"No se pudo actualizar el agente polkit: {error}", file=sys.stderr)
 
         # Reconstruir sólo los paneles: conservar el proceso, servicios y cachés del shell.
         # Instancias antiguas sin este IPC tienen una única recarga de compatibilidad.

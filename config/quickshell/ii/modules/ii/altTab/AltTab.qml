@@ -258,6 +258,11 @@ Scope {
         }
     }
 
+    function closeWindow(address) {
+        const w=root.windowList.find(w=>w.address===address);
+        if(w?.toplevel) w.toplevel.close();
+    }
+
     function cancel() {
         console.log("[AltTab] cancel() called");
         root.opening = false;
@@ -593,7 +598,9 @@ Scope {
         }
     }
 
-    PlasmaSwitcher {
-        controller: root
+    Loader {
+        active: Appearance.isPlasma
+        onActiveChanged: if(active) setSource(Qt.resolvedUrl("../../plasma/switcher/Switcher.qml"), {controller:root}); else source=""
+        Component.onCompleted: if(active) setSource(Qt.resolvedUrl("../../plasma/switcher/Switcher.qml"), {controller:root})
     }
 }

@@ -5,7 +5,7 @@ import qs.modules.common
 import qs.modules.common.functions
 import qs.modules.common.panels.lock
 import qs.modules.ii.omarchyLock
-import qs.modules.ii.plasmaLock
+import qs.modules.plasma.lock as PlasmaLock
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
@@ -52,7 +52,7 @@ LockScreen {
     }
     Component {
         id: plasmaSurface
-        PlasmaLockSurface {
+        PlasmaLock.LockSurface {
             context: root.context
         }
     }

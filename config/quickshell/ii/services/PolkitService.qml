@@ -8,8 +8,8 @@ import qs.modules.common
 
 Singleton {
     id: root
-    // Not in Retro: there Omarchy's own agent (modules/ii/omarchyPolkit) is the session's one, and
-    // polkit only lets one agent register
+    // Retro uses Omarchy's agent; Breeze uses polkit-kde-agent selected by the manifest.
+    // This fallback must not register alongside either of them.
     readonly property var agent: agentLoader.item
     readonly property bool active: agentLoader.item?.isActive ?? false
     readonly property var flow: agentLoader.item?.flow ?? null
@@ -45,7 +45,7 @@ Singleton {
 
     LazyLoader {
         id: agentLoader
-        active: Config.ready && !Appearance.isRetro
+        active: Config.ready && !Appearance.isRetro && !Appearance.isPlasma
         PolkitAgent {
             onAuthenticationRequestStarted: {
                 root.interactionAvailable = true;

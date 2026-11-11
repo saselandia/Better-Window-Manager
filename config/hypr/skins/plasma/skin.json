@@ -57,17 +57,19 @@
     "quickshell": [
       "config/quickshell/ii/modules/plasma/theme",
       "config/quickshell/ii/modules/plasma/kickoff",
-      "config/quickshell/ii/modules/ii/plasmaLock",
       "config/quickshell/ii/modules/plasma/panel",
       "config/quickshell/ii/modules/ii/plasmaCommon",
       "config/quickshell/ii/modules/plasma/menus",
       "config/quickshell/ii/modules/ii/plasmaThemePicker",
-      "config/quickshell/ii/modules/ii/altTab/PlasmaSwitcher.qml",
       "config/quickshell/ii/plasmaSettings.qml",
       "config/quickshell/ii/modules/plasma/settings",
       "config/quickshell/ii/modules/plasma/tray",
       "config/quickshell/ii/modules/plasma/applets",
-      "config/quickshell/ii/modules/plasma/tiling"
+      "config/quickshell/ii/modules/plasma/tiling",
+      "config/quickshell/ii/modules/plasma/switcher",
+      "config/quickshell/ii/modules/plasma/osd",
+      "config/quickshell/ii/modules/plasma/lock",
+      "config/quickshell/ii/modules/plasma/runtime"
     ],
     "hyprland": [
       "config/hypr/modules/plasma_colors.lua",
@@ -97,11 +99,12 @@
       "config/hypr/skins/plasma/scripts/csd-audit.py",
       "config/hypr/skins/plasma/scripts/kwin_rules.py",
       "config/hypr/skins/plasma/scripts/kwin_tiles.py",
-      "config/hypr/skins/plasma/scripts/kwin-tiles.py"
+      "config/hypr/skins/plasma/scripts/kwin-tiles.py",
+      "config/hypr/skins/plasma/scripts/interface-theme.py",
+      "config/hypr/skins/plasma/scripts/krunner.sh"
     ]
   },
   "requires": [
-    "hyprpolkitagent",
     "breeze-icons",
     "breezebars",
     "ksvg",
@@ -113,7 +116,11 @@
     "plasma-pa",
     "plasma-mpris",
     "plasma-calendar",
-    "kde-notificationmanager"
+    "kde-notificationmanager",
+    "polkit-kde-agent",
+    "krunner",
+    "milou",
+    "breeze-components"
   ],
   "recommends": [
     "gio",
@@ -138,6 +145,13 @@
     "bwm-decorator",
     "bwm-kcmhost",
     "kcmshell6",
-    "kwin-rules-kcm"
+    "kwin-rules-kcm",
+    "ki18n"
+  ],
+  "polkitAgent": [
+    "/usr/libexec/polkit-kde-authentication-agent-1",
+    "/usr/lib/polkit-kde-authentication-agent-1",
+    "/usr/lib64/libexec/polkit-kde-authentication-agent-1",
+    "/usr/lib/x86_64-linux-gnu/libexec/polkit-kde-authentication-agent-1"
   ]
 }

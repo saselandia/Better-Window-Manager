@@ -697,10 +697,100 @@
     "bwm-kcmhost": {
       "label": "Módulo QML org.bwm.kcm (bwm-kcmhost)",
       "why": "Incrusta los KCM reales de Plasma (colores, estilo, decoraciones, tema global, iconos, fuentes…) en las Preferencias del sistema de Breeze",
-      "check": {"type": "path", "any": ["~/.local/share/bwm/qml/org/bwm/kcm/libbwmkcmplugin.so"]},
+      "referenceVersion": "2",
+      "check": {"type": "version", "cmd": ["python3", "-c", "import os;from pathlib import Path;p=Path(os.environ.get('XDG_DATA_HOME',str(Path.home()/'.local/share')))/'bwm/qml/org/bwm/kcm';print((p/'api-version').read_text().strip() if (p/'libbwmkcmplugin.so').is_file() and (p/'api-version').is_file() else '')"], "regex": "([0-9]+)", "min": "2"},
       "provider": "build",
       "build": "make -C {repo}/src/bwm-kcmhost install",
-      "notes": {"all": "Necesita las cabeceras de Qt 6 (Quick, Qml) y KF6 KCMUtils. Sólo lo carga la ventana de Preferencias (proceso qs -p aparte), nunca la barra."}
+      "notes": {"all": "Necesita las cabeceras de Qt 6 (Quick, Qml) y KF6 KCMUtils. KcmHost sólo carga KCM en Preferencias; ThemeHost aloja QML de temas F12 en motores separados dentro del shell. Requiere KI18n."}
+    },
+    "polkit-kde-agent": {
+      "label": "Agente polkit de KDE",
+      "why": "Un único diálogo de autenticación nativo de KDE en Breeze",
+      "referenceVersion": "6.7.5",
+      "check": {
+        "type": "cmd",
+        "any": [
+          "/usr/libexec/polkit-kde-authentication-agent-1",
+          "/usr/lib/polkit-kde-authentication-agent-1",
+          "/usr/lib64/libexec/polkit-kde-authentication-agent-1",
+          "/usr/lib/x86_64-linux-gnu/libexec/polkit-kde-authentication-agent-1"
+        ]
+      },
+      "packages": {
+        "gentoo": "kde-plasma/polkit-kde-agent",
+        "arch": "polkit-kde-agent",
+        "fedora": "polkit-kde",
+        "opensuse": "polkit-kde-agent-6",
+        "debian": "polkit-kde-agent-1"
+      }
+    },
+    "krunner": {
+      "label": "KRunner",
+      "why": "Alt+Espacio nativo de Plasma, aplicaciones, cálculo y comandos, sin plasmashell",
+      "referenceVersion": "6.7.5",
+      "check": {
+        "type": "cmd",
+        "any": [
+          "krunner"
+        ]
+      },
+      "packages": {
+        "gentoo": "kde-plasma/plasma-workspace",
+        "arch": "plasma-workspace",
+        "fedora": "plasma-workspace",
+        "opensuse": "plasma6-workspace",
+        "debian": "plasma-workspace"
+      }
+    },
+    "milou": {
+      "label": "Resultados de KRunner",
+      "why": "Interfaz nativa de Plasma en Breeze (F12)",
+      "referenceVersion": "6.7.5",
+      "check": {
+        "type": "qml",
+        "module": "org/kde/milou"
+      },
+      "packages": {
+        "gentoo": "kde-plasma/milou",
+        "arch": "milou",
+        "fedora": "milou",
+        "opensuse": "milou6",
+        "debian": "milou"
+      }
+    },
+    "breeze-components": {
+      "label": "Componentes de sesión de Breeze",
+      "why": "Interfaz nativa de Plasma en Breeze (F12)",
+      "referenceVersion": "6.7.5",
+      "check": {
+        "type": "qml",
+        "module": "org/kde/breeze/components"
+      },
+      "packages": {
+        "gentoo": "kde-plasma/plasma-workspace",
+        "arch": "plasma-workspace",
+        "fedora": "plasma-workspace",
+        "opensuse": "plasma6-workspace",
+        "debian": "plasma-workspace"
+      }
+    },
+    "ki18n": {
+      "label": "Traducciones de KDE (KI18n)",
+      "why": "Contexto de traducción de los temas Plasma cargados con ThemeHost",
+      "referenceVersion": "6.29.0",
+      "check": {
+        "type": "path",
+        "any": [
+          "/usr/include/KF6/KI18n/KLocalizedQmlContext"
+        ]
+      },
+      "packages": {
+        "gentoo": "kde-frameworks/ki18n",
+        "arch": "ki18n",
+        "fedora": "kf6-ki18n-devel",
+        "opensuse": "kf6-ki18n-devel",
+        "debian": "libkf6i18n-dev"
+      }
     }
   }
 }

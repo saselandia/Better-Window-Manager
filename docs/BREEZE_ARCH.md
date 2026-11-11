@@ -447,3 +447,44 @@ Se evitó el nombre show, reservado por el CLI de Quickshell. Plugin compilado c
 Hyprland acepta las reglas generadas (incluyendo opacidad compuesta y límites); configuración
 actual válida, configerrors vacío y bwm check de Plasma correcto. qmllint ejecutado con avisos por
 imports qs, metadatos de Quickshell/KSvg y tipos dinámicos; se complementa con carga real.
+
+
+## 14. Interfaces de sesión de Plasma (F12)
+
+- **Alt+Tab:** rejilla QML de KWin 6.7.5, con el controlador MRU común conservado (pulsaciones
+  acumuladas y foco al soltar Alt). `[TabBox] LayoutName` selecciona paquetes de `kwin/tabbox`.
+  Adaptación de TabBoxSwitcher, Dialog y WindowThumbnail, sobre los Toplevel de Quickshell.
+  Los paquetes originales y sus recursos se conservan; se trabaja en caché publicada atómicamente.
+- **OSD:** OsdItem original de plasma-workspace 6.7.5, PC3/Kirigami y SVG del tema activo;
+  layer-shell sin entrada. Audio/brillo y timeout siguen siendo comunes. Avisos de cambios de
+  pantallas mediante el archivo del gestor común y `plasmaOsd displayText`.
+- **Bloqueo:** KScreenLocker 6.7.5 Greeter y componentes de sesión reales de Breeze.
+  Las fuentes de Breeze 6.7.5 comprobadas ya no llevan `contents/lockscreen`. El tema global
+  puede proporcionar LockScreenUi.qml/main.qml; si no carga se conserva el formulario de reserva.
+  LockContext conserva PAM/huella y la decisión de desbloquear. El tema recibe sólo el adaptador,
+  no el contexto de seguridad completo. Cambiar de usuario no se ofrece.
+- **Temas QML:** ThemeHost (org.bwm.kcm, API 2) utiliza un QQmlEngine separado por componente;
+  Qt.quit no sale del shell. Las APIs de KWin/KScreenLocker fuera del contrato implementado no se
+  emulan; no se promete compatibilidad universal con efectos o temas privados de terceros.
+  KcmHost sigue instanciando KCM únicamente dentro de Preferencias; no se carga Qt en Hyprland.
+- **KRunner:** original instalado, con Milou y sus runners. Verificado sin plasmashell en un bus
+  privado y plataforma offscreen: carga y consulta de calculadora, sin ejecutar resultados.
+  Alt+Espacio se reserva a KRunner sólo en Breeze, autorizado por el usuario; la función anterior
+  queda en default/Retro. No se inicia otro compositor ni un servidor de notificaciones.
+- **Polkit:** manifiesto de Breeze selecciona el agente KDE instalado. bwm_polkit verifica la
+  skin activa, detiene agentes externos conocidos de otras skins, espera su salida y serializa
+  el arranque; reintenta fallos iniciales mientras se desmonta el agente embebido anterior.
+  Retro mantiene Omarchy; el servicio BWM no registra otro agente en Breeze/Retro.
+
+**Pruebas:** ocho pruebas F12 con la interfaz activada: prioridad KDE/kdedefaults, paquetes,
+caché/recursos y selección, guardas/reintento serial de polkit, vistas nativas con autenticación
+simulada, Qt.quit interceptado y Alt+Tab rápido/acumulado/sostenido sin foco real. Además, carga
+del QML original completo de thumbnail_grid a través del adaptador. Vista de bloqueo revisada
+mediante grabToImage del propio elemento (sin capturar otras ventanas), corregido un solapamiento
+del reloj/avatar y eliminada la imagen. Suite general final: 358 pruebas, 65 omitidas. qmllint ejecutado con avisos por metadatos/imports dinámicos, complementado con carga QML real.
+
+**Pendiente real:** volver a cargar el shell para los Loader/módulo nuevo; Alt+Tab físico y capturas
+en vivo de apps, OSD con teclado/hardware, PAM/huella/bloqueo real y autenticación polkit KDE al
+entrar en Breeze. La sesión está en Retro: su agente ha conservado el registro y un intento de
+registrar KDE fue rechazado por PolicyKit; no se sustituyó. No se cerró sesión ni se probó una
+operación privilegiada. Las pruebas con acciones simuladas no certifican estos puntos.

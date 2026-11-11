@@ -31,7 +31,34 @@ Scope {
         },
     ]
 
+    Loader {
+        id: plasmaOsd
+        active: Appearance.isPlasma
+        source: active ? Qt.resolvedUrl("../../plasma/osd/Osd.qml") : ""
+        onLoaded:item.timeout=Qt.binding(()=>Config.options.osd.timeout??1800)
+    }
+    function showPlasmaOsd() {
+        const osd=plasmaOsd.item;
+        if(!osd)return;
+        osd.screen=root.focusedScreen;
+        if(root.currentIndicator==="brightness") {
+            const mon=Brightness.getMonitorForScreen(root.focusedScreen);
+            osd.display("video-display-brightness",Math.round((mon?.brightness??0)*100),100,"",true);
+        } else if(root.currentIndicator==="gamma") {
+            osd.display("preferences-desktop-display-nightcolor",root.protectionMessage,100,"",false);
+        } else {
+            const audio=Audio.sink?.audio;
+            const value=Math.round((audio?.volume??0)*100),muted=audio?.muted??false;
+            osd.display(muted?"audio-volume-muted":value>66?"audio-volume-high":value>33?"audio-volume-medium":"audio-volume-low",muted?0:value,Math.max(100,value),root.protectionMessage,true);
+        }
+    }
+    function hideOsd() {
+        GlobalStates.osdVolumeOpen=false;
+        if(plasmaOsd.item)plasmaOsd.item.hide();
+    }
     function triggerOsd() {
+        if(Appearance.isPlasma) {root.showPlasmaOsd();return;}
+
         // Retro: Omarchy's OSD (modules/ii/omarchyOsd, from shell/plugins/osd, MIT); the gamma
         // warning keeps BWM's
         if (Appearance.isRetro && root.currentIndicator !== "gamma" && omarchyOsd.item) {
@@ -121,7 +148,7 @@ Scope {
 
     Loader {
         id: osdLoader
-        active: GlobalStates.osdVolumeOpen
+        active: GlobalStates.osdVolumeOpen && !Appearance.isPlasma
 
         sourceComponent: PanelWindow {
             id: osdRoot
@@ -237,12 +264,11 @@ Scope {
             root.triggerOsd();
         }
 
-        function hide() {
-            GlobalStates.osdVolumeOpen = false;
-        }
+        function hide() {root.hideOsd();}
 
         function toggle() {
-            GlobalStates.osdVolumeOpen = !GlobalStates.osdVolumeOpen;
+            if(Appearance.isPlasma) {if(plasmaOsd.item?.opened)root.hideOsd();else root.triggerOsd();}
+            else GlobalStates.osdVolumeOpen = !GlobalStates.osdVolumeOpen;
         }
     }
     GlobalShortcut {
@@ -258,7 +284,7 @@ Scope {
         description: "Hides volume OSD on press"
 
         onPressed: {
-            GlobalStates.osdVolumeOpen = false;
+            root.hideOsd();
         }
     }
 }

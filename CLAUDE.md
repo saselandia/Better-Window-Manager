@@ -151,6 +151,7 @@ siendo el nombre del escritorio original que imita Breeze.
 | Minimizar/maximizar/restaurar en Breeze (KWin) | `skins/plasma/scripts/kwin-window.py` (modo en etiquetas `bwm-max-v/h`, restauración por ejes; minimizar con el formato común de `toggle-minimize.py`); atajos `"skins": ["plasma"]`; pruebas `tests/test_kwin_window.py` |
 | Menús contextuales de Breeze (ventana, tareas, escritorio, panel) | `quickshell/ii/modules/plasma/menus/` (PC3.Menu, README), IPC `plasmaWindowMenu`; acciones en `kwin-window.py`; traducciones `menus/po` (`extract.py`); pruebas `tests/test_plasma_menus_ui.py` |
 | Detección CSD/SSD de Breeze | `src/breezebars/CSDLogic.hpp` y `CSDDetect.cpp` (negociación aplicada, X11 asíncrono); `hyprctl -j breezebars-csd` / Lua `hl.plugin.breezebars.decoration(address,pid)` dan el marco real para Python y placement. Auditoría `skins/plasma/scripts/csd-audit.py`; matriz `docs/BREEZE_CSD_RESULTS.md`. Sólo probar plugin nuevo tras reiniciar sesión |
+| Interfaces de Plasma (F12) | `modules/plasma/{switcher,osd,lock,runtime}`; `interface-theme.py` lee LayoutName/LookAndFeelPackage y adapta QML en caché. ThemeHost en `src/bwm-kcmhost` (API 2, motores separados; Qt.quit de un tema no cierra el shell). Controlador MRU común intacto. KRunner nativo en Alt+Espacio sólo Breeze; agente polkit desde manifiesto vía `bwm_polkit.py` (KDE en Breeze, Omarchy embebido en Retro) |
 | Reglas y encaje de KWin (Breeze, F10) | `skins/plasma/scripts/kwin_rules.py`, `kwin_tiles.py`, `kwin-tiles.py`; vigilante único F2 y Lua generado, `skins/plasma/hypr/{rules,kwinrules}.lua`; plugin `KWinSnap.hpp`/`SnapGeometry.hpp`; outline/editor `modules/plasma/tiling`. Ctrl+flechas conservado; Meta+T editor reducido. Cobertura y opt-out en `skins/plasma/scripts/KWIN_RULES.md`, lista tras reinicio en `docs/BREEZE_F10_CHECKLIST.md` |
 | Configuración KDE ↔ BWM en Breeze | `skins/plasma/scripts/kde-config-bridge.py` (export/import/watch, ciclo enter/leave), `skins/plasma/hypr/kwin.lua`; inventario y autoridad en `docs/BREEZE_ARCH.md` §9. Gestores comunes avisan por `scripts/bwm_settings_hooks.py` (hook del manifiesto). Usuario Lua al final; nunca escribir `bwm/user/*` |
 | GTK 3 / Qt / flatpaks | `scripts/gtk-theme.py`, `scripts/bwm_icons.py` (qt6ct, `kdeglobals`, overrides) |
@@ -165,7 +166,7 @@ siendo el nombre del escritorio original que imita Breeze.
 | Modo de cada workspace en Retro (mosaico, desplazamiento, flotante con barras) | `skins/retro/hypr/workspace-modes.lua` (port de Omarchy; modos en `~/.local/state/omarchy/workspace-layouts/`), shims `omarchy-hyprland-workspace-layout-*` y `bwm-workspace-layout-set`; barras con el plugin de Omarchy sin cambios (`src/omarchy-titlebars`), nada del de Breeze |
 | Reglas de ventana / juegos | `hypr/modules/rules.lua`, reglas por app de Omarchy (`Commons/omarchy/default/hypr/apps/`, cargadas por `modules/app_rules.lua`), `scripts/window-guard.py` |
 | Atajos | `keybinds.json` vía `keybinds-manager.py` |
-| Bloqueo / pantalla de inicio de cada skin | `modules/ii/lock/Lock.qml` elige: `lock/LockSurface.qml` (end-4, el desenfoque lo pinta `background/Background.qml` y necesita `session_lock_xray` de `skins/default/hypr/lock.lua`), `omarchyLock/` (Omarchy 4, Retro), `plasmaLock/` (KDE, Breeze); SDDM común entra solo (`install-boot-theme.sh`) |
+| Bloqueo / pantalla de inicio de cada skin | `modules/ii/lock/Lock.qml` elige: `lock/LockSurface.qml` (end-4, el desenfoque lo pinta `background/Background.qml` y necesita `session_lock_xray` de `skins/default/hypr/lock.lua`), `omarchyLock/` (Omarchy 4, Retro), `modules/plasma/lock` (KScreenLocker/Breeze, con LockContext común); SDDM común entra solo (`install-boot-theme.sh`) |
 | Apagar, reiniciar, cerrar sesión, suspender | `config/hypr/scripts/bwm-power <acción> [--dry-run]` (común a todas las skins); los menús de cada skin sólo lo llaman |
 | Animaciones (ventanas, workspaces, menús/capas, fondo) | `config/hypr/skins/<id>/hypr/animations.lua` (copia de las del original); fondo: `modules/ii/background` (default (end-4)), `modules/ii/omarchyBackground` (Retro, vía `set-wallpaper.sh`) |
 | Temas web de Stremio / barra de Steam | `scripts/stremio-theme.py`, `scripts/stremio-theme.cjs`, `scripts/steam-theme.sh`, `hypr/omarchy/overlays/steam.css`; alcance en `docs/STREMIO_THEMING.md` |
@@ -226,7 +227,7 @@ siendo el nombre del escritorio original que imita Breeze.
   rename atómico lo deja sordo. qt6ct vigila la carpeta y aun así no repinta apps abiertas. GTK 3 lee
   `~/.config/gtk-3.0/gtk.css` sólo al arrancar → los colores van en un tema que se alterna.
 - **Un solo dueño**: polkit (un agente por sesión) y `org.freedesktop.Notifications`: en Retro los tiene
-  Quickshell (Omarchy); fuera, `hyprpolkitagent`/swaync o BWM. Al tocar esto, revisa `bwm-theme-manager.py`
+  Quickshell (Omarchy); Breeze usa polkit-kde-agent y default, `hyprpolkitagent`/BWM. Al tocar esto, revisa `bwm-theme-manager.py`
   (6.1/6.2) y `autostart.sh`.
 - **Flatpak**: `--filesystem=xdg-config/x` se monta también en `~/.var/app/<id>/config/x`; los enlaces de
   `~/.config` apuntan al repo, que también hay que exponer.

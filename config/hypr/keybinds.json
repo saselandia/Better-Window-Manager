@@ -1292,7 +1292,11 @@
     "options": {},
     "is_default": false,
     "enabled": true,
-    "is_modified": false
+    "is_modified": false,
+    "skins": [
+      "default",
+      "retro"
+    ]
   },
   {
     "id": "custom_1793425510_74",
@@ -1507,6 +1511,26 @@
     "key": "T",
     "action_type": "exec",
     "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/kwin-tiles.py open",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "plasma_krunner",
+    "category": "Lanzadores",
+    "description": "KRunner (Breeze)",
+    "mods": [
+      "ALT"
+    ],
+    "key": "SPACE",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/krunner.sh",
     "dispatcher": null,
     "dispatcher_arg": null,
     "options": {},

@@ -55,7 +55,7 @@ de un tema; cambiar el fondo no los toca.
 | :--- | :---: | :---: | :--- |
 | Retro | ~90 % | ~80 % | `hyprland.lua` e `icons.theme` de los temas, tema de Chromium (root); plugins que sustituyen barra, bloqueo, overlays o paneles |
 | default (end-4) | ~90 % | — | Plantillas de matugen de terceros: se añaden a mano en `matugen/config.toml` |
-| Breeze (Kde plasma) | ~50 % | 0 % | Esquemas/estilos/iconos/temas globales, panel SVG, Kickoff y bandeja/applets portados (varios reducidos). Preferencias del sistema con los KCM reales de Apariencia y «Obtener nuevos…» (F11). Faltan decoraciones reales, bloqueo/cambiador, plasmoides externos y funciones avanzadas de applets; arquitectura §10–11 y README de cada carpeta. |
+| Breeze (Kde plasma) | ~50 % | 0 % | Esquemas/estilos/iconos/temas globales, panel SVG, Kickoff y bandeja/applets portados (varios reducidos). Preferencias del sistema con los KCM reales de Apariencia y «Obtener nuevos…» (F11). F12 añade rejilla original de Alt+Tab, OSD y controles de bloqueo de KDE, temas QML alojados por BWM y KRunner nativo. Pruebas con contextos simulados; autenticación real y temas externos adicionales pendientes. Persisten límites de plasmoides externos y applets; arquitectura y README de cada carpeta. |
 
 F6b (decoraciones KDE) y F7 (negociación CSD/SSD sin listas de clases y geometría con el marco
 real) están preparados para la próxima sesión de Breeze. Su compilación y pruebas automáticas

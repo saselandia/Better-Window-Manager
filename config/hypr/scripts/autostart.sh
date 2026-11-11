@@ -62,15 +62,11 @@ if command -v dbus-update-activation-environment >/dev/null 2>&1; then
     dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP QT_QPA_PLATFORMTHEME OMARCHY_PATH 2>/dev/null || true
 fi
 
+export QML_IMPORT_PATH="${XDG_DATA_HOME:-$HOME/.local/share}/bwm/qml${QML_IMPORT_PATH:+:$QML_IMPORT_PATH}"
+
 # 2. Agente de autenticación Polkit (Gentoo en /usr/libexec o PATH). En Retro no: allí es el de
 #    Omarchy dentro de Quickshell (modules/ii/omarchyPolkit) y polkit sólo admite un agente.
-if [[ "$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null)" != "retro" ]] && ! pidof hyprpolkitagent >/dev/null 2>&1; then
-    if command -v hyprpolkitagent >/dev/null 2>&1; then
-        hyprpolkitagent >/dev/null 2>&1 &
-    elif [ -x /usr/libexec/hyprpolkitagent ]; then
-        /usr/libexec/hyprpolkitagent >/dev/null 2>&1 &
-    fi
-fi
+python3 "$HOME/.config/hypr/scripts/bwm_polkit.py" "$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get)" || echo "BWM: no se pudo iniciar el agente polkit" >&2
 
 # 3. Demonio de wallpapers (swww)
 # swww cambió de nombre a awww (mismo uso y opciones): vale cualquiera de los dos

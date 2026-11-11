@@ -97,7 +97,7 @@ hl.bind("SUPER + SPACE", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/app-l
 -- [Ventanas]
 hl.bind("SUPER + M", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/omarchy-shims/omarchy-hyprland-window-minimize"), { description = "Ventanas: Minimizar al dock (Omarchy, en workspaces sin mosaico)" })
 -- [Lanzadores]
-hl.bind("ALT + SPACE", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/app-launcher.sh apps"), { description = "Lanzadores: Aplicaciones (Apps de Omarchy en Retro)" })
+if active_skin == "default" or active_skin == "retro" then hl.bind("ALT + SPACE", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/app-launcher.sh apps"), { description = "Lanzadores: Aplicaciones (Apps de Omarchy en Retro)" }) end
 -- [General]
 if active_skin == "default" then hl.bind("SUPER + G", hl.dsp.exec_cmd("quickshell -c ii ipc call overlay toggle"), { description = "General: Overlay de widgets (end-4)" }) end
 if active_skin == "default" then hl.bind("CTRL + SUPER + T", hl.dsp.exec_cmd("quickshell -c ii ipc call wallpaperSelector toggle"), { description = "General: Cambiar fondo (end-4)" }) end
@@ -112,6 +112,8 @@ if active_skin == "plasma" then hl.bind("SUPER + D", hl.dsp.exec_cmd("python3 /h
 if active_skin == "plasma" then hl.bind("ALT + F4", hl.dsp.window.close(), { description = "Ventanas: Cerrar ventana (KDE: Alt+F4)" }) end
 if active_skin == "plasma" then hl.bind("ALT + F3", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py menu"), { description = "Ventanas: Menú de la ventana (KDE: Alt+F3)" }) end
 if active_skin == "plasma" then hl.bind("SUPER + T", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/kwin-tiles.py open"), { description = "Ventanas: Editor de mosaico (Breeze)" }) end
+-- [Lanzadores]
+if active_skin == "plasma" then hl.bind("ALT + SPACE", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/krunner.sh"), { description = "Lanzadores: KRunner (Breeze)" }) end
 
 -- BWMenu: dos teclas normales a la vez, independiente de Quickshell; cualquier orden
 hl.bind("plus + minus", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm menu --open"), { ignore_mods = true, description = "General: BWMenu (+ y - a la vez)" })

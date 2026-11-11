@@ -145,6 +145,12 @@ Son las versiones registradas en el entorno local de BWM, no las últimas public
 | Modelo MPRIS de Plasma | 6.7.5 | — |
 | Calendario de Plasma | 6.7.5 | — |
 | Componentes de notificaciones KDE (sin servidor) | 6.7.5 | — |
+| Módulo QML org.bwm.kcm (bwm-kcmhost) | 2 | 2 |
+| Agente polkit de KDE | 6.7.5 | — |
+| KRunner | 6.7.5 | — |
+| Resultados de KRunner | 6.7.5 | — |
+| Componentes de sesión de Breeze | 6.7.5 | — |
+| Traducciones de KDE (KI18n) | 6.29.0 | — |
 
 ## Skin default (end-4)
 
@@ -223,7 +229,6 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 
 | Requisito | Para qué | Gentoo | Arch / CachyOS | Fedora | openSUSE | Debian / Ubuntu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| hyprpolkitagent | Diálogo de contraseña (polkit). En Retro lo dibuja Quickshell y no hace falta | `hyproverlay:sys-auth/hyprpolkitagent` | `hyprpolkitagent` | `copr:solopasha/hyprland:hyprpolkitagent` | `hyprpolkitagent` | — |
 | Iconos Breeze | Iconos breeze-dark de las apps y applets de la skin Plasma | `kde-frameworks/breeze-icons` | `breeze-icons` | `breeze-icon-theme` | `breeze6-icons` | `breeze-icon-theme` |
 | Plugin breezebars de BWM (barras de título Breeze) | Barras de título Breeze y snapping con previsualización; debe estar compilado para el Hyprland que usas | *se compila* | *se compila* | *se compila* | *se compila* | *se compila* |
 | KSvg (SVG de temas de Plasma) | Pinta el panel, los popups y los controles de Breeze con el estilo de Plasma activo (desktoptheme) | `kde-frameworks/ksvg` | `ksvg` | `kf6-ksvg` | — | — |
@@ -236,6 +241,10 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | Modelo MPRIS de Plasma | Interfaz de los applets portados de Breeze, sin arrancar plasmashell ni sus servidores | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
 | Calendario de Plasma | Interfaz de los applets portados de Breeze, sin arrancar plasmashell ni sus servidores | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
 | Componentes de notificaciones KDE (sin servidor) | Interfaz de los applets portados de Breeze, sin arrancar plasmashell ni sus servidores | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
+| Agente polkit de KDE | Un único diálogo de autenticación nativo de KDE en Breeze | `kde-plasma/polkit-kde-agent` | `polkit-kde-agent` | `polkit-kde` | `polkit-kde-agent-6` | `polkit-kde-agent-1` |
+| KRunner | Alt+Espacio nativo de Plasma, aplicaciones, cálculo y comandos, sin plasmashell | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | `plasma6-workspace` | `plasma-workspace` |
+| Resultados de KRunner | Interfaz nativa de Plasma en Breeze (F12) | `kde-plasma/milou` | `milou` | `milou` | `milou6` | `milou` |
+| Componentes de sesión de Breeze | Interfaz nativa de Plasma en Breeze (F12) | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | `plasma6-workspace` | `plasma-workspace` |
 
 **Recomendado:**
 
@@ -264,6 +273,7 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | Módulo QML org.bwm.kcm (bwm-kcmhost) | Incrusta los KCM reales de Plasma (colores, estilo, decoraciones, tema global, iconos, fuentes…) en las Preferencias del sistema de Breeze | — | — | — | — | — |
 | Anfitrión de módulos de configuración KDE 6 | Abrir el editor original de reglas de KWin desde los menús de Breeze | `kde-frameworks/kcmutils` | `kcmutils` | `kf6-kcmutils` | `kf6-kcmutils` | `libkf6kcmutils-bin` |
 | Editor original de reglas de KWin | Editar kwinrulesrc con kcm_kwinrules; el compositor KWin no se ejecuta | `kde-plasma/kwin` | `kwin` | `kwin` | — | `kwin-common` |
+| Traducciones de KDE (KI18n) | Contexto de traducción de los temas Plasma cargados con ThemeHost | `kde-frameworks/ki18n` | `ki18n` | `kf6-ki18n-devel` | `kf6-ki18n-devel` | `libkf6i18n-dev` |
 
 ## Plugins de barras de título (Breeze (Kde plasma) y Retro)
 
