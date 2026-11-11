@@ -20,6 +20,7 @@ import qs.modules.common.functions
 
 ApplicationWindow {
     id: root
+    property string conflictHelper: FileUtils.trimFileProtocol(Quickshell.shellPath("../..")) + "/hypr/scripts/bwm-shell-conflicts.py"
     property int conflictCount: 0
     onConflictCountChanged: {
         if (conflictCount === 0) {
@@ -50,7 +51,8 @@ ApplicationWindow {
 
     component ConflictingProgramGroup: ColumnLayout {
         id: conflictGroup
-        required property list<string> programs
+        required property string group
+        property list<string> programs: []
         required property string description
         visible: false
         onVisibleChanged: {
@@ -61,10 +63,14 @@ ApplicationWindow {
 
         Process {
             running: true
-            command: ["pidof", ...conflictGroup.programs]
-            onExited: (exitCode, exitStatus) => {
-                if (exitCode === 0) {
-                    conflictGroup.visible = true
+            command: ["python3", root.conflictHelper]
+            stdout: StdioCollector {
+                onStreamFinished: {
+                    const owner = JSON.parse(this.text)[conflictGroup.group];
+                    if (owner) {
+                        conflictGroup.programs = [owner.name];
+                        conflictGroup.visible = true;
+                    }
                 }
             }
         }
@@ -90,7 +96,7 @@ ApplicationWindow {
                     text: Translation.tr("Always")
                 }
                 onClicked: {
-                    Quickshell.execDetached(["killall", ...conflictGroup.programs])
+                    Quickshell.execDetached(["python3", root.conflictHelper, "resolve", conflictGroup.group])
                     conflictGroup.alwaysSelected()
                     conflictGroup.visible = false
                 }
@@ -101,7 +107,7 @@ ApplicationWindow {
                     text: Translation.tr("Yes")
                 }
                 onClicked: {
-                    Quickshell.execDetached(["killall", ...conflictGroup.programs])
+                    Quickshell.execDetached(["python3", root.conflictHelper, "resolve", conflictGroup.group])
                     conflictGroup.visible = false
                 }
             }
@@ -178,7 +184,7 @@ ApplicationWindow {
                     id: kded6Group
                     Layout.alignment: Qt.AlignHCenter
                     Layout.fillHeight: false
-                    programs: ["kded6"]
+                    group: "trays"
                     description: Translation.tr("Conflicts with the shell's system tray implementation")
                     onAlwaysSelected: Config.options.conflictKiller.autoKillTrays = true
                 }
@@ -187,7 +193,7 @@ ApplicationWindow {
                     id: notificationDaemons
                     Layout.alignment: Qt.AlignHCenter
                     Layout.fillHeight: false
-                    programs: ["mako", "dunst"]
+                    group: "notifications"
                     description: Translation.tr("Conflicts with the shell's notification implementation")
                     onAlwaysSelected: Config.options.conflictKiller.autoKillNotificationDaemons = true
                 }

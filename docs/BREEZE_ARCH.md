@@ -117,6 +117,12 @@ lo coordina con `bwm_icons.write_kdeglobals` (ciclo de salida en §9).
 fase 2 (`kde-config-bridge.py guards`) los mantiene, y el instalador los prepara
 si se instala plasma-workspace.
 
+El detector de conflictos comprueba el dueño D-Bus con `bwm-shell-conflicts.py`, no la
+presencia de kded6: ktimezoned puede seguir activo sin interferir. Un kded6 que conserve el
+nombre StatusNotifierWatcher sin su objeto sigue bloqueando la bandeja; se comprobó en F12.
+Retirar ese proceso liberó el nombre y Quickshell recuperó sus elementos. La acción de resolver
+revalida el dueño y termina sólo su PID; no utiliza killall.
+
 ## 7. Cambios en `BREEZE_PLAN.md`
 
 - **F1:** el aplicador debe usar KConfig con notificación; `lookandfeeltool` pisa

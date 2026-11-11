@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // BWM: Plasma 6.7.5 OsdWindow host; OsdItem.qml is the upstream content.
 import QtQuick
+import "." as Local
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
@@ -53,7 +54,7 @@ PanelWindow {
     KSvg.FrameSvgItem {
         visible:!(themed.item?.ready??false)
         id:frame;anchors.fill:parent;imagePath:"widgets/background"
-        OsdItem {
+        Local.OsdItem {
             id:content
             anchors {fill:parent;leftMargin:frame.margins.left;rightMargin:frame.margins.right;topMargin:frame.margins.top;bottomMargin:frame.margins.bottom}
         }

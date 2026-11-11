@@ -24,20 +24,20 @@ Singleton {
 
     Process {
         id: checkConflictsProc
-        command: ["bash", "-c", `echo "$(pidof kded6);$(pidof mako dunst)"`]
+        command: ["python3", FileUtils.trimFileProtocol(Quickshell.shellPath("../..")) + "/hypr/scripts/bwm-shell-conflicts.py"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const output = this.text;
-                const conflictingTrays = output.split(";")[0].trim().length > 0;
-                const conflictingNotifications = output.split(";")[1].trim().length > 0;
+                const conflicts = JSON.parse(this.text);
+                const conflictingTrays = !!conflicts.trays;
+                const conflictingNotifications = !!conflicts.notifications;
                 var openDialog = false;
                 if (conflictingTrays) {
                     if (!Config.options.conflictKiller.autoKillTrays) openDialog = true;
-                    else Quickshell.execDetached(["killall", "kded6"])
+                    else Quickshell.execDetached([...checkConflictsProc.command, "resolve", "trays"])
                 }
                 if (conflictingNotifications) {
                     if (!Config.options.conflictKiller.autoKillNotificationDaemons) openDialog = true;
-                    else Quickshell.execDetached(["killall", "mako", "dunst"])
+                    else Quickshell.execDetached([...checkConflictsProc.command, "resolve", "notifications"])
                 }
                 if (openDialog) {
                     Quickshell.execDetached(["qs", "-p", root.killDialogQmlPath])
