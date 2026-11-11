@@ -32,8 +32,10 @@ QtObject {
     function launch(appId) { entry(appId)?.execute(); }
     function activate(top) {
         if(!top) return;
-        if(minimized(top)) Quickshell.execDetached(["/home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py","unminimize",address(top)]); // kwin-window.py (F8)
-        else top.activate();
+        const window = client(top);
+        if (window?.address && window.pid) {
+            Quickshell.execDetached(["/home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py", "--pid", String(window.pid), "focus", window.address]);
+        } else top.activate();
     }
     function click(group) {
         const tops=group.toplevels;

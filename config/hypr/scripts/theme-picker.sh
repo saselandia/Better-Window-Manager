@@ -10,9 +10,9 @@ set -euo pipefail
 THEME_MANAGER="$HOME/.config/hypr/scripts/bwm-theme-manager.py"
 CURRENT_THEME="$("$THEME_MANAGER" get 2>/dev/null || echo "default")"
 
-# Breeze uses BWM's common skin gallery. Plasma global themes live in Preferences.
-if [[ "$CURRENT_THEME" == "plasma" ]]; then
-    exec "$HOME/.config/hypr/scripts/bwm-menu.py" --open
+# Breeze: selector anterior de skins con la paleta de Plasma activa.
+if [[ "$CURRENT_THEME" == "plasma" ]] && qs -c ii ipc call plasmaThemePicker toggle >/dev/null 2>&1; then
+    exit 0
 fi
 
 # Retro: el carrusel 3D de los temas Retro, con los estilos (skin-switcher.sh)

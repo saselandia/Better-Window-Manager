@@ -4,6 +4,9 @@ Comprobado el 2026-11-11 en Gentoo: Hyprland 0.56.2, Plasma 6.7.5, Frameworks 6.
 Qt 6.11.2 y Quickshell 0.3.2. El port funciona sobre Hyprland; no ejecuta KWin/plasmashell.
 F13 cierra la limpieza del plan; las pruebas físicas y las limitaciones siguientes siguen abiertas.
 
+> Cambios posteriores solicitados por el usuario (selector anterior, fuentes y panel):
+> [BREEZE_PANEL_FIXES.md](BREEZE_PANEL_FIXES.md). El selector de Alt+T ya no abre BWMenu.
+
 ## Limpieza y piezas conservadas
 
 - Eliminados todos los `modules/ii/plasma*`: 13 archivos de plasmaCommon y el selector artesanal.

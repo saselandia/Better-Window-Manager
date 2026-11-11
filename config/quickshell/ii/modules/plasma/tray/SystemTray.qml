@@ -35,14 +35,14 @@ Item {
     readonly property var hiddenItems:items.filter(i=>!Logic.visible(settings,i.id,i.status!==Sni.Status.Passive))
     readonly property var visibleApplets:applets.filter(a=>Logic.visible(settings,"applet:"+a.id,a.active))
     readonly property var hiddenApplets:applets.filter(a=>!Logic.visible(settings,"applet:"+a.id,a.active))
-    readonly property string screenName:QsWindow.window?.screen?.name??""
+    readonly property string screenName:QsWindow.window?.screen?.name||""
     readonly property bool expanded:TrayState.expanded&&TrayState.screenName===screenName
     readonly property string activeApplet:TrayState.applet
     property bool configuring:false
     onActiveAppletChanged:configuring=false
     readonly property var hiddenLayout:({currentIndex:-1})
     implicitWidth:layout.implicitWidth;implicitHeight:layout.implicitHeight
-    function openApplet(id) { TrayState.open(id,screenName); }
+    function openApplet(id) { TrayState.toggle(id,screenName); }
     function openMenu(item,button) { if(readOnly)return; menu.openFor(item.menu,button); }
     function setMode(id,value) { if(!readOnly)Config.options.bar.plasma.trayItems=Logic.update(settings,id,value); }
     GridLayout {
@@ -59,9 +59,9 @@ Item {
         }
         Repeater {
             model:root.visibleApplets
-            PC3.ToolButton { required property var modelData; icon.name:modelData.icon;text:modelData.title;display:PC3.AbstractButton.IconOnly;implicitWidth:30;implicitHeight:30;onClicked:root.openApplet(modelData.id);PC3.ToolTip { text:parent.text } }
+            PC3.ToolButton { required property var modelData; icon.name:modelData.icon;icon.width:22;icon.height:22;text:modelData.title;display:PC3.AbstractButton.IconOnly;implicitWidth:32;implicitHeight:32;checked:root.expanded&&root.activeApplet===modelData.id;onClicked:root.openApplet(modelData.id);PC3.ToolTip { text:parent.text } }
         }
-        PC3.ToolButton { id:expander;icon.name:root.vertical?"arrow-left":"arrow-up";text:qsTr("Status and Notifications");implicitWidth:28;implicitHeight:28;onClicked:{root.configuring=false;TrayState.toggle("",root.screenName)} }
+        PC3.ToolButton { id:expander;icon.name:root.vertical?"arrow-left":"arrow-up";icon.width:16;icon.height:16;text:qsTr("Status and Notifications");implicitWidth:28;implicitHeight:28;onClicked:{root.configuring=false;TrayState.toggle("",root.screenName)} }
     }
     TrayMenu { id:menu }
     readonly property alias popupWindow:expandedWindow

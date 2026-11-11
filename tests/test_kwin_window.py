@@ -5,6 +5,7 @@ XdgToplevelWindow::maximize de kwin v6.7.5, mosaico rápido, etiquetas y marco/c
 """
 import importlib.util
 import unittest
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -104,3 +105,20 @@ class FrameTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TaskActivationTests(unittest.TestCase):
+    def test_focus_raises_the_requested_pid_without_minimizing(self):
+        client={'address':'0x123','pid':17}
+        with mock.patch.object(kw,'run_lua') as run:
+            kw.focus(client)
+        lua=run.call_args.args[0]
+        self.assertIn('w.pid ~= 17',lua)
+        self.assertIn('bring_to_top',lua)
+        self.assertIn('mode = "top"',lua)
+        self.assertNotIn('minimize',lua)
+
+    def test_reused_address_from_panel_does_nothing(self):
+        with mock.patch.object(kw,'find_client',return_value={'address':'0x123','pid':99}), mock.patch.object(kw,'focus') as focus:
+            self.assertEqual(kw.main(['--pid','17','focus','0x123']),1)
+            focus.assert_not_called()

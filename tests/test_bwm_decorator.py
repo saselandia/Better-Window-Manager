@@ -302,6 +302,23 @@ class SupervisorTest(unittest.TestCase):
             self.assertEqual(sup.run(), 0)
         self.assertEqual(runs.read_text().count("x"), 2)
 
+    def test_stop_handler_does_not_reenter_subprocess_wait(self):
+        from unittest import mock
+        tmp=Path(tempfile.mkdtemp(prefix="bwm-sup-stop-"));self.addCleanup(shutil.rmtree,tmp,True)
+        binary=tmp/"fake";binary.write_text("")
+        sup=self.load(tmp,binary)
+        handlers={};child=mock.Mock()
+        def wait(**kwargs):
+            handlers[signal.SIGTERM]()
+            return -15
+        import signal
+        child.wait.side_effect=wait
+        with mock.patch.object(sup,'active_skin',return_value="plasma"), mock.patch.object(sup.subprocess,'Popen',return_value=child), mock.patch.object(sup.signal,'signal',side_effect=lambda signum,handler:handlers.update({signum:handler})):
+            self.assertEqual(sup.run(),0)
+        child.terminate.assert_called_once()
+        child.wait.assert_called_once_with(timeout=0.2)
+        child.poll.assert_not_called()
+
     def test_does_nothing_outside_breeze(self):
         from unittest import mock
         tmp = Path(tempfile.mkdtemp(prefix="bwm-sup-"))

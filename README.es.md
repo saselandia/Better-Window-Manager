@@ -147,7 +147,7 @@ La lista completa, con los paquetes de cada distribución, está en [docs/REQUIR
 | **Núcleo** (todas las skins) | Hyprland ≥ 0.55 (configuración en Lua), Quickshell (probado con 0.3.1), Qt ≥ 6.10 con 5Compat y SVG, Python ≥ 3.11 con Pillow, jq, swww (o awww), wl-clipboard, cliphist, kitty, grim, slurp, libnotify, GLib, fontconfig, PipeWire/WirePlumber, adw-gtk3. Las fuentes (Material Symbols, Google Sans Flex, JetBrainsMono Nerd Font) las instala BWM |
 | **default (end-4)** | matugen, rofi (Wayland), hyprpolkitagent |
 | **Retro** | ImageMagick 7 (`magick`). Polkit, notificaciones y OSD los dibuja Quickshell |
-| **Breeze (Kde plasma)** | polkit-kde-agent, KRunner/Milou, KSvg, libplasma, Kirigami, plasma-workspace (Clock), plasma-nm, plasma-pa, iconos Breeze y el plugin breezebars de BWM **compilado para tu versión de Hyprland** (el instalador lo compila si tienes las cabeceras de Hyprland, `make` y un compilador de C++) |
+| **Breeze (Kde plasma)** | Noto Sans, Hack, polkit-kde-agent, KRunner/Milou, KSvg, libplasma, Kirigami, plasma-workspace (Clock), plasma-nm, plasma-pa, iconos Breeze y el plugin breezebars de BWM **compilado para tu versión de Hyprland** (el instalador lo compila si tienes las cabeceras de Hyprland, `make` y un compilador de C++) |
 
 Opcional: portales de escritorio (hyprland, gtk), NetworkManager, BlueZ, qt6ct, socat, git, Nautilus, Firefox, Flatpak (Vesktop, Spotify, Stremio), btop, fastfetch, Papirus, hyprsunset, SDDM y Plymouth.
 

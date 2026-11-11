@@ -264,6 +264,16 @@
       "packages": {"gentoo": "guru:x11-themes/adw-gtk3", "arch": "adw-gtk-theme", "fedora": "adw-gtk3-theme", "opensuse": null, "debian": null},
       "manual": "https://github.com/lassekongo83/adw-gtk3/releases"
     },
+    "font-noto-sans": {
+      "label": "Noto Sans", "why": "Fuente general original de KDE Plasma (10 pt)",
+      "check": {"type": "font", "family": "Noto Sans"},
+      "packages": {"gentoo": "media-fonts/noto", "arch": "noto-fonts", "fedora": "google-noto-sans-fonts", "opensuse": "google-noto-sans-fonts", "debian": "fonts-noto-core"}
+    },
+    "font-hack": {
+      "label": "Hack", "why": "Fuente monoespaciada predeterminada de KDE Plasma",
+      "check": {"type": "font", "family": "Hack"},
+      "packages": {"gentoo": "media-fonts/hack", "arch": "ttf-hack", "fedora": "source-foundry-hack-fonts", "opensuse": "hack-fonts", "debian": "fonts-hack"}
+    },
     "font-material-symbols": {
       "label": "Fuentes de BWM (Material Symbols, Google Sans Flex)",
       "why": "Iconos y textos de Quickshell",

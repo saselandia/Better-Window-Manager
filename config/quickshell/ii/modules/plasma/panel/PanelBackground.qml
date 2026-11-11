@@ -17,8 +17,19 @@ Item {
     property real panelOpacity: opacityMode === "opaque" || (opacityMode === "adaptive" && touchingWindow) ? 1 : 0
     readonly property var frameMargins: translucentItem.margins
     readonly property var shadowMargins: shadow.margins
-    readonly property int borderMask: floating ? KSvg.FrameSvg.AllBorders :
-        KSvg.FrameSvg.AllBorders & ~({top:KSvg.FrameSvg.TopBorder,bottom:KSvg.FrameSvg.BottomBorder,left:KSvg.FrameSvg.LeftBorder,right:KSvg.FrameSvg.RightBorder})[edge]
+    property bool touchesLeft:false
+    property bool touchesRight:false
+    property bool touchesTop:false
+    property bool touchesBottom:false
+    readonly property int borderMask: {
+        let mask=KSvg.FrameSvg.AllBorders;
+        if(!floating) mask &= ~({top:KSvg.FrameSvg.TopBorder,bottom:KSvg.FrameSvg.BottomBorder,left:KSvg.FrameSvg.LeftBorder,right:KSvg.FrameSvg.RightBorder})[edge];
+        if(touchesLeft) mask &= ~KSvg.FrameSvg.LeftBorder;
+        if(touchesRight) mask &= ~KSvg.FrameSvg.RightBorder;
+        if(touchesTop) mask &= ~KSvg.FrameSvg.TopBorder;
+        if(touchesBottom) mask &= ~KSvg.FrameSvg.BottomBorder;
+        return mask;
+    }
     Behavior on panelOpacity { NumberAnimation { duration:Kirigami.Units.longDuration; easing.type:Easing.OutCubic } }
     // BWM: PanelShadows' SVG pieces are composed here, rather than through KWin's shadow protocol.
     KSvg.FrameSvgItem {

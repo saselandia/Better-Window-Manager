@@ -211,13 +211,13 @@ xcb_connection_t* connection=nullptr;
 wl_event_source* xsource=nullptr;
 std::string display;
 std::chrono::steady_clock::time_point nextConnectionAttempt{};
-xcb_atom_t motifAtom=0,gtkAtom=0;
-unsigned motifAtomSeq=0,gtkAtomSeq=0;
+xcb_atom_t motifAtom=0,gtkAtom=0,moveResizeAtom=0;
+unsigned motifAtomSeq=0,gtkAtomSeq=0,moveResizeAtomSeq=0;
 std::unordered_map<uint32_t,XState> xwindows;
 void disconnectX() {
     if(xsource)wl_event_source_remove(xsource);xsource=nullptr;
     if(connection)xcb_disconnect(connection);connection=nullptr;
-    motifAtom=gtkAtom=0;motifAtomSeq=gtkAtomSeq=0;xwindows.clear();
+    motifAtom=gtkAtom=moveResizeAtom=0;motifAtomSeq=gtkAtomSeq=moveResizeAtomSeq=0;xwindows.clear();
 }
 void query(XState& s,uint32_t xid) {
     if(!connection||!motifAtom||!gtkAtom)return;
@@ -240,7 +240,14 @@ void pumpX() {
     bool changed=false;
     while(auto event=xcb_poll_for_event(connection)) {
         uint8_t type=event->response_type&0x7f;
-        if(type==XCB_PROPERTY_NOTIFY) {
+        if(type==XCB_CLIENT_MESSAGE) {
+            const auto e=reinterpret_cast<xcb_client_message_event_t*>(event);
+            if(enabled() && moveResizeAtom && e->type==moveResizeAtom && e->format==32) {
+                auto it=xwindows.find(e->window);
+                if(it!=xwindows.end()) if(auto owner=it->second.owner.lock(); owner && owner->getPID()==it->second.pid)
+                    handleClientMoveResize(owner,e->data.data32[2],e->data.data32[3]);
+            }
+        } else if(type==XCB_PROPERTY_NOTIFY) {
             auto e=reinterpret_cast<xcb_property_notify_event_t*>(event);
             if(e->atom==motifAtom||e->atom==gtkAtom)if(auto it=xwindows.find(e->window);it!=xwindows.end()){query(it->second,e->window);changed=true;}
         } else if(type==XCB_DESTROY_NOTIFY)xwindows.erase(reinterpret_cast<xcb_destroy_notify_event_t*>(event)->window);
@@ -250,6 +257,7 @@ void pumpX() {
     void* raw=nullptr;
     if(reply(motifAtomSeq,&raw)){if(raw)motifAtom=static_cast<xcb_intern_atom_reply_t*>(raw)->atom;free(raw);raw=nullptr;}
     if(reply(gtkAtomSeq,&raw)){if(raw)gtkAtom=static_cast<xcb_intern_atom_reply_t*>(raw)->atom;free(raw);raw=nullptr;}
+    if(reply(moveResizeAtomSeq,&raw)){if(raw)moveResizeAtom=static_cast<xcb_intern_atom_reply_t*>(raw)->atom;free(raw);raw=nullptr;}
     if(!atomsReady&&motifAtom&&gtkAtom)for(auto& [id,s]:xwindows)query(s,id);
     for(auto it=xwindows.begin();it!=xwindows.end();) {
         auto& s=it->second;auto owner=s.owner.lock();
@@ -279,6 +287,13 @@ void connectX() {
     connection=xcb_connect(value,nullptr);
     if(xcb_connection_has_error(connection)){disconnectX();return;}
     display=value;
+    // Observe EWMH messages sent to the root; never request SubstructureRedirect (the WM owns it).
+    auto screens=xcb_setup_roots_iterator(xcb_get_setup(connection));
+    for(;screens.rem;xcb_screen_next(&screens)) {
+        uint32_t mask=XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
+        xcb_change_window_attributes(connection,screens.data->root,XCB_CW_EVENT_MASK,&mask);
+    }
+    moveResizeAtomSeq=xcb_intern_atom(connection,0,sizeof("_NET_WM_MOVERESIZE")-1,"_NET_WM_MOVERESIZE").sequence;
     for(auto& [id,state]:xwindows) {uint32_t mask=XCB_EVENT_MASK_PROPERTY_CHANGE|XCB_EVENT_MASK_STRUCTURE_NOTIFY;xcb_change_window_attributes(connection,id,XCB_CW_EVENT_MASK,&mask);}
     motifAtomSeq=xcb_intern_atom(connection,0,15,"_MOTIF_WM_HINTS").sequence;
     gtkAtomSeq=xcb_intern_atom(connection,0,18,"_GTK_FRAME_EXTENTS").sequence;

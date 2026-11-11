@@ -151,6 +151,7 @@ siendo el nombre del escritorio original que imita Breeze.
 | Minimizar/maximizar/restaurar en Breeze (KWin) | `skins/plasma/scripts/kwin-window.py` (modo en etiquetas `bwm-max-v/h`, restauración por ejes; minimizar con el formato común de `toggle-minimize.py`); atajos `"skins": ["plasma"]`; pruebas `tests/test_kwin_window.py` |
 | Menús contextuales de Breeze (ventana, tareas, escritorio, panel) | `quickshell/ii/modules/plasma/menus/` (PC3.Menu, README), IPC `plasmaWindowMenu`; acciones en `kwin-window.py`; traducciones `menus/po` (`extract.py`); pruebas `tests/test_plasma_menus_ui.py` |
 | Detección CSD/SSD de Breeze | `src/breezebars/CSDLogic.hpp` y `CSDDetect.cpp` (negociación aplicada, X11 asíncrono); `hyprctl -j breezebars-csd` / Lua `hl.plugin.breezebars.decoration(address,pid)` dan el marco real para Python y placement. Auditoría `skins/plasma/scripts/csd-audit.py`; matriz `docs/BREEZE_CSD_RESULTS.md`. Sólo probar plugin nuevo tras reiniciar sesión |
+| Selector de skins de Breeze (Alt+T) | `modules/plasma/skinPicker`, diseño anterior recuperado; IPC plasmaThemePicker; paleta de PlasmaTheme y fuente Noto Sans 10. Los temas globales KDE se eligen en Preferencias |
 | Interfaces de Plasma (F12) | `modules/plasma/{switcher,osd,lock,runtime}`; `interface-theme.py` lee LayoutName/LookAndFeelPackage y adapta QML en caché. ThemeHost en `src/bwm-kcmhost` (API 2, motores separados; Qt.quit de un tema no cierra el shell). Controlador MRU común intacto. KRunner nativo en Alt+Espacio sólo Breeze; agente polkit desde manifiesto vía `bwm_polkit.py` (KDE en Breeze, Omarchy embebido en Retro) |
 | Cierre del port Breeze y pruebas de integración | `docs/BREEZE_F13_RESULTS.md` (limpieza, Sweet/KNS, cambios de skin y lista manual); `scripts/bwm-shell-conflicts.py` repara sólo reservas de bandeja rotas de kded sin módulos activos salvo ktimezoned |
 | Reglas y encaje de KWin (Breeze, F10) | `skins/plasma/scripts/kwin_rules.py`, `kwin_tiles.py`, `kwin-tiles.py`; vigilante único F2 y Lua generado, `skins/plasma/hypr/{rules,kwinrules}.lua`; plugin `KWinSnap.hpp`/`SnapGeometry.hpp`; outline/editor `modules/plasma/tiling`. Ctrl+flechas conservado; Meta+T editor reducido. Cobertura y opt-out en `skins/plasma/scripts/KWIN_RULES.md`, lista tras reinicio en `docs/BREEZE_F10_CHECKLIST.md` |
@@ -185,7 +186,7 @@ siendo el nombre del escritorio original que imita Breeze.
 - **Breeze (Kde plasma):** port KDE en `quickshell/ii/modules/plasma/` (panel, Kickoff,
   bandeja/applets, menús, temas, Preferencias, cambiador, OSD y bloqueo); no queda modules/ii/plasma*.
   Lee formatos reales KDE y kdedefaults; `bwm-decorator` renderiza KDecoration/Aurorae fuera de
-  Hyprland y `breezebars` los compone. Cursor y servicios comunes siguen a BWM. Alt+T abre BWMenu;
+  Hyprland y `breezebars` los compone. Cursor y servicios comunes siguen a BWM. Alt+T abre el selector anterior en `modules/plasma/skinPicker`;
   temas globales en Preferencias. Informe y límites: `docs/BREEZE_F13_RESULTS.md` (~50 %).
 - **Retro = Omarchy 4** (repo `basecamp/omarchy`, rama `quattro`, MIT; investigación en `docs/OMARCHY_INVESTIGACION.md`):
   - Librerías de Omarchy en `quickshell/ii/Commons` y `Ui` (`qs.Commons`, `qs.Ui`; cambios BWM en `Commons/README.md`):

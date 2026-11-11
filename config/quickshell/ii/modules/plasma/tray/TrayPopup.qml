@@ -20,16 +20,19 @@ PopupWindow {
     readonly property alias renderItem:surface
     required property var tray
     required property var anchorItem
-    readonly property string edge:PanelState.edgeFor(anchorItem.QsWindow.window?.screen?.name??"")
+    readonly property string edge:PanelState.edgeFor(anchorItem.QsWindow.window?.screen?.name||"")
     visible:tray.expanded
+    onVisibleChanged:if(visible)Qt.callLater(()=>surface.forceActiveFocus())
     color:"transparent";implicitWidth:tray.activeApplet==="calendar"?440:460;implicitHeight:540
     anchor.item:anchorItem
     anchor.edges:edge==="bottom"?Edges.Top:edge==="top"?Edges.Bottom:edge==="left"?Edges.Right:Edges.Left
     anchor.gravity:anchor.edges
-    HyprlandFocusGrab { active:trayWindow.visible;windows:[trayWindow];onCleared:TrayState.close() }
+    HyprlandFocusGrab { active:trayWindow.visible;windows:[trayWindow, trayWindow.anchorItem.QsWindow.window].filter(w=>w);onCleared:TrayState.close() }
     Item {
     id:surface
     anchors.fill:parent
+    focus:true
+    Keys.onEscapePressed:event=>{TrayState.close();event.accepted=true;}
     KSvg.FrameSvgItem { anchors.fill:parent;imagePath:"solid/dialogs/background";prefix:"" }
     ColumnLayout {
         anchors.fill:parent;anchors.margins:10;spacing:6
@@ -90,5 +93,5 @@ PopupWindow {
         }
     }
     }
-    Shortcut { sequence:"Escape";enabled:trayWindow.visible;onActivated:TrayState.close() }
+    Shortcut { sequence:"Escape";context:Qt.ApplicationShortcut;enabled:trayWindow.visible;onActivated:TrayState.close() }
 }

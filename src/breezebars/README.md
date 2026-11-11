@@ -234,3 +234,14 @@ inicial ya encuentra esos archivos. El vigilante único de F2 aplica/recuerda la
 cambios de KCMs; no se añade un demonio. El antiguo override de CSD por clases de autostart se retira.
 La lógica y compilación están verificadas; ratón/Wayland real con este plugin siguen pendientes de
 **reiniciar sesión entrando en Breeze**. Ver `docs/BREEZE_F10_CHECKLIST.md` y arquitectura §13.
+
+
+## Movimiento de clientes XWayland (corrección posterior a F13)
+
+CSDDetect.cpp escucha _NET_WM_MOVERESIZE en el root con SubstructureNotify por XCB,
+sin solicitar SubstructureRedirect. CsdMove.hpp valida movimiento con botón izquierdo físico,
+ventana flotante mapeada bajo el puntero y fuera de fullscreen. main.cpp comienza el arrastre
+nativo y la ruta existente de release/snapping lo termina. Cancel sólo afecta a ese gesto.
+Se compensa el mensaje anunciado pero no manejado por XWM.cpp de Hyprland 0.56.2.
+No se fuerzan barras a clientes CSD ni se usa una lista de clases. El binario nuevo requiere
+reiniciar sesión; nunca plugin unload/load. Evidencia y pruebas en docs/BREEZE_PANEL_FIXES.md.

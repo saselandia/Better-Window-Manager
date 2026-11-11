@@ -269,3 +269,11 @@ Los metadatos del tema global Sweet declaran GPL 3+; no se extiende esa declarac
 recursos de sus dependencias. Las fuentes/copias portadas de F3–F12 y sus textos de licencia
 siguen identificadas arriba y en cada README. La lista de auditoría de release de este archivo
 continúa abierta para los recursos y binarios ajenos a este cierre; F13 no la declara resuelta.
+
+
+Selector y ajustes posteriores a F13: modules/plasma/skinPicker recupera el diseño propio
+anterior de BWM desde cab72f8 y adapta paleta/geometría, sin código KDE nuevo. La corrección
+de bordes del panel sigue la política de plasma-workspace 6.7.5 PanelView::updateEnabledBorders;
+se mantienen cabeceras y origen del port. CsdMove.hpp y la recepción XCB de _NET_WM_MOVERESIZE
+son implementación propia sobre EWMH, sin copiar C++ de KWin/Hyprland ni añadir Qt al plugin.
+Noto Sans y Hack proceden de los paquetes del sistema, no se añaden sus binarios al repo.

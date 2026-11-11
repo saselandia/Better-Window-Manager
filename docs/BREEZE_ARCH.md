@@ -526,3 +526,24 @@ al volver. La caché es de sesión/skin en XDG_RUNTIME_DIR (no un archivo de tem
 PID/inicio, workspace y descripción/geometría de monitor. Descarta modos especiales y cambios
 de workspace/salida. Las etiquetas del usuario y de reglas se preservan al salir de Breeze.
 La secuencia final recupera las diez geometrías y conserva siete flujos de audio.
+
+## 16. Ajustes después de F13
+
+El usuario pidió recuperar el selector anterior: Alt+T vuelve a modules/plasma/skinPicker,
+con su diseño BWM original y PlasmaTheme. Las menciones de BWMenu en el cierre F13 describen
+ese commit, no el comportamiento actual. Noto Sans 10 y Hack son los valores predeterminados
+de Breeze, declarados como fuentes requeridas; el puente mantiene su aislamiento entre skins.
+
+PanelBackground sigue también la eliminación de bordes laterales de PanelView cuando el panel
+llega a los extremos de pantalla. Se mantienen el SVG y los botones originales del tema, con
+grupo Complementary e iconos dimensionados. Las tareas usan enfoque/elevación explícitos y PID;
+la bandeja alterna el mismo botón y admite Escape incluyendo el panel en su grab.
+
+El supervisor de decoraciones no espera dentro de un manejador de señal: evita reentrar en el
+lock de Popen.wait y elimina la espera fija de cinco segundos al salir de Breeze.
+
+El plugin recibe _NET_WM_MOVERESIZE por XCB para el arrastre CSD XWayland que Hyprland 0.56.2
+no maneja. Usa la ventana real bajo el puntero y el botón físico, sin adivinar una zona superior
+ni una lista de clases. No altera el protocolo Wayland ni la decisión CSD/SSD. Binario instalado
+atómicamente; la parte C++ sólo se activa al reiniciar sesión. Evidencia y límites en
+[BREEZE_PANEL_FIXES.md](BREEZE_PANEL_FIXES.md).

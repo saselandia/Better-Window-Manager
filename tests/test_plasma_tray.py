@@ -117,7 +117,7 @@ ShellRoot {
             const name=Quickshell.env("F5_CASE");let props={readOnly:true};
             if(name==="Bluetooth")props={backend:mock,adapter:adapter};
             if(name==="Notifications"||name==="Clipboard")props={backend:mock};
-            if(name==="Tray")props={readOnly:true,items:[{id:"demo",title:"Demo tray item",tooltipTitle:"Demo",tooltipDescription:"Safe fixture",icon:"applications-system",status:1}],applets:[],settings:{},appletProperties:{readOnly:true,backend:mock}};
+            if(name==="Tray")props={readOnly:true,items:[{id:"demo",title:"Demo tray item",tooltipTitle:"Demo",tooltipDescription:"Safe fixture",icon:"applications-system",status:1}],applets:[{id:"notifications",title:"Notifications",icon:"notifications",active:true}],settings:{},appletProperties:{readOnly:true,backend:mock}};
             if(name==="Power")props={readOnly:true,battery:mock,monitors:[]};
             if(name==="Compile") {
                 root.compiled=["panel/Panel.qml","panel/PanelContent.qml","tray/TrayController.qml"].map(path=>Qt.createComponent(Qt.resolvedUrl("modules/plasma/"+path)));
@@ -136,7 +136,17 @@ ShellRoot {
             const name=Quickshell.env("F5_CASE");
             const result={name:name,loaded:name==="Compile"?root.compiled.every(c=>c.status===Component.Ready):name==="Toast"?!!root.toastScope:loader.status===Loader.Ready,actions:0};
             if(name==="Toast")result.toastHeight=root.toastScope?.renderItem.children.find(c=>c.modelData!==undefined)?.height??0;
-            if(name==="Tray")result.pageLoaded=!!loader.item?.popupWindow?.appletItem;
+            if(name==="Tray") {
+                result.pageLoaded=!!loader.item?.popupWindow?.appletItem;
+                const opener=root.findText(loader.item,"Notifications");
+                if(opener)driver.mouseClick(opener,opener.width/2,opener.height/2);
+                driver.wait(80);
+                result.secondClickCloses=!!opener&&!TrayPort.TrayState.expanded;
+                if(opener)driver.mouseClick(opener,opener.width/2,opener.height/2);
+                driver.wait(80);
+                driver.keyClick(Qt.Key_Escape);driver.wait(80);
+                result.escapeCloses=!TrayPort.TrayState.expanded;
+            }
             if(loader.item) {
                 if(name==="Bluetooth") { const b=root.findText(loader.item,"Connect");if(b){const pos=b.mapToItem(loader.item,b.width/2,b.height/2);driver.mouseClick(loader.item,pos.x,pos.y);driver.wait(80);}result.control=!!b;result.actions=root.actions;result.discovery=adapter.discovering; }
                 if(name==="Notifications") { const b=root.findText(loader.item,"Test action");if(b){const pos=b.mapToItem(loader.item,b.width/2,b.height/2);driver.mouseClick(loader.item,pos.x,pos.y);driver.wait(80);}result.control=!!b;result.actions=root.actions; }
@@ -172,7 +182,11 @@ class AppletUiTests(unittest.TestCase):
         self.assertIsNotNone(result,output)
         self.assertTrue(result['loaded'],output)
         return result
-    def test_tray_status_notifier_adapter(self):self.assertTrue(self.run_case('Tray','tray/SystemTray.qml')['pageLoaded'])
+    def test_tray_status_notifier_adapter(self):
+        result=self.run_case('Tray','tray/SystemTray.qml')
+        self.assertTrue(result['pageLoaded'])
+        self.assertTrue(result['secondClickCloses'])
+        self.assertTrue(result['escapeCloses'])
     def test_toast_without_extra_notification_server(self):self.assertGreater(self.run_case("Toast","applets/NotificationPopups.qml")["toastHeight"],0)
     def test_panel_and_ipc_controller_compile(self):self.run_case("Compile","panel/Panel.qml")
     def test_audio(self):self.run_case('Audio','applets/audio/AudioApplet.qml')

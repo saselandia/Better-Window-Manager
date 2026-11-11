@@ -1,0 +1,5 @@
+module qs.modules.plasma.skinPicker
+singleton Palette 1.0 Palette.qml
+SkinPicker 1.0 SkinPicker.qml
+PickerWindow 1.0 PickerWindow.qml
+PickerHeader 1.0 PickerHeader.qml

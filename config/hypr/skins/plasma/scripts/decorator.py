@@ -51,6 +51,8 @@ def start() -> int:
 
 
 def run() -> int:
+    # Hyprland workers can inherit blocked signals; the Qt child must accept SIGTERM.
+    signal.pthread_sigmask(signal.SIG_SETMASK, [])
     fd = os.open(SUPERVISOR_LOCK, os.O_RDWR | os.O_CREAT | os.O_CLOEXEC, 0o600)
     try:
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -60,21 +62,32 @@ def run() -> int:
     os.write(fd, str(os.getpid()).encode())
     child: subprocess.Popen | None = None
 
+    stopping = False
+    stop_deadline = 0.0
     def terminate(*_):
-        if child and child.poll() is None:
-            child.terminate()
-            try:
-                child.wait(5)
-            except subprocess.TimeoutExpired:
-                child.kill()
-        sys.exit(0)
+        nonlocal stopping, stop_deadline
+        stopping = True
+        stop_deadline = time.monotonic() + 1
+        # Never wait()/poll() in a signal handler: it can interrupt Popen.wait while
+        # its waitpid lock is held and deadlock against the same thread for 5 seconds.
+        if child:
+            try: child.terminate()
+            except ProcessLookupError: pass
 
     signal.signal(signal.SIGTERM, terminate)
     signal.signal(signal.SIGINT, terminate)
     crashes: list[float] = []
     while active_skin() == "plasma" and BINARY.is_file():
         child = subprocess.Popen([str(BINARY), "--socket", str(SOCKET)])
-        code = child.wait()
+        while True:
+            try:
+                code = child.wait(timeout=0.2)
+                break
+            except subprocess.TimeoutExpired:
+                if stopping and time.monotonic() >= stop_deadline:
+                    child.kill()
+        if stopping:
+            return 0
         if code in (0, 3):  # salida limpia u otra instancia ya en marcha
             break
         now = time.monotonic()
@@ -116,7 +129,7 @@ def stop() -> int:
     if pid:
         os.kill(pid, signal.SIGTERM)
         for _ in range(100):
-            if not Path(f"/proc/{pid}").exists():
+            if _supervisor_pid() != pid:
                 break
             time.sleep(0.05)
     return 0

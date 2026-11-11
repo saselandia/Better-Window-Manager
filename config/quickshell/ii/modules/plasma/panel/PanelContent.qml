@@ -58,8 +58,9 @@ Item {
     Component {
         id:kickoffComponent
         PC3.ToolButton {
-            implicitWidth:40; implicitHeight:40
-            icon.name:Config.options.bar.plasma.kickoff?.icon || "start-here-kde-symbolic"
+            implicitWidth:44; implicitHeight:40
+            icon.width:32;icon.height:32
+            icon.name:Config.options.bar.plasma.kickoff?.icon || "start-here-kde"
             checked:GlobalStates.plasmaKickoffOpen
             // F4: el Kickoff portado (modules/plasma/kickoff) se abre junto a este botón, como el plasmoide
             onClicked: {
@@ -136,7 +137,7 @@ Item {
         id:desktopComponent
         PC3.ToolButton {
             implicitWidth:root.vertical?32:20; implicitHeight:root.vertical?20:32
-            icon.name:"user-desktop"; onClicked:PanelLocal.DesktopState.toggle()
+            icon.name:"user-desktop";icon.width:20;icon.height:20; onClicked:PanelLocal.DesktopState.toggle()
         }
     }
 }

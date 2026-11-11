@@ -109,7 +109,7 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 * **Tema original:** `PlasmaTheme` y `plasma_palette.py` leen la cascada KDE
   XDG_CONFIG_DIRS → kdedefaults → archivos locales; cambios en vivo. `plasma-theme.py`
   aplica esquemas/estilos/iconos/temas globales y sincroniza las plantillas comunes de apps.
-  Cursor, Kelvin, pantallas y demás configuración común siguen bajo autoridad de BWM.
+  Cursor, Kelvin, pantallas y demás configuración común siguen bajo autoridad de BWM. La fuente general predeterminada es Noto Sans 10 y la monoespaciada Hack; fuentes propias de Breeze, no compartidas.
 * **Panel/Kickoff/applets:** `modules/plasma/{panel,kickoff,tray,applets}` usan KSvg/PC3 y
   fuentes de datos KDE o servicios comunes. Panel en bar.plasma, cuatro bordes/reserva real,
   seis widgets incluidos. DesktopState gestiona Mostrar escritorio sobre el minimizado común.
@@ -123,7 +123,7 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   bloqueo KDE sobre LockContext. ThemeHost (API 2) aloja QML de temas en motores separados;
   no emula todas las APIs privadas. KRunner nativo en Alt+Espacio sólo Breeze.
 * **Preferencias F11:** `plasmaSettings.qml`/`modules/plasma/settings` con KCM reales mediante
-  org.bwm.kcm. Páginas comunes de BWM para lo compartido. Alt+T abre BWMenu para elegir skin;
+  org.bwm.kcm. Páginas comunes de BWM para lo compartido. Alt+T abre el selector anterior de skins de Breeze (`modules/plasma/skinPicker`);
   los temas globales de Plasma se eligen dentro de Preferencias. KNS descarga a rutas estándar.
 * **Servicios:** único servidor de avisos de BWM, agente polkit KDE en Breeze/Omarchy en Retro.
   bwm-shell-conflicts comprueba al dueño D-Bus. Kded reserva nombres en cola aun con módulos
@@ -1561,6 +1561,44 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
   qmllint con avisos de metadatos/imports, verificación Hyprland correcta. Detalle, limitaciones
   de licencia y lista manual en docs/BREEZE_F13_RESULTS.md. Requisitos/docs actualizados;
   estimación conservadora ~50 % en SKINS y ambos README. No se declara equivalencia total.
+
+### 159. Ajustes tras F13: selector anterior, panel, foco, fuentes y arrastre CSD (2026-11-11)
+
+* **Rapidez:** Breeze → Retro tardaba ~7,7 s. decorator.py esperaba dentro de su manejador
+  SIGTERM, reentrando en Popen.wait con su lock de waitpid tomado: agotaba 5 s aunque el
+  auxiliar ya saliera. El manejador sólo señala y el bucle normal espera con plazo; se limpian
+  señales bloqueadas heredadas. Stop medido ~0,07 s y cambio completo ~2,5–3 s (resta tematizar
+  fondo/apps). Regresión específica y pruebas del supervisor pasan.
+* **Selector pedido por el usuario:** restaurado el aspecto anterior de Alt+T, miniaturas y
+  navegación en modules/plasma/skinPicker, con paleta PlasmaTheme actual y offsets del panel.
+  Sólo se carga en Breeze; conserva IPC plasmaThemePicker. No se recupera plasmaCommon entero.
+  Añadido qmldir explícito al tema; alias Local.Palette evita la colisión con Palette de QtQuick.
+* **Panel:** PanelBackground elimina todos los bordes que tocan pantalla, como PanelView
+  6.7.5 (incluidos laterales en panel completo, no sólo el borde inferior). Los flotantes siguen
+  admitiendo la forma del SVG. Controles en el grupo Complementary y tamaños explícitos 32 px
+  para Kickoff / 22 px para bandeja: iconos visibles con la paleta del panel. Se conservan widgets/tasks
+  y sus prefijos originales. Recortes del selector/panel revisados y eliminados.
+* **Tareas:** TasksModel usa focus de kwin-window.py con dirección+PID; la acción enfoca y eleva
+  explícitamente, sin depender de las peticiones de activación del cliente. Nueva opción --pid
+  impide operar sobre una dirección reutilizada; el foco Lua también comprueba el PID.
+  Mapeadas 10/10 toplevels reales; activar ChatGPT comprobado, foco anterior restaurado.
+* **Menús:** abrir el mismo applet alterna su estado; el grab incluye su panel para que un
+  clic en el botón no lo cierre antes de procesar el toggle. Escape a nivel de aplicación y
+  contenido enfocado. QtTest con el botón real del fixture y Escape cierra, sin cambiar audio/red.
+* **Fuentes:** Noto Sans 10 para interfaz/menú/barra/títulos y Hack para monoespaciada, como
+  fontssettings.kcfg de Plasma 6.7.5. Manifiesto y requisitos actualizados; ambas instaladas.
+  Aplicado sólo a kdeglobals/perfil Breeze, sin tocar bwm/user ni perfiles de otras skins.
+  Verificado Noto Sans 10 en Qt/Kirigami con QApplication+kde; Retro conserva JetBrains Mono NF.
+* **Arrastre de ChatGPT y equivalentes:** es XWayland con Motif sin marco. Hyprland 0.56.2
+  anuncia _NET_WM_MOVERESIZE pero handleClientMessage no lo procesa. CSDDetect escucha el
+  mensaje estándar en el root X11 por su conexión XCB y pide movimiento al compositor sólo
+  con botón izquierdo físicamente pulsado, ventana flotante mapeada bajo el puntero y fuera
+  de fullscreen; cancela sólo su propio gesto. Sin listas de clases ni barra duplicada.
+  Política pura probada; plugin compilado con -fno-gnu-unique e instalado con make install.
+  **Pendiente reiniciar sesión para activar este cambio C++; no se hizo unload/load ni logout.**
+* **Validación:** 374 pruebas generales, 65 opcionales omitidas, sin fallos; 15 pruebas QML de
+  applets activadas, repetida la del toggle/Escape. Verificación de Hyprland, requisitos y logs.
+  Más detalle en docs/BREEZE_PANEL_FIXES.md; las pruebas de CSD no sustituyen el arrastre físico.
 
 ## 4. 📂 Estructura del repositorio
 

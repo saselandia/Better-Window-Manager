@@ -1,9 +1,19 @@
 #include "CSDLogic.hpp"
+#include "CsdMove.hpp"
 #include <cassert>
 #include <array>
 #include <iostream>
 using namespace BwmCsd;
 int main() {
+    assert(acceptMoveRequest(8,1,true,true,true,false,true));
+    assert(!acceptMoveRequest(8,1,false,true,true,false,true));
+    assert(!acceptMoveRequest(8,1,true,true,true,false,false));
+    assert(!acceptMoveRequest(8,1,true,true,true,true,true));
+    assert(!acceptMoveRequest(8,1,true,false,true,false,true));
+    assert(!acceptMoveRequest(8,1,true,true,false,false,true));
+    assert(!acceptMoveRequest(8,3,true,true,true,false,true));
+    assert(!acceptMoveRequest(0,1,true,true,true,false,true));
+
     Input i;assert(!decide(i).bar); // No negotiation: CSD, without any class/title input.
     i.xdg=true;i.applied=Server;assert(decide(i).bar);
     for(uint32_t request:{0u,1u,2u}) {

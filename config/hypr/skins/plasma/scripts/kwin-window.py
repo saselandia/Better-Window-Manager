@@ -284,13 +284,11 @@ def maximize(client: dict, request: str) -> bool:
 
 
 def focus(client: dict):
-    run_lua(f"""(function()
-        local w = hl.get_window("address:{client['address']}")
-        if not w then return hl.dsp.no_op() end
-        pcall(function() hl.dispatch(hl.dsp.window.alter_zorder({{ mode = "top", window = w }})) end)
-        hl.dispatch(hl.dsp.focus({{ window = w }}))
-        return hl.dsp.no_op()
-    end)()""")
+    run_lua(window_lua(client, """
+        hl.dispatch(hl.dsp.focus({ window = w }))
+        hl.dispatch(hl.dsp.window.bring_to_top({ window = w }))
+        hl.dispatch(hl.dsp.window.alter_zorder({ mode = "top", window = w }))
+    """))
 
 
 def has_tag(client: dict, tag: str) -> bool:
@@ -356,13 +354,14 @@ def open_rules(client: dict, kind: str):
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--pid", type=int, help="Expected process for a panel task")
     sub = parser.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("maximize")
     p.add_argument("--mode", choices=["toggle", "full", "vertical", "horizontal", "restore"], default="toggle")
     p.add_argument("address", nargs="?")
     for name in ("minimize", "toggle-minimize", "state"):
         sub.add_parser(name).add_argument("address", nargs="?")
-    for name in ("unminimize", "activate"):
+    for name in ("unminimize", "activate", "focus"):
         sub.add_parser(name).add_argument("address")
     sub.add_parser("show-desktop").add_argument("leave", nargs="?", choices=["leave"])
     for name in ("menu", "fullscreen", "no-border", "no-capture", "pin", "close"):
@@ -388,7 +387,7 @@ def main(argv=None) -> int:
         return 0
 
     client = find_client(getattr(args, "address", None))
-    if not client:
+    if not client or (args.pid is not None and client.get("pid") != args.pid):
         return 1
     if args.cmd == "maximize":
         maximize(client, args.mode)
@@ -399,6 +398,11 @@ def main(argv=None) -> int:
     elif args.cmd == "toggle-minimize":
         tm = minimizer()
         tm.restore_win(client) if tm.is_minimized(client) else tm.minimize_win(client)
+    elif args.cmd == "focus":
+        if minimizer().is_minimized(client):
+            minimizer().restore_win(client)
+        else:
+            focus(client)
     elif args.cmd == "activate":
         # Como la barra de tareas de Plasma: minimizada → restaurar; activa → minimizar; otra → enfocar
         tm = minimizer()

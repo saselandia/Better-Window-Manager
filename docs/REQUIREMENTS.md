@@ -245,6 +245,8 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | KRunner | Alt+Espacio nativo de Plasma, aplicaciones, cálculo y comandos, sin plasmashell | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | `plasma6-workspace` | `plasma-workspace` |
 | Resultados de KRunner | Interfaz nativa de Plasma en Breeze (F12) | `kde-plasma/milou` | `milou` | `milou` | `milou6` | `milou` |
 | Componentes de sesión de Breeze | Interfaz nativa de Plasma en Breeze (F12) | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | `plasma6-workspace` | `plasma-workspace` |
+| Noto Sans | Fuente general original de KDE Plasma (10 pt) | `media-fonts/noto` | `noto-fonts` | `google-noto-sans-fonts` | `google-noto-sans-fonts` | `fonts-noto-core` |
+| Hack | Fuente monoespaciada predeterminada de KDE Plasma | `media-fonts/hack` | `ttf-hack` | `source-foundry-hack-fonts` | `hack-fonts` | `fonts-hack` |
 
 **Recomendado:**
 

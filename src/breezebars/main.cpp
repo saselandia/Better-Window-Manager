@@ -35,6 +35,7 @@
 
 #include "barDeco.hpp"
 #include "CSDDetect.hpp"
+#include "CsdMove.hpp"
 #include "SquareTop.hpp"
 #include "KWinSnap.hpp"
 #include <hyprland/src/xwayland/XWayland.hpp>
@@ -368,6 +369,37 @@ static PHLWINDOWREF s_pNativeDraggedWindow;
 static bool         s_bHasLastDraggedBox = false;
 static CBox         s_lastDraggedBox;
 
+static bool s_leftHeld = false;
+
+// Electron/GTK XWayland request a move via EWMH. Hyprland 0.56.2 advertises this
+// atom but ignores its ClientMessage. Honor it without forcing an extra SSD bar.
+void handleClientMoveResize(PHLWINDOW window, uint32_t direction, uint32_t button) {
+    if (!g_pGlobalState || !g_pGlobalState->config.enabled->value() || !window || !g_layoutManager)
+        return;
+    if (direction == 11) { // _NET_WM_MOVERESIZE_CANCEL: only cancel this window's drag.
+        auto target = g_layoutManager->dragController()->target();
+        if (target && target->window() == window && s_pNativeDraggedWindow.lock() == window) {
+            g_layoutManager->endDragTarget();
+            s_pNativeDraggedWindow.reset();
+            hideSnapPreview();
+        }
+        return;
+    }
+    auto hit = Desktop::CViewHitTester{*Desktop::viewState()}.windowAt(
+        g_pInputManager->getMouseCoordsInternal(), Desktop::View::RESERVED_EXTENTS | Desktop::View::INPUT_EXTENTS | Desktop::View::ALLOW_FLOATING);
+    if (!BwmCsd::acceptMoveRequest(direction, button, s_leftHeld, Desktop::View::validMapped(window),
+                                  window->m_isFloating, Fullscreen::controller()->isFullscreen(window), hit == window))
+        return;
+    if (g_layoutManager->dragController()->target())
+        return; // A native Wayland/SSD move already owns this gesture.
+    Desktop::focusState()->fullWindowFocus(window, Desktop::FOCUS_REASON_CLICK);
+    Desktop::windowState()->raise(window);
+    clearSnapTags(window);
+    window->updateWindowData();
+    s_pNativeDraggedWindow = window;
+    g_layoutManager->beginDragTarget(window->layoutTarget(), MBIND_MOVE);
+}
+
 static void onGlobalMouseMove(const Vector2D& coords) {
     const Vector2D mousePos = g_pInputManager->getMouseCoordsInternal();
 
@@ -458,6 +490,7 @@ static std::string interactiveCommand(eHyprCtlOutputFormat, std::string request)
 }
 
 static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent e) {
+    if (e.button == BTN_LEFT) s_leftHeld = e.state == WL_POINTER_BUTTON_STATE_PRESSED;
     if(e.state==WL_POINTER_BUTTON_STATE_RELEASED)syncAdjacentResize(true);
     else recordPressFrames();
     if (s_interactiveDrag || s_swallowRelease) {

@@ -42,12 +42,12 @@
     "alwaysShowNumbers": true
   },
   "fonts": {
-    "main": "Google Sans Flex",
-    "numbers": "Google Sans Flex",
-    "title": "Google Sans Flex",
-    "monospace": "JetBrains Mono NF",
-    "reading": "Readex Pro",
-    "expressive": "Space Grotesk",
+    "main": "Noto Sans",
+    "numbers": "Noto Sans",
+    "title": "Noto Sans",
+    "monospace": "Hack",
+    "reading": "Noto Sans",
+    "expressive": "Noto Sans",
     "iconNerd": "JetBrains Mono NF"
   },
   "hooks": {
@@ -67,7 +67,8 @@
       "config/quickshell/ii/modules/plasma/switcher",
       "config/quickshell/ii/modules/plasma/osd",
       "config/quickshell/ii/modules/plasma/lock",
-      "config/quickshell/ii/modules/plasma/runtime"
+      "config/quickshell/ii/modules/plasma/runtime",
+      "config/quickshell/ii/modules/plasma/skinPicker"
     ],
     "hyprland": [
       "config/hypr/modules/plasma_colors.lua",
@@ -118,7 +119,9 @@
     "polkit-kde-agent",
     "krunner",
     "milou",
-    "breeze-components"
+    "breeze-components",
+    "font-noto-sans",
+    "font-hack"
   ],
   "recommends": [
     "gio",

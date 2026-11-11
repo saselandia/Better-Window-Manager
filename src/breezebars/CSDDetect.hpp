@@ -14,3 +14,6 @@ SDecoDetection detectDecorations(PHLWINDOW w);
 void initDecorationDetection();
 void refreshDecorationDetection();
 void closeDecorationDetection();
+
+// Standard X11 interactive move request, handled by the compositor side of Breeze.
+void handleClientMoveResize(PHLWINDOW w, uint32_t direction, uint32_t button);

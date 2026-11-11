@@ -6,6 +6,7 @@ import Quickshell.Io
 import qs
 import qs.services
 import qs.modules.common
+import org.kde.kirigami as Kirigami
 import qs.modules.plasma.menus
 import qs.modules.plasma.tray as PlasmaTray
 import "PanelLogic.js" as Logic
@@ -69,6 +70,8 @@ Scope {
             Timer { id:closeDelay; interval:500; onTriggered:if(!panelHover.hovered) win.revealed=false }
             Item {
                 id:panel
+                Kirigami.Theme.colorSet:Kirigami.Theme.Complementary
+                Kirigami.Theme.inherit:false
                 visible:!win.geo.hidden
                 x:win.vertical?(win.geo.edge==="left"?win.geo.gap:win.shadowPad):win.geo.start
                 y:win.vertical?win.geo.start:(win.geo.edge==="top"?win.geo.gap:win.shadowPad)
@@ -83,6 +86,9 @@ Scope {
                 PanelBackground {
                     id:background; anchors.fill:parent
                     edge:win.geo.edge; floating:win.geo.gap>0; touchingWindow:win.touching
+                    touchesLeft:win.geo.x<=0;touchesTop:win.geo.y<=0
+                    touchesRight:win.geo.x+win.geo.width>=win.screen.width
+                    touchesBottom:win.geo.y+win.geo.height>=win.screen.height
                     opacityMode:win.config.style==="floating"?"adaptive":win.config.style
                 }
                 PanelContent {
