@@ -459,6 +459,7 @@ static std::string interactiveCommand(eHyprCtlOutputFormat, std::string request)
 
 static void onGlobalMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent e) {
     if(e.state==WL_POINTER_BUTTON_STATE_RELEASED)syncAdjacentResize(true);
+    else recordPressFrames();
     if (s_interactiveDrag || s_swallowRelease) {
         if (s_interactiveDrag && e.state == WL_POINTER_BUTTON_STATE_PRESSED) {
             if (g_layoutManager->dragController()->target())
@@ -755,6 +756,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 
 APICALL EXPORT void PLUGIN_EXIT() {
     g_kwinAfterInput.reset();
+    stopInnerDwellTimer();
     g_pDecoClient.reset();
     clearDecorationToolTip();
     hideSnapPreview();

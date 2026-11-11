@@ -54,6 +54,16 @@ def monitor_box(mon: dict) -> tuple:
     return mon["x"], mon["y"], int(w), int(h)
 
 
+def monitor_matches(mon: dict, selector: str) -> bool:
+    """¿Es `selector` («desc:…» o el nombre) este monitor? Hyprland guarda dos descripciones: la
+    de hyprctl (m_shortDescription) y otra con el conector al final, «… (DP-2)» (m_description),
+    que es la que mandaba breezebars hasta F10; se aceptan las dos."""
+    desc = mon.get("description") or ""
+    name = mon.get("name") or ""
+    return bool(selector) and (selector == name or (bool(desc) and selector in
+                                                   ("desc:" + desc, f"desc:{desc} ({name})")))
+
+
 def monitor_for(at, size, monitors: list):
     """El monitor que contiene el centro de la ventana (o el primero)."""
     cx, cy = at[0] + size[0] / 2, at[1] + size[1] / 2

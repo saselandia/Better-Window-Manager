@@ -175,7 +175,8 @@ def main(argv=None):
     mon_id = target_win.get("monitor")
     target_mon = None
     if args.monitor:
-        target_mon = next((m for m in monitors if "desc:" + m.get("description", "") == args.monitor), None)
+        from bwm_windows import monitor_matches
+        target_mon = next((m for m in monitors if monitor_matches(m, args.monitor)), None)
         if target_mon is None:
             parser.error("El monitor de la previsualización ya no está conectado")
     elif edge:

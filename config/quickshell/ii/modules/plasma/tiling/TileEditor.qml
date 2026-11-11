@@ -56,6 +56,8 @@ Scope {
         implicitWidth: 960
         implicitHeight: 650
         color: Kirigami.Theme.backgroundColor
+        // Esc cancela sin guardar, como el editor de mosaico de KWin
+        Shortcut { sequences: [StandardKey.Cancel]; enabled: win.visible; onActivated: root.opened = false }
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: Kirigami.Units.largeSpacing

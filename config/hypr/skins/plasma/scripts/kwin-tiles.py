@@ -56,16 +56,19 @@ def main(argv=None):
         subprocess.run(['qs','-c','ii','ipc','call','plasmaTiles','open']);return 0
     kw=module('bwm_tiles_window','kwin-window.py')
     if args.action=='apply':
-        c=kw.find_client(args.address);monitor=next((m for m in kw.hypr_json('monitors') or [] if 'desc:'+m.get('description','')==args.monitor),None)
+        from bwm_windows import monitor_matches
+        c=kw.find_client(args.address);monitor=next((m for m in kw.hypr_json('monitors') or [] if monitor_matches(m,args.monitor)),None)
         if not c or c.get('pid')!=args.pid or not monitor:return 1
         # Plugin may outlive a skin switch; never snap other skins from an old queued command.
         theme=kw.hypr_json('getoption','plugin:breezebars:enabled')
-        if not isinstance(theme,dict) or not theme.get('int'):return 1
+        # Hyprland 0.56 reports plugin booleans as {"bool": ...}; older builds used {"int": ...}.
+        if not isinstance(theme,dict) or not (theme.get('bool') or theme.get('int')):return 1
         return 0 if apply_frame(kw,c,monitor,[float(v) for v in args.frame.split(',')],args.direction) else 1
     bridge=module('bwm_tiles_bridge','kde-config-bridge.py')
     if args.action=='inspect':
         monitors=kw.hypr_json('monitors') or [];active=kw.hypr_json('activeworkspace') or {}
-        mon=next((m for m in monitors if 'desc:'+m.get('description','')==args.monitor),None) if args.monitor else next((m for m in monitors if m['id']==active.get('monitorID')),None)
+        from bwm_windows import monitor_matches
+        mon=next((m for m in monitors if monitor_matches(m,args.monitor)),None) if args.monitor else next((m for m in monitors if m['id']==active.get('monitorID')),None)
         if not mon:mon=next(iter(monitors),None)
         if not mon:return 1
         ws=mon.get('activeWorkspace',{}).get('id',1)

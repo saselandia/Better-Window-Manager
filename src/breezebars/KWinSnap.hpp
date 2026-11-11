@@ -4,6 +4,7 @@
 #include "SnapGeometry.hpp"
 #include "CSDDetect.hpp"
 #include <hyprland/src/managers/eventLoop/EventLoopManager.hpp>
+#include <hyprland/src/managers/eventLoop/EventLoopTimer.hpp>
 #include "BarPassElement.hpp"
 #include <hyprland/src/desktop/state/WindowState.hpp>
 #include <hyprland/src/desktop/state/ViewState.hpp>
@@ -147,6 +148,7 @@ struct SSnapTarget {
     std::string direction;
     CBox box;
     PHLMONITOR monitor;
+    bool inner=false; // edge shared with another output: KWin waits 250 ms before tiling
 };
 // Release consumes the displayed target, including its monitor and modifier-selected tile.
 inline std::optional<SSnapTarget> g_kwinDisplayedTarget;
@@ -197,6 +199,15 @@ inline void applyKWinMagnet(PHLWINDOW w,Vector2D pointer) {
 }
 inline PHLWINDOWREF g_kwinResizeWindow;
 inline BwmSnap::Rect g_kwinResizeBefore;
+// Frames of the snapped windows when the button went down: the first resize step happens before
+// the first sync sees the window, and starting from that frame lost the step (a lasting gap).
+inline std::unordered_map<uintptr_t,BwmSnap::Rect> g_kwinPressFrames;
+inline void recordPressFrames() {
+    g_kwinPressFrames.clear();
+    for(auto& w:Desktop::windowState()->windows())
+        if(Desktop::View::validMapped(w)&&w->m_ruleApplicator&&w->m_ruleApplicator->m_tagKeeper.isTagged("snapped"))
+            g_kwinPressFrames[(uintptr_t)w.get()]=snapFrame(w);
+}
 inline void syncAdjacentResize(bool final=false) {
     const auto& drag=g_layoutManager->dragController();
     if(!g_pGlobalState->config.enabled->value()){g_kwinResizeWindow.reset();return;}
@@ -204,7 +215,12 @@ inline void syncAdjacentResize(bool final=false) {
     auto w=final?g_kwinResizeWindow.lock():drag->target()->window();if(!Desktop::View::validMapped(w))return;
     if(!w->m_ruleApplicator||!w->m_ruleApplicator->m_tagKeeper.isTagged("snapped")){g_kwinResizeWindow.reset();return;}
     auto after=snapFrame(w);
-    if(g_kwinResizeWindow.lock()!=w){g_kwinResizeWindow=w;g_kwinResizeBefore=after;return;}
+    if(g_kwinResizeWindow.lock()!=w) {
+        g_kwinResizeWindow=w;
+        auto pressed=g_kwinPressFrames.find((uintptr_t)w.get());
+        g_kwinResizeBefore=pressed!=g_kwinPressFrames.end()?pressed->second:after;
+        if(pressed==g_kwinPressFrames.end())return;
+    }
     auto before=g_kwinResizeBefore;
     if(std::abs(before.w-after.w)<.01&&std::abs(before.h-after.h)<.01)return;
     std::vector<std::pair<PHLWINDOW,BwmSnap::Rect>> changes;
@@ -227,6 +243,7 @@ inline void syncAdjacentResize(bool final=false) {
     }
     for(auto& [other,frame]:changes)setSnapFrame(other,frame);
     g_kwinResizeBefore=after;
+    if(final){g_kwinResizeWindow.reset();g_kwinPressFrames.clear();}
 }
 inline UP<SEventLoopDoLaterLock> g_kwinAfterInput;
 inline void queueKWinAfterInput(PHLWINDOW moving) {
@@ -255,7 +272,7 @@ inline std::optional<SSnapTarget> getSnapTarget(const Vector2D& mousePos) {
         auto workspace=monitor->m_activeWorkspace;
         for(size_t i=0;i<g_kwinCustomTiles.size();++i) {
             auto& tile=g_kwinCustomTiles[i];
-            if(tile.description!=monitor->m_description||!workspace||tile.workspace!=workspace->m_id)continue;
+            if(tile.description!=monitor->m_shortDescription||!workspace||tile.workspace!=workspace->m_id)continue;
             auto r=BwmSnap::padded(tile.rect,area,0);
             if(mousePos.x>=r.x&&mousePos.x<=r.right()&&mousePos.y>=r.y&&mousePos.y<=r.bottom()) {
                 auto f=BwmSnap::padded(tile.rect,area,tile.padding);
@@ -265,13 +282,51 @@ inline std::optional<SSnapTarget> getSnapTarget(const Vector2D& mousePos) {
         return {};
     }
     if(!g_kwinQuickTile&&!g_kwinMaximize)return {};
-    auto target=BwmSnap::edge({mousePos.x,mousePos.y},{monitor->m_position.x,monitor->m_position.y,monitor->m_size.x,monitor->m_size.y},area,10,g_kwinCornerRatio);
-    if(!target||(target->direction=="maximize"?!g_kwinMaximize:!g_kwinQuickTile))return {};
+    std::vector<BwmSnap::Rect> others;
+    for(auto& m:State::monitorState()->monitors())
+        if(m&&m!=monitor&&m->m_enabled)others.push_back({m->m_position.x,m->m_position.y,m->m_size.x,m->m_size.y});
+    auto target=BwmSnap::edge({mousePos.x,mousePos.y},area,others,g_kwinCornerRatio,g_kwinQuickTile,g_kwinMaximize);
+    if(!target)return {};
     auto r=target->frame;
-    return SSnapTarget{target->direction,CBox{r.x,r.y,r.w,r.h},monitor};
+    return SSnapTarget{target->direction,CBox{r.x,r.y,r.w,r.h},monitor,target->inner};
 }
 inline std::string snapQuote(const std::string& text) {
     std::string out="'";for(char c:text)out+=c=='\''?"'\\''":std::string(1,c);return out+"'";
+}
+// Inner edges (shared by two outputs) only tile after the pointer rests 250 ms, as KWin's
+// m_electricMaximizingDelay; a timer re-evaluates so the outline appears without more motion.
+inline std::string g_kwinInnerKey;
+inline Time::steady_tp g_kwinInnerSince;
+inline PHLWINDOWREF g_kwinInnerWindow;
+inline SP<CEventLoopTimer> g_kwinInnerTimer;
+inline void updateSnapPreview(const Vector2D& mousePos,PHLWINDOW window);
+inline void resetInnerDwell() {
+    g_kwinInnerKey.clear();g_kwinInnerWindow.reset();
+    if(g_kwinInnerTimer)g_kwinInnerTimer->updateTimeout(std::nullopt);
+}
+inline bool innerDwellDone(const SSnapTarget& t,PHLWINDOW window) {
+    const auto key=t.direction+"@"+(t.monitor?t.monitor->m_name:std::string());
+    const auto now=Time::steadyNow();
+    if(key!=g_kwinInnerKey||g_kwinInnerWindow.lock()!=window) {
+        g_kwinInnerKey=key;g_kwinInnerSince=now;g_kwinInnerWindow=window;
+        if(!g_kwinInnerTimer) {
+            g_kwinInnerTimer=makeShared<CEventLoopTimer>(std::nullopt,[](SP<CEventLoopTimer>,void*){
+                // Only while that window is still being moved (no outline after a release/cancel)
+                auto w=g_kwinInnerWindow.lock();
+                auto dragged=g_layoutManager&&g_layoutManager->dragController()?g_layoutManager->dragController()->target():nullptr;
+                if(w&&!g_kwinInnerKey.empty()&&dragged&&dragged==w->layoutTarget())
+                    updateSnapPreview(g_pInputManager->getMouseCoordsInternal(),w);
+            },nullptr);
+            g_pEventLoopManager->addTimer(g_kwinInnerTimer);
+        }
+        g_kwinInnerTimer->updateTimeout(std::chrono::milliseconds(260));
+        return false;
+    }
+    return now-g_kwinInnerSince>=std::chrono::milliseconds(250);
+}
+inline void stopInnerDwellTimer() {
+    if(g_kwinInnerTimer){g_kwinInnerTimer->cancel();g_pEventLoopManager->removeTimer(g_kwinInnerTimer);g_kwinInnerTimer.reset();}
+    g_kwinInnerKey.clear();g_kwinInnerWindow.reset();
 }
 inline uint64_t g_kwinOutlineSequence=0;
 inline void outline(const std::optional<SSnapTarget>& target) {
@@ -304,6 +359,8 @@ inline void updateSnapPreview(const Vector2D& mousePos,PHLWINDOW window) {
 
     auto target = getSnapTarget(mousePos);
     if(target&&window&&!fitsSnap(window,{target->box.x,target->box.y,target->box.w,target->box.h}))target.reset();
+    if(target&&target->inner&&!innerDwellDone(*target,window))target.reset();
+    else if(!target||!target->inner)resetInnerDwell();
     g_kwinDisplayedTarget=target;g_kwinPreviewWindow=window;
     if (target.has_value() && target->monitor) {
         auto pOldMon   = g_snapPreviewMonitor.lock();
@@ -355,14 +412,14 @@ inline void checkAndTriggerEdgeSnap(PHLWINDOW pWindow, const Vector2D& mousePos)
             return;
         }
         std::string cmd = snapQuote(std::string(home) + "/.config/hypr/skins/plasma/scripts/kwin-tiles.py") + " apply "
-            + snapQuote(addr) + " --monitor " + snapQuote("desc:" + target->monitor->m_description)
+            + snapQuote(addr) + " --monitor " + snapQuote("desc:" + target->monitor->m_shortDescription)
             + " --direction " + target->direction + " --frame "
             + snapQuote(std::format("{},{},{},{}",target->box.x,target->box.y,target->box.w,target->box.h));
         if (pWindow->getPID() > 0)
             cmd += " --pid " + std::to_string(pWindow->getPID());
         Config::Supplementary::executor()->spawn(cmd);
     }
-    clearKWinTarget();hideSnapPreview();
+    clearKWinTarget();resetInnerDwell();hideSnapPreview();
 }
 
 // The outline is painted by KSvg in the Breeze shell; no hard-coded GL preview remains.

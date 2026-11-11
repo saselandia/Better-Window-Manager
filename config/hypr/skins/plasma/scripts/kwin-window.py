@@ -315,7 +315,8 @@ def toggle_tag(client: dict, tag: str):
 def to_screen(client: dict, monitor: str):
     """Mover a otra pantalla conservando la posición relativa (como KWin sendToOutput)."""
     monitors = hypr_json("monitors") or []
-    target = next((m for m in monitors if "desc:" + m.get("description", "") == monitor or m.get("name") == monitor), None)
+    from bwm_windows import monitor_matches
+    target = next((m for m in monitors if monitor_matches(m, monitor)), None)
     source = next((m for m in monitors if m.get("id") == client.get("monitor")), None)
     if not target or not source or target is source:
         return

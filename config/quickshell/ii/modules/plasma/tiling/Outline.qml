@@ -48,7 +48,8 @@ Scope {
             readonly property real ox: monitor?.x ?? 0
             readonly property real oy: monitor?.y ?? 0
             screen: modelData
-            visible: root.active && !!g && !!monitor && g.x<ox+width && g.x+g.width>ox && g.y<oy+height && g.y+g.height>oy
+            // Tamaño de la pantalla, no el de la ventana: éste depende de visible (bucle de enlace)
+            visible: root.active && !!g && !!monitor && g.x<ox+modelData.width && g.x+g.width>ox && g.y<oy+modelData.height && g.y+g.height>oy
             anchors { top:true; bottom:true; left:true; right:true }
             color: "transparent"
             mask: Region {}

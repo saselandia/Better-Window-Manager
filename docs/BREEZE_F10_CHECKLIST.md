@@ -74,3 +74,24 @@ KDE, maximizar/restaurar, cerrar, recargar, encajar, minimizar, «sin barra» y 
 funcionan sin caídas; la versión anterior, compilada aparte, reproduce el aborto de los informes.
 Detalle en `BWM_CONTEXT.md` §3.151. **Sigue pendiente** el inicio de sesión normal y esta lista
 completa con el ratón.
+
+### Pruebas con ratón y teclado virtuales en la sesión real (2026-11-11)
+
+Sesión normal con `breezebars` corregido cargado; Breeze activado con el gestor y ratón/teclado
+virtuales (uinput) mientras el usuario no tocaba el equipo. Detalle en `BWM_CONTEXT.md` §3.153.
+
+* **Funciona:** decoración KDE y colocación (punto 1 y F7); contorno KSvg durante el arrastre y fuera
+  al soltar (2); tras los arreglos de abajo, encaje a mitades, cuartos y maximizado en los dos
+  monitores con el marco exacto del contorno (3); Ctrl+flechas con su ciclo (4); imán entre ventanas
+  (5); la vecina conserva su borde lejano al redimensionar el borde compartido (6); Meta+T abre el
+  editor con la distribución de KWin y Cancelar no escribe nada (7); regla de prueba con posición,
+  tamaño forzado, sin borde y opacidad, «Recordar» al cerrar y abrir, y orden/«No afectar» (9–10);
+  vuelta a Retro sin barras, auxiliar, puente, contorno, etiquetas ni opacidad de Breeze (12).
+* **Corregido:** al soltar no encajaba nunca (`kwin-tiles.py` leía `int` en vez de `bool` y no
+  aceptaba la descripción larga «… (DP-2)» que manda el plugin); Esc no cerraba el editor; bucle de
+  enlace en el contorno; en el plugin (para el próximo inicio de sesión): zonas como KWin 6.7.5
+  (sólo bordes laterales y superior, borde interior con 250 ms), primer paso perdido al redimensionar
+  vecinas (hueco de 2–3 px) y descripción corta del monitor para Mayús+arrastre.
+* **Pendiente:** con el plugin nuevo tras iniciar sesión: el hueco del borde compartido, bordes
+  interiores y Mayús+arrastre (8); otro estilo de Plasma (2); escala fraccionaria; apps XWayland con
+  rol/tipo (11); dividir/unir y aplicar en el editor (7); valores de las zonas en kwinrc (5).

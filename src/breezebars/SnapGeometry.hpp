@@ -9,7 +9,7 @@
 namespace BwmSnap {
 struct Rect { double x=0,y=0,w=0,h=0; double right()const{return x+w;} double bottom()const{return y+h;} };
 struct Point {double x,y;};
-struct Target { std::string direction; Rect frame; };
+struct Target { std::string direction; Rect frame; bool inner=false; };
 struct Zones { double border=10,window=10,center=0; bool overlapOnly=false; };
 inline bool overlaps(double a,double b,double c,double d){return a<=d&&c<=b;}
 inline Rect tile(Rect area,const std::string& direction) {
@@ -22,24 +22,29 @@ inline Rect tile(Rect area,const std::string& direction) {
     if(direction.find("bottom")!=std::string::npos){result.y+=h;result.h=area.h-h;}
     return result;
 }
-inline std::optional<Target> edge(Point p,Rect monitor,Rect area,double threshold=10,double cornerRatio=.25) {
-    // All four reserved edges matter. Edge activation includes a panel strip at that edge.
-    bool left=p.x<=area.x+threshold,right=p.x>=area.right()-threshold;
-    bool top=p.y<=area.y+threshold,bottom=p.y>=area.bottom()-threshold;
-    if(!left&&!right&&!top&&!bottom)return {};
-    std::string d;
-    if(top||bottom) {
-        auto c=std::clamp(cornerRatio,0.,.5)*monitor.w;
-        if(left||p.x<monitor.x+c)d=top?"top-left":"bottom-left";
-        else if(right||p.x>monitor.right()-c)d=top?"top-right":"bottom-right";
-        else d=top?"maximize":"bottom";
-    } else {
-        auto c=std::clamp(cornerRatio,0.,.5)*monitor.h;
-        if(p.y<monitor.y+c)d=left?"top-left":"top-right";
-        else if(p.y>monitor.bottom()-c)d=left?"bottom-left":"bottom-right";
-        else d=left?"left":"right";
+// KWin 6.7.5 Window::checkQuickTilingMaximizationZones: only the left and right edges of the
+// maximize area quick-tile (20 px), the top of each half becomes a quarter by the corner ratio of
+// the area height, and the top edge (5 px) maximizes. The bottom edge does nothing. An edge shared
+// with another output (`inner`) still tiles, but only after the pointer rests there (250 ms).
+inline bool insideAny(Point p,const std::vector<Rect>& rects) {
+    for(const auto& r:rects)if(p.x>=r.x&&p.x<r.right()&&p.y>=r.y&&p.y<r.bottom())return true;
+    return false;
+}
+inline std::optional<Target> edge(Point p,Rect area,const std::vector<Rect>& otherOutputs={},double cornerRatio=.25,
+                                  bool tiling=true,bool maximize=true) {
+    std::string d;bool inner=false;
+    if(tiling) {
+        if(p.x<=area.x+20){d="left";inner=insideAny({area.x-1,p.y},otherOutputs);}
+        else if(p.x>=area.right()-20){d="right";inner=insideAny({area.right()+1,p.y},otherOutputs);}
     }
-    return Target{d,tile(area,d)};
+    if(!d.empty()) {
+        const double c=std::clamp(cornerRatio,0.,.5)*area.h;
+        if(p.y<=area.y+c)d="top-"+d;
+        else if(p.y>=area.bottom()-c)d="bottom-"+d;
+    } else if(maximize&&p.y<=area.y+5) {
+        d="maximize";inner=insideAny({p.x,area.y-1},otherOutputs);
+    } else return {};
+    return Target{d,tile(area,d),inner};
 }
 inline Rect magnet(Rect frame,Rect area,const std::vector<Rect>& others,Zones zones) {
     auto result=frame;double dx=1e30,dy=1e30;
