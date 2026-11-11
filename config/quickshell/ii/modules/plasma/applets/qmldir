@@ -1,0 +1,6 @@
+ClipboardApplet 1.0 ClipboardApplet.qml
+AppletHost 1.0 AppletHost.qml
+NotificationsApplet 1.0 NotificationsApplet.qml
+NotificationPopups 1.0 NotificationPopups.qml
+PowerApplet 1.0 PowerApplet.qml
+BluetoothApplet 1.0 BluetoothApplet.qml

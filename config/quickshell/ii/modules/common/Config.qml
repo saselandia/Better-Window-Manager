@@ -255,6 +255,8 @@ Singleton {
                     property string alignment: "center" // start | center | end
                     property real length: 1
                     property list<string> widgets: ["kickoff", "tasks", "tray", "clock", "desktop"]
+                    // BWM: Plasma visibility modes by stable SNI/applet ID, own to this skin.
+                    property var trayItems: ({})
                     property list<string> taskOrder: []
                     property bool showDate: true
                     property bool showSeconds: false

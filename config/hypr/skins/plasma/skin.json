@@ -60,15 +60,12 @@
       "config/quickshell/ii/modules/ii/plasmaLock",
       "config/quickshell/ii/modules/plasma/panel",
       "config/quickshell/ii/modules/ii/plasmaCommon",
-      "config/quickshell/ii/modules/ii/plasmaAudio",
-      "config/quickshell/ii/modules/ii/plasmaBluetooth",
-      "config/quickshell/ii/modules/ii/plasmaNetwork",
-      "config/quickshell/ii/modules/ii/plasmaCalendar",
-      "config/quickshell/ii/modules/ii/plasmaNotifications",
       "config/quickshell/ii/modules/ii/plasmaTaskMenu",
       "config/quickshell/ii/modules/ii/plasmaThemePicker",
       "config/quickshell/ii/modules/ii/altTab/PlasmaSwitcher.qml",
-      "config/quickshell/ii/plasmaSettings.qml"
+      "config/quickshell/ii/plasmaSettings.qml",
+      "config/quickshell/ii/modules/plasma/tray",
+      "config/quickshell/ii/modules/plasma/applets"
     ],
     "hyprland": [
       "config/hypr/modules/plasma_colors.lua",
@@ -98,7 +95,12 @@
     "libplasma",
     "kirigami",
     "plasma-workspace",
-    "plasma-clock"
+    "plasma-clock",
+    "plasma-nm",
+    "plasma-pa",
+    "plasma-mpris",
+    "plasma-calendar",
+    "kde-notificationmanager"
   ],
   "recommends": [
     "omacalc",
@@ -115,8 +117,6 @@
     "breeze-decoration",
     "aurorae",
     "systemsettings",
-    "plasma-nm",
-    "plasma-pa",
     "bluez-qt",
     "kvantum",
     "kactivitymanagerd"

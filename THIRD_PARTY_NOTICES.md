@@ -179,3 +179,22 @@ autores. BWM sustituye el anfitrión de Plasma (PlasmoidItem, attached Plasmoid,
 los menús QMenu y las acciones de sesión, sin cambiar los modelos de Kicker. `Plasmoid.qml`,
 `KickoffI18n.qml` y `KickoffWindow.qml` son propios de BWM (GPL-2.0-or-later). Adaptación en el
 README de la carpeta; [texto de licencia](licenses/KDE-GPL-2.0-or-later.txt).
+
+### KDE Plasma: bandeja y applets F5 (2026-11-11)
+
+Fuentes v6.7.5 de invent.kde.org/plasma: plasma-workspace (applets/systemtray, mediacontroller,
+digital-clock, notifications/components y klipper/declarative/qml), plasma-pa (applet y
+src/qml/listitemmenu.cpp), plasma-nm (applet), bluedevil (src/applet/qml) y powerdevil
+(applets/batterymonitor, brightness). Destinos: config/quickshell/ii/modules/plasma/{tray,applets}.
+Los README de esas carpetas identifican cada archivo/grupo, procedencia y cambios BWM; sus
+cabeceras SPDX conservan autores y expresiones completas de licencia. El host se adapta a
+Quickshell, modelos KDE compatibles y servicios comunes BWM, con ports reducidos explícitos.
+No se copian binarios ni se incorporan los demonios de Plasma.
+
+Licencias: systemtray/mediacontroller/PowerDevil LGPL-2.0-or-later; calendario/portapapeles
+GPL-2.0-or-later; plasma-pa y componentes de avisos GPL-2.0-only OR GPL-3.0-only OR
+LicenseRef-KDE-Accepted-GPL; plasma-nm/bluedevil y el menú de dispositivos de audio LGPL-2.1-only
+OR LGPL-3.0-only OR LicenseRef-KDE-Accepted-LGPL. Textos originales y referencias aceptadas
+copiados en licenses/KDE-*.txt. Cada cabecera de archivo prevalece sobre este resumen.
+La fuente correspondiente está incluida en QML adaptado y disponible en los repositorios citados,
+etiqueta v6.7.5; las bibliotecas enlazadas las proporciona la distribución.

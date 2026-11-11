@@ -110,7 +110,7 @@ C++, F10 parte C++) comparten `src/breezebars/`: **nunca dos a la vez**.
 
 ## 4. Prompts
 
-> **Hechas: fases 0–4** (arquitectura en `docs/BREEZE_ARCH.md`; motor de temas, puente de configuración, panel y Kickoff en `BWM_CONTEXT.md` §3.139–142). `docs/BREEZE_ARCH.md` manda sobre lo que digan los
+> **Hechas: fases 0–5** (arquitectura en `docs/BREEZE_ARCH.md`; motor de temas, puente de configuración, panel, Kickoff y applets en `BWM_CONTEXT.md` §3.139–143). `docs/BREEZE_ARCH.md` manda sobre lo que digan los
 > prompts siguientes: lo que cambió está anotado en su §7, y F6 se ha partido en F6a y F6b.
 
 ### F0 · Viabilidad y arquitectura — **[HIGH]**
@@ -239,7 +239,7 @@ configuración, respetando la regla 14 (lo común manda desde BWM) y la 18 (lo d
 > Se eligió bar.plasma. Edición de widgets incluidos; alojar plasmoides externos y el catálogo
 > completo «Añadir widgets» queda pendiente por las dependencias del anfitrión de F0.
 > Insignias/progreso Unity y múltiples zonas horarias necesitan trabajo adicional.
-> F4/F5 conservan temporalmente Kickoff y applets actuales con sus nuevos anclajes.
+> F4/F5 ya sustituyen Kickoff y applets; sus límites se detallan en la arquitectura y sus README.
 
 ```text
 Fase 3 de docs/BREEZE_PLAN.md (lee el plan, su sección 2, docs/BREEZE_ARCH.md y el resultado de F1).
@@ -296,6 +296,11 @@ estilo de Plasma activo.
 ```
 
 ### F5 · Bandeja del sistema y applets
+
+> Implementada con vistas originales y adaptadores (BREEZE_ARCH.md §11). Bluetooth, historial y
+> portapapeles son ports reducidos; se conserva un único servidor BWM. Quedan las opciones avanzadas
+> indicadas en la arquitectura (OBEX, jobs, inline reply, DND programado, edición/QR, agenda y perfiles).
+> No se ejecutaron acciones sobre redes/dispositivos reales; interacción probada con datos simulados.
 
 ```text
 Fase 5 de docs/BREEZE_PLAN.md (lee el plan, su sección 2, docs/BREEZE_ARCH.md, F1 y F3).

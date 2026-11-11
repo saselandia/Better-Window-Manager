@@ -268,3 +268,53 @@ nuevo. Al volver a Retro se restauran el estilo de Plasma y los ajustes del pane
 horarias múltiples, applets portados (F5) y alojamiento de plasmoides de terceros. qmllint se
 ejecuta con avisos por imports virtuales qs.* y metadatos incompletos de Quickshell/KSvg; la carga
 real complementa esta comprobación.
+
+## 11. Fase 5: bandeja y applets (2026-11-11)
+
+Bandeja nueva en modules/plasma/tray y páginas en modules/plasma/applets. Las cinco vistas
+anteriores plasmaNetwork/Bluetooth/Audio/Notifications/Calendar se retiran; sus nombres IPC se
+conservan en TrayController. Lo cargan los Loader por ruta de Breeze; el panel usa esta bandeja y
+el reloj abre su calendario. La ventana expandida sigue el borde/monitor y conserva visible el
+panel autooculto. No se instala un anfitrión de plasmoides externos.
+
+**Código original y adaptadores:** AbstractItem/PulseAnimation y eventos SNI de systemtray;
+main.qml y componentes de plasma-pa y plasma-nm; main/ExpandedRepresentation de mediacontroller;
+CalendarView del reloj; ModelInterface/Summary/Body/ActionContainer de notificaciones;
+TextItemDelegate de Klipper; BatteryItem/BrightnessItem de PowerDevil. Bluetooth, encabezados de
+historial y base de portapapeles son ports reducidos. Tabla de procedencia/licencias y cambios en
+los README de ambas carpetas; fuentes v6.7.5 y textos/expresiones SPDX conservados.
+
+**Autoridad:** Quickshell SystemTray alimenta SNI; Auto/Shown/Hidden por ID estable se guardan en
+bar.plasma.trayItems, propios de Breeze. Los applets se crean sólo al abrirlos. Red usa los modelos
+originales y Handler de plasma-nm; audio, los de plasma-pa sobre PipeWire/Pulse existente. Bluetooth,
+brillo, batería, portapapeles y avisos usan los proveedores comunes de BWM. Se cambia la interfaz,
+no la configuración común ni los archivos de texto del usuario.
+
+**Servicios:** nunca KDEDProxy, MicrophoneIndicator.init, GlobalService de plasma-pa ni Globals o
+NotificationManager.Server de Plasma. GlobalService.ensureKDEDModule habría activado
+audioshortcutsservice y kglobalaccel al pulsar volumen: se reemplaza por Audio de BWM.
+Los QMenu de audio/red/velocidad se adaptan a PC3; la bandeja abre sus menús DBus con QsMenuOpener.
+No se inicia Klipper, PowerDevil ni Bluedevil. No hace falta instalar paquetes nuevos: los módulos
+estaban desde F0 y ahora se declaran requires. El servidor de avisos sigue en services/Notifications
+(Breeze/default), y Retro conserva Omarchy; un único dueño. Los toasts nativos respetan el monitor
+común, el bloqueo, la expiración y DND; máximo tres simultáneos. El historial sigue siendo común.
+
+**Pruebas:** carga de todas las páginas en qs -p, acciones QtTest de Bluetooth y notificaciones
+con datos simulados, modelo SNI y popup expandido simulado, calendario y toast sin servidor adicional.
+Las vistas ocultas en workspace 9 no completaban algunas transformaciones antes de los clics:
+las comprobaciones de interacción usan una pequeña capa de prueba visible sin foco de teclado.
+Red/audio se cargan con controles inhabilitados; nunca se conecta/desconecta ni se cambia un radio
+real para probar. Capturas limitadas al contenido de las vistas, revisadas y borradas al terminar.
+
+**Pendiente:** OBEX y asistente avanzado de emparejamiento; KIO/jobs y respuestas en línea;
+DND programado; edición/QR y miniaturas del portapapeles; plugins de agenda y ajustes multizona;
+perfiles/inhibición de PowerDevil; pruebas de acciones reales de red, audio y brillo y de todos los
+menús SNI de terceros. Se ofrecen controles básicos funcionales, no equivalencia completa de todos
+los applets. Sus opciones avanzadas y los KCMs se completan en F11.
+
+Validación final F5: 273 pruebas generales OK (52 opcionales omitidas), y 15 pruebas F5 con QtTest
+activado OK; verificación de Hyprland y requisitos correctos. qmllint conserva avisos por imports
+virtuales y tipos dinámicos; la carga real complementa el análisis. El host de toasts importa
+PlasmaCore explícitamente para inicializar el ImageSet de KSvg también en qs -p aislado. Se mantiene
+Retro; no se cambió a Breeze ni se reinició el shell. Para incorporar los Loader nuevos, usar
+bwm-theme-manager.py set plasma --restart-shell al activar Breeze.

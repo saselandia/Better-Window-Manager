@@ -33,12 +33,7 @@ import qs.modules.ii.idle
 import qs.modules.ii.screenshotPreview
 import qs.modules.ii.omarchyNotifications
 import qs.omarchyShell
-import qs.modules.ii.plasmaBluetooth
-import qs.modules.ii.plasmaNetwork
-import qs.modules.ii.plasmaCalendar
-import qs.modules.ii.plasmaNotifications
 import qs.modules.ii.plasmaTaskMenu
-import qs.modules.ii.plasmaAudio
 import qs.modules.ii.plasmaThemePicker
 
 Scope {
@@ -59,7 +54,7 @@ Scope {
     PanelLoader { extraCondition: Config.options.dock.enable && !Appearance.isRetro; component: Dock {} }
     PanelLoader { component: Lock {} }
     PanelLoader { component: MediaControls {} }
-    PanelLoader { extraCondition: !Appearance.isRetro; component: NotificationPopup {} }
+    PanelLoader { extraCondition: !Appearance.isRetro && !Appearance.isPlasma; component: NotificationPopup {} }
     PanelLoader { component: OnScreenDisplay {} }
     PanelLoader { component: OnScreenKeyboard {} }
     PanelLoader { component: Overlay {} }
@@ -85,11 +80,9 @@ Scope {
     PanelLoader { component: OmarchyMenu {} }
     PanelLoader { extraCondition: Appearance.isPlasma; component: PlasmaKickoffPort.KickoffWindow {} } // F4: Kickoff de Plasma 6.7.5 portado
     PanelLoader { component: BwmIdle {} }
-    PanelLoader { component: PlasmaBluetooth {} }
-    PanelLoader { component: PlasmaNetwork {} }
+    // F5: KDE applet interfaces, BWM data/services; no Plasma notification server.
+    PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/tray/TrayController.qml"):"" }
+    PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/applets/NotificationPopups.qml"):"" }
     PanelLoader { component: PlasmaTaskMenu {} }
-    PanelLoader { component: PlasmaAudio {} }
     PanelLoader { component: PlasmaThemePicker {} }
-    PanelLoader { component: PlasmaCalendar {} }
-    PanelLoader { extraCondition: Appearance.isPlasma; component: PlasmaNotifications {} }
 }

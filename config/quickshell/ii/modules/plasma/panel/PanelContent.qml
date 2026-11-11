@@ -7,7 +7,7 @@ import Quickshell.Hyprland
 import qs
 import qs.services
 import qs.modules.common
-import qs.modules.ii.bar as SharedBar
+import qs.modules.plasma.tray as PlasmaTray
 import qs.modules.ii.plasmaCommon
 import org.kde.plasma.components as PC3
 Item {
@@ -99,26 +99,31 @@ Item {
     }
     Component {
         id:trayComponent
-        GridLayout {
-            rows:root.vertical?-1:1; columns:root.vertical?1:-1
-            SharedBar.SysTray {
-                vertical:root.vertical; itemSize:22
-                Layout.preferredWidth:root.vertical?32:implicitWidth
-                Layout.preferredHeight:root.vertical?implicitHeight:32
-            }
-            PC3.ToolButton { icon.name:"audio-volume-high"; implicitWidth:30; implicitHeight:30; onClicked:PanelState.popup("plasmaAudio",this) }
-            PC3.ToolButton { icon.name:"network-wireless"; implicitWidth:30; implicitHeight:30; onClicked:PanelState.popup("plasmaNetwork",this) }
-            PC3.ToolButton { icon.name:"bluetooth"; implicitWidth:30; implicitHeight:30; visible:BluetoothStatus.available; onClicked:PanelState.popup("plasmaBluetooth",this) }
-            PC3.ToolButton { icon.name:"notifications"; implicitWidth:30; implicitHeight:30; onClicked:PanelState.popup("plasmaNotifications",this) }
-        }
+        PlasmaTray.SystemTray { vertical:root.vertical }
     }
+
     Component {
         id:clockComponent
         DigitalClock {
+            id:clock
+            // BWM: the calendar remains available even if the tray widget is removed.
+            QtObject {
+                id:calendarHost
+                readonly property bool expanded:!root.widgets.includes("tray")&&PlasmaTray.TrayState.expanded&&PlasmaTray.TrayState.applet==="calendar"&&PlasmaTray.TrayState.screenName===root.panelWindow.screen.name
+                readonly property string activeApplet:"calendar"
+                property bool configuring:false
+                readonly property bool configurable:false
+                readonly property bool readOnly:false
+                readonly property var applets:[]
+                readonly property var items:[]
+                readonly property var settings:({})
+                readonly property var appletProperties:({})
+            }
+            PlasmaTray.TrayPopup { anchorItem:clock;tray:calendarHost }
             vertical:root.vertical
             showDate:root.config.showDate
             showSeconds:root.config.showSeconds
-            onClicked:PanelState.popup("plasmaCalendar",this)
+            onClicked:PlasmaTray.TrayState.toggle("calendar",root.panelWindow.screen.name)
         }
     }
     Component {

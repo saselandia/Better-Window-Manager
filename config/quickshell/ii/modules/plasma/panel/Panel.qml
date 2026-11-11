@@ -6,6 +6,7 @@ import Quickshell.Io
 import qs
 import qs.services
 import qs.modules.common
+import qs.modules.plasma.tray as PlasmaTray
 import "PanelLogic.js" as Logic
 Scope {
     id:root
@@ -26,7 +27,7 @@ Scope {
             readonly property var monitor:HyprlandData.monitors.find(m=>m.name===screen.name)
             readonly property var base:Logic.geometry(screen.width,screen.height,config,Config.options.bar.bottom,false,true)
             readonly property bool touching:Logic.touching(monitor,HyprlandData.windowList,base)
-            readonly property var geo:Logic.geometry(screen.width,screen.height,config,Config.options.bar.bottom,touching,revealed||editing)
+            readonly property var geo:Logic.geometry(screen.width,screen.height,config,Config.options.bar.bottom,touching,revealed||editing||(PlasmaTray.TrayState.expanded&&PlasmaTray.TrayState.screenName===screen.name))
             readonly property bool vertical:geo.vertical
             readonly property real shadowPad:Math.max(8,background.shadowMargins.left,background.shadowMargins.right,background.shadowMargins.top,background.shadowMargins.bottom)
             color:"transparent"

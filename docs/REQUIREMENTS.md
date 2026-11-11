@@ -140,6 +140,9 @@ Son las versiones registradas en el entorno local de BWM, no las últimas public
 | Kirigami (componentes KDE) | 6.29.0 | — |
 | Reloj de Plasma | 6.7.5 | — |
 | Gestor de actividades de KDE | 6.7.5 | — |
+| Modelo MPRIS de Plasma | 6.7.5 | — |
+| Calendario de Plasma | 6.7.5 | — |
+| Componentes de notificaciones KDE (sin servidor) | 6.7.5 | — |
 
 ## Skin default (end-4)
 
@@ -226,6 +229,11 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | Kirigami (componentes KDE) | Iconos, fuentes y métricas de los componentes portados del panel Plasma | `kde-frameworks/kirigami` | `kirigami` | `kf6-kirigami` | — | `qml6-module-org-kde-kirigami` |
 | plasma-workspace (herramientas de temas y KCMs) | plasma-apply-*, lookandfeeltool, módulos de Preferencias (colores, estilo de Plasma, iconos, cursores, fuentes, tema global) y modelos de Kickoff/bandeja. Instala KWin, pero BWM no lo ejecuta | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
 | Reloj de Plasma | Fuente de hora del reloj digital portado de Plasma | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
+| plasma-nm (applet de red) | Modelos de red del applet de Plasma (org.kde.plasma.networkmanagement) | `kde-plasma/plasma-nm` | `plasma-nm` | `plasma-nm` | — | `plasma-nm` |
+| plasma-pa (applet de sonido) | Modelos de sonido del applet de Plasma (org.kde.plasma.private.volume) | `kde-plasma/plasma-pa` | `plasma-pa` | `plasma-pa` | — | `plasma-pa` |
+| Modelo MPRIS de Plasma | Interfaz de los applets portados de Breeze, sin arrancar plasmashell ni sus servidores | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
+| Calendario de Plasma | Interfaz de los applets portados de Breeze, sin arrancar plasmashell ni sus servidores | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
+| Componentes de notificaciones KDE (sin servidor) | Interfaz de los applets portados de Breeze, sin arrancar plasmashell ni sus servidores | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
 
 **Recomendado:**
 
@@ -245,8 +253,6 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | Decoración y estilo Breeze | Barras de título Breeze reales y estilo de widgets Breeze | `kde-plasma/breeze` | `breeze` | `plasma-breeze` | — | `breeze` |
 | Aurorae (decoraciones SVG) | Decoraciones de ventana de la KDE Store en formato Aurorae | `kde-plasma/aurorae` | `aurorae` | `aurorae` | — | — |
 | Preferencias del sistema de KDE | Base de las Preferencias del sistema de Breeze (KCMs con kcmshell6) | `kde-plasma/systemsettings` | `systemsettings` | `plasma-systemsettings` | — | `systemsettings` |
-| plasma-nm (applet de red) | Modelos de red del applet de Plasma (org.kde.plasma.networkmanagement) | `kde-plasma/plasma-nm` | `plasma-nm` | `plasma-nm` | — | `plasma-nm` |
-| plasma-pa (applet de sonido) | Modelos de sonido del applet de Plasma (org.kde.plasma.private.volume) | `kde-plasma/plasma-pa` | `plasma-pa` | `plasma-pa` | — | `plasma-pa` |
 | BluezQt | Modelos de Bluetooth del applet de Plasma (org.kde.bluezqt) | `kde-frameworks/bluez-qt` | `bluez-qt` | `kf6-bluez-qt` | — | — |
 | Kvantum (estilo de widgets Qt) | Muchos temas globales de la KDE Store (Sweet, Layan…) piden el estilo de aplicaciones Kvantum; sin él las apps Qt vuelven a Breeze/Fusion | `x11-themes/kvantum` | `kvantum` | `kvantum` | — | — |
 | Gestor de actividades de KDE | Favoritos y recientes del Kickoff de Breeze (KActivities, el formato de Plasma) | `kde-plasma/kactivitymanagerd` | `kactivitymanagerd` | `kactivitymanagerd` | — | `kactivitymanagerd` |

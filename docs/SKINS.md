@@ -55,7 +55,7 @@ de un tema; cambiar el fondo no los toca.
 | :--- | :---: | :---: | :--- |
 | Retro | ~90 % | ~80 % | `hyprland.lua` e `icons.theme` de los temas, tema de Chromium (root); plugins que sustituyen barra, bloqueo, overlays o paneles |
 | default (end-4) | ~90 % | — | Plantillas de matugen de terceros: se añaden a mano en `matugen/config.toml` |
-| Breeze (Kde plasma) | ~35 % | 0 % | Esquemas, iconos, temas globales y panel con SVG del estilo de Plasma (probado con Breeze y Sweet en cuatro bordes). Pendientes: decoraciones reales, Kickoff/applets portados, bloqueo/cambiador y plasmoides externos. Port reducido y límites en docs/BREEZE_ARCH.md §10. |
+| Breeze (Kde plasma) | ~45 % | 0 % | Esquemas/estilos/iconos/temas globales, panel SVG, Kickoff y bandeja/applets portados (varios reducidos). Faltan decoraciones reales, bloqueo/cambiador, plasmoides externos y funciones avanzadas de applets; arquitectura §10–11 y README de cada carpeta. |
 
 Actualiza esta tabla y la del README cuando cambie el soporte.
 
@@ -141,3 +141,7 @@ El panel de Breeze se configura en bar.plasma: borde, grosor, longitud, alineaci
 flotación y widgets incluidos. Usa SVG/márgenes/sombras de Plasma; ya no admite el antiguo color
 plano superpuesto. Se necesitan los módulos KDE declarados en requires de Breeze. El Loader
 carga su ruta sólo en esa skin. Los archivos nuevos requieren reinicio de mantenimiento del shell.
+
+Bandeja de Breeze: modules/plasma/tray y applets; visibilidad por ID en bar.plasma.trayItems.
+Los proveedores de red/Bluetooth/audio/avisos/portapapeles/energía siguen siendo comunes;
+las vistas y los modelos de KDE compatibles se crean sólo al abrir su página.

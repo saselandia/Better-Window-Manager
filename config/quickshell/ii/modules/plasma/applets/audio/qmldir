@@ -1,0 +1,9 @@
+DeviceListItem 1.0 DeviceListItem.qml
+MicrophoneTestView 1.0 MicrophoneTestView.qml
+StreamListItem 1.0 StreamListItem.qml
+ListItemBase 1.0 ListItemBase.qml
+VolumeSlider 1.0 VolumeSlider.qml
+SmallToolButton 1.0 SmallToolButton.qml
+HorizontalStackView 1.0 HorizontalStackView.qml
+AudioApplet 1.0 AudioApplet.qml
+BwmListItemMenu 1.0 BwmListItemMenu.qml

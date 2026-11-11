@@ -1,0 +1,790 @@
+/*
+    SPDX-FileCopyrightText: 2014-2015 Harald Sitter <sitter@kde.org>
+
+    SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
+*/
+
+import QtQuick
+import qs.services
+import QtQuick.Layouts
+
+import org.kde.plasma.core as PlasmaCore
+import org.kde.ksvg as KSvg
+import org.kde.kirigami as Kirigami
+import org.kde.kitemmodels as KItemModels
+import org.kde.plasma.components as PC3
+import org.kde.plasma.extras as PlasmaExtras
+// BWM: Plasmoid attached object supplied by AppletHost.
+import ".."
+
+import org.kde.kcmutils as KCMUtils
+import org.kde.config as KConfig
+
+import org.kde.plasma.private.volume
+
+AppletHost {
+    translationDomain:"plasma_applet_org.kde.plasma.volume"
+    id: main
+    configuration: QtObject { property string currentTab: "devices"; property bool showVirtualDevices: false; property bool pin: false }
+
+    GlobalConfig {
+        id: config
+    }
+
+    height: Kirigami.Units.gridUnit * 21
+    width: Kirigami.Units.gridUnit * 24
+
+    property bool volumeFeedback: config.audioFeedback
+    property bool globalMuteSinks: Audio.sink?.audio.muted??false
+    property bool globalMuteSources: Audio.source?.audio.muted??false
+    property string displayName: i18n("Audio Volume")
+    property QtObject draggedStream: null
+
+    property bool showVirtualDevices: main.configuration.showVirtualDevices
+
+    property bool micTestActive: false
+
+    readonly property bool inPanel: (main.location === PlasmaCore.Types.TopEdge
+        || main.location === PlasmaCore.Types.RightEdge
+        || main.location === PlasmaCore.Types.BottomEdge
+        || main.location === PlasmaCore.Types.LeftEdge)
+    readonly property bool compactInPanel: inPanel && !!compactRepresentationItem?.visible
+
+    // DEFAULT_SINK_NAME in module-always-sink.c
+    readonly property string dummyOutputName: "auto_null"
+    readonly property bool appletContextReady: Context.state === Context.State.Ready
+    readonly property bool kdedContextReady: true // BWM: no kded audio service
+    readonly property bool contextIsReady: {
+        return appletContextReady && kdedContextReady
+    }
+    readonly property bool contextIsAutoConnecting: Context.autoConnecting
+    readonly property string noDevicePlaceholderMessage: {
+        if (!contextIsReady) {
+            if (!contextIsAutoConnecting) {
+                return i18nc("@label", "Connection to the Sound Service Lost")
+            }
+            return i18nc("@label", "Connection to the Sound Service Lost")
+        }
+        return i18n("No output or input devices found")
+    }
+    readonly property string noDeviceExplanation: {
+        if (!contextIsReady && contextIsAutoConnecting) {
+            return i18nc("@info reconnecting to pulseaudio", "Trying to reconnect…")
+        }
+        return ""
+    }
+
+    readonly property Kirigami.Action backAction: Kirigami.Action {
+        enabled: main.micTestActive
+        onTriggered: {
+            micTestActive = false;
+            fullRepresentationItem?.microphoneTestPage?.stopTest();
+        }
+    }
+
+    switchHeight: Kirigami.Units.gridUnit * 8
+    switchWidth: Kirigami.Units.gridUnit * 14
+
+    icon: PreferredDevice.sink && !isDummyOutput(PreferredDevice.sink) ? AudioIcon.forVolume(volumePercent(PreferredDevice.sink.volume), PreferredDevice.sink.muted, "")
+                                                                                : AudioIcon.forVolume(0, true, "")
+    hideOnWindowDeactivate: !main.configuration.pin
+    toolTipMainText: {
+        var sink = PreferredDevice.sink
+        if (!sink || isDummyOutput(sink)) {
+            return displayName;
+        }
+
+        if (sink.muted) {
+            return i18n("Audio Muted");
+        } else {
+            return i18n("Volume at %1%", volumePercent(sink.volume));
+        }
+    }
+    toolTipSubText: {
+        let lines = [];
+
+        if (PreferredDevice.sink && paSinkFilterModel.count > 1 && !isDummyOutput(PreferredDevice.sink)) {
+            lines.push(nodeName(PreferredDevice.sink))
+        }
+
+        if (paSinkFilterModel.count > 0) {
+            lines.push(main.globalMuteSinks ? i18n("Middle-click to unmute")
+                                    : i18n("Middle-click to mute all audio"));
+            lines.push(i18n("Scroll to adjust volume"));
+        } else {
+            lines.push(main.noDevicePlaceholderMessage);
+        }
+        return lines.join("\n");
+    }
+
+    function nodeName(pulseObject) {
+        if (pulseObject.description) {
+            return pulseObject.description
+        }
+
+        if (pulseObject.name) {
+            return pulseObject.name
+        }
+
+        return i18n("Device name not found")
+    }
+
+    function isDummyOutput(output) {
+        return output && output.name === dummyOutputName;
+    }
+
+    function volumePercent(volume) {
+        return Math.round(volume / PulseAudio.NormalVolume * 100.0);
+    }
+
+    function playFeedback(sinkIndex) {
+        if (!volumeFeedback) {
+            return;
+        }
+        if (sinkIndex == undefined) {
+            sinkIndex = PreferredDevice.sink.index;
+        }
+        feedback.play(sinkIndex);
+    }
+
+    // Output devices
+    readonly property SinkModel paSinkModel: SinkModel { id: paSinkModel }
+
+    // Input devices
+    readonly property SourceModel paSourceModel: SourceModel { id: paSourceModel }
+
+    // Confusingly, Sink Input is what PulseAudio calls streams that send audio to an output device
+    readonly property SinkInputModel paSinkInputModel: SinkInputModel { id: paSinkInputModel }
+
+    // Confusingly, Source Output is what PulseAudio calls streams that take audio from an input device
+    readonly property SourceOutputModel paSourceOutputModel: SourceOutputModel { id: paSourceOutputModel }
+
+    // active output devices
+    readonly property PulseObjectFilterModel paSinkFilterModel: PulseObjectFilterModel {
+        id: paSinkFilterModel
+        filterOutInactiveDevices: true
+        filterVirtualDevices: !main.showVirtualDevices
+        sourceModel: paSinkModel
+    }
+
+    // active input devices
+    readonly property PulseObjectFilterModel paSourceFilterModel: PulseObjectFilterModel {
+        id: paSourceFilterModel
+        filterOutInactiveDevices: true
+        filterVirtualDevices: !main.showVirtualDevices
+        sourceModel: paSourceModel
+    }
+
+    // non-virtual streams going to output devices
+    readonly property PulseObjectFilterModel paSinkInputFilterModel: PulseObjectFilterModel {
+        id: paSinkInputFilterModel
+        filters: [
+            { role: "VirtualStream", value: false },
+            { role: "Client", value: (client) => client.name !== "libcanberra" },
+        ]
+        sourceModel: paSinkInputModel
+    }
+
+    // non-virtual streams coming from input devices
+    readonly property PulseObjectFilterModel paSourceOutputFilterModel: PulseObjectFilterModel {
+        id: paSourceOutputFilterModel
+        filters: [ { role: "VirtualStream", value: false } ]
+        sourceModel: paSourceOutputModel
+    }
+
+    readonly property CardModel paCardModel: CardModel {
+        id: paCardModel
+
+        function indexOfCardNumber(cardNumber) {
+            const indexRole = KItemModels.KRoleNames.role("Index");
+            for (let idx = 0; idx < count; ++idx) {
+                if (data(index(idx, 0), indexRole) === cardNumber) {
+                    return index(idx, 0);
+                }
+            }
+            return index(-1, 0);
+        }
+    }
+
+    // Only exists because the default CompactRepresentation doesn't expose:
+    // - scroll actions
+    // - a middle-click action
+    // TODO remove once it gains those features.
+    compactRepresentation: MouseArea {
+        property int wheelDelta: 0
+        property bool wasExpanded: false
+
+        // same minimum sizes as the default compact representation - this is necessary here as
+        // the applet/panel may get confused and briefly apply the fullRepresentation's minimum
+        // sizes, especially after a display disconnection, and keep it afterwards.
+        Layout.minimumWidth: height
+        Layout.minimumHeight: width
+
+        anchors.fill: parent
+        hoverEnabled: true
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+        onPressed: mouse => {
+            if (mouse.button == Qt.LeftButton) {
+                wasExpanded = main.expanded;
+            } else if (mouse.button == Qt.MiddleButton) {
+                Audio.toggleMute();
+            }
+        }
+        onClicked: mouse => {
+            if (mouse.button == Qt.LeftButton) {
+                main.expanded = !wasExpanded;
+            }
+        }
+        onWheel: wheel => {
+            const delta = (wheel.inverted ? -1 : 1) * (wheel.angleDelta.y ? wheel.angleDelta.y : -wheel.angleDelta.x);
+            if ((wheelDelta > 0 && delta < 0) || (wheelDelta < 0 && delta > 0)) {
+                // reset wheelDelta when changing scrolling direction, as there
+                // might be a remainder from the previous wheel action.
+                wheelDelta = 0;
+            }
+            wheelDelta += delta;
+
+            // Magic number 120 for common "one click"
+            // See: https://qt-project.org/doc/qt-5/qml-qtquick-wheelevent.html#angleDelta-prop
+            while (wheelDelta >= 120) {
+                wheelDelta -= 120;
+                if (wheel.modifiers & Qt.ShiftModifier) {
+                    Audio.sink.audio.volume=Math.min(1,Audio.value+.01);
+                } else {
+                    Audio.incrementVolume();
+                }
+            }
+            while (wheelDelta <= -120) {
+                wheelDelta += 120;
+                if (wheel.modifiers & Qt.ShiftModifier) {
+                    Audio.sink.audio.volume=Math.max(0,Audio.value-.01);
+                } else {
+                    Audio.decrementVolume();
+                }
+            }
+        }
+        Kirigami.Icon {
+            anchors.fill: parent
+            source: plasmoid.icon
+            active: parent.containsMouse
+        }
+    }
+
+    VolumeFeedback {
+        id: feedback
+    }
+
+    fullRepresentation: PlasmaExtras.Representation {
+        id: fullRep
+
+        Layout.minimumHeight: (main.inPanel && !main.compactInPanel) ? -1 : main.switchHeight
+        Layout.minimumWidth: (main.inPanel && !main.compactInPanel) ? -1 : main.switchWidth
+
+        collapseMarginsHint: true
+
+        KeyNavigation.down: tabBar.currentItem
+
+        property list<string> hiddenTypes: []
+
+        property var microphoneTestPage: microphoneTestComponent
+
+        function beginMoveStream(type: /* "sink" | "source" */ string) {
+            if (type === "sink") {
+                hiddenTypes = ["source"]
+            } else if (type === "source") {
+                hiddenTypes = ["sink"]
+            }
+            tabBar.setCurrentIndex(devicesTab.PC3.TabBar.index)
+        }
+
+        function endMoveStream() {
+            hiddenTypes = []
+            tabBar.setCurrentIndex(streamsTab.PC3.TabBar.index)
+        }
+
+        Connections {
+            target: main
+            function onExpandedChanged() : void {
+                if (!expanded) {
+                    micTestActive = false;
+                    fullRep.microphoneTestPage?.stopTest();
+                    contentView.currentItem.reset()
+                }
+            }
+        }
+
+        header: PlasmaExtras.PlasmoidHeading {
+            // Make this toolbar's buttons align vertically with the ones above
+            rightPadding: -1
+            // Allow tabbar to touch the header's bottom border
+            bottomPadding: -bottomInset
+            visible: !micTestActive
+
+            RowLayout {
+                anchors.fill: parent
+                spacing: Kirigami.Units.smallSpacing
+
+                PC3.TabBar {
+                    id: tabBar
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    currentIndex: {
+                        switch (plasmoid.configuration.currentTab) {
+                        case "devices":
+                            return devicesTab.PC3.TabBar.index;
+                        case "streams":
+                            return streamsTab.PC3.TabBar.index;
+                        }
+                    }
+
+                    KeyNavigation.right: actionsButton
+                    Keys.onDownPressed: event => {
+                        contentView.currentItem.contentItem.upperListView.currentIndex = 0
+                        event.accepted = false // pass to KeyNavigation, set inside StackView
+                    }
+
+                    onCurrentIndexChanged: {
+                        Qt.callLater( () => { // callLater to avoid interference while loading
+                            switch (currentIndex) {
+                            case devicesTab.PC3.TabBar.index:
+                                plasmoid.configuration.currentTab = "devices";
+                                break;
+                            case streamsTab.PC3.TabBar.index:
+                                plasmoid.configuration.currentTab = "streams";
+                                break;
+                            }
+                        })
+                    }
+
+                    PC3.TabButton {
+                        id: devicesTab
+                        text: i18n("Devices")
+
+                        KeyNavigation.up: fullRep.KeyNavigation.up
+                    }
+
+                    PC3.TabButton {
+                        id: streamsTab
+                        text: i18n("Applications")
+
+                        KeyNavigation.up: fullRep.KeyNavigation.up
+                    }
+                }
+
+                PC3.ToolButton {
+                    id: actionsButton
+
+                    visible: !(plasmoid.containmentDisplayHints & PlasmaCore.Types.ContainmentDrawsPlasmoidHeading)
+
+                    icon.name: "application-menu"
+                    display: PC3.AbstractButton.IconOnly
+                    checkable: true
+                    checked: configMenu.visible
+                    onToggled: {
+                        if (checked) {
+                            configMenu.popup();
+                        } else {
+                            configMenu.close();
+                        }
+                    }
+                    KeyNavigation.right: configureButton
+
+                    text: i18nc("@action:button", "More actions")
+                    PC3.ToolTip {
+                        text: parent.text
+                    }
+                }
+
+                // BWM: PC3 menu can open from layer-shell; QMenu cannot.
+                PC3.Menu {
+                    id:configMenu
+                    parent:actionsButton
+                    Repeater {
+                        model:main.contextualActions
+                        PC3.MenuItem {
+                            required property var modelData
+                            text:modelData.text; checkable:modelData.checkable; checked:modelData.checked
+                            visible:modelData.visible; enabled:modelData.enabled
+                            onTriggered:modelData.trigger()
+                        }
+                    }
+                }
+
+                PC3.ToolButton {
+                    id: configureButton
+                    visible: !(plasmoid.containmentDisplayHints & PlasmaCore.Types.ContainmentDrawsPlasmoidHeading)
+
+                    icon.name: "configure"
+                    onClicked: plasmoid.internalAction("configure").trigger()
+
+                    Accessible.name: plasmoid.internalAction("configure").text
+                    PC3.ToolTip {
+                        text: plasmoid.internalAction("configure").text
+                    }
+                }
+
+                PC3.ToolButton {
+                    visible: main.compactInPanel && !(plasmoid.containmentDisplayHints & PlasmaCore.Types.ContainmentDrawsPlasmoidHeading)
+
+                    icon.name: "window-pin-symbolic"
+                    text: i18nc("@action:button keep this widget's pop-up open until explicitly dismissed", "Keep open")
+                    display: PC3.AbstractButton.IconOnly
+
+                    checkable: true
+                    checked: main.configuration.pin
+                    onToggled: main.configuration.pin = checked
+
+                    PC3.ToolTip.text: text
+                    PC3.ToolTip.visible: hovered || activeFocus
+                    PC3.ToolTip.delay: Kirigami.Units.toolTipDelay
+                }
+            }
+        }
+
+        // NOTE: using a StackView instead of a SwipeView partly because
+        // SwipeView would never start with the correct initial view when the
+        // last saved view was the streams view.
+        // We also don't need to be able to swipe between views.
+        contentItem: Item {
+            HorizontalStackView {
+                id: contentView
+                visible: !micTestActive
+                anchors.fill: parent
+                initialItem: plasmoid.configuration.currentTab === "streams" ? streamsView : devicesView
+                movementTransitionsEnabled: currentItem !== null
+                property TwoPartView deviceViewItem: TwoPartView {
+                    id: devicesView
+                    upperModel: paSinkFilterModel
+                    upperType: "sink"
+                    lowerModel: paSourceFilterModel
+                    lowerType: "source"
+                    iconName: "audio-volume-muted" + (Qt.application.layoutDirection === Qt.RightToLeft ? "-rtl" : "");
+                    placeholderText: main.noDevicePlaceholderMessage
+                    explanationText: main.noDeviceExplanation
+                    helpfulAction: Kirigami.Action {
+                        text: i18nc("@action retry connecting to pulseaudio", "Retry")
+                        icon.name: "view-refresh-symbolic"
+                        onTriggered: {
+                            if (!main.kdedContextReady) {
+                                Context.reconnect() // BWM: local context only
+                            }
+                            if (!main.appletContextReady) {
+                                Context.reconnectDaemon()
+                            }
+                        }
+                        // Fun fact: visibility of the helpfulAction inside PlaceholderMessage is linked to enabled, not visible
+                        enabled: !main.contextIsAutoConnecting && !main.contextIsReady
+                    }
+                    upperDelegate: DeviceListItem {
+                        width: ListView.view.width
+                        type: devicesView.upperType
+                        focus: ListView.isCurrentItem
+                    }
+                    lowerDelegate: DeviceListItem {
+                        width: ListView.view.width
+                        type: devicesView.lowerType
+                        focus: ListView.isCurrentItem
+                    }
+                    HorizontalStackView.onStatusChanged: devicesView.reset()
+                }
+                // NOTE: Don't unload this while dragging and dropping a stream
+                // to a device or else the D&D operation will be cancelled.
+                property TwoPartView streamsViewItem: TwoPartView {
+                    id: streamsView
+                    upperModel: paSinkInputFilterModel
+                    upperType: "sink-input"
+                    lowerModel: paSourceOutputFilterModel
+                    lowerType: "source-output"
+                    iconName: "edit-none"
+                    placeholderText: i18n("No applications playing or recording audio")
+                    upperDelegate: StreamListItem {
+                        width: ListView.view.width
+                        type: streamsView.upperType
+                        devicesModel: paSinkFilterModel
+                        focus: ListView.isCurrentItem
+                    }
+                    lowerDelegate: StreamListItem {
+                        width: ListView.view.width
+                        type: streamsView.lowerType
+                        devicesModel: paSourceFilterModel
+                        focus: ListView.isCurrentItem
+                    }
+                    HorizontalStackView.onStatusChanged: devicesView.reset()
+                }
+                Connections {
+                    target: tabBar
+                    function onCurrentIndexChanged() {
+                        if (tabBar.currentItem === devicesTab) {
+                            contentView.reverseTransitions = false
+                            contentView.replace(devicesView)
+                        } else if (tabBar.currentItem === streamsTab) {
+                            contentView.reverseTransitions = true
+                            contentView.replace(streamsView)
+                        }
+                    }
+                }
+            }
+            MicrophoneTestView {
+                id: microphoneTestComponent
+                anchors.fill: parent
+                visible: micTestActive
+                showInternalBackButton: main.containment.pluginName !== "org.kde.plasma.systemtray"
+                onBackRequested: {
+                    main.micTestActive = false;
+                    microphoneTestComponent.stopTest();
+                }
+            }
+        }
+
+        component TwoPartView : PC3.ScrollView {
+            id: scrollView
+            required property PulseObjectFilterModel upperModel
+            required property string upperType
+            required property Component upperDelegate
+            required property PulseObjectFilterModel lowerModel
+            required property string lowerType
+            required property Component lowerDelegate
+            property string iconName: ""
+            property string placeholderText: ""
+            property string explanationText: ""
+            property Kirigami.Action helpfulAction: null
+
+             // HACK: workaround for https://bugreports.qt.io/browse/QTBUG-83890
+            PC3.ScrollBar.horizontal.policy: PC3.ScrollBar.AlwaysOff
+
+            function reset() : void {
+                upperSection.currentIndex = -1
+                lowerSection.currentIndex = -1
+            }
+
+            Loader {
+                parent: scrollView
+                anchors.centerIn: parent
+                width: parent.width -  Kirigami.Units.gridUnit * 4
+                active: visible
+                visible: scrollView.placeholderText.length > 0 && !upperSection.visible && !lowerSection.visible
+                sourceComponent: PlasmaExtras.PlaceholderMessage {
+                    iconName: scrollView.iconName
+                    text: scrollView.placeholderText
+                    explanation: scrollView.explanationText
+                    helpfulAction: scrollView.helpfulAction
+                }
+            }
+            contentItem: Flickable {
+                contentHeight: layout.implicitHeight
+                clip: true
+
+                property ListView upperListView: upperSection.visible ? upperSection : lowerSection
+                property ListView lowerListView: lowerSection.visible ? lowerSection : upperSection
+
+                ColumnLayout {
+                    id: layout
+                    width: parent.width
+                    spacing: 0
+
+                    PlasmaExtras.ListSectionHeader {
+                        id: upperSectionHeader
+                        visible: upperSection.visible && text != "" && (upperSection.count > 1 || lowerSection.count > 1)
+                        Layout.fillWidth: true
+                        topPadding: Kirigami.Units.mediumSpacing
+                        leftPadding: !mirrored ? 2 * Kirigami.Units.smallSpacing : padding // extra spacing to align with icon/label/radiobutton
+                        rightPadding: mirrored ? 2 * Kirigami.Units.smallSpacing : padding
+                        text: {
+                            switch (scrollView.upperType) {
+                                case "sink":
+                                    return i18nc("@title:group listview section header", "Output Devices")
+                                case "sink-input":
+                                    return i18nc("@title:group listview section header", "Output Streams")
+                                default:
+                                    return ""
+                            }
+                        }
+                    }
+
+                    ListView {
+                        id: upperSection
+                        property bool otherViewHasRadioButtons: lowerSection.visible && (lowerSection.count > 1)
+                        visible: count && !fullRep.hiddenTypes.includes(scrollView.upperType)
+                        interactive: false
+                        Layout.fillWidth: true
+                        implicitHeight: contentHeight
+                        Accessible.name: upperSectionHeader.text
+                        Accessible.role: Accessible.List
+                        model: scrollView.upperModel
+                        delegate: scrollView.upperDelegate
+                        focus: visible
+                        keyNavigationEnabled: true
+                        currentIndex: -1
+                        highlight: PlasmaExtras.Highlight {
+                            visible: upperSection.activeFocus
+                        }
+                        highlightMoveDuration: Kirigami.Units.shortDuration
+
+                        // Careful, qml can get confused about the fallback chain between StackView and outside
+                        KeyNavigation.up: scrollView.PC3.StackView.status === PC3.StackView.Active ? tabBar : null
+                        KeyNavigation.backtab: scrollView.PC3.StackView.status !== PC3.StackView.Active ? null
+                                             : (configureButton.visible ? configureButton : tabBar)
+
+                        Keys.onDownPressed: event => {
+                            if (currentIndex == count - 1 && lowerSection.visible) {
+                                lowerSection.currentIndex = 0;
+                            }
+                            event.accepted = false; // pass to KeyNavigation
+                        }
+                        KeyNavigation.down: lowerSection.visible ? lowerSection : raiseMaximumVolumeCheckbox
+                    }
+                    KSvg.SvgItem {
+                        imagePath: "widgets/line"
+                        elementId: "horizontal-line"
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.smallSpacing * 2
+                        Layout.rightMargin: Layout.leftMargin
+                        Layout.topMargin: Kirigami.Units.smallSpacing // a bit smaller as the sliders cause a visual gap
+                        visible: upperSection.visible && lowerSection.visible && upperSection.count === 1 && lowerSection.count === 1
+                    }
+                    PlasmaExtras.ListSectionHeader {
+                        id: lowerSectionHeader
+                        visible: lowerSection.visible && text != ""  && (upperSection.count > 1 || lowerSection.count > 1)
+                        Layout.fillWidth: true
+                        topPadding: Kirigami.Units.smallSpacing
+                        leftPadding: !mirrored ? 2 * Kirigami.Units.smallSpacing : padding // extra spacing to align with icon/label/radiobutton
+                        rightPadding: mirrored ? 2 * Kirigami.Units.smallSpacing : padding
+                        text: {
+                            switch (scrollView.lowerType) {
+                                case "source":
+                                    return i18nc("@title:group listview section header", "Input Devices")
+                                case "source-output":
+                                    return i18nc("@title:group listview section header", "Input Streams")
+                                default:
+                                    return ""
+                            }
+                        }
+                    }
+                    ListView {
+                        id: lowerSection
+                        property bool otherViewHasRadioButtons: upperSection.visible && (upperSection.count > 1)
+                        visible: count && !fullRep.hiddenTypes.includes(scrollView.lowerType)
+                        interactive: false
+                        Layout.fillWidth: true
+                        implicitHeight: contentHeight
+                        Accessible.name: lowerSectionHeader.text
+                        Accessible.role: Accessible.List
+                        model: scrollView.lowerModel
+                        delegate: scrollView.lowerDelegate
+                        keyNavigationEnabled: true
+                        currentIndex: -1
+                        highlight: PlasmaExtras.Highlight {
+                            visible: lowerSection.activeFocus
+                        }
+                        highlightMoveDuration: Kirigami.Units.shortDuration
+
+                        Keys.onUpPressed: event => {
+                            if (currentIndex == 0 && upperSection.visible) {
+                                upperSection.currentIndex = upperSection.count - 1;
+                            }
+                            event.accepted = false; // pass to KeyNavigation
+                        }
+                        KeyNavigation.up: upperSection
+                        KeyNavigation.down: scrollView.PC3.StackView.status === PC3.StackView.Active ? raiseMaximumVolumeCheckbox : null
+                    }
+                }
+            }
+        }
+
+        footer: PlasmaExtras.PlasmoidHeading {
+            id: footerToolbar
+
+            visible: !micTestActive
+            readonly property int margins: Kirigami.Units.smallSpacing
+
+            Accessible.onPressAction: raiseMaximumVolumeCheckbox.toggle()
+            Keys.onUpPressed: event => {
+                if (KeyNavigation.up.count > 0) {
+                    KeyNavigation.up.currentIndex = KeyNavigation.up.count - 1
+                }
+                event.accepted = false // pass to KeyNavigation, set inside StackView
+            }
+            Keys.onDownPressed: event => event.accepted = true // don't pass to parent
+
+            ColumnLayout {
+                width: parent.width
+                spacing: 0
+
+                Kirigami.InlineMessage {
+                    id: raiseMaxVolumeWarning
+
+                    Layout.fillWidth: true
+                    Layout.margins: footerToolbar.margins
+
+                    showCloseButton: true
+                    type: Kirigami.MessageType.Warning
+
+                    text: xi18nc("@info", "Prolonged use of this feature will damage the device's speakers. Only use it temporarily to make quiet media audible.")
+                }
+
+                PC3.Switch {
+                    id: raiseMaximumVolumeCheckbox
+                    Layout.fillWidth: true
+                    Layout.margins: footerToolbar.margins
+
+                    checked: config.raiseMaximumVolume
+
+                    Accessible.onPressAction: raiseMaximumVolumeCheckbox.toggle()
+                    KeyNavigation.backtab: contentView.currentItem.contentItem.lowerListView.itemAtIndex(contentView.currentItem.contentItem.lowerListView.count - 1)
+                    Keys.onUpPressed: event => {
+                        KeyNavigation.backtab.forceActiveFocus(Qt.BacktabFocusReason);
+                    }
+
+                    text: i18n("Raise maximum volume")
+
+                    onToggled: {
+                        config.raiseMaximumVolume = checked;
+                        config.save();
+                        raiseMaxVolumeWarning.visible = checked;
+                    }
+                }
+            }
+        }
+    }
+
+
+    contextualActions: [
+        PlasmaCore.Action {
+            text: i18n("Mute playback")
+            icon.name: "audio-volume-muted" + (Qt.application.layoutDirection === Qt.RightToLeft ? "-rtl" : "");
+            checkable: true
+            checked: globalMuteSinks
+            onTriggered: {
+                Audio.toggleMute();
+            }
+        },
+        PlasmaCore.Action {
+            text: i18n("Mute microphone")
+            icon.name: "microphone-sensitivity-muted" + (Qt.application.layoutDirection === Qt.RightToLeft ? "-rtl" : "");
+            checkable: true
+            checked: globalMuteSources
+            onTriggered: {
+                Audio.toggleMicMute();
+            }
+        },
+        PlasmaCore.Action {
+            text: i18n("Show virtual devices")
+            icon.name: "audio-card"
+            checkable: true
+            checked: plasmoid.configuration.showVirtualDevices
+            onTriggered: main.configuration.showVirtualDevices = !main.configuration.showVirtualDevices
+        }
+    ]
+
+    PlasmaCore.Action {
+        id: configureAction
+        text: i18n("&Configure Audio Devices…")
+        icon.name: "configure"
+        visible: KConfig.KAuthorized.authorizeControlModule("kcm_pulseaudio")
+        onTriggered: KCMUtils.KCMLauncher.openSystemSettings("kcm_pulseaudio")
+    }
+
+    // BWM: no MicrophoneIndicator/kded initialization or migration of global audio settings.
+    Component.onCompleted: setInternalAction("configure", configureAction)
+}

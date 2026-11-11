@@ -610,6 +610,54 @@
       "why": "Favoritos y recientes del Kickoff de Breeze (KActivities, el formato de Plasma)",
       "check": {"type": "path", "any": ["/usr/libexec/kactivitymanagerd", "/usr/lib/kactivitymanagerd", "/usr/lib/x86_64-linux-gnu/libexec/kactivitymanagerd"]},
       "packages": {"gentoo": "kde-plasma/kactivitymanagerd", "arch": "kactivitymanagerd", "fedora": "kactivitymanagerd", "opensuse": null, "debian": "kactivitymanagerd"}
+    },
+    "plasma-mpris": {
+      "label": "Modelo MPRIS de Plasma",
+      "referenceVersion": "6.7.5",
+      "why": "Interfaz de los applets portados de Breeze, sin arrancar plasmashell ni sus servidores",
+      "check": {
+        "type": "qml",
+        "module": "org/kde/plasma/private/mpris"
+      },
+      "packages": {
+        "gentoo": "kde-plasma/plasma-workspace",
+        "arch": "plasma-workspace",
+        "fedora": "plasma-workspace",
+        "opensuse": null,
+        "debian": "plasma-workspace"
+      }
+    },
+    "plasma-calendar": {
+      "label": "Calendario de Plasma",
+      "referenceVersion": "6.7.5",
+      "why": "Interfaz de los applets portados de Breeze, sin arrancar plasmashell ni sus servidores",
+      "check": {
+        "type": "qml",
+        "module": "org/kde/plasma/workspace/calendar"
+      },
+      "packages": {
+        "gentoo": "kde-plasma/plasma-workspace",
+        "arch": "plasma-workspace",
+        "fedora": "plasma-workspace",
+        "opensuse": null,
+        "debian": "plasma-workspace"
+      }
+    },
+    "kde-notificationmanager": {
+      "label": "Componentes de notificaciones KDE (sin servidor)",
+      "referenceVersion": "6.7.5",
+      "why": "Interfaz de los applets portados de Breeze, sin arrancar plasmashell ni sus servidores",
+      "check": {
+        "type": "qml",
+        "module": "org/kde/notificationmanager"
+      },
+      "packages": {
+        "gentoo": "kde-plasma/plasma-workspace",
+        "arch": "plasma-workspace",
+        "fedora": "plasma-workspace",
+        "opensuse": null,
+        "debian": "plasma-workspace"
+      }
     }
   }
 }

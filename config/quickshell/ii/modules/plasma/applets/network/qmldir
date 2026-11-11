@@ -1,0 +1,8 @@
+Toolbar 1.0 Toolbar.qml
+ConnectionItem 1.0 ConnectionItem.qml
+PopupDialog 1.0 PopupDialog.qml
+ConnectionListPage 1.0 ConnectionListPage.qml
+PasswordField 1.0 PasswordField.qml
+ShareNetworkQrCodePage 1.0 ShareNetworkQrCodePage.qml
+DetailsText 1.0 DetailsText.qml
+NetworkApplet 1.0 NetworkApplet.qml

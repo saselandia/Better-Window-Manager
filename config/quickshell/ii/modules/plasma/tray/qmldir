@@ -1,0 +1,8 @@
+TrayController 1.0 TrayController.qml
+singleton TrayState 1.0 TrayState.qml
+TrayMenu 1.0 TrayMenu.qml
+SystemTray 1.0 SystemTray.qml
+StatusNotifierItem 1.0 StatusNotifierItem.qml
+TrayPopup 1.0 TrayPopup.qml
+PulseAnimation 1.0 PulseAnimation.qml
+AbstractItem 1.0 AbstractItem.qml

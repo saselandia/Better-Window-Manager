@@ -1,0 +1,4 @@
+MediaApplet 1.0 MediaApplet.qml
+CompactRepresentation 1.0 CompactRepresentation.qml
+AlbumArtStackView 1.0 AlbumArtStackView.qml
+ExpandedRepresentation 1.0 ExpandedRepresentation.qml
