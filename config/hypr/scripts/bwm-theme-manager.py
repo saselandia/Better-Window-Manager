@@ -853,7 +853,10 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
 
         # 2. Cargar el perfil de configuración aislado del tema seleccionado
         load_theme_config(theme_name, cfg)
-        if cfg.get("is_plasma"):
+        # Sólo al entrar desde otra skin: estando ya en Breeze (reinicio de mantenimiento, volver a
+        # elegirla) el kdeglobals actual es el bueno y la copia guardada al salir sería vieja; la
+        # restauración deshacía lo aplicado desde las Preferencias (un esquema de color, iconos…).
+        if cfg.get("is_plasma") and curr_theme != "plasma":
             subprocess.run(plasma_theme + ["restore"], check=False)
 
         # 3. Actualizar configuraciones de Hyprland y btop
