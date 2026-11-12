@@ -10,7 +10,7 @@ import Quickshell
 import org.kde.ksvg as KSvg
 import org.kde.kirigami as Kirigami
 import "TaskPrefixes.js" as Prefixes
-MouseArea {
+Item {
     id: task
     required property var group
     required property var tasksModel
@@ -19,18 +19,36 @@ MouseArea {
     readonly property string appId:group?.appId??""
     readonly property var toplevels:group?.toplevels??[]
     readonly property bool isActive:task.toplevels.some(t=>!!t.activated)
-    readonly property bool isMinimized:task.toplevels.length>0 && task.toplevels.every(t=>(tasksModel?.minimized(t)??false))
+    readonly property bool isMinimized:!!(task.toplevels.length>0 && task.toplevels.every(t=>(tasksModel?.minimized(t)??false)))
     readonly property bool attention:task.toplevels.some(t=>!!t.urgent)
     readonly property string basePrefix:!task.toplevels.length ? "" : attention ? "attention" : isMinimized ? "minimized" : isActive ? "focus" : "normal"
+    // BWM: icon geometry follows Task.qml/LayoutMetrics, using the active theme's frame.
+    readonly property real horizontalMargins:metrics.margins.left+metrics.margins.right
+    readonly property real verticalMargins:metrics.margins.top+metrics.margins.bottom
+    readonly property real iconExtent:Math.max(16,Math.min(48,task.width-horizontalMargins,task.height-verticalMargins))
+    readonly property bool containsMouse: hover.hovered
     signal contextRequested(var button)
     implicitWidth:44; implicitHeight:44
-    hoverEnabled:true; acceptedButtons:Qt.LeftButton|Qt.RightButton|Qt.MiddleButton
-    onClicked:mouse=>{
-        if(mouse.button===Qt.RightButton) contextRequested(task);
-        else if(mouse.button===Qt.MiddleButton) tasksModel.launch(appId);
-        else tasksModel.click(group);
+    // BWM: match Plasma's pointer handlers; a child DragHandler steals MouseArea clicks.
+    HoverHandler { id:hover }
+    TapHandler {
+        acceptedButtons:Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+        onTapped:(eventPoint,button)=>{
+            if(button===Qt.RightButton) task.contextRequested(task);
+            else if(button===Qt.MiddleButton) task.tasksModel.launch(task.appId);
+            else task.tasksModel.click(task.group);
+        }
     }
-    onWheel:wheel=>{ tasksModel.cycle(group,wheel.angleDelta.y>0?-1:1); wheel.accepted=true; }
+    // BWM: a wheel-only area also works inside Quickshell's Flickable host.
+    MouseArea {
+        anchors.fill:parent; acceptedButtons:Qt.NoButton
+        onWheel:event=>{ task.tasksModel.cycle(task.group,event.angleDelta.y>0?-1:1); event.accepted=true; }
+    }
+    // BWM: stable normal-state metrics, as in upstream main.qml's taskFrame.
+    KSvg.FrameSvgItem {
+        id:metrics; visible:false; imagePath:"widgets/tasks"
+        prefix:Prefixes.taskPrefix("normal",task.edge)
+    }
     KSvg.FrameSvgItem {
         id:frame; anchors.fill:parent; imagePath:"widgets/tasks"
         prefix:task.containsMouse ? Prefixes.taskPrefixHovered(task.basePrefix,task.edge) : Prefixes.taskPrefix(task.basePrefix,task.edge)
@@ -43,7 +61,8 @@ MouseArea {
         Drag.hotSpot.x:width/2; Drag.hotSpot.y:height/2
         Kirigami.Icon {
             anchors.centerIn:parent
-            width:Math.min(32,task.width-8); height:width
+            width:task.iconExtent; height:width
+            active:task.containsMouse
             source:Quickshell.iconPath(task.tasksModel?.entry(task.appId)?.icon || "application-x-executable")
         }
         DragHandler {

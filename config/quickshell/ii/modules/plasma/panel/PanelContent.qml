@@ -93,13 +93,14 @@ Item {
             implicitWidth:root.vertical?40:Math.max(44,contentWidth)
             implicitHeight:root.vertical?Math.max(44,contentHeight):40
             orientation:root.vertical?ListView.Vertical:ListView.Horizontal
-            spacing:2; clip:true; boundsBehavior:Flickable.StopAtBounds
+            // BWM: adjacent task frames, with spacing supplied by the Plasma SVG margins.
+            spacing:0; clip:true; boundsBehavior:Flickable.StopAtBounds
             model:ScriptModel { objectProp:"appId"; values:modelAdapter.groups }
             delegate:Task {
                 required property var modelData
                 group:modelData; tasksModel:modelAdapter; edge:root.edge
-                width:root.vertical?list.width:Math.min(52,list.height+4)
-                height:root.vertical?Math.min(52,list.width+4):list.height
+                width:root.vertical?list.width:Math.min(48,list.height)+horizontalMargins-verticalMargins
+                height:root.vertical?Math.min(48,list.width)+verticalMargins-horizontalMargins:list.height
                 onContextRequested:button=>root.menuFor(modelData,button)
             }
         }

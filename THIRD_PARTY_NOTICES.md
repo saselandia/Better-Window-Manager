@@ -159,7 +159,8 @@ Panel de Breeze (F3, 2026-11-11): componentes derivados de KDE Plasma **v6.7.5**
 config/quickshell/ii/modules/plasma/panel, GPL-2.0-or-later. Origen:
 [plasma-desktop](https://invent.kde.org/plasma/plasma-desktop/-/tree/v6.7.5)
 (desktoppackage/contents/views/Panel.qml, containments/panel, applets/taskmanager/qml/Task.qml y
-code/TaskTools.js) y
+code/TaskTools.js y qml/code/LayoutMetrics.js; manejadores y medidas cotejados de nuevo
+el 2026-11-12) y
 [plasma-workspace](https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5)
 (applets/digital-clock/DigitalClock.qml, shell/panelview.cpp y panelshadows.cpp).
 Se conservan las cabeceras SPDX de Marco Martin, Eike Hein, Nate Graham, Heena Mahour,

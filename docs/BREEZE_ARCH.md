@@ -547,3 +547,9 @@ no maneja. Usa la ventana real bajo el puntero y el botón físico, sin adivinar
 ni una lista de clases. No altera el protocolo Wayland ni la decisión CSD/SSD. Binario instalado
 atómicamente; la parte C++ sólo se activa al reiniciar sesión. Evidencia y límites en
 [BREEZE_PANEL_FIXES.md](BREEZE_PANEL_FIXES.md).
+
+Seguimiento 2026-11-12: la acción de enfoque funcionaba pero el MouseArea del delegado
+perdía el clic izquierdo por su DragHandler hijo. Task utiliza TapHandler como upstream;
+prueba de entrada real en ListView, incluyendo miniatura, en los cuatro bordes. Sin margen
+artificial entre tareas ni en el eje corto del panel; dimensiones basadas en las métricas
+normales del SVG, como Task.qml/LayoutMetrics.js. Detalle en BREEZE_PANEL_FIXES.md.

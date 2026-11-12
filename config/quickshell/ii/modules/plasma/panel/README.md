@@ -79,3 +79,12 @@ F13 retira plasmaCommon: DesktopState.qml (código propio BWM, GPL-2.0-or-later)
 Mostrar escritorio sobre el estado común de minimizar; el panel ya tiene su propia lógica
 SVG/geometría y no necesita las antiguas heurísticas de flotación. Informe final en
 `docs/BREEZE_F13_RESULTS.md`.
+
+### Entrada y medidas de tareas (2026-11-12)
+
+Task usa TapHandler/HoverHandler como Plasma Task.qml 6.7.5: el MouseArea padre anterior
+perdía el clic izquierdo por el DragHandler del icono. La rueda tiene su área sin botones.
+Los marcos son adyacentes, ocupan el eje corto del panel y las métricas normales del SVG
+fijan iconos y longitud, como code/LayoutMetrics.js; no cambian de tamaño al enfocar.
+Prueba opcional tests/test_plasma_task_input.py: clic en icono/margen, central/derecho,
+rueda, arrastre sin clic y miniatura, en cuatro bordes; acciones sustituidas.

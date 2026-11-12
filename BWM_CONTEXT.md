@@ -112,7 +112,8 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   Cursor, Kelvin, pantallas y demás configuración común siguen bajo autoridad de BWM. La fuente general predeterminada es Noto Sans 10 y la monoespaciada Hack; fuentes propias de Breeze, no compartidas.
 * **Panel/Kickoff/applets:** `modules/plasma/{panel,kickoff,tray,applets}` usan KSvg/PC3 y
   fuentes de datos KDE o servicios comunes. Panel en bar.plasma, cuatro bordes/reserva real,
-  seis widgets incluidos. DesktopState gestiona Mostrar escritorio sobre el minimizado común.
+  seis widgets incluidos. Clic de tareas con TapHandler, probado con eventos en cuatro bordes (§3.160);
+  marcos adyacentes y medidas del SVG. DesktopState gestiona Mostrar escritorio sobre el minimizado común.
   No hay anfitrión completo de plasmoides externos; límites de applets en sus README.
 * **Ventanas:** `breezebars` compone las imágenes de KDecoration/Aurorae de `bwm-decorator`
   fuera de Hyprland; CSD negociado sin listas de clases y marco real por dirección+PID.
@@ -1599,6 +1600,22 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 * **Validación:** 374 pruebas generales, 65 opcionales omitidas, sin fallos; 15 pruebas QML de
   applets activadas, repetida la del toggle/Escape. Verificación de Hyprland, requisitos y logs.
   Más detalle en docs/BREEZE_PANEL_FIXES.md; las pruebas de CSD no sustituyen el arrastre físico.
+
+### 160. Clic directo de tareas y medidas del panel de Breeze (2026-11-12)
+
+* El usuario detectó que §3.159 no resolvía el clic: se había probado focus, no la entrada
+  del icono. Reproducido con Task real en ListView: clic izquierdo 0, miniatura 1.
+  MouseArea padre interfería con DragHandler hijo; sustituido por Item+TapHandler/HoverHandler
+  como Plasma 6.7.5. Área sin botones para rueda, comprobada dentro del ListView.
+* Marcos sin separación artificial de 2 px, sin margen en el eje corto del panel; geometría
+  de iconos/tareas con las métricas normales estables de widgets/tasks (Task.qml/LayoutMetrics.js).
+  SVG y estados originales conservados. Recorte real revisado y borrado; sin prometer paridad visual total.
+* Prueba opcional test_plasma_task_input.py: centro, margen, central, derecho, rueda,
+  arrastre sin activar y miniatura, en cuatro bordes. Mock sólo de captura/datos/acciones.
+  Pasa con la corrección y falla con Task anterior (0 clics). Ocho pruebas de geometría y
+  trece de acciones de ventanas pasan. Reinicio de mantenimiento del shell; sin cambio C++
+  ni cierre de sesión. Suite general: 375 pruebas, 66 omitidas, sin fallos; la entrada QML
+  opcional se ejecutó expresamente. Informe actualizado en docs/BREEZE_PANEL_FIXES.md.
 
 ## 4. 📂 Estructura del repositorio
 

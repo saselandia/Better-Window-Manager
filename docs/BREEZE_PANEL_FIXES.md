@@ -51,3 +51,36 @@ configerrors se comprueban al cerrar este cambio; bwm check de Breeze correcto.
 
 Los avisos previos de traducción en_US, UPower ausente y ToolbarTabBar no se presentan como
 resueltos por este cambio.
+
+## Corrección del clic directo y geometría (2026-11-12)
+
+La comprobación anterior de focus verificaba el destino de la acción, pero no pulsaba
+el icono del panel. El usuario confirmó que seguía fallando. Reproducido con el delegado
+real dentro de un ListView: la versión anterior registra **0 clics izquierdos** y la
+miniatura registra 1 activación. El DragHandler del icono interfiere con el MouseArea padre.
+
+Task usa ahora Item + TapHandler/HoverHandler, como Task.qml de Plasma 6.7.5. La rueda
+conserva un MouseArea exclusivo sin botones: WheelHandler no recibía ese evento en la
+prueba dentro del ListView. Se mantienen las acciones del adaptador y su identidad por PID.
+
+La disposición elimina los 2 px añadidos entre tareas y el margen del eje corto aplicado
+a todo el panel. Los marcos llegan al borde exterior; las dimensiones de iconos/tareas
+salen de los márgenes normales del SVG, con métricas estables al enfocar o pasar el ratón,
+según Task.qml y code/LayoutMetrics.js de plasma-desktop 6.7.5. Se conserva el dibujo del
+tema para normal/foco/minimizado; no se altera su color ni se ocultan sus estados.
+Los fondos de las aplicaciones abiertas siguen siendo los del tema activo.
+
+La prueba opcional tests/test_plasma_task_input.py pulsa centro y margen del botón,
+botón central/derecho, rueda, arrastra y pulsa la miniatura real del PopupWindow.
+Pasa en los cuatro bordes. Se sustituye sólo la captura de pantalla del fixture y el
+adaptador de acciones: ninguna ventana/app real se modifica. La misma prueba contra
+Task.qml anterior falla con cero clics izquierdos. Las pruebas de geometría (8) y acciones
+de ventanas (13) pasan. Shell reiniciado por el gestor de mantenimiento, una instancia ii;
+sin errores de configuración de Hyprland. Recortes del panel revisados y borrados.
+
+Suite general: 375 pruebas, 66 opcionales omitidas, sin fallos. La prueba de entrada
+opcional se ejecutó además expresamente; qmllint conserva avisos de imports/metadatos
+dinámicos, complementados con la carga real del shell.
+
+Esto comprueba el componente que usa la barra; no certifica equivalencia visual completa
+con todas las versiones y temas de Plasma. No se modifica el plugin ni hace falta cerrar sesión.
