@@ -553,3 +553,9 @@ perdía el clic izquierdo por su DragHandler hijo. Task utiliza TapHandler como 
 prueba de entrada real en ListView, incluyendo miniatura, en los cuatro bordes. Sin margen
 artificial entre tareas ni en el eje corto del panel; dimensiones basadas en las métricas
 normales del SVG, como Task.qml/LayoutMetrics.js. Detalle en BREEZE_PANEL_FIXES.md.
+
+Port visual posterior del mismo día: representaciones compactas originales de Kickoff,
+DigitalClock, Mostrar escritorio y ExpanderArrow; cuadrícula nativa de bandeja sobre
+AbstractItem y márgenes del contenedor por applet. Servicios y acciones permanecen en BWM.
+bar.plasma.clock y systemTray admiten claves originales de apariencia; requisitos incluyen
+el módulo QML privado de digital-clock. Estado y límites en BREEZE_PANEL_FIXES.md.

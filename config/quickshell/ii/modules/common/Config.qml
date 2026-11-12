@@ -257,7 +257,10 @@ Singleton {
                     property list<string> widgets: ["kickoff", "tasks", "tray", "clock", "desktop"]
                     // BWM: Plasma visibility modes by stable SNI/applet ID, own to this skin.
                     property var trayItems: ({})
+                    property var systemTray: ({}) // Native scaleIconsToFit/iconSpacing
                     property list<string> taskOrder: []
+                    // BWM: native digital-clock Appearance keys for Breeze.
+                    property var clock: ({})
                     property bool showDate: true
                     property bool showSeconds: false
                     property string style: "translucent" // adaptive | translucent | opaque (floating = legacy adaptive + floating)

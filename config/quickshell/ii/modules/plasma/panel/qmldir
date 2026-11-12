@@ -9,3 +9,5 @@ TasksModel 1.0 TasksModel.qml
 Task 1.0 Task.qml
 TaskToolTip 1.0 TaskToolTip.qml
 DigitalClock 1.0 DigitalClock.qml
+KickoffButton 1.0 KickoffButton.qml
+ShowDesktopButton 1.0 ShowDesktopButton.qml

@@ -6,3 +6,5 @@ StatusNotifierItem 1.0 StatusNotifierItem.qml
 TrayPopup 1.0 TrayPopup.qml
 PulseAnimation 1.0 PulseAnimation.qml
 AbstractItem 1.0 AbstractItem.qml
+ExpanderArrow 1.0 ExpanderArrow.qml
+AppletItem 1.0 AppletItem.qml

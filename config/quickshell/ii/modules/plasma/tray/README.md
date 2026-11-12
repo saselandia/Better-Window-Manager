@@ -36,3 +36,11 @@ inhabilitados. No se conecta/desconecta ni se cambia el radio real para probarla
 Las páginas originales de ajustes de cada plasmoide y los plasmoides de terceros no se alojan aquí.
 La disposición/configuración es la opción bar.plasma aceptada en F3, no un appletsrc parcial.
 Nuevos archivos/Loader: reinicio de mantenimiento con bwm-theme-manager.py set <skin-actual> --restart-shell.
+
+
+Seguimiento visual 2026-11-12: ExpanderArrow.qml procede de plasma-workspace v6.7.5 sin
+redibujar su flecha ni sus animaciones. AppletItem.qml adapta PlasmoidItem.qml a los modelos
+BWM usando AbstractItem; sustituye ToolButton en el panel. SystemTray usa las fórmulas de
+qml/main.qml: smallMedium (22 px), smallSpacing*iconSpacing (8 px de entrada), celdas de
+30 px, filas/columnas según grosor y opción scaleIconsToFit. Claves nativas de apariencia
+en bar.plasma.systemTray; visibilidad por ID sigue en trayItems. Sin cambios de servicios.

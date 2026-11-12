@@ -84,3 +84,38 @@ dinámicos, complementados con la carga real del shell.
 
 Esto comprueba el componente que usa la barra; no certifica equivalencia visual completa
 con todas las versiones y temas de Plasma. No se modifica el plugin ni hace falta cerrar sesión.
+
+## Port visual desde los originales (2026-11-12)
+
+La comparación posterior del usuario mostró que las medidas corregidas de las tareas no
+bastaban: reloj, lanzador, bandeja y Mostrar escritorio seguían siendo versiones reducidas.
+Se clonaron plasma-desktop y plasma-workspace con la etiqueta v6.7.5 verificada y se portaron
+sus representaciones compactas y métricas. Inventario y modificaciones en panel/README.md.
+
+| Pieza | Implementación vigente |
+| :--- | :--- |
+| Kickoff | Compacto original; medidas según icono, etiqueta opcional, icono de reserva y arrastre. |
+| Reloj | Estados y etiquetas originales, ajuste de fuente y formatos nativos; sin negrita fija. Las 216 líneas de estados se cotejaron iguales tras sustituir el attached. |
+| Bandeja | AbstractItem para SNI/applets, flecha y animaciones originales; 22 px y celdas de 30 px por defecto, filas y escala según las fórmulas de Plasma. |
+| Mostrar escritorio | Icono simbólico de 32 px e indicador tabbar original; controlador común BWM. |
+| Contenedor | fixedMargins por applet y smallSpacing entre applets, con CanFillArea en tareas; sin margen exterior duplicado. |
+
+Probado en el shell real y con fixtures seguros: reloj horizontal de varias alturas,
+una línea y vertical; clic de lanzador, Mostrar escritorio y flecha; escala automática de
+bandeja; se conservan las comprobaciones de tareas/miniaturas y popup/Escape. Capturas de
+los componentes y extremos del panel revisadas y eliminadas. El módulo privado del reloj,
+ya instalado, se declara en requisitos y manifiesto; no se instalaron paquetes.
+
+En la referencia, el panel mide 44 px y el fondo es #202326: coinciden con el panel actual.
+El logo turquesa de la referencia es distinto del start-here-kde-symbolic blanco instalado;
+las aplicaciones, sus estados y el formato regional también difieren. Se conserva la
+configuración elegida. No se afirma igualdad de todos los píxeles sin conocer los activos
+y la configuración de la sesión de referencia. Se han sustituido las aproximaciones
+identificadas por el código visual original; no se cambia la estimación general del port.
+
+Verificación final: 379 pruebas generales, 70 opcionales omitidas, sin fallos; ejecutadas
+además las cuatro pruebas de controles/medidas nativas, quince de bandeja y la de tareas en
+cuatro bordes. Hyprland verifica config ok, configerrors vacío, requisitos de Breeze correctos
+y una instancia ii. qmllint sin errores de sintaxis; conserva avisos de imports virtuales y
+metadatos dinámicos, complementados con instanciación real. Avisos anteriores de UPower,
+traducción en_US y ToolbarTabBar fuera del alcance de este ajuste.

@@ -149,3 +149,10 @@ carga su ruta sólo en esa skin. Los archivos nuevos requieren reinicio de mante
 Bandeja de Breeze: modules/plasma/tray y applets; visibilidad por ID en bar.plasma.trayItems.
 Los proveedores de red/Bluetooth/audio/avisos/portapapeles/energía siguen siendo comunes;
 las vistas y los modelos de KDE compatibles se crean sólo al abrir su página.
+
+
+Breeze: el panel usa las representaciones compactas de Kickoff, reloj, Mostrar escritorio
+y la flecha de bandeja de Plasma 6.7.5, con márgenes por applet y cuadrícula original.
+El detalle comprobado está en docs/BREEZE_PANEL_FIXES.md. La estimación anterior no cambia:
+portar estos componentes no certifica equivalencia de toda la sesión ni de una captura
+con otros iconos, aplicaciones y configuración regional.

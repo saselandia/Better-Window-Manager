@@ -278,3 +278,16 @@ de bordes del panel sigue la política de plasma-workspace 6.7.5 PanelView::upda
 se mantienen cabeceras y origen del port. CsdMove.hpp y la recepción XCB de _NET_WM_MOVERESIZE
 son implementación propia sobre EWMH, sin copiar C++ de KWin/Hyprland ni añadir Qt al plugin.
 Noto Sans y Hack proceden de los paquetes del sistema, no se añaden sus binarios al repo.
+
+
+Panel Breeze, ampliación del port visual (2026-11-12): fuentes de **v6.7.5**, etiquetas
+verificadas en clones de [plasma-desktop](https://invent.kde.org/plasma/plasma-desktop/-/tree/v6.7.5)
+y [plasma-workspace](https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5).
+KickoffButton.qml extrae kickoff/main.qml y ShowDesktopButton.qml deriva de showdesktop/main.qml
+(GPL-2.0-or-later). DigitalClock.qml conserva ahora la representación compacta completa
+(GPL-2.0-or-later). Se conservan sus cabeceras SPDX y autores. PanelContent adapta los márgenes
+de containments/panel/main.qml; las señales de expansión/acciones y la configuración las aporta BWM.
+ExpanderArrow.qml y AppletItem.qml proceden de systemtray/qml/{ExpanderArrow,PlasmoidItem}.qml
+(LGPL-2.0-or-later); la cuadrícula sigue systemtray/qml/main.qml. Cabeceras y modificaciones
+marcadas BWM en los archivos; explicaciones en los README de panel y tray. Textos de licencia
+ya incluidos en licenses. No se copia el logotipo de la captura de referencia.

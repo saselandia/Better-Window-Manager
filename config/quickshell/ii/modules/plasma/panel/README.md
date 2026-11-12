@@ -21,8 +21,8 @@ Fuentes de KDE Plasma **v6.7.5**, en https://invent.kde.org/plasma/:
   sólo-iconos, estados/prefijos y marca de grupo. TaskPrefixes.js conserva los prefijos.
   TasksModel.qml sustituye TaskManager.TasksModel por toplevels de Quickshell y datos de Hyprland.
   TaskToolTip.qml reutiliza ScreencopyView, como el anterior plasmaTaskMenu.
-- plasma-workspace/applets/digital-clock/DigitalClock.qml: representación compacta local,
-  adaptada en DigitalClock.qml (Clock original de KDE, PC3, formato de fecha y disposición).
+- plasma-workspace/applets/digital-clock/DigitalClock.qml: representación compacta original
+  en DigitalClock.qml (estados, fuentes ajustables, etiquetas, formatos y Clock de KDE).
   Configuración y señales sustituyen al attached Plasmoid; el formato horario compartido sigue
   saliendo de Config.options.time.format.
 
@@ -88,3 +88,34 @@ Los marcos son adyacentes, ocupan el eje corto del panel y las métricas normale
 fijan iconos y longitud, como code/LayoutMetrics.js; no cambian de tamaño al enfocar.
 Prueba opcional tests/test_plasma_task_input.py: clic en icono/margen, central/derecho,
 rueda, arrastre sin clic y miniatura, en cuatro bordes; acciones sustituidas.
+
+### Representaciones nativas (2026-11-12)
+
+Clones verificados v6.7.5 de plasma-desktop y plasma-workspace:
+
+- KickoffButton.qml conserva la representación compacta de kickoff/main.qml (icono,
+  etiqueta opcional, icono de reserva, medidas y arrastre). La expansión se delega al host.
+- ShowDesktopButton.qml conserva el icono user-desktop-symbolic, acceso por teclado,
+  temporizador de arrastre e indicador widgets/tabbar de showdesktop/main.qml.
+  DesktopState sustituye únicamente los controladores de KWin.
+- DigitalClock.qml conserva los estados horizontal, vertical y una línea y los métodos de
+  formato del original. Las 216 líneas de estados coinciden con upstream después de adaptar
+  los nombres de configuración. Sin fuente pequeña/negrita fija ni ancho mínimo de 72 px.
+- PanelContent aplica spacingAtMinSize y fixedMargins del panel por applet; tasks declara
+  implícitamente CanFillArea y no recibe esos márgenes. Separación entre applets smallSpacing.
+- La bandeja usa las celdas, filas, tamaños y ExpanderArrow originales; AppletItem comparte
+  AbstractItem con los SNI. No se dibujan los applets con ToolButton genérico.
+
+Claves originales en bar.plasma.clock (Appearance de digital-clock) y bar.plasma.systemTray
+(scaleIconsToFit/iconSpacing); showDate/showSeconds y el formato horario común se conservan.
+No hay configuración de todas estas claves en la interfaz todavía. Cambiar zonas con la rueda,
+lanzar un calendario externo y los menús contextuales privados del reloj no se han portado.
+La nueva biblioteca QML privada del reloj está declarada como plasma-digitalclock.
+
+Pruebas opcionales test_plasma_panel_native.py con fuente/entorno KDE: ajuste de fuente,
+fecha, una línea, panel vertical, medidas de la bandeja y clics locales en los botones.
+Se sustituyen las acciones por contadores y las ventanas van al workspace 9.
+Comparación con la imagen de referencia: panel 44 px y fondo #202326 coinciden. El icono
+blanco start-here-kde-symbolic es el de Breeze instalado; la referencia muestra otro logo.
+La fecha sigue la configuración regional actual. No se certifica igualdad de todos los
+píxeles con una captura cuya configuración completa de iconos y fuentes no está disponible.

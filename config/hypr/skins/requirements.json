@@ -641,6 +641,13 @@
       "check": {"type": "qml", "module": "org/kde/plasma/clock"},
       "packages": {"gentoo": "kde-plasma/plasma-workspace", "arch": "plasma-workspace", "fedora": "plasma-workspace", "opensuse": null, "debian": "plasma-workspace"}
     },
+    "plasma-digitalclock": {
+      "label": "Interfaz del reloj digital de Plasma",
+      "referenceVersion": "6.7.5",
+      "why": "Formato y traducciones de zonas horarias del reloj nativo de Plasma",
+      "check": {"type": "qml", "module": "org/kde/plasma/private/digitalclock"},
+      "packages": {"gentoo": "kde-plasma/plasma-workspace", "arch": "plasma-workspace", "fedora": "plasma-workspace", "opensuse": null, "debian": "plasma-workspace"}
+    },
     "kactivitymanagerd": {
       "label": "Gestor de actividades de KDE",
       "referenceVersion": "6.7.5",

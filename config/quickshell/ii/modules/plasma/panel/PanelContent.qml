@@ -11,6 +11,8 @@ import qs.modules.plasma.tray as PlasmaTray
 import "." as PanelLocal
 import qs.modules.plasma.menus
 import org.kde.plasma.components as PC3
+import org.kde.ksvg as KSvg
+import org.kde.kirigami as Kirigami
 Item {
     id:root
     required property var panelWindow
@@ -18,25 +20,43 @@ Item {
     property bool vertical:edge==="left"||edge==="right"
     readonly property var config:Config.options.bar.plasma
     readonly property var widgets:config.widgets ?? ["kickoff","tasks","tray","clock","desktop"]
+    // BWM: containment main.qml margins, independent of enabled exterior borders.
+    KSvg.FrameSvgItem {
+        id:panelMetrics;visible:false;imagePath:"widgets/panel-background"
+        prefix:[({top:"north",bottom:"south",left:"west",right:"east"})[root.edge],""]
+    }
+    readonly property real spacingAtMinSize:Math.floor(Math.max(1,(vertical?width:height)-Kirigami.Units.iconSizes.smallMedium)/2)
+    function getMargins(side) { return Math.round(Math.min(spacingAtMinSize,panelMetrics.fixedMargins[side])); }
     TasksModel { id:modelAdapter }
     // F9: el menú del gestor de tareas de Plasma (modules/plasma/menus/TaskMenu.qml)
     function menuFor(group,button) {
         PlasmaMenus.openFor("task",button,root.edge,{group:group});
     }
     GridLayout {
-        anchors.fill:parent; rowSpacing:2; columnSpacing:2
+        anchors.fill:parent
+        anchors.leftMargin:root.vertical?0:Math.min(root.spacingAtMinSize,panelMetrics.fixedMargins.left+Kirigami.Units.smallSpacing)
+        anchors.rightMargin:root.vertical?0:Math.min(root.spacingAtMinSize,panelMetrics.fixedMargins.right+Kirigami.Units.smallSpacing)
+        anchors.topMargin:root.vertical?Math.min(root.spacingAtMinSize,panelMetrics.fixedMargins.top+Kirigami.Units.smallSpacing):0
+        anchors.bottomMargin:root.vertical?Math.min(root.spacingAtMinSize,panelMetrics.fixedMargins.bottom+Kirigami.Units.smallSpacing):0
+        rowSpacing:Kirigami.Units.smallSpacing; columnSpacing:Kirigami.Units.smallSpacing
         rows:root.vertical?-1:1; columns:root.vertical?1:-1
         Repeater {
             model:root.widgets
             delegate:Loader {
                 id:widget
                 required property string modelData
+                readonly property bool isAppletContainer:true
+                function getMargins(side,all) { return modelData==="tasks"?0:root.getMargins(side); }
+                Layout.topMargin:root.vertical?0:getMargins("top")
+                Layout.bottomMargin:root.vertical?0:getMargins("bottom")
+                Layout.leftMargin:root.vertical?getMargins("left"):0
+                Layout.rightMargin:root.vertical?getMargins("right"):0
                 Layout.fillWidth:root.vertical||modelData==="tasks"
                 Layout.fillHeight:!root.vertical||modelData==="tasks"
                 Layout.minimumWidth:root.vertical?0:(modelData==="tasks"?44:0)
                 Layout.minimumHeight:root.vertical&&modelData==="tasks"?44:0
-                Layout.preferredWidth:root.vertical?-1:implicitWidth
-                Layout.preferredHeight:root.vertical?implicitHeight:-1
+                Layout.preferredWidth:root.vertical?-1:(item?.Layout.preferredWidth>0?item.Layout.preferredWidth:implicitWidth)
+                Layout.preferredHeight:root.vertical?(item?.Layout.preferredHeight>0?item.Layout.preferredHeight:implicitHeight):-1
                 sourceComponent:({
                     kickoff:kickoffComponent,pager:pagerComponent,tasks:tasksComponent,
                     tray:trayComponent,clock:clockComponent,desktop:desktopComponent
@@ -57,19 +77,18 @@ Item {
     }
     Component {
         id:kickoffComponent
-        PC3.ToolButton {
-            implicitWidth:44; implicitHeight:40
-            icon.width:32;icon.height:32
-            icon.name:Config.options.bar.plasma.kickoff?.icon || "start-here-kde"
-            checked:GlobalStates.plasmaKickoffOpen
-            // F4: el Kickoff portado (modules/plasma/kickoff) se abre junto a este botón, como el plasmoide
-            onClicked: {
-                if (GlobalStates.plasmaKickoffOpen) { GlobalStates.plasmaKickoffOpen=false; return; }
-                PanelState.anchor(this,"plasmaKickoff");
-                GlobalStates.plasmaKickoffOpen=true;
+        KickoffButton {
+            vertical:root.vertical
+            icon:root.config.kickoff?.icon ?? "start-here-kde-symbolic"
+            menuLabel:root.config.kickoff?.menuLabel ?? ""
+            expanded:GlobalStates.plasmaKickoffOpen
+            onToggleRequested:expanded=>{
+                if(expanded) PanelState.anchor(this,"plasmaKickoff");
+                GlobalStates.plasmaKickoffOpen=expanded;
             }
         }
     }
+
     Component {
         id:pagerComponent
         GridLayout {
@@ -107,7 +126,7 @@ Item {
     }
     Component {
         id:trayComponent
-        PlasmaTray.SystemTray { vertical:root.vertical }
+        PlasmaTray.SystemTray { vertical:root.vertical;edge:root.edge }
     }
 
     Component {
@@ -129,6 +148,7 @@ Item {
             }
             PlasmaTray.TrayPopup { anchorItem:clock;tray:calendarHost }
             vertical:root.vertical
+            settings:root.config.clock ?? ({})
             showDate:root.config.showDate
             showSeconds:root.config.showSeconds
             onClicked:PlasmaTray.TrayState.toggle("calendar",root.panelWindow.screen.name)
@@ -136,9 +156,9 @@ Item {
     }
     Component {
         id:desktopComponent
-        PC3.ToolButton {
-            implicitWidth:root.vertical?32:20; implicitHeight:root.vertical?20:32
-            icon.name:"user-desktop";icon.width:20;icon.height:20; onClicked:PanelLocal.DesktopState.toggle()
+        ShowDesktopButton {
+            vertical:root.vertical;edge:root.edge
+            onToggleRequested:PanelLocal.DesktopState.toggle()
         }
     }
 }

@@ -111,6 +111,7 @@
     "kirigami",
     "plasma-workspace",
     "plasma-clock",
+    "plasma-digitalclock",
     "plasma-nm",
     "plasma-pa",
     "plasma-mpris",

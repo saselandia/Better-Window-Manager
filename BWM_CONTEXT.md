@@ -113,7 +113,8 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 * **Panel/Kickoff/applets:** `modules/plasma/{panel,kickoff,tray,applets}` usan KSvg/PC3 y
   fuentes de datos KDE o servicios comunes. Panel en bar.plasma, cuatro bordes/reserva real,
   seis widgets incluidos. Clic de tareas con TapHandler, probado con eventos en cuatro bordes (§3.160);
-  marcos adyacentes y medidas del SVG. DesktopState gestiona Mostrar escritorio sobre el minimizado común.
+  marcos adyacentes y medidas del SVG. Representaciones compactas nativas de Kickoff/reloj/
+  Mostrar escritorio y flecha de bandeja, con márgenes originales por applet (§3.161). DesktopState gestiona Mostrar escritorio sobre el minimizado común.
   No hay anfitrión completo de plasmoides externos; límites de applets en sus README.
 * **Ventanas:** `breezebars` compone las imágenes de KDecoration/Aurorae de `bwm-decorator`
   fuera de Hyprland; CSD negociado sin listas de clases y marco real por dirección+PID.
@@ -1616,6 +1617,26 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
   trece de acciones de ventanas pasan. Reinicio de mantenimiento del shell; sin cambio C++
   ni cierre de sesión. Suite general: 375 pruebas, 66 omitidas, sin fallos; la entrada QML
   opcional se ejecutó expresamente. Informe actualizado en docs/BREEZE_PANEL_FIXES.md.
+
+### 161. Panel de Breeze: representaciones y medidas originales de Plasma (2026-11-12)
+
+* El usuario pidió igualdad visual precisa. Clonadas y verificadas etiquetas v6.7.5 de
+  plasma-desktop/plasma-workspace. KickoffButton, ShowDesktopButton y ExpanderArrow portan
+  sus representaciones originales; las acciones se delegan al host/servicios BWM.
+* DigitalClock conserva etiquetas, fuentes ajustables, estados y formato original (216
+  líneas de disposición cotejadas iguales tras adaptar nombres). Se retira fuente fija
+  pequeña/negrita. Configuración nativa en bar.plasma.clock y formato común conservado.
+* PanelContent aplica fixedMargins por applet, límite spacingAtMinSize y smallSpacing;
+  tareas llenan el área. Bandeja con AbstractItem también para applets, celdas/filas nativas,
+  22/30 px por defecto y scaleIconsToFit/iconSpacing en bar.plasma.systemTray.
+* Dependencia QML privada digitalclock declarada (ya instalada). Cuatro pruebas QML de
+  reloj/medidas/controles pasan, quince de bandeja y tareas con eventos en cuatro bordes.
+  Recortes reales revisados y eliminados. Shell reiniciado por el gestor, sin cerrar sesión.
+* Referencia adjunta: fondo #202326 y panel 44 px coinciden. Logo y configuración regional
+  distintos; no se afirma igualdad de todos los píxeles ni se eleva compatibilidad estimada.
+  Límites y fuentes en docs/BREEZE_PANEL_FIXES.md y README de panel/tray. Suite general:
+  379 pruebas, 70 opcionales omitidas, sin fallos; config/requirements correctos y una instancia ii.
+
 
 ## 4. 📂 Estructura del repositorio
 

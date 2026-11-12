@@ -93,11 +93,6 @@ Scope {
                 }
                 PanelContent {
                     anchors.fill:parent
-                    // BWM: Plasma containments only pad the long axis; task frames fill panel thickness.
-                    anchors.leftMargin:win.vertical?0:Math.min(8,background.frameMargins.left)
-                    anchors.rightMargin:win.vertical?0:Math.min(8,background.frameMargins.right)
-                    anchors.topMargin:win.vertical?Math.min(8,background.frameMargins.top):0
-                    anchors.bottomMargin:win.vertical?Math.min(8,background.frameMargins.bottom):0
                     panelWindow:win; edge:win.geo.edge
                 }
             }

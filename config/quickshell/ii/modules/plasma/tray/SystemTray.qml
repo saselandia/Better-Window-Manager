@@ -16,7 +16,17 @@ import "TrayLogic.js" as Logic
 Item {
     id:root
     property bool vertical:false
-    property int itemSize:22
+    property string edge:"bottom"
+    // BWM: systemtray/main.qml grid formula, native Appearance defaults.
+    property var appearance:Config.options.bar.plasma.systemTray ?? ({})
+    readonly property int smallIconSize:Kirigami.Units.iconSizes.smallMedium
+    readonly property bool autoSize:appearance.scaleIconsToFit ?? false
+    readonly property int gridThickness:vertical?width:height
+    readonly property int lanes:autoSize?1:Math.max(1,Math.min(entries.length,Math.floor(gridThickness/(smallIconSize+Kirigami.Units.smallSpacing))))
+    readonly property int itemSize:autoSize?Kirigami.Units.iconSizes.roundedIconSize(Math.min(gridThickness/lanes,Kirigami.Units.iconSizes.enormous)):smallIconSize
+    readonly property int cellSpacing:Kirigami.Units.smallSpacing*(appearance.iconSpacing ?? 2)
+    readonly property int cellLength:itemSize+(gridThickness<itemSize?0:cellSpacing)
+    readonly property var entries:visibleItems.map(i=>({kind:"sni",item:i})).concat(visibleApplets.map(a=>({kind:"applet",item:a})))
     property bool configurable:true
     property bool readOnly:false
     property var appletProperties: ({})
@@ -41,27 +51,54 @@ Item {
     property bool configuring:false
     onActiveAppletChanged:configuring=false
     readonly property var hiddenLayout:({currentIndex:-1})
-    implicitWidth:layout.implicitWidth;implicitHeight:layout.implicitHeight
+    readonly property real contentLength:cellLength*Math.ceil(entries.length/lanes)+(expander.visible?itemSize:0)+Kirigami.Units.smallSpacing
+    implicitWidth:vertical?Kirigami.Units.iconSizes.medium:contentLength
+    implicitHeight:vertical?contentLength:Kirigami.Units.iconSizes.medium
     function openApplet(id) { TrayState.toggle(id,screenName); }
     function openMenu(item,button) { if(readOnly)return; menu.openFor(item.menu,button); }
     function setMode(id,value) { if(!readOnly)Config.options.bar.plasma.trayItems=Logic.update(settings,id,value); }
     GridLayout {
-        id:layout; anchors.fill:parent;columns:root.vertical?1:-1;rows:root.vertical?-1:1;rowSpacing:4;columnSpacing:4
-        Repeater {
-            model:root.visibleItems
-            StatusNotifierItem {
+        anchors.fill:parent;rowSpacing:0;columnSpacing:0
+        rows:root.vertical?2:1;columns:root.vertical?1:2
+        GridView {
+            id:layout
+            Layout.alignment:Qt.AlignCenter
+            implicitWidth:root.vertical?root.width:cellWidth*Math.ceil(count/root.lanes)
+            implicitHeight:root.vertical?cellHeight*Math.ceil(count/root.lanes):root.height
+            interactive:false
+            flow:root.vertical?GridView.LeftToRight:GridView.TopToBottom
+            cellWidth:root.vertical?Math.floor(root.width/root.lanes):root.cellLength
+            cellHeight:root.vertical?root.cellLength:Math.floor(root.height/root.lanes)
+            model:root.entries
+            delegate:Loader {
+                id:entry
                 required property var modelData
-                required index
-                item:modelData;model:({});tray:root
-                effectiveStatus:PlasmaCore.Types.ActiveStatus
-                Layout.preferredWidth:root.itemSize+6;Layout.preferredHeight:root.itemSize+6
+                required property int index
+                width:layout.cellWidth;height:layout.cellHeight
+                sourceComponent:modelData.kind==="sni"?sniComponent:appletComponent
+                Component {
+                    id:sniComponent
+                    StatusNotifierItem {
+                        item:entry.modelData.item;index:entry.index;model:({});tray:root
+                        effectiveStatus:PlasmaCore.Types.ActiveStatus
+                    }
+                }
+                Component {
+                    id:appletComponent
+                    AppletItem {
+                        applet:entry.modelData.item;index:entry.index;model:({});tray:root
+                        effectiveStatus:PlasmaCore.Types.ActiveStatus
+                    }
+                }
             }
         }
-        Repeater {
-            model:root.visibleApplets
-            PC3.ToolButton { required property var modelData; icon.name:modelData.icon;icon.width:22;icon.height:22;text:modelData.title;display:PC3.AbstractButton.IconOnly;implicitWidth:32;implicitHeight:32;checked:root.expanded&&root.activeApplet===modelData.id;onClicked:root.openApplet(modelData.id);PC3.ToolTip { text:parent.text } }
+        ExpanderArrow {
+            id:expander;vertical:root.vertical;edge:root.edge
+            iconSize:root.itemSize;expanded:root.expanded
+            visible:root.hiddenItems.length+root.hiddenApplets.length>0
+            Layout.fillWidth:root.vertical;Layout.fillHeight:!root.vertical
+            onToggleRequested:value=>{root.configuring=false;if(value)TrayState.open("",root.screenName);else TrayState.close()}
         }
-        PC3.ToolButton { id:expander;icon.name:root.vertical?"arrow-left":"arrow-up";icon.width:16;icon.height:16;text:qsTr("Status and Notifications");implicitWidth:28;implicitHeight:28;onClicked:{root.configuring=false;TrayState.toggle("",root.screenName)} }
     }
     TrayMenu { id:menu }
     readonly property alias popupWindow:expandedWindow
