@@ -30,6 +30,15 @@ hl.window_rule({
     float = true,
 })
 
+-- com.stremio.Stremio
+hl.window_rule({
+    name  = "persist_com_stremio_stremio",
+    match = {
+        class = "^com\\.stremio\\.Stremio$",
+    },
+    float = true,
+})
+
 -- kitty
 hl.window_rule({
     name  = "persist_kitty",
@@ -101,16 +110,6 @@ hl.window_rule({
         title = "(?i).*(friends|amigos|chat).*",
     },
     float = true,
-})
-
--- Steam (Ventana Principal)
-hl.window_rule({
-    name  = "persist_steam_main",
-    match = {
-        class = "^steam$",
-        title = "^Steam$",
-    },
-    float = false,
 })
 
 -- Steam (Sign in to Steam)

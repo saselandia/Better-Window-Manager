@@ -25,7 +25,9 @@ Item {
     // BWM: icon geometry follows Task.qml/LayoutMetrics, using the active theme's frame.
     readonly property real horizontalMargins:metrics.margins.left+metrics.margins.right
     readonly property real verticalMargins:metrics.margins.top+metrics.margins.bottom
-    readonly property real iconExtent:Math.max(16,Math.min(48,task.width-horizontalMargins,task.height-verticalMargins))
+    // BWM: Task.qml iconBox "standalone": width min(minimumWidth, tasksRoot.height) minus the frame's
+    // left/right margins, height minus top/bottom margins; Kirigami.Icon paints the smaller side.
+    readonly property real iconExtent:Math.max(16,Math.min(Math.min(task.width,task.height)-horizontalMargins,task.height-verticalMargins))
     readonly property bool containsMouse: hover.hovered
     signal contextRequested(var button)
     implicitWidth:44; implicitHeight:44

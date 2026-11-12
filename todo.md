@@ -14,21 +14,6 @@ agregar el las kde plasma settings y hacer que coincidan con las settings que te
 
 
 
-4. Otras novedades sin portar:
-
-animaciones de introducción al cambiar de fondo;
-el panel de pantallas con mapa de distribución y opción de Extender o Duplicar;
-las reglas de movimiento aplicadas a las animaciones de Hyprland;
-cambios en el menú: Apariencia como menú principal, la transparencia de apps opcional y una sección de Teclado;
-botones Abrir/Cortar en los avisos de descargas y grabaciones.
-
-Los instaladores de apps (Notion, Slack, dictado…) dependen de Arch y no sirven tal cual en Gentoo.
-
-Te propongo empezar por el punto 1: portar el modo por workspace a Retro sin cargar un segundo plugin, ampliando nuestro hyprbars-plasma con las dos cosas que le faltan. Como no quieres atajos nuevos, el cambio de modo iría en el menú de Retro en vez de en Super+L.
-
-
-
-
 MEJORAR ALT TAB EN TODOS
 
 
@@ -42,3 +27,7 @@ cambiar de nautilus a dolphin, dejar nautilus en omarchy y añadirle los plugins
 
 
 hacer que bwmenu salga como app para buscarla en el lanzador
+
+
+
+hacer mas comodo el cambiar de skin, que no cierre firefox, que las ventanas esten donde deberian estar

@@ -22,13 +22,13 @@
     "extraBackgroundTint": true,
     "fakeScreenRounding": 0,
     "fonts": {
-      "expressive": "Space Grotesk",
-      "iconNerd": "JetBrains Mono NF",
-      "main": "Google Sans Flex",
-      "monospace": "JetBrains Mono NF",
-      "numbers": "Google Sans Flex",
-      "reading": "Readex Pro",
-      "title": "Google Sans Flex"
+      "main": "Noto Sans",
+      "numbers": "Noto Sans",
+      "title": "Noto Sans",
+      "monospace": "Hack",
+      "reading": "Noto Sans",
+      "expressive": "Noto Sans",
+      "iconNerd": "JetBrains Mono NF"
     },
     "palette": {
       "accentColor": "",
@@ -46,6 +46,7 @@
         "forceDarkMode": false,
         "harmonizeThreshold": 100,
         "harmony": 0.6,
+        "neutral": false,
         "termFgBoost": 0.35
       }
     }
@@ -150,12 +151,58 @@
       }
     },
     "plasma": {
+      "alignment": "center",
       "centerTasks": false,
       "color": "#000000",
+      "edge": "",
       "floating": false,
       "floatingGap": 8,
+      "kickoff": {
+        "alphaSort": false,
+        "appNameFormat": 2,
+        "applicationsDisplay": 1,
+        "compactMode": false,
+        "favorites": [
+          "preferred://browser",
+          "org.gnome.Nautilus.desktop",
+          "kitty.desktop",
+          "systemsettings.desktop"
+        ],
+        "favoritesDisplay": 0,
+        "favoritesPortedToKAstats": true,
+        "highlightNewlyInstalledApps": true,
+        "icon": "start-here-kde-symbolic",
+        "menuLabel": "",
+        "paneSwap": false,
+        "pin": false,
+        "primaryActions": 0,
+        "showActionButtonCaptions": true,
+        "switchCategoryOnHover": false,
+        "systemApplications": [
+          "systemsettings.desktop"
+        ],
+        "systemFavorites": [
+          "suspend",
+          "hibernate",
+          "reboot",
+          "shutdown"
+        ]
+      },
+      "length": 1,
       "opacity": 0.91,
-      "style": "opaque"
+      "showDate": true,
+      "showSeconds": false,
+      "style": "opaque",
+      "taskOrder": [],
+      "thickness": 44,
+      "visibility": "always",
+      "widgets": [
+        "kickoff",
+        "tasks",
+        "tray",
+        "clock",
+        "desktop"
+      ]
     },
     "resources": {
       "alwaysShowCpu": true,
@@ -236,6 +283,7 @@
     "hoverToReveal": true,
     "ignoredAppRegexes": [],
     "monochromeIcons": true,
+    "omarchy": false,
     "pinnedApps": [
       "org.gnome.Nautilus"
     ],
@@ -243,6 +291,13 @@
   },
   "hacks": {
     "arbitraryRaceConditionDelay": 20
+  },
+  "idle": {
+    "lock": 0,
+    "screen": 1200,
+    "screensaver": true,
+    "screensaverTime": 150,
+    "suspend": 0
   },
   "interactions": {
     "deadPixelWorkaround": {
@@ -590,12 +645,5 @@
   "screensaver": {
     "enable": true,
     "timeoutMinutes": 5
-  },
-  "idle": {
-    "lock": 0,
-    "screen": 1200,
-    "screensaver": true,
-    "screensaverTime": 150,
-    "suspend": 0
   }
 }

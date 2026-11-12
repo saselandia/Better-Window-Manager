@@ -41,6 +41,18 @@ ShellRoot {
     readonly property var kickoff: loader.item
     function report(key, value) { results[key] = value; console.log("KICKOFFTEST " + JSON.stringify({ key: key, value: value })); }
 
+    // Favoritos de prueba: el cliente de KActivities es nuevo y aleatorio, así que Kickoff debe importarlos
+    // de la configuración aunque el Kickoff real del usuario ya marcara favoritesPortedToKAstats
+    property bool prepared: false
+    Timer {
+        interval: 50; repeat: true; running: !shell.prepared
+        onTriggered: if (Config.ready) {
+            Config.blockWrites = true;
+            Config.options.bar.plasma.kickoff.favoritesPortedToKAstats = false;
+            shell.prepared = true;
+        }
+    }
+
     PanelWindow {
         id: win
         screen: Quickshell.screens.find(s => s.name === "@SCREEN@") ?? Quickshell.screens[0]
@@ -59,6 +71,7 @@ ShellRoot {
             id: loader
             anchors.fill: parent
             asynchronous: true
+            active: shell.prepared
             focus: true
             sourceComponent: K.Kickoff { focus: true }
             onStatusChanged: if (status === Loader.Error) shell.report("loaderError", true)

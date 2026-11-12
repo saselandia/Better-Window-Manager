@@ -119,3 +119,39 @@ cuatro bordes. Hyprland verifica config ok, configerrors vacío, requisitos de B
 y una instancia ii. qmllint sin errores de sintaxis; conserva avisos de imports virtuales y
 metadatos dinámicos, complementados con instanciación real. Avisos anteriores de UPower,
 traducción en_US y ToolbarTabBar fuera del alcance de este ajuste.
+
+## Ancho e icono de las tareas como LayoutMetrics; comparación con una referencia (2026-11-12)
+
+Medido sobre una captura del usuario con un panel de Plasma de referencia (fotograma de vídeo) y
+el panel de BWM a la misma escala. Las tareas de BWM medían 42 px con paso 44: `PanelContent`
+usaba `min(48, alto) + márgenes horizontales − verticales`, que es `preferredMinLauncherWidth()`
+(el mínimo). En un panel con relleno, Task.qml de icontasks toma `Layout.maximumWidth` =
+`preferredMaxWidth()` = alto + `horizontalMargins()` (márgenes izquierdo+derecho del marco
+`widgets/tasks` × `iconSpacing`; vertical: ancho + `verticalMargins()`). El icono «standalone»
+es `min(ancho mínimo, alto) − márgenes laterales` por `alto − márgenes verticales` y
+`Kirigami.Icon` redondea a un tamaño estándar. Con Breeze por defecto (márgenes 4/4/4/4,
+`south-*` no existe y cae en `normal`) y panel de 44: tarea de 52 px e icono de 32 px.
+Nuevo `bar.plasma.taskManager.iconSpacing` (0/1/3, por defecto 1), el `iconSpacing` de icontasks.
+
+La referencia no usa los valores por defecto: sus medidas cuadran a la vez con un panel de 68 px,
+espaciado de tareas Grande (3) y bandeja con `scaleIconsToFit` y espaciado Grande (6), los ajustes
+que Plasma pone en modo táctil. Aplicados un momento en el panel real y a escala 0,5: tareas
+(44–45 px visibles, paso 46), bandeja (iconos y paso), flecha y ancho del reloj coinciden. Quedan
+dos diferencias que no salen de Plasma 6.7.5: «Mostrar escritorio» mide allí ~39 px y en 6.7.5
+está fijado a 32 (`Layout.minimum/maximum = iconSizes.medium`), y su reloj es algo menor; la
+referencia puede ser otra versión. La configuración del usuario se devolvió a la anterior.
+
+Después se dejó el panel con los valores por defecto (44 px, espaciado Normal, bandeja sin escalar).
+El applet de Bluetooth sigue a bluedevil 6.7.5: visible mientras el adaptador está presente y encendido
+(`bluetoothOperational`), no sólo con un dispositivo conectado; iconos `network-bluetooth*-symbolic`.
+
+## Iconos de la bandeja, Kickoff sobre el panel y resaltado del botón (2026-11-12)
+
+- Iconos SNI cuadrados: Quickshell da una URL de imagen y `Kirigami.Icon` la estiraba a la celda.
+- Kickoff recorta en el borde del diálogo (en Plasma lo hace su ventana): las pestañas del pie
+  bajaban 3 px sobre el panel. Línea `widgets/line` entre menú y panel como `CompactApplet.qml`.
+- Botón abierto: `widgets/tabbar` `south-active-tab` (línea `ButtonFocus` de 3 px) hasta el borde
+  del panel, como `expandedItem` de `CompactApplet.qml`; también en el reloj con el calendario.
+- Bandeja: resaltado del applet abierto (o de toda la bandeja para los ocultos) como
+  `CurrentItemHighLight.qml`. Las ventanas emergentes de bandeja y calendario se apoyan en el borde del
+  panel, sin borde en ese lado y con la línea separadora (antes se anclaban 4 px dentro y lo tapaban).

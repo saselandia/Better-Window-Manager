@@ -27,6 +27,25 @@ Item {
     }
     readonly property real spacingAtMinSize:Math.floor(Math.max(1,(vertical?width:height)-Kirigami.Units.iconSizes.smallMedium)/2)
     function getMargins(side) { return Math.round(Math.min(spacingAtMinSize,panelMetrics.fixedMargins[side])); }
+    // CompactApplet.qml (plasma-desktop 6.7.5): an expanded applet shows «widgets/tabbar»
+    // <edge>-active-tab behind it, stretched over the containment margins to the panel edges.
+    component ExpandedHighlight: KSvg.FrameSvgItem {
+        id:highlight
+        property bool expanded:false
+        readonly property var container:{ let item=highlight; while(item.parent){item=item.parent;if(item.isAppletContainer)return item;} return null; }
+        z:-100
+        anchors.fill:parent
+        anchors.topMargin:!root.vertical&&container?-container.getMargins("top",true):0
+        anchors.bottomMargin:!root.vertical&&container?-container.getMargins("bottom",true):0
+        anchors.leftMargin:root.vertical&&container?-container.getMargins("left",true):0
+        anchors.rightMargin:root.vertical&&container?-container.getMargins("right",true):0
+        imagePath:"widgets/tabbar"
+        // hasElementPrefix() is not notifiable; a prefix list lets KSvg pick the first existing one
+        prefix:[(({left:"west",top:"north",right:"east"})[root.edge]??"south")+"-active-tab","active-tab"]
+        visible:opacity>0
+        opacity:expanded?1:0
+        Behavior on opacity { NumberAnimation { duration:Kirigami.Units.shortDuration;easing.type:Easing.InOutQuad } }
+    }
     TasksModel { id:modelAdapter }
     // F9: el menú del gestor de tareas de Plasma (modules/plasma/menus/TaskMenu.qml)
     function menuFor(group,button) {
@@ -82,6 +101,7 @@ Item {
             icon:root.config.kickoff?.icon ?? "start-here-kde-symbolic"
             menuLabel:root.config.kickoff?.menuLabel ?? ""
             expanded:GlobalStates.plasmaKickoffOpen
+            ExpandedHighlight { expanded:GlobalStates.plasmaKickoffOpen&&GlobalStates.plasmaKickoffScreen===root.panelWindow.screen.name }
             onToggleRequested:expanded=>{
                 if(expanded) PanelState.anchor(this,"plasmaKickoff");
                 GlobalStates.plasmaKickoffOpen=expanded;
@@ -118,8 +138,12 @@ Item {
             delegate:Task {
                 required property var modelData
                 group:modelData; tasksModel:modelAdapter; edge:root.edge
-                width:root.vertical?list.width:Math.min(48,list.height)+horizontalMargins-verticalMargins
-                height:root.vertical?Math.min(48,list.width)+verticalMargins-horizontalMargins:list.height
+                // BWM: icons-only Task.qml in a fill panel takes Layout.maximumWidth/Height, i.e.
+                // LayoutMetrics.preferredMaxWidth() = height + horizontalMargins() (vertical:
+                // preferredMaxHeight() = width + verticalMargins()), iconSpacing 1 by default.
+                readonly property int iconSpacing:Config.options.bar.plasma.taskManager?.iconSpacing ?? 1
+                width:root.vertical?list.width:list.height+horizontalMargins*iconSpacing
+                height:root.vertical?list.width+verticalMargins*iconSpacing:list.height
                 onContextRequested:button=>root.menuFor(modelData,button)
             }
         }
@@ -147,6 +171,7 @@ Item {
                 readonly property var appletProperties:({})
             }
             PlasmaTray.TrayPopup { anchorItem:clock;tray:calendarHost }
+            ExpandedHighlight { expanded:PlasmaTray.TrayState.expanded&&PlasmaTray.TrayState.applet==="calendar"&&PlasmaTray.TrayState.screenName===root.panelWindow.screen.name }
             vertical:root.vertical
             settings:root.config.clock ?? ({})
             showDate:root.config.showDate

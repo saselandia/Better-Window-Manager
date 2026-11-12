@@ -24,7 +24,31 @@ PopupWindow {
     visible:tray.expanded
     onVisibleChanged:if(visible)Qt.callLater(()=>surface.forceActiveFocus())
     color:"transparent";implicitWidth:tray.activeApplet==="calendar"?440:460;implicitHeight:540
+    // BWM: PlasmaQuick::Dialog docks against the panel edge, not against the icon (which sits inside
+    // the containment margins): the anchor rect spans the panel thickness. Floating panels keep
+    // CompactApplet's largeSpacing margin.
+    readonly property string screenName:anchorItem.QsWindow.window?.screen?.name||""
+    readonly property bool docked:PanelState.gapFor(screenName)<=0
+    readonly property var container:{ let item=anchorItem; while(item&&item.parent){ item=item.parent; if(item.isAppletContainer)return item; } return null; }
+    readonly property bool horizontalPanel:edge==="top"||edge==="bottom"
+    readonly property rect panelSpan:{
+        // depend on the geometry that moves the icon inside the panel
+        void(anchorItem.x+anchorItem.y+anchorItem.width+anchorItem.height+(container?container.width+container.height:0)+visible);
+        if(!container)return Qt.rect(0,0,anchorItem.width,anchorItem.height);
+        const p=anchorItem.mapToItem(container,0,0);
+        const margin=docked?0:Kirigami.Units.largeSpacing;
+        if(horizontalPanel){
+            const top=-(p.y+container.getMargins("top",true))-margin;
+            const bottom=container.height-p.y+container.getMargins("bottom",true)+margin;
+            return Qt.rect(0,top,anchorItem.width,bottom-top);
+        }
+        const left=-(p.x+container.getMargins("left",true))-margin;
+        const right=container.width-p.x+container.getMargins("right",true)+margin;
+        return Qt.rect(left,0,right-left,anchorItem.height);
+    }
     anchor.item:anchorItem
+    anchor.rect.x:panelSpan.x;anchor.rect.y:panelSpan.y
+    anchor.rect.width:panelSpan.width;anchor.rect.height:panelSpan.height
     anchor.edges:edge==="bottom"?Edges.Top:edge==="top"?Edges.Bottom:edge==="left"?Edges.Right:Edges.Left
     anchor.gravity:anchor.edges
     HyprlandFocusGrab { active:trayWindow.visible;windows:[trayWindow, trayWindow.anchorItem.QsWindow.window].filter(w=>w);onCleared:TrayState.close() }
@@ -33,7 +57,22 @@ PopupWindow {
     anchors.fill:parent
     focus:true
     Keys.onEscapePressed:event=>{TrayState.close();event.accepted=true;}
-    KSvg.FrameSvgItem { anchors.fill:parent;imagePath:"solid/dialogs/background";prefix:"" }
+    KSvg.FrameSvgItem {
+        anchors.fill:parent;imagePath:"solid/dialogs/background";prefix:""
+        // Docked to the panel: no border on that side, as PlasmaQuick::Dialog
+        enabledBorders:!trayWindow.docked?KSvg.FrameSvgItem.AllBorders
+            :({bottom:KSvg.FrameSvgItem.AllBorders&~KSvg.FrameSvgItem.BottomBorder,
+               top:KSvg.FrameSvgItem.AllBorders&~KSvg.FrameSvgItem.TopBorder,
+               left:KSvg.FrameSvgItem.AllBorders&~KSvg.FrameSvgItem.LeftBorder,
+               right:KSvg.FrameSvgItem.AllBorders&~KSvg.FrameSvgItem.RightBorder})[trayWindow.edge]??KSvg.FrameSvgItem.AllBorders
+    }
+    // CompactApplet.qml: 1 px «widgets/line» between a docked popup and the panel, drawn on top
+    KSvg.SvgItem {
+        visible:trayWindow.docked;z:999
+        imagePath:"widgets/line";elementId:trayWindow.horizontalPanel?"horizontal-line":"vertical-line"
+        x:trayWindow.edge==="right"?parent.width-1:0;y:trayWindow.edge==="bottom"?parent.height-1:0
+        width:trayWindow.horizontalPanel?parent.width:1;height:trayWindow.horizontalPanel?1:parent.height
+    }
     ColumnLayout {
         anchors.fill:parent;anchors.margins:10;spacing:6
         RowLayout {

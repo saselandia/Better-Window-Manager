@@ -258,6 +258,7 @@ Singleton {
                     // BWM: Plasma visibility modes by stable SNI/applet ID, own to this skin.
                     property var trayItems: ({})
                     property var systemTray: ({}) // Native scaleIconsToFit/iconSpacing
+                    property var taskManager: ({}) // Native icontasks iconSpacing (0 small, 1 normal, 3 large)
                     property list<string> taskOrder: []
                     // BWM: native digital-clock Appearance keys for Breeze.
                     property var clock: ({})

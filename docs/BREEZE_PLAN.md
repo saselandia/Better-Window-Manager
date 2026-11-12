@@ -105,6 +105,7 @@ C++, F10 parte C++) comparten `src/breezebars/`: **nunca dos a la vez**.
 | F11 Preferencias del sistema                              | medium   | No                              |
 | F12 Alt+Tab, OSD, bloqueo, KRunner                        | medium   | No                              |
 | F13 Limpieza, documentación y prueba completa             | medium   | No: no cambia el plugin; lista manual pendiente |
+|                                                           |          |                                 |
 
 ---
 

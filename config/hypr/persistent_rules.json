@@ -66,15 +66,6 @@
         },
         "float": true
     },
-    "steam_main": {
-        "name": "persist_steam_main",
-        "description": "Steam (Ventana Principal)",
-        "match": {
-            "class": "^steam$",
-            "title": "^Steam$"
-        },
-        "float": false
-    },
     "steam_app_960090": {
         "name": "persist_steam_app_960090",
         "description": "steam_app_960090",
@@ -120,6 +111,14 @@
         "description": "org.bwm.menu",
         "match": {
             "class": "^org\\.bwm\\.menu$"
+        },
+        "float": true
+    },
+    "com_stremio_stremio": {
+        "name": "persist_com_stremio_stremio",
+        "description": "com.stremio.Stremio",
+        "match": {
+            "class": "^com\\.stremio\\.Stremio$"
         },
         "float": true
     }

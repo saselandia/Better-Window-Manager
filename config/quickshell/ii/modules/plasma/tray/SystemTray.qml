@@ -10,6 +10,7 @@ import Quickshell.Services.SystemTray as Sni
 import org.kde.plasma.components as PC3
 import org.kde.plasma.core as PlasmaCore
 import org.kde.kirigami as Kirigami
+import org.kde.ksvg as KSvg
 import qs.modules.common
 import qs.services
 import "TrayLogic.js" as Logic
@@ -34,7 +35,8 @@ Item {
     property var settings:Config.options.bar.plasma.trayItems
     property var applets:[
         ({id:"network",title:qsTr("Networks"),icon:Network.ethernet?"network-wired":Network.wifiEnabled?"network-wireless":"network-wireless-offline",active:true}),
-        ({id:"bluetooth",title:qsTr("Bluetooth"),icon:BluetoothStatus.enabled?"bluetooth-active":"bluetooth-disabled",active:BluetoothStatus.connected}),
+        // BWM: bluedevil 6.7.5 main.qml: Active while BluezQt bluetoothOperational (adapter present and on), icon by state.
+        ({id:"bluetooth",title:qsTr("Bluetooth"),icon:BluetoothStatus.connected?"network-bluetooth-activated-symbolic":(BluetoothStatus.available&&BluetoothStatus.enabled)?"network-bluetooth-symbolic":"network-bluetooth-inactive-symbolic",active:BluetoothStatus.available&&BluetoothStatus.enabled}),
         ({id:"audio",title:qsTr("Audio Volume"),icon:Audio.sink?.audio.muted?"audio-volume-muted":"audio-volume-high",active:true}),
         ({id:"notifications",title:qsTr("Notifications"),icon:Notifications.silent?"notifications-disabled":"notifications",active:Notifications.silent||Notifications.unread>0}),
         ({id:"media",title:qsTr("Media Player"),icon:"media-playback-start",active:MprisController.activePlayer?.isPlaying??false}),
@@ -99,6 +101,64 @@ Item {
             Layout.fillWidth:root.vertical;Layout.fillHeight:!root.vertical
             onToggleRequested:value=>{root.configuring=false;if(value)TrayState.open("",root.screenName);else TrayState.close()}
         }
+    }
+    // BWM: CurrentItemHighLight.qml (plasma-workspace 6.7.5 systemtray): «widgets/tabbar» active tab behind
+    // the open applet's icon, or behind the whole tray (out to the panel edges) for hidden items. The
+    // calendar belongs to the clock, which has its own highlight.
+    KSvg.FrameSvgItem {
+        id:currentItemHighLight
+        property bool animationEnabled:true
+        property var highlightedItem:null
+        readonly property bool shown:root.expanded&&root.activeApplet!=="calendar"
+        property var containerMargins:{ let item=root; while(item.parent){ item=item.parent; if(item.isAppletContainer)return item.getMargins; } return undefined; }
+        z:-1
+        imagePath:"widgets/tabbar"
+        // hasElementPrefix() is not notifiable; a prefix list lets KSvg pick the first existing one
+        prefix:[(({left:"west",top:"north",right:"east"})[root.edge]??"south")+"-active-tab","active-tab"]
+        visible:opacity>0
+        opacity:0
+        function itemFor(id) {
+            for (const child of layout.contentItem.children)
+                if (child.modelData?.kind==="applet"&&child.modelData.item.id===id) return child;
+            return null;
+        }
+        function updateHighlightedItem() {
+            if (shown) {
+                const item=root.activeApplet!==""?itemFor(root.activeApplet):null;
+                if (item) changeHighlightedItem(item,false); // applet shown in the panel
+                else changeHighlightedItem(root,true); // 'Show hidden items' popup or a hidden applet
+            } else {
+                highlightedItem=null;
+            }
+            opacity=shown?1:0;
+        }
+        function changeHighlightedItem(nextItem,forceEdgeHighlight) {
+            // do not animate the first appearance or when the highlighted item is the same
+            if (!highlightedItem||highlightedItem===nextItem) animationEnabled=false;
+            const p=root.mapFromItem(nextItem,0,0);
+            if (containerMargins&&(root.lanes===1||forceEdgeHighlight)) {
+                x=p.x-containerMargins("left",true);
+                y=p.y-containerMargins("top",true);
+                width=nextItem.width+containerMargins("left",true)+containerMargins("right",true);
+                height=nextItem.height+containerMargins("bottom",true)+containerMargins("top",true);
+            } else {
+                x=p.x;y=p.y;width=nextItem.width;height=nextItem.height;
+            }
+            highlightedItem=nextItem;
+            animationEnabled=true;
+        }
+        Connections {
+            target:root
+            function onExpandedChanged() { Qt.callLater(currentItemHighLight.updateHighlightedItem); }
+            function onActiveAppletChanged() { Qt.callLater(currentItemHighLight.updateHighlightedItem); }
+            function onWidthChanged() { Qt.callLater(currentItemHighLight.updateHighlightedItem); }
+            function onHeightChanged() { Qt.callLater(currentItemHighLight.updateHighlightedItem); }
+        }
+        Behavior on opacity { NumberAnimation { duration:Kirigami.Units.shortDuration;easing.type:currentItemHighLight.shown?Easing.OutCubic:Easing.InCubic } }
+        Behavior on x { enabled:currentItemHighLight.animationEnabled;NumberAnimation { duration:Kirigami.Units.longDuration;easing.type:Easing.InOutCubic } }
+        Behavior on y { enabled:currentItemHighLight.animationEnabled;NumberAnimation { duration:Kirigami.Units.longDuration;easing.type:Easing.InOutCubic } }
+        Behavior on width { enabled:currentItemHighLight.animationEnabled;NumberAnimation { duration:Kirigami.Units.longDuration;easing.type:Easing.InOutCubic } }
+        Behavior on height { enabled:currentItemHighLight.animationEnabled;NumberAnimation { duration:Kirigami.Units.longDuration;easing.type:Easing.InOutCubic } }
     }
     TrayMenu { id:menu }
     readonly property alias popupWindow:expandedWindow

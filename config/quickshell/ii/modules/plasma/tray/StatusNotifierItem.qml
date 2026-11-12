@@ -15,7 +15,13 @@ AbstractItem {
     textFormat:Text.AutoText
     active:true
     status:item.status===Status.NeedsAttention?PlasmaCore.Types.NeedsAttentionStatus:PlasmaCore.Types.ActiveStatus
-    Kirigami.Icon { anchors.fill:parent;parent:taskIcon.iconContainer;source:taskIcon.item.icon;active:taskIcon.containsMouse }
+    // BWM: Plasma passes a QIcon, which Kirigami.Icon keeps square; Quickshell gives an image URL, which
+    // Kirigami.Icon stretches to the container (itemSize x cell height). Keep it square and centred.
+    Kirigami.Icon {
+        parent:taskIcon.iconContainer;anchors.centerIn:parent
+        width:Math.min(parent.width,parent.height);height:width
+        source:taskIcon.item.icon;active:taskIcon.containsMouse
+    }
     onActivated:pos=>{ if(item.onlyMenu)tray.openMenu(item,taskIcon);else item.activate(); }
     onContextMenu:mouse=>tray.openMenu(item,taskIcon)
     onClicked:mouse=>{

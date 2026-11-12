@@ -4,15 +4,15 @@
 -- =============================================================================
 
 local theme = {
-    name = "retro",
-    rounding = 0,
+    name = "plasma",
+    rounding = 12,
     rounding_power = 2,
-    border_size = 2,
-    gaps_in = 3,
-    gaps_out = 5,
+    border_size = 0,
+    gaps_in = 0,
+    gaps_out = 0,
     -- Ventanas: "tiling" (mosaico) o "traditional" (WM tradicional, todas flotantes con barra de
-    -- título). Sale de config/hypr/skins/retro/skin.json → "windows"
-    windows = "tiling",
+    -- título). Sale de config/hypr/skins/plasma/skin.json → "windows"
+    windows = "traditional",
 }
 
 return theme

@@ -84,6 +84,10 @@ Scope {
             // Plasma usa la variante translúcida sólo con el efecto de desenfoque de KWin; Breeze no
             // desenfoca (decoration.blur apagado), así que, como Plasma sin desenfoque, la sólida
             imagePath: "solid/dialogs/background"
+            // En Plasma el diálogo es una ventana propia y su borde recorta lo que se extiende hacia sus
+            // márgenes (las pestañas del pie bajan bottomPadding); aquí la capa ocupa toda la pantalla y eso
+            // tapaba 3 px del panel: se recorta en el borde del diálogo
+            clip: true
             // Pegado al panel: sin el borde que lo toca, como PlasmaQuick::Dialog
             enabledBorders: win.floatingPanel ? KSvg.FrameSvgItem.AllBorders
                 : ({ bottom: KSvg.FrameSvgItem.AllBorders & ~KSvg.FrameSvgItem.BottomBorder,
@@ -92,8 +96,13 @@ Scope {
                      right: KSvg.FrameSvgItem.AllBorders & ~KSvg.FrameSvgItem.RightBorder })[win.edge]
                   ?? KSvg.FrameSvgItem.AllBorders
 
-            width: Math.min(win.areaWidth, kickoff.implicitWidth + margins.left + margins.right)
-            height: Math.min(win.areaHeight - win.distance, kickoff.implicitHeight + margins.top + margins.bottom)
+            // CompactApplet.qml (plasma-desktop 6.7.5): a popup docked to the panel draws a 1 px
+            // «widgets/line» against it and grows by that pixel (appletParent.extraWidth/extraHeight)
+            readonly property bool horizontalPanel: win.edge === "top" || win.edge === "bottom"
+            readonly property int lineX: !win.floatingPanel && !horizontalPanel ? 1 : 0
+            readonly property int lineY: !win.floatingPanel && horizontalPanel ? 1 : 0
+            width: Math.min(win.areaWidth, kickoff.implicitWidth + margins.left + margins.right + lineX)
+            height: Math.min(win.areaHeight - win.distance, kickoff.implicitHeight + margins.top + margins.bottom + lineY)
 
             readonly property real anchorX: GlobalStates.plasmaKickoffAnchorX
             readonly property real anchorY: GlobalStates.plasmaPopupAnchorY
@@ -114,11 +123,23 @@ Scope {
 
             Kickoff {
                 id: kickoff
-                x: frame.margins.left
-                y: frame.margins.top
-                width: frame.width - frame.margins.left - frame.margins.right
-                height: frame.height - frame.margins.top - frame.margins.bottom
+                x: frame.margins.left + (win.edge === "left" ? frame.lineX : 0)
+                y: frame.margins.top + (win.edge === "top" ? frame.lineY : 0)
+                width: frame.width - frame.margins.left - frame.margins.right - frame.lineX
+                height: frame.height - frame.margins.top - frame.margins.bottom - frame.lineY
                 focus: root.opened
+            }
+
+            // Línea entre el menú y el panel, encima del contenido como en Plasma (z 999)
+            KSvg.SvgItem {
+                visible: frame.lineX + frame.lineY > 0
+                z: 999
+                imagePath: "widgets/line"
+                elementId: frame.horizontalPanel ? "horizontal-line" : "vertical-line"
+                x: win.edge === "right" ? frame.width - 1 : 0
+                y: win.edge === "bottom" ? frame.height - 1 : 0
+                width: frame.horizontalPanel ? frame.width : 1
+                height: frame.horizontalPanel ? 1 : frame.height
             }
         }
 

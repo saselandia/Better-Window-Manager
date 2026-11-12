@@ -49,9 +49,7 @@
         "neutral": false,
         "termFgBoost": 0.35
       }
-    },
-    "retroThemeMode": "static",
-    "retroThemeName": "jade-horse"
+    }
   },
   "apps": {
     "bluetooth": "blueman-manager",
@@ -153,12 +151,58 @@
       }
     },
     "plasma": {
+      "alignment": "center",
       "centerTasks": false,
       "color": "#24292e",
+      "edge": "",
       "floating": false,
       "floatingGap": 8,
+      "kickoff": {
+        "alphaSort": false,
+        "appNameFormat": 2,
+        "applicationsDisplay": 1,
+        "compactMode": false,
+        "favorites": [
+          "preferred://browser",
+          "org.gnome.Nautilus.desktop",
+          "kitty.desktop",
+          "systemsettings.desktop"
+        ],
+        "favoritesDisplay": 0,
+        "favoritesPortedToKAstats": true,
+        "highlightNewlyInstalledApps": true,
+        "icon": "start-here-kde-symbolic",
+        "menuLabel": "",
+        "paneSwap": false,
+        "pin": false,
+        "primaryActions": 0,
+        "showActionButtonCaptions": true,
+        "switchCategoryOnHover": false,
+        "systemApplications": [
+          "systemsettings.desktop"
+        ],
+        "systemFavorites": [
+          "suspend",
+          "hibernate",
+          "reboot",
+          "shutdown"
+        ]
+      },
+      "length": 1,
       "opacity": 0.91,
-      "style": "translucent"
+      "showDate": true,
+      "showSeconds": false,
+      "style": "translucent",
+      "taskOrder": [],
+      "thickness": 44,
+      "visibility": "always",
+      "widgets": [
+        "kickoff",
+        "tasks",
+        "tray",
+        "clock",
+        "desktop"
+      ]
     },
     "resources": {
       "alwaysShowCpu": true,
