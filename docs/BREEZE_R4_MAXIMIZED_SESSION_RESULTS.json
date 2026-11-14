@@ -1,0 +1,358 @@
+{
+  "date": "2026-11-14",
+  "phase": "R4",
+  "executedBy": "user in local Hyprland session",
+  "recordedByAssistant": true,
+  "validatedScope": "MSI scale 1 bottom panel: explicit BWM maximization respects usable area with/without native reservation; own 28 px decoration included; native panel/fixture cleanup completed",
+  "knownFailure": "After native panel withdrawal, already maximized BWM window keeps height 1348 instead of 1396 until explicitly maximized again; 48 px unused",
+  "limits": [
+    "Automatic adjustment after panel withdrawal failed",
+    "Automatic adjustment on adding a panel to an already maximized window not tested",
+    "Other outputs/edges/scales/skins and production panel takeover not certified",
+    "No live command executed by assistant"
+  ],
+  "sourceReportSha256": "429f5823b4ecd4cc28f4247afa4dcf72eab4fbb1497029d58b6a76c3f16fb437",
+  "report": {
+    "version": 1,
+    "before": {
+      "version": 1,
+      "sessionModified": false,
+      "r4Complete": false,
+      "realAreaVerified": false,
+      "environment": {
+        "runtimeExists": true,
+        "instanceSignaturePresent": true,
+        ".socket.sock": {
+          "exists": true,
+          "isSocket": true,
+          "ownedByCurrentUser": true
+        },
+        ".socket2.sock": {
+          "exists": true,
+          "isSocket": true,
+          "ownedByCurrentUser": true
+        }
+      },
+      "monitors": [
+        {
+          "name": "DP-1",
+          "description": "LG Electronics LG ULTRAFINE 405NTVS2J655",
+          "x": 2560,
+          "y": 0,
+          "width": 3840,
+          "height": 2160,
+          "scale": 1,
+          "transform": 0,
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ]
+        },
+        {
+          "name": "DP-2",
+          "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+          "x": 0,
+          "y": 720,
+          "width": 2560,
+          "height": 1440,
+          "scale": 1,
+          "transform": 0,
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ]
+        }
+      ],
+      "nativeLayers": [],
+      "preview": {
+        "active": false
+      },
+      "status": "access-ok-no-native-preview"
+    },
+    "r4Complete": false,
+    "realAreaVerified": true,
+    "reservationDeltaVerified": true,
+    "maximizedWindowVerified": true,
+    "during": {
+      "version": 1,
+      "sessionModified": false,
+      "r4Complete": false,
+      "realAreaVerified": false,
+      "environment": {
+        "runtimeExists": true,
+        "instanceSignaturePresent": true,
+        ".socket.sock": {
+          "exists": true,
+          "isSocket": true,
+          "ownedByCurrentUser": true
+        },
+        ".socket2.sock": {
+          "exists": true,
+          "isSocket": true,
+          "ownedByCurrentUser": true
+        }
+      },
+      "monitors": [
+        {
+          "name": "DP-1",
+          "description": "LG Electronics LG ULTRAFINE 405NTVS2J655",
+          "x": 2560,
+          "y": 0,
+          "width": 3840,
+          "height": 2160,
+          "scale": 1,
+          "transform": 0,
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ]
+        },
+        {
+          "name": "DP-2",
+          "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+          "x": 0,
+          "y": 720,
+          "width": 2560,
+          "height": 1440,
+          "scale": 1,
+          "transform": 0,
+          "reserved": [
+            0,
+            0,
+            0,
+            92
+          ]
+        }
+      ],
+      "nativeLayers": [
+        {
+          "output": "DP-2",
+          "level": "2",
+          "namespace": "bwm-r4-native-policy",
+          "x": 0,
+          "y": 2068,
+          "w": 640,
+          "h": 48
+        }
+      ],
+      "preview": {
+        "active": true,
+        "status": "acknowledged",
+        "revision": 3,
+        "skin": "plasma",
+        "runtime": {
+          "availableOutputs": [
+            {
+              "description": "LG Electronics LG ULTRAFINE",
+              "geometry": {
+                "height": 2160,
+                "width": 3840,
+                "x": 2560,
+                "y": 0
+              },
+              "manufacturer": "LG Electronics",
+              "model": "LG ULTRAFINE",
+              "name": "DP-1",
+              "serial": "",
+              "serialAvailable": false
+            },
+            {
+              "description": "Micro-Star Int'l Co., Ltd. MAG 274Q X24",
+              "geometry": {
+                "height": 1440,
+                "width": 2560,
+                "x": 0,
+                "y": 720
+              },
+              "manufacturer": "Micro-Star Int'l Co., Ltd.",
+              "model": "MAG 274Q X24",
+              "name": "DP-2",
+              "serial": "",
+              "serialAvailable": false
+            }
+          ],
+          "blockers": [
+            "isolated-preview-only",
+            "session-validation-pending",
+            "reserved-area-unverified"
+          ],
+          "nativePanelPolicy": true,
+          "panels": [
+            {
+              "blockers": [
+                "reserved-area-unverified"
+              ],
+              "containmentId": 1,
+              "error": "",
+              "exclusiveZoneRequested": 48,
+              "outputDescription": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+              "presentation": {
+                "compositorPresentationVerified": false,
+                "exposed": true,
+                "frameSubmitted": true,
+                "nativeViewLoaded": true,
+                "renderError": "",
+                "renderReady": true,
+                "surfaceError": "",
+                "visible": true
+              },
+              "renderReady": true,
+              "reservationRequested": true,
+              "reservedArea": false,
+              "status": "visible",
+              "surfaceRole": "native-policy-test",
+              "visible": true,
+              "waylandVerified": false
+            }
+          ],
+          "qtPlatform": "wayland",
+          "renderReady": true,
+          "replacementReady": false,
+          "scope": "isolated-preview",
+          "skin": "plasma",
+          "version": 1
+        }
+      },
+      "status": "observations-collected"
+    },
+    "maximizedDuring": {
+      "expected": [
+        0,
+        720,
+        2560,
+        1348
+      ],
+      "observedFrame": [
+        0,
+        720,
+        2560,
+        1348
+      ],
+      "mode": 3,
+      "borders": {
+        "left": 0,
+        "top": 28,
+        "right": 0,
+        "bottom": 0
+      },
+      "decorationRecordAvailable": true,
+      "matches": true
+    },
+    "previewExitCode": 130,
+    "after": {
+      "version": 1,
+      "sessionModified": false,
+      "r4Complete": false,
+      "realAreaVerified": false,
+      "environment": {
+        "runtimeExists": true,
+        "instanceSignaturePresent": true,
+        ".socket.sock": {
+          "exists": true,
+          "isSocket": true,
+          "ownedByCurrentUser": true
+        },
+        ".socket2.sock": {
+          "exists": true,
+          "isSocket": true,
+          "ownedByCurrentUser": true
+        }
+      },
+      "monitors": [
+        {
+          "name": "DP-1",
+          "description": "LG Electronics LG ULTRAFINE 405NTVS2J655",
+          "x": 2560,
+          "y": 0,
+          "width": 3840,
+          "height": 2160,
+          "scale": 1,
+          "transform": 0,
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ]
+        },
+        {
+          "name": "DP-2",
+          "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+          "x": 0,
+          "y": 720,
+          "width": 2560,
+          "height": 1440,
+          "scale": 1,
+          "transform": 0,
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ]
+        }
+      ],
+      "nativeLayers": [],
+      "preview": {
+        "active": false
+      },
+      "status": "access-ok-no-native-preview"
+    },
+    "errors": [],
+    "maximizedAfterWithoutRemaximize": {
+      "expected": [
+        0,
+        720,
+        2560,
+        1396
+      ],
+      "observedFrame": [
+        0,
+        720,
+        2560,
+        1348
+      ],
+      "mode": 3,
+      "borders": {
+        "left": 0,
+        "top": 28,
+        "right": 0,
+        "bottom": 0
+      },
+      "decorationRecordAvailable": true,
+      "matches": false,
+      "reason": "Marco distinto del área útil"
+    },
+    "dynamicMaximizedWindowVerified": false,
+    "maximizedAfter": {
+      "expected": [
+        0,
+        720,
+        2560,
+        1396
+      ],
+      "observedFrame": [
+        0,
+        720,
+        2560,
+        1396
+      ],
+      "mode": 3,
+      "borders": {
+        "left": 0,
+        "top": 28,
+        "right": 0,
+        "bottom": 0
+      },
+      "decorationRecordAvailable": true,
+      "matches": true
+    },
+    "fixtureExitCode": -15
+  }
+}

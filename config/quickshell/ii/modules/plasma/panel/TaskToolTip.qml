@@ -44,7 +44,11 @@ PopupWindow {
                 ColumnLayout {
                     anchors.fill:parent
                     PC3.Label { Layout.maximumWidth:180; text:card.modelData.title; elide:Text.ElideRight }
-                    ScreencopyView { Layout.fillWidth:true; Layout.fillHeight:true; captureSource:card.modelData; live:popup.visible }
+                    // Temporary containment: see docs/BREEZE_RECOVERY.md.
+                    ScreencopyView {
+                        Layout.fillWidth:true; Layout.fillHeight:true
+                        captureSource:null; live:false
+                    }
                 }
             }
         }

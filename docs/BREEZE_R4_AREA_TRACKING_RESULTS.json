@@ -1,0 +1,112 @@
+{
+  "date": "2026-11-14",
+  "phase": "R4",
+  "status": "automatic BWM maximized-area tracking implemented and isolated tests passed; live session acceptance pending",
+  "newLiveSessionRunByAssistant": false,
+  "bridgeRestartedByAssistant": false,
+  "compositorRestarted": false,
+  "pluginsChanged": false,
+  "cppChanged": false,
+  "r4Complete": false,
+  "dynamicMaximizedWindowVerifiedInLiveSession": false,
+  "lastLiveEvidence": "BREEZE_R4_MAXIMIZED_SESSION_RESULTS.json",
+  "behavior": {
+    "owner": "existing kde-config-bridge watch; no additional daemon/server",
+    "pollSeconds": 0.5,
+    "ipcTimeoutSeconds": 2,
+    "maxBatchWindows": 16,
+    "maxAttemptsPerSignature": 3,
+    "decorationAuthority": "breezebars-csd v1, exact address/PID and actual extents",
+    "writesRestoreOrPresnap": false,
+    "changesFocusOrWorkspaceOrTags": false,
+    "respectsKdeForceGeometry": true,
+    "optOutTags": [
+      "bwm-ignore-kwin-rules",
+      "bwm-ignore-maximized-area"
+    ],
+    "reloadAction": "existing bridge restart; remains active for existing BWM maximized windows",
+    "readiness": "fresh private 0600 baseline metadata plus live PID/start; not a real geometry verification"
+  },
+  "newRunnerContract": {
+    "name": "panel-appearance-and-withdrawal",
+    "before": "explicit own fixture max without panel",
+    "appearance": "automatic measurement with remaximize=False, then separate explicit measurement",
+    "withdrawal": "automatic measurement with remaximize=False, then separate explicit measurement",
+    "dynamicFlagRequires": "restored reservation, matching baseline, and both automatic phases",
+    "directWindowCommands": "owned fixture only; existing bridge can reflow other BWM maxima as intended"
+  },
+  "sourceSha256": {
+    "config/hypr/skins/plasma/scripts/kwin_area.py": "0124f3fde5412398c5b807e5c4c485bbffc69f64a7aafdc4d31849a8388a5089",
+    "config/hypr/skins/plasma/scripts/kde-config-bridge.py": "c99a4a06e07c7b84e5887661f8527a0ea2165cf994520c969bb0793ff08bb045",
+    "config/hypr/skins/plasma/scripts/r4-maximized-check.py": "4096a72f078f87648d651806ab03cbbd5cbf5707499d529c5757f8430ce4886c",
+    "config/hypr/skins/plasma/scripts/r4-reservation-smoke.py": "605898bf684aa488a6b200eab7ddd754b9c71caec6f915da74eb557cb1e708bd",
+    "config/hypr/skins/plasma/skin.json": "f1e307e96a418f34de299b30f716200ee1679859ce35886ef768455ee19d5740",
+    "tests/test_r4_kwin_area.py": "32dea470568e0385b8cdaebf4738a4625d5d2dea3f9ac3d03094d9ceab6b5251",
+    "tests/test_kde_config_bridge.py": "7a43a079b8bf0e81746aff4cdf81855518d24f6ab54afae1c7fe2e67e214525e",
+    "tests/test_r4_maximized_check.py": "6736fd097ff63dba20c5babb4008912ff1e2ddeebdf9595bd94ee64f34478be2",
+    "tests/test_r4_reservation_smoke.py": "4279d2ad02197bf198446cee726ea8b2f2230759a7371dc2ea2df8cc66a20508"
+  },
+  "reference": {
+    "archive": "/var/cache/distfiles/hyprland-0.56.2.gh.tar.gz",
+    "sha256": "03ad3f5ef152ff44116ffd56fcf808486211ecabf4f0ba567108ee746ba5cd2e",
+    "version": "Hyprland 0.56.2",
+    "inspectedSources": {
+      "hyprland-source/src/config/lua/objects/LuaWindow.cpp": "0755621ac698e5afa4bdb2e65e8475d3b7ee7a766e9389de05c797b3ae6d5ced",
+      "hyprland-source/src/config/lua/objects/LuaMonitor.cpp": "91e23b022b12c875b668713c49889653806d9d71c1f7fde8642f1c02cdade2d5"
+    },
+    "copiedImplementation": false,
+    "newDependencies": false
+  },
+  "tests": {
+    "r4": {
+      "passed": 89,
+      "command": "python3 -m unittest discover -s tests -p test_r4*.py",
+      "log": "...............................................BWM: hook de cambio de plasma: unacknowledged\nBWM: hook de cambio de retro: unacknowledged\n.BWM: hook de cambio de plasma: El hook debe estar dentro de su skin\nBWM: hook de cambio de retro: El hook debe estar dentro de su skin\n.........................................\n----------------------------------------------------------------------\nRan 89 tests in 0.140s\n\nOK\n"
+    },
+    "bridge": {
+      "passed": 18,
+      "command": "python3 -m unittest discover -s tests -p test_kde_config_bridge.py",
+      "log": "..................\n----------------------------------------------------------------------\nRan 18 tests in 0.119s\n\nOK\n"
+    },
+    "rules": {
+      "passed": 18,
+      "command": "python3 -m unittest discover -s tests -p test_kwin_rules.py",
+      "log": "..................\n----------------------------------------------------------------------\nRan 18 tests in 0.014s\n\nOK\n"
+    },
+    "window": {
+      "passed": 13,
+      "command": "python3 -m unittest discover -s tests -p test_kwin_window.py",
+      "log": ".............\n----------------------------------------------------------------------\nRan 13 tests in 0.002s\n\nOK\n"
+    },
+    "skins": {
+      "passed": 7,
+      "command": "python3 -m unittest discover -s tests -p test_skins.py",
+      "log": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.005s\n\nOK\n"
+    },
+    "startup": {
+      "passed": 4,
+      "command": "python3 -m unittest discover -s tests -p test_breeze_startup.py",
+      "log": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.034s\n\nOK\n"
+    },
+    "r3Settings": {
+      "passed": 10,
+      "command": "python3 -m unittest discover -s tests -p test_r3_native_settings.py",
+      "log": "..........\n----------------------------------------------------------------------\nRan 10 tests in 0.056s\n\nOK\n"
+    }
+  },
+  "totalPythonTestsPassed": 159,
+  "luaTests": "two tests invoke installed Lua interpreter with simulated compositor API; no skips",
+  "checks": {
+    "pyCompile": true,
+    "gitDiffCheck": true,
+    "agentsEqualsClaude": true,
+    "runnerHelp": true
+  },
+  "limits": [
+    "No fresh real session run or bridge restart by assistant; executor IPC remains unavailable",
+    "Last observed live dynamic expansion still failed before this code was loaded",
+    "Both automatic appearance and withdrawal must pass in local user session",
+    "Real scale/rotation beyond previous scale 1 bottom MSI evidence not certified",
+    "No production panel takeover, R5 editor, R7 effects, KNS remote acceptance or remaining backend closure"
+  ]
+}

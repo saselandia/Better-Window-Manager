@@ -155,8 +155,9 @@ FocusScope {
 
                                 ScreencopyView {
                                     anchors.fill: parent
-                                    captureSource: modelData.toplevel ?? null
-                                    live: true
+                                    // Temporary containment for the 2026-11-12 capture crash.
+                                    captureSource: null
+                                    live: false
                                 }
 
                                 Kirigami.Icon {

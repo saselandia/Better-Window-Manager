@@ -128,6 +128,12 @@ def _plasma_icons() -> str:
     try:
         parser.read(KDEGLOBALS, encoding="utf-8")
         if not parser.has_section("BWM"):
+            # The user file wins over global-theme defaults; a theme is also valid
+            # when its Icons/Theme only exists in kdedefaults (native Plasma layout).
+            paths = [Path(base) / 'kdeglobals' for base in reversed(os.environ.get('XDG_CONFIG_DIRS','/etc/xdg').split(':')) if base]
+            paths += [KDEGLOBALS.parent / 'kdedefaults/kdeglobals', KDEGLOBALS]
+            parser.clear()
+            parser.read(paths, encoding='utf-8')
             return parser.get("Icons", "Theme", fallback="breeze") or "breeze"
     except configparser.Error:
         pass
@@ -159,13 +165,18 @@ def write_qt6ct(icon_theme: str, mono_font: str = ""):
 
 
 def apply(theme: str, accent: str = "", light: bool = False):
+    if theme != _active_skin():
+        return _current_icons()  # A queued job from a previous skin must not overwrite the new one.
     icons = icon_theme_for(theme, accent, light)
+    if theme != _active_skin():
+        return _current_icons()  # Generating a Papirus variant can outlive a skin transition.
     if _rebuilt:
         # Same theme name, new contents: running apps only reload icons when the name changes
         subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "icon-theme", "Adwaita"],
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "icon-theme", icons],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    write_gtk_icons(icons)
     mono = ""
     if theme == "retro":
         try:
@@ -175,7 +186,56 @@ def apply(theme: str, accent: str = "", light: bool = False):
             mono = "JetBrainsMono Nerd Font"
     write_qt6ct(icons, mono)
     write_kdeglobals()
+    notify_appearance()
     return icons
+
+
+def write_gtk_icons(icons: str):
+    """Keep GTK's file fallback consistent with gsettings; preserve all other keys."""
+    import re
+    for version in ('gtk-3.0', 'gtk-4.0'):
+        path = HOME / '.config' / version / 'settings.ini'
+        text = path.read_text(encoding='utf-8') if path.exists() else ''
+        lines = text.splitlines(keepends=True)
+        inside = False
+        written = False
+        output = []
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith('[') and stripped.endswith(']'):
+                if inside and not written:
+                    output.append(f'gtk-icon-theme-name={icons}\n');written = True
+                inside = stripped == '[Settings]'
+            if inside and re.match(r'^\s*gtk-icon-theme-name\s*=', line):
+                if not written:
+                    output.append(f'gtk-icon-theme-name={icons}\n');written = True
+            else:
+                output.append(line)
+        if not written:
+            if output and not output[-1].endswith('\n'):output[-1] += '\n'
+            if not inside:output.append('[Settings]\n')
+            output.append(f'gtk-icon-theme-name={icons}\n')
+        updated = ''.join(output)
+        if updated != text:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(updated, encoding='utf-8')
+
+
+def notify_icons():
+    # PaletteChanged alone does not refresh KIconLoader/QPA icon caches.
+    for group in range(6):
+        subprocess.run(['dbus-send', '--session', '--type=signal', '/KIconLoader',
+                        'org.kde.KIconLoader.iconChanged', f'int32:{group}'], check=False,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def notify_appearance():
+    # Plasma integration ChangeType: palette, fonts, widget style (0, 1, 2).
+    for kind in (0, 1, 2):
+        subprocess.run(['dbus-send', '--session', '--type=signal', '/KGlobalSettings',
+                        'org.kde.KGlobalSettings.notifyChange', f'int32:{kind}', 'int32:0'],
+                       check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    notify_icons()
 
 
 # ------------------------------------------------------------------------------ KDE / Qt flatpaks
@@ -245,7 +305,10 @@ def write_kdeglobals():
     scheme = _end4_qt_scheme()
     if scheme:
         out = _with_end4_scheme(out, scheme)
+    if KDEGLOBALS.exists() and KDEGLOBALS.read_text(encoding='utf-8') == out:
+        return False
     KDEGLOBALS.write_text(out, encoding="utf-8")
+    return True
 
 
 # default (end-4) with «Qt apps» on: the colours are end-4's, made by kde-material-you-colors
@@ -368,7 +431,11 @@ def flatpak_overrides():
 
 def qt_sync():
     """After bwm.conf changes (matugen/Breeze/Omarchy post_hook): kdeglobals and flatpak access."""
-    write_kdeglobals()
+    changed = write_kdeglobals()
+    if changed:
+        subprocess.run(['dbus-send', '--session', '--type=signal', '/KGlobalSettings',
+                        'org.kde.KGlobalSettings.notifyChange', 'int32:0', 'int32:0'],
+                       check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     flatpak_overrides()
 
 

@@ -1,0 +1,103 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+#include "surfaces.h"
+#include <LayerShellQt/Window>
+#include <QScreen>
+#include <QtTest>
+class SurfaceTest:public QObject {
+    Q_OBJECT
+private Q_SLOTS:
+    void geometry_data() {
+        QTest::addColumn<QRect>("area");QTest::addColumn<QRect>("anchor");QTest::addColumn<QSize>("size");QTest::addColumn<int>("edge");QTest::addColumn<QRect>("expected");
+        QTest::newRow("bottom-second-output")<<QRect(2560,0,2560,1440)<<QRect(2700,1320,40,40)<<QSize(400,300)<<int(Qt::BottomEdge)<<QRect(2560,1020,400,300);
+        QTest::newRow("top-negative-origin")<<QRect(-1920,0,1920,1080)<<QRect(-900,50,40,40)<<QSize(300,200)<<int(Qt::TopEdge)<<QRect(-1030,90,300,200);
+        QTest::newRow("left-offset")<<QRect(0,720,2560,1440)<<QRect(20,900,40,40)<<QSize(400,300)<<int(Qt::LeftEdge)<<QRect(60,770,400,300);
+        QTest::newRow("right-offset")<<QRect(0,720,2560,1440)<<QRect(2500,900,40,40)<<QSize(400,300)<<int(Qt::RightEdge)<<QRect(2100,770,400,300);
+        QTest::newRow("flip")<<QRect(0,0,1920,1080)<<QRect(900,1000,40,40)<<QSize(300,300)<<int(Qt::TopEdge)<<QRect(770,700,300,300);
+        QTest::newRow("oversize")<<QRect(0,0,200,100)<<QRect(50,40,40,40)<<QSize(1000,900)<<int(Qt::BottomEdge)<<QRect(0,0,200,100);
+        QTest::newRow("reserved-region")<<QRect(0,40,1000,700)<<QRect(400,10,40,30)<<QSize(200,100)<<int(Qt::TopEdge)<<QRect(320,40,200,100);
+    }
+    void geometry(){QFETCH(QRect,area);QFETCH(QRect,anchor);QFETCH(QSize,size);QFETCH(int,edge);QFETCH(QRect,expected);QCOMPARE(BwmSurface::placePopup(area,anchor,size,Qt::Edge(edge)),expected);}
+    void invalid(){QVERIFY(BwmSurface::placePopup({},QRect(0,0,10,10),QSize(20,20),Qt::BottomEdge).isEmpty());QVERIFY(BwmSurface::placePopup(QRect(0,0,100,100),{},QSize(20,20),Qt::BottomEdge,-1).isEmpty());}
+    void rolePropertiesAndTransformedAnchor() {
+        QQuickWindow panel;panel.resize(300,48);BwmSurface::configurePanel(&panel,Qt::BottomEdge,64);
+        auto *panelRole=LayerShellQt::Window::get(&panel);QCOMPARE(panelRole->exclusionZone(),-1);
+        QCOMPARE(panelRole->keyboardInteractivity(),LayerShellQt::Window::KeyboardInteractivityNone);
+        QVERIFY(panel.flags().testFlag(Qt::WindowDoesNotAcceptFocus));QCOMPARE(panel.color(),QColor(Qt::transparent));
+        BwmSurface::setPanelAcceptsInput(&panel,true);
+        QCOMPARE(panelRole->keyboardInteractivity(),LayerShellQt::Window::KeyboardInteractivityOnDemand);QVERIFY(!panel.flags().testFlag(Qt::WindowDoesNotAcceptFocus));
+        BwmSurface::setPanelAcceptsInput(&panel,false);
+        QCOMPARE(panelRole->keyboardInteractivity(),LayerShellQt::Window::KeyboardInteractivityNone);
+        QQuickItem widget(panel.contentItem());widget.setPosition({20.5,10.5});widget.setSize({31,21});widget.setScale(1.25);
+        QQuickWindow popup;popup.resize(100,80);PopupAnchor adapter;adapter.setPopup(&popup);adapter.setVisualParent(&widget);
+        auto expected=[&]{const QRect anchor=widget.mapRectToScene(QRectF(0,0,widget.width(),widget.height())).toAlignedRect().translated(panel.property("bwmPanelRect").toRect().topLeft());return BwmSurface::placePopup(panel.screen()->geometry(),anchor,popup.size(),Qt::BottomEdge);};
+        QCOMPARE(popup.property("bwmPopupRect").toRect(),expected());
+        auto *role=LayerShellQt::Window::get(&popup);QCOMPARE(role->exclusionZone(),-1);QCOMPARE(role->layer(),LayerShellQt::Window::LayerOverlay);
+        QCOMPARE(QPoint(role->margins().left(),role->margins().top()),expected().topLeft()-panel.screen()->geometry().topLeft());
+        panel.setProperty("bwmAvailableRect",QRect(panel.screen()->geometry().topLeft(),QSize(200,100)));
+        QVERIFY(QRect(panel.screen()->geometry().topLeft(),QSize(200,100)).contains(popup.property("bwmPopupRect").toRect()));
+        panel.setProperty("bwmAvailableRect",QVariant());panel.resize(320,60);QCOMPARE(popup.property("bwmPopupRect").toRect(),expected());
+    }
+    void packageRequestedGeometryIsPreservedAndClamped() {
+        QQuickWindow panel;panel.resize(300,48);BwmSurface::configurePanel(&panel,Qt::BottomEdge);
+        QQuickItem widget(panel.contentItem());widget.setSize({32,32});
+        panel.setProperty("bwmAvailableRect",QRect(-100,20,600,400));
+        QQuickWindow popup;popup.resize(100,80);popup.setPosition({40,70});
+        PopupAnchor adapter;adapter.setIndependentWindow(true);adapter.setUseRequestedPosition(true);
+        adapter.setPopup(&popup);adapter.setVisualParent(&widget);
+        QCOMPARE(popup.property("bwmPopupRect").toRect(),QRect(40,70,100,80));
+        popup.setPosition({900,-100});
+        QCOMPARE(popup.property("bwmPopupRect").toRect(),QRect(400,20,100,80));
+        // A request that would cover the panel strip ends right above it.
+        const QRect strip=panel.property("bwmPanelRect").toRect();
+        panel.setProperty("bwmAvailableRect",QRect(strip.left(),strip.bottom()-399,600,400));
+        popup.setPosition({strip.left()+10,strip.top()});
+        QCOMPARE(popup.property("bwmPopupRect").toRect(),QRect(strip.left()+10,strip.top()-80,100,80));
+    }
+    void focusGrabWithoutProtocolIsInert() {
+        // Offscreen (or a compositor without hyprland_focus_grab_v1): no grab, no signal, the
+        // Dialog keeps its own hideOnWindowDeactivate behaviour.
+        QVERIFY(!FocusGrab::available());
+        QQuickWindow window;window.resize(10,10);window.show();
+        FocusGrab grab;QSignalSpy cleared(&grab,&FocusGrab::cleared);
+        QVERIFY(!grab.start({&window}));QVERIFY(!grab.active());grab.stop();QCOMPARE(cleared.count(),0);
+    }
+    void panelStrip() {
+        const QRect area(0,0,1000,800);
+        QCOMPARE(BwmSurface::withoutPanelStrip(area,QRect(0,700,640,48),Qt::BottomEdge),QRect(0,0,1000,700));
+        QCOMPARE(BwmSurface::withoutPanelStrip(area,QRect(0,0,1000,40),Qt::TopEdge),QRect(0,40,1000,760));
+        QCOMPARE(BwmSurface::withoutPanelStrip(area,QRect(0,0,44,800),Qt::LeftEdge),QRect(44,0,956,800));
+        QCOMPARE(BwmSurface::withoutPanelStrip(area,QRect(956,0,44,800),Qt::RightEdge),QRect(0,0,956,800));
+        QCOMPARE(BwmSurface::withoutPanelStrip(area,QRect(2000,0,44,800),Qt::RightEdge),area);
+    }
+    void nativePolicyRequests_data() {
+        QTest::addColumn<int>("edge");
+        for(auto edge:{Qt::TopEdge,Qt::BottomEdge,Qt::LeftEdge,Qt::RightEdge})QTest::newRow(qPrintable(QString::number(int(edge))))<<int(edge);
+    }
+    void nativePolicyRequests() {
+        QFETCH(int,edge);const auto side=Qt::Edge(edge);const bool vertical=side==Qt::LeftEdge || side==Qt::RightEdge;
+        QQuickWindow window;window.resize(vertical?QSize(64,300):QSize(300,64));
+        BwmSurface::configurePanel(&window,side,0,true);auto *role=LayerShellQt::Window::get(&window);
+        QVERIFY(BwmSurface::setPanelVisibility(&window,0,40));QCOMPARE(role->exclusionZone(),-1); // Hidden.
+        window.show();QTRY_COMPARE(role->exclusionZone(),40);
+        using W=LayerShellQt::Window;
+        const auto anchor=side==Qt::TopEdge?W::AnchorTop:side==Qt::BottomEdge?W::AnchorBottom:side==Qt::LeftEdge?W::AnchorLeft:W::AnchorRight;
+        const W::Anchors perpendicular=vertical?W::Anchors(W::AnchorTop)|W::AnchorBottom:W::Anchors(W::AnchorLeft)|W::AnchorRight;
+        QCOMPARE(role->anchors(),perpendicular|anchor);QCOMPARE(role->exclusiveEdge(),anchor);
+        QCOMPARE(vertical?role->margins().bottom():role->margins().right(),(vertical?window.screen()->size().height():window.screen()->size().width())-300);
+        QVERIFY(window.property("bwmReservationRequested").toBool());
+        QVERIFY(!BwmSurface::setPanelVisibility(&window,1,40));QCOMPARE(role->exclusionZone(),40);
+        QVERIFY(!BwmSurface::setPanelVisibility(&window,0,0));QCOMPARE(role->exclusionZone(),40);
+        window.hide();QCOMPARE(role->exclusionZone(),-1);QVERIFY(!window.property("bwmReservationRequested").toBool());
+        window.show();QTRY_COMPARE(role->exclusionZone(),40);
+        QVERIFY(BwmSurface::setPanelVisibility(&window,3,40));QCOMPARE(role->exclusionZone(),-1);
+        QVERIFY(BwmSurface::setPanelVisibility(&window,0,48));QCOMPARE(role->exclusionZone(),48);
+        if(vertical)window.resize(64,window.screen()->size().height()+1);else window.resize(window.screen()->size().width()+1,64);
+        QTRY_COMPARE(role->exclusionZone(),-1);QVERIFY(!window.property("bwmSurfaceError").toString().isEmpty());
+        window.resize(vertical?QSize(64,300):QSize(300,64));QTRY_COMPARE(role->exclusionZone(),48);
+        QVERIFY(window.property("bwmSurfaceError").toString().isEmpty());
+        QQuickWindow preview;preview.resize(300,48);BwmSurface::configurePanel(&preview,Qt::BottomEdge);
+        QVERIFY(!BwmSurface::setPanelVisibility(&preview,0,40));QCOMPARE(W::get(&preview)->exclusionZone(),-1);
+    }
+};
+QTEST_MAIN(SurfaceTest)
+#include "test-surfaces.moc"

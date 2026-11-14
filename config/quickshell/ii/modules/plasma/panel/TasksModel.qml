@@ -29,7 +29,7 @@ QtObject {
         return DesktopEntries.applications.values.find(d=>d.id.toLowerCase().replace(/\.desktop$/,"")===key)
             ?? DesktopEntries.heuristicLookup(appId);
     }
-    function launch(appId) { entry(appId)?.execute(); }
+    function launch(appId) { AppSearch.launch(entry(appId)); }
     function activate(top) {
         if(!top) return;
         const window = client(top);
@@ -37,17 +37,21 @@ QtObject {
             Quickshell.execDetached(["/home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py", "--pid", String(window.pid), "focus", window.address]);
         } else top.activate();
     }
+    // BWM: Hyprland keeps a window minimized to special:minimized as the active one when nothing else
+    // takes focus (alone on its workspace, pointer over the panel), so its toplevel stays "activated".
+    // KWin never reports a minimized window as active: neither does this adapter.
+    function isActive(top) { return !!top?.activated && !minimized(top); }
     function click(group) {
         const tops=group.toplevels;
         if(!tops.length) { launch(group.appId); return; }
-        if(tops.length===1 && tops[0].activated) {
+        if(tops.length===1 && isActive(tops[0])) {
             Quickshell.execDetached(["/home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py","minimize",address(tops[0])]);
         } else cycle(group,1);
     }
     function cycle(group,step) {
         const tops=group.toplevels;
         if(!tops.length) return;
-        const index=tops.findIndex(t=>t.activated);
+        const index=tops.findIndex(t=>root.isActive(t));
         activate(tops[(index+step+tops.length)%tops.length]);
     }
 }

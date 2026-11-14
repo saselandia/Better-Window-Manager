@@ -57,12 +57,12 @@ export XDG_CURRENT_DESKTOP="Hyprland"
 export XDG_SESSION_TYPE="wayland"
 export XDG_SESSION_DESKTOP="Hyprland"
 
-# Actualizar entorno en systemd y dbus (vital para Flatpak, Signal, Steam, Polkit)
-if command -v dbus-update-activation-environment >/dev/null 2>&1; then
-    dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP QT_QPA_PLATFORMTHEME OMARCHY_PATH 2>/dev/null || true
-fi
-
 export QML_IMPORT_PATH="${XDG_DATA_HOME:-$HOME/.local/share}/bwm/qml${QML_IMPORT_PATH:+:$QML_IMPORT_PATH}"
+
+# Actualizar entorno en systemd y dbus (también defaults/menús de KDE).
+if command -v dbus-update-activation-environment >/dev/null 2>&1; then
+    dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP QT_QPA_PLATFORMTHEME XDG_CONFIG_DIRS XDG_MENU_PREFIX OMARCHY_PATH QML_IMPORT_PATH 2>/dev/null || true
+fi
 
 # 2. Agente de autenticación Polkit (Gentoo en /usr/libexec o PATH). En Retro no: allí es el de
 #    Omarchy dentro de Quickshell (modules/ii/omarchyPolkit) y polkit sólo admite un agente.
@@ -128,10 +128,10 @@ fi
 ) &
 
 # 5. Barra y entorno de escritorio Quickshell (End_4 / Illogical Impulse)
-if ! pidof quickshell >/dev/null 2>&1; then
-    if command -v quickshell >/dev/null 2>&1; then
-        quickshell -c ii >/run/user/$(id -u)/quickshell-session.log 2>&1 &
-    fi
+if command -v quickshell >/dev/null 2>&1; then
+    # Same environment and ii-instance guard as recovery/maintenance. A qs settings
+    # window is not evidence that the desktop shell is already running.
+    python3 "$HOME/.config/hypr/scripts/bwm_session.py" ensure-shell >/dev/null 2>&1
 fi
 
 # 5.0 Bienvenida de BWM (skins y requisitos): en cada inicio de sesión hasta que se desactive
@@ -169,16 +169,26 @@ if [ -f "$HOME/.config/hypr/scripts/autostart-manager.py" ]; then
     ) &
 fi
 
-# 9. Cargar plugins (soporte CSD minimize y hyprbars para KDE Plasma)
+# 9. Preparar Breeze una sola vez al arrancar, aunque la skin inicial sea Retro/default.
+# Nunca ejecutar este bloque desde un cambio de skin: plugin load/unload en caliente no es seguro.
 (
     sleep 1
-    # hypr-csd retired in favor of native hyprbars
-    if [ -f "/home/sasel/.config/hypr/modules/theme.lua" ] && grep -q 'name = "plasma"' "/home/sasel/.config/hypr/modules/theme.lua" 2>/dev/null; then
+    breeze_startup=false
+    if [ -f "$HOME/.config/hypr/modules/theme.lua" ] && grep -q 'name = "plasma"' "$HOME/.config/hypr/modules/theme.lua" 2>/dev/null; then
+        breeze_startup=true
         # Compile the original KDE files before the plugin's initial configuration reload.
         python3 "$HOME/.config/hypr/skins/plasma/scripts/kde-config-bridge.py" enter
+    fi
+    # appearance.lua enables bars only in Breeze. Preloading here permits later skin
+    # changes without loading a plugin into an already-running desktop transition.
+    if [ -f "$HOME/.config/hypr/plugins/breezebars.so" ]; then
         if ! hyprctl plugin list 2>/dev/null | grep -q "Plugin breezebars"; then
-            hyprctl plugin load "/home/sasel/.config/hypr/plugins/breezebars.so" 2>/dev/null || true
+            if ! hyprctl plugin load "$HOME/.config/hypr/plugins/breezebars.so"; then
+                printf '%s\n' '[BWM] No se pudo cargar breezebars al arrancar; comprueba la versión del plugin. No se reintentará en caliente.' >&2
+            fi
         fi
+    fi
+    if "$breeze_startup"; then
         # F10: the plugin reloads configuration once at initialization, using those files.
         # Subsequent changes are debounced by the single F2 bridge.
         python3 "$HOME/.config/hypr/skins/plasma/scripts/kde-config-bridge.py" start

@@ -1,0 +1,68 @@
+{
+  "date": "2026-11-13",
+  "status": "fixes-implemented-live-session-acceptance-pending",
+  "liveVisualVerified": false,
+  "dbusTransportVerified": false,
+  "compositorRestarted": false,
+  "shellRestartedFromTools": false,
+  "hyprlandPluginsLoadedOrUnloadedFromTools": false,
+  "nativeTestMode": "isolated offscreen QApplication; local native KF6 receiver; no session IPC",
+  "tests": {
+    "skinRuntime": 12,
+    "plasmaPanel": 8,
+    "plasmaTheme": 12,
+    "session": 7,
+    "qtColors": 4,
+    "breezeStartup": 4,
+    "skinManifests": 7,
+    "total": 54,
+    "qmlFilesParsed": 9
+  },
+  "initialFileState": {
+    "kdeglobals": "breeze-dark",
+    "qt6ct": "breeze-dark",
+    "gtk3": "Adwaita",
+    "gtk4": "Adwaita"
+  },
+  "gtkFileFallbackApplied": "breeze-dark",
+  "nativeIconProbe": {
+    "kde": {
+      "backend": "kde",
+      "explicitIconThemeOverride": false,
+      "snapshots": [
+        {
+          "fresh": "#c44234",
+          "retained": "#c44234",
+          "theme": "BwmProbeRetro"
+        },
+        {
+          "fresh": "#c44234",
+          "retained": "#c44234",
+          "theme": "BwmProbeRetro"
+        },
+        {
+          "fresh": "#3478c4",
+          "retained": "#3478c4",
+          "theme": "BwmProbeBreeze"
+        },
+        {
+          "fresh": "#c44234",
+          "retained": "#c44234",
+          "theme": "BwmProbeRetro"
+        },
+        {
+          "fresh": "#7b34c4",
+          "retained": "#7b34c4",
+          "theme": "BwmProbeCustom"
+        }
+      ],
+      "transport": "local-KF6-receiver"
+    }
+  },
+  "pending": [
+    "one-time adoption of new shell startup",
+    "visual Retro to Breeze transition in live session",
+    "real D-Bus/systemd environment export delivery",
+    "live launches from updated menus"
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "date": "2026-11-14",
+  "phase": "R4",
+  "status": "fixture to-screen argument order fixed and verified against actual manager parser; local measurement repeat pending",
+  "newLiveSessionRunByAssistant": false,
+  "maximizedWindowVerified": false,
+  "r4Complete": false,
+  "observedAttempt": {
+    "sourceReportSha256": "59759a8584b080ec10fba7bc57ca66c532b2fe4eae3840524fc5cfe8688485d5",
+    "originalErrors": [
+      "Falló operación de ventana propia: "
+    ],
+    "originalReservationFlag": false,
+    "independentlyReevaluatedReservationDelta": true,
+    "fixtureExitCode": -15,
+    "previewExitCode": 130,
+    "afterPreviewActive": false,
+    "beforeReserved": [
+      [
+        0,
+        0,
+        0,
+        44
+      ],
+      [
+        0,
+        0,
+        0,
+        44
+      ]
+    ],
+    "duringReserved": [
+      [
+        0,
+        0,
+        0,
+        44
+      ],
+      [
+        0,
+        0,
+        0,
+        92
+      ]
+    ],
+    "afterReserved": [
+      [
+        0,
+        0,
+        0,
+        44
+      ],
+      [
+        0,
+        0,
+        0,
+        44
+      ]
+    ]
+  },
+  "cause": "Fixture.start reversed to-screen positional arguments; actual parser expects MONITOR [ADDRESS], manager rejected with exit 1 and empty stderr",
+  "changes": [
+    "use PID/class/address guarded command builder with monitor before own address",
+    "test Fixture.start against actual argparse and PID guard with external operations mocked",
+    "rejections include operation, exit status and stderr/stdout or fallback text",
+    "independent verified reservation delta retained on maximization failure"
+  ],
+  "sourceSha256": {
+    "config/hypr/skins/plasma/scripts/r4-maximized-check.py": "d1dba63e17713d9bf4e4a69386b638b6026cc746edad64e317331df974f0a48a",
+    "config/hypr/skins/plasma/scripts/r4-reservation-smoke.py": "1e59c98169af1878cdfcffb09a169493aa8cedf3511955dd9ac39308230206d9",
+    "tests/test_r4_maximized_check.py": "523140683329580238271ef729f2d3eabc529fb2b7ddcd0a20f035fd4f3e8f07",
+    "tests/test_r4_reservation_smoke.py": "12b2492d8e6f3be4ca87398eb04284fc0f2fd59fc22b44d0ea2afeb104cbaa09"
+  },
+  "tests": {
+    "r4": {
+      "passed": 69,
+      "log": ".............................BWM: hook de cambio de plasma: unacknowledged\nBWM: hook de cambio de retro: unacknowledged\n.BWM: hook de cambio de plasma: El hook debe estar dentro de su skin\nBWM: hook de cambio de retro: El hook debe estar dentro de su skin\n.......................................\n----------------------------------------------------------------------\nRan 69 tests in 0.113s\n\nOK\n"
+    },
+    "manager": {
+      "passed": 13,
+      "log": ".............\n----------------------------------------------------------------------\nRan 13 tests in 0.002s\n\nOK\n"
+    },
+    "skins": {
+      "passed": 7,
+      "log": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.005s\n\nOK\n"
+    }
+  }
+}

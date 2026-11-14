@@ -10,6 +10,18 @@ import Quickshell
  */
 Singleton {
     id: root
+    // The shell's Qt provider is stable across skins, while launched applications
+    // must use Hyprland's current environment (including the user's Lua overrides).
+    function launch(entry, action = null) {
+        if (!entry) return false;
+        const command = Array.from((action || entry).command || []);
+        if (command.length === 0) return false;
+        const payload = {command: command, workingDirectory: entry.workingDirectory || "",
+                         terminal: !!entry.runInTerminal};
+        Quickshell.execDetached(["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/bwm-launch-app.py",
+                                JSON.stringify(payload)]);
+        return true;
+    }
     property bool sloppySearch: Config.options?.search.sloppy ?? false
     property real scoreThreshold: 0.2
     property var substitutions: ({

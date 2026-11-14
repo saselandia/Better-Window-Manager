@@ -91,4 +91,9 @@ for agent in claude codex grok; do
   fi
 done
 
+# BWM: one stamp per run, so the panel follows every record with a single
+# inotify watch instead of one per agent (each FileView costs an inotify
+# instance and the per-user limit is 128).
+printf '%s\n' "${EPOCHREALTIME/,/.}" >"$USAGE_DIR/.updated" 2>/dev/null || true
+
 exit $status

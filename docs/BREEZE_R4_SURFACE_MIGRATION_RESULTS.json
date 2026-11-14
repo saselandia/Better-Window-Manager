@@ -1,0 +1,148 @@
+{
+  "date": "2026-11-13",
+  "layerShellQtVersion": "6.7.5",
+  "geometryAndRoleTests": "passed under offscreen",
+  "waylandSessionVerified": false,
+  "activePanelChanged": false,
+  "nativeMigration": {
+    "status": "verified-native-stage",
+    "activationAllowed": false,
+    "panels": [
+      {
+        "containmentId": 1,
+        "outputDescription": "MSI fixture",
+        "widgets": [
+          {
+            "appletId": 2,
+            "legacyIndex": 0,
+            "legacyName": "clock",
+            "nativeSettings": {
+              "showDate": false,
+              "showSeconds": 2
+            },
+            "package": "org.kde.plasma.digitalclock",
+            "status": "native-instance-staged"
+          },
+          {
+            "appletId": 3,
+            "legacyIndex": 1,
+            "legacyName": "clock",
+            "nativeSettings": {
+              "showDate": false,
+              "showSeconds": 2
+            },
+            "package": "org.kde.plasma.digitalclock",
+            "status": "native-instance-staged"
+          }
+        ]
+      },
+      {
+        "containmentId": 4,
+        "outputDescription": "LG fixture",
+        "widgets": [
+          {
+            "appletId": 5,
+            "legacyIndex": 0,
+            "legacyName": "clock",
+            "nativeSettings": {
+              "showDate": false,
+              "showSeconds": 2
+            },
+            "package": "org.kde.plasma.digitalclock",
+            "status": "native-instance-staged"
+          },
+          {
+            "appletId": 6,
+            "legacyIndex": 1,
+            "legacyName": "clock",
+            "nativeSettings": {
+              "showDate": false,
+              "showSeconds": 2
+            },
+            "package": "org.kde.plasma.digitalclock",
+            "status": "native-instance-staged"
+          }
+        ]
+      }
+    ],
+    "archivePreserved": true,
+    "enumSecondsMappedToAlways": true,
+    "missingPackageRejected": true,
+    "tamperedArchiveRejected": true,
+    "existingDestinationPreserved": true
+  },
+  "asanNativeMigration": {
+    "status": "verified-native-stage",
+    "activationAllowed": false,
+    "panels": [
+      {
+        "containmentId": 1,
+        "outputDescription": "MSI fixture",
+        "widgets": [
+          {
+            "appletId": 2,
+            "legacyIndex": 0,
+            "legacyName": "clock",
+            "nativeSettings": {
+              "showDate": false,
+              "showSeconds": 2
+            },
+            "package": "org.kde.plasma.digitalclock",
+            "status": "native-instance-staged"
+          },
+          {
+            "appletId": 3,
+            "legacyIndex": 1,
+            "legacyName": "clock",
+            "nativeSettings": {
+              "showDate": false,
+              "showSeconds": 2
+            },
+            "package": "org.kde.plasma.digitalclock",
+            "status": "native-instance-staged"
+          }
+        ]
+      },
+      {
+        "containmentId": 4,
+        "outputDescription": "LG fixture",
+        "widgets": [
+          {
+            "appletId": 5,
+            "legacyIndex": 0,
+            "legacyName": "clock",
+            "nativeSettings": {
+              "showDate": false,
+              "showSeconds": 2
+            },
+            "package": "org.kde.plasma.digitalclock",
+            "status": "native-instance-staged"
+          },
+          {
+            "appletId": 6,
+            "legacyIndex": 1,
+            "legacyName": "clock",
+            "nativeSettings": {
+              "showDate": false,
+              "showSeconds": 2
+            },
+            "package": "org.kde.plasma.digitalclock",
+            "status": "native-instance-staged"
+          }
+        ]
+      }
+    ],
+    "archivePreserved": true,
+    "enumSecondsMappedToAlways": true,
+    "missingPackageRejected": true,
+    "tamperedArchiveRejected": true,
+    "existingDestinationPreserved": true
+  },
+  "missingDesktopPackageConfirmed": true,
+  "minimalPortagePlan": {
+    "newPackages": 5,
+    "downloadKiB": 19071,
+    "installed": false,
+    "postProcessingError": "ReadOnlyFileSystem updating /var/lib/gentoo/news"
+  }
+}

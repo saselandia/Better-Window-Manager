@@ -17,8 +17,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-_qml_path = str(Path(os.environ.get("XDG_DATA_HOME", Path.home()/".local/share"))/"bwm/qml")
-SHELL_CMD = ["env", "QML_IMPORT_PATH=" + _qml_path + (":" + os.environ["QML_IMPORT_PATH"] if os.environ.get("QML_IMPORT_PATH") else ""), "quickshell", "-n", "-c", "ii"]
+QT_PLATFORM_DIRS = (Path('/usr/lib64/qt6/plugins/platformthemes'),
+                    Path('/usr/lib/qt6/plugins/platformthemes'),
+                    Path('/usr/lib/x86_64-linux-gnu/qt6/plugins/platformthemes'))
 SHELL_LOG = f"/run/user/{os.getuid()}/quickshell-session.log"
 THEME_LOCK = "/tmp/bwm-theme-manager.lock"
 
@@ -27,7 +28,7 @@ def _lua_string(text: str) -> str:
     return '"' + text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n") + '"'
 
 
-def spawn(argv: list, log: str = None) -> bool:
+def spawn(argv: list, log: str = None, *, allow_fallback: bool = True) -> bool:
     """Lanza argv como hijo de Hyprland; si no hay compositor, como proceso aparte. ¿Lanzado?"""
     command = shlex.join(argv) + (f" >{shlex.quote(log)} 2>&1" if log else "")
     try:
@@ -37,6 +38,8 @@ def spawn(argv: list, log: str = None) -> bool:
             return True
     except (OSError, subprocess.SubprocessError):
         pass
+    if not allow_fallback:
+        return False
     env = os.environ.copy()
     env.pop("BWM_SKIN_SWITCH", None)
     try:
@@ -75,8 +78,41 @@ def theme_manager_busy() -> bool:
     return False
 
 
+def shell_command() -> list:
+    """Stable Qt backend for the long-lived shell, independent of the boot skin.
+
+    App launchers retain Hyprland's per-skin environment. Only the shell uses the KDE
+    backend when installed so its existing process observes KDE icon/palette changes.
+    Do not use QIcon::setThemeName/QS_ICON_THEME: that bypasses native icon engines.
+    """
+    qml = str(Path(os.environ.get('XDG_DATA_HOME', Path.home()/'.local/share'))/'bwm/qml')
+    if os.environ.get('QML_IMPORT_PATH'):
+        qml += ':' + os.environ['QML_IMPORT_PATH']
+    config = Path(os.environ.get('XDG_CONFIG_HOME', Path.home()/'.config'))
+    defaults = str(config/'kdedefaults')
+    dirs = [defaults] + [p for p in os.environ.get('XDG_CONFIG_DIRS', '/etc/xdg').split(':') if p and p != defaults]
+    env = ['env', 'QML_IMPORT_PATH=' + qml, 'XDG_CONFIG_DIRS=' + ':'.join(dirs)]
+    for library, name in (('KDEPlasmaPlatformTheme6.so', 'kde'), ('libqt6ct.so', 'qt6ct'),
+                          ('libqxdgdesktopportal.so', 'xdgdesktopportal')):
+        if any((base/library).is_file() for base in QT_PLATFORM_DIRS):
+            env.append('QT_QPA_PLATFORMTHEME=' + name)
+            break
+    return env + ['quickshell', '-n', '-c', 'ii']
+
+
 def start_shell() -> bool:
-    return spawn(SHELL_CMD, SHELL_LOG)
+    return spawn(shell_command(), SHELL_LOG)
+
+
+def sync_activation_environment() -> bool:
+    """Request export from Hyprland's *current* child environment after config reload.
+
+    The caller may be a shell born in another skin. Never export that caller's stale
+    variables as fallback. Explicit user Lua overrides are preserved by this route.
+    """
+    return spawn(['dbus-update-activation-environment', '--systemd', 'QT_QPA_PLATFORMTHEME',
+                  'XDG_CONFIG_DIRS', 'XDG_MENU_PREFIX', 'OMARCHY_PATH', 'QML_IMPORT_PATH'],
+                 allow_fallback=False)
 
 
 def ensure_shell() -> bool:

@@ -152,6 +152,7 @@ Son las versiones registradas en el entorno local de BWM, no las últimas public
 | Resultados de KRunner | 6.7.5 | — |
 | Componentes de sesión de Breeze | 6.7.5 | — |
 | Traducciones de KDE (KI18n) | 6.29.0 | — |
+| Widgets y paquete de escritorio originales de Plasma | 6.7.5 | — |
 
 ## Skin default (end-4)
 
@@ -179,7 +180,7 @@ Imita **end-4 / illogical-impulse (Material You)**. Material Design 3: barra, pa
 | SongRec | Reconocer la música que suena (botón de los ajustes rápidos) | `guru:media-sound/songrec` | `songrec` | — | — | — |
 | hyprsunset | Luz nocturna que no tiñe las capturas (sin él se usa un shader) | `hyproverlay:gui-apps/hyprsunset` | `hyprsunset` | `copr:solopasha/hyprland:hyprsunset` | `hyprsunset` | — |
 | Colores Qt de end-4 (kde-material-you-colors) | Apps Qt de default (end-4) con la paleta del fondo, como en illogical-impulse | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
-| Plugin de plataforma de KDE para Qt | Las apps Qt de default (end-4) leen kdeglobals (QT_QPA_PLATFORMTHEME=kde), como en end-4 | `kde-plasma/plasma-integration` | `plasma-integration` | `plasma-integration` | `plasma6-integration-plugin` | `plasma-integration` |
+| Plugin de plataforma de KDE para Qt | Proveedor Qt del shell para conservar iconos/paleta KDE al cambiar de skin; integración Qt de Breeze y default (end-4) | `kde-plasma/plasma-integration` | `plasma-integration` | `plasma-integration` | `plasma6-integration-plugin` | `plasma-integration` |
 | Darkly (estilo de widgets Qt) | Estilo de las apps Qt de end-4 en default (end-4) | — | `aur:darkly-bin` | `copr:deltacopy/darkly:darkly` | — | — |
 | mpvpaper | Fondos de vídeo en default (end-4) y Breeze (Kde plasma), como switchwall.sh de end-4; sin él se queda el primer fotograma | `guru:gui-apps/mpvpaper` | `aur:mpvpaper` | — | — | — |
 
@@ -231,6 +232,7 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | Requisito | Para qué | Gentoo | Arch / CachyOS | Fedora | openSUSE | Debian / Ubuntu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | Iconos Breeze | Iconos breeze-dark de las apps y applets de la skin Plasma | `kde-frameworks/breeze-icons` | `breeze-icons` | `breeze-icon-theme` | `breeze6-icons` | `breeze-icon-theme` |
+| Plugin de plataforma de KDE para Qt | Proveedor Qt del shell para conservar iconos/paleta KDE al cambiar de skin; integración Qt de Breeze y default (end-4) | `kde-plasma/plasma-integration` | `plasma-integration` | `plasma-integration` | `plasma6-integration-plugin` | `plasma-integration` |
 | Plugin breezebars de BWM (barras de título Breeze) | Barras de título Breeze y snapping con previsualización; debe estar compilado para el Hyprland que usas | *se compila* | *se compila* | *se compila* | *se compila* | *se compila* |
 | KSvg (SVG de temas de Plasma) | Pinta el panel, los popups y los controles de Breeze con el estilo de Plasma activo (desktoptheme) | `kde-frameworks/ksvg` | `ksvg` | `kf6-ksvg` | — | — |
 | libplasma (PlasmaComponents 3) | Controles de Plasma (botones, menús, deslizadores) con el tema de Plasma en el shell de Breeze | `kde-plasma/libplasma` | `libplasma` | `libplasma` | — | — |
@@ -275,9 +277,13 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | Gestor de actividades de KDE | Favoritos y recientes del Kickoff de Breeze (KActivities, el formato de Plasma) | `kde-plasma/kactivitymanagerd` | `kactivitymanagerd` | `kactivitymanagerd` | — | `kactivitymanagerd` |
 | Auxiliar de decoraciones de BWM (bwm-decorator) | Dibuja las decoraciones reales de KDE (Breeze, Aurorae, de terceros) para las barras de título de Breeze | — | — | — | — | — |
 | Módulo QML org.bwm.kcm (bwm-kcmhost) | Incrusta los KCM reales de Plasma (colores, estilo, decoraciones, tema global, iconos, fuentes…) en las Preferencias del sistema de Breeze | — | — | — | — | — |
+| KCM nativos de BWM para System Settings (experimental) | Módulos nativos R2/R3 y descubrimiento de configuradores; migración todavía parcial | — | — | — | — | — |
+| Compilación de KCM nativos BWM (Qt Widgets y KF6) | Construye los módulos nativos experimentales para System Settings real | `dev-qt/qtbase` `kde-frameworks/kcmutils` `kde-frameworks/ki18n` `kde-frameworks/kcoreaddons` `dev-build/cmake` | `qt6-base` `kcmutils` `ki18n` `kcoreaddons` `cmake` | `qt6-qtbase-devel` `kf6-kcmutils-devel` `kf6-ki18n-devel` `kf6-kcoreaddons-devel` `cmake` | `qt6-base-devel` `kf6-kcmutils-devel` `kf6-ki18n-devel` `kf6-kcoreaddons-devel` `cmake` | `qt6-base-dev` `libkf6kcmutils-dev` `libkf6i18n-dev` `libkf6coreaddons-dev` `cmake` |
 | Anfitrión de módulos de configuración KDE 6 | Abrir el editor original de reglas de KWin desde los menús de Breeze | `kde-frameworks/kcmutils` | `kcmutils` | `kf6-kcmutils` | `kf6-kcmutils` | `libkf6kcmutils-bin` |
 | Editor original de reglas de KWin | Editar kwinrulesrc con kcm_kwinrules; el compositor KWin no se ejecuta | `kde-plasma/kwin` | `kwin` | `kwin` | — | `kwin-common` |
 | Traducciones de KDE (KI18n) | Contexto de traducción de los temas Plasma cargados con ThemeHost | `kde-frameworks/ki18n` | `ki18n` | `kf6-ki18n-devel` | `kf6-ki18n-devel` | `libkf6i18n-dev` |
+| Anfitrión experimental libplasma R4 (compilación y pruebas) | Prueba aislada de Corona, PlasmoidItem, páginas y KPackage; no sustituye todavía el panel | `kde-plasma/libplasma` `kde-frameworks/kpackage` `kde-frameworks/kconfig` `dev-qt/qtbase` `dev-qt/qtdeclarative` `dev-build/cmake` `kde-frameworks/knewstuff` `kde-plasma/layer-shell-qt` `kde-frameworks/kcoreaddons` `dev-qt/qtwayland` `dev-libs/hyprland-protocols` `kde-frameworks/ksvg` | `libplasma` `kpackage` `kconfig` `qt6-base` `qt6-declarative` `cmake` `knewstuff` `layer-shell-qt` `kcoreaddons` `qt6-wayland` `hyprland-protocols` `ksvg` | — | — | — |
+| Widgets y paquete de escritorio originales de Plasma | Kickoff, tareas y paquete de shell/containment que necesita el anfitrión R4; no ejecuta plasmashell | `kde-plasma/plasma-desktop` | `plasma-desktop` | `plasma-desktop` | — | `plasma-desktop` |
 
 ## Plugins de barras de título (Breeze (Kde plasma) y Retro)
 

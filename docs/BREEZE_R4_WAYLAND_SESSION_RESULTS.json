@@ -1,0 +1,147 @@
+{
+  "date": "2026-11-13",
+  "executor": "Claude Code (Opus 5.5) with access to the user's Hyprland session",
+  "compositor": {
+    "version": "0.56.2",
+    "commit": "efb50993780079460b0cbed1363e2166a2de1d9f"
+  },
+  "activeSkin": "plasma",
+  "outputs": [
+    {
+      "description": "LG Electronics LG ULTRAFINE 405NTVS2J655",
+      "origin": [
+        2560,
+        0
+      ],
+      "logicalSize": [
+        3840,
+        2160
+      ],
+      "scale": 1
+    },
+    {
+      "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+      "origin": [
+        0,
+        720
+      ],
+      "logicalSize": [
+        2560,
+        1440
+      ],
+      "scale": 1
+    }
+  ],
+  "command": "python3 src/bwm-plasma-host/preview-isolated.py --binary /tmp/bwm-r4-build/bwm-plasma-host --package ~/.local/share/plasma/plasmoids/AndromedaLauncher --native-panel --layer-panel [--output DESC]",
+  "isolation": "Temporary XDG roots, session D-Bus disabled for the host, package installed into the temporary root with kpackagetool6; no plasmashell, KWin or Plasma D-Bus services; the active Breeze panel was not modified.",
+  "input": "Virtual uinput pointer/keyboard created only during each check; pointer placed with hl.dsp.cursor.move and restored afterwards with the previously focused window.",
+  "before": {
+    "panelLayer": {
+      "namespace": "bwm-r4-preview",
+      "layer": "top",
+      "geometry": [
+        2560,
+        2048,
+        640,
+        48
+      ]
+    },
+    "findings": [
+      "Qt reported the layer panel at its output origin (2560,0), so mapToGlobal() of every applet was wrong.",
+      "Qt Wayland discarded the x/y that Andromeda requested for its PlasmaCore.Dialog menu: the menu layer appeared at the top-left of the output (2560,0) instead of above the panel.",
+      "Andromeda's floating avatar (PlasmaCore.Dialog type Notification) became a floating xdg toplevel in the middle of the LG (status requires-noninteractive-role-adapter).",
+      "The panel layer requested keyboard focus on demand; clicking the launcher made the panel active and hideOnWindowDeactivate hid the menu before the toggle reopened it.",
+      "The preview window was opaque white (no alpha buffer / transparent color)."
+    ]
+  },
+  "changes": [
+    "main: QT_WAYLAND_DISABLE_FIXED_POSITIONS set only around QApplication creation and QQuickWindow::setDefaultAlphaBuffer(true), as plasma-workspace 6.7.5 shell/main.cpp.",
+    "configurePanel publishes the anchored layer position to QWindow, uses a transparent frameless window without focus and KeyboardInteractivityNone; setPanelAcceptsInput follows the containment AcceptingInputStatus like PanelView::refreshStatus 6.7.5.",
+    "PopupAnchor: package-requested positions are clamped to the available area without the panel strip and the final position is written back to the QWindow so companion Dialogs follow it.",
+    "PackageWindows adapts output-only/Notification/OSD/Tooltip Dialogs owned by the containment as overlay layers without keyboard interactivity.",
+    "preview-isolated.py --output DESC selects an output by description (never by connector).",
+    "FocusGrab (focusgrab.cpp): hyprland_focus_grab_v1 client generated at build time from the system hyprland-protocols XML; PopupAnchor starts it when an interactive Dialog with hideOnWindowDeactivate becomes visible and hides the Dialog on cleared. Inert without the protocol (offscreen tests, other compositors)."
+  ],
+  "after": [
+    {
+      "output": "LG Electronics LG ULTRAFINE",
+      "panel": [
+        2560,
+        2048,
+        640,
+        48
+      ],
+      "menu": [
+        2560,
+        1532,
+        680,
+        516
+      ],
+      "avatar": [
+        2845,
+        1477,
+        110,
+        110
+      ],
+      "hyprlandToplevelsFromHost": 0
+    },
+    {
+      "output": "Micro-Star Int'l Co. Ltd. MAG 274Q X24",
+      "panel": [
+        0,
+        2048,
+        640,
+        48
+      ],
+      "menu": [
+        0,
+        1532,
+        680,
+        516
+      ],
+      "avatar": [
+        285,
+        1477,
+        110,
+        110
+      ],
+      "hyprlandToplevelsFromHost": 0
+    }
+  ],
+  "interaction": {
+    "launcherClickOpens": true,
+    "secondLauncherClickCloses": true,
+    "clickInsideMenuKeepsItOpen": true,
+    "escapeCloses": true,
+    "clickOnEmptyDesktopCloses": true,
+    "clickOnEmptyDesktopNote": "Closed through hyprland_focus_grab_v1 (second iteration, same day): whitelist = popup + panel + visible non-interactive companion Dialogs; the cleared event hides Dialogs with hideOnWindowDeactivate. Before the grab Hyprland kept keyboard focus on the OnDemand layer and nothing closed it.",
+    "avatarClick": "Avatar is whitelisted (no cleared event in the log); its own handler closes the menu (root.toggle) and calls KCMLauncher.openSystemSettings('kcm_users'), which launched nothing because the preview has no session bus."
+  },
+  "visualNotes": [
+    "Translucent Plasma dialog background is drawn without blur: KWindowEffects blur is not available in Hyprland; a layer rule for the bwm-r4-* namespaces would be needed.",
+    "The preview panel draws no panel background: the BWM test shell package has no views/Panel.qml equivalent of PanelView."
+  ],
+  "tests": {
+    "ctestNormal": "2/2 passed (surface-geometry 14 cases incl. panel strip, focus policy and inert focus grab; isolated-plasmoids with KDE example and Andromeda)",
+    "ctestAsan": "2/2 passed with ASAN_OPTIONS=detect_leaks=0",
+    "python": "tests.test_r4_migration and tests.test_skins OK"
+  },
+  "sourceHashes": {
+    "main.cpp": "bb47470bfbf4bbf5a59f3de2d2171e4d40369b778acab61f487cb9db3465dce0",
+    "surfaces.cpp": "87f66d80a20c66f651bc50f2fd6dba5abe1a1933aacce9feed2fb406e8a8199a",
+    "surfaces.h": "5a980408979c0a94435d705df8de95af7739e9cb2a613bca5acbad7b17b92cf5",
+    "packagewindows.cpp": "7c08710dfe94aa68773f0d7431bba7fcdaeff8746b000fddb5c87b0d44009a9b",
+    "test-ui.cpp": "6b8c76f3db5fd26bd9ad2cadb6960a005e0997792f0c36d6b1ddc81e6d9454d7",
+    "test-surfaces.cpp": "7acbd441d80e97e2c86bcbfd9271820ac51d7bbc296ea3609e736175094a45b8",
+    "preview-isolated.py": "43369df383105db98de4d2df706cae1f34711155ef87dd3131d35fedb4b3c538",
+    "focusgrab.cpp": "e5b05647f28bbcddf7eca33323783a27bca76c19d7c265cee6fe2ba2b0a11561",
+    "focusgrab.h": "29743049b7fcdf1edad93274a86f8f6ed3acdc8241f0cb03d2995029d9a0c295",
+    "CMakeLists.txt": "c1b9c7b791bd271095180a63b8898e32ddf72d72bacc73485d81fe6d0b2285cf"
+  },
+  "notVerified": [
+    "Fractional scale outputs, panels on top/left/right edges, autohide and real reservations (the preview uses exclusiveZone -1).",
+    "Blur of translucent backgrounds and panel background view; focus grab with Dialogs of other packages and AppletPopup.",
+    "Other packages' Dialogs and tooltips; Dialogs created or shown before registration.",
+    "Activation of the native panel as the daily Breeze panel, migration/rollback and skin switches."
+  ]
+}

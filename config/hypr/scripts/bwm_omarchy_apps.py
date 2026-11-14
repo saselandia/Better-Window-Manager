@@ -335,11 +335,14 @@ def vscode_install(cmd: str, ext: str, name: str):
 # ------------------------------------------------------------------------------ other apps
 def apply_obsidian():
     css = THEME_DIR / "obsidian.css"
-    try:
-        vaults = json.loads((CONFIG / "obsidian" / "obsidian.json").read_text(encoding="utf-8")).get("vaults", {})
-    except Exception:
-        return
-    for v in vaults.values():
+    # Nativo (~/.config/obsidian) o Flatpak (~/.var/app/md.obsidian.Obsidian/config/obsidian)
+    vaults = {}
+    for base in (CONFIG, HOME / ".var" / "app" / "md.obsidian.Obsidian" / "config"):
+        try:
+            vaults.update(json.loads((base / "obsidian" / "obsidian.json").read_text(encoding="utf-8")).get("vaults", {}))
+        except Exception:
+            continue
+    for k, v in vaults.items():
         path = Path(v.get("path", ""))
         if not (path / ".obsidian").is_dir():
             continue
@@ -350,6 +353,15 @@ def apply_obsidian():
                 "description": "Automatically syncs with your current Omarchy system theme colors and fonts",
                 "author": "Omarchy", "authorUrl": "https://omarchy.org"}, indent=2))
         _write(d / "theme.css", css.read_text(encoding="utf-8"))
+        # Si la bóveda no tiene ningún tema elegido, activa el de Omarchy (Obsidian lo recarga en vivo)
+        ap = path / ".obsidian" / "appearance.json"
+        try:
+            data = json.loads(ap.read_text(encoding="utf-8")) if ap.is_file() else {}
+        except Exception:
+            continue
+        if not data.get("cssTheme"):
+            data["cssTheme"] = "Omarchy"
+            _write(ap, json.dumps(data, indent=2, ensure_ascii=False) + "\n")
 
 
 def _json_setting(path: Path, key: str, value: str, restore_key: str):

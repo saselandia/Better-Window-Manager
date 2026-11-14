@@ -1,5 +1,6 @@
 -- BWM F10: traditional defaults and decoration states belong only to Breeze.
 hl.window_rule({ name = "breeze-float-all", match = { class = ".*" },
+    -- Keep custom shadows disabled until their capture/render path is validated.
     float = true, no_shadow = true, no_blur = true, border_size = 0 })
 for _, state in ipairs({ { "fullscreen", { fullscreen = true } },
                          { "maximized", { tag = "bwm-maximized" } },

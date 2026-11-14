@@ -56,6 +56,7 @@ y el hueco); al volver a una de mosaico, se rehace el mosaico. Hyprland recibe l
 | `bar` | Alto, posición (`bottom`), esquinas y workspaces de la barra |
 | `fonts` | Fuentes de la skin (las de cada tema de Retro mandan sobre éstas) |
 | `hooks.settingsChanged` | Script relativo a la carpeta de la skin que recibe `export --no-reload` cuando un gestor común guarda un ajuste; no debe escribir la configuración del usuario |
+| `hooks.skinChanged` | Script relativo que recibe `event before\|after ANTERIOR ACTUAL` para las skins involucradas. Before ocurre antes de mutar perfiles; si falla se aborta y se intenta recuperar el auxiliar anterior. After ocurre tras recargar el shell. Sólo actuar sobre auxiliares autorizados explícitamente; sin lanzar un segundo shell ni cerrar apps |
 | `parts` | **Mapa de archivos** de la skin: QML, Hyprland, colores y scripts (rutas desde la raíz del repo; un test comprueba que existen) |
 | `requires`, `recommends`, `catalog` | Requisitos (ids del catálogo de `requirements.json`, o propios en `catalog`) |
 

@@ -1,0 +1,1390 @@
+{
+  "date": "2026-11-13",
+  "phase": "R4",
+  "status": "native-panel-api-tested-isolated; live-integration-pending",
+  "sessionModified": false,
+  "livePanelReplaced": false,
+  "waylandVerified": false,
+  "r5Implemented": false,
+  "scope": [
+    "native panel/widget ordered inventory",
+    "dynamic catalog-backed instance creation",
+    "permanent native removal respecting immutability",
+    "configuration closes before native instance cleanup",
+    "exact instance permutation delegated to original reorderApplets",
+    "QAction identity handles and native contextual action preparation",
+    "submenus and current membership/state validation",
+    "read-only action refresh without rebuilding native actions",
+    "native same-owner layout persistence and fresh-process positions"
+  ],
+  "nativeSources": {
+    "version": "6.7.5",
+    "libplasma": [
+      "src/plasma/applet.cpp (destroy/config/saveState)",
+      "src/plasma/containment.cpp (createApplet/addApplet)",
+      "src/plasma/private/applet_p.cpp (setDestroyed/cleanup)",
+      "src/plasma/corona.cpp (loadLayout/saveLayout)"
+    ],
+    "plasma-desktop": [
+      "containments/panel/main.qml (reorderApplets)",
+      "containments/panel/LayoutManager.js (reorder/save/restore)"
+    ]
+  },
+  "persistence": {
+    "pattern": "loadLayout(owner) before creating containments; saveLayout(same owner); config.sync",
+    "orderPath": "Containments/<id>/General/AppletOrder",
+    "differentOwnerExportIsNotTestedAsPersistence": true,
+    "removedInstanceConfigAbsent": true,
+    "sameAndFreshProcessReadback": true,
+    "originalPanelPositionsChecked": true
+  },
+  "actions": {
+    "tests": "harmless fixture actions only; no package power/session actions triggered",
+    "identity": "applet QObject plus QAction QPointer and session token",
+    "rejections": [
+      "foreign instance",
+      "removed from current action list",
+      "deleted action",
+      "disabled action",
+      "hidden action",
+      "disabled parent submenu",
+      "submenu heading",
+      "removed applet"
+    ],
+    "dynamicAboutToShowChecked": true,
+    "refreshPrepareFalseNoFactoryReentry": true
+  },
+  "fixtures": "BWM disposable shared-config applet plus selected original KDE example / external Andromeda package; no native action backend certification",
+  "python": {
+    "migration": {
+      "passed": 7
+    },
+    "skinManifests": {
+      "passed": 7
+    }
+  },
+  "sourceSha256": {
+    "src/bwm-plasma-host/panelsession.cpp": "8acda92b00940e7a1bef4147d161214d5aa79a9366253980db8a122cde173bb1",
+    "src/bwm-plasma-host/panelsession.h": "07f7dfe2e761c2b27b6f2b99461a730c73881c5d1a19f201b1ac4f4abc779411",
+    "src/bwm-plasma-host/catalog.cpp": "8098ff8828536e2e5cabef05d09b525e062ae629d51089497cace9bde853f545",
+    "src/bwm-plasma-host/catalog.h": "9dabf1ff367ab7bafd2855e394d748be27bcfc69925c1c9041515e54db20e559",
+    "src/bwm-plasma-host/main.cpp": "54916e376a1b053cff1422a4c0859b325ab2f5cf773c1d684f270865aed782b3",
+    "src/bwm-plasma-host/test-ui.cpp": "e8b662a48adfdbe146ae0f5050c1ba7cb89f28307d4321fd3700bd305a6592f7",
+    "src/bwm-plasma-host/check-isolated.py": "46f957ad467dc2c24fef127ea53f54666df5d48efb1d7c073a7f92b66cc3062c"
+  },
+  "normal": {
+    "ctestLog": "Test project /tmp/bwm-r4-build\n    Start 1: surface-geometry\n1/2 Test #1: surface-geometry .................   Passed    0.03 sec\n    Start 2: isolated-plasmoids\n2/2 Test #2: isolated-plasmoids ...............   Passed   12.28 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =  12.31 sec\n",
+    "isolated": {
+      "session_modified": false,
+      "live_panel_integrated": false,
+      "packages": [
+        {
+          "actions": [],
+          "categories": [],
+          "compact": true,
+          "configModel": "",
+          "configurationKeys": [],
+          "error": "",
+          "exercisePassed": false,
+          "firstId": 4,
+          "formFactor": 2,
+          "full": true,
+          "height": 48,
+          "itemLoaded": true,
+          "location": 4,
+          "mainScript": "file:///tmp/bwm-r4-check-80gx_8my/data/plasma/plasmoids/org.kde.example.compactrepresentation/contents/ui/main.qml",
+          "package": "org.kde.example.compactrepresentation",
+          "pages": [],
+          "secondId": 5,
+          "translationDomain": "plasma_applet_org.kde.example.compactrepresentation",
+          "valuesBeforeExercise": {},
+          "width": 48,
+          "nativeInstallRemove": true
+        },
+        {
+          "actions": [],
+          "categories": [
+            {
+              "configUiComponent": "",
+              "configUiModule": "",
+              "icon": "plasma",
+              "name": "General",
+              "pluginName": "",
+              "source": "file:///tmp/bwm-r4-check-80gx_8my/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configGeneral.qml",
+              "visible": true
+            },
+            {
+              "configUiComponent": "",
+              "configUiModule": "",
+              "icon": "konqueror",
+              "name": "Other page",
+              "pluginName": "",
+              "source": "file:///tmp/bwm-r4-check-80gx_8my/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configOther.qml",
+              "visible": true
+            }
+          ],
+          "compact": true,
+          "configModel": "file:///tmp/bwm-r4-check-80gx_8my/data/plasma/plasmoids/org.kde.example.configuration/contents/config/config.qml",
+          "configurationKeys": [
+            "BoolTest",
+            "Test",
+            "IntTest",
+            "OtherTest",
+            "EnumTest"
+          ],
+          "error": "",
+          "exercise": {
+            "cancelDoesNotWrite": true,
+            "defaultsStaged": true,
+            "expectedValue": false,
+            "key": "BoolTest",
+            "pageReopened": true,
+            "reloadedValue": false,
+            "saved": true,
+            "secondInstanceUnchanged": true
+          },
+          "exercisePassed": true,
+          "firstId": 6,
+          "formFactor": 2,
+          "full": true,
+          "height": 48,
+          "itemLoaded": true,
+          "location": 4,
+          "mainScript": "file:///tmp/bwm-r4-check-80gx_8my/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/main.qml",
+          "package": "org.kde.example.configuration",
+          "pages": [
+            {
+              "error": "",
+              "loaded": true,
+              "source": "file:///tmp/bwm-r4-check-80gx_8my/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configGeneral.qml"
+            },
+            {
+              "error": "",
+              "loaded": true,
+              "source": "file:///tmp/bwm-r4-check-80gx_8my/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configOther.qml"
+            }
+          ],
+          "secondId": 7,
+          "translationDomain": "plasma_applet_org.kde.example.configuration",
+          "valuesBeforeExercise": {
+            "BoolTest": true,
+            "EnumTest": 2,
+            "IntTest": 1,
+            "OtherTest": "test2",
+            "Test": "test"
+          },
+          "width": 48,
+          "freshProcessReadback": true,
+          "nativePopupAndConfigButtonsPassed": true,
+          "originalPanelConfigureActionPassed": true,
+          "packageWindowBoundaryChecksPassed": true,
+          "viewOutputGeometryChecksPassed": true,
+          "sharedConfigurationTransactionsPassed": true,
+          "sharedConfigurationFreshProcessReadbackOutput": "********* Start testing of UiTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : UiTest::initTestCase()\nPASS   : UiTest::sharedConfigurationFreshProcessReadback()\nPASS   : UiTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 39ms\n********* Finished testing of UiTest *********\n",
+          "nativePanelLifecycleAndActionsPassed": true,
+          "nativePanelFreshProcessReadbackOutput": "********* Start testing of UiTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : UiTest::initTestCase()\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.windowsystem: Could not find any platform plugin\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() qt.qml.propertyCache.append: Member enabled of the object DeclarativeDropArea overrides a member of the base object. Consider renaming it or adding final or override specifier\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Toolbox not loading, toolbox package is either invalid or disabled.\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55dd37694ca0)\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55dd378c8dc0)\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55dd37828b00)\nPASS   : UiTest::nativePanelApiFreshProcessReadback()\nPASS   : UiTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 74ms\n********* Finished testing of UiTest *********\n",
+          "uiTestOutput": "elConfigureActionAndIndependentInstances() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55a036b2e7c0)\nQWARN  : UiTest::originalPanelConfigureActionAndIndependentInstances() qrc:/qt/qml/plasma/applet/org/kde/panel/main.qml:135: TypeError: Cannot read property 'height' of null\nQWARN  : UiTest::originalPanelConfigureActionAndIndependentInstances() QQmlComponent: Component is not ready\nQWARN  : UiTest::originalPanelConfigureActionAndIndependentInstances() qrc:/qt/qml/plasma/applet/org/kde/panel/main.qml:401:9: QML ListModel: remove: indices [-1 - 0] out of range [0 - 1]\nPASS   : UiTest::originalPanelConfigureActionAndIndependentInstances()\nQWARN  : UiTest::nativePanelWidgetLifecycle() kf.plasma.quick: Toolbox not loading, toolbox package is either invalid or disabled.\nQWARN  : UiTest::nativePanelWidgetLifecycle() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55a036b26420)\nQWARN  : UiTest::nativePanelWidgetLifecycle() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55a036c0f4d0)\nQWARN  : UiTest::nativePanelWidgetLifecycle() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55a0368f29b0)\nQWARN  : UiTest::nativePanelWidgetLifecycle() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55a036b385c0)\nPASS   : UiTest::nativePanelWidgetLifecycle()\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Toolbox not loading, toolbox package is either invalid or disabled.\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55a036aad9a0)\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55a03699ccf0)\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55a03693b720)\nPASS   : UiTest::nativePanelApiFreshProcessReadback()\nPASS   : UiTest::nativeContextualActionsRejectStaleAndForeignHandles()\nPASS   : UiTest::nativeGeometryUsesTheViewOutput()\nQWARN  : UiTest::packageWindowOwnershipAndPreSurfaceBoundary() qt.qml.propertyCache.append: Member visible of the object PlasmaQuick::Dialog overrides a member of the base object. Consider renaming it or adding final or override specifier\nQWARN  : UiTest::packageWindowOwnershipAndPreSurfaceBoundary() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::Dialog(0x55a036c05070, name=\"unknown-package-dialog\")\nQWARN  : UiTest::packageWindowOwnershipAndPreSurfaceBoundary() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::Dialog(0x55a036c05070, name=\"unknown-package-dialog\")\nQWARN  : UiTest::packageWindowOwnershipAndPreSurfaceBoundary() This plugin does not support raise()\nQWARN  : UiTest::packageWindowOwnershipAndPreSurfaceBoundary() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::Dialog(0x55a036c05070, name=\"unknown-package-dialog\")\nPASS   : UiTest::packageWindowOwnershipAndPreSurfaceBoundary()\nPASS   : UiTest::sharedConfigurationTransactions()\nPASS   : UiTest::sharedConfigurationConstraintRejected()\nPASS   : UiTest::sharedConfigurationFreshProcessReadback()\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55a036c05190)\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x55a036c05190, name=\"bwmAppletPopup\")\nQWARN  : UiTest::configButtonsAndPopup() This plugin does not support setting window masks\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x55a036c05190, name=\"bwmAppletPopup\")\nPASS   : UiTest::configButtonsAndPopup()\nPASS   : UiTest::cleanupTestCase()\nTotals: 14 passed, 0 failed, 0 skipped, 0 blacklisted, 875ms\n********* Finished testing of UiTest *********\n",
+          "nativeInstallRemove": true
+        },
+        {
+          "actions": [
+            "Edit Applications…"
+          ],
+          "categories": [
+            {
+              "configUiComponent": "",
+              "configUiModule": "",
+              "icon": "preferences-desktop-plasma",
+              "name": "General",
+              "pluginName": "",
+              "source": "file:///tmp/bwm-r4-check-80gx_8my/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ConfigGeneral.qml",
+              "visible": true
+            },
+            {
+              "configUiComponent": "",
+              "configUiModule": "",
+              "icon": "view-list-details",
+              "name": "Lists and grids",
+              "pluginName": "",
+              "source": "file:///tmp/bwm-r4-check-80gx_8my/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ListAndGrid.qml",
+              "visible": true
+            }
+          ],
+          "compact": false,
+          "configModel": "file:///tmp/bwm-r4-check-80gx_8my/data/plasma/plasmoids/AndromedaLauncher/contents/config/config.qml",
+          "configurationKeys": [
+            "icon",
+            "useCustomButtonImage",
+            "customButtonImage",
+            "activationIndicator",
+            "indicatorColor",
+            "enableGreeting",
+            "pinnedModel",
+            "defaultPage",
+            "customGreeting",
+            "launcherPosition",
+            "offsetX",
+            "offsetY",
+            "floating",
+            "enableGlow",
+            "glowColor",
+            "compactListItems",
+            "showItemsInGrid",
+            "extraRunners",
+            "useSystemFontSettings",
+            "appsIconSize",
+            "numberColumns",
+            "numberOfRows"
+          ],
+          "error": "",
+          "exercise": {
+            "cancelDoesNotWrite": true,
+            "defaultsStaged": true,
+            "expectedValue": true,
+            "key": "useCustomButtonImage",
+            "pageReopened": true,
+            "reloadedValue": true,
+            "saved": true,
+            "secondInstanceUnchanged": true
+          },
+          "exercisePassed": true,
+          "firstId": 8,
+          "formFactor": 2,
+          "full": true,
+          "height": 0,
+          "itemLoaded": true,
+          "location": 4,
+          "mainScript": "file:///tmp/bwm-r4-check-80gx_8my/data/plasma/plasmoids/AndromedaLauncher/contents/ui/main.qml",
+          "package": "AndromedaLauncher",
+          "pages": [
+            {
+              "error": "",
+              "loaded": true,
+              "source": "file:///tmp/bwm-r4-check-80gx_8my/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ConfigGeneral.qml"
+            },
+            {
+              "error": "",
+              "loaded": true,
+              "source": "file:///tmp/bwm-r4-check-80gx_8my/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ListAndGrid.qml"
+            }
+          ],
+          "secondId": 9,
+          "translationDomain": "plasma_applet_AndromedaLauncher",
+          "valuesBeforeExercise": {
+            "activationIndicator": true,
+            "appsIconSize": 2,
+            "compactListItems": false,
+            "customButtonImage": "",
+            "customGreeting": "",
+            "defaultPage": 0,
+            "enableGlow": false,
+            "enableGreeting": true,
+            "extraRunners": [
+              "shell",
+              "bookmarks",
+              "baloosearch",
+              "locations"
+            ],
+            "floating": false,
+            "glowColor": 0,
+            "icon": "start-here-kde-symbolic",
+            "indicatorColor": "#2164c9",
+            "launcherPosition": 0,
+            "numberColumns": 6,
+            "numberOfRows": 3,
+            "offsetX": 0,
+            "offsetY": 0,
+            "pinnedModel": 0,
+            "showItemsInGrid": false,
+            "useCustomButtonImage": false,
+            "useSystemFontSettings": false
+          },
+          "width": 0,
+          "freshProcessReadback": true,
+          "nativePopupAndConfigButtonsPassed": true,
+          "originalPanelConfigureActionPassed": true,
+          "packageOwnedDialogOffscreenPassed": true,
+          "packageOwnedDialogLayerRolePrepared": true,
+          "packageWindowBoundaryChecksPassed": true,
+          "viewOutputGeometryChecksPassed": true,
+          "sharedConfigurationTransactionsPassed": true,
+          "sharedConfigurationFreshProcessReadbackOutput": "********* Start testing of UiTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : UiTest::initTestCase()\nPASS   : UiTest::sharedConfigurationFreshProcessReadback()\nPASS   : UiTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 41ms\n********* Finished testing of UiTest *********\n",
+          "nativePanelLifecycleAndActionsPassed": true,
+          "nativePanelFreshProcessReadbackOutput": " something else is broken on your system. Recent documents and alike will not work!\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() qt.sql.qsqldatabase: QSqlDatabasePrivate::database: unable to open database: \"unable to open database file Error opening database\"\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kde.plasma.activitiesstats: PlasmaActivities: Database is not open:  \"kactivities_db_resources_140181221342528_readonly\" \"/tmp/bwm-r4-check-80gx_8my/data/kactivitymanagerd/resources/database\" QSqlError(\"14\", \"Error opening database\", \"unable to open database file\")\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() qt.sql.qsqldatabase: QSqlDatabasePrivate::database: unable to open database: \"unable to open database file Error opening database\"\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kde.plasma.activitiesstats: PlasmaActivities: Database is not open:  \"kactivities_db_resources_140181221342528_readonly\" \"/tmp/bwm-r4-check-80gx_8my/data/kactivitymanagerd/resources/database\" QSqlError(\"14\", \"Error opening database\", \"unable to open database file\")\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kde.plasma.activitiesstats: Plasma Activities ERROR: There is no database. This probably means that you do not have the Activity Manager running, or that something else is broken on your system. Recent documents and alike will not work!\nQDEBUG : UiTest::nativePanelApiFreshProcessReadback() failed to acquire GL context to resolve capabilities, using defaults..\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x56227a4b9c50)\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x56227a6d6490)\nPASS   : UiTest::nativePanelApiFreshProcessReadback()\nPASS   : UiTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 128ms\n********* Finished testing of UiTest *********\n",
+          "uiTestOutput": "sources_140337216929088_readonly\" \"/tmp/bwm-r4-check-80gx_8my/data/kactivitymanagerd/resources/database\" QSqlError(\"14\", \"Error opening database\", \"unable to open database file\")\nQWARN  : UiTest::configButtonsAndPopup() kde.plasma.activitiesstats: Plasma Activities ERROR: There is no database. This probably means that you do not have the Activity Manager running, or that something else is broken on your system. Recent documents and alike will not work!\nQWARN  : UiTest::configButtonsAndPopup() qt.sql.qsqldatabase: QSqlDatabasePrivate::database: unable to open database: \"unable to open database file Error opening database\"\nQWARN  : UiTest::configButtonsAndPopup() kde.plasma.activitiesstats: PlasmaActivities: Database is not open:  \"kactivities_db_resources_140337216929088_readonly\" \"/tmp/bwm-r4-check-80gx_8my/data/kactivitymanagerd/resources/database\" QSqlError(\"14\", \"Error opening database\", \"unable to open database file\")\nQWARN  : UiTest::configButtonsAndPopup() qt.sql.qsqldatabase: QSqlDatabasePrivate::database: unable to open database: \"unable to open database file Error opening database\"\nQWARN  : UiTest::configButtonsAndPopup() kde.plasma.activitiesstats: PlasmaActivities: Database is not open:  \"kactivities_db_resources_140337216929088_readonly\" \"/tmp/bwm-r4-check-80gx_8my/data/kactivitymanagerd/resources/database\" QSqlError(\"14\", \"Error opening database\", \"unable to open database file\")\nQWARN  : UiTest::configButtonsAndPopup() kde.plasma.activitiesstats: Plasma Activities ERROR: There is no database. This probably means that you do not have the Activity Manager running, or that something else is broken on your system. Recent documents and alike will not work!\nQDEBUG : UiTest::configButtonsAndPopup() failed to acquire GL context to resolve capabilities, using defaults..\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x55e30e1ad1d0, name=\"bwmAppletPopup\")\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() This plugin does not support setting window masks\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x55e30e1ad1d0, name=\"bwmAppletPopup\")\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x55e30e1ad1d0, name=\"bwmAppletPopup\")\nQWARN  : UiTest::configButtonsAndPopup() This plugin does not support setting window masks\nPASS   : UiTest::configButtonsAndPopup()\nPASS   : UiTest::cleanupTestCase()\nTotals: 14 passed, 0 failed, 0 skipped, 0 blacklisted, 1341ms\n********* Finished testing of UiTest *********\n",
+          "nativeInstallRemove": true
+        }
+      ],
+      "nativeBuiltin": {
+        "actions": [],
+        "categories": [
+          {
+            "configUiComponent": "",
+            "configUiModule": "",
+            "icon": "preferences-desktop-color",
+            "name": "Appearance",
+            "pluginName": "",
+            "source": "qrc:/qt/qml/plasma/applet/org/kde/plasma/analogclock/configGeneral.qml",
+            "visible": true
+          }
+        ],
+        "compact": true,
+        "configModel": "",
+        "configurationKeys": [
+          "showSecondHand",
+          "showTimezoneString"
+        ],
+        "error": "",
+        "exercise": {
+          "cancelDoesNotWrite": true,
+          "defaultsStaged": true,
+          "expectedValue": true,
+          "key": "showSecondHand",
+          "pageReopened": true,
+          "reloadedValue": true,
+          "saved": true,
+          "secondInstanceUnchanged": true
+        },
+        "exercisePassed": true,
+        "firstId": 2,
+        "formFactor": 2,
+        "full": true,
+        "height": 48,
+        "itemLoaded": true,
+        "location": 4,
+        "mainScript": "",
+        "package": "org.kde.plasma.analogclock",
+        "pages": [
+          {
+            "error": "",
+            "loaded": true,
+            "source": "qrc:/qt/qml/plasma/applet/org/kde/plasma/analogclock/configGeneral.qml"
+          }
+        ],
+        "secondId": 3,
+        "translationDomain": "plasma_applet_org.kde.plasma.analogclock",
+        "valuesBeforeExercise": {
+          "showSecondHand": false,
+          "showTimezoneString": false
+        },
+        "width": 48,
+        "freshProcessReadback": true
+      },
+      "themeInventory": {
+        "theme": {
+          "configurationContract": "Route references to native component KCMs; widgets use discovered KPackage schemas per instance. Preserve user keys/kdedefaults. Never infer widgets by evaluating layouts.",
+          "defaults": [
+            {
+              "applicationVerified": false,
+              "component": "defaults",
+              "groups": [
+                "UnknownFile",
+                "Vendor"
+              ],
+              "key": "Keep",
+              "value": "42"
+            },
+            {
+              "applicationVerified": false,
+              "component": "desktop-svg-reference",
+              "groups": [
+                "plasmarc",
+                "Theme"
+              ],
+              "key": "name",
+              "value": "breeze-dark"
+            },
+            {
+              "applicationVerified": false,
+              "component": "decoration-reference",
+              "groups": [
+                "kwinrc",
+                "org.kde.kdecoration2"
+              ],
+              "key": "library",
+              "value": "org.kde.breeze"
+            }
+          ],
+          "id": "org.bwm.r4.disposable-theme",
+          "layoutDefaults": [],
+          "name": "Disposable theme inventory fixture",
+          "packagePath": "/tmp/bwm-r4-check-80gx_8my/data/plasma/look-and-feel/org.bwm.r4.disposable-theme/",
+          "resolvedFiles": {
+            "defaults": {
+              "inherited": false,
+              "path": "/tmp/bwm-r4-check-80gx_8my/data/plasma/look-and-feel/org.bwm.r4.disposable-theme/contents/defaults"
+            },
+            "logoutmainscript": {
+              "inherited": true,
+              "path": "/usr/share/plasma/look-and-feel/org.kde.breeze.desktop/contents/logout/Logout.qml"
+            },
+            "splashmainscript": {
+              "inherited": true,
+              "path": "/usr/share/plasma/look-and-feel/org.kde.breeze.desktop/contents/splash/Splash.qml"
+            }
+          },
+          "scripts": [
+            {
+              "contract": "layouts",
+              "executeAllowed": false,
+              "inherited": false,
+              "path": "/tmp/bwm-r4-check-80gx_8my/data/plasma/look-and-feel/org.bwm.r4.disposable-theme/contents/layouts/org.kde.plasma.desktop-layout.js",
+              "sha256": "6fffcfe6ff6c2109a05204dd66fc0cce4e39932b67ba1a3097a48d64432af9d0",
+              "status": "requires-reviewed-layout-adapter"
+            }
+          ],
+          "status": "inventory-only",
+          "valid": true
+        },
+        "nativeInstallRemove": true,
+        "sourcePreserved": true,
+        "layoutExecutionEnabled": false
+      },
+      "migration": {
+        "status": "verified-native-stage",
+        "activationAllowed": false,
+        "panels": [
+          {
+            "appletOrder": "2;3",
+            "containmentId": 1,
+            "containmentPackage": "org.kde.panel",
+            "outputDescription": "MSI fixture",
+            "widgets": [
+              {
+                "appletId": 2,
+                "deferredRuntime": [],
+                "legacyIndex": 0,
+                "legacyName": "clock",
+                "nativeSettings": {
+                  "showDate": false,
+                  "showSeconds": 2
+                },
+                "package": "org.kde.plasma.digitalclock",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 3,
+                "deferredRuntime": [],
+                "legacyIndex": 1,
+                "legacyName": "clock",
+                "nativeSettings": {
+                  "showDate": false,
+                  "showSeconds": 2
+                },
+                "package": "org.kde.plasma.digitalclock",
+                "status": "native-instance-staged"
+              }
+            ]
+          },
+          {
+            "appletOrder": "5;6",
+            "containmentId": 4,
+            "containmentPackage": "org.kde.panel",
+            "outputDescription": "LG fixture",
+            "widgets": [
+              {
+                "appletId": 5,
+                "deferredRuntime": [],
+                "legacyIndex": 0,
+                "legacyName": "clock",
+                "nativeSettings": {
+                  "showDate": false,
+                  "showSeconds": 2
+                },
+                "package": "org.kde.plasma.digitalclock",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 6,
+                "deferredRuntime": [],
+                "legacyIndex": 1,
+                "legacyName": "clock",
+                "nativeSettings": {
+                  "showDate": false,
+                  "showSeconds": 2
+                },
+                "package": "org.kde.plasma.digitalclock",
+                "status": "native-instance-staged"
+              }
+            ]
+          }
+        ],
+        "archivePreserved": true,
+        "enumSecondsMappedToAlways": true,
+        "missingPackageRejected": true,
+        "tamperedArchiveRejected": true,
+        "existingDestinationPreserved": true
+      },
+      "originalPanel": {
+        "panels": [
+          {
+            "containmentId": 1,
+            "qmlBaseUrl": "qrc:/qt/qml/plasma/applet/org/kde/panel/main.qml",
+            "rootType": "ContainmentItem_QML_60",
+            "widgets": [
+              {
+                "error": "",
+                "height": 40,
+                "id": 2,
+                "nativeContainer": true,
+                "ordered": true,
+                "package": "org.kde.plasma.digitalclock",
+                "width": 116.90625,
+                "x": 8,
+                "y": 4
+              },
+              {
+                "error": "",
+                "height": 40,
+                "id": 3,
+                "nativeContainer": true,
+                "ordered": true,
+                "package": "org.kde.plasma.digitalclock",
+                "width": 116.90625,
+                "x": 129,
+                "y": 4
+              }
+            ]
+          },
+          {
+            "containmentId": 4,
+            "qmlBaseUrl": "qrc:/qt/qml/plasma/applet/org/kde/panel/main.qml",
+            "rootType": "ContainmentItem_QML_60",
+            "widgets": [
+              {
+                "error": "",
+                "height": 40,
+                "id": 5,
+                "nativeContainer": true,
+                "ordered": true,
+                "package": "org.kde.plasma.digitalclock",
+                "width": 116.90625,
+                "x": 8,
+                "y": 4
+              },
+              {
+                "error": "",
+                "height": 40,
+                "id": 6,
+                "nativeContainer": true,
+                "ordered": true,
+                "package": "org.kde.plasma.digitalclock",
+                "width": 116.90625,
+                "x": 129,
+                "y": 4
+              }
+            ]
+          }
+        ],
+        "status": "original-panel-qml-passed",
+        "waylandVerified": false
+      },
+      "fullPanelDataMigration": {
+        "status": "verified-native-stage",
+        "panels": [
+          {
+            "appletOrder": "2;3;4;12;13",
+            "containmentId": 1,
+            "containmentPackage": "org.kde.panel",
+            "outputDescription": "MSI fixture",
+            "widgets": [
+              {
+                "appletId": 2,
+                "deferredRuntime": [
+                  "Kickoff must import favorites into its new KAStats client on first render; runtime import not verified"
+                ],
+                "legacyIndex": 0,
+                "legacyName": "kickoff",
+                "nativeSettings": {
+                  "compactMode": true,
+                  "favorites": [
+                    "preferred://browser"
+                  ],
+                  "favoritesPortedToKAstats": false,
+                  "icon": "start-here-kde-symbolic"
+                },
+                "package": "org.kde.plasma.kickoff",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 3,
+                "deferredRuntime": [],
+                "legacyIndex": 1,
+                "legacyName": "tasks",
+                "nativeSettings": {
+                  "iconSpacing": 2,
+                  "showOnlyCurrentDesktop": true
+                },
+                "package": "org.kde.plasma.icontasks",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 4,
+                "deferredRuntime": [],
+                "legacyIndex": 2,
+                "legacyName": "tray",
+                "nativeSettings": {},
+                "package": "org.kde.plasma.systemtray",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 12,
+                "deferredRuntime": [],
+                "legacyIndex": 3,
+                "legacyName": "clock",
+                "nativeSettings": {
+                  "customDateFormat": "yyyy-MM-dd",
+                  "dateFormat": "custom",
+                  "showDate": false,
+                  "showSeconds": 1
+                },
+                "package": "org.kde.plasma.digitalclock",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 13,
+                "deferredRuntime": [],
+                "legacyIndex": 4,
+                "legacyName": "desktop",
+                "nativeSettings": {},
+                "package": "org.kde.plasma.showdesktop",
+                "status": "native-instance-staged"
+              }
+            ]
+          },
+          {
+            "appletOrder": "15;16;17;25;26",
+            "containmentId": 14,
+            "containmentPackage": "org.kde.panel",
+            "outputDescription": "LG fixture",
+            "widgets": [
+              {
+                "appletId": 15,
+                "deferredRuntime": [
+                  "Kickoff must import favorites into its new KAStats client on first render; runtime import not verified"
+                ],
+                "legacyIndex": 0,
+                "legacyName": "kickoff",
+                "nativeSettings": {
+                  "compactMode": true,
+                  "favorites": [
+                    "preferred://browser"
+                  ],
+                  "favoritesPortedToKAstats": false,
+                  "icon": "start-here-kde-symbolic"
+                },
+                "package": "org.kde.plasma.kickoff",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 16,
+                "deferredRuntime": [],
+                "legacyIndex": 1,
+                "legacyName": "tasks",
+                "nativeSettings": {
+                  "iconSpacing": 2,
+                  "showOnlyCurrentDesktop": true
+                },
+                "package": "org.kde.plasma.icontasks",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 17,
+                "deferredRuntime": [],
+                "legacyIndex": 2,
+                "legacyName": "tray",
+                "nativeSettings": {},
+                "package": "org.kde.plasma.systemtray",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 25,
+                "deferredRuntime": [],
+                "legacyIndex": 3,
+                "legacyName": "clock",
+                "nativeSettings": {
+                  "customDateFormat": "yyyy-MM-dd",
+                  "dateFormat": "custom",
+                  "showDate": false,
+                  "showSeconds": 1
+                },
+                "package": "org.kde.plasma.digitalclock",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 26,
+                "deferredRuntime": [],
+                "legacyIndex": 4,
+                "legacyName": "desktop",
+                "nativeSettings": {},
+                "package": "org.kde.plasma.showdesktop",
+                "status": "native-instance-staged"
+              }
+            ]
+          }
+        ],
+        "activationAllowed": false,
+        "runtimeVerified": false,
+        "favoritesImportDeferred": true
+      }
+    }
+  },
+  "asan": {
+    "ctestLog": "Test project /tmp/bwm-r4-asan\n    Start 1: surface-geometry\n1/2 Test #1: surface-geometry .................   Passed    0.04 sec\n    Start 2: isolated-plasmoids\n2/2 Test #2: isolated-plasmoids ...............   Passed   16.02 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =  16.06 sec\n",
+    "isolated": {
+      "session_modified": false,
+      "live_panel_integrated": false,
+      "packages": [
+        {
+          "actions": [],
+          "categories": [],
+          "compact": true,
+          "configModel": "",
+          "configurationKeys": [],
+          "error": "",
+          "exercisePassed": false,
+          "firstId": 4,
+          "formFactor": 2,
+          "full": true,
+          "height": 48,
+          "itemLoaded": true,
+          "location": 4,
+          "mainScript": "file:///tmp/bwm-r4-check-f2q146x2/data/plasma/plasmoids/org.kde.example.compactrepresentation/contents/ui/main.qml",
+          "package": "org.kde.example.compactrepresentation",
+          "pages": [],
+          "secondId": 5,
+          "translationDomain": "plasma_applet_org.kde.example.compactrepresentation",
+          "valuesBeforeExercise": {},
+          "width": 48,
+          "nativeInstallRemove": true
+        },
+        {
+          "actions": [],
+          "categories": [
+            {
+              "configUiComponent": "",
+              "configUiModule": "",
+              "icon": "plasma",
+              "name": "General",
+              "pluginName": "",
+              "source": "file:///tmp/bwm-r4-check-f2q146x2/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configGeneral.qml",
+              "visible": true
+            },
+            {
+              "configUiComponent": "",
+              "configUiModule": "",
+              "icon": "konqueror",
+              "name": "Other page",
+              "pluginName": "",
+              "source": "file:///tmp/bwm-r4-check-f2q146x2/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configOther.qml",
+              "visible": true
+            }
+          ],
+          "compact": true,
+          "configModel": "file:///tmp/bwm-r4-check-f2q146x2/data/plasma/plasmoids/org.kde.example.configuration/contents/config/config.qml",
+          "configurationKeys": [
+            "BoolTest",
+            "Test",
+            "IntTest",
+            "OtherTest",
+            "EnumTest"
+          ],
+          "error": "",
+          "exercise": {
+            "cancelDoesNotWrite": true,
+            "defaultsStaged": true,
+            "expectedValue": false,
+            "key": "BoolTest",
+            "pageReopened": true,
+            "reloadedValue": false,
+            "saved": true,
+            "secondInstanceUnchanged": true
+          },
+          "exercisePassed": true,
+          "firstId": 6,
+          "formFactor": 2,
+          "full": true,
+          "height": 48,
+          "itemLoaded": true,
+          "location": 4,
+          "mainScript": "file:///tmp/bwm-r4-check-f2q146x2/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/main.qml",
+          "package": "org.kde.example.configuration",
+          "pages": [
+            {
+              "error": "",
+              "loaded": true,
+              "source": "file:///tmp/bwm-r4-check-f2q146x2/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configGeneral.qml"
+            },
+            {
+              "error": "",
+              "loaded": true,
+              "source": "file:///tmp/bwm-r4-check-f2q146x2/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configOther.qml"
+            }
+          ],
+          "secondId": 7,
+          "translationDomain": "plasma_applet_org.kde.example.configuration",
+          "valuesBeforeExercise": {
+            "BoolTest": true,
+            "EnumTest": 2,
+            "IntTest": 1,
+            "OtherTest": "test2",
+            "Test": "test"
+          },
+          "width": 48,
+          "freshProcessReadback": true,
+          "nativePopupAndConfigButtonsPassed": true,
+          "originalPanelConfigureActionPassed": true,
+          "packageWindowBoundaryChecksPassed": true,
+          "viewOutputGeometryChecksPassed": true,
+          "sharedConfigurationTransactionsPassed": true,
+          "sharedConfigurationFreshProcessReadbackOutput": "********* Start testing of UiTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : UiTest::initTestCase()\nPASS   : UiTest::sharedConfigurationFreshProcessReadback()\nPASS   : UiTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 79ms\n********* Finished testing of UiTest *********\n",
+          "nativePanelLifecycleAndActionsPassed": true,
+          "nativePanelFreshProcessReadbackOutput": "********* Start testing of UiTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : UiTest::initTestCase()\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.windowsystem: Could not find any platform plugin\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() qt.qml.propertyCache.append: Member enabled of the object DeclarativeDropArea overrides a member of the base object. Consider renaming it or adding final or override specifier\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Toolbox not loading, toolbox package is either invalid or disabled.\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7d0471871540)\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7d0471878a40)\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7d047187a540)\nPASS   : UiTest::nativePanelApiFreshProcessReadback()\nPASS   : UiTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 144ms\n********* Finished testing of UiTest *********\n",
+          "uiTestOutput": "ain.qml:135: TypeError: Cannot read property 'height' of null\nQWARN  : UiTest::originalPanelConfigureActionAndIndependentInstances() QQmlComponent: Component is not ready\nQWARN  : UiTest::originalPanelConfigureActionAndIndependentInstances() qrc:/qt/qml/plasma/applet/org/kde/panel/main.qml:401:9: QML ListModel: remove: indices [-1 - 0] out of range [0 - 1]\nPASS   : UiTest::originalPanelConfigureActionAndIndependentInstances()\nQWARN  : UiTest::nativePanelWidgetLifecycle() kf.plasma.quick: Toolbox not loading, toolbox package is either invalid or disabled.\nQWARN  : UiTest::nativePanelWidgetLifecycle() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7ceb5796f740)\nQWARN  : UiTest::nativePanelWidgetLifecycle() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7ceb57971840)\nQWARN  : UiTest::nativePanelWidgetLifecycle() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7ceb57973640)\nQWARN  : UiTest::nativePanelWidgetLifecycle() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7ceb5764a9c0)\nPASS   : UiTest::nativePanelWidgetLifecycle()\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Toolbox not loading, toolbox package is either invalid or disabled.\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7ceb577a84c0)\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7ceb577a6840)\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7ceb577a4440)\nPASS   : UiTest::nativePanelApiFreshProcessReadback()\nPASS   : UiTest::nativeContextualActionsRejectStaleAndForeignHandles()\nPASS   : UiTest::nativeGeometryUsesTheViewOutput()\nQWARN  : UiTest::packageWindowOwnershipAndPreSurfaceBoundary() qt.qml.propertyCache.append: Member visible of the object PlasmaQuick::Dialog overrides a member of the base object. Consider renaming it or adding final or override specifier\nQWARN  : UiTest::packageWindowOwnershipAndPreSurfaceBoundary() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::Dialog(0x7cdb580ee900, name=\"unknown-package-dialog\")\nQWARN  : UiTest::packageWindowOwnershipAndPreSurfaceBoundary() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::Dialog(0x7cdb580ee900, name=\"unknown-package-dialog\")\nQWARN  : UiTest::packageWindowOwnershipAndPreSurfaceBoundary() This plugin does not support raise()\nQWARN  : UiTest::packageWindowOwnershipAndPreSurfaceBoundary() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::Dialog(0x7cdb580ee900, name=\"unknown-package-dialog\")\nPASS   : UiTest::packageWindowOwnershipAndPreSurfaceBoundary()\nPASS   : UiTest::sharedConfigurationTransactions()\nPASS   : UiTest::sharedConfigurationConstraintRejected()\nPASS   : UiTest::sharedConfigurationFreshProcessReadback()\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7ceb576869c0)\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x7ceb576869c0, name=\"bwmAppletPopup\")\nQWARN  : UiTest::configButtonsAndPopup() This plugin does not support setting window masks\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x7ceb576869c0, name=\"bwmAppletPopup\")\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x7ceb576869c0, name=\"bwmAppletPopup\")\nQWARN  : UiTest::configButtonsAndPopup() This plugin does not support setting window masks\nPASS   : UiTest::configButtonsAndPopup()\nPASS   : UiTest::cleanupTestCase()\nTotals: 14 passed, 0 failed, 0 skipped, 0 blacklisted, 1464ms\n********* Finished testing of UiTest *********\n",
+          "nativeInstallRemove": true
+        },
+        {
+          "actions": [
+            "Edit Applications…"
+          ],
+          "categories": [
+            {
+              "configUiComponent": "",
+              "configUiModule": "",
+              "icon": "preferences-desktop-plasma",
+              "name": "General",
+              "pluginName": "",
+              "source": "file:///tmp/bwm-r4-check-f2q146x2/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ConfigGeneral.qml",
+              "visible": true
+            },
+            {
+              "configUiComponent": "",
+              "configUiModule": "",
+              "icon": "view-list-details",
+              "name": "Lists and grids",
+              "pluginName": "",
+              "source": "file:///tmp/bwm-r4-check-f2q146x2/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ListAndGrid.qml",
+              "visible": true
+            }
+          ],
+          "compact": false,
+          "configModel": "file:///tmp/bwm-r4-check-f2q146x2/data/plasma/plasmoids/AndromedaLauncher/contents/config/config.qml",
+          "configurationKeys": [
+            "icon",
+            "useCustomButtonImage",
+            "customButtonImage",
+            "activationIndicator",
+            "indicatorColor",
+            "enableGreeting",
+            "pinnedModel",
+            "defaultPage",
+            "customGreeting",
+            "launcherPosition",
+            "offsetX",
+            "offsetY",
+            "floating",
+            "enableGlow",
+            "glowColor",
+            "compactListItems",
+            "showItemsInGrid",
+            "extraRunners",
+            "useSystemFontSettings",
+            "appsIconSize",
+            "numberColumns",
+            "numberOfRows"
+          ],
+          "error": "",
+          "exercise": {
+            "cancelDoesNotWrite": true,
+            "defaultsStaged": true,
+            "expectedValue": true,
+            "key": "useCustomButtonImage",
+            "pageReopened": true,
+            "reloadedValue": true,
+            "saved": true,
+            "secondInstanceUnchanged": true
+          },
+          "exercisePassed": true,
+          "firstId": 8,
+          "formFactor": 2,
+          "full": true,
+          "height": 0,
+          "itemLoaded": true,
+          "location": 4,
+          "mainScript": "file:///tmp/bwm-r4-check-f2q146x2/data/plasma/plasmoids/AndromedaLauncher/contents/ui/main.qml",
+          "package": "AndromedaLauncher",
+          "pages": [
+            {
+              "error": "",
+              "loaded": true,
+              "source": "file:///tmp/bwm-r4-check-f2q146x2/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ConfigGeneral.qml"
+            },
+            {
+              "error": "",
+              "loaded": true,
+              "source": "file:///tmp/bwm-r4-check-f2q146x2/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ListAndGrid.qml"
+            }
+          ],
+          "secondId": 9,
+          "translationDomain": "plasma_applet_AndromedaLauncher",
+          "valuesBeforeExercise": {
+            "activationIndicator": true,
+            "appsIconSize": 2,
+            "compactListItems": false,
+            "customButtonImage": "",
+            "customGreeting": "",
+            "defaultPage": 0,
+            "enableGlow": false,
+            "enableGreeting": true,
+            "extraRunners": [
+              "shell",
+              "bookmarks",
+              "baloosearch",
+              "locations"
+            ],
+            "floating": false,
+            "glowColor": 0,
+            "icon": "start-here-kde-symbolic",
+            "indicatorColor": "#2164c9",
+            "launcherPosition": 0,
+            "numberColumns": 6,
+            "numberOfRows": 3,
+            "offsetX": 0,
+            "offsetY": 0,
+            "pinnedModel": 0,
+            "showItemsInGrid": false,
+            "useCustomButtonImage": false,
+            "useSystemFontSettings": false
+          },
+          "width": 0,
+          "freshProcessReadback": true,
+          "nativePopupAndConfigButtonsPassed": true,
+          "originalPanelConfigureActionPassed": true,
+          "packageOwnedDialogOffscreenPassed": true,
+          "packageOwnedDialogLayerRolePrepared": true,
+          "packageWindowBoundaryChecksPassed": true,
+          "viewOutputGeometryChecksPassed": true,
+          "sharedConfigurationTransactionsPassed": true,
+          "sharedConfigurationFreshProcessReadbackOutput": "********* Start testing of UiTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : UiTest::initTestCase()\nPASS   : UiTest::sharedConfigurationFreshProcessReadback()\nPASS   : UiTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 76ms\n********* Finished testing of UiTest *********\n",
+          "nativePanelLifecycleAndActionsPassed": true,
+          "nativePanelFreshProcessReadbackOutput": " something else is broken on your system. Recent documents and alike will not work!\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() qt.sql.qsqldatabase: QSqlDatabasePrivate::database: unable to open database: \"unable to open database file Error opening database\"\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kde.plasma.activitiesstats: PlasmaActivities: Database is not open:  \"kactivities_db_resources_139785695513984_readonly\" \"/tmp/bwm-r4-check-f2q146x2/data/kactivitymanagerd/resources/database\" QSqlError(\"14\", \"Error opening database\", \"unable to open database file\")\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() qt.sql.qsqldatabase: QSqlDatabasePrivate::database: unable to open database: \"unable to open database file Error opening database\"\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kde.plasma.activitiesstats: PlasmaActivities: Database is not open:  \"kactivities_db_resources_139785695513984_readonly\" \"/tmp/bwm-r4-check-f2q146x2/data/kactivitymanagerd/resources/database\" QSqlError(\"14\", \"Error opening database\", \"unable to open database file\")\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kde.plasma.activitiesstats: Plasma Activities ERROR: There is no database. This probably means that you do not have the Activity Manager running, or that something else is broken on your system. Recent documents and alike will not work!\nQDEBUG : UiTest::nativePanelApiFreshProcessReadback() failed to acquire GL context to resolve capabilities, using defaults..\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7c4261b1dbc0)\nQWARN  : UiTest::nativePanelApiFreshProcessReadback() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7c4261add6c0)\nPASS   : UiTest::nativePanelApiFreshProcessReadback()\nPASS   : UiTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 272ms\n********* Finished testing of UiTest *********\n",
+          "uiTestOutput": "sources_140231573482880_readonly\" \"/tmp/bwm-r4-check-f2q146x2/data/kactivitymanagerd/resources/database\" QSqlError(\"14\", \"Error opening database\", \"unable to open database file\")\nQWARN  : UiTest::configButtonsAndPopup() kde.plasma.activitiesstats: Plasma Activities ERROR: There is no database. This probably means that you do not have the Activity Manager running, or that something else is broken on your system. Recent documents and alike will not work!\nQWARN  : UiTest::configButtonsAndPopup() qt.sql.qsqldatabase: QSqlDatabasePrivate::database: unable to open database: \"unable to open database file Error opening database\"\nQWARN  : UiTest::configButtonsAndPopup() kde.plasma.activitiesstats: PlasmaActivities: Database is not open:  \"kactivities_db_resources_140231573482880_readonly\" \"/tmp/bwm-r4-check-f2q146x2/data/kactivitymanagerd/resources/database\" QSqlError(\"14\", \"Error opening database\", \"unable to open database file\")\nQWARN  : UiTest::configButtonsAndPopup() qt.sql.qsqldatabase: QSqlDatabasePrivate::database: unable to open database: \"unable to open database file Error opening database\"\nQWARN  : UiTest::configButtonsAndPopup() kde.plasma.activitiesstats: PlasmaActivities: Database is not open:  \"kactivities_db_resources_140231573482880_readonly\" \"/tmp/bwm-r4-check-f2q146x2/data/kactivitymanagerd/resources/database\" QSqlError(\"14\", \"Error opening database\", \"unable to open database file\")\nQWARN  : UiTest::configButtonsAndPopup() kde.plasma.activitiesstats: Plasma Activities ERROR: There is no database. This probably means that you do not have the Activity Manager running, or that something else is broken on your system. Recent documents and alike will not work!\nQDEBUG : UiTest::configButtonsAndPopup() failed to acquire GL context to resolve capabilities, using defaults..\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x7caa34615840, name=\"bwmAppletPopup\")\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() This plugin does not support setting window masks\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x7caa34615840, name=\"bwmAppletPopup\")\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x7caa34615840, name=\"bwmAppletPopup\")\nQWARN  : UiTest::configButtonsAndPopup() This plugin does not support setting window masks\nPASS   : UiTest::configButtonsAndPopup()\nPASS   : UiTest::cleanupTestCase()\nTotals: 14 passed, 0 failed, 0 skipped, 0 blacklisted, 2493ms\n********* Finished testing of UiTest *********\n",
+          "nativeInstallRemove": true
+        }
+      ],
+      "nativeBuiltin": {
+        "actions": [],
+        "categories": [
+          {
+            "configUiComponent": "",
+            "configUiModule": "",
+            "icon": "preferences-desktop-color",
+            "name": "Appearance",
+            "pluginName": "",
+            "source": "qrc:/qt/qml/plasma/applet/org/kde/plasma/analogclock/configGeneral.qml",
+            "visible": true
+          }
+        ],
+        "compact": true,
+        "configModel": "",
+        "configurationKeys": [
+          "showSecondHand",
+          "showTimezoneString"
+        ],
+        "error": "",
+        "exercise": {
+          "cancelDoesNotWrite": true,
+          "defaultsStaged": true,
+          "expectedValue": true,
+          "key": "showSecondHand",
+          "pageReopened": true,
+          "reloadedValue": true,
+          "saved": true,
+          "secondInstanceUnchanged": true
+        },
+        "exercisePassed": true,
+        "firstId": 2,
+        "formFactor": 2,
+        "full": true,
+        "height": 48,
+        "itemLoaded": true,
+        "location": 4,
+        "mainScript": "",
+        "package": "org.kde.plasma.analogclock",
+        "pages": [
+          {
+            "error": "",
+            "loaded": true,
+            "source": "qrc:/qt/qml/plasma/applet/org/kde/plasma/analogclock/configGeneral.qml"
+          }
+        ],
+        "secondId": 3,
+        "translationDomain": "plasma_applet_org.kde.plasma.analogclock",
+        "valuesBeforeExercise": {
+          "showSecondHand": false,
+          "showTimezoneString": false
+        },
+        "width": 48,
+        "freshProcessReadback": true
+      },
+      "themeInventory": {
+        "theme": {
+          "configurationContract": "Route references to native component KCMs; widgets use discovered KPackage schemas per instance. Preserve user keys/kdedefaults. Never infer widgets by evaluating layouts.",
+          "defaults": [
+            {
+              "applicationVerified": false,
+              "component": "decoration-reference",
+              "groups": [
+                "kwinrc",
+                "org.kde.kdecoration2"
+              ],
+              "key": "library",
+              "value": "org.kde.breeze"
+            },
+            {
+              "applicationVerified": false,
+              "component": "defaults",
+              "groups": [
+                "UnknownFile",
+                "Vendor"
+              ],
+              "key": "Keep",
+              "value": "42"
+            },
+            {
+              "applicationVerified": false,
+              "component": "desktop-svg-reference",
+              "groups": [
+                "plasmarc",
+                "Theme"
+              ],
+              "key": "name",
+              "value": "breeze-dark"
+            }
+          ],
+          "id": "org.bwm.r4.disposable-theme",
+          "layoutDefaults": [],
+          "name": "Disposable theme inventory fixture",
+          "packagePath": "/tmp/bwm-r4-check-f2q146x2/data/plasma/look-and-feel/org.bwm.r4.disposable-theme/",
+          "resolvedFiles": {
+            "defaults": {
+              "inherited": false,
+              "path": "/tmp/bwm-r4-check-f2q146x2/data/plasma/look-and-feel/org.bwm.r4.disposable-theme/contents/defaults"
+            },
+            "logoutmainscript": {
+              "inherited": true,
+              "path": "/usr/share/plasma/look-and-feel/org.kde.breeze.desktop/contents/logout/Logout.qml"
+            },
+            "splashmainscript": {
+              "inherited": true,
+              "path": "/usr/share/plasma/look-and-feel/org.kde.breeze.desktop/contents/splash/Splash.qml"
+            }
+          },
+          "scripts": [
+            {
+              "contract": "layouts",
+              "executeAllowed": false,
+              "inherited": false,
+              "path": "/tmp/bwm-r4-check-f2q146x2/data/plasma/look-and-feel/org.bwm.r4.disposable-theme/contents/layouts/org.kde.plasma.desktop-layout.js",
+              "sha256": "6fffcfe6ff6c2109a05204dd66fc0cce4e39932b67ba1a3097a48d64432af9d0",
+              "status": "requires-reviewed-layout-adapter"
+            }
+          ],
+          "status": "inventory-only",
+          "valid": true
+        },
+        "nativeInstallRemove": true,
+        "sourcePreserved": true,
+        "layoutExecutionEnabled": false
+      },
+      "migration": {
+        "status": "verified-native-stage",
+        "activationAllowed": false,
+        "panels": [
+          {
+            "appletOrder": "2;3",
+            "containmentId": 1,
+            "containmentPackage": "org.kde.panel",
+            "outputDescription": "MSI fixture",
+            "widgets": [
+              {
+                "appletId": 2,
+                "deferredRuntime": [],
+                "legacyIndex": 0,
+                "legacyName": "clock",
+                "nativeSettings": {
+                  "showDate": false,
+                  "showSeconds": 2
+                },
+                "package": "org.kde.plasma.digitalclock",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 3,
+                "deferredRuntime": [],
+                "legacyIndex": 1,
+                "legacyName": "clock",
+                "nativeSettings": {
+                  "showDate": false,
+                  "showSeconds": 2
+                },
+                "package": "org.kde.plasma.digitalclock",
+                "status": "native-instance-staged"
+              }
+            ]
+          },
+          {
+            "appletOrder": "5;6",
+            "containmentId": 4,
+            "containmentPackage": "org.kde.panel",
+            "outputDescription": "LG fixture",
+            "widgets": [
+              {
+                "appletId": 5,
+                "deferredRuntime": [],
+                "legacyIndex": 0,
+                "legacyName": "clock",
+                "nativeSettings": {
+                  "showDate": false,
+                  "showSeconds": 2
+                },
+                "package": "org.kde.plasma.digitalclock",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 6,
+                "deferredRuntime": [],
+                "legacyIndex": 1,
+                "legacyName": "clock",
+                "nativeSettings": {
+                  "showDate": false,
+                  "showSeconds": 2
+                },
+                "package": "org.kde.plasma.digitalclock",
+                "status": "native-instance-staged"
+              }
+            ]
+          }
+        ],
+        "archivePreserved": true,
+        "enumSecondsMappedToAlways": true,
+        "missingPackageRejected": true,
+        "tamperedArchiveRejected": true,
+        "existingDestinationPreserved": true
+      },
+      "originalPanel": {
+        "panels": [
+          {
+            "containmentId": 1,
+            "qmlBaseUrl": "qrc:/qt/qml/plasma/applet/org/kde/panel/main.qml",
+            "rootType": "ContainmentItem_QML_60",
+            "widgets": [
+              {
+                "error": "",
+                "height": 40,
+                "id": 2,
+                "nativeContainer": true,
+                "ordered": true,
+                "package": "org.kde.plasma.digitalclock",
+                "width": 116.90625,
+                "x": 8,
+                "y": 4
+              },
+              {
+                "error": "",
+                "height": 40,
+                "id": 3,
+                "nativeContainer": true,
+                "ordered": true,
+                "package": "org.kde.plasma.digitalclock",
+                "width": 116.90625,
+                "x": 129,
+                "y": 4
+              }
+            ]
+          },
+          {
+            "containmentId": 4,
+            "qmlBaseUrl": "qrc:/qt/qml/plasma/applet/org/kde/panel/main.qml",
+            "rootType": "ContainmentItem_QML_60",
+            "widgets": [
+              {
+                "error": "",
+                "height": 40,
+                "id": 5,
+                "nativeContainer": true,
+                "ordered": true,
+                "package": "org.kde.plasma.digitalclock",
+                "width": 116.90625,
+                "x": 8,
+                "y": 4
+              },
+              {
+                "error": "",
+                "height": 40,
+                "id": 6,
+                "nativeContainer": true,
+                "ordered": true,
+                "package": "org.kde.plasma.digitalclock",
+                "width": 116.90625,
+                "x": 129,
+                "y": 4
+              }
+            ]
+          }
+        ],
+        "status": "original-panel-qml-passed",
+        "waylandVerified": false
+      },
+      "fullPanelDataMigration": {
+        "status": "verified-native-stage",
+        "panels": [
+          {
+            "appletOrder": "2;3;4;12;13",
+            "containmentId": 1,
+            "containmentPackage": "org.kde.panel",
+            "outputDescription": "MSI fixture",
+            "widgets": [
+              {
+                "appletId": 2,
+                "deferredRuntime": [
+                  "Kickoff must import favorites into its new KAStats client on first render; runtime import not verified"
+                ],
+                "legacyIndex": 0,
+                "legacyName": "kickoff",
+                "nativeSettings": {
+                  "compactMode": true,
+                  "favorites": [
+                    "preferred://browser"
+                  ],
+                  "favoritesPortedToKAstats": false,
+                  "icon": "start-here-kde-symbolic"
+                },
+                "package": "org.kde.plasma.kickoff",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 3,
+                "deferredRuntime": [],
+                "legacyIndex": 1,
+                "legacyName": "tasks",
+                "nativeSettings": {
+                  "iconSpacing": 2,
+                  "showOnlyCurrentDesktop": true
+                },
+                "package": "org.kde.plasma.icontasks",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 4,
+                "deferredRuntime": [],
+                "legacyIndex": 2,
+                "legacyName": "tray",
+                "nativeSettings": {},
+                "package": "org.kde.plasma.systemtray",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 12,
+                "deferredRuntime": [],
+                "legacyIndex": 3,
+                "legacyName": "clock",
+                "nativeSettings": {
+                  "customDateFormat": "yyyy-MM-dd",
+                  "dateFormat": "custom",
+                  "showDate": false,
+                  "showSeconds": 1
+                },
+                "package": "org.kde.plasma.digitalclock",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 13,
+                "deferredRuntime": [],
+                "legacyIndex": 4,
+                "legacyName": "desktop",
+                "nativeSettings": {},
+                "package": "org.kde.plasma.showdesktop",
+                "status": "native-instance-staged"
+              }
+            ]
+          },
+          {
+            "appletOrder": "15;16;17;25;26",
+            "containmentId": 14,
+            "containmentPackage": "org.kde.panel",
+            "outputDescription": "LG fixture",
+            "widgets": [
+              {
+                "appletId": 15,
+                "deferredRuntime": [
+                  "Kickoff must import favorites into its new KAStats client on first render; runtime import not verified"
+                ],
+                "legacyIndex": 0,
+                "legacyName": "kickoff",
+                "nativeSettings": {
+                  "compactMode": true,
+                  "favorites": [
+                    "preferred://browser"
+                  ],
+                  "favoritesPortedToKAstats": false,
+                  "icon": "start-here-kde-symbolic"
+                },
+                "package": "org.kde.plasma.kickoff",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 16,
+                "deferredRuntime": [],
+                "legacyIndex": 1,
+                "legacyName": "tasks",
+                "nativeSettings": {
+                  "iconSpacing": 2,
+                  "showOnlyCurrentDesktop": true
+                },
+                "package": "org.kde.plasma.icontasks",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 17,
+                "deferredRuntime": [],
+                "legacyIndex": 2,
+                "legacyName": "tray",
+                "nativeSettings": {},
+                "package": "org.kde.plasma.systemtray",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 25,
+                "deferredRuntime": [],
+                "legacyIndex": 3,
+                "legacyName": "clock",
+                "nativeSettings": {
+                  "customDateFormat": "yyyy-MM-dd",
+                  "dateFormat": "custom",
+                  "showDate": false,
+                  "showSeconds": 1
+                },
+                "package": "org.kde.plasma.digitalclock",
+                "status": "native-instance-staged"
+              },
+              {
+                "appletId": 26,
+                "deferredRuntime": [],
+                "legacyIndex": 4,
+                "legacyName": "desktop",
+                "nativeSettings": {},
+                "package": "org.kde.plasma.showdesktop",
+                "status": "native-instance-staged"
+              }
+            ]
+          }
+        ],
+        "activationAllowed": false,
+        "runtimeVerified": false,
+        "favoritesImportDeferred": true
+      }
+    },
+    "options": "detect_leaks=0; no leak certificate or instrumentation of all KDE dependencies"
+  }
+}

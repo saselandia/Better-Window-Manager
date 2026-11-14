@@ -1,0 +1,92 @@
+[
+    {
+        "configModule": "",
+        "decorationMetadata": {
+            "KNewStuff": "aurorae.knsrc",
+            "themeListKeyword": "themes",
+            "themes": true
+        },
+        "file": "/usr/lib64/qt6/plugins/org.kde.kdecoration3/org.kde.kwin.aurorae.v2.so",
+        "id": "org.kde.kwin.aurorae.v2",
+        "themes": [
+            {
+                "configModule": "kcm_auroraedecoration",
+                "id": "__aurorae__svg__Sweet-ambar-blue",
+                "name": "Sweet-ambar-blue"
+            },
+            {
+                "configModule": "kcm_auroraedecoration",
+                "id": "__aurorae__svg__Sweet-Dark",
+                "name": "Sweet-Dark"
+            },
+            {
+                "configModule": "kcm_auroraedecoration",
+                "id": "__aurorae__svg__Sweet-Dark-transparent",
+                "name": "Sweet-Dark-transparent"
+            },
+            {
+                "configModule": "kcm_auroraedecoration",
+                "id": "__aurorae__svg__Sweet-Mars",
+                "name": "Sweet-Mars"
+            },
+            {
+                "configModule": "kcm_auroraedecoration",
+                "id": "__aurorae__svg__Sweet-Mars-transparent",
+                "name": "Sweet-Mars-transparent"
+            }
+        ]
+    },
+    {
+        "configModule": "",
+        "decorationMetadata": {
+            "KNewStuff": "aurorae.knsrc",
+            "defaultTheme": "kwin4_decoration_qml_plastik",
+            "themeListKeyword": "themes",
+            "themes": true
+        },
+        "file": "/usr/lib64/qt6/plugins/org.kde.kdecoration3/org.kde.kwin.aurorae.so",
+        "id": "org.kde.kwin.aurorae",
+        "themes": [
+            {
+                "configModule": "kcm_auroraedecoration",
+                "id": "kwin4_decoration_qml_plastik",
+                "name": "Plastik"
+            }
+        ]
+    },
+    {
+        "checkboxes": [
+            {
+                "label": "Draw window outline",
+                "name": "drawOutline"
+            },
+            {
+                "label": "Draw a circle around close button",
+                "name": "outlineCloseButton"
+            },
+            {
+                "label": "Draw border on maximized and tiled windows",
+                "name": "drawBorderOnMaximizedWindows"
+            },
+            {
+                "label": "Draw titlebar background gradient",
+                "name": "drawBackgroundGradient"
+            },
+            {
+                "label": "Round bottom corners of windows with no borders",
+                "name": "roundedCorners"
+            }
+        ],
+        "configFile": "/usr/lib64/qt6/plugins/org.kde.kdecoration3.kcm/kcm_breezedecoration.so",
+        "configMetadataValid": true,
+        "configModule": "kcm_breezedecoration",
+        "decorationMetadata": {
+            "blur": false,
+            "recommendedBorderSize": "None"
+        },
+        "factoryInstantiated": true,
+        "file": "/usr/lib64/qt6/plugins/org.kde.kdecoration3/org.kde.breeze.so",
+        "id": "org.kde.breeze"
+    }
+]
+

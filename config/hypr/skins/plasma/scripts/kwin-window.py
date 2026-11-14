@@ -41,6 +41,7 @@ from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parents[3] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
+import bwm_windows
 
 RESTORE = 0
 VERTICAL = 1
@@ -284,11 +285,7 @@ def maximize(client: dict, request: str) -> bool:
 
 
 def focus(client: dict):
-    run_lua(window_lua(client, """
-        hl.dispatch(hl.dsp.focus({ window = w }))
-        hl.dispatch(hl.dsp.window.bring_to_top({ window = w }))
-        hl.dispatch(hl.dsp.window.alter_zorder({ mode = "top", window = w }))
-    """))
+    run_lua(window_lua(client, bwm_windows.focus_body_lua()))
 
 
 def has_tag(client: dict, tag: str) -> bool:

@@ -1,0 +1,70 @@
+{
+  "status": "installed and discovered",
+  "modules": [
+    {
+      "module": "kcm_bwm_nightlight",
+      "installed": true,
+      "discovered": true,
+      "matches_local_build": true
+    },
+    {
+      "module": "kcm_bwm_cursor",
+      "installed": true,
+      "discovered": true,
+      "matches_local_build": true
+    },
+    {
+      "module": "kcm_bwm_screens",
+      "installed": true,
+      "discovered": true,
+      "matches_local_build": true
+    },
+    {
+      "module": "kcm_bwm_workspaces",
+      "installed": true,
+      "discovered": true,
+      "matches_local_build": true
+    },
+    {
+      "module": "kcm_bwm_apps",
+      "installed": true,
+      "discovered": true,
+      "matches_local_build": true
+    },
+    {
+      "module": "kcm_bwm_startup",
+      "installed": true,
+      "discovered": true,
+      "matches_local_build": true
+    },
+    {
+      "module": "kcm_bwm_shortcuts",
+      "installed": true,
+      "discovered": true,
+      "matches_local_build": true
+    },
+    {
+      "module": "kcm_bwm_energy",
+      "installed": true,
+      "discovered": true,
+      "matches_local_build": true
+    },
+    {
+      "module": "kcm_bwm_windows",
+      "installed": true,
+      "discovered": true,
+      "matches_local_build": true
+    }
+  ],
+  "blocked_modules_absent": [
+    "kcm_autostart",
+    "kcm_componentchooser",
+    "kcm_cursortheme",
+    "kcm_nightlight",
+    "kcm_nighttime",
+    "kcm_screenlocker",
+    "kcm_wallpaper"
+  ],
+  "session_application_verified": false,
+  "compositor_restarted": false
+}

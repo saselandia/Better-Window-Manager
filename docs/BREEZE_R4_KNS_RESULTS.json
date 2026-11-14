@@ -1,0 +1,622 @@
+{
+  "date": "2026-11-14",
+  "executor": "Claude Code (Opus 5.5) with Hyprland/network access in the user session",
+  "storeCycle": {
+    "provider": "/usr/share/knsrcfiles/plasmoids.knsrc",
+    "sessionModified": false,
+    "liveHyprlandUsed": false,
+    "candidates": [
+      {
+        "uniqueId": "2196105",
+        "name": "KDE Control Station",
+        "version": "2.13.0",
+        "downloadCount": 993145,
+        "install": {
+          "exit": 0,
+          "errors": [],
+          "questions": [],
+          "status": "installed",
+          "catalogAdded": [
+            "KdeControlStation"
+          ]
+        },
+        "plugin": "KdeControlStation",
+        "packageInXdgDataHome": true,
+        "rejected": [
+          "contents/ui/main.qml runs commands (engine\\s*:\\s*[\"\\']executable[\"\\'])",
+          "contents/ui/config/configColorscheme.qml runs commands (engine\\s*:\\s*[\"\\']executable[\"\\'])",
+          "contents/ui/components/ScreenshotBtn.qml runs commands (engine\\s*:\\s*[\"\\']executable[\"\\'])",
+          "contents/ui/components/CommandRun.qml runs commands (engine\\s*:\\s*[\"\\']executable[\"\\'])",
+          "contents/ui/components/ColorSchemeSwitcher.qml runs commands (engine\\s*:\\s*[\"\\']executable[\"\\'])"
+        ],
+        "booleanOptions": [
+          "animations",
+          "transparency",
+          "showBorders",
+          "useCustomButtonImage",
+          "preferChangeGlobalTheme"
+        ],
+        "uninstall": {
+          "exit": 0,
+          "errors": [],
+          "catalogRemoved": [
+            "KdeControlStation"
+          ],
+          "status": "deleted",
+          "packageGone": true
+        },
+        "result": "rejected"
+      },
+      {
+        "uniqueId": "2130967",
+        "name": "Panel Colorizer",
+        "version": "v8.1.0",
+        "downloadCount": 426079,
+        "install": {
+          "exit": 0,
+          "errors": [],
+          "questions": [],
+          "status": "installed",
+          "catalogAdded": [
+            "luisbocanegra.panel.colorizer"
+          ]
+        },
+        "plugin": "luisbocanegra.panel.colorizer",
+        "packageInXdgDataHome": true,
+        "rejected": [
+          "contents/ui/RunCommand.qml runs commands (engine\\s*:\\s*[\"\\']executable[\"\\'])",
+          "ships executable/compiled file contents/ui/tools/service.py",
+          "ships executable/compiled file contents/ui/tools/list_presets.sh",
+          "ships executable/compiled file contents/ui/tools/gdbus_get_signal.sh"
+        ],
+        "booleanOptions": [
+          "isEnabled",
+          "hideWidget",
+          "enableDebug",
+          "enableDBusService",
+          "animatePropertyChanges",
+          "pluginFound",
+          "configureFromAllWidgets",
+          "blacklistSpacers",
+          "systemTrayIconsReplacementEnabled",
+          "logSystemTrayIconChanges",
+          "systemTrayIconBuiltinReplacementsEnabled",
+          "islandSeparatorPairing",
+          "islandsEnabled",
+          "blacklistIslandSeparator"
+        ],
+        "uninstall": {
+          "exit": 0,
+          "errors": [],
+          "catalogRemoved": [
+            "luisbocanegra.panel.colorizer"
+          ],
+          "status": "deleted",
+          "packageGone": true
+        },
+        "result": "rejected"
+      },
+      {
+        "uniqueId": "2238525",
+        "name": "Plasma Flex Hub",
+        "version": "0.9.5.5",
+        "downloadCount": 267808,
+        "install": {
+          "exit": 0,
+          "errors": [],
+          "questions": [],
+          "status": "installed",
+          "catalogAdded": []
+        },
+        "result": "legacy-metadata-not-listed-by-kpackage",
+        "legacyServiceTypes": [
+          "Plasma/Applet"
+        ],
+        "uninstall": {
+          "exit": 0,
+          "errors": [],
+          "status": "deleted",
+          "packageGone": true
+        }
+      },
+      {
+        "uniqueId": "2137418",
+        "name": "Simple Separator for panel plasma 6",
+        "version": "1.4.7",
+        "downloadCount": 254638,
+        "install": {
+          "exit": 0,
+          "errors": [],
+          "questions": [],
+          "status": "installed",
+          "catalogAdded": []
+        },
+        "result": "legacy-metadata-not-listed-by-kpackage",
+        "legacyServiceTypes": [
+          "Plasma/Applet"
+        ],
+        "uninstall": {
+          "exit": 0,
+          "errors": [],
+          "status": "deleted",
+          "packageGone": true
+        }
+      },
+      {
+        "uniqueId": "2139890",
+        "name": "Plasma Control Hub",
+        "version": "1.0",
+        "downloadCount": 236717,
+        "install": {
+          "exit": 0,
+          "errors": [],
+          "questions": [],
+          "status": "installed",
+          "catalogAdded": []
+        },
+        "result": "legacy-metadata-not-listed-by-kpackage",
+        "legacyServiceTypes": [
+          "Plasma/Applet"
+        ],
+        "uninstall": {
+          "exit": 0,
+          "errors": [],
+          "status": "deleted",
+          "packageGone": true
+        }
+      },
+      {
+        "uniqueId": "1473016",
+        "name": "HTML Clock for Plasma 6",
+        "version": "v2.3.0",
+        "downloadCount": 222628,
+        "install": {
+          "exit": 0,
+          "errors": [],
+          "questions": [],
+          "status": "installed",
+          "catalogAdded": [
+            "com.marcinorlowski.htmlclock"
+          ]
+        },
+        "plugin": "com.marcinorlowski.htmlclock",
+        "packageInXdgDataHome": true,
+        "rejected": [
+          "ships executable/compiled file translate/build.sh",
+          "contents/ui/HtmlClock.qml runs commands (engine\\s*:\\s*[\"\\']executable[\"\\'])"
+        ],
+        "booleanOptions": [
+          "useUserLayout",
+          "useCustomFont",
+          "widgetContainerFillWidth",
+          "widgetContainerFillHeight",
+          "enforceWidgetMinWidth",
+          "enforceWidgetMaxWidth",
+          "useSpecificLocaleEnabled",
+          "clockTimezoneOffsetEnabled",
+          "showWeekNumbers",
+          "pin"
+        ],
+        "uninstall": {
+          "exit": 0,
+          "errors": [],
+          "catalogRemoved": [
+            "com.marcinorlowski.htmlclock"
+          ],
+          "status": "deleted",
+          "packageGone": true
+        },
+        "result": "rejected"
+      },
+      {
+        "uniqueId": "2100418",
+        "name": "Thermal Monitor",
+        "version": "0.2.8",
+        "downloadCount": 164693,
+        "install": {
+          "exit": 0,
+          "errors": [],
+          "questions": [],
+          "status": "installed",
+          "catalogAdded": [
+            "org.kde.olib.thermalmonitor"
+          ]
+        },
+        "plugin": "org.kde.olib.thermalmonitor",
+        "packageInXdgDataHome": true,
+        "rejected": [],
+        "booleanOptions": [
+          "pinned",
+          "scrollApplet",
+          "scrollAppletOpensPopup",
+          "scrollPopup",
+          "scrollWraparound",
+          "showUnit",
+          "enableDangerColor",
+          "swapLabels",
+          "showStats",
+          "chartAutomaticScale"
+        ],
+        "sha256": "72cac34062b984aa4836449fbfcf4da3706ce5aec52e336dee3a9a7383eb53d7",
+        "exercise": {
+          "itemLoaded": true,
+          "compact": true,
+          "full": true,
+          "exercise": {
+            "cancelDoesNotWrite": true,
+            "defaultsStaged": true,
+            "expectedValue": true,
+            "key": "pinned",
+            "pageReopened": true,
+            "reloadedValue": true,
+            "saved": true,
+            "secondInstanceUnchanged": true
+          },
+          "exercisePassed": true,
+          "categories": [
+            {
+              "configUiComponent": "",
+              "configUiModule": "",
+              "icon": "temperature-warm",
+              "name": "Sensors",
+              "pluginName": "",
+              "source": "file:///tmp/bwm-r4-kns-nrbs1rrg/data/plasma/plasmoids/org.kde.olib.thermalmonitor/contents/ui/config/ConfigSensors.qml",
+              "visible": true
+            },
+            {
+              "configUiComponent": "",
+              "configUiModule": "",
+              "icon": "preferences-other",
+              "name": "Behavior",
+              "pluginName": "",
+              "source": "file:///tmp/bwm-r4-kns-nrbs1rrg/data/plasma/plasmoids/org.kde.olib.thermalmonitor/contents/ui/config/ConfigBehavior.qml",
+              "visible": true
+            },
+            {
+              "configUiComponent": "",
+              "configUiModule": "",
+              "icon": "preferences-desktop-color",
+              "name": "Appearance",
+              "pluginName": "",
+              "source": "file:///tmp/bwm-r4-kns-nrbs1rrg/data/plasma/plasmoids/org.kde.olib.thermalmonitor/contents/ui/config/ConfigAppearance.qml",
+              "visible": true
+            }
+          ],
+          "pages": [
+            {
+              "component": "",
+              "error": "",
+              "loaded": true,
+              "loader": "source",
+              "module": "",
+              "source": "file:///tmp/bwm-r4-kns-nrbs1rrg/data/plasma/plasmoids/org.kde.olib.thermalmonitor/contents/ui/config/ConfigSensors.qml"
+            },
+            {
+              "component": "",
+              "error": "",
+              "loaded": true,
+              "loader": "source",
+              "module": "",
+              "source": "file:///tmp/bwm-r4-kns-nrbs1rrg/data/plasma/plasmoids/org.kde.olib.thermalmonitor/contents/ui/config/ConfigBehavior.qml"
+            },
+            {
+              "component": "",
+              "error": "",
+              "loaded": true,
+              "loader": "source",
+              "module": "",
+              "source": "file:///tmp/bwm-r4-kns-nrbs1rrg/data/plasma/plasmoids/org.kde.olib.thermalmonitor/contents/ui/config/ConfigAppearance.qml"
+            }
+          ],
+          "error": "",
+          "translationDomain": "plasma_applet_org.kde.olib.thermalmonitor"
+        },
+        "newProcessValue": true,
+        "newProcessMatches": true,
+        "uninstall": {
+          "exit": 0,
+          "errors": [],
+          "catalogRemoved": [
+            "org.kde.olib.thermalmonitor"
+          ],
+          "status": "deleted",
+          "packageGone": true
+        },
+        "result": "gate-passed"
+      },
+      {
+        "uniqueId": "2129423",
+        "name": "Window Title Applet 6",
+        "version": "v0.9.0",
+        "downloadCount": 150754,
+        "install": {
+          "exit": 0,
+          "errors": [],
+          "questions": [],
+          "status": "installed",
+          "catalogAdded": []
+        },
+        "result": "legacy-metadata-not-listed-by-kpackage",
+        "legacyServiceTypes": [
+          "Plasma/Applet"
+        ],
+        "uninstall": {
+          "exit": 0,
+          "errors": [],
+          "status": "deleted",
+          "packageGone": true
+        }
+      },
+      {
+        "uniqueId": "2136505",
+        "name": "Netspeed Widget",
+        "version": "3.1",
+        "downloadCount": 130284,
+        "install": {
+          "exit": 0,
+          "errors": [],
+          "questions": [],
+          "status": "installed",
+          "catalogAdded": []
+        },
+        "result": "legacy-metadata-not-listed-by-kpackage",
+        "legacyServiceTypes": null,
+        "uninstall": {
+          "exit": 0,
+          "errors": [],
+          "status": "deleted",
+          "packageGone": true
+        }
+      },
+      {
+        "uniqueId": "2135653",
+        "name": "KDE Modern Clock",
+        "version": "v1.0.0",
+        "downloadCount": 126280,
+        "install": {
+          "exit": 0,
+          "errors": [],
+          "questions": [],
+          "status": "installed",
+          "catalogAdded": [
+            "com.github.prayag2.modernclock"
+          ]
+        },
+        "plugin": "com.github.prayag2.modernclock",
+        "packageInXdgDataHome": true,
+        "rejected": [],
+        "booleanOptions": [
+          "show_day",
+          "show_date",
+          "show_time",
+          "use_24_hour_format"
+        ],
+        "sha256": "47ba5937beed1513e7e1696d885d0a569226e4393d1324f5379f0aec6c0a573c",
+        "exercise": {
+          "itemLoaded": true,
+          "compact": false,
+          "full": true,
+          "exercise": {
+            "cancelDoesNotWrite": true,
+            "defaultsStaged": true,
+            "expectedValue": false,
+            "key": "show_day",
+            "pageReopened": true,
+            "reloadedValue": false,
+            "saved": true,
+            "secondInstanceUnchanged": true
+          },
+          "exercisePassed": true,
+          "categories": [
+            {
+              "configUiComponent": "",
+              "configUiModule": "",
+              "icon": "preferences-desktop-color",
+              "name": "Appearance",
+              "pluginName": "",
+              "source": "file:///tmp/bwm-r4-kns-nrbs1rrg/data/plasma/plasmoids/com.github.prayag2.modernclock/contents/ui/configAppearance.qml",
+              "visible": true
+            }
+          ],
+          "pages": [
+            {
+              "component": "",
+              "error": "",
+              "loaded": true,
+              "loader": "source",
+              "module": "",
+              "source": "file:///tmp/bwm-r4-kns-nrbs1rrg/data/plasma/plasmoids/com.github.prayag2.modernclock/contents/ui/configAppearance.qml"
+            }
+          ],
+          "error": "",
+          "translationDomain": "plasma_applet_com.github.prayag2.modernclock"
+        },
+        "newProcessValue": false,
+        "newProcessMatches": true,
+        "uninstall": {
+          "exit": 0,
+          "errors": [],
+          "catalogRemoved": [
+            "com.github.prayag2.modernclock"
+          ],
+          "status": "deleted",
+          "packageGone": true
+        },
+        "result": "gate-passed"
+      },
+      {
+        "uniqueId": "2136307",
+        "name": "Minimal Chaac Weather for panel Plasma6",
+        "version": "3.0.1",
+        "downloadCount": 119120,
+        "install": {
+          "exit": 0,
+          "errors": [],
+          "questions": [],
+          "status": "installed",
+          "catalogAdded": []
+        },
+        "result": "legacy-metadata-not-listed-by-kpackage",
+        "legacyServiceTypes": [
+          "Plasma/Applet"
+        ],
+        "uninstall": {
+          "exit": 0,
+          "errors": [],
+          "status": "deleted",
+          "packageGone": true
+        }
+      },
+      {
+        "uniqueId": "2115883",
+        "name": "Simple Application Launcher for Plasma 6",
+        "version": "2.5",
+        "downloadCount": 118259,
+        "install": {
+          "exit": 0,
+          "errors": [],
+          "questions": [],
+          "status": "installed",
+          "catalogAdded": [
+            "org.kde.plasma.simplekickoff"
+          ]
+        },
+        "plugin": "org.kde.plasma.simplekickoff",
+        "packageInXdgDataHome": true,
+        "rejected": [],
+        "booleanOptions": [
+          "favoritesPortedToKAstats",
+          "paneSwap",
+          "alphaSort",
+          "pin",
+          "showActionButtonCaptions",
+          "compactMode"
+        ],
+        "sha256": "d77a762cf9c1289ad6d8888783f31df95efd2cd16220e1e799047d3cea3a1ed4",
+        "exercise": {
+          "itemLoaded": true,
+          "compact": true,
+          "full": true,
+          "exercise": {
+            "cancelDoesNotWrite": true,
+            "defaultsStaged": true,
+            "expectedValue": true,
+            "key": "paneSwap",
+            "pageReopened": true,
+            "reloadedValue": true,
+            "saved": true,
+            "secondInstanceUnchanged": true
+          },
+          "exercisePassed": true,
+          "categories": [
+            {
+              "configUiComponent": "",
+              "configUiModule": "",
+              "icon": "preferences-desktop-plasma",
+              "name": "General",
+              "pluginName": "",
+              "source": "file:///tmp/bwm-r4-kns-nrbs1rrg/data/plasma/plasmoids/org.kde.plasma.simplekickoff/contents/ui/ConfigGeneral.qml",
+              "visible": true
+            }
+          ],
+          "pages": [
+            {
+              "component": "",
+              "error": "",
+              "loaded": true,
+              "loader": "source",
+              "module": "",
+              "source": "file:///tmp/bwm-r4-kns-nrbs1rrg/data/plasma/plasmoids/org.kde.plasma.simplekickoff/contents/ui/ConfigGeneral.qml"
+            }
+          ],
+          "error": "",
+          "translationDomain": "plasma_applet_org.kde.plasma.simplekickoff"
+        },
+        "newProcessValue": true,
+        "newProcessMatches": true,
+        "uninstall": {
+          "exit": 0,
+          "errors": [],
+          "catalogRemoved": [
+            "org.kde.plasma.simplekickoff"
+          ],
+          "status": "deleted",
+          "packageGone": true
+        },
+        "result": "gate-passed"
+      }
+    ],
+    "gate": {
+      "uniqueId": "2100418",
+      "plugin": "org.kde.olib.thermalmonitor",
+      "key": "pinned",
+      "savedValue": true,
+      "chosenBy": "store order (downloads), first candidate passing the static safety filter"
+    },
+    "searchCount": 20,
+    "passed": [
+      {
+        "uniqueId": "2100418",
+        "plugin": "org.kde.olib.thermalmonitor",
+        "key": "pinned",
+        "savedValue": true
+      },
+      {
+        "uniqueId": "2135653",
+        "plugin": "com.github.prayag2.modernclock",
+        "key": "show_day",
+        "savedValue": false
+      },
+      {
+        "uniqueId": "2115883",
+        "plugin": "org.kde.plasma.simplekickoff",
+        "key": "paneSwap",
+        "savedValue": true
+      }
+    ],
+    "summary": {
+      "gate-passed": 3,
+      "legacy-metadata-not-listed-by-kpackage": 6,
+      "rejected": 3
+    },
+    "ok": true,
+    "finishedAt": "2026-11-14T17:30:11+0100"
+  },
+  "sessionCheck": {
+    "compositor": "Hyprland 0.56.2 efb50993",
+    "output": "LG Electronics LG ULTRAFINE 405NTVS2J655 (selected by description)",
+    "package": "com.github.prayag2.modernclock (KDE Store 2135653), downloaded by --kns-install into a temporary root and copied for the preview",
+    "command": "preview-isolated.py --package <copy> --layer-panel --output \"LG Electronics LG ULTRAFINE 405NTVS2J655\"",
+    "configureDialog": "Modern Clock Settings, 800x600 xdg toplevel on workspace 10, original configAppearance.qml page",
+    "action": "unchecked Show Day with a temporary uinput pointer, Apply",
+    "nativeFileAfterApply": "bwm-plasma-host-appletsrc: show_day=false",
+    "visualFix": "dialog/preview were transparent after the alpha-buffer change; now Kirigami.Theme.backgroundColor like AppletConfiguration.qml 6.7.5, re-checked in session",
+    "cleanup": "preview stopped, temporary root removed, no bwm-r4 layers or host clients left, pointer and focus restored",
+    "notVerified": [
+      "other scales/edges for this widget",
+      "its expanded popup in the session",
+      "daily panel replacement"
+    ]
+  },
+  "tests": {
+    "ctestNormal": "2/2",
+    "ctestAsan": "2/2 (ASAN_OPTIONS=detect_leaks=0)",
+    "python": "96 OK (test_r4_* + test_skins)",
+    "newRegressions": [
+      "callback-config fixture: saveConfig() honoured, unschemed cfg_ ignored, fresh-process readback",
+      "--kns-* refused outside temporary XDG roots"
+    ]
+  },
+  "sourceHashes": {
+    "kns.cpp": "a171ec3043e13bcc1d9b0d0ce01d1ed3d2aef98e0ef9bd99298321cbc784fc21",
+    "kns.h": "8ee731c82261c944fcf9c2ddfd6e9ca782b95dd029fc2fcd2125b3370fc4d3d3",
+    "kns-cycle.py": "8d0b91290759aed789bdb9b5ba8b313be3acec4b0077242964365165e38d3fbd",
+    "main.cpp": "978d1586d5546e2118cf4547c3dc19bd486ba0171b64294873fbb2c0b9289928",
+    "configurationsession.cpp": "108e74e84f329b8ef7076b290387ec379ee499bc05972e8f12226771a56d606c",
+    "check-isolated.py": "52fa2a554762a39ef925bffb1110ccddc59c5eb8e4c14110c54bb9c487761b8b",
+    "CMakeLists.txt": "b3d1c01830f02e5680815f6e2f86de4d07611ae79a0085c7432ba787a738689f",
+    "shell/contents/configuration/AppletConfiguration.qml": "1d82247e5caa26e7a1a6e45d5ea9cd041c4e7dc0dc836e2bfedb44ea332497e4",
+    "shell/contents/views/Preview.qml": "0d69987b1d6acb23f9f6d42ee4d3963041a37f8421a04b6b6ed1f1499a9e9c29",
+    "tests/callback-config/contents/ui/Page.qml": "16eb17d5aa793b13a944a0bf972b0946f78b5216f7155c490edde254f3c9ab88"
+  }
+}

@@ -35,10 +35,7 @@ QtObject {
         const entry = root.entryById(appId);
         if (!entry)
             return;
-        if (entry.runInTerminal && entry.command && entry.command.length > 0)
-            Quickshell.execDetached([Quickshell.env("HOME") + "/.config/hypr/scripts/bwm-terminal", "--"].concat(Array.from(entry.command)));
-        else
-            entry.execute();
+        AppSearch.launch(entry);
     }
     function remove(appId, label) {
         Quickshell.execDetached(["notify-send", "-a", "Menu", String(label || appId), "Uninstall it with your package manager (emerge --depclean / flatpak uninstall)."]);

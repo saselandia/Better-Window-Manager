@@ -1,0 +1,15 @@
+{
+    "KPlugin": {
+        "Name": "BWM Night Light",
+        "Name[es]": "Luz nocturna de BWM",
+        "Description": "Night Light shared by all BWM skins",
+        "Description[es]": "Luz nocturna compartida entre las skins de BWM",
+        "Icon": "redshift-status-on",
+        "License": "GPL-2.0-or-later",
+        "Version": "1.0"
+    },
+    "X-KDE-System-Settings-Parent-Category": "display",
+    "X-KDE-Weight": 90,
+    "X-KDE-Keywords": "BWM,night light,color temperature,Kelvin",
+    "X-KDE-Keywords[es]": "BWM,luz nocturna,temperatura de color,Kelvin"
+}

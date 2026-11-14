@@ -116,7 +116,8 @@ class TaskActivationTests(unittest.TestCase):
         self.assertIn('w.pid ~= 17',lua)
         self.assertIn('bring_to_top',lua)
         self.assertIn('mode = "top"',lua)
-        self.assertNotIn('minimize',lua)
+        self.assertNotIn('hl.dsp.window.move',lua)
+        self.assertIn('workspace = ws.name', lua)
 
     def test_reused_address_from_panel_does_nothing(self):
         with mock.patch.object(kw,'find_client',return_value={'address':'0x123','pid':99}), mock.patch.object(kw,'focus') as focus:

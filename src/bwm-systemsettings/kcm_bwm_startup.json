@@ -1,0 +1,10 @@
+{
+  "KPlugin": {
+    "Name": "BWM — Inicio automático",
+    "Description": "Inicio automático: gestor común de BWM",
+    "Icon": "system-run",
+    "License": "GPL-2.0-or-later"
+  },
+  "X-KDE-System-Settings-Parent-Category": "session",
+  "X-BWM-Category": "startup"
+}

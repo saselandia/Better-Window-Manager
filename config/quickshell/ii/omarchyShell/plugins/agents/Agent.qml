@@ -20,9 +20,10 @@ Item {
   FileView {
     id: agentFile
     path: root.path
-    watchChanges: true
+    // BWM: no watch per record (each costs an inotify instance, limit 128 per
+    // user); Main.qml reloads every record when the usage stamp changes.
+    watchChanges: false
     printErrors: false
-    onFileChanged: reload()
     onLoaded: root.parse(text())
     onLoadFailed: root.clear()
   }

@@ -1,0 +1,415 @@
+{
+  "date": "2026-11-14",
+  "phase": "R4",
+  "executedBy": "user in local Hyprland session",
+  "recordedByAssistant": true,
+  "assistantExecutedLiveCommands": false,
+  "bridgeReloadConfirmedByRunner": true,
+  "validatedScope": "MSI bottom panel, scale 1 transform 0: existing BWM maximized window automatically shrinks on panel appearance and expands on withdrawal, without remaximizing either automatic observation; explicit maximization and cleanup also pass",
+  "sourceReportSha256": "5eeb422f429b75d16abf6d25c0b4ded501062043361a40e3c1cae2c3017f1553",
+  "sourceCodeEvidence": "BREEZE_R4_AREA_TRACKING_RESULTS.json",
+  "sourceHashesStillMatch": true,
+  "independentlyReevaluatedReservationDelta": true,
+  "allFiveOwnFrameMeasurementsMatch": true,
+  "r4Complete": false,
+  "limits": [
+    "One own window, full BWM mode 3, MSI bottom edge, scale 1 transform 0 only",
+    "LG reservation unchanged, not a maximized-window acceptance on LG",
+    "No manual visual comparison, partial axes, fractional scale, alternate edges, hotplug or skin transition verified by this run",
+    "No production daily panel takeover or remaining backend/authority/KNS acceptance"
+  ],
+  "report": {
+    "version": 1,
+    "before": {
+      "version": 1,
+      "sessionModified": false,
+      "r4Complete": false,
+      "realAreaVerified": false,
+      "environment": {
+        "runtimeExists": true,
+        "instanceSignaturePresent": true,
+        ".socket.sock": {
+          "exists": true,
+          "isSocket": true,
+          "ownedByCurrentUser": true
+        },
+        ".socket2.sock": {
+          "exists": true,
+          "isSocket": true,
+          "ownedByCurrentUser": true
+        }
+      },
+      "monitors": [
+        {
+          "name": "DP-1",
+          "description": "LG Electronics LG ULTRAFINE 405NTVS2J655",
+          "x": 2560,
+          "y": 0,
+          "width": 3840,
+          "height": 2160,
+          "scale": 1,
+          "transform": 0,
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ]
+        },
+        {
+          "name": "DP-2",
+          "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+          "x": 0,
+          "y": 720,
+          "width": 2560,
+          "height": 1440,
+          "scale": 1,
+          "transform": 0,
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ]
+        }
+      ],
+      "nativeLayers": [],
+      "preview": {
+        "active": false
+      },
+      "status": "access-ok-no-native-preview"
+    },
+    "r4Complete": false,
+    "realAreaVerified": true,
+    "reservationDeltaVerified": true,
+    "maximizedWindowVerified": true,
+    "areaObserverReload": {
+      "ready": true,
+      "version": 1,
+      "startedAt": 1794672066.3135781
+    },
+    "dynamicMaximizedContract": "panel-appearance-and-withdrawal",
+    "maximizedBefore": {
+      "expected": [
+        0,
+        720,
+        2560,
+        1396
+      ],
+      "observedFrame": [
+        0,
+        720,
+        2560,
+        1396
+      ],
+      "mode": 3,
+      "borders": {
+        "left": 0,
+        "top": 28,
+        "right": 0,
+        "bottom": 0
+      },
+      "decorationRecordAvailable": true,
+      "matches": true
+    },
+    "during": {
+      "version": 1,
+      "sessionModified": false,
+      "r4Complete": false,
+      "realAreaVerified": false,
+      "environment": {
+        "runtimeExists": true,
+        "instanceSignaturePresent": true,
+        ".socket.sock": {
+          "exists": true,
+          "isSocket": true,
+          "ownedByCurrentUser": true
+        },
+        ".socket2.sock": {
+          "exists": true,
+          "isSocket": true,
+          "ownedByCurrentUser": true
+        }
+      },
+      "monitors": [
+        {
+          "name": "DP-1",
+          "description": "LG Electronics LG ULTRAFINE 405NTVS2J655",
+          "x": 2560,
+          "y": 0,
+          "width": 3840,
+          "height": 2160,
+          "scale": 1,
+          "transform": 0,
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ]
+        },
+        {
+          "name": "DP-2",
+          "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+          "x": 0,
+          "y": 720,
+          "width": 2560,
+          "height": 1440,
+          "scale": 1,
+          "transform": 0,
+          "reserved": [
+            0,
+            0,
+            0,
+            92
+          ]
+        }
+      ],
+      "nativeLayers": [
+        {
+          "output": "DP-2",
+          "level": "2",
+          "namespace": "bwm-r4-native-policy",
+          "x": 0,
+          "y": 2068,
+          "w": 640,
+          "h": 48
+        }
+      ],
+      "preview": {
+        "active": true,
+        "status": "acknowledged",
+        "revision": 3,
+        "skin": "plasma",
+        "runtime": {
+          "availableOutputs": [
+            {
+              "description": "LG Electronics LG ULTRAFINE",
+              "geometry": {
+                "height": 2160,
+                "width": 3840,
+                "x": 2560,
+                "y": 0
+              },
+              "manufacturer": "LG Electronics",
+              "model": "LG ULTRAFINE",
+              "name": "DP-1",
+              "serial": "",
+              "serialAvailable": false
+            },
+            {
+              "description": "Micro-Star Int'l Co., Ltd. MAG 274Q X24",
+              "geometry": {
+                "height": 1440,
+                "width": 2560,
+                "x": 0,
+                "y": 720
+              },
+              "manufacturer": "Micro-Star Int'l Co., Ltd.",
+              "model": "MAG 274Q X24",
+              "name": "DP-2",
+              "serial": "",
+              "serialAvailable": false
+            }
+          ],
+          "blockers": [
+            "isolated-preview-only",
+            "session-validation-pending",
+            "reserved-area-unverified"
+          ],
+          "nativePanelPolicy": true,
+          "panels": [
+            {
+              "blockers": [
+                "reserved-area-unverified"
+              ],
+              "containmentId": 1,
+              "error": "",
+              "exclusiveZoneRequested": 48,
+              "outputDescription": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+              "presentation": {
+                "compositorPresentationVerified": false,
+                "exposed": true,
+                "frameSubmitted": true,
+                "nativeViewLoaded": true,
+                "renderError": "",
+                "renderReady": true,
+                "surfaceError": "",
+                "visible": true
+              },
+              "renderReady": true,
+              "reservationRequested": true,
+              "reservedArea": false,
+              "status": "visible",
+              "surfaceRole": "native-policy-test",
+              "visible": true,
+              "waylandVerified": false
+            }
+          ],
+          "qtPlatform": "wayland",
+          "renderReady": true,
+          "replacementReady": false,
+          "scope": "isolated-preview",
+          "skin": "plasma",
+          "version": 1
+        }
+      },
+      "status": "observations-collected"
+    },
+    "maximizedDuringWithoutRemaximize": {
+      "expected": [
+        0,
+        720,
+        2560,
+        1348
+      ],
+      "observedFrame": [
+        0,
+        720,
+        2560,
+        1348
+      ],
+      "mode": 3,
+      "borders": {
+        "left": 0,
+        "top": 28,
+        "right": 0,
+        "bottom": 0
+      },
+      "decorationRecordAvailable": true,
+      "matches": true
+    },
+    "maximizedDuring": {
+      "expected": [
+        0,
+        720,
+        2560,
+        1348
+      ],
+      "observedFrame": [
+        0,
+        720,
+        2560,
+        1348
+      ],
+      "mode": 3,
+      "borders": {
+        "left": 0,
+        "top": 28,
+        "right": 0,
+        "bottom": 0
+      },
+      "decorationRecordAvailable": true,
+      "matches": true
+    },
+    "previewExitCode": 130,
+    "after": {
+      "version": 1,
+      "sessionModified": false,
+      "r4Complete": false,
+      "realAreaVerified": false,
+      "environment": {
+        "runtimeExists": true,
+        "instanceSignaturePresent": true,
+        ".socket.sock": {
+          "exists": true,
+          "isSocket": true,
+          "ownedByCurrentUser": true
+        },
+        ".socket2.sock": {
+          "exists": true,
+          "isSocket": true,
+          "ownedByCurrentUser": true
+        }
+      },
+      "monitors": [
+        {
+          "name": "DP-1",
+          "description": "LG Electronics LG ULTRAFINE 405NTVS2J655",
+          "x": 2560,
+          "y": 0,
+          "width": 3840,
+          "height": 2160,
+          "scale": 1,
+          "transform": 0,
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ]
+        },
+        {
+          "name": "DP-2",
+          "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+          "x": 0,
+          "y": 720,
+          "width": 2560,
+          "height": 1440,
+          "scale": 1,
+          "transform": 0,
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ]
+        }
+      ],
+      "nativeLayers": [],
+      "preview": {
+        "active": false
+      },
+      "status": "access-ok-no-native-preview"
+    },
+    "errors": [],
+    "maximizedAfterWithoutRemaximize": {
+      "expected": [
+        0,
+        720,
+        2560,
+        1396
+      ],
+      "observedFrame": [
+        0,
+        720,
+        2560,
+        1396
+      ],
+      "mode": 3,
+      "borders": {
+        "left": 0,
+        "top": 28,
+        "right": 0,
+        "bottom": 0
+      },
+      "decorationRecordAvailable": true,
+      "matches": true
+    },
+    "dynamicMaximizedWindowVerified": true,
+    "maximizedAfter": {
+      "expected": [
+        0,
+        720,
+        2560,
+        1396
+      ],
+      "observedFrame": [
+        0,
+        720,
+        2560,
+        1396
+      ],
+      "mode": 3,
+      "borders": {
+        "left": 0,
+        "top": 28,
+        "right": 0,
+        "bottom": 0
+      },
+      "decorationRecordAvailable": true,
+      "matches": true
+    },
+    "fixtureExitCode": -15
+  }
+}

@@ -135,6 +135,30 @@ class BridgeTest(unittest.TestCase):
         self.m.reconcile()
         self.assertEqual(sum(c.args[0] == ["hyprctl", "reload"] for c in self.calls.call_args_list), 1)
 
+    def test_failed_application_is_persisted_and_retried(self):
+        self.m.enter()
+        self.write(self.config / "kwinrc", "[Windows]\nBorderSnapZone=29\n")
+        self.calls.return_value = subprocess.CompletedProcess([], 1, "", "IPC denied")
+        with self.assertRaisesRegex(RuntimeError, "pendiente"):
+            self.m.reconcile()
+        self.assertTrue(self.m.load_json(self.m.META)["pendingReload"])
+        self.calls.return_value = subprocess.CompletedProcess([], 0, "", "")
+        self.calls.reset_mock()
+        self.m.reconcile()
+        self.assertNotIn("pendingReload", self.m.load_json(self.m.META))
+        self.assertEqual(sum(c.args[0] == ["hyprctl", "reload"] for c in self.calls.call_args_list), 1)
+
+    def test_watches_complete_kconfig_cascade(self):
+        watched = self.m.watched_files()
+        for base in (self.config / "kdedefaults", self.root / "system"):
+            for name in ("kxkbrc", "breezerc", "kwinrulesrc", "plasma-localerc"):
+                self.assertIn(base / name, watched)
+        self.write(self.root / "system/kwinrc", "[Windows]\nBorderSnapZone=11\n")
+        self.write(self.config / "kdedefaults/kwinrc", "[Windows]\nBorderSnapZone=22\n")
+        self.m.enter()
+        self.assertEqual(self.m.kwin_settings()["borderSnap"], 22)
+        self.assertIn("BorderSnapZone=22", (self.config / "kdedefaults/kwinrc").read_text())
+
     def test_no_import_or_export_outside_breeze(self):
         cfg = self.m.load_json(self.options)
         cfg["appearance"]["bwmTheme"] = "retro"
@@ -142,6 +166,25 @@ class BridgeTest(unittest.TestCase):
         self.assertFalse(self.m.reconcile())
         self.assertFalse((self.config / "kcminputrc").exists())
         self.assertFalse(self.m.KWIN_STATE.exists())
+
+    def test_single_watch_owns_and_closes_area_observer(self):
+        watcher=mock.Mock();watcher.wait.return_value=False
+        rules=mock.Mock();areas=mock.Mock()
+        with mock.patch.object(self.m,'active',side_effect=[True,False]), \
+             mock.patch.object(self.m,'Inotify',return_value=watcher), \
+             mock.patch.object(self.m.kwin_rules,'Runtime',return_value=rules), \
+             mock.patch.object(self.m.kwin_area,'Runtime',return_value=areas), \
+             mock.patch.object(self.m.signal,'signal'):
+            self.m.watch()
+        areas.tick.assert_called_once();areas.close.assert_called_once()
+        rules.close.assert_called_once();watcher.close.assert_called_once()
+
+    def test_restart_stops_existing_owner_before_spawning(self):
+        sequence=[]
+        with mock.patch.object(self.m,'stop',side_effect=lambda:sequence.append('stop')), \
+             mock.patch.object(self.m,'start',side_effect=lambda:sequence.append('start')):
+            self.m.restart()
+        self.assertEqual(sequence,['stop','start'])
 
     def test_snap_distances_are_lua_integers_and_factor_can_be_fractional(self):
         self.write(self.config / "kwinrc", "[Windows]\nWindowSnapZone=19\nBorderSnapZone=7\n")

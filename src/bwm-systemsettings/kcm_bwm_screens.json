@@ -1,0 +1,10 @@
+{
+  "KPlugin": {
+    "Name": "BWM — Pantallas",
+    "Description": "Pantallas: gestor común de BWM",
+    "Icon": "preferences-desktop-display",
+    "License": "GPL-2.0-or-later"
+  },
+  "X-KDE-System-Settings-Parent-Category": "display",
+  "X-BWM-Category": "screens"
+}

@@ -1,0 +1,10 @@
+{
+  "KPlugin": {
+    "Name": "BWM — Aplicaciones predeterminadas",
+    "Description": "Aplicaciones predeterminadas: gestor común de BWM",
+    "Icon": "preferences-desktop-default-applications",
+    "License": "GPL-2.0-or-later"
+  },
+  "X-KDE-System-Settings-Parent-Category": "applications-defaults",
+  "X-BWM-Category": "apps"
+}

@@ -1,0 +1,10 @@
+{
+  "KPlugin": {
+    "Name": "BWM — Atajos",
+    "Description": "Atajos: gestor común de BWM",
+    "Icon": "preferences-desktop-keyboard-shortcuts",
+    "License": "GPL-2.0-or-later"
+  },
+  "X-KDE-System-Settings-Parent-Category": "keyboard",
+  "X-BWM-Category": "shortcuts"
+}

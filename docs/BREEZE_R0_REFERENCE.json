@@ -1,0 +1,183 @@
+{
+  "date": "2026-11-12",
+  "scope": "R0 read-only audit; not runtime certification",
+  "bwm_head": "2a4ae3c5041bd3859bada58dc3aa95ec38d87e2c",
+  "sources": {
+    "plasma-desktop": {
+      "tag": "v6.7.5",
+      "commit": "43f55fff3480c6eb5f60133f045bfc74b9c67d84"
+    },
+    "plasma-workspace": {
+      "tag": "v6.7.5",
+      "commit": "cc1ab7963f94a9b76836412855caed6b94066188"
+    },
+    "libplasma": {
+      "version": "6.7.5",
+      "provenance": "local extracted tree; no Git commit established; hashes below"
+    }
+  },
+  "live_observation": {
+    "hyprland": "blocked: Unix socket access denied",
+    "plugins_loaded": "unknown",
+    "dbus_owners": "blocked: user bus access denied",
+    "reference_render": "not measured"
+  },
+  "files": [
+    {
+      "id": "panel-editor",
+      "path": "config/quickshell/ii/modules/plasma/panel/PanelEditor.qml",
+      "sha256": "811a4b034f1a193ea65b469b64c3bef2e0c79c4d9cd721c5b37fdb6610a2597b",
+      "bytes": 4672
+    },
+    {
+      "id": "panel-state",
+      "path": "config/quickshell/ii/modules/plasma/panel/PanelState.qml",
+      "sha256": "d79716f1111f1ebd7d165f8a95d9d9e15eae78051efb5ce1972b3390b6bd3f6f",
+      "bytes": 1388
+    },
+    {
+      "id": "applet-host",
+      "path": "config/quickshell/ii/modules/plasma/applets/AppletHost.qml",
+      "sha256": "146c76975b5fb0e7afae60cb19c9841e9f4d8674c0c0b7fc641c45eefd9818b2",
+      "bytes": 2275
+    },
+    {
+      "id": "kickoff-config",
+      "path": "config/quickshell/ii/modules/plasma/kickoff/Plasmoid.qml",
+      "sha256": "e3c1f492dc7bb60528a0f0662d489c0bc07c172214a1101969311476aefb9b38",
+      "bytes": 2069
+    },
+    {
+      "id": "animation-base",
+      "path": "config/hypr/skins/plasma/hypr/animations.lua",
+      "sha256": "295bc3d62db8025a87828ab25fa5a82bc20942c25888c1f4c2b3416de97af369",
+      "bytes": 1679
+    },
+    {
+      "id": "animation-bridge",
+      "path": "config/hypr/skins/plasma/hypr/kwin.lua",
+      "sha256": "85b0cd066728abf6f854d92dca3574d6cb57314d5b7005274db3607e47fb6081",
+      "bytes": 4745
+    },
+    {
+      "id": "load-order",
+      "path": "config/hypr/modules/appearance.lua",
+      "sha256": "0c6187693b3625f72f179361adcf82b460a2719382555ce29f2a37e62681dea4",
+      "bytes": 13238
+    },
+    {
+      "id": "config-reconcile",
+      "path": "config/hypr/skins/plasma/scripts/kde-config-bridge.py",
+      "sha256": "29deafdbc011d6d67ae41990ad76498164a109573f90864de303a5cdd374bd5b",
+      "bytes": 28010
+    },
+    {
+      "id": "activation",
+      "path": "config/hypr/scripts/bwm_windows.py",
+      "sha256": "e499d7cffd2e3c436d1bade83d3e64eb10233f2012f40a43f63d8c4e79527bdb",
+      "bytes": 24452
+    },
+    {
+      "id": "minimize",
+      "path": "config/hypr/scripts/toggle-minimize.py",
+      "sha256": "5cb2c04ea82571025cb46fb2e1e450497826399cb701ab07ef336cad24701533",
+      "bytes": 14071
+    },
+    {
+      "id": "alt-tab",
+      "path": "config/quickshell/ii/modules/ii/altTab/AltTab.qml",
+      "sha256": "0e48a25af87264c30cacc749e9b6376d2031f2a8fccaed5ba018a0398153edcd",
+      "bytes": 24735
+    },
+    {
+      "id": "retro-restore",
+      "path": "config/quickshell/ii/modules/ii/omarchyDock/Dock.qml",
+      "sha256": "23b24f2502202b3c5b8a79cb3cf4c896236dd0b700e9ecf313ece3a81ee01587",
+      "bytes": 15017
+    },
+    {
+      "id": "settings-entry",
+      "path": "config/hypr/scripts/open-settings.sh",
+      "sha256": "e60effb0425a53ae853d15ce7e91ff1ece0d32b43524b227e76a5f2fff3bb5f7",
+      "bytes": 1418
+    },
+    {
+      "id": "settings-native",
+      "path": "src/bwm-systemsettings/nightlightmodule.cpp",
+      "sha256": "1a72d424a605a9e7efc172b7a5dbd308f3b892efba54d51b7c587940597ab598",
+      "bytes": 4740
+    },
+    {
+      "id": "custom-shadow",
+      "path": "src/breezebars/barRemote.cpp",
+      "sha256": "88e09afa8254e1d70a762f6ed687520f7f9f639b0c00d21010c90ef1dc3aa1c8",
+      "bytes": 37331
+    },
+    {
+      "id": "shadow-policy",
+      "path": "config/hypr/skins/plasma/hypr/rules.lua",
+      "sha256": "5b73616f585c84f6fe77b5379a4bd3c47674fadcd643a58b81383380c179d83f",
+      "bytes": 1244
+    },
+    {
+      "id": "plasma-quick-contract",
+      "path": "/tmp/bwm-panel-native/src/libplasma-6.7.5/src/plasmaquick/appletquickitem.h",
+      "sha256": "bc5724488bfae08d7230ebe769e51b40d806964e4537e27b46cfa2b389fe5cff",
+      "bytes": 7523
+    },
+    {
+      "id": "plasma-corona-contract",
+      "path": "/tmp/bwm-panel-native/src/libplasma-6.7.5/src/plasma/corona.h",
+      "sha256": "e0f32077016fa44106d45a5f9f317ad0c8170fe18a19eebd1e34c71fa7b4f47b",
+      "bytes": 14154
+    },
+    {
+      "id": "plasma-applet-contract",
+      "path": "/tmp/bwm-panel-native/src/libplasma-6.7.5/src/plasma/applet.h",
+      "sha256": "c4729b99bdca2352f9580ddf3d25fb1dca906b758e69d4f0b55b856ce1a0531f",
+      "bytes": 32675
+    },
+    {
+      "id": "upstream-applet-config",
+      "path": "/tmp/bwm-panel-native/plasma-desktop/desktoppackage/contents/configuration/AppletConfiguration.qml",
+      "sha256": "0c40138f816bb30e5d4260df4184489751d88a9e85333ebe0254f88db5121bce",
+      "bytes": 16205
+    },
+    {
+      "id": "upstream-panel-config",
+      "path": "/tmp/bwm-panel-native/plasma-desktop/desktoppackage/contents/configuration/PanelConfiguration.qml",
+      "sha256": "bbd6cb759f59266186af8c5524c194d8131afbb66669c662b5812977229f0433",
+      "bytes": 34898
+    },
+    {
+      "id": "upstream-edit-mode",
+      "path": "/tmp/bwm-panel-native/plasma-desktop/desktoppackage/contents/views/DesktopEditMode.qml",
+      "sha256": "ef4848bcd4efb75da1d15e39d8c2ea8d5d2af0cb38116dc62f33769c82edbaf5",
+      "bytes": 7441
+    },
+    {
+      "id": "upstream-custom-host-example",
+      "path": "/tmp/bwm-panel-native/src/libplasma-6.7.5/examples/shell/customcorona.cpp",
+      "sha256": "efc072727a1be1d3b7112241c212f76b9401676b675f13235dd29a41b5468123",
+      "bytes": 2584
+    },
+    {
+      "id": "upstream-clock",
+      "path": "/tmp/bwm-panel-native/plasma-workspace/applets/digital-clock/DigitalClock.qml",
+      "sha256": "b3dfe4b4b472588f01f698872d5eee87df0015cf43bab07321f1d250b8c988e7",
+      "bytes": 24977
+    },
+    {
+      "id": "factory-desktop-defaults",
+      "path": "/usr/share/plasma/look-and-feel/org.kde.breeze.desktop/contents/defaults",
+      "sha256": "08b074e6e6c0c6ea76128aa4905f5f429d506f606db5636d319cac70869c7cff",
+      "bytes": 341
+    },
+    {
+      "id": "installed-plugin",
+      "path": "config/hypr/plugins/breezebars.so",
+      "sha256": "34f3b43fe78abc94a087d42e2391f4bbcf331763b86570145019da29907334e9",
+      "bytes": 890456
+    }
+  ]
+}

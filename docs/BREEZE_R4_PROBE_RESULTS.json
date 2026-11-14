@@ -1,0 +1,222 @@
+{
+  "session_modified": false,
+  "live_panel_integrated": false,
+  "packages": [
+    {
+      "actions": [],
+      "categories": [],
+      "compact": true,
+      "configModel": "",
+      "configurationKeys": [],
+      "error": "",
+      "exercisePassed": false,
+      "firstId": 2,
+      "formFactor": 2,
+      "full": true,
+      "height": 48,
+      "itemLoaded": true,
+      "location": 4,
+      "mainScript": "file:///tmp/bwm-r4-check-lbxrzr1m/data/plasma/plasmoids/org.kde.example.compactrepresentation/contents/ui/main.qml",
+      "package": "org.kde.example.compactrepresentation",
+      "pages": [],
+      "secondId": 3,
+      "translationDomain": "plasma_applet_org.kde.example.compactrepresentation",
+      "valuesBeforeExercise": {},
+      "width": 48,
+      "nativeInstallRemove": true
+    },
+    {
+      "actions": [],
+      "categories": [
+        {
+          "configUiComponent": "",
+          "configUiModule": "",
+          "icon": "plasma",
+          "name": "General",
+          "pluginName": "",
+          "source": "file:///tmp/bwm-r4-check-lbxrzr1m/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configGeneral.qml",
+          "visible": true
+        },
+        {
+          "configUiComponent": "",
+          "configUiModule": "",
+          "icon": "konqueror",
+          "name": "Other page",
+          "pluginName": "",
+          "source": "file:///tmp/bwm-r4-check-lbxrzr1m/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configOther.qml",
+          "visible": true
+        }
+      ],
+      "compact": false,
+      "configModel": "file:///tmp/bwm-r4-check-lbxrzr1m/data/plasma/plasmoids/org.kde.example.configuration/contents/config/config.qml",
+      "configurationKeys": [
+        "BoolTest",
+        "Test",
+        "IntTest",
+        "OtherTest",
+        "EnumTest"
+      ],
+      "error": "",
+      "exercise": {
+        "cancelDoesNotWrite": true,
+        "defaultsStaged": true,
+        "expectedValue": false,
+        "key": "BoolTest",
+        "pageReopened": true,
+        "reloadedValue": false,
+        "saved": true,
+        "secondInstanceUnchanged": true
+      },
+      "exercisePassed": true,
+      "firstId": 4,
+      "formFactor": 2,
+      "full": true,
+      "height": 48,
+      "itemLoaded": true,
+      "location": 4,
+      "mainScript": "file:///tmp/bwm-r4-check-lbxrzr1m/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/main.qml",
+      "package": "org.kde.example.configuration",
+      "pages": [
+        {
+          "error": "",
+          "loaded": true,
+          "source": "file:///tmp/bwm-r4-check-lbxrzr1m/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configGeneral.qml"
+        },
+        {
+          "error": "",
+          "loaded": true,
+          "source": "file:///tmp/bwm-r4-check-lbxrzr1m/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configOther.qml"
+        }
+      ],
+      "secondId": 5,
+      "translationDomain": "plasma_applet_org.kde.example.configuration",
+      "valuesBeforeExercise": {
+        "BoolTest": true,
+        "EnumTest": 2,
+        "IntTest": 1,
+        "OtherTest": "test2",
+        "Test": "test"
+      },
+      "width": 48,
+      "freshProcessReadback": true,
+      "nativeInstallRemove": true
+    },
+    {
+      "actions": [
+        "Edit Applications…"
+      ],
+      "categories": [
+        {
+          "configUiComponent": "",
+          "configUiModule": "",
+          "icon": "preferences-desktop-plasma",
+          "name": "General",
+          "pluginName": "",
+          "source": "file:///tmp/bwm-r4-check-lbxrzr1m/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ConfigGeneral.qml",
+          "visible": true
+        },
+        {
+          "configUiComponent": "",
+          "configUiModule": "",
+          "icon": "view-list-details",
+          "name": "Lists and grids",
+          "pluginName": "",
+          "source": "file:///tmp/bwm-r4-check-lbxrzr1m/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ListAndGrid.qml",
+          "visible": true
+        }
+      ],
+      "compact": false,
+      "configModel": "file:///tmp/bwm-r4-check-lbxrzr1m/data/plasma/plasmoids/AndromedaLauncher/contents/config/config.qml",
+      "configurationKeys": [
+        "icon",
+        "useCustomButtonImage",
+        "customButtonImage",
+        "activationIndicator",
+        "indicatorColor",
+        "enableGreeting",
+        "pinnedModel",
+        "defaultPage",
+        "customGreeting",
+        "launcherPosition",
+        "offsetX",
+        "offsetY",
+        "floating",
+        "enableGlow",
+        "glowColor",
+        "compactListItems",
+        "showItemsInGrid",
+        "extraRunners",
+        "useSystemFontSettings",
+        "appsIconSize",
+        "numberColumns",
+        "numberOfRows"
+      ],
+      "error": "",
+      "exercise": {
+        "cancelDoesNotWrite": true,
+        "defaultsStaged": true,
+        "expectedValue": true,
+        "key": "useCustomButtonImage",
+        "pageReopened": true,
+        "reloadedValue": true,
+        "saved": true,
+        "secondInstanceUnchanged": true
+      },
+      "exercisePassed": true,
+      "firstId": 6,
+      "formFactor": 2,
+      "full": true,
+      "height": 0,
+      "itemLoaded": true,
+      "location": 4,
+      "mainScript": "file:///tmp/bwm-r4-check-lbxrzr1m/data/plasma/plasmoids/AndromedaLauncher/contents/ui/main.qml",
+      "package": "AndromedaLauncher",
+      "pages": [
+        {
+          "error": "",
+          "loaded": true,
+          "source": "file:///tmp/bwm-r4-check-lbxrzr1m/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ConfigGeneral.qml"
+        },
+        {
+          "error": "",
+          "loaded": true,
+          "source": "file:///tmp/bwm-r4-check-lbxrzr1m/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ListAndGrid.qml"
+        }
+      ],
+      "secondId": 7,
+      "translationDomain": "plasma_applet_AndromedaLauncher",
+      "valuesBeforeExercise": {
+        "activationIndicator": true,
+        "appsIconSize": 2,
+        "compactListItems": false,
+        "customButtonImage": "",
+        "customGreeting": "",
+        "defaultPage": 0,
+        "enableGlow": false,
+        "enableGreeting": true,
+        "extraRunners": [
+          "shell",
+          "bookmarks",
+          "baloosearch",
+          "locations"
+        ],
+        "floating": false,
+        "glowColor": 0,
+        "icon": "start-here-kde-symbolic",
+        "indicatorColor": "#2164c9",
+        "launcherPosition": 0,
+        "numberColumns": 6,
+        "numberOfRows": 3,
+        "offsetX": 0,
+        "offsetY": 0,
+        "pinnedModel": 0,
+        "showItemsInGrid": false,
+        "useCustomButtonImage": false,
+        "useSystemFontSettings": false
+      },
+      "width": 0,
+      "freshProcessReadback": true,
+      "nativeInstallRemove": true
+    }
+  ]
+}

@@ -5,6 +5,7 @@
   plasma-theme.py current                    lo activo, en JSON
   plasma-theme.py colors <esquema|archivo.colors>
   plasma-theme.py desktoptheme <tema>        estilo de Plasma (plasmarc [Theme] name)
+  plasma-theme.py refresh-icons              avisa a los cargadores de iconos sin cambiar configuración
   plasma-theme.py icons <tema>
   plasma-theme.py lookandfeel <id>           tema global: aplica sus partes como lookandfeeltool
   plasma-theme.py cursor <tema>              no: el cursor es común a todas las skins (regla 14)
@@ -85,6 +86,21 @@ def notify_palette():
     """KGlobalSettings.notifyChange(PaletteChanged): repintan las apps con el plugin de KDE."""
     subprocess.run(["dbus-send", "--session", "--type=signal", "/KGlobalSettings", "org.kde.KGlobalSettings.notifyChange",
                     "int32:0", "int32:0"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def notify_icons() -> int:
+    """Reload KDE's icon loaders after restoring the saved theme, including panel/small icons.
+
+    PaletteChanged does not invalidate icon-theme caches. KIconLoader's public Group enum
+    spans Desktop through Dialog (0..5); notify each group as a theme change affects all.
+    """
+    failed = False
+    for group in range(6):
+        result = subprocess.run(["dbus-send", "--session", "--type=signal", "/KIconLoader",
+                                 "org.kde.KIconLoader.iconChanged", f"int32:{group}"],
+                                check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        failed = failed or result.returncode != 0
+    return 1 if failed else 0
 
 
 def active_skin() -> str:
@@ -228,8 +244,7 @@ def apply_icons(name: str, sync_after: bool = True) -> int:
         print(f"No existe el tema de iconos «{name}»", file=sys.stderr)
         return 1
     kwrite("kdeglobals", ["Icons"], "Theme", item["id"])
-    subprocess.run(["dbus-send", "--session", "--type=signal", "/KIconLoader", "org.kde.KIconLoader.iconChanged", "int32:0"],
-                   check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    notify_icons()
     if sync_after:
         sync()
     return 0
@@ -331,6 +346,7 @@ def restore() -> int:
         shutil.copy2(saved, tmp)
         os.replace(tmp, KDEGLOBALS)
         notify_palette()
+        notify_icons()
         write_palette_state(plasma_palette.load(KDEGLOBALS))
         return 0
     if _is_bwm_kdeglobals():
@@ -349,6 +365,7 @@ def restore() -> int:
     else:
         apply_colors("BreezeDark", sync_after=False)
     write_palette_state(plasma_palette.load(KDEGLOBALS))
+    notify_icons()
     return 0
 
 
@@ -405,8 +422,9 @@ def main(argv: list[str]) -> int:
             print(__doc__)
             return 1
         return handlers[cmd](args[0])
-    if cmd in ("save", "restore", "sync", "translations"):
-        return {"save": save, "restore": restore, "sync": sync, "translations": install_translations}[cmd]()
+    if cmd in ("save", "restore", "sync", "translations", "refresh-icons"):
+        return {"save": save, "restore": restore, "sync": sync, "translations": install_translations,
+                "refresh-icons": notify_icons}[cmd]()
     print(__doc__)
     return 1
 

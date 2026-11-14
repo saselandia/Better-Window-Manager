@@ -94,7 +94,7 @@ PC3.Menu {
             required property var modelData
             text: modelData.name
             icon.name: modelData.icon || ""
-            onTriggered: modelData.execute()
+            onTriggered: AppSearch.launch(root.entry, modelData)
         }
     }
     PC3.MenuSeparator {
@@ -139,7 +139,7 @@ PC3.Menu {
         visible: root.entry !== null; height: visible ? implicitHeight : 0
         text: root.trc("action:inmenu", "Open New Window")
         icon.name: "window-new"
-        onTriggered: root.entry.execute()
+        onTriggered: AppSearch.launch(root.entry)
     }
 
     PC3.Menu {

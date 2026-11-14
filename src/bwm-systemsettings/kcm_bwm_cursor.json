@@ -1,0 +1,10 @@
+{
+  "KPlugin": {
+    "Name": "BWM — Cursor",
+    "Description": "Cursor: gestor común de BWM",
+    "Icon": "edit-select",
+    "License": "GPL-2.0-or-later"
+  },
+  "X-KDE-System-Settings-Parent-Category": "appearance",
+  "X-BWM-Category": "cursor"
+}

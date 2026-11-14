@@ -1,0 +1,281 @@
+{
+  "session_modified": false,
+  "live_panel_integrated": false,
+  "packages": [
+    {
+      "actions": [],
+      "categories": [],
+      "compact": true,
+      "configModel": "",
+      "configurationKeys": [],
+      "error": "",
+      "exercisePassed": false,
+      "firstId": 4,
+      "formFactor": 2,
+      "full": true,
+      "height": 48,
+      "itemLoaded": true,
+      "location": 4,
+      "mainScript": "file:///tmp/bwm-r4-check-fakebkgt/data/plasma/plasmoids/org.kde.example.compactrepresentation/contents/ui/main.qml",
+      "package": "org.kde.example.compactrepresentation",
+      "pages": [],
+      "secondId": 5,
+      "translationDomain": "plasma_applet_org.kde.example.compactrepresentation",
+      "valuesBeforeExercise": {},
+      "width": 48,
+      "nativeInstallRemove": true
+    },
+    {
+      "actions": [],
+      "categories": [
+        {
+          "configUiComponent": "",
+          "configUiModule": "",
+          "icon": "plasma",
+          "name": "General",
+          "pluginName": "",
+          "source": "file:///tmp/bwm-r4-check-fakebkgt/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configGeneral.qml",
+          "visible": true
+        },
+        {
+          "configUiComponent": "",
+          "configUiModule": "",
+          "icon": "konqueror",
+          "name": "Other page",
+          "pluginName": "",
+          "source": "file:///tmp/bwm-r4-check-fakebkgt/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configOther.qml",
+          "visible": true
+        }
+      ],
+      "compact": true,
+      "configModel": "file:///tmp/bwm-r4-check-fakebkgt/data/plasma/plasmoids/org.kde.example.configuration/contents/config/config.qml",
+      "configurationKeys": [
+        "BoolTest",
+        "Test",
+        "IntTest",
+        "OtherTest",
+        "EnumTest"
+      ],
+      "error": "",
+      "exercise": {
+        "cancelDoesNotWrite": true,
+        "defaultsStaged": true,
+        "expectedValue": false,
+        "key": "BoolTest",
+        "pageReopened": true,
+        "reloadedValue": false,
+        "saved": true,
+        "secondInstanceUnchanged": true
+      },
+      "exercisePassed": true,
+      "firstId": 6,
+      "formFactor": 2,
+      "full": true,
+      "height": 48,
+      "itemLoaded": true,
+      "location": 4,
+      "mainScript": "file:///tmp/bwm-r4-check-fakebkgt/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/main.qml",
+      "package": "org.kde.example.configuration",
+      "pages": [
+        {
+          "error": "",
+          "loaded": true,
+          "source": "file:///tmp/bwm-r4-check-fakebkgt/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configGeneral.qml"
+        },
+        {
+          "error": "",
+          "loaded": true,
+          "source": "file:///tmp/bwm-r4-check-fakebkgt/data/plasma/plasmoids/org.kde.example.configuration/contents/ui/configOther.qml"
+        }
+      ],
+      "secondId": 7,
+      "translationDomain": "plasma_applet_org.kde.example.configuration",
+      "valuesBeforeExercise": {
+        "BoolTest": true,
+        "EnumTest": 2,
+        "IntTest": 1,
+        "OtherTest": "test2",
+        "Test": "test"
+      },
+      "width": 48,
+      "freshProcessReadback": true,
+      "nativePopupAndConfigButtonsPassed": true,
+      "uiTestOutput": "********* Start testing of UiTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : UiTest::initTestCase()\nPASS   : UiTest::liveCatalogRefreshAndNativeMetadata()\nQWARN  : UiTest::previewLoadsAndOpensOriginalConfig() kf.windowsystem: Could not find any platform plugin\nQWARN  : UiTest::previewLoadsAndOpensOriginalConfig() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55d116c5e5c0)\nPASS   : UiTest::previewLoadsAndOpensOriginalConfig()\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55d116c514d0)\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x55d116c514d0, name=\"bwmAppletPopup\")\nQWARN  : UiTest::configButtonsAndPopup() This plugin does not support setting window masks\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x55d116c514d0, name=\"bwmAppletPopup\")\nPASS   : UiTest::configButtonsAndPopup()\nPASS   : UiTest::cleanupTestCase()\nTotals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 619ms\n********* Finished testing of UiTest *********\n",
+      "nativeInstallRemove": true
+    },
+    {
+      "actions": [
+        "Edit Applications…"
+      ],
+      "categories": [
+        {
+          "configUiComponent": "",
+          "configUiModule": "",
+          "icon": "preferences-desktop-plasma",
+          "name": "General",
+          "pluginName": "",
+          "source": "file:///tmp/bwm-r4-check-fakebkgt/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ConfigGeneral.qml",
+          "visible": true
+        },
+        {
+          "configUiComponent": "",
+          "configUiModule": "",
+          "icon": "view-list-details",
+          "name": "Lists and grids",
+          "pluginName": "",
+          "source": "file:///tmp/bwm-r4-check-fakebkgt/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ListAndGrid.qml",
+          "visible": true
+        }
+      ],
+      "compact": false,
+      "configModel": "file:///tmp/bwm-r4-check-fakebkgt/data/plasma/plasmoids/AndromedaLauncher/contents/config/config.qml",
+      "configurationKeys": [
+        "icon",
+        "useCustomButtonImage",
+        "customButtonImage",
+        "activationIndicator",
+        "indicatorColor",
+        "enableGreeting",
+        "pinnedModel",
+        "defaultPage",
+        "customGreeting",
+        "launcherPosition",
+        "offsetX",
+        "offsetY",
+        "floating",
+        "enableGlow",
+        "glowColor",
+        "compactListItems",
+        "showItemsInGrid",
+        "extraRunners",
+        "useSystemFontSettings",
+        "appsIconSize",
+        "numberColumns",
+        "numberOfRows"
+      ],
+      "error": "",
+      "exercise": {
+        "cancelDoesNotWrite": true,
+        "defaultsStaged": true,
+        "expectedValue": true,
+        "key": "useCustomButtonImage",
+        "pageReopened": true,
+        "reloadedValue": true,
+        "saved": true,
+        "secondInstanceUnchanged": true
+      },
+      "exercisePassed": true,
+      "firstId": 8,
+      "formFactor": 2,
+      "full": true,
+      "height": 0,
+      "itemLoaded": true,
+      "location": 4,
+      "mainScript": "file:///tmp/bwm-r4-check-fakebkgt/data/plasma/plasmoids/AndromedaLauncher/contents/ui/main.qml",
+      "package": "AndromedaLauncher",
+      "pages": [
+        {
+          "error": "",
+          "loaded": true,
+          "source": "file:///tmp/bwm-r4-check-fakebkgt/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ConfigGeneral.qml"
+        },
+        {
+          "error": "",
+          "loaded": true,
+          "source": "file:///tmp/bwm-r4-check-fakebkgt/data/plasma/plasmoids/AndromedaLauncher/contents/ui/config/ListAndGrid.qml"
+        }
+      ],
+      "secondId": 9,
+      "translationDomain": "plasma_applet_AndromedaLauncher",
+      "valuesBeforeExercise": {
+        "activationIndicator": true,
+        "appsIconSize": 2,
+        "compactListItems": false,
+        "customButtonImage": "",
+        "customGreeting": "",
+        "defaultPage": 0,
+        "enableGlow": false,
+        "enableGreeting": true,
+        "extraRunners": [
+          "shell",
+          "bookmarks",
+          "baloosearch",
+          "locations"
+        ],
+        "floating": false,
+        "glowColor": 0,
+        "icon": "start-here-kde-symbolic",
+        "indicatorColor": "#2164c9",
+        "launcherPosition": 0,
+        "numberColumns": 6,
+        "numberOfRows": 3,
+        "offsetX": 0,
+        "offsetY": 0,
+        "pinnedModel": 0,
+        "showItemsInGrid": false,
+        "useCustomButtonImage": false,
+        "useSystemFontSettings": false
+      },
+      "width": 0,
+      "freshProcessReadback": true,
+      "nativePopupAndConfigButtonsPassed": true,
+      "uiTestOutput": "resources_140719249046848_readonly\" \"/tmp/bwm-r4-check-fakebkgt/data/kactivitymanagerd/resources/database\" QSqlError(\"14\", \"Error opening database\", \"unable to open database file\")\nQWARN  : UiTest::configButtonsAndPopup() kde.plasma.activitiesstats: Plasma Activities ERROR: There is no database. This probably means that you do not have the Activity Manager running, or that something else is broken on your system. Recent documents and alike will not work!\nQWARN  : UiTest::configButtonsAndPopup() qt.sql.qsqldatabase: QSqlDatabasePrivate::database: unable to open database: \"unable to open database file Error opening database\"\nQWARN  : UiTest::configButtonsAndPopup() kde.plasma.activitiesstats: PlasmaActivities: Database is not open:  \"kactivities_db_resources_140719249046848_readonly\" \"/tmp/bwm-r4-check-fakebkgt/data/kactivitymanagerd/resources/database\" QSqlError(\"14\", \"Error opening database\", \"unable to open database file\")\nQWARN  : UiTest::configButtonsAndPopup() qt.sql.qsqldatabase: QSqlDatabasePrivate::database: unable to open database: \"unable to open database file Error opening database\"\nQWARN  : UiTest::configButtonsAndPopup() kde.plasma.activitiesstats: PlasmaActivities: Database is not open:  \"kactivities_db_resources_140719249046848_readonly\" \"/tmp/bwm-r4-check-fakebkgt/data/kactivitymanagerd/resources/database\" QSqlError(\"14\", \"Error opening database\", \"unable to open database file\")\nQWARN  : UiTest::configButtonsAndPopup() kde.plasma.activitiesstats: Plasma Activities ERROR: There is no database. This probably means that you do not have the Activity Manager running, or that something else is broken on your system. Recent documents and alike will not work!\nQDEBUG : UiTest::configButtonsAndPopup() failed to acquire GL context to resolve capabilities, using defaults..\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x5645bbe5fcc0, name=\"bwmAppletPopup\")\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() kf.solid.backends.udisks2: Failed to fetch all devices \"org.freedesktop.DBus.Error.Disconnected\" \"Not connected to D-Bus server\"\nQWARN  : UiTest::configButtonsAndPopup() This plugin does not support setting window masks\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x5645bbe5fcc0, name=\"bwmAppletPopup\")\nQWARN  : UiTest::configButtonsAndPopup() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::AppletPopup(0x5645bbe5fcc0, name=\"bwmAppletPopup\")\nQWARN  : UiTest::configButtonsAndPopup() This plugin does not support setting window masks\nPASS   : UiTest::configButtonsAndPopup()\nPASS   : UiTest::cleanupTestCase()\nTotals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 910ms\n********* Finished testing of UiTest *********\n",
+      "nativeInstallRemove": true
+    }
+  ],
+  "nativeBuiltin": {
+    "actions": [],
+    "categories": [
+      {
+        "configUiComponent": "",
+        "configUiModule": "",
+        "icon": "preferences-desktop-color",
+        "name": "Appearance",
+        "pluginName": "",
+        "source": "qrc:/qt/qml/plasma/applet/org/kde/plasma/analogclock/configGeneral.qml",
+        "visible": true
+      }
+    ],
+    "compact": true,
+    "configModel": "",
+    "configurationKeys": [
+      "showSecondHand",
+      "showTimezoneString"
+    ],
+    "error": "",
+    "exercise": {
+      "cancelDoesNotWrite": true,
+      "defaultsStaged": true,
+      "expectedValue": true,
+      "key": "showSecondHand",
+      "pageReopened": true,
+      "reloadedValue": true,
+      "saved": true,
+      "secondInstanceUnchanged": true
+    },
+    "exercisePassed": true,
+    "firstId": 2,
+    "formFactor": 2,
+    "full": true,
+    "height": 48,
+    "itemLoaded": true,
+    "location": 4,
+    "mainScript": "",
+    "package": "org.kde.plasma.analogclock",
+    "pages": [
+      {
+        "error": "",
+        "loaded": true,
+        "source": "qrc:/qt/qml/plasma/applet/org/kde/plasma/analogclock/configGeneral.qml"
+      }
+    ],
+    "secondId": 3,
+    "translationDomain": "plasma_applet_org.kde.plasma.analogclock",
+    "valuesBeforeExercise": {
+      "showSecondHand": false,
+      "showTimezoneString": false
+    },
+    "width": 48,
+    "freshProcessReadback": true
+  }
+}

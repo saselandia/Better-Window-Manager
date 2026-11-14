@@ -143,6 +143,36 @@ Scope {
             }
         }
 
-        onVisibleChanged: if (visible) Qt.callLater(() => kickoff.forceActiveFocus())
+        // BWM: como en Plasma, Kickoff se abre con el cursor ya en el buscador: lo que se teclee justo
+        // después de Super/Alt+F1 busca aplicaciones. Kickoff es un Item simple (no un FocusScope), así
+        // que enfocarlo a él dejaba el teclado fuera del campo; se enfoca el campo, y si aún no existe
+        // (la vista se construye al hacerse visible la capa) se reintenta unos instantes.
+        function focusSearch() {
+            const field = kickoff.searchField;
+            if (field) {
+                field.forceActiveFocus(Qt.ShortcutFocusReason);
+                return true;
+            }
+            kickoff.forceActiveFocus();
+            return false;
+        }
+        onVisibleChanged: if (visible) {
+            focusRetries.remaining = 20;
+            Qt.callLater(() => { if (win.focusSearch()) focusRetries.remaining = 0; else focusRetries.restart(); });
+        }
+        Timer {
+            id: focusRetries
+            property int remaining: 0
+            interval: 25
+            repeat: true
+            running: false
+            onTriggered: {
+                if (!root.opened || remaining <= 0 || win.focusSearch()) {
+                    stop();
+                    return;
+                }
+                remaining--;
+            }
+        }
     }
 }

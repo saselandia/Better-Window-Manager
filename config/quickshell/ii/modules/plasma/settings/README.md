@@ -21,3 +21,10 @@ y volver a aplicar los cambios `// BWM:`. Las cadenas usan el catálogo instalad
 Límites: los KCM de QWidget (`kcm_kwinoptions`, `kcm_networkmanagement`) no se incrustan; el de
 Bluetooth (bluedevil) no está instalado. Sin insignias de «cambios resaltados» en la barra lateral
 (sólo en el KCM abierto). Sin Ayuda local (abre docs.kde.org).
+
+
+Continuación R2 (2026-11-12): el host de esta carpeta sigue siendo el lanzador activo.
+`src/bwm-systemsettings` contiene el primer KCM BWM para **systemsettings real**, todavía
+experimental. Ver docs/BREEZE_R2_RESULTS.md antes de cambiar open-settings.sh: faltan páginas
+BWM y alias, por lo que reemplazarlo ahora perdería opciones. No se retira org.bwm.kcm:
+ThemeHost también sirve a las interfaces de sesión y no depende de esta migración.

@@ -18,7 +18,7 @@ Item {
     property bool vertical:edge==="left"||edge==="right"
     readonly property string appId:group?.appId??""
     readonly property var toplevels:group?.toplevels??[]
-    readonly property bool isActive:task.toplevels.some(t=>!!t.activated)
+    readonly property bool isActive:task.toplevels.some(t=>tasksModel?.isActive(t)??!!t.activated)
     readonly property bool isMinimized:!!(task.toplevels.length>0 && task.toplevels.every(t=>(tasksModel?.minimized(t)??false)))
     readonly property bool attention:task.toplevels.some(t=>!!t.urgent)
     readonly property string basePrefix:!task.toplevels.length ? "" : attention ? "attention" : isMinimized ? "minimized" : isActive ? "focus" : "normal"

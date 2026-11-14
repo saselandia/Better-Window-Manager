@@ -1,0 +1,30 @@
+# Process-local KDE Kiosk policy for the experimental BWM System Settings launcher.
+# Native equivalents require KWin/PowerDevil/kglobalaccel APIs that BWM does not own.
+# Do not install as the user's kdeglobals or change system plugin metadata.
+[KDE Control Module Restrictions][$i]
+kcm_kscreen=false
+kcm_kwin_virtualdesktops=false
+kcm_keys=false
+kcm_powerdevilprofilesconfig=false
+kcm_energyinfo=false
+kcm_kwin_effects=false
+kcm_kwin_scripts=false
+kcm_kwinoptions=false
+kcm_kwinrules=false
+kcm_animations=false
+kcm_animations_x11=false
+kcm_cursortheme=false
+kcm_nightcolor=false
+kcm_keyboard=false
+kcm_componentchooser=false
+kcm_autostart=false
+kcm_nightlight=false
+kcm_nighttime=false
+kcm_kwin_virtualdesktops_x11=false
+kcm_kwin_effects_x11=false
+kcm_kwin_scripts_x11=false
+kcm_kwinrules_x11=false
+kcm_kwinxwayland=false
+kcm_screenlocker=false
+kcm_virtualkeyboard=false
+kcm_wallpaper=false

@@ -103,6 +103,103 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 
 ### 2.4 Breeze (Kde plasma): port sobre Hyprland
 
+* **Breeze II (2026-11-12):** `docs/BREEZE_PLAN_V2.md`, R0 entregada con referencia y límites documentados;
+  R1 corrige origen de especiales al minimizar, activación común y filtro de Alt+Tab (pruebas
+  aisladas; fallo visual original pendiente). R2 tiene primer KCM QWidget real, descubierto por
+  `systemsettings --list`, aún sin migrar el lanzador. Dock Retro ya usa restauración común con
+  origen especial preservado (R1, pendiente de sesión). Veto no_shadow restaurado como contención
+  y miniaturas Breeze suspendidas tras el crash; recuperación/comparación visual pendientes. Informes `BREEZE_R0/R1/R2/R6_RESULTS.md`.
+  R3 añade ocho KCM nativos/adaptadores, perfil KAuthorized del lanzador experimental y
+  descubrimiento de configuradores por factories; pruebas aisladas aprobadas, aceptación
+  real y cobertura completa pendientes (`docs/BREEZE_R3_RESULTS.md`). Sin migrar Super+I.
+  R4: auxiliar aislado libplasma/PlasmaQuick en src/bwm-plasma-host, opción externa Andromeda
+  guardada/releída en proceso nuevo y dos instancias. Ya tiene popup/diálogo con botones y
+  catálogo vivo (también applets compilados), conexión KNS nativa y vista temporal explícita.
+  Pruebas QtTest/ASan; adaptador LayerShellQt y staging nativo añadidos (2026-11-13).
+  plasma-desktop instalado: org.kde.panel/QML original, AppletOrder y configuración por
+  QAction probados; staging de cinco widgets/dos paneles. Dialog propios ocultos sin superficie
+  reciben adaptador layer-shell por contexto; ViewCorona usa salida Qt (offscreen/ASan OK).
+  Claves compartidas entre categorías sincronizadas en memoria y páginas estables durante
+  cambios de controles; Aplicar/Cancelar/Predeterminados y lectura en otro proceso probados (§185).
+  API PanelSession de instancias/altas/bajas/orden/acciones para R5 probada sobre org.kde.panel:
+  lectura de archivo, posiciones y opciones en proceso nuevo (§186), sin activar el panel diario.
+  Páginas por módulo QML y required/title/cfg_ antes de completar admitidas (§188), con fábrica
+  común diálogo/probe/ejercicio y errores explícitos. Regresión normal/ASan y proceso nuevo OK.
+  Marco original Panel.qml alojado por PanelViewHost/ContainmentView (§189): SVG/temas, bordes,
+  flotación, tamaño, NoBackground y ruta del ejecutable probados con readback offscreen/ASan.
+  Migración de borde/orientación corregida (§190): cuatro bordes y fallback bar.bottom,
+  lectura nativa/QML por ambos ejes y fuente intacta, normal/ASan. R4 no se declara cerrado.
+  Seis preferencias del marco guardadas en plasmashellrc nativo (§191), con efecto en la vista,
+  kdedefaults/inmutabilidad, conflictos y lectura de dos paneles desde otro proceso probados.
+  Los setters siguen siendo vista previa; guardar es explícito. Sin activar el panel diario.
+  Staging migra grosor/flag de flotación/enum de opacidad (§192) al archivo KDE separado;
+  ocho casos/dos paneles, marco original, lectura nueva y rechazos Adaptive normal/ASan OK.
+  Geometría/controladores restantes se archivan con motivos; no hay activación de sesión.
+  PanelRuntime coordina vistas por salida/skin (§193): hotplug, duplicados, borde/resolución,
+  cierre de configuración pendiente/ventanas propias y reapertura Qt aislada normal/ASan OK.
+  Hook común before/after controla ahora una prueba registrada explícitamente (§194), con
+  confirmación, unicidad y cierre/Ctrl+C probados. Perfil diario/autoridad de bindings y
+  aceptación de cambios de skin en Hyprland pendientes; no sustituye el panel activo.
+  ProfileStore conserva un perfil de ensayo entre procesos (§195): archivos KDE completos,
+  bindings, checkpoints e IDs/opciones propios; restore a otra ruta evita escrituras tardías
+  del propietario viejo. Qt/CLI/envoltorio normal/ASan OK; raíces temporales, sin activación diaria.
+  Exportación explícita a XDG de estado (§196): conserva estado seleccionado e historial de
+  snapshots fuera de /tmp; fuente eliminada y destino reabierto/guardado/restaurado en fixtures.
+  Estado real del usuario intacto; selección/activación/fallback del panel diario pendientes.
+  Consulta fresca de disponibilidad (§197): status no recarga ni cambia skin; renderReady
+  requiere QML/exposición y frame Qt de la misma generación. Bloqueos explícitos y timeout;
+  replacementReady false conserva el panel diario. Qt/software y CLI aislados comprobados.
+  --native-policy (§198) conecta panelVisibility 0/3 con peticiones LayerShellQt de grosor
+  nativo; flotación, retirada/skins y lectura nueva probadas. Un panel por salida en ese modo;
+  reserva real/posicionamiento Wayland pendientes, sin sustituir el panel diario.
+  Diagnóstico local r4-session-check.py (§199) con informe privado, filtros y timeout; aquí
+  sockets presentes/propios e IPC inaccesible. Elevación denegada por política del ejecutor.
+  Acceso del terminal local confirmado (§200): dos salidas a escala 1 con 44 px inferiores,
+  sin ensayo R4. Runner temporal de reserva/cierre automático preparado, sin ejecución gráfica
+  nueva del asistente; maximizado/aceptación siguen pendientes.
+  Primer ensayo local (§201): auxiliar activo pero output-unavailable, cierre/44 px restaurados.
+  Compatibilidad de descripción Hyprland con Qt sin serie e inventario diagnóstico añadidos;
+  falta repetir la prueba real, sin certificar identidad física por serie ausente.
+  Segundo intento (§202) confirma Qt Wayland y fabricante MSI con coma sólo en Qt;
+  normalización limitada al fabricante completo corregida. Datos exactos cubiertos por
+  regresión, limpieza/44 px originales confirmados; delta de reserva real aún pendiente.
+  Reserva local MSI validada (§203): 44→92→44 px, capa original 640×48, LG inalterado y
+  registro/capas retirados. Evidencia de usuario conservada; maximizado/resto R4 pendientes.
+  Ensayo --maximize preparado (§204): ventana propia y maximizador BWM guardado por identidad,
+  autoridad de decoración y medición independiente con/sin panel; reajuste automático separado.
+  Pendiente de nueva ejecución local; no se ha certificado aún el marco maximizado real.
+  --maximize local falla por to-screen invertido en runner (§205), corregido con prueba
+  contra parser real. Reserva/limpieza correctas; marco todavía sin medición real.
+  Maximizado explícito real validado (§206): marco 0,720,2560,1348 con panel y 0,720,2560,1396
+  al maximizar de nuevo sin panel; barra de 28 px incluida. Reajuste automático al retirarlo
+  falla (48 px sin usar); adición sobre ventana ya maximizada/resto R4 pendientes.
+  Seguimiento de área implementado en el puente existente (§207), con autoridad de bordes,
+  ejes parciales, Force KDE y guardas PID/skin/estado; sin tocar restauración/presnap/foco.
+  159 tests Python pasan, incluidos Lua ejecutado y runner de aparición/retirada sin remax.
+  Usuario carga el puente actualizado y valida ambos sentidos en sesión (§208): reserva
+  44→92→44 y altura de marco 1396→1348→1396 sin remax, MSI inferior escala 1/giro 0. LG
+  inalterado, limpieza correcta; otros casos y resto R4 pendientes. Evidencia conservada.
+  El puente permanece activo para reajustar máximos BWM; no reinicia compositor.
+  Criterios originales de R4 cumplidos (§209): ciclo real de «Obtener nuevos» con la tienda
+  KDE (KNSCore + plasmoids.knsrc, raíces temporales), tres widgets elegidos por la tienda guardan
+  su opción propia por su página original y en proceso nuevo; Modern Clock también en Hyprland.
+  saveConfig()/cfg_ sin esquema como AppletConfiguration.qml 6.7.5. Panel diario/backends fuera.
+  Primera prueba en la sesión Wayland (§187): posiciones de Qt Wayland, foco del panel y Dialog
+  no interactivos corregidos; menú/avatar de Andromeda bien colocados en los dos monitores.
+  Cierre al pulsar fuera con hyprland_focus_grab_v1. Pendientes de sesión: desenfoque, aceptación
+  del nuevo marco, escala fraccionaria y bordes. No se deduce validación del marco de §187.
+  Pendientes backend de ventanas/escritorios, negociación Wayland, otros tipos/creación tardía
+  de ventanas y migración/activación completa. Detalles
+  BREEZE_R4_RESULTS.md / BREEZE_R4_ARCH.md. Centered de R3 confirmado por usuario en sesión.
+  Autostart precarga breezebars aunque la skin inicial sea Retro/default; barras desactivadas
+  fuera de Breeze. Usuario confirma el resultado visual tras las correcciones Retro→Breeze;
+  no equivale a validar la matriz de R4. Nunca cargar/descargar el plugin en caliente (§183).
+  Auditoría Retro→Breeze (§184): arranque/recuperación del shell con proveedor Qt estable,
+  iconos GTK/Qt/KDE coherentes y avisos nativos; apps por AppSearch.launch/Hyprland y entorno
+  de activación actualizado. Pruebas aisladas aprobadas y usuario confirma «está perfecto
+  ahora» para el aspecto de la barra; entrega por bus y matriz completa no se deducen de ello.
+  F0–F13 se conserva como historial en `docs/BREEZE_PLAN.md`.
+
 * **Estado F0–F13 (§3.139–158):** interfaces en `modules/plasma/`, scripts/Lua en
   `skins/plasma/`. Retirados todos los `modules/ii/plasma*`, su selector artesanal, 152 SVG
   locales sin uso y la paleta fija de reserva. Informe final: `docs/BREEZE_F13_RESULTS.md`.
@@ -1638,6 +1735,980 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
   379 pruebas, 70 opcionales omitidas, sin fallos; config/requirements correctos y una instancia ii.
 
 
+### 162. Segundo plan de Breeze: fidelidad y correcciones del port (2026-11-12)
+
+* **Petición:** nuevo plan con prompts y esfuerzo medium/high para modo edición original,
+  opciones de temas/complementos, sombras, animaciones y ajustes KDE auténticos, auditoría
+  profunda y arreglo de Magic/Alt+S y ventanas especiales que aparecen detrás de las normales.
+* **Hecho:** `docs/BREEZE_PLAN_V2.md`, diez fases R0–R9 secuenciales con objetivos, rutas,
+  pruebas de aceptación, dependencias y límites. Enlace desde el plan histórico F0–F13.
+  Revisión inicial de código y documentación: editor reducido, animaciones MD3, Ajustes
+  mediante `qs -p`, sombras KDE ya implementadas y ruta de activación de tareas sin tratamiento
+  explícito de especiales. `systemsettings` existe; no se abrió ni se probó en esta sesión.
+* **Comprobado:** estructura de los diez prompts, vallas Markdown y `git diff --check`.
+  `AGENTS.md`/`CLAUDE.md` siguen idénticos. Sólo cambios documentales, sin commit ni push.
+* **Pendiente:** toda la ejecución R0–R9. La causa de Alt+S sigue sin reproducir; se documenta
+  como hipótesis, no se afirma que existan dos workspaces distintos ni que se haya corregido.
+  No se cambiaron skins, configuración de usuario, procesos ni plugins.
+
+### 163. Primera ejecución Breeze II: auditoría, especiales y prueba de KCM nativo (2026-11-12)
+
+* **Petición:** ejecutar R0 y continuar autónomamente mientras el usuario descansa, dejando
+  sudo/pruebas físicas/reinicio para mañana. No se promete haber consumido cinco horas.
+* **Entorno:** IPC Hyprland/Wayland/D-Bus bloqueado por sandbox; systemsettings 6.7.5 y
+  referencias locales desktop/workspace v6.7.5 confirmadas. No se pudo inspeccionar plugin vivo.
+* **R0:** `docs/BREEZE_AUDIT_V2.md`, inventario priorizado y referencia reproducible. Identificados
+  origen especial perdido al minimizar y veto global de sombras como causas de código; no se
+  atribuye con certeza el síntoma Alt+S sin reproducirlo.
+* **R1:** política común de activación, PID en foco diferido de Alt+Tab, Magic visible incluido,
+  nombre especial conservado en etiqueta al minimizar y caché geométrica con identidad. Pruebas
+  Lua/QtTest offscreen/Python pasan. Dock nativo opcional Retro y matriz de sesión siguen pendientes.
+* **R2 parcial:** `src/bwm-systemsettings`, primer KCModule QWidget real de luz nocturna con
+  controlador común, pruebas aisladas y detección por systemsettings real. Instalado sólo en
+  `/tmp` para probar. Lanzador experimental `settings-native.sh`; Super+I sigue intacto hasta
+  migrar las demás opciones BWM. Recomendación experimental declarada y requisitos regenerados.
+* **R6 parcial adelantada:** quitado no_shadow=true de la regla global Breeze, manteniendo
+  sombra genérica apagada y overrides de Sin marco. Regresión de Lua pasa; no cambia plugin.
+* **Límites:** no se cambió skin, reinició shell/sesión, instaló con sudo ni tocó texto de usuario.
+  No hay prueba visual ni equivalencia nueva. Resultados por fase y pasos para mañana en docs.
+  Sin commit ni push. Las suites con sockets de decorador fallan por permisos del sandbox,
+  no se presentan como aprobadas; resultado offline final en el informe de continuación.
+
+### 164. Incidente de modo seguro tras Breeze II: contención (2026-11-12)
+
+* Usuario comunica modo seguro. Informe reciente SIGSEGV en ScreenshareSession::init+0xad7,
+  capturando una ventana; objdump confirma lectura nula 0x94 en cálculo de escala. No se
+  demuestra causalidad con sombra/plugin ni se identificó ventana/cliente exactos.
+* Restaurado no_shadow=true global de Breeze como contención, y captureSource:null/live:false
+  en miniaturas TaskToolTip/ThumbnailGrid/compat WindowThumbnail. Sombras R6 siguen pendientes.
+* No se reinició ni cerró sesión; IPC sigue bloqueado. Reentrada normal y verificación pendientes.
+  Detalle en docs/BREEZE_RECOVERY.md; informes anteriores R6 quedan supersedidos.
+
+### 165. Revisión R0–R2: estados parciales y captura en fallback oculto (2026-11-12)
+
+* Repetidas 33 pruebas específicas y reconstrucción limpia de KCM/CTest; KDE descubre el módulo.
+* R0 documental con referencia gráfica pendiente, R1 parcial y R2 sólo prototipo. No se cierran.
+* Detectada y corregida captura del Alt+Tab común oculto en Breeze: ahora la fuente depende
+  de panelWindow.visible, con prueba de binding en QtTest sin capturar ventanas reales.
+* Restauración del dock Retro aún ignora el origen especial; integración/validación pendientes.
+  No se cambió sesión ni archivos generados ajenos. Informe docs/BREEZE_R0_R1_R2_REVIEW.md.
+
+### 166. R0 completada como auditoría sobre el trabajo existente (2026-11-12)
+
+* Petición: hacer R0 aprovechando lo ya hecho. Se actualiza inventario al árbol actual,
+  incluyendo R1 parcial, prototipo R2 y contención posterior; no se cambia código/runtime.
+* Leídos contratos Corona/Containment/Applet/AppletQuickItem, ejemplo CustomCorona,
+  configuración de applet/panel y edición upstream de la versión local; auditadas rutas de
+  servicios, tareas, reloj, menús y carga del puente. Fuentes ausentes se marcan sin cotejo.
+* Corregida afirmación anterior: kwin.lua no escala factor 1, pero appearance carga la base
+  antes; el fallo de retorno a 1 no está demostrado. Kickoff aún tiene Configurar desactivado;
+  panel comparte configuración entre monitores. Breeze de fábrica declara BreezeLight.
+* Entregados protocolo de referencia con 12 casos y manifiesto SHA-256 de 26 archivos.
+  Se cumple la alternativa de R0 para sesión de referencia inaccesible. IPC/servicios vivos y
+  mediciones visuales siguen sin verificar; no se certifica equivalencia ni resolución del crash.
+* BREEZE_R0_RESULTS.md incluye cierre con límites y siguiente prompt R1. Sin instalación,
+  reinicios, cambios de skin, commit o push. Documentación actual corrige el estado del veto de sombras.
+
+### 167. Continuación R1: restaurar especiales desde dock Retro sin extraerlos (2026-11-12)
+
+* Dock Retro delega al controlador común con PID de lastIpcObject. Opción restore-on-current
+  conserva destino actual para normales (Omarchy) y nombre/geométrica de origen para especiales.
+  No cambia la restricción nativa de minimizar sólo en workspaces normales flotantes de Retro.
+* Cleanup no_anim del dock pasa de shell diferido a timer con PID fresco en el compositor.
+  min/toggle con dirección cerrada ya no usan como alternativa la ventana activa.
+* Diez pruebas nuevas de Lua con estado, CLI y método real del dock en QtTest pasan; también
+  las específicas de activación/minimizado/KWin/transición. Sin capturas ni acciones en sesión.
+* IPC sigue rechazado: R1 no se cierra visualmente. No se cambió skin, reinició shell,
+  reactivó sombras/miniaturas ni instaló plugin. Informe ampliado BREEZE_R1_RESULTS.md.
+
+### 168. Intento de validación real R1 y límite de permisos (2026-11-12)
+
+* Usuario autoriza probar todo y reactivar compositor con cuidado. Consulta IPC falla y
+  escalación read-only de hyprctl -j version rechazada por sandbox_approval=false antes de ejecutar.
+  No se reinicia compositor: no se puede comprobar estado/ventanas ni cambia el permiso al reiniciar.
+* Preparado bwm-r1-validate.py para ejecutar desde una terminal real de la sesión, con fixtures
+  desechables y limpieza/restauración; rechaza Magic ocupado y no usa capturas ni reinicia nada.
+* Aquí sólo preflight bloqueado; 3 tests de seguridad aislados pasan. Cero pruebas gráficas nuevas
+  aprobadas. Instrucciones/alcance en BREEZE_R1_RESULTS.md. R1 sigue sin aceptación de sesión.
+
+### 169. R1: prueba principal aprobada en la sesión real del usuario (2026-11-12)
+
+* Usuario ejecuta bwm-r1-validate.py --run y comparte resultado; se comprueba el mismo JSON
+  en /tmp y se conserva en docs/BREEZE_R1_SESSION_RESULTS.json, sin títulos/datos privados.
+* Hyprland 0.56.2: IPC, Magic canónico, dispatcher mostrar/ocultar, activación repetida/foco,
+  minimizar/restaurar con política de dock y rechazo de PID incorrecto aprobados. Limpieza
+  sin errores reportados; compositor no reiniciado y visual_verified=false.
+* Esta es evidencia real por ejecución del usuario; el sandbox no obtuvo acceso. No cubre
+  pulsación física, clic QML del dock, matriz de monitores/skins, fullscreen o Mostrar escritorio.
+  R1 tiene smoke principal aprobado pero aceptación completa pendiente. Sombras/capturas siguen
+  contenidas; no se declara resuelto el crash. Sin cambios de runtime en este registro.
+
+### 170. R1: matriz de monitores/skins y registro de observaciones preparado (2026-11-12)
+
+* bwm-r1-validate.py añade --matrix/--interactive. Recorre monitores por desc y tres skins,
+  verifica identidad/workspace de apps preexistentes, estado Magic y restaura skin original.
+  Bloques manuales por skin registran s/n/pendiente; no se confunden con medición de render.
+* Rechaza matriz sin plugin cargado; no carga plugins ni reinicia compositor. Alt+Tab físico
+  sólo se ofrece en Breeze mientras no se resuelva el crash; otras skins quedan pendientes.
+* 9 pruebas aisladas del validador y 10 de restauración pasan. Matriz nueva aún no ejecutada
+  en sesión; smoke real anterior se conserva. Instrucción y alcance en BREEZE_R1_RESULTS.md.
+
+### 171. Primer intento de matriz R1 y preparación del puntero (2026-11-12)
+
+* Usuario sólo ve Comprobando skin: default. Informe encontrado: error de monitor enfocado,
+  matrix vacío y cleanup sin errores; se conserva en BREEZE_R1_MATRIX_ATTEMPT_01.json.
+* Se coloca puntero en centro lógico del monitor antes de enfocarlo y se espera convergencia;
+  se guarda/restaura cursor y se añade diagnóstico si falla. Sin cambiar política de foco.
+* Simulador reproduce vuelta de foco al monitor del puntero y prueba con/sin movimiento.
+  9 pruebas pasan. Falta repetir en sesión; causa real aún no confirmada. Sin nuevo crash report
+  observado. Detalle en BREEZE_R1_RESULTS.md.
+
+### 172. Iconos de Breeze tras la matriz: restauración sin aviso a KIconLoader (2026-11-12)
+
+* Usuario ve iconos de Retro (sonido, entre otros) en la barra Breeze. kdeglobals y qt6ct
+  inspeccionados seleccionan breeze-dark; no se ha visto el render de la sesión desde aquí.
+* Hallazgo: plasma-theme.py restore devolvía kdeglobals guardado y enviaba sólo cambio de
+  paleta, sin invalidar iconos. Se añade notify_icons para grupos KDE Desktop..Dialog (0..5)
+  tras ambas ramas de restore, y se reutiliza al aplicar iconos explícitamente. Es un defecto
+  comprobado de notificación, candidato al síntoma; falta verificar visualmente el resultado.
+* Orden refresh-icons sólo emite avisos de iconos, sin reescribir preferencias, cambiar skin,
+  reiniciar apps/shell/compositor ni forzar Breeze en lugar del tema KDE elegido por el usuario.
+* 12 pruebas del aplicador pasan, incluidas restauración del tema personalizado antes del
+  aviso, grupos panel/pequeños y refresco sin escritura. Bus real no usado en las pruebas.
+  Sintaxis/diff correctos. Recuperación de la barra actual requiere ejecutar refresh-icons en
+  terminal real por la restricción de IPC/D-Bus del sandbox. No se afirma icono ya reparado.
+
+### 173. Iconos de Breeze: el aviso no basta; comprobación en proceso nuevo (2026-11-12)
+
+* El usuario confirma que refresh-icons no corrigió sonido y ahora ve el logo de GNOME.
+  No se considera resuelto el incidente de §172.
+* Comprobación aislada con QApplication y KIconLoader, plataforma offscreen, tanto con
+  QT_QPA_PLATFORMTHEME=qt6ct como kde: Qt y KDE seleccionan breeze-dark; audio-volume-high
+  resuelve a /usr/share/icons/breeze-dark/status/24/audio-volume-high.svg y
+  start-here-kde-symbolic a /usr/share/icons/breeze-dark/places/22/start-here-kde-symbolic.svg.
+  La configuración activa de Kickoff también conserva start-here-kde-symbolic. Esto verifica
+  los recursos y su resolución en un proceso nuevo, no el render de la barra existente.
+* Siguiente recuperación: bwm-theme-manager.py set plasma --restart-shell, reinicio único
+  de mantenimiento del shell; no volver a ejecutar la matriz de skins. No realizado desde
+  el sandbox por el bloqueo de acceso a la sesión. Pendiente confirmar ambos iconos después.
+  No se fuerza otro tema de iconos ni se modifican preferencias del usuario.
+
+### 174. Kickoff de Breeze se abre con el buscador enfocado (2026-11-12)
+
+* **Petición:** como en Plasma, al abrir el menú con Super (o Alt+F1) lo que se teclee a continuación debe buscar aplicaciones.
+* **Causa:** `KickoffWindow.qml` hacía `kickoff.forceActiveFocus()` al mostrarse la capa; `Kickoff` es un `Item` normal (no un `FocusScope`), así que el foco se quedaba en él y no descendía al `searchField`, y las letras se perdían.
+* **Hecho:** `focusSearch()` en `KickoffWindow.qml` enfoca `kickoff.searchField` con `Qt.ShortcutFocusReason` al hacerse visible la capa, con reintentos cada 25 ms (máx. 20) mientras la vista aún no ha creado el campo.
+* **Verificado (sesión real, Breeze, tras reinicio de mantenimiento del shell, necesario porque la capa se carga por ruta):** con teclado virtual uinput, abrir por IPC y pulsar «f», «i» sin tocar nada → el campo muestra «fi» y la lista filtra aplicaciones; cerrado después, sin capas residuales. Capturas borradas.
+* **No probado:** pulsar físicamente Super y escribir de inmediato. Las teclas que llegan antes de que el compositor dé el foco de teclado a la capa (unas decenas de ms tras soltar Super: lanza `app-launcher.sh`, que llama a `qs ipc`) las recibe la app que tenía el foco; es una limitación de layer-shell.
+
+### 174. R3 parcial: preferencias nativas efectivas y catálogo de decoraciones (2026-11-12)
+
+* Iconos: el usuario confirma resueltos tras el reinicio de shell de §173.
+* Ocho KCModule QWidget sobre gestores comunes y puente KDE (ventanas, cursor, pantallas,
+  escritorios por monitor, apps, inicio, atajos, inactividad). Nueve con luz nocturna R2.
+  Aplicar explícito, revisión de página, validación, candado y relectura; errores conservan dirty.
+* Puente: pendingReload durable ante error IPC; vigila cascada KDE completa y eventos ajenos
+  no aplazan el debounce. Conserva formatos/claves/kdedefaults y precedencia del usuario.
+* Perfil KAuthorized sólo para settings-native.sh: retira KCM incompatibles sin borrar plugins.
+  Systemsettings real descubre los nueve y confirma filtrado de cursor/apps/autostart.
+* bwm-kcm-catalog sigue X-KDE-ConfigModule y DecorationThemeProvider. Descubre Sweet (5 temas)
+  y sus configuradores. Ensayo instalado Breeze: drawBackgroundGradient guarda, reabre y cambia
+  el render del plugin; no se certifica su efecto en las ventanas vivas ni una opción propia Sweet.
+* settings-capabilities.json: autoridad por clave, APIs ausentes y contrato R7; efectos
+  soportados vacío, sin anunciar KWin como motor operativo. Plasmoides quedan en R4.
+* 54 pruebas Python y 3 ejecutables CTest pasan. Build/install sólo /tmp/bwm-r3-prefix;
+  sin instalar en HOME, sin IPC de sesión, sin cambios de skin, capturas ni sombras.
+  R3 sigue parcial: aceptación real, controles avanzados y terceros por completar. Informe
+  BREEZE_R3_RESULTS.md con tabla/control y rollback. No cambia Super+I ni cierra R2.
+
+### 175. R3: instalación real comprobada tras confirmación del usuario (2026-11-12)
+
+* Usuario ejecuta make install. Los nueve KCM del prefijo real coinciden por SHA-256 con
+  src/bwm-systemsettings/build. Systemsettings real los descubre mediante settings-native.sh;
+  siete módulos incompatibles enumerables en offscreen quedan retirados por el perfil.
+* Evidencia BREEZE_R3_INSTALLATION.json; informe R3 actualizado. Instalar ya no es pendiente;
+  apertura gráfica y aplicación real siguen sin verificar. Sin reinicios ni ajustes cambiados.
+
+### 176. R3 Centered confirmado y R4: primer anfitrión nativo aislado (2026-11-12)
+
+* Usuario confirma apertura de systemsettings real, Centered aplica a ventana nueva y persiste
+  al reabrir. No valida por extensión toda R3 ni el ciclo de skins.
+* src/bwm-plasma-host: Corona/Containment/Applet/PlasmoidItem, ConfigView/Model, KConfigLoader
+  y KPackage reales. Tres paquetes instalados/retirados en XDG temporal con kpackagetool6.
+  Ejemplo compacto original tiene ambas representaciones; ejemplo configurable y Andromeda
+  cargan páginas, guardan bool descubierto dinámicamente y releen desde proceso nuevo.
+  Segunda instancia intacta. Pruebas no muestran ventanas ni usan bus de sesión.
+* Migración: propuesta sin escritura con origen íntegro, tres tests OK. Contratos R5, formatos,
+  capacidades, proveedor plasmoids.knsrc y actualización upstream documentados.
+* R4 sigue pendiente: falta shell package/muebles de expansión, diálogo interactivo completo,
+  integración layer-shell/panel, migración aplicada y KNS vivo. No se presenta lista fija como
+  host universal. Sin cambios en panel, servicios, sombras, capturas, skin ni compositor.
+* BREEZE_R4_RESULTS.md, BREEZE_R4_ARCH.md y BREEZE_R4_PROBE_RESULTS.json. No instalación real,
+  commit ni push; auxiliar experimental declarado como recomendación de compilación.
+
+### 177. Tareas del panel de Breeze: el segundo clic no devolvía la ventana minimizada (2026-11-12)
+
+* **Petición:** clic en una app de la barra la minimiza; un segundo clic sin mover el ratón no la traía al frente; alejando el cursor y volviendo, sí.
+* **Causa (reproducida):** al minimizar una ventana sola en su workspace (o sin otra ventana que tome el foco, con el puntero sobre el panel), Hyprland la mantiene como ventana activa aunque esté en `special:minimized`; `activewindow` la sigue dando y su toplevel conserva `activated`. `TasksModel.click()` veía «una ventana activa» y la volvía a minimizar (no hacía nada). Al mover el puntero sobre el escritorio u otra ventana cambiaba el foco y el siguiente clic sí la activaba. Con otra ventana en el workspace el foco pasa a ésa y no ocurría.
+* **Hecho:** `modules/plasma/panel/TasksModel.qml` con `isActive(top)` = `activated` y no en `special:minimized` (KWin nunca da por activa una ventana minimizada); lo usan `click()`, `cycle()` y el estado visual de `Task.qml`.
+* **Verificado (sesión real, Breeze, tras reinicio de mantenimiento del shell):** kitty de prueba sola en el workspace 9 y ratón virtual uinput sobre su icono: primer clic → `special:minimized` (y sigue siendo la activa, confirmando la causa), segundo clic sin mover → de vuelta al 9. Ventana cerrada, workspace 1 y foco en Vesktop devueltos, `configerrors` vacío.
+* **No probado:** con el ratón físico; grupos de varias ventanas (usan el mismo `isActive`).
+
+### 179. Minimizadas de Breeze sin salida al cambiar de skin (2026-11-12)
+
+* **Petición:** las apps minimizadas en Breeze quedaban en un limbo difícil de sacar al cambiar de skin.
+* **Causa:** desde §3.114 todas las skins comparten `special:minimized` y al cambiar de skin «no se mueve nada». Pero sólo Breeze tiene algo visible que las devuelva (el panel); en default el dock de end-4 está apagado por defecto y en Retro el dock de Omarchy sólo sale en workspaces flotantes. Sólo quedaba Alt+Tab.
+* **Hecho:** `toggle-minimize.py release-all` devuelve todas las minimizadas a su workspace de origen (geometría y etiquetas como `restore`, sin foco ni cambio de workspace; `restore_win(focus=False)`) y vacía el estado de «Mostrar escritorio». `bwm-theme-manager.py` lo llama al cambiar a una skin sin forma de verlas (`shows_minimized()`: Breeze sí; default sólo con `dock.enable` en su perfil; Retro no), antes de capturar las ventanas, para que la skin destino las coloque en mosaico o flotantes como a las demás. Matiza §3.114.
+* **Verificado (sesión real, Breeze):** kitty de prueba en el workspace 9, minimizada con `kwin-window.py` → `special:minimized`; `release-all` → de vuelta al 9 sin etiquetas, misma ventana activa y mismos workspaces visibles (10 y 1). Regla temporal retirada, `configerrors` vacío, `py_compile` correcto.
+* **Cambios de skin reales (a petición):** con una kitty de prueba minimizada desde el workspace 9: Breeze → default tres veces y default → Retro una: en las cuatro volvió al 9 sin etiquetas. Un primer intento Breeze → default **no** la devolvió (siguió en `special:minimized` con su etiqueta) y no se pudo reproducir ni explicar después (en ese intento no se registró la salida de `release-all`). El resto de ventanas conservó PID y workspace, una sola instancia del shell, `configerrors` vacío; se volvió a Breeze con los workspaces 10/1 y el foco en Vesktop.
+* **Breeze → Retro con varias (a petición):** tres kitty de prueba minimizadas desde Breeze (dos del workspace 9, una del 8, flotantes): al entrar en Retro (2,7 s) las tres volvieron a su workspace, en mosaico y sin etiquetas, sin ningún evento de cambio de workspace o monitor y con la misma ventana activa. De vuelta en Breeze flotan en su workspace. Una sola instancia del shell, `configerrors` vacío.
+* **Observado durante esa prueba:** una ventana del usuario en el workspace 10 (PID 18138) ya no existía al terminar; sin coredump ni rastro en el journal ni en el log de Hyprland, y el usuario usaba el ratón en ese momento. Los comandos de prueba sólo tocaron las clases `bwm-mt*`; no se ha establecido qué la cerró. Investigado después: era casi con seguridad Firefox (hay uno nuevo, PID 100566, en el workspace 10, arrancado a las 21:06:08 como `app-firefox-bin@….service` desde `firefox-bin.desktop`, el patrón de los lanzadores de KDE como Kickoff/KRunner). El anterior seguía vivo a las ~21:04 y murió de golpe: no escribió `sessionstore.jsonlz4` (último cierre limpio a las 03:58), sin informe de fallo de Firefox ni coredump, sin OOM ni kill en el kernel, sin salida suya en el journal y con un log de Hyprland que sólo tiene el arranque. Firefox 158.0.1 no se había actualizado. En BWM nada envía señales a Firefox durante un cambio de skin (`restart_firefox` no tiene llamadas; los `pkill` sólo afectan a apps GTK 4 fuera de transición, swaync y Spotify). Causa sin determinar; candidatas: un error de protocolo Wayland que desconecta al cliente o un fallo sin informe. **Reproducción (a petición):** con el Firefox nuevo (su salida va al journal por ser unidad) y vigilando su PID cada 0,2 s y los `closewindow` de socket2: el mismo escenario (tres kitty minimizadas, Breeze → Retro → Breeze, cierre de las kitty y `hyprctl reload`) y dos ciclos completos default → Retro → Breeze: siete cambios de skin sin que Firefox muriera ni escribiera nada en el journal; resto de ventanas con el mismo PID y workspace. No reproducido; si vuelve a pasar, mirar `journalctl --user` del Firefox lanzado como unidad.
+* Las que ya estuvieran en el limbo salen en el próximo cambio de skin o con `toggle-minimize.py release-all`.
+
+### 178. R4: popup, diálogo nativo y catálogo vivo en auxiliar aislado (2026-11-12)
+
+* Paquete Plasma/Shell mínimo de BWM sobre AppletPopup y ConfigView reales. Compacto pulsado,
+  expansión/cierre repetidos, botones Aplicar/Cancelar/Predeterminados y navegación probados.
+  Bool/texto/enteros, defaults del esquema no expuestos y conflicto concurrente cubiertos.
+* ConfigView se autodestruye al ocultarse: corregido doble borrado con QPointer. ASan encontró
+  el fallo en el auxiliar de prueba; corrección y regresión pasan, sin afectar la sesión real.
+* Catalog usa PluginLoader (KPackage + bibliotecas/qrc): lectura local de 27 widgets, 18 nativos.
+  Reloj analógico nativo probado. Watcher único y PackageJob prueban alta/baja con catálogo vivo.
+  Obtener nuevos conecta KNSWidgets::Dialog(plasmoids.knsrc); descarga remota aún no probada.
+* Vista --preview y script preview-isolated.py opt-in con copia/config temporal; menú QAction
+  probado con acción inocua, sin acciones de sesión. No se abrió en el escritorio del usuario.
+* CTest aislado normal y AddressSanitizer pasan con ejemplos KDE y Andromeda; resultados en
+  BREEZE_R4_UI_RESULTS.json y BREEZE_R4_UI_ASAN_RESULTS.json (leaks deshabilitados).
+* R4 pendiente: Wayland/Hyprland (posición nativa usa PlasmaShellWaylandIntegration), migración
+  aplicada y ciclo del panel, casos de configuración bloqueados, descarga KNS e integración R5.
+  Sin cambios en barra activa, compositor, sombras, capturas, servicios, instalación o push.
+
+### 180. R4: adaptador layer-shell y staging nativo, pendiente de sesión (2026-11-13)
+
+* BwmSurface/PopupAnchor usan LayerShellQt por ventana: geometría lógica, cuatro bordes,
+  clipping/flip, pantalla/DPR de Qt, área útil explícita, OnDemand, Top/Overlay y zona -1.
+  Cambio de salida recrea rol. Vista --layer-preview opt-in, sin reserva ni sustitución de barra.
+* BwmMigration stage/verify crea datos de instancias con Corona, guarda archivo original íntegro,
+  hace sync/libera propietarios antes de publicar directorio y relee desde otro proceso.
+  Dos paneles ficticios/dos relojes, IDs y settings persistidos; errores no publican parciales.
+  showSeconds conserva false→ToolTip(1), true→Always(2), contrastado con DigitalClock actual.
+  activationAllowed=false: disposición completa, activación y rollback siguen pendientes.
+* CTest normal/ASan pasa surface-geometry + isolated-plasmoids; 5 tests de propuesta/mapeo y
+  7 de manifiestos OK. BREEZE_R4_SURFACE_MIGRATION_RESULTS.json conserva evidencia.
+* plasma-desktop no instalado (qlist/base local); faltan widgets originales del panel. Pretend
+  con USE=-semantic-desktop resuelve 5 nuevos/19071 KiB, luego falla al actualizar news por
+  filesystem read-only. Sin instalación. Comando sudo preparado en BREEZE_R4_RESULTS.md.
+* LayerShellQt declarado en build y plasma-desktop-widgets como recomendación de recursos;
+  presencia de paquete no certifica APIs KWin/modelo de tareas ni inicia esos servicios.
+* R4 pendiente de paquete desktop y pruebas Wayland reales, migración completa/activación,
+  callbacks bloqueados y descarga KNS. No se abrió preview en la sesión ni cambió el panel.
+
+### 181. R4: plasma-desktop instalado, panel/QML original y configuración por instancia (2026-11-13)
+
+* Verificado kde-plasma/plasma-desktop-6.7.5 instalado por el usuario; catálogo43 entradas.
+  kind/containmentType son metadatos; catalogVisible sigue NoDisplay/categoría/form factors
+  del explorador. Folder View/bandeja pueden ser containments y widgets visibles a la vez.
+* El staging usa org.kde.panel, General/AppletOrder mediante schema y Corona. --probe-stage
+  carga qrc original, verifica contenedores/tamaños/orden en dos paneles y relee después.
+  Diez instancias/cinco widgets en dos paneles conservan datos de fixture y archivo original.
+* PanelSession conecta configureRequested nativo a ConfigurationSession por ID. QtTest pulsa
+  Aplicar, cierra/reabre, verifica persistencia y segunda instancia intacta con ejemplo KDE y
+  Andromeda. Diálogo sin categorías explica el límite y bloquea Defaults/Apply.
+* Andromeda define fullRepresentation como botón y abre PlasmaCore.Dialog propio: clic real
+  de esa ruta probado offscreen. El wrapper compacto de la primera prueba no cubría su menú.
+  PopupAnchor aún sólo adapta AppletPopup del anfitrión, no ventanas arbitrarias del paquete.
+* --native-panel en preview-isolated ofrece dos instancias en org.kde.panel; --layer-panel
+  selecciona la superficie experimental. Sin instalación/autostart, apertura de sesión ni
+  sustitución de barra. El auxiliar sigue fuera del runtime de producción.
+* Esquemas heredados con nombres KDE pasan a validación nativa, sin lista fija de claves.
+  Kickoff prepara favoritesPortedToKAstats=false para el nuevo cliente por ID; importación
+  efectiva aún pendiente. Listas copiadas independientemente entre propuestas de monitor.
+* CTest normal/ASan (leaks off) pasa dos suites, siete tests Python de migración y siete de
+  manifiestos OK. Evidencia BREEZE_R4_NATIVE_PANEL_RESULTS.json; arquitectura y README al día.
+* --theme-catalog usa Plasma/LookAndFeel/KConfig: defaults y referencias de componentes,
+  recursos propios/fallback y scripts con hash/executeAllowed=false. Tema desechable instalado,
+  inventariado con claves desconocidas y retirado. No aplica defaults ni evalúa layouts/QML.
+  Retirada de widget con configuración abierta probada también en el panel original.
+* R4 pendiente: negociación/foco/posición Wayland, backend BWM de tareas/escritorios/Mostrar
+  escritorio, favoritos KAStats, geometría/activación/rollback/skins y descarga KNS. Catálogo
+  expone dependencias y operationalVerified=false; desconocidos unassessed. Sin R5, reinicios,
+  cambios de sombras/miniaturas, commit ni push.
+
+### 182. R4: Dialog propios, registro pre-superficie y geometría Qt de la vista (2026-11-13)
+
+* Usuario indica «ya está, continúa» tras la vista normal. Sin informe de matriz no se da por
+  validado layer-shell, foco, dos monitores o escalas. No se inicia R5 ni se sustituye la barra.
+* PackageWindows registra QQuickWindow del proceso por contexto nativo plasmoid y pertenencia
+  al containment. Dialog oculto/sin handle: rol preparado antes de show, Overlay/OnDemand/-1.
+  PopupAnchor independiente conserva visualParent o x/y solicitados, límites y visibilidad al
+  cambiar de salida, sin activar expanded. No modifica paquetes, metadatos ni servidores KDE.
+* Tipos pendientes explícitos: Window genérico, no interactivos, rol ya creado/ventana visible,
+  ancla externa. Sin tocar ventanas sin propietario del panel ni AppletPopup ya alojado.
+  Registro coalescido por eventos y refresh explícito; sin sondeo periódico. waylandVerified=false.
+* ViewCorona reemplaza fixture 1024×768 en ejecutable por QQuickWindow/QScreen: geometría lógica,
+  área Qt disponible, región y asignación de salida; índices no persistentes. Staging conserva
+  fixtures. Reservas que Qt no comunique necesitan fuente del anfitrión y aceptación real.
+* CTest normal/ASan pasa dos suites, incluido menú real de Andromeda con rol preparado antes del
+  clic, Dialog desconocido, límites/limpieza, x/y y geometría de salida. Siete tests Python de
+  migración y siete de manifiestos OK. ASan leaks off. Resultado PACKAGE_WINDOWS_RESULTS.json.
+* R4 sigue pendiente: negociación/foco/escala/salidas Wayland, tipos/creación tardía no adaptados,
+  backend BWM, KAStats, geometría/activación/rollback/skins, callbacks/KCM y KNS remoto.
+  Vista manual --native-panel --layer-panel preparada; no se abrió desde el sandbox ni se
+  accedió a sockets restringidos. Sin reinicios, sombras/miniaturas, instalación, commit o push.
+
+### 183. Terminal sin barra tras Retro→Breeze: precarga de breezebars al iniciar (2026-11-13)
+
+* Usuario abre terminal tras Retro→Breeze sin barra; hyprctl -j breezebars-csd devuelve
+  unknown request. La terminal configurada es Kitty y hide_window_decorations=no. El comando
+  no está registrado en su sesión; no se obtuvo plugin list ni snapshot CSD vivo desde sandbox.
+* Causa encontrada en código: autostart sólo cargaba breezebars si arrancaba en Plasma.
+  sync_floating_windows activaba su opción al cambiar a Breeze, pero no podía crear un plugin
+  ausente. Las barras de Retro son otro plugin y no resuelven esta ausencia.
+* Bloque 9 de autostart ahora precarga el .so existente en cualquier skin inicial, sólo al
+  arrancar Hyprland. appearance.lua mantiene enabled=false fuera de Breeze. Bridge enter
+  precede a la carga sólo si inicia en Breeze; bridge/decorator tampoco arrancan en Retro/default.
+  Evita duplicar plugin load, no hace unload ni añade carga desde la transición. Fallo de carga
+  se informa por stderr; binario ausente no interrumpe arranque de otras skins.
+* El aviso del gestor de skins identifica breezebars ausente y explica reentrada de sesión,
+  en lugar de nombrar hyprbars o sugerir que sólo se preparará iniciando en Plasma.
+* Cuatro pruebas funcionales sobre bloque real con comandos simulados: las tres skins, orden
+  enter→load, servicios por skin, carga única, binario ausente/fallo y Lua de enabled. Pasan;
+  bash -n, py_compile y diff OK. No se ejecuta autostart real durante las pruebas.
+* Aplicación efectiva pendiente de cerrar/abrir sesión por el usuario. Sin plugin load/unload,
+  modificación/reinstalación de .so, reinicio de compositor, cambios de skin, sombras o miniaturas
+  desde esta ejecución. No se afirma todavía verificación visual de la terminal reparada.
+
+### 184. Auditoría Retro→Breeze: Qt del shell, iconos y entorno de las apps (2026-11-13)
+
+* Captura del usuario muestra otros iconos en Breeze tras iniciar en Retro. KDE/qt6ct seleccionan
+  breeze-dark, GTK3/4 settings.ini conservaba Adwaita; corregido sólo ese campo a la selección
+  actual. Proveedor Qt del proceso queda fijado al construir QApplication: bwmSkin.reload
+  reconstruía paneles pero conservaba GTK si el shell nacía en Retro.
+* bwm_session.shell_command usa KDE cuando está instalado, qt6ct/portal como fallback y rutas
+  coherentes QML/kdedefaults para el shell duradero. Autostart usa ensure_shell (config ii),
+  en vez de pidof de cualquier Quickshell. Cambios normales conservan proceso/servicios.
+* bwm_icons actualiza respaldo GTK sin perder datos ajenos ni reescribir si coincide. Avisos
+  nativos de paleta/fuentes/estilo y seis grupos de iconos; qt_sync sólo avisa si cambió su
+  kdeglobals generado. Mantiene autoridad KDE en Breeze y temas personalizados/kdedefaults.
+  Trabajos de iconos obsoletos se omiten antes de generar y antes de aplicar.
+* AppSearch.launch → bwm-launch-app.py → bwm_session.spawn(allow_fallback=False) usa el entorno
+  actual de Hyprland para DesktopEntry/acciones, cwd y terminal común. Actualizados buscador,
+  Retro, dock, tareas/menús Breeze y grids/tareas Waffle. Así el proveedor estable del shell
+  no se impone a las apps. Se preserva argv analizado, sin construir un Exec shell nuevo.
+* Autostart exporta XDG_CONFIG_DIRS/XDG_MENU_PREFIX/QML_IMPORT_PATH a activación. Gestor solicita
+  nueva exportación desde un hijo de Hyprland tras recarga, respetando overrides Lua; nunca
+  exporta el entorno antiguo del llamante como fallback. Entrega real por bus aún no probada.
+* 54 pruebas OK (runtime 12, panel 8, Plasma 12, sesión 7, Qt 4, arranque 4, manifiestos 7);
+  parser acepta nueve QML modificados. bash -n, py_compile y diff correctos.
+* QApplication aislado conserva QIcon: A→B→A→custom cambia icono nuevo/retenido, sin setThemeName
+  ni forceThemeForTests. Bus privado/display fueron bloqueados; el probe final sólo invoca el
+  receptor nativo local KF6 6.29.0 (contrato privado exclusivo del test), no entrega D-Bus.
+  BREEZE_SKIN_TRANSITION_RESULTS.md y BREEZE_SKIN_TRANSITION_RUNTIME_RESULTS.json.
+* Proceso actual necesita adoptar el nuevo arranque una vez. Reentrada de sesión aplica también
+  precarga de breezebars; mantenimiento sólo de shell no carga un plugin ausente. Sin cambios
+  de skin, reinicio de compositor/shell, cierre de apps, plugin load/unload o sombras/capturas
+  desde aquí. IPC continúa bloqueado; aceptación visual Retro→Breeze pendiente en sesión.
+
+### 185. R4: claves compartidas entre categorías y páginas estables durante edición (2026-11-13)
+
+* Usuario confirma el aspecto tras la corrección Retro→Breeze y pide retomar R4. El TXT
+  mencionado no está disponible en el entorno; no se inventa su salida ni aceptación Wayland.
+* ConfigurationSession permite la misma clave nativa en varias categorías: mapa pendiente
+  por instancia, notify original de cfg_ y propagación de la clave editada con guarda de
+  reentrada. Controles con rangos incompatibles bloquean Aplicar con explicación. Propiedades
+  sin escritura/notificación siguen sin adaptar; callbacks/KCM tampoco se anuncian operativos.
+* pagesChanged queda separado del notifier dirty/error: editar no reconstruye los delegados
+  de las páginas. Cancelar/Predeterminados no guardan; se mantienen inmutabilidad, detección
+  de edición concurrente y conservación de claves ajenas mediante KConfig.
+* Fixture propio desechable con dos categorías prueba ambos sentidos, 57 cambios sin alterar
+  bytes/contenedor, Apply con efecto en binding Plasmoid.configuration, Defaults sobre clave
+  oculta, Cancel, dos instancias, lectura en proceso nuevo, conflicto y rango incompatible.
+  No se usa este fixture como certificado de terceros: driver también repite ejemplo KDE
+  original y Andromeda con instalación/retirada temporal y sus páginas originales.
+* Dos suites CTest normales y ASan pasan, 11 resultados UI por paquete más lectura en proceso
+  nuevo; ASan con detect_leaks=0. Siete tests Python de migración y siete de manifiestos OK.
+  Evidencia BREEZE_R4_SHARED_CONFIG_RESULTS.json; informes/arquitectura/guía/plan actualizados.
+* R4 sigue pendiente de Wayland real, backends y activación/migración completa, tipos/creación
+  tardía de ventanas, favoritos KAStats, callbacks/KCM y descarga real KNS. Sin nuevas
+  dependencias, instalación, acceso a sockets restringidos, cambios de skin, reinicios de
+  shell/compositor, plugins, sombras/miniaturas, commit o push. No se avanza R5.
+
+### 186. R4: API nativa de instancias, orden persistente y acciones dinámicas (2026-11-13)
+
+* Usuario pide seguir R4 y cita el aviso previo de pendiente; no es salida nueva de sesión.
+  Se continúa sin exigir TXT. No se implementa el editor visual R5.
+* PanelSession expone panelInfo/widgets/order, addWidget/removeWidget/requestOrder,
+  widgetActions/triggerAction y configure. Main enlaza AppletQuickItem propietario y deja
+  el QObject bwmPanelSession en su ventana. Catalog.discover comparte descubrimiento/política
+  de metadatos con el catálogo vivo, sin otro watcher por panel ni lista fija de widgets.
+* Altas por createApplet, bajas permanentes por Applet.destroy e inmutabilidad respetada.
+  Al marcar destroyedChanged se cierra Configurar antes de limpiar el esquema. Se rechazan
+  IDs de otro panel, raíz como widget, órdenes incompletos/duplicados/fraccionarios y bloqueos.
+* Orden mediante reorderApplets/LayoutManager original; true acredita despacho, consumidor
+  verifica order. Inventario coalescido. Menús con QAction originales y tokens efímeros por
+  QObject; submenús/estados dinámicos, pertenencia actual y ruta habilitada/visible. prepare=false
+  refresca sin reejecutar la fábrica del menú. No se simulan acciones internas/undo/servicios.
+* Prueba de exportación detecta que saveLayout a otro nombre copia estado del containment
+  bajo Configuration. Persistencia correcta: loadLayout del propietario antes de crear,
+  saveLayout del mismo archivo + config.sync. AppletOrder vive en Containments/<id>/General.
+  Ejecutable y staging ya usan mismo propietario; se alinea el test y verifica archivo/posiciones
+  del QML original/valores al reabrir en otro proceso. No se escribe un appletsrc alternativo.
+* Dos suites CTest normales/ASan pasan: 14 resultados UI por paquete original KDE/Andromeda,
+  además de lecturas de panel/configuración en procesos separados. Siete tests migración y
+  siete manifiestos OK; py_compile/diff correctos. ASan detect_leaks=0, no certificado de fugas.
+  BREEZE_R4_PANEL_API_RESULTS.json con drivers, logs y hashes; arquitectura/guía/resultados
+  y procedencia actualizados. Prompt R4 restaurado desde el encargo del usuario: sólo tenía
+  «ewe» y no cerraba el bloque. No cambia alcance a R5 ni añade dependencias.
+* R4 pendiente de sesión Wayland real, superficies duraderas desc:, activación/rollback/skins,
+  descarga KNS y capacidades por paquete aún sin adaptar. API en proceso; editor externo
+  necesitará IPC/ciclo de vida. No se activa el panel ni se cambia skin, shell/compositor,
+  plugins, sombras/miniaturas o servicios reales. Sin instalación, commit ni push.
+
+### 187. R4 en la sesión Wayland real: posiciones, foco del panel y ventanas no interactivas (2026-11-13)
+
+* Usuario pide continuar R4 donde lo dejó la sesión de ChatGPT. Esta vez sí hay acceso a
+  Hyprland: vista --native-panel --layer-panel con Andromeda en entorno desechable, sin bus
+  de sesión ni plasmashell/KWin, ratón virtual uinput sólo durante cada prueba; puntero y
+  foco devueltos, panel Breeze activo intacto.
+* Hallazgos: Qt Wayland llevaba cada ventana al origen de su salida (panel en 2560,0 para Qt,
+  menú de Andromeda en la esquina superior); el avatar (Dialog Notification) salía como
+  ventana normal; el panel tomaba el foco y el segundo clic no cerraba el menú; el menú tapaba
+  el icono por el hueco de 64 px de la vista.
+* Corrección como upstream: QT_WAYLAND_DISABLE_FIXED_POSITIONS sólo al crear QApplication y
+  fondo con alfa (plasma-workspace 6.7.5 shell/main.cpp); panel transparente, sin foco y
+  KeyboardInteractivityNone salvo AcceptingInputStatus (PanelView::refreshStatus, que ya usa
+  LayerShellQt). Propio: posición del panel publicada en QWindow, posición pedida limitada al
+  área sin la franja del panel y devuelta a la QWindow; Dialog solo salida/Notification/OSD/
+  Tooltip como capa Overlay sin teclado. preview-isolated.py --output elige salida por desc.
+* Comprobado en LG y MSI: menú 680×516 sobre el panel, avatar centrado en su borde, cero
+  ventanas sueltas; abrir/cerrar con el icono, clic dentro y Escape. CTest normal y ASan
+  (detect_leaks=0) 2/2, migración y manifiestos OK. Evidencia BREEZE_R4_WAYLAND_SESSION_RESULTS.json.
+* Clic fuera (segunda iteración): Hyprland deja el foco en una capa si el clic no cae en una
+  superficie. FocusGrab usa hyprland_focus_grab_v1 (cliente generado del XML de hyprland-protocols
+  del sistema); lista blanca Dialog + panel + Dialog no interactivos; cleared oculta Dialogs con
+  hideOnWindowDeactivate; inerte sin protocolo. Probado: escritorio vacío cierra, clic dentro
+  no, avatar en lista blanca. Qt6 WaylandClient y hyprland-protocols declarados (regla 12).
+* Pendiente: fondo translúcido sin desenfoque, vista sin fondo de panel, escala fraccionaria,
+  otros bordes, otros paquetes, activación/migración/skins y KNS. R4 sigue pendiente; sin commit ni push.
+
+### 188. R4: páginas por módulo QML, propiedades iniciales y CLI común (2026-11-13)
+
+* Se conserva §187 y su evidencia Wayland real; desde esta ejecución hyprctl -j monitors
+  vuelve a fallar con Couldn't open a socket (1). Sin bypass ni nuevas pruebas de sesión.
+* ConfigurationSession deja de confundir configUiModule/configUiComponent con KCModule.
+  Usa QQmlComponent.loadFromModule y prioridad de AppletConfiguration.qml 6.7.5: pareja completa
+  precede source, sin fallback silencioso al fallar; pareja incompleta admite source.
+  Source absoluto preservado por ConfigModel se convierte a URL local. pluginName/KCM,
+  callbacks y contratos no adaptados siguen bloqueados, con diagnósticos reales conservados.
+* beginCreate/setInitialProperties/completeCreate entrega title y cfg_/Default/Immutable
+  declaradas antes de Component.onCompleted, incluidas required. Contexto/localización
+  nativos. --probe/--exercise usan la misma fábrica; ejercicio aplica por ConfigurationSession.
+* Módulo propio en ruta QML aislada y nueve paquetes desechables prueban prioridad, fuente
+  absoluta, required/contexto/localización, Apply/Cancel/Defaults, dos instancias y proceso
+  nuevo; módulo/tipo ausentes, raíz no Item, required desconocido, descriptores parciales y
+  KCM bloqueado. Fixtures propios no se presentan como terceros; KDE/Andromeda repiten sus
+  páginas reales en la regresión común. No se alteran sus fuentes ni importaciones de sesión.
+* Dos suites CTest normales y dos ASan pasan; 24 resultados UI por paquete, más lecturas en
+  procesos separados. Siete migración y siete manifiestos OK, py_compile/diff. ASan con
+  detect_leaks=0. BREEZE_R4_CONFIG_PAGES_RESULTS.json contiene drivers/probes/logs/hashes;
+  arquitectura, guía, plan y procedencia al día. Sin dependencias nuevas.
+* R4 pendiente de integración/activación/migración/rollback/skins, KNS remoto, pendientes
+  visuales/Wayland y capacidades sin adaptar. No se activa el panel diario, reinicia shell/
+  compositor, cambia skin, carga plugins, reactiva sombras/miniaturas ni instala en producción.
+  Sin commit/push ni avance a R5.
+
+### 189. R4: marco original Panel.qml, SVG/temas y geometría de la vista (2026-11-13)
+
+* PanelViewHost deriva de ContainmentView y carga Panel.qml instalado con KPackage, sin copia
+  ni parche. Global registra sólo los enums de PanelView 6.7.5. Contenido org.kde.panel nativo;
+  Configurar virtual → PanelSession sin conexión duplicada. No se implementa UI de R5.
+* --panel-preview/--layer-panel-preview usan el marco original; --probe-panel-frame verifica
+  esa ruta en Qt offscreen. Layout de panel separado del de probes de widgets para no alojar
+  por error un containment null. Fuente/readback/dimensiones/capacidades en el JSON del probe.
+* Geometría separa preferred length y límites de superficie; evita encoger al inicializar o
+  tomar el máximo del eje anterior. Grosor, padding, floatingness y máscara originales;
+  duración Kirigami e InCubic/OutCubic. Configurar abre una sola sesión. Destrucción separa
+  el item y destruye QML antes de los miembros; SharedQmlEngine guarda el root en QPointer.
+* Dos temas SVG propios, instalados/retirados con KPackage, prueban cambio en vivo, colores y
+  prefijos de cuatro bordes. Píxeles con tolerancia 4/255 RGB, alfa >250; NoBackground alfa0.
+  Flotación 0↔1 y contenido/marco comprobados; límites 320→640 y cambio de orientación OK.
+* Adaptive rechazado con explicación. Políticas fijas en memoria; fallback KDE sin composición
+  conservado en offscreen. Autohide/dodge, reservas, blur, sombras externas y aceptación de
+  máscaras/render del nuevo marco en Wayland sin certificar. No se ofrecen como ajustes
+  persistentes activos; no confundir con el PanelView completo ni activar efectos por él.
+* CTest normales y ASan 2/2, 26 resultados UI por paquete KDE/Andromeda, probes del ejecutable,
+  lecturas separadas y regresiones de staging. ASan detect_leaks=0. Siete migración y siete
+  manifiestos OK, sintaxis/diff. BREEZE_R4_PANEL_VIEW_RESULTS.json incluye logs/drivers/hashes.
+  KF6 Svg explícito en CMake/requisito del auxiliar; KSvg ya requerido por Breeze. Tabla,
+  arquitectura, guía y procedencia actualizadas.
+* R4 pendiente de este marco en sesión, escala/bordes/reservas, controlador adaptable y efectos,
+  persistencia de vista, integración/activación/migración/rollback/skins y KNS remoto. Se conserva
+  §187 sin deducir nueva aceptación. Sin cambiar panel diario/skin, reiniciar shell/compositor,
+  cargar plugins, reactivar sombras/miniaturas, instalar en producción, commit/push ni R5.
+
+### 190. R4: revisión del alcance y migración de borde/orientación (2026-11-14)
+
+* Usuario pide hacer lo que falte de R4, sin cambios si ya estuviera cubierto. Se detecta
+  migración forzada BottomEdge/Horizontal y probe sólo por x, aunque origen indique otro borde.
+* Propuesta conserva bar.plasma.edge; vacío/ausente usa bar.bottom (false de esquema→top),
+  como PanelLogic.edge. Valores inválidos/fallback no booleano rechazados. C++ deriva del
+  archivo autenticado y rechaza propuesta discrepante. Corona serializa Location/FormFactor
+  nativos; verificador y probe respetan orientación y orden por x/y.
+* orientationContractVersion=1 del informe exige campos coherentes con el origen/layout.
+  Fuente leída una vez; validación antes de cargar. Informes antiguos siguen bottom/horizontal
+  sin reescritura; propuestas antiguas sin edge se preparan desde la fuente. No se activa nada.
+* Siete casos con dos paneles: cuatro bordes, fallbacks true/false y defecto de esquema.
+  Stage→lectura nueva→QML original→lectura pasa; fuente exacta. Errores de propuesta/origen/
+  campos ausentes y compatibilidad de informe antiguo comprobados. Doce tests migración y
+  siete manifiestos OK; CTest normal/ASan 2/2, regresión UI 26 por paquete, sintaxis/diff.
+  ASan detect_leaks=0. BREEZE_R4_ORIENTATION_RESULTS.json; informe/arquitectura/guía/plan al día.
+* R4 sigue pendiente de aceptación de sesión/integración declarada y KNS remoto; hyprctl
+  vuelve a fallar Couldn't open a socket (1). Auditoría distingue capacidades no adaptadas
+  de promesas universales y evita invadir editor R5/efectos R7. Sin nuevas dependencias,
+  cambio de panel/skin, reinicio, plugins, sombras/miniaturas, instalación, commit o push.
+
+### 191. R4: persistencia nativa de preferencias del marco (2026-11-14)
+
+* PanelViewSettings usa KConfig privado y el plasmashellrc original. Contrato contrastado
+  con panelview.cpp, ShellCorona::applicationConfig y la identidad plasmashell de 6.7.5.
+  floating/floatingApplets/panelOpacity en PlasmaViews/Panel <id>; thickness en Defaults;
+  minLength/maxLength en Horizontal<ancho> o Vertical<alto> y Defaults, como el original.
+* Nombre relativo conserva cascada XDG/kdedefaults. Sólo seis claves admitidas; conserva
+  claves ajenas y otros paneles. Rechaza Adaptive y políticas explícitas sin controlador
+  antes de abrir una vista que las ignore. No ofrece backends nuevos ni controles de R5.
+* PanelViewHost carga valores antes del QML y los aplica al tamaño/flotación/opacidad reales
+  del marco de ensayo. viewSettings/reloadViewSettings/applyViewSettings distinguen instantánea,
+  vista previa y guardado explícito. Cambio de salida/orientación obliga a releer el ámbito.
+* Lote validado antes de escribir, bloqueo por archivo para escritores BWM, firmas de todos
+  los destinos (también Defaults oculto), inmutabilidad y mezcla KConfig. Sin watcher ni
+  escritura por deslizador. No promete CAS entre aplicaciones; al fallar sync limpia el
+  escritor privado para impedir reintento del destructor tras informar el error.
+* Pruebas de grupos nativos, precedencia, claves ajenas, conflicto, escritor ocupado,
+  kdedefaults inmutable y lote sin escritura parcial. Dos containments independientes,
+  efecto del marco y lectura desde otro proceso; orientación obsoleta y Adaptive rechazados.
+  CTest normal/ASan 2/2, 29 resultados UI por paquete y lectura separada 3/3. ASan sin
+  detectar fugas (detect_leaks=0); doce tests migración y siete manifiestos aprobados.
+  Evidencia BREEZE_R4_VIEW_SETTINGS_RESULTS.json; informe/arquitectura/guía/plan actualizados.
+* Pendientes aceptación real de este marco/escala/bordes, ciclo por skin, otras preferencias
+  heredadas, integración/activación/rollback y KNS remoto. Sin dependencias nuevas, cambios de
+  panel/skin, reinicios, plugins, sombras/miniaturas, instalación de producción, commit o push.
+
+### 192. R4: migración de preferencias de vista y probe del marco original (2026-11-14)
+
+* migration.py/C++ derivan thickness/floating/panelOpacity desde el origen archivado. Grosor
+  con fallback 0→44 y clamp 24..128 de PanelLogic; estilos con enums KDE 0/1/2. El antiguo
+  style=floating es Adaptive más flag floating; el alfa numérico no se confunde con el enum.
+* KConfig prepara plasmashellrc junto a layout/legacy.json/report.json. Grupos originales por
+  ID Corona y Defaults, sin formato BWM ni reemplazo del archivo completo de la sesión. La
+  futura activación requiere mezcla por panel con política/cascada del destino, aún pendiente.
+* viewSettingsContractVersion=1 contrasta origen/informe/archivo. Detecta datos/contrato/
+  pendientes omitidos o alterados. Propuestas antiguas derivadas desde el origen, stages
+  antiguos realmente sin artefacto siguen legibles. Ningún stage certifica runtime.
+* PanelViewHost acepta archivo al construir; ruta normal conserva plasmashellrc relativo/
+  kdedefaults. --probe-stage-frame lee el artefacto con Panel.qml instalado y comprueba render,
+  tamaño, modos/flotación y orden. --probe-stage conserva el ensayo de containment original.
+* deferredViewSettings archiva valores/motivos: visibilidad/reservas, alineación, longitud
+  proporcional sin salida, gap, docking y Adaptive sin backend; otros valores sin equivalencia
+  no se aplican a ciegas. Adaptive se conserva pero el frame lo rechaza, no se degrada el modo.
+* CTest normal/ASan 2/2, ocho casos con dos paneles (seis de marco y dos Adaptive rechazados),
+  lectura posterior y fuente idéntica. Pruebas de alteraciones, claves ajenas, tipos inválidos,
+  legado y raíz de preferencias intacta. Regresión UI 29 por paquete más lectura separada 3/3;
+  18 tests migración y siete manifiestos. ASan detect_leaks=0. Evidencia completa y hashes en
+  BREEZE_R4_VIEW_MIGRATION_RESULTS.json; informe/arquitectura/guía/plan/procedencia al día.
+* Hyprctl sigue sin acceso (Couldn't open a socket (1)); R4 no cierra sesión/escala/bordes,
+  activación/migración/rollback/skins ni KNS remoto. Sin nuevas dependencias, instalación,
+  cambios de panel/skin, reinicios, plugins/efectos, commit/push o avance a R5.
+
+### 193. R4: ciclo de vistas por monitor/skin e identidad de salidas (2026-11-14)
+
+* PanelRuntime recibe Corona viva, archivo nativo de preferencias y bindings ID→descripción
+  del llamador; exige cobertura exacta de paneles. Sólo plasma crea vistas, como máximo una
+  por containment. Retro/default retiran vistas sin borrar containments/IDs/configuración.
+  Invalidar skin/bindings no altera las vistas vigentes; snapshots explican estados/errores.
+* BwmOutput sustituye también la búsqueda parcial de --output: fabricante/modelo/serie,
+  normalización de desc:/espacios/caja, descripción completa/secuencia modelo+serie/modelo
+  único. Rechaza conectores, serie distinta, subcadenas y duplicados; no fallback al primario.
+* Hotplug retira antes de que Qt reasigne ventanas; reconexión restaura el mismo panel con
+  conector/índice distintos. Cambio de borde recrea sólo esa vista/rol; resolución lógica
+  relee su ámbito nativo. Adaptive no disponible bloquea sólo el panel afectado con motivo.
+* ViewCorona.bind/unbind desconecta relaciones anteriores; destruir ventana sustituida no
+  borra la vigente. screenRemoved notifica índice previo y recalcula vigentes. Suspender
+  colapsa applets y oculta sus ventanas identificadas, con QPointer ante callbacks destructivos;
+  eliminar la vista cierra ConfigurationSession sin aplicar controles pendientes.
+* --preview-stage y --probe-stage-runtime consumen staging verificado bajo raíces temporales;
+  el primero es opt-in layer-shell sin reservas, el segundo snapshot temporizado. CLI con
+  salidas ausentes deja espera sin crear vistas. No se ejecutó preview en la sesión real.
+* Cuatro tests nuevos con QScreen de fixture QPA offscreen prueban identidad, bindings,
+  dos paneles, ciclos/ventanas/configuración, hotplug/duplicado, borde/resolución y proceso
+  nuevo con enumeración/conectores cambiados. Widget del ciclo propio, no aceptación general
+  Andromeda. CTest normal/ASan 2/2; 33 resultados UI por paquete y lectura específica 3/3;
+  18 migración/siete manifiestos y sintaxis/diff OK. ASan detect_leaks=0. Evidencia completa
+  BREEZE_R4_RUNTIME_RESULTS.json con logs/hashes; contratos/procedencia/guía/plan actualizados.
+* Corona debe sobrevivir al controlador; anfitrión persistente requiere vida sin ventanas y
+  llamada setSkin del gestor común. Hook diario, autoridad/persistencia de bindings y alta/
+  baja de paneles completos pendientes; no inventa appletsrc ni un estándar de bindings.
+  Aceptación Hyprland/escala/skins, servicios/ventanas sin adaptar, activación/rollback y KNS
+  remoto siguen pendientes. IPC denegado; sin cambios de panel/skin, reinicios, instalaciones,
+  plugins/efectos, dependencias nuevas, commit/push ni R5.
+
+### 194. R4: hook de skins conectado a previsualización explícita y parada limpia (2026-11-14)
+
+* hooks.skinChanged Breeze → panel-session.py mediante dispatcher común, confinado a ambas
+  skins involucradas. Before antes de mutar perfiles; si falla aborta e intenta recuperar
+  el auxiliar anterior. After tras recarga del shell. Contexto del lock del gestor cierra
+  su descriptor también al abortar; prueba con la función real y efectos externos sustituidos.
+* --follow-skin del envoltorio exige panel nativo/layer/output y registra explícitamente el
+  auxiliar en XDG_RUNTIME_DIR/bwm-plasma-host-preview. Inicialmente inactivo, sólo se activa
+  tras registro. Token+PID/inicio; muerto/zombie/reutilizado no autoriza comandos. Duplicado
+  no crea otra vista ni retira registro ajeno. Sin registro no inicia procesos ni crea controles.
+* RuntimeControl: watcher agrupado 25 ms, control/ack atómicos, revisión creciente, token y
+  dueños únicos de control/layout; publicador serializa y espera hasta 1,5 s (dispatcher 3).
+  Sólo skin/stop, sin dispatch de compositor ni D-Bus. Son metadatos privados temporales,
+  separados del layout/preferencias KDE; no hay un appletsrc alternativo ni autoridad diaria.
+* Stop confirma retirada, después salida principal guarda Corona/config.sync y comprueba
+  resultado. Proceso vive sin ventanas. Ctrl+C del envoltorio envía stop, auxiliar ignora
+  SIGINT y sigue en grupo del terminal. Registro retirado y transacción drenada antes de
+  limpiar: se corrige carrera que borraba el ack antes de que lo consumiera el publicador.
+* QtTest hook común real→Python→Qt con widget/salida propios; revisión antigua/token ajeno,
+  singleton y no-op sin registro. CLI con cada paquete/salida ausente verifica vida/parada;
+  envoltorio real prueba duplicado, parada externa y Ctrl+C del grupo privado del ensayo.
+  CTest normal/ASan 2/2, UI 34 por paquete; 16 tests publicación/abort, 18 migración, siete
+  manifiestos, cuatro arranque y 16 puente KDE aprobados, sintaxis/diff. ASan detect_leaks=0.
+  Evidencia BREEZE_R4_SKIN_CONTROL_RESULTS.json con logs/hashes; guía/arquitectura/plan al día.
+* Código de hook conectado, sin registro/ejecución en la sesión real ni sustitución diaria.
+  IPC sigue denegado. Pendientes perfil/autoridad de bindings, activación/rollback real,
+  servicios/controladores sin adaptar, Hyprland/escala/skins y KNS remoto. Sin dependencias
+  nuevas, cambios de panel/skin, reinicios, instalación en producción, plugins/efectos,
+  commit/push o avance a R5. Retirar la conexión no exige restaurar archivos de sesión.
+
+### 195. R4: perfil nativo de ensayo y restauración por generaciones (2026-11-14)
+
+* ProfileStore importa copia capturada/validada del staging a destino nuevo. Conserva layout
+  completo de Corona, plasmashellrc, origen e informe; bindings.json separa IDs/descripciones/
+  procedencia, head.json selecciona generación. No inventa appletsrc ni impone valores viejos
+  del informe a los widgets editados. Validación nativa sobre copia, sin modificar lo inspeccionado.
+* Lease del perfil durante toda la vida de Corona; guarda/sync/cierra propietarios antes
+  de checkpoint con cinco archivos y hashes. Snapshot alterado, bindings/rutas/symlinks,
+  destino existente o perfil ocupado se rechazan. Desconocidos nativos/head se conservan.
+* Restore copia a una generación/ruta nueva y cambia head atómicamente; conserva la vieja.
+  Escritura tardía de KSharedConfig retenido sólo afecta a su ruta anterior, probada. Sin GC;
+  generaciones no elegidas pueden permanecer tras fallo de preparación. Lease cooperante
+  y comprobación optimista de head; sin prometer CAS ajeno, firma ni durabilidad por corte.
+* CLI import/profile-info/checkpoint/restore/serve-profile y preview-isolated --profile
+  --follow-skin: reabre sin recrear widgets/IDs/bindings ni fijar BottomEdge. Lookup XDG del
+  llamador, auxiliares/caché/runtime/D-Bus desechables. Dos arranques/cierres del envoltorio
+  y checkpoints automáticos pasan; el perfil sobrevive a éste, bajo raíz temporal privada.
+* Dos tests Qt nuevos con dos paneles/reloj KDE y widget propio añadido/configurado por
+  PanelSession/ConfigurationSession; grosor 52/44 con efecto de vista, ciclo de skin,
+  baseline/editado y lectura desde otro proceso con nueva enumeración. Archivos completos,
+  desconocidos, escritor antiguo y errores comprobados. CTest normal/ASan 2/2, UI 36 por
+  paquete y lectura específica 3/3; 16 control, 18 migración, siete manifiestos, cuatro arranque,
+  16 puente KDE y sintaxis/diff OK. ASan detect_leaks=0. BREEZE_R4_PROFILE_RESULTS.json con
+  logs/hashes; informe/arquitectura/guía/plan/procedencia actualizados.
+* No es perfil diario ni garantía de conservar /tmp después de reiniciar el equipo. Pendientes
+  autoridad/activación/rollback de sustitución, servicios/controladores no adaptados, aceptación
+  Hyprland/escala/skins y KNS remoto. Sin registro en sesión, cambios de panel/skin, reinicios,
+  instalación de producción, plugins/efectos, dependencias nuevas, commit/push o avance R5.
+
+### 196. R4: exportación persistente XDG y reapertura fuera de /tmp (2026-11-14)
+
+* ProfileStore.exportToState/--export-profile SOURCE NAME y envoltorio --profile SOURCE
+  --export-as NAME conservan estado nativo seleccionado y todo historial de snapshots en
+  GenericStateLocation/bwm/plasma/panel-profiles/NAME (XDG_STATE_HOME o ~/.local/state).
+  Nueva generación/rutas con IDs/opciones/bindings/desconocidos; fuente y sus generaciones
+  no seleccionadas intactas. No se duplican esquemas ni se fabrica otro appletsrc.
+* Copia preparada en filesystem de destino, valida archivos/hashes/identidad nativa y publica
+  sin reemplazo. Historial alterado no publica destino parcial. Nombres/rutas/propiedad/
+  enlaces controlados; sólo autoridad XDG dedicada o temporal, no cualquier carpeta privada.
+  No chmod de directorios preexistentes; aplicación/almacenamiento nuevos privados.
+* Exportación no arranca ni registra preview, no selecciona perfil diario/autostart. Reabre
+  después por --profile DEST --follow-skin; auxiliares/config de escritura/caché/runtime/
+  D-Bus desechables y recursos/paquetes por lookup XDG. El snapshot no empaqueta esos activos.
+* Fixture XDG_STATE_HOME en tests del repo fuera de /tmp, sin tocar estado real del usuario.
+  Prueba de bytes/manifiestos, desconocidos, restore, origen intacto, alias y carpeta fuera de
+  autoridad. CLI/envoltorio exporta, elimina fuente temporal, reabre/guarda/restaura destino;
+  lease y copias conservados. Destino existente/nombre inválido rechazados. CLI también
+  acepta slash final del directorio de snapshot y no confunde nombre inválido con --catalog.
+* CTest normal/ASan 2/2, UI 37 por paquete; 16 control, 18 migración, siete manifiestos,
+  cuatro arranque y 16 puente KDE, sintaxis/diff OK. ASan detect_leaks=0. Evidencia completa
+  BREEZE_R4_STATE_PROFILE_RESULTS.json con logs/hashes; informe/guía/arquitectura/plan al día.
+* Sin reboot/corte de energía ni garantía de filesystem. R4 pendiente de autoridades/selección/
+  activación/fallback diarios, servicios/controladores sin adaptar, Hyprland/escala/skins y
+  KNS remoto. IPC denegado; sin perfil ni registro en estado/sesión real, cambios de skin/panel,
+  reinicios, instalación productiva, plugins/efectos, dependencias nuevas, commit/push o R5.
+
+### 197. R4: consulta fresca y disponibilidad del marco antes de activación (2026-11-14)
+
+* Se identifica que el ack de skin sólo acredita aplicación de la orden, no un primer
+  fotograma. Se prepara ese requisito previo sin seleccionar/activar un perfil diario.
+* PanelViewHost.presentationState comprueba carga QML, visible/exposed, frame Qt y error
+  de scene graph. beforeRendering/frameSwapped usan generaciones atómicas compartidas:
+  ocultación/reaparición, tamaño/salida, superficie o invalidación retiran disponibilidad;
+  un swap tardío de una generación anterior no confirma la nueva. Los callbacks de render
+  no acceden a miembros derivados/QML al destruir la vista. Error requiere recrearla.
+* PanelRuntime.readiness agrega vistas y vuelve a comprobar salidas al consultar. Distingue
+  renderReady de replacementReady (false); lista los bloqueos, incluidas reservas ausentes
+  y validación de sesión. Un frame Qt no acredita presentación física, servicios ni aspecto.
+* RuntimeControl añade status sin setSkin/relectura/recreación. panel-session.py status exige
+  ack de revisión nueva con token/contrato/timeout; PID vivo/ack antiguo no bastan. Sin registro
+  devuelve active=false sin crear archivos; contrato antiguo rechazado. No se añade watcher
+  por panel ni escrituras por frame, selector sin consumidor o control del compositor.
+* Test nuevo Qt usa marco nativo/software: primer frame real, vista oculta, swap tardío y
+  error de render inyectados, salida retirada y skin inactiva. CLI/publicador reales consultan
+  Qt conservando la vista/skin; driver comprueba respuesta en hijo/envoltorio sin salida.
+* CTest normal 2/2, ASan 2/2, 38 resultados UI por paquete; control Python
+  20, migración 18 y manifiestos 7 OK, sintaxis/diff/cmp OK. Primera ejecución ASan con LSan
+  por defecto falla por ptrace; final completa con detect_leaks=0 como en las anteriores.
+  BREEZE_R4_READINESS_RESULTS.json conserva drivers/logs/hashes; guía/arquitectura/plan e
+  instrucciones/procedencia actualizados. Fixtures fuera de /tmp retirados.
+* Hyprctl sigue denegado (Couldn't open a socket (1)). R4 pendiente de selección/activación/
+  fallback y autoridades diarios, reservas/backends, Wayland/escala/skins y KNS remoto. No se
+  registra prueba real ni se cambia panel/skin, compositor, sombras, plugins ni servicios;
+  sin dependencias nuevas, instalación, reinicios, commit/push o R5/R7.
+
+### 198. R4: política nativa de visibilidad y peticiones de reserva LayerShellQt (2026-11-14)
+
+* Usuario autoriza explícitamente alterar su sesión cuando sea necesario en este proyecto.
+  No pedir otra confirmación por ese motivo; sockets siguen denegados en este entorno.
+* --native-policy del envoltorio activa sólo el ensayo registrado --follow-skin (paquete o
+  perfil). Limpia BWM_R4_NATIVE_PANEL_POLICY heredada cuando falta la opción. No hay selector,
+  autostart ni retirada de la barra diaria; modo común conserva política sin reservas.
+* PanelViewSettings añade panelVisibility 0/3 sólo con esa capacidad. Lee la clave global
+  y fallback antiguo por resolución; escribe sólo global, conserva desconocidas y verifica
+  concurrencia/fallback, kdedefaults/inmutabilidad. AutoHide/Dodge y longitud excesiva se
+  rechazan sin escribir. Un perfil NormalPanel necesita la opción también al reabrirlo.
+* BwmSurface conecta NormalPanel con setExclusiveZone(grosor), excluyendo padding flotante
+  como Plasma 6.7.5; WindowsGoBelow/ocultación/skin retiran la petición. Usa borde + ambos
+  anclajes perpendiculares/margen final para preservar longitud sin requerir protocolo v5.
+  Superficie que no cabe marca error y retira petición. Un panel nativo por salida;
+  duplicados bloqueados explícitamente hasta coordinar disposición/apilamiento.
+* Capability/status distingue petición y zona solicitada de reserva/Wayland verificados
+  (false); error de política bloquea renderReady. replacementReady sigue false, reservado
+  positivo pendiente de aceptación real no implica retirar la barra existente.
+  Guard de QScreen esperado retira/oculta antes del remapeo de respaldo de Qt; el runtime
+  recrea por descripción. Test de cambio de salida comprueba que no reserva la ajena.
+* Fuentes plasma-workspace/layer-shell-qt 6.7.5 reextraídas de /var/cache/distfiles y hashes
+  registrados. No copia de implementaciones/dependencias nuevas. Guía de actualización,
+  arquitectura/resultados/plan/procedencia e instrucciones sincronizados.
+* Qt/software prueba cuatro bordes, flotación, retiro, clave/formato nativo, dos instancias/
+  salidas, conflicto, ciclo de skins y nuevo proceso con conectores cambiados; wrapper real
+  comprueba opción explícita pese a variable heredada y parada limpia. Resultados finales
+  en BREEZE_R4_RESERVATION_RESULTS.json. No certifica protocolo enviado/compositor real.
+  Final normal/ASan 2/2, 41 resultados UI por paquete y 18 de superficie por compilación;
+  Python control 20, migración 18 y manifiestos 7 OK. ASan detect_leaks=0; sintaxis/diff/cmp
+  correctos y fixtures de estado fuera de /tmp retirados.
+* R4 pendiente de reserva/posición/área útil y coexistencia de paneles en Hyprland, autoridades/
+  activación/fallback diarios, backends, escala/skins y KNS remoto. No prueba registrada real,
+  cambios de panel/skin, plugins, efectos, servicios, reinicios, instalación, commit/push o R5/R7.
+
+### 199. R4: diagnóstico acotado de acceso a la sesión (2026-11-14)
+
+* Usuario pide continuar e intentar conseguir acceso al sistema. UID/entorno/metadata
+  confirman firma presente y sockets existentes/propios; hyprctl no abre la conexión.
+  Intento documentado de elevación de lectura rechazado automáticamente por política
+  Granular (sandbox_approval/rules/request_permissions=false). No es falta de permiso
+  del usuario; no sortearlo mediante otros runtimes/terminales/puentes.
+* Nuevo skins/plasma/scripts/r4-session-check.py para ejecutar en terminal normal del
+  usuario: consultas hyprctl monitors/layers y status del auxiliar, timeout 3 s por hijo,
+  salida inmediata cuando falla IPC, informe privado atómico con datos filtrados.
+  Sin dispatch, lanzadores de ventanas, reinicios ni configuraciones de usuario.
+* No guarda títulos/direcciones de clientes, firma de instancia ni capas ajenas al auxiliar.
+  Sockets se inspeccionan como metadata; sólo hyprctl intenta la conexión normal. Reporta
+  acceso/observaciones separadamente de área útil/cierre R4 (siempre no certificados).
+* Diez tests nuevos y 20 del publicador OK. Diagnóstico real aquí ipc-unavailable y sockets
+  presentes/propios; evidencia BREEZE_R4_ACCESS_RESULTS.json. README/resultados/plan al día.
+  No se modifica C++ ni se repite su matriz, no hay nueva prueba gráfica ni cambio de sesión.
+* Próximo paso dependiente: usuario ejecuta el único comando documentado en su terminal
+  para observar acceso fuera de este ejecutor restringido. No hay bypass/autorización nueva
+  ni cierre de R4, instalación, R5/R7, commit/push o cambio de compositor.
+
+### 200. R4: acceso local confirmado y runner temporal de reservas (2026-11-14)
+
+* Usuario aporta access-ok-no-native-preview. Lectura del JSON local confirma dos salidas
+  a escala 1 y reserva inferior 44 px en ambas; ninguna capa/prueba R4 activa. No implica
+  acceso desde el ejecutor restringido ni aceptación del anfitrión nuevo.
+* Nuevo r4-reservation-smoke.py --run --output descripción exacta: un comando en terminal
+  local ejecuta envoltorio/ejemplo KDE aislado con política nativa, espera frame/capa y mide
+  antes/durante/después. Cierre automático por parada/flush/Ctrl+C; plazo acotado y escalado
+  de señales sólo al grupo creado por este runner si no responde. No toca ventanas/skins.
+* Evalúa delta inferior exacto, salida/capa/petición, resto de bordes/salidas sin cambios,
+  geometría/escala iguales y recuperación completa. No certifica maximizado/área real/R4
+  completos; cambios externos concurrentes y equivalencia visual no quedan resueltos.
+* Diez tests nuevos con procesos simulados y regresiones Python; parts/guía/resultados/plan
+  y procedencia actualizados. BREEZE_R4_RESERVATION_SMOKE_RESULTS.json. El ensayo real aún
+  lo debe lanzar el usuario desde su terminal; no se ha lanzado desde otra herramienta para
+  saltar las restricciones. Sin cambios C++, reinicios, instalación, R5/R7 o commit/push.
+
+### 201. R4: ensayo local sin salida coincidente y Qt Wayland sin serie (2026-11-14)
+
+* Usuario aporta timeout de frame/capa. JSON local confirma auxiliar registrado/respondiente,
+  skin plasma/política nativa, pero output-unavailable y ninguna petición/capa. Cierre 130,
+  registro retirado y reservas inferiores 44 px en ambas salidas, iguales al inicio.
+* Fuente qtbase 6.11.2 de Portage: QWaylandScreen implementa fabricante/modelo desde
+  wl_output y no serialNumber. Matcher anterior de descripción larga exigía sufijo con
+  serie Qt; ahora admite fabricante/modelo completos + un campo de serie añadido si Qt
+  carece de ella y sólo hay una coincidencia. Duplicados/fabricante/modelo distintos/serie
+  conocida diferente se rechazan. No verifica serie ausente ni sustituciones de equipo idéntico.
+* Readiness añade qtPlatform/availableOutputs/serialAvailable y geometría; conector sólo
+  diagnóstico. Runner distingue falta de salida de timeout genérico; conserva inventario.
+  Recompilado el binario normal para el siguiente ensayo local, sin plugin/reinicio.
+  El runner de sesión fija QT_QPA_PLATFORM=wayland sólo en su hijo; no hereda selección
+  xcb/offscreen del terminal. Los tests aislados de Qt siguen usando offscreen/software.
+* Tests ampliados de identidad con descriptores LG/MSI y serie Qt vacía; inventario GUI y
+  matriz normal/ASan, regresión Python y hashes en BREEZE_R4_OUTPUT_MATCH_RESULTS.json.
+  Falta repetir prueba real: plataforma/identidades Qt reales y reserva aplicada pendientes.
+  Sin ejecución gráfica nueva desde el asistente, R5/R7, instalaciones, commit/push.
+
+### 202. R4: coma en fabricante MSI confirmada por inventario Qt real (2026-11-14)
+
+* Usuario repite ensayo; nuevo JSON confirma qtPlatform=wayland, fabricante Qt MSI
+  «Micro-Star Int'l Co., Ltd.» vs descripción Hyprland «Micro-Star Int'l Co. Ltd.».
+  Modelo igual y serie Qt vacía. La coma que sólo tiene Qt explica la selección rechazada
+  tras corregir el sufijo de serie. Cierre 130, registro/capas retirados y 44 px originales.
+* OutputIdentity compara el prefijo completo del fabricante ignorando sólo comas, con
+  modelo completo literal y sufijo de un campo cuando falta serie Qt. No cambia otros
+  signos, modelo/serie, conectores ni rechazo de ambigüedad o series Qt conocidas distintas.
+* Tests con el fabricante real exacto, ambas direcciones, duplicados y negativos de modelo/
+  fabricante. Matriz normal/ASan y hashes en BREEZE_R4_MAKER_MATCH_RESULTS.json; binario normal
+  recompilado para repetir el mismo comando local. Documentación e instrucciones sincronizadas.
+* No se afirma reserva aplicada: falta nuevo ensayo real. Sin prueba Wayland lanzada por el
+  asistente, cambios de compositor/panel diario, plugin/reinicio, R5/R7, commit/push.
+
+### 203. R4: reserva real del panel temporal confirmada por usuario en Hyprland (2026-11-14)
+
+* Usuario repite ensayo: reservationDeltaVerified=true, errors=[]. Informe leído y conservado
+  en BREEZE_R4_RESERVATION_SESSION_RESULTS.json con origen de ejecución local del usuario.
+* MSI escala 1: reserva inferior 44→92→44 px; petición del panel 48 px, capa nativa 640×48
+  en (0,2068), sobre la barra existente. LG conserva 44 px. Frame/exposición/QML confirmados
+  por auxiliar Wayland, envoltorio termina 130 tras su parada automática, sin registro/capas
+  ni reserva residual. Se verifica la limpieza completa a partir del informe.
+* Aceptación limitada a MSI/borde inferior/escala 1/ejemplo KDE/coexistencia. No se certifican
+  posiciones publicadas Qt/popup, otros bordes/escalas/skins/paquetes ni sustitución diaria.
+  Flags globales del auxiliar conservadas; el ejecutor del asistente sigue restringido.
+* MaximizedWindowVerified/realAreaVerified/r4Complete siguen false porque falta medir una
+  ventana propia maximizada. Resto de integración/autoridades/backends/KNS pendiente.
+* Sólo evidencia/documentación, sin cambios de runtime, pruebas de código repetidas, plugin,
+  reinicio, instalación, R5/R7, commit/push.
+
+### 204. R4: preparación del ensayo de maximizado con ventana propia (2026-11-14)
+
+* --maximize añade fixture Qt normal al runner de reserva, app_id aleatorio, timer 60 s y
+  raíces auxiliares privadas. C++ --maximize-fixture exige identidad válida/raíces temporales;
+  no ejecuta QML de paquetes ni maximiza desde el cliente (Hyprland suprime esas solicitudes).
+* r4-maximized-check.py selecciona sólo PID vivo/clase/dirección propios y llama a
+  kwin-window.py --pid para colocar/restaurar/maximizar. Esperado calculado independientemente
+  desde geometría/reserved; escala 1/giro 0, marco observado completo, 1 px de tolerancia.
+  Exige registro breezebars-csd propio con bordes coherentes; sin autoridad no certifica.
+* Compara maximizado explícito con panel y después sin panel. Observa el reajuste automático
+  antes de volver a maximizar y lo registra separado; no promete que funcione. Flags área/
+  maximizado sólo pasan con medidas explícitas/reserva/limpieza; r4Complete sigue false.
+* Cleanup restaura/cierra sólo fixture y retira su presnap con API común; excepciones guardan
+  fallo y ejecutan cleanup. Sin cambios de ventanas ajenas/skin/plugin/compositor ni servicios.
+* Normal/ASan CTest 2/2, 41 UI por paquete, 18 superficie y ciclo fixture offscreen; Python
+  R4 67 y manifiestos 7 OK, sintaxis/diff/cmp. ASan detect_leaks=0. Evidencia de preparación
+  BREEZE_R4_MAXIMIZED_PREP_RESULTS.json; no hay nueva validación Wayland del asistente.
+* Usuario debe lanzar el mismo runner con --maximize en su terminal; no se sortea el sandbox.
+  Sigue pendiente maximizado real/resto R4. Sin instalaciones, reinicios, R5/R7 o commit/push.
+
+### 205. R4: contrato CLI de to-screen corregido y fallos parciales separados (2026-11-14)
+
+* Usuario ejecuta --maximize y obtiene error vacío. Informe confirma panel/reserva MSI
+  44→92→44, pero ninguna medición del marco. Runner enviaba ADDRESS MONITOR; el parser real
+  de kwin-window exige MONITOR [ADDRESS] y devolvía 1 sin stderr al buscar esa dirección.
+  Fixture termina -15, panel 130, registro/capas retirados y reservas originales recuperadas.
+* Fixture.start pasa ahora por command('to-screen', 'desc:'+output), conservando PID/clase/
+  dirección verificados. Regresión usa start + argparse real + PID guard, sustituyendo sólo
+  operaciones externas; antes habría fallado con los argumentos invertidos.
+* Errores incluyen acción/exit code y stdout/stderr o texto si no hay salida. Si falla la
+  medición, runner reevalúa reserva antes/durante/después tras limpiar y no borra un delta
+  válido; maximizado/área real siguen false y --maximize devuelve fallo.
+* Python R4 69 y tests del gestor/manifiestos OK; sintaxis/diff/cmp correctos. Evidencia
+  BREEZE_R4_MAXIMIZED_CLI_RESULTS.json. Sin cambios C++ ni repetición de su matriz.
+* Falta repetir mismo comando local: no se afirma marco real verificado, reinicio/plugin,
+  servicios, R5/R7, instalación, commit/push o acceso ampliado del ejecutor.
+
+### 206. R4: marco maximizado real correcto; reajuste automático pendiente (2026-11-14)
+
+* Usuario ejecuta --maximize corregido: delta/maximizado/área real true, dinámico false y
+  sin errores. Informe leído/conservado en BREEZE_R4_MAXIMIZED_SESSION_RESULTS.json, con
+  origen de ejecución local del usuario; no supone acceso del asistente al compositor.
+* MSI escala 1/giro 0: con panel marco esperado/observado (0,720,2560,1348); tras retirar
+  y maximizar de nuevo (0,720,2560,1396). Modo 3 y decoración propia 28 px confirmados.
+  Límite inferior coincide con capa/panel real. Reserva 44→92→44, LG inalterado, cierre
+  panel 130/fixture -15 y sin registro/capas residuales.
+* Sin nuevo maximizado conserva 1348 en vez de 1396: deja 48 px sin usar. Seguimiento
+  automático de área útil pendiente; añadir panel sobre ventana ya maximizada no probado.
+  No certificar lo dinámico con el éxito explícito ni ampliar aceptación a otras escalas/
+  bordes/skins/backends o a sustitución diaria. R4 sigue abierta.
+* Sólo evidencia/documentación; sin runtime, tests de código repetidos, reinicio/plugin,
+  instalación, R5/R7, commit/push.
+
+### 207. R4: seguimiento de área útil en el puente existente; ensayo dinámico preparado (2026-11-14)
+
+* Responde al fallo real de §206: kwin_area.py observa monitores/clientes desde el watch
+  único de kde-config-bridge, no crea otro demonio/servidor. Usa reserved real y matemáticas
+  BWM de marco/contenido con bordes propios de breezebars-csd por dirección/PID.
+* Sólo ejes bwm-max-v/h de ventanas flotantes normales; excluye fullscreen, especiales,
+  minimizadas, snapping y opt-outs. Respeta Force KDE de geometría y bloqueo de transición.
+  Lua vuelve a validar PID/monitor/skin/estado/etiquetas antes de resize/move. No modifica
+  restore, presnap, etiquetas, foco ni workspace. Escala/giro calculados en unidades lógicas.
+* Poll agrupado 0,5 s, consultas/dispatch 2 s, hasta 16 ventanas en una petición, tres
+  intentos por firma con confirmación de geometría. Sin recargas por cada evento ni lucha
+  ilimitada contra reglas. El baseline privado incluye PID/inicio y fecha; no certifica efecto.
+* restart recarga sólo el puente por su ciclo existente; --refresh-area-watcher exige
+  marcador fresco/privado y proceso vivo antes del ensayo. Queda activo para máximos BWM
+  existentes. El runner crea/maximiza primero su fixture, mide al aparecer/retirar el panel
+  sin remax, y conserva por separado las medidas explícitas. Limpieza en todos los fallos.
+* 159 tests Python: R4 89, puente 18, reglas 18, ventanas 13, manifiestos 7, arranque 4,
+  ajustes R3 10. Incluye Lua real con API simulada, batches, PID reutilizado, ambos sentidos,
+  ejes, Force/opt-outs/transición, confirmación/reintentos y orden refresh→fixture→panel.
+  Evidencia/hashes: BREEZE_R4_AREA_TRACKING_RESULTS.json. No cambios C++ ni repetir su matriz.
+* El ejecutor sigue sin IPC real: no ha recargado el puente ni validado el nuevo comportamiento
+  en sesión. Repetir comando local con --refresh-area-watcher. R4 permanece pendiente junto
+  con aceptación restante/autoridades/backend/KNS; sin R5/R7, instalación, commit o push.
+
+### 208. R4: reajuste automático real al aparecer y retirar el panel validado (2026-11-14)
+
+* Usuario ejecuta --run --maximize --refresh-area-watcher en su terminal Hyprland. El
+  runner confirma baseline fresco del puente y devuelve reserva/maximizado/dinámico/área
+  real true, errors=[] y r4Complete=false. Informe completo guardado con hash/origen en
+  BREEZE_R4_AREA_SESSION_RESULTS.json; hashes de las nueve fuentes de §207 aún coinciden.
+* Se reevalúa reserva con la función pura del runner y se contrastan las cinco medidas:
+  antes marco (0,720,2560,1396), al aparecer panel sin remax (0,720,2560,1348), explícito
+  con panel igual, al retirarlo sin remax (0,720,2560,1396), explícito final igual. En
+  todas modo 3, decoración autoritativa y borde superior 28 px confirmados.
+* MSI inferior escala 1/giro 0: reserva 44→92→44, capa nativa 640×48 en (0,2068). LG
+  mantiene 44 px; no equivale a maximizado probado en LG. Panel termina 130 y fixture -15,
+  sin capas/registro residuales. Resuelve el fallo dinámico observado en §206 para este caso.
+* Sin nuevas órdenes gráficas del asistente ni cambios de runtime/repetición de tests.
+  R4 sigue abierta por integración diaria/backends/autoridades/KNS y aceptación restante:
+  ejes parciales, otros bordes/escala/salidas, hotplug y cambios de skin no se deducen del
+  ensayo. Sin avance a R5/R7, sustitución del panel, instalación, commit o push.
+
+### 209. R4: «Obtener nuevos» real y puerta con widgets no conocidos de antemano (2026-11-14)
+
+* Usuario pide continuar R4 desde el traspaso a Claude. Esta ejecución tiene acceso a Hyprland y
+  red. Build anterior en /tmp perdido: recompilado en scratchpad con libplasma 6.7.5 de Portage.
+* kns.cpp: búsqueda/instalación/retirada sin diálogo con KNSCore 6.29 y plasmoids.knsrc (mismos
+  Entry/Transaction que el diálogo), sólo raíces XDG temporales, preguntas siempre Cancelar/No,
+  alta/baja en el catálogo vivo. kns-cycle.py elige por orden de descargas de la tienda (excluye
+  Andromeda), rechaza antes de cargar binarios/scripts/fuentes executable (filtro estático),
+  ejercita la opción booleana propia, relee en proceso nuevo y retira por KNS.
+* Corregido: páginas con cfg_ sin esquema (Thermal Monitor) se bloqueaban y saveConfig() también;
+  ahora como AppletConfiguration.qml 6.7.5 (sólo config.keys(), saveConfig() antes de Aplicar).
+  Fixture tests/callback-config y regresión KNS fuera de raíces temporales en check-isolated.
+  Diálogo/vista con Kirigami.Theme.backgroundColor (el alfa de §187 los dejaba transparentes).
+* Tienda (12 primeros sin Andromeda): 3 superan (Thermal Monitor pinned, Modern Clock show_day,
+  Simple Application Launcher paneSwap), 6 con metadatos antiguos que KPackage 6.29/Plasma 6.7.5
+  tampoco listan, 3 rechazados por ejecutar órdenes. Todos retirados por KNS.
+* Sesión Hyprland (LG por descripción): Modern Clock descargado, «Configure…» abre su página
+  original, uinput desmarca Show Day, Aplicar escribe show_day=false en el appletsrc nativo.
+  Limpieza completa, puntero/foco devueltos. CTest normal/ASan 2/2 (detect_leaks=0), 96 Python.
+  Evidencia BREEZE_R4_KNS_RESULTS.json; resultados/arquitectura/plan/README/procedencia al día.
+* Criterios originales de R4 cumplidos. Fuera de su puerta y pendientes: panel diario
+  (replacementReady=false), backends tareas/escritorios, otras escalas/bordes/skins, desenfoque,
+  widgets que ejecutan órdenes, diálogo KNS gráfico en sesión. Sin R5/R7, commit ni push.
+
 ## 4. 📂 Estructura del repositorio
 
 ```
@@ -1832,3 +2903,10 @@ git status; git log --oneline -5; git push origin main
 * **Resaltado:** `ExpandedHighlight` en `PanelContent.qml` porta el `expandedItem` de `CompactApplet.qml`: `widgets/tabbar` `<borde>-active-tab` estirado sobre los márgenes del contenedor hasta el borde del panel, con su fundido. Se usa en Kickoff y en el reloj (calendario). El prefijo va como lista porque `hasElementPrefix()` no es notificable.
 * **Comprobado:** con Kickoff abierto, la línea azul del botón sale a `#3daee9` pleno y las tareas conservan su línea; 32 pruebas de bandeja, panel y Kickoff con `BWM_RUN_QML_TESTS=1`. Capturas recortadas y borradas; cinco reinicios de mantenimiento del shell para cargar el panel (Loader) y las pruebas temporales, con el foco devuelto.
 * **Después:** resaltado de la bandeja portado de `CurrentItemHighLight.qml` (systemtray 6.7.5) en `tray/SystemTray.qml`: tras el icono del applet abierto, o toda la bandeja hasta el borde del panel con la lista de ocultos; el calendario es del reloj. No se veía porque las ventanas emergentes de la bandeja y del calendario se anclaban al borde del icono, 4 px dentro del panel, y lo tapaban: `TrayPopup.qml` se apoya ahora en el borde del panel (como `PlasmaQuick::Dialog`), sin su borde en ese lado y con la línea `widgets/line`; en panel flotante deja `largeSpacing`. La prueba de Kickoff dependía de que la configuración real no hubiera importado ya los favoritos a KActivities (`favoritesPortedToKAstats`); ahora lo pone a falso con escrituras bloqueadas antes de crear Kickoff. 32 pruebas OK.
+
+### 170. Obsidian: tema en la versión Flatpak y límite de inotify (2026-11-12)
+
+* **Tema:** `bwm_omarchy_apps.apply_obsidian()` sólo leía `~/.config/obsidian/obsidian.json`; el Obsidian Flatpak la guarda en `~/.var/app/md.obsidian.Obsidian/config/obsidian`. Ahora lee las dos y, si una bóveda no tiene tema elegido (`cssTheme` vacío), activa «Omarchy»; un tema elegido por el usuario se respeta. Aplicado a las dos bóvedas del usuario.
+* **«EMFILE: too many open files, watch» al abrir una bóveda:** no eran descriptores sino instancias de inotify: 127 de 128 por usuario, 86 de ellas de Quickshell. Cada `FileView` con `watchChanges` es un `QFileSystemWatcher` y una instancia. El panel de agentes de Omarchy creaba una por registro de uso (23 proveedores). Ahora `Agent.qml` no vigila y `Main.qml` vigila un único marcador `agents/usage/.updated`, que `omarchy-agent-usage-update` reescribe al final de cada ejecución (también lanzada desde fuera del panel); se siguen recargando todos los registros tras cada actualización del propio panel. Fuera también los dos vigilantes de `agent-local` (BWM no tiene modelos locales). Parches marcados «BWM».
+* **Comprobado:** tras reinicio de mantenimiento, Quickshell 86 → 42 instancias y el usuario 127 → 85; destinos IPC `shell`/`omarchy.agents` presentes, sin errores nuevos en el log; el script escribe el marcador. No se cambió `fs.inotify.max_user_instances` (sigue 128), así que vale para cualquier instalación.
+* **No probado:** abrir la bóveda en Obsidian tras el arreglo y que el panel de agentes muestre datos nuevos en vivo tras una actualización lanzada desde terminal. Quedan 11 instancias de Quickshell sin ningún archivo vigilado (FileView sobre archivos inexistentes) sin identificar.

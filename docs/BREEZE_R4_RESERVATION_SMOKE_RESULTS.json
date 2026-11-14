@@ -1,0 +1,70 @@
+{
+  "date": "2026-11-14",
+  "phase": "R4",
+  "status": "local access confirmed; automatic temporary reservation runner prepared, not yet run in live session",
+  "liveSmokeExecutedByAssistant": false,
+  "userLocalAccessConfirmed": true,
+  "reservationDeltaVerified": false,
+  "maximizedWindowVerified": false,
+  "r4Complete": false,
+  "localAccessEvidence": {
+    "source": "/tmp/bwm-r4-access-1000.json",
+    "sha256": "f68f04d183ddf561879791f50174fdfb88bb7451dfa297f7648ee131d64c89ef",
+    "status": "access-ok-no-native-preview",
+    "nativeLayerCount": 0,
+    "previewActive": false,
+    "monitors": [
+      {
+        "x": 2560,
+        "y": 0,
+        "width": 3840,
+        "height": 2160,
+        "scale": 1,
+        "transform": 0,
+        "reserved": [
+          0,
+          0,
+          0,
+          44
+        ]
+      },
+      {
+        "x": 0,
+        "y": 720,
+        "width": 2560,
+        "height": 1440,
+        "scale": 1,
+        "transform": 0,
+        "reserved": [
+          0,
+          0,
+          0,
+          44
+        ]
+      }
+    ]
+  },
+  "sourceSha256": {
+    "config/hypr/skins/plasma/scripts/r4-reservation-smoke.py": "eb49f9ba6a6e1913cac9b146d343cabef4887f4497d2dcba2fbc7da869eeff97",
+    "tests/test_r4_reservation_smoke.py": "0e933765d2be0c119b3f1b35e85cffbe6b9ddaf94e3665b0a7f6f5a046522c1d",
+    "config/hypr/skins/plasma/skin.json": "47b2d492bdc9bad6e2a937b096cf2c44a619800ca3e4e5d92c5bea5c8242db41"
+  },
+  "tests": {
+    "smoke": {
+      "passed": 10,
+      "log": "..........\n----------------------------------------------------------------------\nRan 10 tests in 0.001s\n\nOK\n"
+    },
+    "access": {
+      "passed": 10,
+      "log": "..........\n----------------------------------------------------------------------\nRan 10 tests in 0.002s\n\nOK\n"
+    },
+    "control": {
+      "passed": 20,
+      "log": "..BWM: hook de cambio de plasma: unacknowledged\nBWM: hook de cambio de retro: unacknowledged\n.BWM: hook de cambio de plasma: El hook debe estar dentro de su skin\nBWM: hook de cambio de retro: El hook debe estar dentro de su skin\n.................\n----------------------------------------------------------------------\nRan 20 tests in 0.085s\n\nOK\n"
+    },
+    "skins": {
+      "passed": 7,
+      "log": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.006s\n\nOK\n"
+    }
+  }
+}

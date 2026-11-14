@@ -1,0 +1,18 @@
+{
+  "checks": [
+    "IPC accessible",
+    "test window moved into canonical Magic",
+    "Alt+S dispatcher shows and hides Magic",
+    "repeated common activation keeps Magic open and focuses fixture",
+    "minimize and common dock-policy restore preserve special origin",
+    "stale PID rejected without moving fixture"
+  ],
+  "visual_verified": false,
+  "compositor_restarted": false,
+  "version": "0.56.2",
+  "matrix": [],
+  "matrix_scope": "activation per connected monitor and skin changes with Magic open/closed",
+  "status": "failed or blocked",
+  "error": "Matrix activation focused the wrong monitor",
+  "cleanup_errors": []
+}

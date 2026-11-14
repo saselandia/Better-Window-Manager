@@ -78,6 +78,8 @@ Item {
         workspaceId: workspace ? workspace.id : -1,
         minimized: !!workspace && DockModel.isMinimizedWorkspace(workspace.name),
         address: toplevels[i].address,
+        // BWM: preserve the IPC identity at selection, not just a reusable address.
+        pid: Number(toplevels[i].lastIpcObject?.pid || 0),
         toplevel: toplevel
       })
     }
@@ -191,32 +193,15 @@ Item {
   }
 
   // A window the dock brings forward lands on top of the others, focused; a
-  // minimized one first comes back to the workspace in front of the user.
+  // minimized normal window comes back here; a special origin stays special.
   function bringForward(window) {
     var address = String(window.address || "")
-    if (!address) {
-      window.toplevel.activate()
-      return
-    }
+    if (!address || !(window.pid > 0)) return
     if (address.indexOf("0x") !== 0) address = "0x" + address
-    var target = "window = \"address:" + address + "\""
-    var steps = []
-    var after = []
-    if (window.minimized) {
-      var monitor = Hyprland.focusedMonitor
-      var workspace = monitor && monitor.activeWorkspace ? monitor.activeWorkspace.id : -1
-      if (!(workspace >= 1)) return
-      // A restored window is simply there again, without animating in.
-      steps.push("hl.dsp.window.set_prop({ prop = \"no_anim\", value = \"1\", " + target + " })")
-      steps.push("hl.dsp.window.move({ workspace = \"" + workspace + "\", " + target + " })")
-      after.push("hl.dsp.window.set_prop({ prop = \"no_anim\", value = \"unset\", " + target + " })")
-    }
-    steps.push("hl.dsp.focus({ " + target + " })")
-    steps.push("hl.dsp.window.alter_zorder({ mode = \"top\", " + target + " })")
-    var dispatch = function(step) { return "hyprctl dispatch " + Util.shellQuote(step) }
-    var command = steps.map(dispatch).join(" && ")
-    if (after.length > 0) command += "; sleep 0.4; " + after.map(dispatch).join("; ")
-    Util.execDetached(command)
+    // BWM: resolve the live workspace and PID in the common controller. No delayed
+    // shell commands may act on a different window that reused the same address.
+    Quickshell.execDetached(["python3", "/home/sasel/.config/hypr/scripts/bwm-focus.py",
+      address, "--pid", String(window.pid), "--restore-on-current"])
   }
 
   function quit(item) {

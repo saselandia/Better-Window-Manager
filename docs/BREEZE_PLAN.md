@@ -1,5 +1,9 @@
 # Plan: Breeze = KDE Plasma porteado a BWM
 
+> **Continuación activa (2026-11-12): [BREEZE_PLAN_V2.md](BREEZE_PLAN_V2.md)**.
+> Auditoría y mejoras R0–R9: Magic/Alt+S, System Settings real, modo edición y complementos,
+> sombras y animaciones. Este documento conserva los prompts históricos F0–F13.
+
 > Plan de acción para rehacer la skin **Breeze (Kde plasma)** (id `plasma`) como un port real de
 > KDE Plasma 6 sobre Hyprland + Quickshell, compatible con los temas de Plasma. Cada fase es un
 > prompt listo para pegar en una sesión nueva. Pensado para **Opus 5.5, esfuerzo medium**; las

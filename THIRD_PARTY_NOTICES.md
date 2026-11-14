@@ -291,3 +291,164 @@ ExpanderArrow.qml y AppletItem.qml proceden de systemtray/qml/{ExpanderArrow,Pla
 (LGPL-2.0-or-later); la cuadrícula sigue systemtray/qml/main.qml. Cabeceras y modificaciones
 marcadas BWM en los archivos; explicaciones en los README de panel y tray. Textos de licencia
 ya incluidos en licenses. No se copia el logotipo de la captura de referencia.
+
+
+### KCM nativo experimental de BWM (Breeze II R2, 2026-11-12)
+
+`src/bwm-systemsettings` es código propio BWM bajo GPL-2.0-or-later, indicado en sus fuentes;
+[texto de licencia](licenses/KDE-GPL-2.0-or-later.txt). Utiliza las APIs públicas de Qt Widgets
+6.11.2 y KF6 KCMUtils/CoreAddons/I18n 6.29.0 instaladas por la distribución. No incluye fuentes
+copiadas de KDE ni distribuye esas bibliotecas. Conserva los avisos de sus paquetes originales.
+Factory y metadata siguen el contrato documentado en las cabeceras KCMUtils instaladas.
+Alcance, compilación, pruebas aisladas y límites en `src/bwm-systemsettings/README.md`.
+
+R3 añade `ManagerModule`, el adaptador `native-settings.py`, el contrato de capacidades y
+`bwm-kcm-catalog`: código propio GPL-2.0-or-later. Descubrimiento mediante KPluginMetaData,
+KPluginFactory y KDecoration3::DecorationThemeProvider; no se copian los formularios de terceros.
+La prueba `test-decoration-option` carga el KCM Breeze instalado y reutiliza el POC de render
+ya incluido en `src/bwm-decorator/poc-fase0.cpp`; no distribuye binarios KDE adicionales.
+El perfil local utiliza las restricciones KAuthorized documentadas en KF6 Config 6.29.
+
+### Anfitrión experimental libplasma R4 (2026-11-12)
+
+`src/bwm-plasma-host` es código propio BWM GPL-2.0-or-later que utiliza las APIs instaladas
+libplasma/PlasmaQuick 6.7.5, KF6 Config/KPackage y Qt. Se estudió CustomCorona y los contratos
+de la distribución upstream fijada en BREEZE_R4_RESULTS.md; no se incluyen esos ejemplos ni
+código de AndromedaLauncher. Las pruebas leen fuentes elegidas explícitamente y las instalan
+en un prefijo temporal. AndromedaLauncher conserva sus avisos GPL y autoría originales en
+la copia de prueba; no se redistribuye en este repositorio. Las APIs privadas requieren la
+revisión de actualización descrita en el README del auxiliar.
+
+La continuación R4 añade un paquete Plasma/Shell mínimo propio (muebles sobre AppletPopup,
+marco ConfigView y vista temporal), `ConfigurationSession` y `Catalog`, todos GPL-2.0-or-later.
+No copia AppletConfiguration.qml ni CompactApplet.qml de plasma-desktop; carga formularios de
+los paquetes originales. Usa además KF6 NewStuffWidgets y el proveedor plasmoids.knsrc de la
+distribución, manteniendo sus licencias. QtTest/ASan prueban el adaptador sin redistribuir los
+widgets ni ejecutar un shell Plasma. Estado y diferencias en BREEZE_R4_RESULTS.md.
+
+La continuación R4 del 2026-11-13 utiliza también LayerShellQt 6.7.5 instalado, mediante su
+API pública Window, sin copiar su implementación. `surfaces.*`, `migration.*` y sus pruebas
+son código propio GPL-2.0-or-later; geometría y publicación de la migración quedan fuera del
+compositor. La fuente de referencia y SHA-256 del tarball LayerShellQt se registran en
+BREEZE_R4_RESULTS.md. No se redistribuye el paquete plasma-desktop ni se ejecuta plasmashell.
+
+Tras instalar plasma-desktop 6.7.5, el ensayo carga org.kde.panel y su LayoutManager desde
+los recursos originales instalados. `panelsession.*` y `panelprobe.*` son adaptadores/pruebas
+propios GPL-2.0-or-later. No se copian los QML del panel ni del menú de Andromeda. El filtro
+de visibilidad se contrasta con PlasmaAppletItemModel de plasma-workspace 6.7.5 mediante sus
+metadatos públicos. Procedencia y SHA-256 de las fuentes en BREEZE_R4_RESULTS.md.
+`themeinventory.*` es código propio GPL-2.0-or-later que consulta Plasma/LookAndFeel/KConfig;
+no copia ni evalúa layouts o vistas de temas. Conserva las rutas y procedencia de los recursos.
+`packagewindows.*` y `viewcorona.*` son adaptadores propios GPL-2.0-or-later. Consultan las
+APIs/contextos nativos de libplasma/PlasmaQuick 6.7.5, Qt y LayerShellQt sin copiar Dialog ni
+alterar las bibliotecas/paquetes instalados. Pruebas y límites en BREEZE_R4_RESULTS.md.
+
+La API de instancias/acciones de PanelSession y sus pruebas son propias GPL-2.0-or-later.
+Utilizan Containment.createApplet, Applet.destroy, QAction/QMenu y el método reorderApplets
+del panel original cargado desde sus recursos. Se revisan Corona.loadLayout/saveLayout y
+Applet.saveState de libplasma 6.7.5; no se copian sus implementaciones ni LayoutManager.js.
+
+La resolución de categorías por módulo QML de ConfigurationSession utiliza QQmlComponent
+de Qt y ConfigCategory/ConfigModel de libplasma 6.7.5. Se estudia la prioridad de open() en
+AppletConfiguration.qml del shell original; no se copia esa vista. La fábrica, la adaptación
+de propiedades iniciales y los fixtures tests/{module-config,config-pages-module} son propios
+GPL-2.0-or-later, instalados sólo en raíces temporales por las pruebas.
+
+`panelviewhost.*` es un adaptador propio GPL-2.0-or-later sobre ContainmentView y KF6 Svg.
+Carga sin modificar el views/Panel.qml instalado de org.kde.plasma.desktop (GPL-2.0-or-later,
+© 2012 Marco Martin). Su registro de enums sigue los valores de PanelView 6.7.5; se revisan
+su política de flotación/geometría y SharedQmlEngine para la destrucción segura del root.
+No se copia Panel.qml, panelview.cpp ni sus sombras/efectos de compositor. Los SVG usados
+como fixtures son rectángulos propios generados en raíces temporales, GPL-2.0-or-later.
+
+`panelviewsettings.*` es propio GPL-2.0-or-later. Usa KConfig/QLockFile y la jerarquía de
+plasmashellrc de PanelView 6.7.5 (panelConfig, configDefaults, restore y setters), sin copiar
+sus implementaciones. Se contrasta applicationConfig de ShellCorona y la identidad de
+plasmashell para el archivo nativo. Las políticas/fixtures de configuración se prueban sólo
+en raíces XDG temporales; no se redistribuye código ni configuración de usuario de KDE.
+La preparación de preferencias de vista de migration.* deriva los valores heredados del
+Config.qml/PanelLogic.js propios y los serializa con KConfig en los grupos originales de
+PanelView 6.7.5. panelprobe.* carga el Panel.qml instalado para verificar esa lectura, sin
+copiarlo. Código nuevo GPL-2.0-or-later, sin recursos de terceros añadidos ni efectos portados.
+
+`outputidentity.*` y `panelruntime.*` son propios GPL-2.0-or-later. Coordinan QScreen,
+ViewCorona y las vistas nativas sin copiar ScreenPool/ShellCorona de Plasma. Los fixtures
+de pantallas en test-ui.cpp usan las APIs QPA ya requeridas de Qt 6.11.2; se revisa el
+contrato handleScreenRemoved/QPlatformScreen del tarball qtbase-everywhere-src-6.11.2,
+sin copiar sus implementaciones. Sólo se añaden/eliminan pantallas dentro del proceso
+offscreen de pruebas, no se redistribuyen módulos de plataforma ni código del compositor.
+
+`runtimecontrol.*`, el publicador `skins/plasma/scripts/panel-session.py` y las ampliaciones
+del dispatcher/gestor y envoltorio son código propio GPL-2.0-or-later. Usan Qt Core y la
+biblioteca estándar Python para metadatos privados de integración, sin copiar servidores,
+formatos de preferencias o servicios de Plasma. La configuración/layout siguen bajo las
+APIs KDE originales. Las pruebas del protocolo/hook se ejecutan sólo en raíces desechables;
+no se redistribuye un módulo de plataforma nuevo ni código de terceros adicional.
+
+`profilestore.*` y las ampliaciones del CLI/envoltorio son propios GPL-2.0-or-later. Copian
+archivos completos ya producidos por Corona/KConfig y llaman las APIs nativas para validar
+copias, sin copiar la implementación de Plasma ni inventar otro formato appletsrc. Los
+metadatos de bindings/generaciones/hashes son integración BWM separada. Fixtures y ensayos
+se limitan a directorios temporales; no se añaden recursos de terceros ni dependencias.
+La ampliación de almacenamiento persistente de ProfileStore usa GenericStateLocation de
+Qt Core y un namespace propio de estado para copias/índices, conservando archivos KDE
+completos. Código propio GPL-2.0-or-later; sin copiar implementaciones ni incorporar recursos
+nuevos. El ensayo fuera de /tmp usa un XDG_STATE_HOME de fixture en el repo y lo elimina,
+sin escribir perfiles en el estado real del usuario.
+
+El diagnóstico de disponibilidad del anfitrión usa señales públicas de QQuickWindow de
+Qt 6.11.2 (beforeRendering, frameSwapped y sceneGraphInvalidated), sin copiar implementaciones.
+Las generaciones/contadores atómicos, agregación de bloqueos y ampliación status del
+protocolo de ensayo son código propio GPL-2.0-or-later. No incorporan nuevas dependencias
+ni certifican presentación física del compositor o funcionamiento de servicios KDE.
+
+La ampliación de política de panel/reservas es propia GPL-2.0-or-later. Contrasta las APIs
+instaladas y los tarballs plasma-workspace/layer-shell-qt 6.7.5 de Portage, en particular
+PanelView::restore/setVisibilityMode/updateExclusiveZone/updateLayerWindow y
+QWaylandLayerSurface::setDesiredSize/setExclusiveEdge. No copia sus implementaciones ni el
+XML de protocolo al repo. Hashes, contrato y límites en BREEZE_R4_RESERVATION_RESULTS.json;
+no añade dependencias. La petición LayerShellQt no se presenta como reserva física validada.
+
+El diagnóstico R4 r4-session-check.py y sus tests son propios GPL-2.0-or-later; utilizan
+Python estándar y la interfaz JSON del hyprctl instalado. No incorporan código de terceros,
+dependencias nuevas ni un puente de ejecución fuera de las restricciones del asistente.
+
+El runner temporal r4-reservation-smoke.py y sus tests son propios GPL-2.0-or-later.
+Reutiliza el envoltorio existente y el ejemplo KDE de configuración de libplasma 6.7.5
+ya seleccionado/extraído para ensayos; no redistribuye ese ejemplo ni añade dependencias.
+
+La continuación de identidad de salidas consulta qtbase-everywhere-src 6.11.2 de Portage
+(QWaylandScreen manufacturer/model y QPlatformScreen::serialNumber) sin copiar su código.
+El matcher y el inventario Qt son propios GPL-2.0-or-later; hashes en
+BREEZE_R4_OUTPUT_MATCH_RESULTS.json. No añade dependencias ni certifica serie EDID ausente.
+
+El fixture Qt de maximizado, r4-maximized-check.py y pruebas son propios GPL-2.0-or-later.
+Usan QQuickWindow público y los gestores BWM existentes; no copian interfaces ni algoritmos
+KDE, no incorporan dependencias y no cambian plugins/compositor.
+
+`kwin_area.py` y las ampliaciones de puente/runner/tests son propias GPL-2.0-or-later.
+Reutilizan las matemáticas y reglas BWM existentes. Para los guardas Lua se consultan
+LuaWindow.cpp y LuaMonitor.cpp del tarball Hyprland 0.56.2 de Portage, sin copiar sus
+implementaciones. No añaden bibliotecas, protocolos ni servicios; hashes/procedencia en
+BREEZE_R4_AREA_TRACKING_RESULTS.json. El código de API simulado para tests es propio y
+no sustituye la aceptación en el compositor real.
+
+`kns.*` y `kns-cycle.py` son propios GPL-2.0-or-later; enlazan KNewStuffCore 6.29 instalado
+(LGPL) y usan el proveedor `plasmoids.knsrc` del sistema. Los widgets que descarga el ensayo se
+instalan sólo en raíces temporales y se retiran; no se redistribuyen. El fixture
+`tests/callback-config` es propio. El comportamiento de `saveConfig()`/claves del esquema sigue
+`AppletConfiguration.qml` de plasma-desktop 6.7.5 sin copiar su código.
+
+`focusgrab.*` es propio GPL-2.0-or-later. En la compilación, qtwaylandscanner/wayland-scanner
+generan los enlaces cliente de `hyprland-focus-grab-v1.xml`, leído del paquete del sistema
+hyprland-protocols (BSD-3-Clause, © 2024 outfoxxed; aviso completo en el propio XML); el XML
+no se copia al repositorio, pero el binario incluye código generado a partir de él.
+La preparación de plataforma de `main.cpp` (QT_WAYLAND_DISABLE_FIXED_POSITIONS alrededor de
+QApplication, alfa por defecto) y la política de foco del panel siguen el comportamiento de
+plasma-workspace 6.7.5 (`shell/main.cpp`, `PanelView::refreshStatus`) sin copiar su código.
+
+La auditoría de transición de skins utiliza el código propio GPL-2.0-or-later
+`bwm-launch-app.py` y el probe `tests/qt_skin_icon_probe.cpp`. Consulta Qt 6.11.2,
+plasma-integration 6.7.5 y KIconThemes 6.29.0 instalados; sus implementaciones no se copian.
+Los iconos PNG de prueba se generan en directorios temporales. El contrato privado del
+receptor KF6 se usa sólo en el test local, no en los componentes desplegados.

@@ -5,5 +5,6 @@ import Quickshell.Wayland
 Item {
  property var wId
  property var winId:wId
- ScreencopyView {anchors.fill:parent;captureSource:bwmToplevels?.[String(parent.wId)]??null;live:true}
+ // Temporary containment: see docs/BREEZE_RECOVERY.md.
+ ScreencopyView { anchors.fill:parent; captureSource:null; live:false }
 }

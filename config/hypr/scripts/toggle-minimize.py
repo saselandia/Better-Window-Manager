@@ -22,11 +22,13 @@ import os
 import sys
 import json
 import subprocess
+import bwm_windows
 
 MINIMIZED_WS = "special:minimized"
 TAG_PREFIX = "omarchy-minimized-from-"
 LEGACY_WS_ID = 99            # older versions: workspace 99 + from_ws_<n>
 LEGACY_TAG_PREFIX = "from_ws_"
+SPECIAL_TAG_PREFIX = "bwm-minimized-from-special-"
 # Windows hidden by Show Desktop, read by the Breeze panel DesktopState.
 # Quickshell empties it as soon as a window shows up again, which ends the mode like KWin.
 SHOW_DESKTOP_STATE = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "bwm-show-desktop.json")
@@ -77,10 +79,18 @@ def is_minimized(client: dict) -> bool:
 def minimize_tags(client: dict) -> list:
     """Tags this script or Omarchy's minimize left (dynamic tags may end in "*")."""
     return [t.rstrip("*") for t in client.get("tags", []) or []
-            if t.rstrip("*").startswith((TAG_PREFIX, LEGACY_TAG_PREFIX))]
+            if t.rstrip("*").startswith((TAG_PREFIX, LEGACY_TAG_PREFIX, SPECIAL_TAG_PREFIX))]
 
 def origin_workspace(client: dict):
     for tag in minimize_tags(client):
+        if tag.startswith(SPECIAL_TAG_PREFIX):
+            try:
+                name = bytes.fromhex(tag[len(SPECIAL_TAG_PREFIX):]).decode("utf-8")
+            except (ValueError, UnicodeError):
+                continue
+            if (name == "special" or name.startswith("special:")) and name != MINIMIZED_WS:
+                return name
+            continue
         number = tag[len(TAG_PREFIX):] if tag.startswith(TAG_PREFIX) else tag[len(LEGACY_TAG_PREFIX):]
         if number.isdigit() and int(number) >= 1 and int(number) != LEGACY_WS_ID:
             return int(number)
@@ -97,10 +107,15 @@ def minimize_win(client: dict):
 
     ws = client.get("workspace", {})
     ws_id = ws.get("id", 1)
+    name = ws.get("name", "")
+    origin_tag = (SPECIAL_TAG_PREFIX + name.encode("utf-8").hex()
+                  if ws_id < 0 and (name == "special" or name.startswith("special:"))
+                  else TAG_PREFIX + str(ws_id))
 
     if client.get("floating"):
         geometries = load_geometries()
-        geometries[addr] = {"at": client.get("at"), "size": client.get("size")}
+        geometries[addr] = {"at": client.get("at"), "size": client.get("size"),
+                            "pid": client.get("pid"), "generation": bwm_windows.process_generation(client.get("pid"))}
         save_geometries(geometries)
 
     # Like Omarchy: one origin tag, the window to the hidden special workspace without following it,
@@ -109,10 +124,10 @@ def minimize_win(client: dict):
     lua_code = f"""(function()
         local cur = hl.get_cursor_pos()
         local w = hl.get_window("address:{addr}")
-        if w then
+        if w and w.pid == {int(client.get('pid') or 0)} then
             {untag_lua(minimize_tags(client))}
             -- "+" sets the tag (a bare tag name toggles it in Hyprland)
-            pcall(function() hl.dispatch(hl.dsp.window.tag({{ tag = "+{TAG_PREFIX}{ws_id}", window = w }})) end)
+            pcall(function() hl.dispatch(hl.dsp.window.tag({{ tag = "+{origin_tag}", window = w }})) end)
             hl.dispatch(hl.dsp.window.move({{ workspace = "{MINIMIZED_WS}", follow = false, window = w }}))
             local active = hl.get_active_workspace()
             if active and active.id == {ws_id} then
@@ -126,7 +141,7 @@ def minimize_win(client: dict):
     end)()"""
     run_lua(lua_code)
 
-def restore_win(client: dict):
+def restore_win(client: dict, on_current_workspace: bool = False, focus: bool = True):
     addr = client.get("address")
     if not addr:
         return
@@ -135,16 +150,24 @@ def restore_win(client: dict):
     # (they let Alt+Enter un-maximize a window that was minimized while maximized)
     untag = untag_lua(minimize_tags(client))
     target_ws_id = origin_workspace(client)
+    special_origin = isinstance(target_ws_id, str)
 
-    if target_ws_id is not None:
-        target_clause = f"local target = {target_ws_id}"
+    if on_current_workspace and not special_origin:
+        # Omarchy's dock restores normal windows on the workspace in front of the user.
+        # A scratchpad origin is different: it must never be extracted into a normal workspace.
+        target_clause = "local active = hl.get_active_workspace(); local target = (active and active.id > 0 and active.id ~= 99) and active.id or 1"
+    elif target_ws_id is not None:
+        target_clause = f"local target = {json.dumps(target_ws_id, ensure_ascii=False)}"
     else:
         target_clause = "local target = (hl.get_active_workspace() and hl.get_active_workspace().id) or 1"
 
     geometries = load_geometries()
     geo = geometries.pop(addr, None)
     geometry_clause = ""
-    if geo and client.get("floating") and geo.get("at") and geo.get("size"):
+    if (geo and (not on_current_workspace or special_origin)
+            and geo.get("pid") == client.get("pid")
+            and geo.get("generation") == bwm_windows.process_generation(client.get("pid"))
+            and client.get("floating") and geo.get("at") and geo.get("size")):
         (gx, gy), (gw, gh) = geo["at"], geo["size"]
         geometry_clause = (
             f"hl.dispatch(hl.dsp.window.resize({{ x = {int(gw)}, y = {int(gh)}, relative = false, window = w }})) "
@@ -153,18 +176,33 @@ def restore_win(client: dict):
     if geo is not None:
         save_geometries(geometries)
 
+    animation_start = animation_end = ""
+    if on_current_workspace and not special_origin:
+        # Preserve the dock's instantaneous restore without a detached shell acting later
+        # on a potentially reused address. The cleanup rechecks the identity in Hyprland.
+        animation_start = 'hl.dispatch(hl.dsp.window.set_prop({ prop = "no_anim", value = "1", window = w }))'
+        animation_end = f'''local function clear_animation_override()
+            local restored = hl.get_window("address:{addr}")
+            if restored and restored.pid == {int(client.get('pid') or 0)} then
+                hl.dispatch(hl.dsp.window.set_prop({{ prop = "no_anim", value = "unset", window = restored }}))
+            end
+        end
+        if hl.timer then
+            hl.timer(clear_animation_override, {{ type = "oneshot", timeout = 400 }})
+        else clear_animation_override() end'''
+
     # Restore window to workspace, bring to top (primer plano), focus, and keep cursor in place!
     lua_code = f"""(function()
         local cur = hl.get_cursor_pos()
         local w = hl.get_window("address:{addr}")
-        if w then
+        if w and w.pid == {int(client.get('pid') or 0)} then
             {target_clause}
+            {animation_start}
             hl.dispatch(hl.dsp.window.move({{ workspace = target, follow = false, window = w }}))
             {geometry_clause}
-            pcall(function() hl.dispatch(hl.dsp.window.bring_to_top({{ window = w }})) end)
-            pcall(function() hl.dispatch(hl.dsp.window.alter_zorder({{ mode = "top", window = w }})) end)
-            hl.dispatch(hl.dsp.focus({{ window = w }}))
+            {bwm_windows.focus_body_lua() if focus else ""}
             {untag}
+            {animation_end}
             if cur and cur.x and cur.y then
                 pcall(function() hl.dispatch(hl.dsp.cursor.move({{ x = cur.x, y = cur.y }})) end)
             end
@@ -180,21 +218,7 @@ def toggle_win(client: dict, active_addr: str):
     elif addr == active_addr:
         minimize_win(client)
     else:
-        # Focus and bring to top without warping mouse away from where clicked!
-        lua_code = f"""(function()
-            local cur = hl.get_cursor_pos()
-            local w = hl.get_window("address:{addr}")
-            if w then
-                pcall(function() hl.dispatch(hl.dsp.window.bring_to_top({{ window = w }})) end)
-                pcall(function() hl.dispatch(hl.dsp.window.alter_zorder({{ mode = "top", window = w }})) end)
-                hl.dispatch(hl.dsp.focus({{ window = w }}))
-                if cur and cur.x and cur.y then
-                    pcall(function() hl.dispatch(hl.dsp.cursor.move({{ x = cur.x, y = cur.y }})) end)
-                end
-            end
-            return hl.dsp.no_op()
-        end)()"""
-        run_lua(lua_code)
+        bwm_windows.focus_window(client)
 
 def find_matching_clients(clients: list, app_id: str) -> list:
     if not app_id:
@@ -295,7 +319,7 @@ def show_desktop(clients: list, leave: bool = False, keep_focus: str = ""):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: toggle-minimize.py <toggle|toggle-app|min|restore> [arg]")
+        print("Usage: toggle-minimize.py <toggle|toggle-app|min|restore|release-all|show-desktop> [arg]")
         sys.exit(1)
 
     cmd = sys.argv[1].lower().strip()
@@ -309,7 +333,7 @@ def main():
         target = None
         if arg:
             target = next((c for c in clients if c.get("address") == arg), None)
-        if not target and active_addr:
+        if not arg and active_addr:
             target = active
         if target:
             minimize_win(target)
@@ -325,10 +349,19 @@ def main():
         target = None
         if arg:
             target = next((c for c in clients if c.get("address") == arg), None)
-        if not target and active_addr:
+        if not arg and active_addr:
             target = active
         if target:
             toggle_win(target, active_addr)
+
+    elif cmd == "release-all":
+        # Skin change to a skin with nothing that shows minimized windows (no panel, dock off):
+        # every minimized window goes back to its origin workspace, geometry included, without
+        # focus or workspace switches (the skin manager restores its own focus snapshot).
+        for client in clients:
+            if is_minimized(client):
+                restore_win(client, focus=False)
+        write_show_desktop_state([])
 
     elif cmd == "show-desktop":
         show_desktop(clients, leave=(arg == "leave"), keep_focus=active_addr)
@@ -350,22 +383,8 @@ def main():
             minimize_win(active_match)
             return
 
-        # 3. Otherwise, focus the first window of this app, bring to top (primer plano), and preserve cursor!
-        target_addr = matching[0]["address"]
-        lua_code = f"""(function()
-            local cur = hl.get_cursor_pos()
-            local w = hl.get_window("address:{target_addr}")
-            if w then
-                pcall(function() hl.dispatch(hl.dsp.window.bring_to_top({{ window = w }})) end)
-                pcall(function() hl.dispatch(hl.dsp.window.alter_zorder({{ mode = "top", window = w }})) end)
-                hl.dispatch(hl.dsp.focus({{ window = w }}))
-                if cur and cur.x and cur.y then
-                    pcall(function() hl.dispatch(hl.dsp.cursor.move({{ x = cur.x, y = cur.y }})) end)
-                end
-            end
-            return hl.dsp.no_op()
-        end)()"""
-        run_lua(lua_code)
+        # Resolve special workspace before focusing; never move it into a normal workspace.
+        bwm_windows.focus_window(matching[0])
 
 if __name__ == "__main__":
     main()

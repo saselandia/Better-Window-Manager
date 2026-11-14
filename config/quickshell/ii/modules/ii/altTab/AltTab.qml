@@ -81,7 +81,8 @@ Scope {
     property bool releasedEarly: false // Alt released before the snapshot arrived (quick tap)
 
     function getVisibleWindows(clients, monitors) {
-        const activeWorkspaceIds = (monitors || []).map(m => m.activeWorkspace?.id);
+        const activeWorkspaceIds = (monitors || []).map(m => m.activeWorkspace?.id)
+            .concat((monitors || []).map(m => m.specialWorkspace?.id));
         if (root.appFilterFromActive) {
             root.appFilter = (clients || []).find(w => w.focusHistoryID === 0)?.class ?? "";
             root.appFilterFromActive = false;
@@ -93,13 +94,14 @@ Scope {
             if (c.mapped === false || c.hidden === true) continue;
             // Minimized windows wait on special:minimized (toggle-minimize.py; 99 in older versions)
             const minimizedClient = c.workspace?.name === "special:minimized" || c.workspace?.id === 99;
-            if (!c.workspace || (c.workspace.id <= 0 && !minimizedClient)) continue;
+            if (!c.workspace || (c.workspace.id <= 0 && !minimizedClient && !activeWorkspaceIds.includes(c.workspace.id))) continue;
             // KDE Plasma: like KWin's default, only windows of the visible workspaces
             // (plus minimized ones) and, for Alt+`, one app
             if (Appearance.isPlasma && !minimizedClient && !activeWorkspaceIds.includes(c.workspace.id)) continue;
             if (appFilter !== "" && c.class !== appFilter) continue;
             visible.push({
                 address: c.address,
+                pid: c.pid,
                 title: c.title || "",
                 class: c.class || "",
                 workspace: c.workspace,
@@ -163,30 +165,22 @@ Scope {
     }
 
     // Focus + bring to the front of the stacking order (floating windows are not raised by focus alone)
-    function focusAndRaise(address) {
-        const w = "\"address:" + address + "\"";
-        Hyprland.dispatch("hl.dsp.focus({window = " + w + "})");
-        Hyprland.dispatch("hl.dsp.window.bring_to_top({window = " + w + "})");
-        Hyprland.dispatch("hl.dsp.window.alter_zorder({mode = \"top\", window = " + w + "})");
+    function focusAndRaise(target) {
+        if (!target?.address || !target.pid) return;
+        Quickshell.execDetached(["python3", "/home/sasel/.config/hypr/scripts/bwm-focus.py",
+            target.address, "--pid", String(target.pid)]);
     }
 
     function focusTarget(target) {
         if (!target || !target.address) return;
         const minimized = target.workspace?.name === "special:minimized" || (target.workspace?.id ?? 0) === 99;
-        // minimized window: restore it first
-        if (minimized)
-            // Breeze: el módulo de ventanas de KWin (F8); el resto, el script común
-            Quickshell.execDetached(Appearance.isPlasma
-                ? ["/home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py", "unminimize", target.address]
-                : ["/home/sasel/.config/hypr/scripts/toggle-minimize.py", "restore", target.address]);
-        else
-            root.focusAndRaise(target.address);
+        root.focusAndRaise(target);
         // The switcher layer still holds the keyboard until it unmaps; focus again once it is gone
-        pendingFocus = target.address;
+        pendingFocus = target;
         focusTimer.interval = minimized ? 160 : 70;
         focusTimer.restart();
     }
-    property string pendingFocus: ""
+    property var pendingFocus: null
     Timer {
         id: focusTimer
         interval: 160
@@ -551,11 +545,13 @@ Scope {
                                 ScreencopyView {
                                     id: screencopy
                                     anchors.centerIn: parent
-                                    captureSource: (root.isOpen && modelData.toplevel) ? modelData.toplevel : null
-                                    live: true
+                                    // This view also exists while Breeze displays its own switcher.
+                                    // Never request captures from the hidden fallback window.
+                                    captureSource: (panelWindow.visible && root.isOpen && modelData.toplevel) ? modelData.toplevel : null
+                                    live: panelWindow.visible
                                     paintCursor: false
                                     constraintSize: Qt.size(240, 125)
-                                    visible: (modelData.toplevel != null)
+                                    visible: panelWindow.visible && (modelData.toplevel != null)
                                 }
                             }
 

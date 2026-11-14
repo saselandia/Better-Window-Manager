@@ -46,6 +46,37 @@ def current_skin() -> str:
     return out.stdout.strip().splitlines()[-1] if out.stdout.strip() else ""
 
 
+def focus_body_lua() -> str:
+    """Activate the live workspace before raising w; never extract a scratchpad window.
+
+    Use focus, not toggle_special: delayed/repeated activations must not hide the workspace.
+    Storage for minimized windows must be restored by the minimize controller first.
+    """
+    return '''
+        local ws = w.workspace
+        if not ws or ws.name == "special:minimized" or ws.id == 99 then return hl.dsp.no_op() end
+        if ws.id < 0 then
+            hl.dispatch(hl.dsp.focus({ workspace = ws.name }))
+        end
+        hl.dispatch(hl.dsp.focus({ window = w }))
+        hl.dispatch(hl.dsp.window.bring_to_top({ window = w }))
+        hl.dispatch(hl.dsp.window.alter_zorder({ mode = "top", window = w }))
+    '''
+
+
+def focus_window(client: dict):
+    """Focus with address+PID checked again inside the compositor."""
+    addr, pid = client.get("address", ""), client.get("pid")
+    if not re.fullmatch(r"0x[0-9a-fA-F]+", addr) or not isinstance(pid, int) or pid <= 0:
+        return
+    dispatch([f'''local w = hl.get_window("address:{addr}")
+        if w and w.pid == {pid} then
+            local cursor = hl.get_cursor_pos()
+            {focus_body_lua()}
+            if cursor then hl.dispatch(hl.dsp.cursor.move({{ x = cursor.x, y = cursor.y }})) end
+        end'''])
+
+
 def monitor_box(mon: dict) -> tuple:
     """(x, y, ancho, alto) lógicos del monitor (escala y rotación)."""
     scale = mon.get("scale") or 1

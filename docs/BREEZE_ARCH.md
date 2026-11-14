@@ -559,3 +559,34 @@ DigitalClock, Mostrar escritorio y ExpanderArrow; cuadrícula nativa de bandeja 
 AbstractItem y márgenes del contenedor por applet. Servicios y acciones permanecen en BWM.
 bar.plasma.clock y systemTray admiten claves originales de apariencia; requisitos incluyen
 el módulo QML privado de digital-clock. Estado y límites en BREEZE_PANEL_FIXES.md.
+
+## 17. Breeze II: primera corrección y prueba del anfitrión nativo (2026-11-12)
+
+Auditoría R0 y seguimiento en BREEZE_PLAN_V2.md. La activación común consulta workspace vivo,
+resuelve el especial antes de foco/elevación y comprueba PID; Alt+Tab utiliza bwm-focus.py y
+conserva la identidad en su timer. El origen especial del minimizado se guarda por nombre.
+La prueba del síntoma real queda pendiente de acceso al compositor, no disponible en el sandbox.
+
+La retirada de no_shadow se **revirtió como contención** tras el crash de captura de ventanas.
+La regla global vuelve a vetar CBreezeShadow; miniaturas Breeze suspendidas y fallback oculto
+sin captura. No hay causalidad probada sombra→crash ni validación de recuperación de sesión.
+Ver BREEZE_RECOVERY.md. No reactivar esta ruta sólo porque pase una prueba de reglas Lua.
+
+`src/bwm-systemsettings` inicia el reemplazo del host adaptado por System Settings real:
+KCModule QWidget con factory y metadata KDE, descubierto por systemsettings --list y probado
+con controlador falso. Sólo luz nocturna por ahora. Super+I aún conserva el host anterior;
+settings-native.sh es experimental y aplica el prefijo de plugins únicamente a ese proceso.
+No se considera terminada R2 ni portados los demás módulos BWM. Detalle y rollback en sus informes.
+
+
+R0 actualizada: inventario de contratos en BREEZE_AUDIT_V2.md, referencia reproducible propuesta
+BREEZE_R0_REFERENCE.md y fuentes fijadas por hash en BREEZE_R0_REFERENCE.json. El ejemplo
+CustomCorona de libplasma demuestra que existe una API para anfitrión propio, no que R4 esté
+implementada. La configuración compartida por panel y Configurar de Kickoff desactivado siguen
+siendo trabajo pendiente de R4/R5. Mediciones gráficas y servicios vivos no verificados.
+
+## Breeze II R4: anfitrión experimental de plasmoides
+
+Arquitectura y contratos comprobados en [BREEZE_R4_ARCH.md](BREEZE_R4_ARCH.md). El ejecutable
+`src/bwm-plasma-host` carga Applet/PlasmoidItem/ConfigView nativos en pruebas aisladas; aún no
+sustituye los paneles. Informe y puerta de salida pendiente en BREEZE_R4_RESULTS.md.

@@ -270,6 +270,7 @@ siendo el nombre del escritorio original que imita Breeze.
   `Desktop::windowState()`, `CViewHitTester`, `Fullscreen::controller()`, `Animation::mgr()`), portéalo con el
   diff del hyprbars oficial entre los commits que fija `hyprpm.toml` de hyprwm/hyprland-plugins.
 - **Pantalla completa**: `modules/fullscreen.lua` (cargado el último de las reglas) la deja sin bordes ni sombra, sin quitar la transparencia; un CSS nuevo para una app debe anular sus bordes/contornos en `:fullscreen` (Discord re-declara variables en `.theme-dark`: hay que ponerlas también ahí).
+- **inotify (límite 128 instancias por usuario, por defecto en casi todas las distros)**: cada `FileView` con `watchChanges: true` (y cada `QFileSystemWatcher`) gasta una instancia, también si el archivo no existe. Llegar a 128 rompe otras apps (Obsidian: «EMFILE: too many open files, watch»). No crees un vigilante por elemento de una lista: uno sobre un archivo-marca que reescribe el productor (p. ej. `agents/usage/.updated`). Mide con `find /proc/<pid>/fd -lname 'anon_inode:inotify' | wc -l`.
 - **swww/awww**: GURU publica swww con su nombre nuevo, `awww` (mismo uso). Los scripts usan el que exista.
 - **Luz nocturna**: dos motores (servicio `Hyprsunset.qml` en default (end-4)/Plasma, `nightlight.py` en Retro) con un
   solo Kelvin: `nightlight.py --temperature` lo copia a `light.night.colorTemperature` y el servicio llama a
@@ -286,6 +287,61 @@ siendo el nombre del escritorio original que imita Breeze.
 - Un demonio lanzado desde una terminal o una sesión de IA queda en su cgroup y puede morir con ella (pasó con la
   barra y `window-guard.py`, §3.105): lánzalos con `bwm_session.spawn()` (`hl.dsp.exec_cmd`), no con `Popen`.
   `window-guard.py` relanza el shell si falta: para pararlo de verdad, para antes el vigilante.
+- **Entorno del shell al cambiar de skin:** arranque/recuperación/mantenimiento pasan por
+  `bwm_session.start_shell` (proveedor Qt estable, KDE si está instalado). Las entradas de apps
+  usan `AppSearch.launch` → `bwm-launch-app.py` → Hyprland para heredar el entorno actual,
+  no el del arranque del shell. No forzar QIcon::setThemeName: desactiva el motor nativo KDE.
+- **Anfitrión Plasma R4 (experimental):** cargar el archivo propietario con Corona.loadLayout
+  antes de crear containments y guardar con saveLayout del mismo archivo + config.sync.
+  AppletOrder del containment está en Containments/<id>/General, no Configuration/General.
+  Exportar a otro nombre no sustituye ese ciclo. PanelSession sólo opera dentro del auxiliar;
+  no activar el panel diario ni anunciar backends probados por descubrir un widget/acción.
+  configUiModule/configUiComponent pueden ser páginas QML normales, no necesariamente KCM.
+  Entregar title/cfg_ antes de Component.onCompleted y usar ConfigurationSession también en
+  los probes; no certificar una opción por escribir el esquema desde una vía de prueba aparte.
+  PanelViewHost carga Panel.qml instalado: length es preferencia, distinta de los límites de
+  superficie. Sus setters son vista previa; applyViewSettings guarda explícitamente las seis
+  claves admitidas en plasmashellrc nativo, respetando claves ajenas, kdedefaults e inmutabilidad.
+  --native-policy añade panelVisibility 0/3 con petición de reserva LayerShellQt; no confirma
+  área útil real. Un panel por salida en ese ensayo; varios se bloquean hasta coordinar layout.
+  Cambiar salida/orientación exige releer antes de guardar. Adaptive/efectos/autoocultado siguen
+  sin backend; no anunciarlos operativos. Vida QML y máscaras se validan al actualizar.
+  Migración: conservar bar.plasma.edge o fallback bar.bottom (false→top), sin fijar BottomEdge/
+  Horizontal; Corona serializa Location/FormFactor y el probe comprueba el orden por su eje.
+  El plasmashellrc de staging sólo contiene paneles preparados: no sustituir con él el archivo
+  completo de sesión. Flags nativos migrados no certifican reservas/docking/Adaptive sin backend.
+  PanelRuntime coordina vistas por descripción/skin; el hook común sólo controla una prueba
+  registrada explícitamente con --follow-skin. No sustituye el panel diario. El llamador conserva
+  Corona y bindings. Ambigüedad de salida deja el panel en
+  espera; nunca usar el primer modelo parcial o un índice Qt como identidad persistente.
+  Qt Wayland 6.11.2 no expone serie en QScreen: la descripción Hyprland puede añadirla al
+  fabricante/modelo completo. Sólo admitir esa forma si la coincidencia es única; una serie
+  conocida debe coincidir y dos salidas indistinguibles se rechazan. No certificar serie
+  física cuando Qt no la aporta; status incluye qtPlatform/availableOutputs/serialAvailable.
+  MSI real: Qt anuncia fabricante «Co., Ltd.» y descripción Hyprland «Co. Ltd.»; tolerar
+  comas sólo en el prefijo completo del fabricante, sin alterar modelo/serie ni unicidad.
+  Al cerrar la prueba, retirar registro y esperar a su transacción antes de borrar el ack.
+  ProfileStore conserva archivos KDE completos y bindings separados en perfiles de ensayo;
+  restaurar siempre a otra generación/ruta, sin sobrescribir el archivo de un KSharedConfig
+  retenido. Mantener el lease durante la vida de Corona y hacer flush/cierre antes del checkpoint.
+  --export-as conserva perfil/historial en la autoridad XDG de estado dedicada; no selecciona
+  ni activa el panel. No ampliar esa autoridad a cualquier carpeta privada ni sobrescribir nombres.
+  panel-session.py status exige respuesta nueva, no basta PID/ack viejo. renderReady sólo
+  comprueba el marco Qt; replacementReady sigue false y no permite retirar el panel diario.
+  «Obtener nuevos» sin diálogo (--kns-*, kns-cycle.py): sólo raíces XDG temporales, preguntas
+  KNS siempre Cancelar; no cargar widgets que ejecutan órdenes sin revisarlos. Paquetes con
+  KPlugin.ServiceTypes sin KPackageStructure no los lista KPackage 6.29 ni Plasma: no forzarlos.
+  Páginas: sólo claves de main.xml y saveConfig() antes de Aplicar, como AppletConfiguration.qml.
+  CLI de kwin-window: to-screen MONITOR [ADDRESS], con --pid antes del subcomando;
+  no invertir los posicionales. Los fixtures deben probarse contra el parser real.
+  kwin_area vive en el watch único de kde-config-bridge: sigue reserved real para ejes BWM
+  maximizados, sin remaximizar ni escribir restauración/presnap. Respeta Force KDE, opt-outs,
+  fullscreen/especiales/minimizadas y transición. Cambiar su Python exige reiniciar el puente
+  existente (restart o --refresh-area-watcher del ensayo), no compositor/plugins/Quickshell.
+  Ese observador queda activo y puede reajustar ventanas BWM ya maximizadas. El marcador
+  privado sólo confirma baseline/proceso; la aceptación dinámica requiere medir al aparecer
+  y retirar el panel sin remaximizar. Validado en sesión por el usuario para MSI inferior,
+  escala 1/giro 0 y modo completo (§208); no extender a otras combinaciones ni takeover.
 - Kitty recuerda también el estado maximizado: `remember_window_size no` evita restaurarlo. La regla global
   `suppress-maximize-events` bloquea peticiones de maximizado de apps (también botones CSD); el compositor
   conserva el control manual y las peticiones de fullscreen de juegos/vídeo siguen permitidas.

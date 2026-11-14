@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+#pragma once
+#include <QObject>
+#include <QPointer>
+#include <QList>
+class QWindow;
+class FocusGrabClient;
+// hyprland_focus_grab_v1 (hyprland-protocols): keyboard focus is limited to the whitelisted
+// surfaces and a click outside them clears the grab. This is the Hyprland equivalent of the
+// focus change that makes KWin deactivate a PlasmaCore.Dialog with hideOnWindowDeactivate.
+// Without the protocol (other compositors, offscreen tests) available() is false and start()
+// does nothing: the Dialog keeps its native behaviour.
+class FocusGrab : public QObject {
+    Q_OBJECT
+public:
+    explicit FocusGrab(QObject *parent=nullptr);
+    ~FocusGrab() override;
+    static bool available();
+    // Starts a new grab for the windows that already have a Wayland surface. Returns false
+    // when the protocol is missing or none of the windows has a surface yet.
+    bool start(const QList<QWindow*> &windows);
+    void stop();
+    bool active()const{return m_client;}
+Q_SIGNALS:
+    void cleared();
+private:
+    FocusGrabClient *m_client=nullptr;
+};

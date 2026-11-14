@@ -726,7 +726,7 @@ def sync_floating_windows(skin: str, previous_skin=None, original_clients=None):
     if skin == "plasma":
         plist = subprocess.run(["hyprctl", "plugin", "list"], capture_output=True, text=True, check=False)
         if "Plugin breezebars" not in plist.stdout:
-            print("[BWM] Las barras hyprbars se cargarán en el próximo inicio de sesión en Plasma.", file=sys.stderr)
+            print("[BWM] Falta el plugin breezebars en esta sesión: las ventanas SSD no tendrán barra. Se carga al iniciar sesión, también desde Retro/default; no se cargará en caliente.", file=sys.stderr)
         subprocess.run(["hyprctl", "keyword", "plugin:breezebars:enabled", "true"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     else:
         # DO NOT unload plugins dynamically at runtime to prevent compositor segfaults
@@ -799,6 +799,23 @@ def sync_floating_windows(skin: str, previous_skin=None, original_clients=None):
         # no de la geometría flotante por defecto que el compositor pudiera haber aplicado.
         bwm_windows.float_in_place(skin, clients)
 
+def shows_minimized(skin: str) -> bool:
+    """¿Tiene la skin algo visible que devuelva las ventanas minimizadas?
+
+    Breeze: la barra de tareas del panel. default: el dock de end-4, si está activado en su perfil.
+    Retro: el dock de Omarchy sólo aparece en workspaces flotantes, así que una minimizada de un
+    workspace en mosaico quedaría sin salida; no cuenta.
+    """
+    if skin == "plasma":
+        return True
+    if skin == "default":
+        try:
+            with open(CONFIG_DEFAULT_JSON, "r", encoding="utf-8") as f:
+                return bool(json.load(f).get("dock", {}).get("enable"))
+        except Exception:
+            return False
+    return False
+
 def apply_theme(theme_name: str, restart_shell: bool = False):
     """Applies theme across all subsystems, with complete isolation."""
     if theme_name not in THEMES:
@@ -813,16 +830,28 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
     try:
         fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
+        lock_fd.close()
         return
 
     import bwm_transition
-    with bwm_transition.skin_change():
+    with lock_fd, bwm_transition.skin_change():
         curr_theme = get_current_theme()
         cfg = THEMES[theme_name]
+        import bwm_settings_hooks
+        if not bwm_settings_hooks.skin_changed('before', curr_theme, theme_name):
+            bwm_settings_hooks.skin_changed('after', curr_theme, curr_theme)
+            raise RuntimeError('No se confirmó el hook de salida; no se han cambiado los perfiles de skin')
         print(f"Aplicando estilo: {cfg['title']}...")
         import bwm_windows
         import bwm_session  # demonios como hijos de Hyprland, no de quien llama al gestor
         focus = bwm_windows.snapshot_focus()
+        # Las minimizadas viven en special:minimized en todas las skins. Si la skin destino no
+        # tiene nada visible que las devuelva (Breeze: el panel; default: su dock si está activo),
+        # vuelven a su workspace de origen antes de capturar las ventanas, para que la skin las
+        # coloque (mosaico o flotante) como a las demás. Sin foco ni cambios de workspace.
+        if theme_name != curr_theme and not shows_minimized(theme_name):
+            subprocess.run([sys.executable, str(Path(__file__).resolve().parent / "toggle-minimize.py"), "release-all"],
+                           check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
         original_clients = bwm_windows.hypr_json("clients")  # antes de que las reglas cambien floating/geometría
         if bwm_windows.is_traditional(curr_theme) and not bwm_windows.is_traditional(theme_name):
             bwm_windows.remember_traditional(curr_theme, original_clients)
@@ -924,6 +953,12 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         except Exception:
             pass
 
+        # D-Bus/systemd still remember the startup skin unless explicitly refreshed.
+        # Run the exporter as a child of Hyprland, where the reloaded environment and
+        # final user Lua overrides live; this caller can still have Retro's old env.
+        if not bwm_session.sync_activation_environment():
+            print("[BWM] No se pudo solicitar la actualización del entorno de activación de la sesión.", file=sys.stderr)
+
         # 6. Sincronizar el estado flotante / mosaico de las ventanas abiertas tras la recarga
         sync_floating_windows(theme_name, curr_theme, original_clients)
 
@@ -967,6 +1002,8 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         if cfg.get("is_plasma"):
             subprocess.run(kde_bridge + ["start"], check=False)
             subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "decorator.py"), "start"], check=False)
+
+        bwm_settings_hooks.skin_changed('after', curr_theme, theme_name)
 
         # Una sola restauración, después de la geometría; los hooks no reinician apps ni restauran focos antiguos.
         bwm_windows.restore_focus(focus)

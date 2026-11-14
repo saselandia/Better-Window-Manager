@@ -257,5 +257,33 @@ class PlasmaThemeTest(unittest.TestCase):
         self.assertEqual(json.loads((self.state / "bwm" / "plasma" / "colors.json").read_text())["scheme"], "TestDark")
 
 
+    def test_saved_icon_theme_is_restored_before_cache_notification(self):
+        original = DARK + "\n[Icons]\nTheme=custom-plasma-icons\n"
+        (self.config / "kdeglobals").write_text(original)
+        self.mod.save()
+        (self.config / "kdeglobals").write_text("[BWM]\nGenerated=x\n[Icons]\nTheme=BWM-Papirus\n")
+        observed = []
+        with mock.patch.object(self.mod, 'notify_icons', side_effect=lambda: observed.append(ini(self.config / 'kdeglobals')['Icons']['Theme'])):
+            self.mod.restore()
+        self.assertEqual(observed, ['custom-plasma-icons'])
+        self.assertEqual((self.config / 'kdeglobals').read_text(), original)
+
+    def test_icon_notification_includes_panel_and_small_groups(self):
+        import subprocess
+        with mock.patch.object(self.mod.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0)) as run:
+            self.assertEqual(self.mod.notify_icons(), 0)
+        self.assertEqual([call.args[0][-1] for call in run.call_args_list], [f'int32:{group}' for group in range(6)])
+        self.assertTrue(all(call.args[0][4] == 'org.kde.KIconLoader.iconChanged' for call in run.call_args_list))
+
+    def test_icon_refresh_does_not_write_settings_or_switch_skin(self):
+        original = DARK + "\n[Icons]\nTheme=custom-plasma-icons\n"
+        (self.config / 'kdeglobals').write_text(original)
+        with mock.patch.object(self.mod, 'notify_icons', return_value=1) as notify:
+            self.assertEqual(self.mod.main(['refresh-icons']), 1)
+        notify.assert_called_once_with()
+        self.assertEqual((self.config / 'kdeglobals').read_text(), original)
+        self.assertEqual(self.manager_calls, [])
+
+
 if __name__ == "__main__":
     unittest.main()

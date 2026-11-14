@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-14",
+  "phase": "R4",
+  "sessionModified": false,
+  "status": "access diagnosis prepared; local IPC unavailable",
+  "execution": {
+    "version": 1,
+    "sessionModified": false,
+    "r4Complete": false,
+    "realAreaVerified": false,
+    "environment": {
+      "runtimeExists": true,
+      "instanceSignaturePresent": true,
+      ".socket.sock": {
+        "exists": true,
+        "isSocket": true,
+        "ownedByCurrentUser": true
+      },
+      ".socket2.sock": {
+        "exists": true,
+        "isSocket": true,
+        "ownedByCurrentUser": true
+      }
+    },
+    "status": "ipc-unavailable",
+    "hyprland": {
+      "ok": false,
+      "error": "Couldn't open a socket (1)"
+    }
+  },
+  "elevationAttempt": {
+    "action": "read-only hyprctl -j monitors",
+    "result": "rejected by execution policy",
+    "reason": "Granular policy disables sandbox_approval, rules and request_permissions"
+  },
+  "tests": {
+    "sessionCheck": "..........\n----------------------------------------------------------------------\nRan 10 tests in 0.002s\n\nOK\n",
+    "skinManifests": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.025s\n\nOK\n",
+    "panelSessionTestsPassed": 20
+  },
+  "sourceSha256": {
+    "config/hypr/skins/plasma/scripts/r4-session-check.py": "63086e8b59503c9dc02d9f4fee9b9a764aecb8cd95ba7f3f11ff438e4c81cb52",
+    "tests/test_r4_session_check.py": "911c9a6b3a75b936a49a257e396e67d3081a48fd462918ee85699ae60ca0467c",
+    "config/hypr/skins/plasma/skin.json": "e29cacb6a2df21c7e9112614d98103b9371f26a87119d21dbc54f34b510d24f9"
+  },
+  "limits": [
+    "No graphical validation performed",
+    "No compositor area/reservation attribution certified",
+    "No bypass, external-terminal execution or socket bridge",
+    "User must run diagnostic in their ordinary session to observe access there"
+  ]
+}

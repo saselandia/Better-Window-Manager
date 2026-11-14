@@ -1,0 +1,4 @@
+module org.bwm.r4.configpages
+ModulePage 1.0 ModulePage.qml
+NonItem 1.0 NonItem.qml
+RequiredExtra 1.0 RequiredExtra.qml

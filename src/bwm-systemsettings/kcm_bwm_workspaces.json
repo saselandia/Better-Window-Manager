@@ -1,0 +1,10 @@
+{
+  "KPlugin": {
+    "Name": "BWM — Escritorios",
+    "Description": "Escritorios: gestor común de BWM",
+    "Icon": "preferences-desktop-virtual",
+    "License": "GPL-2.0-or-later"
+  },
+  "X-KDE-System-Settings-Parent-Category": "workspace",
+  "X-BWM-Category": "workspaces"
+}

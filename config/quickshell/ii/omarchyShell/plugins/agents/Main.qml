@@ -23,7 +23,8 @@ Item {
   FileView {
     id: localModelFile
     path: root.home + "/.local/state/omarchy/agent-local/status.json"
-    watchChanges: true
+    // BWM: no local models (omarchy-agent-local is a no-op); not worth an inotify instance
+    watchChanges: false
     printErrors: false
     onFileChanged: reload()
     onLoaded: root.parseLocalModel(text())
@@ -36,7 +37,8 @@ Item {
   FileView {
     id: localRecipesFile
     path: root.home + "/.local/state/omarchy/agent-local/list.json"
-    watchChanges: true
+    // BWM: no local models (omarchy-agent-local is a no-op); not worth an inotify instance
+    watchChanges: false
     printErrors: false
     onFileChanged: reload()
     onLoaded: {
@@ -130,8 +132,19 @@ Item {
     onObjectRemoved: (index, object) => root.rebuildAgents()
   }
 
-  // Each record's FileView follows its file on its own; this catches the ones
-  // whose watch was lost when an update replaced the file underneath them.
+  // BWM: records are not watched one by one (an inotify instance each); the
+  // update script rewrites this stamp after every run, wherever it was run from.
+  FileView {
+    id: usageStamp
+    path: root.usageDir + "/.updated"
+    watchChanges: true
+    printErrors: false
+    onFileChanged: {
+      root.rescanAgents()
+      root.reloadRecords()
+    }
+  }
+
   function reloadRecords() {
     for (var i = 0; i < agents.length; i++)
       if (agents[i]) agents[i].reload()

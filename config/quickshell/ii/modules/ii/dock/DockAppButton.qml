@@ -63,7 +63,7 @@ DockButton {
 
     onClicked: {
         if (appToplevel.toplevels.length === 0) {
-            root.desktopEntry?.execute();
+            AppSearch.launch(root.desktopEntry);
             return;
         }
         if (root.appIsActive && appToplevel.toplevels.length === 1) {
@@ -75,7 +75,7 @@ DockButton {
     }
 
     middleClickAction: () => {
-        root.desktopEntry?.execute();
+        AppSearch.launch(root.desktopEntry);
     }
 
     altAction: () => {

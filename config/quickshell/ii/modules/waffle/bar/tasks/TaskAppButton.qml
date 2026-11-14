@@ -48,13 +48,13 @@ AppButton {
         } else if (root.appEntry.toplevels.length === 1) {
             Quickshell.execDetached(["/home/sasel/.config/hypr/scripts/toggle-minimize.py", "toggle-app", root.appEntry.appId])
         } else {
-            root.desktopEntry.execute()
+            AppSearch.launch(root.desktopEntry)
         }
     }
 
     middleClickAction: () => {
         if (root.desktopEntry) {
-            desktopEntry.execute()
+            AppSearch.launch(desktopEntry)
         }
     }
 
@@ -105,7 +105,7 @@ AppButton {
                 iconName: action.icon,
                 text: action.name,
                 action: () => {
-                    action.execute()
+                    AppSearch.launch(root.desktopEntry, action)
                 }
             })).concat({ type: "separator" }) : []),
             {
@@ -114,7 +114,7 @@ AppButton {
                 monochromeIcon: false,
                 action: () => {
                     if (root.desktopEntry) {
-                        root.desktopEntry.execute()
+                        AppSearch.launch(root.desktopEntry)
                     }
                 }
             },

@@ -1,0 +1,10 @@
+{
+  "KPlugin": {
+    "Name": "BWM — Comportamiento de ventanas",
+    "Description": "Opciones KDE con traducción efectiva a BWM",
+    "Icon": "preferences-system-windows",
+    "License": "GPL-2.0-or-later"
+  },
+  "X-KDE-System-Settings-Parent-Category": "windowmanagement",
+  "X-BWM-Category": "windows"
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-2.0-or-later -->
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0">
+    <kcfgfile name=""/>
+    <group name="General">
+        <entry name="enabled" type="Bool"><default>true</default></entry>
+        <entry name="amount" type="Int"><default>3</default></entry>
+        <entry name="caption" type="String"><default>initial</default></entry>
+        <entry name="unexposed" type="String"><default>hidden default</default></entry>
+    </group>
+</kcfg>

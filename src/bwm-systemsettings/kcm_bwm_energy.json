@@ -1,0 +1,10 @@
+{
+  "KPlugin": {
+    "Name": "BWM — Inactividad y energía",
+    "Description": "Inactividad y energía: gestor común de BWM",
+    "Icon": "preferences-system-power-management",
+    "License": "GPL-2.0-or-later"
+  },
+  "X-KDE-System-Settings-Parent-Category": "hardware",
+  "X-BWM-Category": "energy"
+}

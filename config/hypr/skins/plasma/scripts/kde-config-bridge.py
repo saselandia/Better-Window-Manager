@@ -27,6 +27,7 @@ import types
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import kwin_rules
 import kwin_tiles
+import kwin_area
 
 CONFIG = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
 STATE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "bwm/plasma"
@@ -48,9 +49,9 @@ class Conflict(RuntimeError):
     """El archivo cambió mientras se preparaba una escritura: reintentar, nunca pisarlo."""
 
 
-def run(argv):
+def run(argv, timeout=15):
     try:
-        return subprocess.run(argv, capture_output=True, text=True, timeout=15)
+        return subprocess.run(argv, capture_output=True, text=True, timeout=timeout)
     except (OSError, subprocess.SubprocessError):
         return subprocess.CompletedProcess(argv, 1, "", "")
 
@@ -459,8 +460,16 @@ def reconcile(do_import=True, reload=True):
                     os.environ["BWM_SKIN_SWITCH"] = env_prev
         meta["palette"] = sig
         save_json(META, meta)
-        if changed_kwin and reload and os.environ.get("BWM_SKIN_SWITCH") != "1":
-            run(["hyprctl", "reload"])
+        if reload and os.environ.get("BWM_SKIN_SWITCH") != "1" and (changed_kwin or meta.get("pendingReload")):
+            # A failed IPC application must survive restart/retry even when the generated
+            # files no longer change. Never turn a persisted file into a false success.
+            meta["pendingReload"] = True
+            save_json(META, meta)
+            result = run(["hyprctl", "reload"])
+            if result.returncode:
+                raise RuntimeError("No se pudo aplicar la configuración al compositor; recarga pendiente")
+            meta.pop("pendingReload", None)
+            save_json(META, meta)
         return True
 
 
@@ -503,6 +512,11 @@ def start():
                       str(STATE / "bridge.log"))
 
 
+def restart():
+    stop()
+    start()
+
+
 def stop():
     try:
         fd = os.open(STATE / "watch.lock", os.O_RDWR)
@@ -532,6 +546,8 @@ def stop():
 
 
 def watched_files():
+    sources = [Path(p) for p in os.environ.get("XDG_CONFIG_DIRS", "/etc/xdg").split(":") if p]
+    files = ("kdeglobals", "kcminputrc", "kxkbrc", "kwinrc", "kwinrulesrc", "plasmarc", "breezerc", "plasma-localerc")
     return [OPTIONS, CONFIG / "hypr/modules/cursor.lua", CONFIG / "hypr/modules/binds.lua",
             CONFIG / "hypr/modules/monitors.lua", CONFIG / "hypr/monitors_layout.json",
             CONFIG / "bwm/user/shell.jsonc", CONFIG / "bwm/user/hyprland.lua",
@@ -539,7 +555,7 @@ def watched_files():
             STATE.parent / "nightlight.json", STATE / "tiling-outputs.json", *[CONFIG / f for f in
                 ("kdeglobals", "kcminputrc", "kxkbrc", "kwinrc", "kwinrulesrc", "plasmarc", "breezerc", "plasma-localerc",
                  "gtkrc", "gtkrc-2.0", "Trolltech.conf")],
-            *[CONFIG / "kdedefaults" / f for f in ("kdeglobals", "kcminputrc", "kwinrc", "plasmarc")]]
+            *[base / f for base in [CONFIG / "kdedefaults", *sources] for f in files]]
 
 
 def signatures():
@@ -613,8 +629,9 @@ def watch():
             stopping = True
         signal.signal(signal.SIGTERM, shutdown)
         watcher = Inotify()
-        previous, deadline = signatures(), None
+        observed, deadline = signatures(), None
         rules = kwin_rules.Runtime(types.SimpleNamespace(**globals()))
+        areas = kwin_area.Runtime(types.SimpleNamespace(**globals()),rules=rules)
         try:
             while not stopping:
                 try:
@@ -625,35 +642,46 @@ def watch():
                     watcher.wait(0.25)
                     continue
                 if watcher.wait(0.25):
-                    if signatures() != previous:
+                    current = signatures()
+                    # Directory events unrelated to our files must not postpone a real
+                    # pending change indefinitely. Compare to the last observation.
+                    if current != observed:
+                        observed = current
                         deadline = time.monotonic() + 0.3
                 if deadline is not None and time.monotonic() >= deadline:
                     try:
                         reconcile()
-                        previous, deadline = signatures(), None
-                    except (Conflict, ValueError, OSError) as exc:
+                        observed, deadline = signatures(), None
+                    except (Conflict, ValueError, OSError, RuntimeError) as exc:
                         print(f"kde-config-bridge: reintentar: {exc}", file=sys.stderr, flush=True)
                         deadline = time.monotonic() + 1
                 if deadline is None:
                     try:
                         rules.tick()
-                    except (Conflict, ValueError, OSError) as exc:
+                    except (Conflict, ValueError, OSError, RuntimeError) as exc:
                         print(f"kde-config-bridge: reglas: {exc}", file=sys.stderr, flush=True)
+                    try:
+                        areas.tick()
+                    except (ValueError, OSError, RuntimeError) as exc:
+                        areas.log_error(exc)
         finally:
             try:
                 rules.close()
             finally:
+                areas.close()
                 watcher.close()
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("enter", "export", "import", "watch", "start", "stop", "leave", "guards",
-                                           "kwin-settings"))
+    parser.add_argument("action", choices=("enter", "export", "import", "watch", "start", "stop", "restart", "leave", "guards",
+                                           "kwin-settings", "capabilities"))
     parser.add_argument("--no-reload", action="store_true")
     args = parser.parse_args()
     try:
-        if args.action == "kwin-settings":
+        if args.action == "capabilities":
+            print(read(Path(__file__).with_name("settings-capabilities.json")))
+        elif args.action == "kwin-settings":
             # F11: las páginas de comportamiento leen los mismos valores efectivos que aplica el puente
             print(json.dumps(kwin_settings()))
         elif args.action in ("export", "import"):
