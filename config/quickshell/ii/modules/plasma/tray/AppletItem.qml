@@ -11,7 +11,7 @@ AbstractItem {
     itemId:"applet:"+applet.id
     text:applet.title;mainText:applet.title;subText:"";textFormat:Text.PlainText
     status:PlasmaCore.Types.ActiveStatus
-    active:!tray.expanded || tray.activeApplet!==applet.id
+    active:!tray.expanded
     effectivePressed:tray.expanded&&tray.activeApplet===applet.id
     Kirigami.Icon {
         parent:taskIcon.iconContainer;anchors.fill:parent

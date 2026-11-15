@@ -1,2 +1,3 @@
 module qs.modules.plasma.theme
 singleton PlasmaTheme 1.0 PlasmaTheme.qml
+ToolTipArea 1.0 ToolTipArea.qml

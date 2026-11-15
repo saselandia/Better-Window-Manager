@@ -350,6 +350,16 @@ siendo el nombre del escritorio original que imita Breeze.
   (agentes, recordatorios, Elsewhen). Un plugin nuevo que la use necesita su enlace bajo `shell/plugins/`.
 - Omarchy usa `pacman`/AUR: al portar sus scripts, cámbialo por emerge/flatpak/`qlist` y avisa del paquete con
   `scripts/bwm-require.sh`.
+- **Foco y puntero en Breeze (Hyprland 0.56):** `ClickToFocus` equivale a `input:follow_mouse = 2` (el puntero
+  y el scroll siguen al ratón sin cambiar el foco activo hasta el clic); `follow_mouse = 0` bloquea
+  `wl_pointer.enter` en ventanas inactivas y rompe el scroll sin clic. Además, los hooks de
+  `m_events.input.mouse.button` (como `breezebars`) corren antes de `CInputManager::processMouseDownNormal`, que
+  omite `setPointerFocus` si `focusState()->window()` ya es la ventana bajo el cursor: nunca llames a
+  `fullWindowFocus` cuando el plugin deja pasar el clic (`!info.cancelled`).
+- **Tooltips y foco de popups en Breeze (Quickshell):** `PlasmaCore.ToolTipArea` instancia
+  `PlasmaQuick::ToolTipDialog` (`org_kde_plasma_shell`), que aparece centrado y rompe el primer clic del
+  panel/bandeja; usar `PlasmaTheme.ToolTipArea` (`PopupWindow` pasivo). En `TrayPopup.qml`, activar
+  `HyprlandFocusGrab` ~50 ms después de abrir para no congelar el puntero antes del mapeo del popup.
 
 ## 6. Cómo probar
 

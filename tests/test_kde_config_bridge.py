@@ -3,6 +3,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 import time
@@ -250,6 +251,30 @@ class BridgeTest(unittest.TestCase):
         self.assertEqual(self.m.patch_ini("# own\n[Other]\nKey=100%", {("Other", "New"): "yes"}),
                          "# own\n[Other]\nKey=100%\nNew=yes\n")
         self.assertEqual(self.m.patch_ini("[A]\nX=old\nY=keep\n", {("A", "X"): None}), "[A]\nY=keep\n")
+
+    def test_focus_policy_maps_click_to_follow_mouse_2_and_follows_to_1(self):
+        lua = shutil.which("lua5.4") or shutil.which("lua")
+        if not lua:
+            self.skipTest("lua interpreter not available")
+        misc = ROOT / "config/hypr/skins/plasma/hypr/misc.lua"
+        kwin = ROOT / "config/hypr/skins/plasma/hypr/kwin.lua"
+        harness = (
+            "local last = nil\n"
+            "hl = { config = function(t) last = t end, window_rule = function() end }\n"
+            f"dofile({json.dumps(str(misc))})\n"
+            "assert(last.input.follow_mouse == 2, 'misc.lua follow_mouse=' .. tostring(last.input.follow_mouse))\n"
+            f"dofile({json.dumps(str(kwin))})\n"
+            "print(last.input.follow_mouse)\n"
+        )
+        self.write(self.config / "kwinrc", "[Windows]\nFocusPolicy=ClickToFocus\n")
+        self.m.enter()
+        click = subprocess.run([lua, "-e", harness], capture_output=True, text=True, check=True)
+        self.assertEqual(click.stdout.strip(), "2")
+
+        self.write(self.config / "kwinrc", "[Windows]\nFocusPolicy=FocusFollowsMouse\n")
+        self.m.reconcile()
+        follows = subprocess.run([lua, "-e", harness], capture_output=True, text=True, check=True)
+        self.assertEqual(follows.stdout.strip(), "1")
 
 
 if __name__ == "__main__":

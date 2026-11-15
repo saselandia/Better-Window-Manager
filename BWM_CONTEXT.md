@@ -212,9 +212,11 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   seis widgets incluidos. Clic de tareas con TapHandler, probado con eventos en cuatro bordes (§3.160);
   marcos adyacentes y medidas del SVG. Representaciones compactas nativas de Kickoff/reloj/
   Mostrar escritorio y flecha de bandeja, con márgenes originales por applet (§3.161). DesktopState gestiona Mostrar escritorio sobre el minimizado común.
+  `TrayPopup` difiere `HyprlandFocusGrab` 50 ms al abrirse y el panel/bandeja usan `PlasmaTheme.ToolTipArea` (`PopupWindow` pasivo) en lugar de `PlasmaCore.ToolTipArea`.
   No hay anfitrión completo de plasmoides externos; límites de applets en sus README.
 * **Ventanas:** `breezebars` compone las imágenes de KDecoration/Aurorae de `bwm-decorator`
   fuera de Hyprland; CSD negociado sin listas de clases y marco real por dirección+PID.
+  `ClickToFocus` mapea a `input:follow_mouse = 2` (scroll al pasar el ratón; foco activo al pulsar) y `breezebars` ya no llama a `fullWindowFocus` en clics CSD pasantes (`m_hidden`).
   `kwin-window.py` proporciona minimizar/maximizar/restaurar; `modules/plasma/menus` los menús.
   Reglas originales kwinrulesrc y Tiling de kwinrc vía puente F2/F10, Ctrl+flechas conservado,
   Meta+T editor reducido. Comprobaciones físicas pendientes en las listas F7/F10.
@@ -2708,6 +2710,15 @@ Peticiones del usuario y cómo se resolvieron, en el orden en que se hicieron (s
 * Criterios originales de R4 cumplidos. Fuera de su puerta y pendientes: panel diario
   (replacementReady=false), backends tareas/escritorios, otras escalas/bordes/skins, desenfoque,
   widgets que ejecutan órdenes, diálogo KNS gráfico en sesión. Sin R5/R7, commit ni push.
+
+### 217. Breeze: congelación de popups de la bandeja, tooltips `ToolTipDialog`, `follow_mouse = 2` y primer clic en CSD (2026-11-15)
+
+* **Popups de bandeja/reloj congelados tras abrir (`TrayPopup.qml`, `AppletItem.qml`, `StatusNotifierItem.qml`, `Panel.qml`, `PanelState.qml`):** `TrayPopup.qml` activaba `HyprlandFocusGrab` en el mismo ciclo al abrir antes de mapearse la superficie `xdg_popup`, bloqueando el puntero/clics dentro del desplegable. Diferido 50 ms con `grabReady` + `grabTimer`; `AppletItem.qml` (`active: !tray.expanded`) y `StatusNotifierItem.qml` (`active: !tray.expanded && inVisibleLayout`) desactivan áreas de hover mientras la bandeja está expandida, y `Panel.qml`/`PanelState.qml` extraen `forceShown` con guarda no-op en `update()`.
+* **Tooltip centrado y fallo del primer clic en iconos del panel/bandeja (`PlasmaCore.ToolTipArea`):** `AbstractItem.qml`, `ExpanderArrow.qml` y `ShowDesktopButton.qml` instanciaban `PlasmaQuick::ToolTipDialog` (`org_kde_plasma_shell`), que sin protocolo Plasma en Hyprland aparecía centrado en pantalla y estorbaba al primer clic sobre los iconos del panel/bandeja. Creado `config/quickshell/ii/modules/plasma/theme/ToolTipArea.qml` (exportado en `qmldir`) basado en `HoverHandler { acceptedButtons: Qt.NoButton }`, retardo `Kirigami.Units.toolTipDelay` y `PopupWindow` no enfocable con estilo `KSvg.FrameSvgItem` (`solid/dialogs/background`); `ShowDesktopButton.qml` oculta además el tooltip al pulsar. Comprobado con grep cero usos restantes de `PlasmaCore.ToolTipArea` en `modules/plasma/`.
+* **Scroll sin clic previo en ventanas inactivas (`misc.lua`, `kwin.lua`, `settings-capabilities.json`, `docs/BREEZE_ARCH.md`):** `input:follow_mouse = 0` impedía que Hyprland enviara `wl_pointer.enter` al pasar el ratón por ventanas sin foco (Firefox no recibía scroll hasta hacer clic). En Hyprland 0.56 `ClickToFocus` debe mapear a `follow_mouse = 2` (el cursor/scroll sigue al ratón sin robar foco activo hasta el clic; `FollowsMouse` conserva `1`).
+* **Primer clic/arrastre ignorado en CSD oculto (`src/breezebars/barDeco.cpp`):** al hacer clic en los 50 px superiores fuera de los últimos 140 px (`if (m_hidden)`), el hook `mouse.button` llamaba a `fullWindowFocus` y `raise` antes de `CInputManager::processMouseDownNormal`; al ver que `focusState()->window()` ya coincidía con la ventana bajo el cursor, Hyprland omitía `setPointerFocus` y entregaba el primer `BTN_LEFT` a la ventana previa. Eliminadas ambas llamadas en ese paso pasante y reinstalado `config/hypr/plugins/breezebars.so` de forma atómica con `make install`.
+* **Comprobado:** 45 pruebas en verde (`BWM_RUN_QML_TESTS=1 python3 -m unittest tests.test_kde_config_bridge tests.test_plasma_tray tests.test_plasma_panel_native tests.test_plasma_task_input tests.test_breezebars -v`, incluidos los nuevos regresivos de `follow_mouse` en `lua5.4` y `ToolTipAreaTests`); `hyprctl reload` + `bwm-theme-manager.py set plasma --restart-shell` sin errores de configuración ni errores QML en `/run/user/1000/quickshell-session.log`, y `hyprctl getoption input:follow_mouse` devuelve `int: 2`.
+* **Pendiente manual del usuario:** el cambio C++ de `breezebars.so` está instalado atómicamente pero no recargado en caliente (regla de Hyprland); entra en vigor en el compositor tras reiniciar la sesión de Hyprland. Faltan pruebas manuales interactivas del usuario sobre popups de bandeja, tooltips, scroll sobre Firefox sin clic y arrastre inmediato entre ventanas tras dicho reinicio.
 
 ## 4. 📂 Estructura del repositorio
 

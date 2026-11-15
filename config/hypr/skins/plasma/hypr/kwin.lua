@@ -6,7 +6,7 @@ local k = ok and type(settings) == "table" and settings or {}
 local follows = k.focus ~= nil and k.focus ~= "ClickToFocus"
 local native_snap = not (hl.plugin and hl.plugin.breezebars and hl.plugin.breezebars.snap_config)
 hl.config({
-    input = { follow_mouse = follows and 1 or 0 },
+    input = { follow_mouse = follows and 1 or 2 },
     general = { snap = {
         enabled = native_snap and ((k.borderSnap or 10) > 0 or (k.windowSnap or 10) > 0),
         monitor_gap = k.borderSnap or 10,

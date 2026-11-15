@@ -11,7 +11,11 @@ Singleton {
     property var panels: ({})
     property var editing: ({})
     function edgeFor(screenName) { return Logic.edge(configuration, Config.options.bar.bottom); }
-    function update(screenName, values) { panels = Object.assign({}, panels, {[screenName]: values}); }
+    function update(screenName, values) {
+        const prev = panels[screenName];
+        if (prev && JSON.stringify(prev) === JSON.stringify(values)) return;
+        panels = Object.assign({}, panels, {[screenName]: values});
+    }
     function remove(screenName) { const copy=Object.assign({},panels); delete copy[screenName]; panels=copy; }
     function gapFor(screenName) { return panels[screenName]?.gap ?? 0; }
     function distanceFor(screenName) { return panels[screenName]?.distance ?? Number(configuration.thickness || Config.options.bar.height || 44); }

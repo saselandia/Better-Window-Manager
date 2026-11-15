@@ -13,7 +13,7 @@ AbstractItem {
     text:item.title||item.tooltipTitle||item.id
     mainText:item.tooltipTitle; subText:item.tooltipDescription
     textFormat:Text.AutoText
-    active:true
+    active:!tray.expanded&&inVisibleLayout
     status:item.status===Status.NeedsAttention?PlasmaCore.Types.NeedsAttentionStatus:PlasmaCore.Types.ActiveStatus
     // BWM: Plasma passes a QIcon, which Kirigami.Icon keeps square; Quickshell gives an image URL, which
     // Kirigami.Icon stretches to the container (itemSize x cell height). Keep it square and centred.

@@ -506,11 +506,9 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
         if (mousePos.x > windowBox.w - 140)
             return;
 
-        if (Desktop::focusState()->window() != PWINDOW)
-            Desktop::focusState()->fullWindowFocus(PWINDOW, Desktop::FOCUS_REASON_CLICK);
-
-        if (PWINDOW->m_isFloating)
-            Desktop::windowState()->raise(PWINDOW);
+        // Do not call fullWindowFocus here: single clicks pass through to Hyprland's
+        // processMouseDownNormal, which skips setPointerFocus if focusState()->window()
+        // was already changed early (swallowing the first press/drag on unfocused CSD apps).
 
         // Double click: maximize / restore
         auto now = Time::steadyNow();

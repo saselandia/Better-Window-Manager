@@ -9,7 +9,7 @@
 import QtQuick
 import QtQuick.Layouts
 
-import org.kde.plasma.core as PlasmaCore
+import qs.modules.plasma.theme as PlasmaThemeModule
 import org.kde.kirigami as Kirigami
 import org.kde.ksvg as KSvg
 
@@ -37,6 +37,7 @@ Item {
         activeFocusOnTab: true
         hoverEnabled: true
 
+        onPressed: toolTip.hideImmediately();
         onClicked: root.toggleRequested();
 
         Keys.onPressed: event => {
@@ -130,9 +131,10 @@ Item {
             }
         }
 
-        PlasmaCore.ToolTipArea {
+        PlasmaThemeModule.ToolTipArea {
             id: toolTip
             anchors.fill: parent
+            edge: root.edge
             mainText: root.title
             subText: root.toolTipSubText
             textFormat: Text.PlainText

@@ -8,10 +8,10 @@
 import QtQuick
 
 import org.kde.kirigami as Kirigami
-import org.kde.plasma.core as PlasmaCore
+import qs.modules.plasma.theme as PlasmaThemeModule
 
 
-PlasmaCore.ToolTipArea {
+PlasmaThemeModule.ToolTipArea {
     id: tooltip
     // BWM: tray state supplied by our host, no PlasmaShell singleton.
     property bool expanded:false
@@ -41,12 +41,14 @@ PlasmaCore.ToolTipArea {
     }
 
     subText: tooltip.expanded ? qsTr("Close popup") : qsTr("Show hidden icons")
+    active: !tooltip.expanded
 
     property bool wasExpanded
 
     TapHandler {
         onPressedChanged: {
             if (pressed) {
+                tooltip.hideImmediately();
                 tooltip.wasExpanded = tooltip.expanded;
             }
         }

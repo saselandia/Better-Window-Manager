@@ -21,8 +21,14 @@ PopupWindow {
     required property var tray
     required property var anchorItem
     readonly property string edge:PanelState.edgeFor(anchorItem.QsWindow.window?.screen?.name||"")
+    property bool grabReady:false
     visible:tray.expanded
-    onVisibleChanged:if(visible)Qt.callLater(()=>surface.forceActiveFocus())
+    onVisibleChanged:{
+        grabReady=false;
+        if(visible){grabTimer.restart();Qt.callLater(()=>surface.forceActiveFocus());}
+        else grabTimer.stop();
+    }
+    Timer { id:grabTimer;interval:50;onTriggered:if(trayWindow.visible)trayWindow.grabReady=true }
     color:"transparent";implicitWidth:tray.activeApplet==="calendar"?440:460;implicitHeight:540
     // BWM: PlasmaQuick::Dialog docks against the panel edge, not against the icon (which sits inside
     // the containment margins): the anchor rect spans the panel thickness. Floating panels keep
@@ -51,7 +57,7 @@ PopupWindow {
     anchor.rect.width:panelSpan.width;anchor.rect.height:panelSpan.height
     anchor.edges:edge==="bottom"?Edges.Top:edge==="top"?Edges.Bottom:edge==="left"?Edges.Right:Edges.Left
     anchor.gravity:anchor.edges
-    HyprlandFocusGrab { active:trayWindow.visible;windows:[trayWindow, trayWindow.anchorItem.QsWindow.window].filter(w=>w);onCleared:TrayState.close() }
+    HyprlandFocusGrab { active:trayWindow.visible&&trayWindow.grabReady;windows:trayWindow.grabReady?[trayWindow, trayWindow.anchorItem.QsWindow.window].filter(w=>w):[];onCleared:TrayState.close() }
     Item {
     id:surface
     anchors.fill:parent
