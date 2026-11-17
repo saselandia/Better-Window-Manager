@@ -23,6 +23,15 @@
 -- See https://wiki.hypr.land/Configuring/Basics/Window-Rules/
 -- and https://wiki.hypr.land/Configuring/Basics/Workspace-Rules/
 
+-- El almacén de minimizadas es compartido y puede pertenecer a otra pantalla.
+-- Su traslado oculto no debe animar geometría hacia ese monitor. Al restaurar,
+-- esta regla deja de coincidir; no impone una propiedad temporal a la ventana.
+hl.window_rule({
+    name = "bwm-minimized-storage-no-animation",
+    match = { workspace = "special:minimized" },
+    no_anim = true,
+})
+
 -- El compositor controla el maximizado, no el estado guardado por las apps.
 -- Afecta también a sus botones CSD; usar el atajo de BWM para maximizar.
 -- No suprime fullscreen (juegos/vídeo), ni los dispatchers manuales de Hyprland.

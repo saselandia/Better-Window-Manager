@@ -28,6 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import kwin_rules
 import kwin_tiles
 import kwin_area
+import native_workspaces
 
 CONFIG = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
 STATE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "bwm/plasma"
@@ -245,10 +246,8 @@ def shared_values():
 
 
 @contextlib.contextmanager
-def lock():
-    STATE.mkdir(parents=True, exist_ok=True)
-    with open(STATE / "bridge.lock", "a") as fd:
-        fcntl.flock(fd, fcntl.LOCK_EX)
+def lock(blocking=True):
+    with native_workspaces.bridge_lock(STATE,blocking):
         yield
 
 
@@ -431,7 +430,7 @@ def palette_signature():
     return hashlib.sha256(json.dumps(own, sort_keys=True).encode()).hexdigest()
 
 
-def reconcile(do_import=True, reload=True):
+def reconcile(do_import=True, reload=True, native_count_runtime=None):
     if not active():
         return False
     with lock():
@@ -460,6 +459,8 @@ def reconcile(do_import=True, reload=True):
                     os.environ["BWM_SKIN_SWITCH"] = env_prev
         meta["palette"] = sig
         save_json(META, meta)
+        # Optional R4 runtime copy, never a new authority or compositor reload.
+        (native_count_runtime or native_workspaces.Runtime(types.SimpleNamespace(**globals()))).tick(force=True,locked=True)
         if reload and os.environ.get("BWM_SKIN_SWITCH") != "1" and (changed_kwin or meta.get("pendingReload")):
             # A failed IPC application must survive restart/retry even when the generated
             # files no longer change. Never turn a persisted file into a false success.

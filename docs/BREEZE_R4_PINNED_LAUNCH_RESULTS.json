@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "date": "2026-11-17",
+  "section": "BWM_CONTEXT §3.250",
+  "scope": "R4 only: pinned launchers without windows and .desktop Actions from the original KDE task menu",
+  "design": {
+    "pinnedLaunchers": "BwmLaunchRouter: QIdentityProxyModel + exported TaskManager::AbstractTasksProxyModelIface inserted by the bridge between KDE TaskFilterProxyModel and ConcatenateTasksProxyModel (virtual QAbstractProxyModel::setSourceModel). requestActivate/requestNewInstance/requestOpenUrls on LauncherTasksModel rows queue {action:launcher,launcherUrl,urls}; all other rows/requests pass through. KDE concatenation and LauncherTasksModel untouched (manual sorting maps through it).",
+    "serviceActions": "TaskMenuPolicy identifies the QActions that the original Backend parented to the reviewed ContextMenu.qml (SHA256 unchanged) and matches the trailing ones against the .desktop Actions (same filtering as Backend::jumpListActions; separator/icon/text with mnemonics removed and elision). Routed actions queue {action:service-action,launcherUrl,serviceAction}; KDE handler stays connected. Places/Recent Files actions (built from the disposable host data) are masked (disabled), not routed.",
+    "hostPolicy": "Disposable host XDG_CONFIG_DIRS gets an immutable KDE KIOSK kdeglobals [KDE Action Restrictions][$i] run_desktop_files=false, shell_access=false (written O_EXCL by native_launch.write_host_policy in preview-isolated.py and check-local.py). KIO ApplicationLauncherJob/OpenUrlJob in the host are denied before spawning; preview startup requires applicationLauncher.inProcessLaunchDenied=true.",
+    "helper": "native-tasks.py launch_launcher (no window identity; Breeze rechecked under the shared native lock) -> bwm-plasma-host --launch-task-application with restored caller XDG/D-Bus/Qt environment -> KIO::ApplicationLauncherJob(KService) or (KServiceAction). Launcher resolution mirrors runApp (applications:, preferred:, local .desktop) without its OpenUrlJob/executable fallback; other schemes rejected."
+  },
+  "localTests": {
+    "ctestNormal": "13/13 (build/bwm-plasma-host, includes native Wayland fixtures here)",
+    "ctestAsan": "13/13 with ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 (includes native-task-thumbnail and native-task-delegate-render under ASan)",
+    "isolatedTaskApplicationLaunch": {
+      "version": 1,
+      "sessionModified": false,
+      "userApplicationsLaunched": false,
+      "applicationReadinessVerified": false,
+      "launchReturnsBeforeApplicationExits": true,
+      "newInstanceAccepted": true,
+      "nativeUrlExpansionVerified": true,
+      "callerEnvironmentRestored": true,
+      "launchOutsideActionProcessGroup": true,
+      "staleIdentityAndEmptyUrlsRejected": true,
+      "pinnedLauncherApplicationsFileAndPreferredUrlsVerified": true,
+      "desktopServiceActionsVerified": true,
+      "hiddenUnknownAndMalformedLauncherRequestsRejected": true,
+      "hostKioskPolicyDeniesInProcessLaunch": true,
+      "nativeMenuVisibilityPolicyDoesNotBlockExplicitRequests": true,
+      "unregisteredExecutableFallbackRejected": true,
+      "passed": true,
+      "originalKdeApplicationLauncherJobVerified": true
+    },
+    "panelTasksQtTest": "PanelTaskTest 4/4 incl. init/cleanup: window rows still route to BwmTaskSource through the router; pinned launcher activate/new-instance/open-urls queue 3 launcher requests and empty drop none; original ContextMenu.qml routes 2 Actions (\"Compose & send\" with & and mnemonics), hides NoDisplay, masks Places (FileManager); KDE hides Open New Window for pure launchers (LauncherTasksModel CanLaunchNewInstance=false); no in-process launch marker after triggering; manual launcher move/syncLaunchers preserved.",
+    "pythonR4": "155 OK (tests/test_r4*.py), skins+kde bridge 27 OK"
+  },
+  "sessionSmoke": {
+    "origin": "executed by the assistant in the user Hyprland session (IPC accessible in this run), no clicks, no applications launched",
+    "command": "preview-isolated.py ... --builtin org.kde.plasma.taskmanager --native-panel --layer-panel --instances 1 --follow-skin --task-actions --all-desktops --session-appearance --output MSI",
+    "status": {
+      "boundModels": 1,
+      "windowCount": 10,
+      "launcherRows": 4,
+      "snapshotAvailable": true,
+      "pinnedLauncherRoutes": 1,
+      "inProcessLaunchDenied": true,
+      "lastError": ""
+    },
+    "stop": "panel-session.py stop acknowledged; no host process, registry inactive, no leftover layers; skin still plasma"
+  },
+  "previousAuxiliaryAtStart": "not running (no process, panel-session status active=false); Breeze active",
+  "notVerified": [
+    "focus/activation of the started applications",
+    "Places/Recent Files sections (masked)",
+    "preferred://mailer command fallback and runApp non-application URLs (rejected by design)",
+    "KActivities notifyAccessed for launches (not reproduced)",
+    "daily panel replacement (replacementReady=false)"
+  ],
+  "operationalVerified": false,
+  "replacementReady": false,
+  "r4Complete": false,
+  "files": {
+    "src/bwm-plasma-host/launchrouter.h": "9db886b19c0e27c82f078ab9aaca4d2ed884da3682f4525ad9dc7d8500aa688f",
+    "src/bwm-plasma-host/launchrouter.cpp": "e0b9db1a07f0b5c07449953c409f6c9f64b7ed9d9f25659548167998adf9f1ef",
+    "src/bwm-plasma-host/tasklauncher.h": "c463d7024a54cb707838d54ad4e417361c5477ec2662eae30ff30707496774a2",
+    "src/bwm-plasma-host/tasklauncher.cpp": "96d50f4bef196db6b015db97d7f740f91275d74da23d9713abca01ccf53707a3",
+    "src/bwm-plasma-host/taskbridge.h": "85e014b7948bd6a3b19267a60c6f6b8548a5cd7286763b7d2139475d9fc85d94",
+    "src/bwm-plasma-host/taskbridge.cpp": "5e08d0f7835bb308fba667115ef27920113920c426148cf5a3c024ea242353fc",
+    "src/bwm-plasma-host/taskmenupolicy.h": "fe2c7f0d00eeb18d5608d795ce20fc6274c1acc32265cee218120c51a6dc268f",
+    "src/bwm-plasma-host/taskmenupolicy.cpp": "f594f64374896f9c2b892ebba678a02ce342e43af4134af8e36541eef1ee63e6",
+    "src/bwm-plasma-host/tasksource.cpp": "7a9de7aad9a2db99bbf9382af8125d0246042db90752d60afaefa27931e7e72c",
+    "src/bwm-plasma-host/preview-isolated.py": "b7f820b9d54c628c8abf4c01fa8b7435d8a3de16e65a892d69b9d36ea6971673",
+    "src/bwm-plasma-host/previewchecks.py": "7218d54daaedc49238d399b966c253869b4e7937a7b0d9273cbb1518b04b0dee",
+    "src/bwm-plasma-host/check-task-launch.py": "6ad1dd294a164bfe13f4baa2ad93e71824dd0c138cdb3789ee2813364c96e677",
+    "src/bwm-plasma-host/check-local.py": "7aa6fa3e974702906fbacc8de1b34f607e39fc39c04b144fb6e09d07c9980644",
+    "src/bwm-plasma-host/test-paneltasks.cpp": "08a906e1ef08cd840ce96fcd9ead3bb758cc9bece349cfeca24b52938f275bb7",
+    "src/bwm-plasma-host/CMakeLists.txt": "e2663da4b00bd3ae09d5d6ac8bb0c31713215ee8a99804526f3732f9474a2237",
+    "config/hypr/skins/plasma/scripts/native-tasks.py": "9a9b0dcdc82e1b45266f8d377e420efc653a13ed914455d9ce456d4084a7e0da",
+    "config/hypr/skins/plasma/scripts/native_launch.py": "33181ac5969ab856527a2ed20edca7201928fe7330c9c082d70cd683dc7311ff",
+    "tests/test_r4_native_launch.py": "b5ab7d6e4c4d70b6de97abe94f973ea32958b7f68880f2b91a3dbc63b4da096e",
+    "tests/test_r4_preview.py": "0e2d1271815edf72e21e998cfad32f6d8c0bb0b5837531574bf52c28a1b5cbdd"
+  },
+  "userAcceptance": {
+    "section": "BWM_CONTEXT §3.251",
+    "origin": "manual test by the user in the Hyprland session, auxiliary launched by the assistant on request",
+    "pinnedLauncherWithoutWindowOpensApp": true,
+    "serviceActionNewWindowFirefox": true,
+    "fileDroppedOnPinnedLauncherOpensInApp": true,
+    "placesSectionShown": true,
+    "hostTelemetry": {
+      "launchRequests": 3,
+      "lastError": ""
+    },
+    "newWindowAppendedRight": "expected KDE behaviour for org.kde.plasma.taskmanager (separateLaunchers default true; launchInPlace requires iconsOnly + manual sort)",
+    "notMeasured": [
+      "focus/activation of the new application",
+      "each Places entry disabled"
+    ]
+  }
+}

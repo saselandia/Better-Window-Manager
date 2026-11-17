@@ -12,6 +12,28 @@ local is_plasma = ok_theme and (active_theme.name == "plasma" or (active_theme.n
 local fullscreen_mode = is_plasma and 1 or 0
 local active_skin = ok_theme and active_theme.name or ""
 
+local function close_window_target()
+    if is_plasma then
+        local c = hl.get_cursor_pos()
+        local m = hl.get_monitor_at_cursor()
+        local ws = m and (hl.get_active_special_workspace(m) or m.active_workspace)
+        local best = nil
+        if c and m then
+            for _, w in ipairs(hl.get_windows()) do
+                if w.mapped and not w.hidden and (w.pinned or (ws and w.workspace and w.workspace.id == ws.id)) then
+                    local b = (hl.plugin and hl.plugin.breezebars and hl.plugin.breezebars.decoration and hl.plugin.breezebars.decoration(w.address, w.pid)) or nil
+                    local ext = (b and b.visible and b.borders) or {}
+                    if c.x >= w.at.x - (ext.left or 0) and c.x <= w.at.x + w.size.x + (ext.right or 0) and c.y >= w.at.y - (ext.top or 0) and c.y <= w.at.y + w.size.y + (ext.bottom or 0) then
+                        if not best or (w.focus_history_id or 999999) < (best.focus_history_id or 999999) then best = w end
+                    end
+                end
+            end
+        end
+        if best then return hl.dsp.window.close({ window = best }) end
+    end
+    return hl.dsp.window.close()
+end
+
 -- [General]
 hl.bind("ALT + A", hl.dsp.exec_cmd("quickshell -c ii ipc call cheatsheet toggle"), { description = "General: Guía de atajos (Cheatsheet)" })
 -- [Lanzadores]
@@ -20,7 +42,7 @@ hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/app
 hl.bind("ALT + E", hl.dsp.exec_cmd("nautilus --new-window"), { description = "Lanzadores: Explorador de archivos alternativo (Alt+E)" })
 hl.bind("ALT + W", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/wallpaper-picker.sh"), { description = "Lanzadores: Selector de fondos de pantalla" })
 -- [Ventanas]
-hl.bind("ALT + X", hl.dsp.window.close(), { description = "Ventanas: Cerrar ventana activa" })
+hl.bind("ALT + X", (is_plasma and close_window_target or hl.dsp.window.close)(), { description = "Ventanas: Cerrar ventana activa" })
 hl.bind("ALT + Q", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/toggle-float-persistent.py"), { description = "Ventanas: Recordar regla flotante persistente" })
 hl.bind("ALT + J", hl.dsp.layout("togglesplit"), { description = "Ventanas: Alternar división horizontal/vertical (Split)" })
 if active_skin ~= "plasma" then hl.bind("ALT + RETURN", hl.dsp.window.fullscreen({ mode = fullscreen_mode, action = "toggle" }), { description = "Ventanas: Alternar pantalla completa" }) end
@@ -109,7 +131,7 @@ if active_skin == "plasma" then hl.bind("ALT + RETURN", hl.dsp.exec_cmd("python3
 if active_skin == "plasma" then hl.bind("SUPER + Prior", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py maximize --mode full"), { description = "Ventanas: Maximizar ventana (KDE: Meta+RePág)" }) end
 if active_skin == "plasma" then hl.bind("SUPER + Next", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py minimize"), { description = "Ventanas: Minimizar ventana (KDE: Meta+AvPág)" }) end
 if active_skin == "plasma" then hl.bind("SUPER + D", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py show-desktop"), { description = "Ventanas: Echar un vistazo al escritorio (KDE: Meta+D)" }) end
-if active_skin == "plasma" then hl.bind("ALT + F4", hl.dsp.window.close(), { description = "Ventanas: Cerrar ventana (KDE: Alt+F4)" }) end
+if active_skin == "plasma" then hl.bind("ALT + F4", (is_plasma and close_window_target or hl.dsp.window.close)(), { description = "Ventanas: Cerrar ventana (KDE: Alt+F4)" }) end
 if active_skin == "plasma" then hl.bind("ALT + F3", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py menu"), { description = "Ventanas: Menú de la ventana (KDE: Alt+F3)" }) end
 if active_skin == "plasma" then hl.bind("SUPER + T", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/kwin-tiles.py open"), { description = "Ventanas: Editor de mosaico (Breeze)" }) end
 -- [Lanzadores]

@@ -4,6 +4,7 @@
 #include <QPointer>
 #include <QVariantList>
 #include <QHash>
+#include <QSet>
 namespace Plasma {class Containment;}
 class QQuickWindow;
 class PackageWindows : public QObject {
@@ -21,7 +22,9 @@ protected:
     bool eventFilter(QObject *,QEvent *)override;
 private:
     void schedule();
+    void prepare(QQuickWindow *window,bool creatingSurface=false);
     QPointer<Plasma::Containment> m_containment;
     QHash<QQuickWindow*,QVariantMap> m_records;
+    QSet<QQuickWindow*> m_observedPopups,m_trackedWindows;
     bool m_scheduled=false;
 };

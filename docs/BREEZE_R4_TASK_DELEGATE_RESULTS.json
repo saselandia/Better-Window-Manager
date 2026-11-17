@@ -1,0 +1,360 @@
+{
+  "version": 1,
+  "date": "2026-11-16",
+  "phase": "R4",
+  "historySection": 229,
+  "scope": "Prepared original native Task.qml delegate memory-render coverage, runtime blocked before Qt; no rendering acceptance",
+  "sessionModified": false,
+  "productionCodeModified": false,
+  "hyprlandPluginInstalled": false,
+  "hyprlandPluginLoaded": false,
+  "dailyPanelReplaced": false,
+  "quickshellRestarted": false,
+  "hostBinaryRebuilt": false,
+  "operationalVerified": false,
+  "replacementReady": false,
+  "r4Complete": false,
+  "sourceSha256": {
+    "src/bwm-plasma-host/test-taskdelegate.cpp": "6b8a112be1ebf2a524f3a217a18568eda64b96c8d1f9255038108d4a874f1d83",
+    "src/bwm-plasma-host/CMakeLists.txt": "91fb625c9a37f3e9b6034e3f0a61ef82ec156685186bfaaf45edc088c7a0b6a6",
+    "src/bwm-plasma-host/check-desktops.py": "b8f1c02bcac81b594771541820f8e3e52adb5537fc61fc0390177d62ca2384c4",
+    "src/bwm-plasma-desktops/test-display.cpp": "2e199fe8fb00a472ed2576f01ddd78a9582590b96049c3973bcb75b6e3e996ea",
+    "AGENTS.md": "28fea0501b51ac63239be88ef88db402336e855d8683074889202e3fdf8250b5",
+    "CLAUDE.md": "28fea0501b51ac63239be88ef88db402336e855d8683074889202e3fdf8250b5",
+    "BWM_CONTEXT.md": "0e36c9e87738b4fa417d82e9b8905c111b8bf1f82d4c826cc3f48bb1c7487382",
+    "docs/BREEZE_R4_RESULTS.md": "7e360bc935284f77928c19ebbf7fbdb93044d9b4e6855852b0872ed9c30c2340",
+    "docs/BREEZE_R4_ARCH.md": "65b12640089411a714341e51770768013fde0c27d6be7dac51d55ce97a7c9014",
+    "docs/BREEZE_R4_HANDOFF_CLAUDE.md": "e43dcb491921082020591e0d975207ebba995c95ca9f3d27be89250e4e8e4dcf",
+    "docs/BREEZE_PLAN_V2.md": "9aed75652a2e172aa60cc126629ffdea70a73bb225c6195baa13cd239615359e",
+    "src/bwm-plasma-host/README.md": "cbc7383eddb42e6a2107d360e522f7da1c2b8a981c8835016a0cbe41029d833e",
+    "THIRD_PARTY_NOTICES.md": "61a187aed835f2b7de5f41f417cd4a0c815441bc822f26953bcb44735fca4b0a"
+  },
+  "references": {
+    "plasma-workspace-6.7.5.tar.xz": {
+      "archiveSha256": "94ab21e2243b7876f65c315f1e545081c6437f5bd0a041ca4fb6c2533ae874c9",
+      "consultedMembers": {
+        "libtaskmanager/tasksmodel.cpp": "e2b131effdeec961bfd1880065963d74fcdc8cfdf8be7d6bdcb62d8a0564d430",
+        "libtaskmanager/windowtasksmodel.cpp": "5d20a1b064e195fbef609acc9efc72c9e44f5a95e0358ea8b8db8323d4001d36"
+      }
+    },
+    "plasma-desktop-6.7.5.tar.xz": {
+      "archiveSha256": "079fcf6b87d7bf65e3f2a4670d605fac9469344c279a285a98ad549332d7b53e",
+      "consultedMembers": {
+        "applets/taskmanager/qml/Task.qml": "ae8dbfabf98cb377f79fcb2a3295d5afccf1d1b5ce359d39e0fae627f9a7d334",
+        "applets/taskmanager/qml/main.qml": "8132232b514230b2d93eb4ea9c0313315c66c0901faf7a07fd29f226120ddef6"
+      }
+    },
+    "wayland-1.26.0.tar.xz": {
+      "archiveSha256": "64176eaa46e4969903e286f8e5ef8331affc17fdf03ac9b58381d2b23162b7a3",
+      "consultedMembers": {
+        "src/wayland-server.c": "77bfc0fdf911cf8288430b40227f22c4e37dcd4abaa4cc1f367d597e75abf893"
+      }
+    }
+  },
+  "build": {
+    "normalCompiled": true,
+    "asanCompiled": true,
+    "asanOptions": "detect_leaks=0:halt_on_error=1",
+    "normalBuildOutput": "[  0%] Built target bwm-window-system_autogen_timestamp_deps\n[  2%] Automatic MOC for target bwm-window-system\n[  2%] Built target bwm-window-system_autogen\n[ 11%] Built target bwm-window-system\n[ 27%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 30%] Automatic MOC for target bwm-plasma-configuration\n[ 30%] Built target bwm-plasma-configuration_autogen\n[ 91%] Built target bwm-plasma-configuration\n[ 91%] Built target test-taskdelegate_autogen_timestamp_deps\n[ 94%] Automatic MOC for target test-taskdelegate\n[ 94%] Built target test-taskdelegate_autogen\n[ 97%] Building CXX object CMakeFiles/test-taskdelegate.dir/test-taskdelegate.cpp.o\n[100%] Linking CXX executable test-taskdelegate\n[100%] Built target test-taskdelegate\n",
+    "asanBuildOutput": "[  0%] Built target bwm-window-system_autogen_timestamp_deps\n[  2%] Automatic MOC for target bwm-window-system\n[  2%] Built target bwm-window-system_autogen\n[ 11%] Built target bwm-window-system\n[ 27%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 30%] Automatic MOC for target bwm-plasma-configuration\n[ 30%] Built target bwm-plasma-configuration_autogen\n[ 91%] Built target bwm-plasma-configuration\n[ 91%] Built target test-taskdelegate_autogen_timestamp_deps\n[ 94%] Automatic MOC for target test-taskdelegate\n[ 94%] Built target test-taskdelegate_autogen\n[ 97%] Building CXX object CMakeFiles/test-taskdelegate.dir/test-taskdelegate_autogen/mocs_compilation.cpp.o\n[ 97%] Building CXX object CMakeFiles/test-taskdelegate.dir/test-taskdelegate.cpp.o\n[100%] Linking CXX executable test-taskdelegate\n[100%] Built target test-taskdelegate\n[ 25%] Built target bwm-desktop-protocol_autogen_timestamp_deps\n[ 25%] Built target bwm-desktop-protocol_autogen\n[ 68%] Built target bwm-desktop-protocol\n[ 75%] Built target desktop-test-display_autogen_timestamp_deps\n[ 81%] Automatic MOC for target desktop-test-display\n[ 81%] Built target desktop-test-display_autogen\n[ 81%] Building CXX object desktop-protocol/CMakeFiles/desktop-test-display.dir/test-display.cpp.o\n[ 87%] Linking CXX executable desktop-test-display\n[100%] Built target desktop-test-display\n"
+  },
+  "regression": {
+    "normal": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n    Start 1: desktop-workspace-projection\n1/3 Test #1: desktop-workspace-projection .....   Passed    0.05 sec\n    Start 7: surface-geometry\n2/3 Test #7: surface-geometry .................   Passed    0.04 sec\n    Start 8: isolated-local-configuration\n3/3 Test #8: isolated-local-configuration .....   Passed   22.94 sec\n\n100% tests passed, 0 tests failed out of 3\n\nTotal Test time (real) =  23.03 sec\n",
+    "asan": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan\n    Start 1: desktop-workspace-projection\n1/3 Test #1: desktop-workspace-projection .....   Passed    0.06 sec\n    Start 7: surface-geometry\n2/3 Test #7: surface-geometry .................   Passed    0.05 sec\n    Start 8: isolated-local-configuration\n3/3 Test #8: isolated-local-configuration .....   Passed   24.41 sec\n\n100% tests passed, 0 tests failed out of 3\n\nTotal Test time (real) =  24.52 sec\n",
+    "selectedSuites": [
+      "desktop-workspace-projection",
+      "surface-geometry",
+      "isolated-local-configuration"
+    ],
+    "passedSuitesPerBuild": 3,
+    "fullCtestPassed": false,
+    "pythonRunnerCompiled": true
+  },
+  "nativeRender": {
+    "normal": {
+      "version": 1,
+      "sessionModified": false,
+      "hyprlandPluginLoaded": false,
+      "dailyPanelReplaced": false,
+      "renderingVerified": false,
+      "arbitratedProvider": false,
+      "memoryRenderingRequested": true,
+      "memoryRenderingVerified": false,
+      "passed": false,
+      "error": "Invalid fixture handshake (exit 4): fixture first wl_client_create: Operation not permitted\n"
+    },
+    "asan": {
+      "version": 1,
+      "sessionModified": false,
+      "hyprlandPluginLoaded": false,
+      "dailyPanelReplaced": false,
+      "renderingVerified": false,
+      "arbitratedProvider": false,
+      "memoryRenderingRequested": true,
+      "memoryRenderingVerified": false,
+      "passed": false,
+      "error": "Invalid fixture handshake (exit 4): fixture first wl_client_create: Operation not permitted\n"
+    },
+    "previousNativeDesktopProtocolAlsoBlocked": true,
+    "assertionsExecuted": false,
+    "memoryRenderingVerified": false,
+    "error": "wl_client_create returned EPERM before starting Qt; exact denied operation not determined",
+    "permissionsChangedOrBypassed": false
+  },
+  "preparedAssertions": [
+    "installed original icontasks and taskmanager widgets",
+    "native TasksModel roleNames without proxy substitutes",
+    "BwmTaskBridge snapshots through original models",
+    "native Task.qml PID/appId/name/title",
+    "active/minimized/restored states and stable index/delegate",
+    "QQuickRenderControl pixels and state change to QImage",
+    "removal invalidates index/delegate",
+    "no QQuickWindow show/create or Wayland surface",
+    "QML binding errors fail test"
+  ],
+  "rejectedApproach": "An attempted test-only offscreen role proxy cannot repair TasksModel static native roleNames. Removed all substitutions and hooks; no private-state modification.",
+  "validationCommand": "ctest --test-dir /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host -R '^native-task-delegate-render$' --output-on-failure",
+  "limitations": [
+    "Native render test compiled, NOT run through assertions",
+    "No new original Task.qml paint result or Wayland acceptance",
+    "No physical input, compositor/session frontend/startup/delivery validation",
+    "No daily authority/fallback/takeover",
+    "ASan leak detection disabled; passing selected suites is not passing full CTest"
+  ],
+  "git": {
+    "commitCreated": false,
+    "pushPerformed": false,
+    "preexistingChangesPreserved": true,
+    "preexistingWhitespaceFinding": "tests/test_plasma_tray.py:586 new blank line at EOF; left untouched"
+  },
+  "userLocalAttempt": {
+    "date": "2026-11-16",
+    "origin": "User terminal output, also present in workspace task-delegate-results.json",
+    "report": {
+      "version": 1,
+      "sessionModified": false,
+      "hyprlandPluginLoaded": false,
+      "dailyPanelReplaced": false,
+      "renderingVerified": false,
+      "arbitratedProvider": false,
+      "memoryRenderingRequested": true,
+      "memoryRenderingVerified": false,
+      "clientExit": 2,
+      "clientOutput": "********* Start testing of TaskDelegateTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : TaskDelegateTest::initTestCase()\nFAIL!  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) '!qEnvironmentVariableIsEmpty(\"WAYLAND_SOCKET\")' returned FALSE. ()\n   Loc: [/mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/test-taskdelegate.cpp(47)]\nFAIL!  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) '!qEnvironmentVariableIsEmpty(\"WAYLAND_SOCKET\")' returned FALSE. ()\n   Loc: [/mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/test-taskdelegate.cpp(47)]\nPASS   : TaskDelegateTest::cleanupTestCase()\nTotals: 2 passed, 2 failed, 0 skipped, 0 blacklisted, 0ms\n********* Finished testing of TaskDelegateTest *********\n",
+      "clientDiagnostics": "",
+      "fixtureExit": 0,
+      "fixtureDiagnostics": "",
+      "fixtureOutput": "{\"accepted\":0,\"cancelled\":0,\"rejected\":0}\n",
+      "passed": false,
+      "error": "Native desktop protocol regression failed"
+    },
+    "result": "Private fixture started and Qt ran; test assertion incorrectly expected consumed WAYLAND_SOCKET environment variable. No render assertions reached."
+  },
+  "followUp230": {
+    "date": "2026-11-16",
+    "problem": "Test incorrectly required WAYLAND_SOCKET after QApplication; libwayland consumes/unsets it",
+    "fix": "QTest initMain saves fstat identity before QApplication; initTestCase checks active Qt Wayland display fd identity",
+    "sourceSha256": {
+      "src/bwm-plasma-host/test-taskdelegate.cpp": "9b3fc956e78ea6a11e522292c26067667e36d278cf5408d200b4d11b43b70bcd"
+    },
+    "references": {
+      "wayland-1.26.0/src/wayland-client.c": "c3536111c4fae59f9379a5927d79b80ef9bc4d0fe42054d54ce49027747d4c60"
+    },
+    "normalBuildOutput": "[  0%] Built target bwm-window-system_autogen_timestamp_deps\n[  2%] Automatic MOC for target bwm-window-system\n[  2%] Built target bwm-window-system_autogen\n[ 11%] Built target bwm-window-system\n[ 27%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 30%] Automatic MOC for target bwm-plasma-configuration\n[ 30%] Built target bwm-plasma-configuration_autogen\n[ 91%] Built target bwm-plasma-configuration\n[ 91%] Built target test-taskdelegate_autogen_timestamp_deps\n[ 94%] Automatic MOC for target test-taskdelegate\n[ 94%] Built target test-taskdelegate_autogen\n[ 97%] Building CXX object CMakeFiles/test-taskdelegate.dir/test-taskdelegate.cpp.o\n[100%] Linking CXX executable test-taskdelegate\n[100%] Built target test-taskdelegate\n",
+    "asanBuildOutput": "[  0%] Built target bwm-window-system_autogen_timestamp_deps\n[  2%] Built target bwm-window-system_autogen\n[ 11%] Built target bwm-window-system\n[ 27%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 30%] Built target bwm-plasma-configuration_autogen\n[ 91%] Built target bwm-plasma-configuration\n[ 91%] Built target test-taskdelegate_autogen_timestamp_deps\n[ 94%] Automatic MOC for target test-taskdelegate\n[ 94%] Built target test-taskdelegate_autogen\n[ 97%] Building CXX object CMakeFiles/test-taskdelegate.dir/test-taskdelegate.cpp.o\n[100%] Linking CXX executable test-taskdelegate\n[100%] Built target test-taskdelegate\n",
+    "installedLibraryReproduction": {
+      "source": "Actual installed libwayland-client, inherited socketpair, no server or Qt application",
+      "environmentConsumed": true,
+      "connectionIdentityPreserved": true
+    },
+    "currentExecutorAttempt": {
+      "version": 1,
+      "sessionModified": false,
+      "hyprlandPluginLoaded": false,
+      "dailyPanelReplaced": false,
+      "renderingVerified": false,
+      "arbitratedProvider": false,
+      "memoryRenderingRequested": true,
+      "memoryRenderingVerified": false,
+      "passed": false,
+      "error": "Invalid fixture handshake (exit 4): fixture first wl_client_create: Operation not permitted\n"
+    },
+    "localRerunPending": true,
+    "memoryRenderingVerified": false,
+    "productionModified": false
+  },
+  "userLocalAttemptAfter230": {
+    "origin": "User terminal output, mirrored in workspace report",
+    "report": {
+      "version": 1,
+      "sessionModified": false,
+      "hyprlandPluginLoaded": false,
+      "dailyPanelReplaced": false,
+      "renderingVerified": false,
+      "arbitratedProvider": false,
+      "memoryRenderingRequested": true,
+      "memoryRenderingVerified": false,
+      "clientExit": 2,
+      "clientOutput": "********* Start testing of TaskDelegateTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : TaskDelegateTest::initTestCase()\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) qt.qml.propertyCache.append: Member enabled of the object DeclarativeDropArea overrides a member of the base object. Consider renaming it or adding final or override specifier\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.libtaskmanager: The PlasmaWindowManagement protocol hasn't activated in time. The client possibly got denied by kwin? Check kwin output.\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.taskmanager: failed to register Update signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.notificationmanager: Failed to register JobViewServer DBus object\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x5572f20846c0)\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) kf.plasma.quick: Toolbox not loading, toolbox package is either invalid or disabled.\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) kf.plasma.quick: Couldn't create KWindowShadow for ToolTipDialog(0x5572f20846c0)\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.taskmanager: failed to register Update signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.notificationmanager: Failed to register JobViewServer DBus object\nFAIL!  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) 'qmlContext(delegate)->baseUrl().toString().contains(\"/taskmanager/Task.qml\")' returned FALSE. ()\n   Loc: [/mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/test-taskdelegate.cpp(128)]\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x5572f217ac00)\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.libtaskmanager: The PlasmaWindowManagement protocol hasn't activated in time. The client possibly got denied by kwin? Check kwin output.\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.taskmanager: failed to register Update signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.notificationmanager: Failed to register JobViewServer DBus object\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x5572f216d6e0)\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) kf.plasma.quick: Toolbox not loading, toolbox package is either invalid or disabled.\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.taskmanager: failed to register Update signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.notificationmanager: Failed to register JobViewServer DBus object\nFAIL!  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) 'qmlContext(delegate)->baseUrl().toString().contains(\"/taskmanager/Task.qml\")' returned FALSE. ()\n   Loc: [/mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/test-taskdelegate.cpp(128)]\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x5572f209d6a0)\nPASS   : TaskDelegateTest::cleanupTestCase()\nTotals: 2 passed, 2 failed, 0 skipped, 0 blacklisted, 398ms\n********* Finished testing of TaskDelegateTest *********\n",
+      "clientDiagnostics": "",
+      "fixtureExit": 0,
+      "fixtureDiagnostics": "",
+      "fixtureOutput": "{\"accepted\":0,\"cancelled\":0,\"rejected\":0}\n",
+      "passed": false,
+      "error": "Native desktop protocol regression failed"
+    },
+    "result": "Connection identity, bridge snapshots, native roles and model row insertion pass; context baseUrl assumption fails before remaining delegate/render assertions."
+  },
+  "followUp231": {
+    "date": "2026-11-16",
+    "problem": "Incorrect assertion that delegate QQmlContext.baseUrl contains Task.qml",
+    "fix": "Shared test-only resolvedUrl(resource)/SHA256 guard, tested on original delegate in local menu regression",
+    "sourceSha256": {
+      "src/bwm-plasma-host/tests/task-qml-source.h": "e07662cd14ac37086ae58828f99fe973ae72a4e6791e1bcf0c27905e226f711b",
+      "src/bwm-plasma-host/test-taskdelegate.cpp": "1cee58036d2a869c22f8933431f49c0b152533396786477d70fe3872934748b9",
+      "src/bwm-plasma-host/test-taskmenu.cpp": "02a3e590c5dcb88bc0f993c955b1623c95fa7d8c262d1ed3c85092cfc94b2f66"
+    },
+    "qt6112ConsultedSourceHashes": {
+      "src/qml/qml/qqmlcontext.cpp": "ab3480c41aca1a8f6dc94df1ec91aa41e24f0c9a3980a629fc83cff21c916d70",
+      "src/quick/items/qquickrendercontrol.cpp": "f9cb5a512d74ecac32ed88ccab154b4c50e4e077e0c9d062ebd2a1f9b60b0a9b",
+      "src/quick/scenegraph/adaptations/software/qsgsoftwarerenderer.cpp": "608bd8e61392a04b92107287a02f7cb76fcce3529fa036d78add07145eb315f9"
+    },
+    "normalBuildOutput": "[  0%] Built target bwm-window-system_autogen_timestamp_deps\n[  2%] Built target bwm-window-system_autogen\n[ 11%] Built target bwm-window-system\n[ 27%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 30%] Built target bwm-plasma-configuration_autogen\n[ 91%] Built target bwm-plasma-configuration\n[ 91%] Built target test-taskdelegate_autogen_timestamp_deps\n[ 94%] Automatic MOC for target test-taskdelegate\n[ 94%] Built target test-taskdelegate_autogen\n[ 97%] Building CXX object CMakeFiles/test-taskdelegate.dir/test-taskdelegate.cpp.o\n[100%] Linking CXX executable test-taskdelegate\n[100%] Built target test-taskdelegate\n[  0%] Built target bwm-window-system_autogen_timestamp_deps\n[  2%] Built target bwm-window-system_autogen\n[ 11%] Built target bwm-window-system\n[ 27%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 30%] Built target bwm-plasma-configuration_autogen\n[ 91%] Built target bwm-plasma-configuration\n[ 91%] Built target test-taskmenu_autogen_timestamp_deps\n[ 94%] Automatic MOC for target test-taskmenu\n[ 94%] Built target test-taskmenu_autogen\n[ 94%] Building CXX object CMakeFiles/test-taskmenu.dir/test-taskmenu.cpp.o\n[ 97%] Linking CXX executable test-taskmenu\n[100%] Built target test-taskmenu\n",
+    "asanBuildOutput": "[  0%] Built target bwm-window-system_autogen_timestamp_deps\n[  2%] Built target bwm-window-system_autogen\n[ 11%] Built target bwm-window-system\n[ 27%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 30%] Built target bwm-plasma-configuration_autogen\n[ 91%] Built target bwm-plasma-configuration\n[ 91%] Built target test-taskdelegate_autogen_timestamp_deps\n[ 94%] Automatic MOC for target test-taskdelegate\n[ 94%] Built target test-taskdelegate_autogen\n[ 97%] Building CXX object CMakeFiles/test-taskdelegate.dir/test-taskdelegate.cpp.o\n[100%] Linking CXX executable test-taskdelegate\n[100%] Built target test-taskdelegate\n[  0%] Built target bwm-window-system_autogen_timestamp_deps\n[  2%] Built target bwm-window-system_autogen\n[ 11%] Built target bwm-window-system\n[ 27%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 30%] Built target bwm-plasma-configuration_autogen\n[ 91%] Built target bwm-plasma-configuration\n[ 91%] Built target test-taskmenu_autogen_timestamp_deps\n[ 94%] Automatic MOC for target test-taskmenu\n[ 94%] Built target test-taskmenu_autogen\n[ 94%] Building CXX object CMakeFiles/test-taskmenu.dir/test-taskmenu.cpp.o\n[ 97%] Linking CXX executable test-taskmenu\n[100%] Built target test-taskmenu\n",
+    "normalLocalRegression": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n    Start 8: isolated-local-configuration\n1/1 Test #8: isolated-local-configuration .....   Passed   22.64 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =  22.64 sec\n",
+    "asanLocalRegression": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan\n    Start 8: isolated-local-configuration\n1/1 Test #8: isolated-local-configuration .....   Passed   24.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =  24.00 sec\n",
+    "asanOptions": "detect_leaks=0:halt_on_error=1",
+    "qtSoftwareSmoke": {
+      "sourceSha256": "6828435f5dec23bd954221b423a12c072c6e312a7189b13810f88e07ef1b7b12",
+      "results": {
+        "initialPixelsCorrect": true,
+        "updatedPixelsCorrect": true,
+        "pixelsChanged": true,
+        "windowHidden": true,
+        "noNativeHandle": true
+      },
+      "scope": "Simple original Qt Rectangle, API rendering to image only; not native KDE Task.qml"
+    },
+    "provenanceGuardVerifiedInOriginalOffscreenDelegate": true,
+    "nativeTaskMemoryRenderingVerified": false,
+    "localNativeRerunPending": true,
+    "productionModified": false,
+    "sessionModified": false
+  },
+  "userLocalAttemptAfter231": {
+    "origin": "User terminal output, mirrored in workspace report",
+    "report": {
+      "version": 1,
+      "sessionModified": false,
+      "hyprlandPluginLoaded": false,
+      "dailyPanelReplaced": false,
+      "renderingVerified": false,
+      "arbitratedProvider": false,
+      "memoryRenderingRequested": true,
+      "memoryRenderingVerified": false,
+      "clientExit": 2,
+      "clientOutput": "********* Start testing of TaskDelegateTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : TaskDelegateTest::initTestCase()\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) qt.qml.propertyCache.append: Member enabled of the object DeclarativeDropArea overrides a member of the base object. Consider renaming it or adding final or override specifier\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.libtaskmanager: The PlasmaWindowManagement protocol hasn't activated in time. The client possibly got denied by kwin? Check kwin output.\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.taskmanager: failed to register Update signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.notificationmanager: Failed to register JobViewServer DBus object\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55e5f658c6c0)\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) kf.plasma.quick: Toolbox not loading, toolbox package is either invalid or disabled.\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) kf.plasma.quick: Couldn't create KWindowShadow for ToolTipDialog(0x55e5f658c6c0)\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.taskmanager: failed to register Update signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.notificationmanager: Failed to register JobViewServer DBus object\nFAIL!  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) Compared values are not the same\n   Actual   (delegate->property(\"appId\").toString()): \"test-taskdelegate\"\n   Expected (\"org.kde.konsole\")                     : org.kde.konsole\n   Loc: [/mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/test-taskdelegate.cpp(132)]\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55e5f6599080)\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.libtaskmanager: The PlasmaWindowManagement protocol hasn't activated in time. The client possibly got denied by kwin? Check kwin output.\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.taskmanager: failed to register Update signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.notificationmanager: Failed to register JobViewServer DBus object\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55e5f63e52d0)\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) kf.plasma.quick: Toolbox not loading, toolbox package is either invalid or disabled.\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.taskmanager: failed to register Update signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.notificationmanager: Failed to register JobViewServer DBus object\nFAIL!  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) Compared values are not the same\n   Actual   (delegate->property(\"appId\").toString()): \"test-taskdelegate\"\n   Expected (\"org.kde.konsole\")                     : org.kde.konsole\n   Loc: [/mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/test-taskdelegate.cpp(132)]\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55e5f659b810)\nPASS   : TaskDelegateTest::cleanupTestCase()\nTotals: 2 passed, 2 failed, 0 skipped, 0 blacklisted, 30442ms\n********* Finished testing of TaskDelegateTest *********\n",
+      "clientDiagnostics": "",
+      "fixtureExit": 0,
+      "fixtureDiagnostics": "",
+      "fixtureOutput": "{\"accepted\":0,\"cancelled\":0,\"rejected\":0}\n",
+      "passed": false,
+      "error": "Native desktop protocol regression failed"
+    },
+    "result": "Connection, roles, source provenance and PID passed; hardcoded Konsole appId expectation failed with actual process-derived test-taskdelegate. Remaining rendering assertions not reached."
+  },
+  "followUp232": {
+    "date": "2026-11-16",
+    "problem": "Konsole appId had no guaranteed service in isolated environment; native resolver fell back to executable PID",
+    "fix": "Shared owned desktop/PNG fixture, native private service DB rebuild and asynchronous service delivery, exact model and QML metadata expectations",
+    "sourceSha256": {
+      "src/bwm-plasma-host/tests/task-app-fixture.h": "f07078c031c4a2decf1b29074fa5df2940ce7049c47f8864d1256ca38a2ed22a",
+      "src/bwm-plasma-host/test-taskdelegate.cpp": "08ab64053139dadbd76af5b9bbf4294e6e3a910a33c4304fe7ea851284ce5997",
+      "src/bwm-plasma-host/test-taskmetadata.cpp": "b020e753d5903e485835f4029f2f01440811aa14f3165b128b39e552e617b372",
+      "src/bwm-plasma-host/check-desktops.py": "e01a2c9a81ba84e74e6b01ffefec6096f27884b6d89361c1e3751577e4158001",
+      "src/bwm-plasma-host/CMakeLists.txt": "52272f0fcc88bad4c3e513bee93c652f59ebaf0f8c726f555aeacb6a00e42d33"
+    },
+    "referenceTaskTools675Sha256": "65ad59ba3ec98e0a7b01b47f7d7c95448e3128630616b7e52bc5a819ea670a6d",
+    "normalBuildOutput": "[  0%] Built target bwm-window-system_autogen_timestamp_deps\n[  2%] Built target bwm-window-system_autogen\n[ 11%] Built target bwm-window-system\n[ 27%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 30%] Built target bwm-plasma-configuration_autogen\n[ 91%] Built target bwm-plasma-configuration\n[ 91%] Built target test-taskdelegate_autogen_timestamp_deps\n[ 94%] Automatic MOC for target test-taskdelegate\n[ 94%] Built target test-taskdelegate_autogen\n[ 97%] Building CXX object CMakeFiles/test-taskdelegate.dir/test-taskdelegate.cpp.o\n[100%] Linking CXX executable test-taskdelegate\n[100%] Built target test-taskdelegate\n[  0%] Built target bwm-window-system_autogen_timestamp_deps\n[  2%] Built target bwm-window-system_autogen\n[ 11%] Built target bwm-window-system\n[ 27%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 30%] Built target bwm-plasma-configuration_autogen\n[ 91%] Built target bwm-plasma-configuration\n[ 91%] Built target test-taskmetadata_autogen_timestamp_deps\n[ 94%] Automatic MOC for target test-taskmetadata\n[ 94%] Built target test-taskmetadata_autogen\n[ 97%] Building CXX object CMakeFiles/test-taskmetadata.dir/test-taskmetadata.cpp.o\n[ 97%] Linking CXX executable test-taskmetadata\n[100%] Built target test-taskmetadata\n",
+    "asanBuildOutput": "[  0%] Built target bwm-window-system_autogen_timestamp_deps\n[  2%] Automatic MOC for target bwm-window-system\n[  2%] Built target bwm-window-system_autogen\n[ 11%] Built target bwm-window-system\n[ 27%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 30%] Automatic MOC for target bwm-plasma-configuration\n[ 30%] Built target bwm-plasma-configuration_autogen\n[ 91%] Built target bwm-plasma-configuration\n[ 91%] Built target test-taskdelegate_autogen_timestamp_deps\n[ 94%] Automatic MOC for target test-taskdelegate\n[ 94%] Built target test-taskdelegate_autogen\n[ 94%] Building CXX object CMakeFiles/test-taskdelegate.dir/test-taskdelegate_autogen/mocs_compilation.cpp.o\n[ 97%] Building CXX object CMakeFiles/test-taskdelegate.dir/test-taskdelegate.cpp.o\n[100%] Linking CXX executable test-taskdelegate\n[100%] Built target test-taskdelegate\n[  0%] Built target bwm-window-system_autogen_timestamp_deps\n[  2%] Built target bwm-window-system_autogen\n[ 11%] Built target bwm-window-system\n[ 27%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 30%] Built target bwm-plasma-configuration_autogen\n[ 91%] Built target bwm-plasma-configuration\n[ 91%] Built target test-taskmetadata_autogen_timestamp_deps\n[ 94%] Automatic MOC for target test-taskmetadata\n[ 94%] Built target test-taskmetadata_autogen\n[ 97%] Building CXX object CMakeFiles/test-taskmetadata.dir/test-taskmetadata.cpp.o\n[ 97%] Linking CXX executable test-taskmetadata\n[100%] Built target test-taskmetadata\n",
+    "normalLocalRegression": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n    Start 8: isolated-local-configuration\n1/1 Test #8: isolated-local-configuration .....   Passed   23.00 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =  23.00 sec\n",
+    "asanLocalRegression": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan\n    Start 8: isolated-local-configuration\n1/1 Test #8: isolated-local-configuration .....   Passed   24.92 sec\n\n100% tests passed, 0 tests failed out of 1\n\nTotal Test time (real) =  24.92 sec\n",
+    "normalNativeMetadataOutput": "********* Start testing of MetadataTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : MetadataTest::initTestCase()\nPASS   : MetadataTest::delegateApplicationFixtureResolvesBeforePidFallback()\nPASS   : MetadataTest::nativeDatabaseRefreshesBothSourcesWithoutReplacingWindows()\nPASS   : MetadataTest::cleanupTestCase()\nTotals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 3201ms\n********* Finished testing of MetadataTest *********\n",
+    "asanNativeMetadataOutput": "********* Start testing of MetadataTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : MetadataTest::initTestCase()\nPASS   : MetadataTest::delegateApplicationFixtureResolvesBeforePidFallback()\nPASS   : MetadataTest::nativeDatabaseRefreshesBothSourcesWithoutReplacingWindows()\nPASS   : MetadataTest::cleanupTestCase()\nTotals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 3249ms\n********* Finished testing of MetadataTest *********\n",
+    "asanOptions": "detect_leaks=0:halt_on_error=1",
+    "runnerPythonCompiled": true,
+    "metadataFixtureVerified": true,
+    "rawModelAppIdSuffix": ".desktop",
+    "qmlAppIdSuffixRemovedBy": "original Task.qml",
+    "nativeTaskMemoryRenderingVerified": false,
+    "localNativeRerunPending": true,
+    "productionModified": false,
+    "sessionModified": false,
+    "runtimeDependenciesAdded": false,
+    "configurationRoot": "runner-owned temporary XDG directories only",
+    "fixtureExecInvoked": false
+  },
+  "latestHistorySection": 233,
+  "memoryRenderingVerified": true,
+  "currentValidation": {
+    "date": "2026-11-16",
+    "origin": "User terminal run; matching full workspace report read by assistant",
+    "report": {
+      "version": 1,
+      "sessionModified": false,
+      "hyprlandPluginLoaded": false,
+      "dailyPanelReplaced": false,
+      "renderingVerified": false,
+      "arbitratedProvider": false,
+      "memoryRenderingRequested": true,
+      "memoryRenderingVerified": true,
+      "clientExit": 0,
+      "clientOutput": "********* Start testing of TaskDelegateTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : TaskDelegateTest::initTestCase()\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) qt.qml.propertyCache.append: Member enabled of the object DeclarativeDropArea overrides a member of the base object. Consider renaming it or adding final or override specifier\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.libtaskmanager: The PlasmaWindowManagement protocol hasn't activated in time. The client possibly got denied by kwin? Check kwin output.\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.taskmanager: failed to register Update signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.notificationmanager: Failed to register JobViewServer DBus object\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x558d67acf3c0)\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) kf.plasma.quick: Toolbox not loading, toolbox package is either invalid or disabled.\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.taskmanager: failed to register Update signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) org.kde.plasma.notificationmanager: Failed to register JobViewServer DBus object\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only) kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x558d681300d0)\nPASS   : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(icons-only)\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.libtaskmanager: The PlasmaWindowManagement protocol hasn't activated in time. The client possibly got denied by kwin? Check kwin output.\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.taskmanager: failed to register Update signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.notificationmanager: Failed to register JobViewServer DBus object\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x558d67b08130)\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) kf.plasma.quick: Toolbox not loading, toolbox package is either invalid or disabled.\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.taskmanager: failed to register Update signal\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) org.kde.plasma.notificationmanager: Failed to register JobViewServer DBus object\nQWARN  : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons) kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x558d67acd650)\nPASS   : TaskDelegateTest::originalDelegateRendersWithNativeWaylandRoles(text-and-icons)\nPASS   : TaskDelegateTest::cleanupTestCase()\nTotals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 724ms\n********* Finished testing of TaskDelegateTest *********\n",
+      "clientDiagnostics": "",
+      "fixtureExit": 0,
+      "fixtureDiagnostics": "",
+      "fixtureOutput": "{\"accepted\":0,\"cancelled\":0,\"rejected\":0}\n",
+      "passed": true,
+      "cleanupVerified": true
+    },
+    "ctestPassed": true,
+    "ctestElapsedSecondsFromUser": 0.83,
+    "qtTestPassCountIncludingLifecycle": 4,
+    "sourceSha256": {
+      "src/bwm-plasma-host/test-taskdelegate.cpp": "08ab64053139dadbd76af5b9bbf4294e6e3a910a33c4304fe7ea851284ce5997",
+      "src/bwm-plasma-host/tests/task-app-fixture.h": "f07078c031c4a2decf1b29074fa5df2940ce7049c47f8864d1256ca38a2ed22a",
+      "src/bwm-plasma-host/tests/task-qml-source.h": "e07662cd14ac37086ae58828f99fe973ae72a4e6791e1bcf0c27905e226f711b",
+      "src/bwm-plasma-host/check-desktops.py": "e01a2c9a81ba84e74e6b01ffefec6096f27884b6d89361c1e3751577e4158001",
+      "src/bwm-plasma-host/CMakeLists.txt": "52272f0fcc88bad4c3e513bee93c652f59ebaf0f8c726f555aeacb6a00e42d33"
+    },
+    "binarySha256": "4a8514878c87dcc83bd2b539af3d24bae306e7a7742c5a5466746f43b7d62da0",
+    "scope": "Original KDE icontasks/taskmanager Task.qml, native private Wayland connection and model chain, software rendering into QImage, no visible or native window",
+    "assertionsExecuted": true,
+    "memoryRenderingVerified": true,
+    "sessionSurfaceRenderingVerified": false,
+    "normalNativePassed": true,
+    "asanNativePassed": false,
+    "asanNativeStatus": "Not run; existing ASan build and local regression passed in section 232",
+    "warningsRetained": [
+      "DeclarativeDropArea enabled override",
+      "KWin navigation D-Bus signal absent",
+      "PlasmaWindowManagement absent in data-only fixture",
+      "service update/job view registration absent",
+      "shadow/toolbox fixture warnings"
+    ],
+    "operationalVerified": false,
+    "replacementReady": false,
+    "r4Complete": false,
+    "sessionModified": false,
+    "productionModified": false,
+    "pluginInstalledOrLoaded": false,
+    "dailyPanelReplaced": false,
+    "remaining": [
+      "Actual Hyprland frontend/startup/shared delivery acceptance",
+      "Native Wayland surfaces and input",
+      "Remaining task/provider capabilities",
+      "Daily authority/fallback"
+    ],
+    "noRetestRequiredWithoutChange": true
+  }
+}

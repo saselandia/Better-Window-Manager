@@ -16,6 +16,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import org.kde.plasma.components as PC3
+import qs.modules.plasma.tray as PlasmaTray
 
 Scope {
     id: root
@@ -42,7 +43,7 @@ Scope {
                         items.push((it.subMenu ? "▸ " : "") + (it.text ?? (it.title ?? "—")) + (it.checkable ? (it.checked ? " [x]" : " [ ]") : "") + (it.enabled === false ? " (off)" : ""));
                 }
             return JSON.stringify({ kind: PlasmaMenus.kind, screen: PlasmaMenus.screenName, opened: m?.opened ?? false,
-                                    x: m?.x ?? -1, y: m?.y ?? -1, items: items });
+                                    x: m?.x ?? -1, y: m?.y ?? -1, width: m?.width ?? -1, height: m?.height ?? -1, items: items });
         }
         function close(): void { PlasmaMenus.close(); }
     }
@@ -77,7 +78,7 @@ Scope {
             property int serial: PlasmaMenus.serial
             onSerialChanged: { active = false; active = PlasmaMenus.opened; }
             active: false
-            sourceComponent: ({ window: windowMenu, task: taskMenu, desktop: desktopMenu, panel: panelMenu })[PlasmaMenus.kind] ?? null
+            sourceComponent: ({ window: windowMenu, task: taskMenu, desktop: desktopMenu, panel: panelMenu, tray: trayMenu })[PlasmaMenus.kind] ?? null
             onLoaded: Qt.callLater(root.show)
         }
         Connections {
@@ -96,17 +97,21 @@ Scope {
         m.closed.connect(() => { if (loader.item === m) PlasmaMenus.close(); });
         m.popup(host, PlasmaMenus.x, PlasmaMenus.y);
         root.place(m);
-        // Las entradas que llegan después (recientes) cambian la altura: se recoloca
+        // Las entradas que llegan después (recientes, D-Bus menu) cambian el tamaño: se recoloca
         m.heightChanged.connect(() => root.place(m));
+        m.widthChanged.connect(() => root.place(m));
     }
     function place(m) {
-        if (PlasmaMenus.kind === "task" || PlasmaMenus.kind === "panel") {
+        if (PlasmaMenus.kind === "task" || PlasmaMenus.kind === "panel" || PlasmaMenus.kind === "tray") {
             const r = PlasmaMenus.anchorRect;
             const e = PlasmaMenus.edge;
             if (e === "bottom") { m.x = r.x; m.y = r.y - m.height; }
             else if (e === "top") { m.x = r.x; m.y = r.y + r.height; }
             else if (e === "left") { m.x = r.x + r.width; m.y = r.y; }
             else { m.x = r.x - m.width; m.y = r.y; }
+            m.x = Math.max(0, Math.min(m.x, win.width - m.width));
+            m.y = Math.max(0, Math.min(m.y, win.height - m.height));
+        } else if (win.width > 0 && win.height > 0) {
             m.x = Math.max(0, Math.min(m.x, win.width - m.width));
             m.y = Math.max(0, Math.min(m.y, win.height - m.height));
         }
@@ -116,4 +121,12 @@ Scope {
     Component { id: taskMenu; TaskMenu { parent: host; group: PlasmaMenus.group } }
     Component { id: desktopMenu; DesktopMenu { parent: host } }
     Component { id: panelMenu; PanelMenu { parent: host; panelScreen: PlasmaMenus.panelScreen } }
+    Component {
+        id: trayMenu
+        PlasmaTray.TrayMenu {
+            parent: host
+            handle: PlasmaMenus.trayMenu?.menu !== undefined ? PlasmaMenus.trayMenu.menu : PlasmaMenus.trayMenu
+            mockEntries: PlasmaMenus.trayMenu?.mockEntries ?? null
+        }
+    }
 }

@@ -88,15 +88,17 @@ def main():
     parser.add_argument('--maximize', action='store_true', help='Also create one own window and measure BWM maximization against the real usable area')
     parser.add_argument('--refresh-area-watcher', action='store_true', help='Reload the existing Breeze bridge to enable automatic maximized-area tracking; requires --maximize')
     parser.add_argument('--output', required=True, help='Exact monitor description; never a connector name')
-    parser.add_argument('--binary', type=Path, default=Path('/tmp/bwm-r4-panel-view-build/bwm-plasma-host'))
-    parser.add_argument('--package', type=Path, default=Path('/tmp/bwm-r4-config-pages-upstream/libplasma-6.7.5/examples/applets/config'))
+    parser.add_argument('--binary', type=Path, default=ROOT / 'build/bwm-plasma-host/bwm-plasma-host')
+    parser.add_argument('--package', type=Path, default=ROOT / 'src/bwm-plasma-host/tests/shared-config',
+                        help='Disposable local fixture by default; --package accepts an explicitly selected original KDE package')
     parser.add_argument('--report', type=Path, default=Path(tempfile.gettempdir()) / f'bwm-r4-reservation-session-{os.getuid()}.json')
     args = parser.parse_args()
     if not args.run: parser.error('El ensayo exige --run; modifica temporalmente la reserva de la salida elegida')
     if args.refresh_area_watcher and not args.maximize:parser.error('--refresh-area-watcher requires --maximize')
     before = check.collect()
     report = {'version': 1, 'before': before, 'r4Complete': False, 'realAreaVerified': False,
-              'reservationDeltaVerified': False, 'maximizedWindowVerified': False}
+              'reservationDeltaVerified': False, 'maximizedWindowVerified': False,
+              'binary': str(args.binary.resolve()), 'package': str(args.package.resolve())}
     child = None
     fixture = None
     try:

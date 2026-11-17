@@ -9,15 +9,16 @@ import qs.services
 Singleton {
     id: root
 
-    property string kind: ""            // window | task | desktop | panel
+    property string kind: ""            // window | task | desktop | panel | tray
     property string screenName: ""
     property real x: 0                  // punto de apertura, lógico y relativo a la pantalla
     property real y: 0
-    property rect anchorRect: Qt.rect(0, 0, 0, 0) // botón que lo abre (task/panel), relativo a la pantalla
+    property rect anchorRect: Qt.rect(0, 0, 0, 0) // botón que lo abre (task/panel/tray), relativo a la pantalla
     property string edge: "bottom"      // borde del panel, para colocarlo como Plasma
     property string address: ""         // window: ventana de Hyprland (0x…)
     property var group: null            // task: grupo del gestor de tareas (appId, toplevels)
     property var panelScreen: ""        // panel: pantalla del panel
+    property var trayMenu: null         // tray: QsMenuHandle (o mock con entries) del StatusNotifierItem
     property int serial: 0
 
     readonly property string kwin: Quickshell.env("HOME") + "/.config/hypr/skins/plasma/scripts/kwin-window.py"
@@ -35,18 +36,32 @@ Singleton {
         const s = screenAt(gx, gy);
         openLocal(kind, s?.name ?? "", gx - (s?.x ?? 0), gy - (s?.y ?? 0), props);
     }
-    // Junto a un elemento (botón del panel): debajo o encima según el borde, alineado a la izquierda
+    // Junto a un elemento (botón del panel o icono en TrayPopup): debajo o encima según el borde
     function openFor(kind, item, edge, props) {
         const win = item.QsWindow.window;
         const p = item.mapToItem(null, 0, 0);
-        const s = win?.screen;
-        // La capa del panel está pegada a su borde: su origen en la pantalla sale del borde
+        const s = win?.screen ?? Quickshell.screens.find(sc => sc.name === (item.tray?.screenName ?? "")) ?? Quickshell.screens[0];
         const e = edge || "bottom";
-        const wx = e === "right" ? (s?.width ?? 0) - (win?.width ?? 0) : 0;
-        const wy = e === "bottom" ? (s?.height ?? 0) - (win?.height ?? 0) : 0;
-        root.anchorRect = Qt.rect(p.x + wx, p.y + wy, item.width, item.height);
-        root.edge = edge || "bottom";
-        openLocal(kind, s?.name ?? "", p.x + wx, p.y + wy + item.height, props, true);
+        let lx = p.x;
+        let ly = p.y;
+        // La capa del panel está pegada a su borde: su origen en la pantalla sale del borde.
+        // Si se abre desde un PopupWindow (TrayPopup de ocultos), sumamos su ancla en el panel.
+        if (win?.anchor?.item) {
+            const awin = win.anchor.item.QsWindow?.window;
+            const ap = win.anchor.item.mapToItem(null, 0, 0);
+            const awx = e === "right" ? (s?.width ?? 0) - (awin?.width ?? 0) : 0;
+            const awy = e === "bottom" ? (s?.height ?? 0) - (awin?.height ?? 0) : 0;
+            lx = ap.x + awx;
+            ly = ap.y + awy;
+        } else {
+            const wx = e === "right" ? (s?.width ?? 0) - (win?.width ?? 0) : 0;
+            const wy = e === "bottom" ? (s?.height ?? 0) - (win?.height ?? 0) : 0;
+            lx += wx;
+            ly += wy;
+        }
+        root.anchorRect = Qt.rect(lx, ly, item.width, item.height);
+        root.edge = e;
+        openLocal(kind, s?.name ?? "", lx, ly + item.height, props, true);
     }
     function openLocal(kind, screenName, lx, ly, props, keepAnchor) {
         if (!keepAnchor)
@@ -55,6 +70,7 @@ Singleton {
         root.group = props?.group ?? null;
         root.panelScreen = props?.panelScreen ?? "";
         root.panelEditing = props?.editing ?? false;
+        root.trayMenu = props?.trayMenu ?? null;
         if (props?.edge)
             root.edge = props.edge;
         root.screenName = screenName;
@@ -64,7 +80,7 @@ Singleton {
         root.serial++;
         HyprlandData.updateWindowList();
     }
-    function close() { root.kind = ""; }
+    function close() { root.kind = ""; root.trayMenu = null; }
 
     // Modo de edición del panel (F3) y su editor de elementos gráficos: los atiende el panel
     // (Panel.qml/PanelContent.qml); así este módulo no importa el del panel

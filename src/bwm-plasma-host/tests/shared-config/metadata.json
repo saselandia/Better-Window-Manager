@@ -1,0 +1,9 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Id": "org.bwm.r4.shared-config",
+        "Name": "Disposable shared configuration test",
+        "Version": "1.0",
+        "License": "GPL-2.0-or-later"
+    }
+}

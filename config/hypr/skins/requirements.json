@@ -61,7 +61,7 @@
     "plasma-integration": {
       "label": "Plugin de plataforma de KDE para Qt",
       "referenceVersion": "6.7.5",
-      "why": "Las apps Qt de default (end-4) leen kdeglobals (QT_QPA_PLATFORMTHEME=kde), como en end-4",
+      "why": "Proveedor Qt del shell para conservar iconos/paleta KDE al cambiar de skin; integración Qt de Breeze y default (end-4)",
       "check": {"type": "qtplugin", "path": "platformthemes/KDEPlasmaPlatformTheme6.so"},
       "packages": {"gentoo": "kde-plasma/plasma-integration", "arch": "plasma-integration", "fedora": "plasma-integration", "opensuse": "plasma6-integration-plugin", "debian": "plasma-integration"}
     },
@@ -711,6 +711,46 @@
       "build": "make -C {repo}/src/bwm-decorator install",
       "notes": {"all": "Necesita kdecoration, breeze y las cabeceras de Qt 6 y KF6 (Config, ColorScheme, CoreAddons, Service). Proceso aparte: no se carga en Hyprland."}
     },
+    "bwm-systemsettings-build": {
+      "label": "Compilación de KCM nativos BWM (Qt Widgets y KF6)",
+      "why": "Construye los módulos nativos experimentales para System Settings real",
+      "check": {
+        "type": "pkgconfig",
+        "modules": [
+          "Qt6Widgets"
+        ],
+        "cmds": [
+          "cmake",
+          "make",
+          "c++"
+        ]
+      },
+      "packages": {
+        "gentoo": "dev-qt/qtbase kde-frameworks/kcmutils kde-frameworks/ki18n kde-frameworks/kcoreaddons dev-build/cmake",
+        "arch": "qt6-base kcmutils ki18n kcoreaddons cmake",
+        "fedora": "qt6-qtbase-devel kf6-kcmutils-devel kf6-ki18n-devel kf6-kcoreaddons-devel cmake",
+        "opensuse": "qt6-base-devel kf6-kcmutils-devel kf6-ki18n-devel kf6-kcoreaddons-devel cmake",
+        "debian": "qt6-base-dev libkf6kcmutils-dev libkf6i18n-dev libkf6coreaddons-dev cmake"
+      },
+      "notes": {
+        "all": "Qt Widgets y CMake comprobados por pkg-config/comandos; la configuración CMake valida además las cabeceras KF6. CMake valida también KDecoration3 y KF6 Config, ya requeridos por Breeze. Qt Test sólo es necesario para make test."
+      }
+    },
+    "bwm-systemsettings": {
+      "label": "KCM nativos de BWM para System Settings (experimental)",
+      "why": "Módulos nativos R2/R3 y descubrimiento de configuradores; migración todavía parcial",
+      "check": {
+        "type": "path",
+        "any": [
+          "~/.local/share/bwm/systemsettings/lib/qt6/plugins/plasma/kcms/systemsettings/kcm_bwm_nightlight.so"
+        ]
+      },
+      "provider": "build",
+      "build": "make -C {repo}/src/bwm-systemsettings install",
+      "notes": {
+        "all": "Prototipo R2: no sustituye aún el lanzador. Necesita CMake, Qt 6 Widgets, KF6 KCMUtils, CoreAddons, Config, I18n y KDecoration3; Qt Test sólo para pruebas. El proceso de systemsettings debe recibir QT_PLUGIN_PATH apuntando al prefijo local, según src/bwm-systemsettings/README.md."
+      }
+    },
     "bwm-kcmhost": {
       "label": "Módulo QML org.bwm.kcm (bwm-kcmhost)",
       "why": "Incrusta los KCM reales de Plasma (colores, estilo, decoraciones, tema global, iconos, fuentes…) en las Preferencias del sistema de Breeze",
@@ -807,6 +847,92 @@
         "fedora": "kf6-ki18n-devel",
         "opensuse": "kf6-ki18n-devel",
         "debian": "libkf6i18n-dev"
+      }
+    },
+    "bwm-plasma-host-build": {
+      "label": "Anfitrión experimental libplasma R4 (compilación y pruebas)",
+      "why": "Prueba aislada de Corona, PlasmoidItem, páginas y KPackage; no sustituye todavía el panel",
+      "check": {
+        "type": "pkgconfig",
+        "modules": [
+          "Qt6Widgets",
+          "Qt6Quick",
+          "Qt6WaylandClient",
+          "wayland-client",
+          "wayland-protocols",
+          "hyprland-protocols"
+        ],
+        "cmds": [
+          "cmake",
+          "c++",
+          "kpackagetool6",
+          "wayland-scanner"
+        ]
+      },
+      "packages": {
+        "gentoo": "kde-plasma/libplasma kde-frameworks/kpackage kde-frameworks/kconfig dev-qt/qtbase dev-qt/qtdeclarative dev-build/cmake kde-frameworks/knewstuff kde-plasma/layer-shell-qt kde-frameworks/kcoreaddons dev-qt/qtwayland dev-libs/hyprland-protocols kde-frameworks/ksvg kde-frameworks/kwindowsystem kde-plasma/plasma-workspace kde-frameworks/kservice dev-libs/wayland dev-libs/plasma-wayland-protocols dev-libs/wayland-protocols kde-frameworks/kio",
+        "arch": "libplasma kpackage kconfig qt6-base qt6-declarative cmake knewstuff layer-shell-qt kcoreaddons qt6-wayland hyprland-protocols ksvg kwindowsystem plasma-workspace kservice wayland plasma-wayland-protocols wayland-protocols kio",
+        "fedora": null,
+        "opensuse": null,
+        "debian": null
+      },
+      "notes": {
+        "all": "CMake valida Plasma/PlasmaQuick 6.7.5, LayerShellQt >=6.7.5, KF6 CoreAddons/Package/Config/ConfigQml/NewStuffWidgets/Svg, Qt6 WaylandClient y hyprland-protocols (focus grab para cerrar menús al pulsar fuera). El adaptador KWindowSystem usa ABI privada V5 y exige 6.29.0 EXACT y sus headers private; sólo dentro del auxiliar, sin instalar un plugin global. LibTaskManager 6.7.5 EXACT de plasma-workspace y KF6 Service aportan el modelo nativo y metadatos de apps; la fuente BWM es opt-in y no acredita escritorios virtuales ni compatibilidad completa del widget. Qt Test con BUILD_TESTING. Las pruebas de org.kde.panel, Panel.qml original y la migración necesitan plasma-desktop. Vistas y staging aislados: no sustituyen el panel ni activan una migración. Instalar recursos no demuestra compatibilidad de sus servicios con Hyprland. KIOGui aporta ApplicationLauncherJob nativo para Nueva ventana/abrir archivos de una tarea, lanzadores anclados y Actions .desktop; proceso separado con entorno de sesión restaurado, sin interpretar Exec a mano. KIOFileWidgets (mismo paquete kio) aporta KFilePlacesModel para identificar los Lugares del menú original. Miniaturas opt-in del preview: wayland-protocols con ext-foreign-toplevel-list/ext-image-capture-source/ext-image-copy-capture y hyprland-protocols con toplevel-mapping; sólo captura por ventana en memoria con guarda verificada del compositor activo; aceptación visual por entorno. No requiere org.kde.pipewire para esa adaptación. BUILD_TESTING añade servidor Wayland sólo de fixture por socketpair privado y usa los XML plasma-wayland-protocols 1.23.0 (hash fijado) y wayland-protocols; no conecta a la sesión."
+      }
+    },
+
+    "bwm-plasma-desktops-build": {
+      "label": "Proveedor experimental de escritorios Plasma (sólo compilación R4)",
+      "why": "Protocolo nativo de escritorios sobre el display existente; opt-in desactivado y sin carga automática",
+      "check": {
+        "type": "pkgconfig",
+        "modules": [
+          "hyprland",
+          "wayland-server >= 1.22",
+          "wayland-client",
+          "nlohmann_json"
+        ],
+        "cmds": [
+          "cmake",
+          "c++",
+          "wayland-scanner"
+        ]
+      },
+      "packages": {
+        "gentoo": "dev-libs/wayland dev-libs/plasma-wayland-protocols dev-libs/wayland-protocols dev-cpp/nlohmann_json dev-build/cmake",
+        "arch": "wayland plasma-wayland-protocols wayland-protocols nlohmann-json cmake",
+        "fedora": null,
+        "opensuse": null,
+        "debian": null
+      },
+      "notes": {
+        "all": "Fuentes src/bwm-plasma-desktops. CMake con BWM_BUILD_HYPRLAND_PLUGIN=ON genera un .so separado con -fno-gnu-unique; no instala, carga o reinicia nada. Compilar con el mismo Hyprland/compilador; guarda de hash en inicialización y XML privado fijado. Reutiliza la autoridad BWM 1–N y el estado vivo, omite especiales/99. El auxiliar requiere control v2: barrera por conexión y asociación del global KDE, con registro único visible; también arbitraje de servidor v1, ciclo de vida v1 con inicio diferido y countMirrorVersion=1 con contador común confirmado. El shell común coordina hooks.sharedSettings de adaptadores incluidos entre skins; un auxiliar lee las opciones efectivas de la skin actual y envía sólo una copia por IPC. El puente KDE conserva su reconciliación propia, sin quedar activo en otras skins. El frontend no lee config.json ni crea otra preferencia o daemon. Inventario asíncrono sobre el display existente, elección por claim entre proveedores BWM y retirada ante conflictos visibles; sin esperar procesos en el compositor ni sustituir su filtro global. Una generación publicada por sesión, sin reactivar tras retirada. No impide que módulos ajenos anuncien duplicados ni ve globals ocultos por filtros. Creación, borrado y traslado entre monitores no soportados; no se anuncia pager/tareas completo. Prueba del proveedor KDE por Wayland aislado, sin validar el plugin en sesión. No cargar/descargar en caliente; instalación sólo con make install atómico y carga en un futuro inicio de sesión tras revisión."
+      }
+    },
+    "plasma-desktop-widgets": {
+      "label": "Widgets y paquete de escritorio originales de Plasma",
+      "referenceVersion": "6.7.5",
+      "why": "Kickoff, tareas y paquete de shell/containment que necesita el anfitrión R4; no ejecuta plasmashell",
+      "check": {
+        "type": "path",
+        "any": [
+          "/usr/lib64/qt6/plugins/plasma/applets/org.kde.plasma.kickoff.so",
+          "/usr/lib/qt6/plugins/plasma/applets/org.kde.plasma.kickoff.so",
+          "/usr/lib/x86_64-linux-gnu/qt6/plugins/plasma/applets/org.kde.plasma.kickoff.so",
+          "/usr/share/plasma/plasmoids/org.kde.plasma.kickoff/metadata.json",
+          "~/.local/share/plasma/plasmoids/org.kde.plasma.kickoff/metadata.json"
+        ]
+      },
+      "packages": {
+        "gentoo": "kde-plasma/plasma-desktop",
+        "arch": "plasma-desktop",
+        "fedora": "plasma-desktop",
+        "opensuse": null,
+        "debian": "plasma-desktop"
+      },
+      "notes": {
+        "gentoo": "R4 se contrasta con 6.7.5. Revisar emerge --pretend antes de instalar. -semantic-desktop evita añadir Baloo para este ensayo; es una elección temporal si se aplica mediante USE en el comando.",
+        "all": "La presencia del paquete sólo acredita recursos disponibles. Modelo de tareas, escritorios y APIs del shell necesitan adaptadores BWM y validación independiente."
       }
     }
   }

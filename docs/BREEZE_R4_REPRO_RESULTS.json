@@ -1,0 +1,92 @@
+{
+  "date": "2026-11-14",
+  "baseCommit": "e41c28d",
+  "phase": "R4",
+  "build": "/tmp/bwm-r4-build",
+  "buildPassed": true,
+  "ctestLocal": "Test project /tmp/bwm-r4-build\n    Start 1: surface-geometry\n1/2 Test #1: surface-geometry .................   Passed    0.03 sec\n    Start 2: isolated-local-configuration\n2/2 Test #2: isolated-local-configuration .....   Passed    7.07 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =   7.10 sec\n",
+  "localConfiguration": {
+    "version": 1,
+    "sessionModified": false,
+    "externalWidgetGateVerified": false,
+    "networkUsed": false,
+    "packages": [
+      {
+        "id": "org.bwm.r4.callback-config",
+        "exercise": {
+          "cancelDoesNotWrite": true,
+          "defaultsStaged": true,
+          "expectedValue": false,
+          "key": "flag",
+          "pageReopened": true,
+          "reloadedValue": false,
+          "saved": true,
+          "secondInstanceUnchanged": true
+        },
+        "freshProcessReadback": true
+      },
+      {
+        "id": "org.bwm.r4.shared-config",
+        "exercise": {
+          "cancelDoesNotWrite": true,
+          "defaultsStaged": true,
+          "expectedValue": false,
+          "key": "enabled",
+          "pageReopened": true,
+          "reloadedValue": false,
+          "saved": true,
+          "secondInstanceUnchanged": true
+        },
+        "freshProcessReadback": true
+      },
+      {
+        "id": "org.bwm.r4.module-config",
+        "moduleAndSourcePagesLoaded": true
+      }
+    ],
+    "ui": [
+      {
+        "test": "liveCatalogRefreshAndNativeMetadata",
+        "passed": true
+      },
+      {
+        "test": "sharedConfigurationTransactions",
+        "passed": true
+      },
+      {
+        "test": "sharedConfigurationFreshProcessReadback",
+        "passed": true
+      },
+      {
+        "test": "moduleConfigurationTransactions",
+        "passed": true
+      },
+      {
+        "test": "moduleConfigurationFreshProcessReadback",
+        "passed": true
+      }
+    ],
+    "defaultSessionFixtureNativePanelVerifiedOffscreen": true,
+    "cleanupVerified": true,
+    "passed": true
+  },
+  "pythonR4": "...............................................BWM: hook de cambio de plasma: unacknowledged\nBWM: hook de cambio de retro: unacknowledged\n.BWM: hook de cambio de plasma: El hook debe estar dentro de su skin\nBWM: hook de cambio de retro: El hook debe estar dentro de su skin\n.........................................\n----------------------------------------------------------------------\nRan 89 tests in 0.149s\n\nOK\n",
+  "liveSessionRun": false,
+  "ipcStatus": "ipc-unavailable",
+  "externalGateEvidence": "BREEZE_R4_KNS_RESULTS.json",
+  "scope": "repository fixture regression and reproducible session runner defaults; not production takeover or new external/ASan matrix",
+  "metadataOmittedFromBaseCommit": [
+    "src/bwm-plasma-host/tests/callback-config/metadata.json",
+    "src/bwm-plasma-host/tests/module-config/metadata.json",
+    "src/bwm-plasma-host/tests/shared-config/metadata.json"
+  ],
+  "indexWrite": "not available; .git read-only, no commit or push",
+  "sourceSha256": {
+    "src/bwm-plasma-host/check-local.py": "01fe21e6149579e1e43d82be651caf286810f0322f4d37f893417b61dcca9004",
+    "src/bwm-plasma-host/CMakeLists.txt": "d0f6e0e24fed924b132b45c0a73cfe3c409a5101aef387972df200532447c823",
+    "config/hypr/skins/plasma/scripts/r4-reservation-smoke.py": "c2e07dfd4ed4fbcbf13f127184c865b217bcad264a8591a16965375ce4c32fae",
+    "src/bwm-plasma-host/tests/callback-config/metadata.json": "8d4f2bdb29647e8855c7bda1ff3cba0b7b152c83abe90b353033f9c3a57beca3",
+    "src/bwm-plasma-host/tests/module-config/metadata.json": "2466816359164012ccda387834410700c704b012e2722f668363e019f707fbdc",
+    "src/bwm-plasma-host/tests/shared-config/metadata.json": "8204b5be76631118c34dddfcdb77fcff40542204988b0ff6cd5114b8085b44ca"
+  }
+}

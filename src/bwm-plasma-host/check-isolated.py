@@ -27,6 +27,8 @@ with tempfile.TemporaryDirectory(prefix='bwm-r4-check-') as tmp:
              XDG_CACHE_HOME=str(root/'cache'),XDG_RUNTIME_DIR=str(root/'runtime'),
              XDG_CONFIG_DIRS=str(root/'defaults'),XDG_DATA_DIRS='/usr/local/share:/usr/share',
              DBUS_SESSION_BUS_ADDRESS='unix:path='+str(root/'no-bus'))
+    env.pop('BWM_R4_DESKTOP_ACTIONS',None);env.pop('BWM_R4_DESKTOP_RUNTIME',None);env.pop('BWM_R4_DESKTOP_CONFIG',None)
+    for key in ('BWM_R4_TASK_ACTIONS','BWM_R4_TASK_RUNTIME','BWM_R4_TASK_CONFIG','BWM_R4_NATIVE_DESKTOPS'):env.pop(key,None)
     for name in ('config','data','cache','runtime','defaults'): (root/name).mkdir(mode=0o700)
     (root/'defaults/kdedefaults').mkdir()
     env['XDG_CONFIG_DIRS']=str(root/'defaults/kdedefaults')+os.pathsep+str(root/'defaults')

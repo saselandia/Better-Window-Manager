@@ -1,0 +1,226 @@
+{
+  "version": 1,
+  "date": "2026-11-15",
+  "phase": "R4",
+  "historySection": 228,
+  "scope": "Common shell coordinator for shared count delivery between skins, independently of KDE watch; no live native provider acceptance",
+  "gitHeadAtValidation": "aa2cfd704e05682a9ff2def82f9d087f6a3745ef",
+  "sourceSha256": {
+    "config/hypr/scripts/bwm_settings_hooks.py": "8465039beaa32b66a5e2c77b0a07101df386f94c64091c857d0ff4539e02f46a",
+    "config/hypr/skins/plasma/scripts/native_workspaces.py": "8bc918bd6408d06920351dfcfb29616a04ccafa959f89a3b4cf62bb22aca3e4a",
+    "config/hypr/skins/plasma/scripts/kde-config-bridge.py": "6f795913a8edb2c01dc4bd7734604d4d43c6ee5f6614c41d992a3237a1254f49",
+    "config/hypr/skins/plasma/skin.json": "160693aa112fd9da40bf2f4e946e66bcda6d01a9b56cfa258d734a95f842ef1f",
+    "config/hypr/skins/requirements.json": "5107f6763fe31e2a3887bad339f176617cda604f7374d5cc11de1570182a4ffe",
+    "config/hypr/skins/README.md": "6f1dd6205772c22d4f91f677a72849214f3c1d95d0e02afbf89258ef23791133",
+    "config/quickshell/ii/shell.qml": "46c31637b76ca208caaa2bec624aaeb9e2156a95e1ab5d4618f94fd42e0e1cf8",
+    "config/quickshell/ii/services/SharedSettingsRuntime.qml": "684fab05bbe8541851ac26e635e3d0970137284ed44dd7f93dea884ecbaa2b58",
+    "tests/test_r4_shared_settings.py": "9427ea7a1b69cf9baa35f8f8e676e752e72d1e12a85b194e7676a6a101fb6061",
+    "docs/REQUIREMENTS.md": "6e0e30b84a05723ff6de50f5707ac5333520d00a63d495f22569c9a89f6522b3",
+    "docs/SKINS.md": "3126331719fd4df3b1af6e57bef249234a82ddfd184583584d15262c89409271",
+    "AGENTS.md": "0044dcc9bc599fa8c3909b34685664861b01e222a779b3192a36d61ae4e1d526",
+    "CLAUDE.md": "0044dcc9bc599fa8c3909b34685664861b01e222a779b3192a36d61ae4e1d526",
+    "BWM_CONTEXT.md": "243f3c169278cd9a253cab4bfb71d5d10df13cf08265a37c4ab2872e0351fa9c",
+    "THIRD_PARTY_NOTICES.md": "73329145742ac4bc0e74e53dd6620cb80f10001abfd15c171d56d640ccaf60b7",
+    "docs/BREEZE_R4_RESULTS.md": "03141f148d6a9f9473bba252173de486ad36ed49dedc0d842dfc697214d1460d",
+    "docs/BREEZE_R4_ARCH.md": "76547237822d63d7625d94b119faa5f32d6ae5b8c69d3341384a1af4d5396888",
+    "docs/BREEZE_R4_HANDOFF_CLAUDE.md": "6eb2095777215c526ac0a4ba8bda6d0733c8f5cff6344f7f4a479141e938f714",
+    "docs/BREEZE_PLAN_V2.md": "2854a5066734546a850124974f55a125254174fbe9f9d29946cf25016c99e42a",
+    "src/bwm-plasma-desktops/README.md": "27eceacfbe9688c71c9f95ac703514b2d3967f6f0eeaa1149f7b81d2b982c043",
+    "src/bwm-plasma-host/README.md": "14860d931f6459330b288f62729d49da52e034439ad1ad08e1beae7c0374eddf"
+  },
+  "references": {
+    "quickshell-0.3.2.tar.gz": {
+      "archiveSha256": "946a27e2a276917a03c1079e5c60971af84ece73088c3661dee455d92eb420f7",
+      "consultedMembers": {
+        "quickshell-0.3.2/src/io/process.cpp": "7b73cdd9ca62071aedf41571ca0cf51f6c2537ffdbf6eb5ae2588b2712ef8fe2",
+        "quickshell-0.3.2/src/io/process.hpp": "42ae489e3b1ee4290d907870469afab45388dfdde94d474684f7f56a6661473e",
+        "quickshell-0.3.2/src/io/datastream.cpp": "c558ce4e697d1250db6f158c3f87fb4bbc2520a1a0b6c95341e1ae66dcf7a04e"
+      }
+    }
+  },
+  "quickshellVersion": "Quickshell 0.3.2 (revision 4f508be500dea6e5732cc3d50382a0048b17e7b1, distributed by Gentoo GURU)",
+  "contract": {
+    "owner": "One SharedSettingsRuntime in shell.qml outside panel/skin loaders, not in Settings/Config singleton",
+    "triggers": [
+      "settings ready",
+      "workspace count changed",
+      "skin changed",
+      "armed retry"
+    ],
+    "debounceMs": 200,
+    "errorRetryMs": 5000,
+    "processPolicy": "One asynchronous Process; queue latest inputs rather than overlap/cancel in-flight work",
+    "registration": "Bundled reviewed skins only: hooks.sharedSettings {script, requiresConfigFile, intervalMs}; external skins/packages do not register execution",
+    "validation": "Script within own skin, prerequisite relative XDG path without escape, interval integer1000–30000ms, timeout3s, version integer1/applied boolean receipt",
+    "inactive": "No prerequisite: no adapter/IPC and retry0. New install needs another trigger/start. Presence never loads/enables provider",
+    "adapter": "native_workspaces.py shared resolves current skin common/user options without importing/starting KDE bridge or writing KDE/user files",
+    "locking": "Existing bridge_lock, LOCK_NB from helper, guard already held in reconcile; no file/process/lock waiting in compositor",
+    "kdeWatch": "Periodic count tick removed; KDE rules/area still only Breeze; reconcile still forwards count",
+    "diagnostic": "qs -c ii ipc call sharedSettings status; read-only ready/busy/completedPasses/skin/lastReport",
+    "failedStart": "QS0.3.2 streams end before exited; FailedToStart only runningChanged; explicit recovery handles both",
+    "resources": "Timer Qt + Process in existing shell, no new daemon/thread/FileView/inotify or second shell"
+  },
+  "specificTests": {
+    "tests": 12,
+    "output": "test_armed_adapter_retries_without_another_preference_change (test_r4_shared_settings.SharedCoordinatorTest.test_armed_adapter_retries_without_another_preference_change) ... ok\ntest_changes_during_delivery_coalesce_without_overlapping_processes (test_r4_shared_settings.SharedCoordinatorTest.test_changes_during_delivery_coalesce_without_overlapping_processes) ... ok\ntest_does_not_deliver_before_settings_are_ready (test_r4_shared_settings.SharedCoordinatorTest.test_does_not_deliver_before_settings_are_ready) ... ok\ntest_failed_to_start_does_not_leave_coordinator_busy (test_r4_shared_settings.SharedCoordinatorTest.test_failed_to_start_does_not_leave_coordinator_busy) ... ok\ntest_invalid_receipt_recovers_on_new_change (test_r4_shared_settings.SharedCoordinatorTest.test_invalid_receipt_recovers_on_new_change) ... ok\ntest_actual_hook_cli_tracks_default_retro_breeze_with_native_receipts (test_r4_shared_settings.SharedDeliveryTest.test_actual_hook_cli_tracks_default_retro_breeze_with_native_receipts) ... ok\ntest_effective_options_uses_current_skin_overrides_and_never_writes_user_file (test_r4_shared_settings.SharedDeliveryTest.test_effective_options_uses_current_skin_overrides_and_never_writes_user_file) ... ok\ntest_headless_coordinator_to_dispatcher_adapter_and_native_receipts (test_r4_shared_settings.SharedDeliveryTest.test_headless_coordinator_to_dispatcher_adapter_and_native_receipts) ... ok\ntest_invalid_script_prerequisite_or_interval_is_rejected_before_execution (test_r4_shared_settings.SharedDeliveryTest.test_invalid_script_prerequisite_or_interval_is_rejected_before_execution) ... ok\ntest_timeout_or_bad_receipt_keeps_bounded_retry_without_claiming_application (test_r4_shared_settings.SharedDeliveryTest.test_timeout_or_bad_receipt_keeps_bounded_retry_without_claiming_application) ... ok\ntest_uninstalled_adapter_is_noop_even_from_another_skin (test_r4_shared_settings.SharedDeliveryTest.test_uninstalled_adapter_is_noop_even_from_another_skin) ... ok\ntest_unselected_downloaded_skin_does_not_register_background_execution (test_r4_shared_settings.SharedDeliveryTest.test_unselected_downloaded_skin_does_not_register_background_execution) ... ok\n\n----------------------------------------------------------------------\nRan 12 tests in 5.940s\n\nOK\n"
+  },
+  "fullR4Regression": {
+    "tests": 134,
+    "output": "................................................BWM: native transaction unavailable or rejected\n.usage: python3 -m unittest [-h] [--pid PID] [--native-serialized]\n                           [--expected-generation EXPECTED_GENERATION]\n                           {maximize,minimize,toggle-minimize,state,unminimize,activate,focus,show-desktop,fullscreen,menu,no-border,no-capture,pin,close,interactive,to-desktop,to-screen,rules} ...\npython3 -m unittest: error: Native fullscreen requires --expected-generation, --pid and --state on|off\nusage: python3 -m unittest [-h] [--pid PID] [--native-serialized]\n                           [--expected-generation EXPECTED_GENERATION]\n                           {maximize,minimize,toggle-minimize,state,unminimize,activate,focus,show-desktop,fullscreen,menu,no-border,no-capture,pin,close,interactive,to-desktop,to-screen,rules} ...\npython3 -m unittest: error: Native fullscreen requires --expected-generation, --pid and --state on|off\nusage: python3 -m unittest [-h] [--pid PID] [--native-serialized]\n                           [--expected-generation EXPECTED_GENERATION]\n                           {maximize,minimize,toggle-minimize,state,unminimize,activate,focus,show-desktop,fullscreen,menu,no-border,no-capture,pin,close,interactive,to-desktop,to-screen,rules} ...\npython3 -m unittest: error: Native fullscreen requires --expected-generation, --pid and --state on|off\n...BWM: native transaction unavailable or rejected\n........................BWM: hook de cambio de plasma: unacknowledged\nBWM: hook de cambio de retro: unacknowledged\n.BWM: hook de cambio de plasma: El hook debe estar dentro de su skin\nBWM: hook de cambio de retro: El hook debe estar dentro de su skin\n.........................................................\n----------------------------------------------------------------------\nRan 134 tests in 8.038s\n\nOK\n"
+  },
+  "bridgeRegression": {
+    "tests": 20,
+    "output": "....................\n----------------------------------------------------------------------\nRan 20 tests in 0.128s\n\nOK\n"
+  },
+  "skinsRegression": {
+    "tests": 7,
+    "output": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.006s\n\nOK\n"
+  },
+  "normalCtest": {
+    "summary": {
+      "name": "Linux-c++",
+      "tests": "7",
+      "failures": "0",
+      "disabled": "0",
+      "skipped": "0",
+      "hostname": "THE-MAXINE",
+      "time": "31",
+      "timestamp": "2026-11-15T23:07:03"
+    },
+    "tests": [
+      {
+        "name": "desktop-workspace-projection",
+        "seconds": 0.0441276
+      },
+      {
+        "name": "native-desktop-provider-arbitration",
+        "seconds": 2.73048
+      },
+      {
+        "name": "native-desktop-protocol",
+        "seconds": 5.12827
+      },
+      {
+        "name": "native-desktop-arbitrated-kde-consumer",
+        "seconds": 0.65578
+      },
+      {
+        "name": "native-desktop-control-wire",
+        "seconds": 0.0419932
+      },
+      {
+        "name": "surface-geometry",
+        "seconds": 0.0325884
+      },
+      {
+        "name": "isolated-local-configuration",
+        "seconds": 23.0054
+      }
+    ],
+    "output": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n    Start 1: desktop-workspace-projection\n1/7 Test #1: desktop-workspace-projection .............   Passed    0.04 sec\n    Start 2: native-desktop-provider-arbitration\n2/7 Test #2: native-desktop-provider-arbitration ......   Passed    2.73 sec\n    Start 3: native-desktop-protocol\n3/7 Test #3: native-desktop-protocol ..................   Passed    5.13 sec\n    Start 4: native-desktop-arbitrated-kde-consumer\n4/7 Test #4: native-desktop-arbitrated-kde-consumer ...   Passed    0.66 sec\n    Start 5: native-desktop-control-wire\n5/7 Test #5: native-desktop-control-wire ..............   Passed    0.04 sec\n    Start 6: surface-geometry\n6/7 Test #6: surface-geometry .........................   Passed    0.03 sec\n    Start 7: isolated-local-configuration\n7/7 Test #7: isolated-local-configuration .............   Passed   23.01 sec\n\n100% tests passed, 0 tests failed out of 7\n\nTotal Test time (real) =  31.64 sec\n"
+  },
+  "asanCtest": {
+    "summary": {
+      "name": "Linux-c++",
+      "tests": "7",
+      "failures": "0",
+      "disabled": "0",
+      "skipped": "0",
+      "hostname": "THE-MAXINE",
+      "time": "33",
+      "timestamp": "2026-11-15T23:07:03"
+    },
+    "tests": [
+      {
+        "name": "desktop-workspace-projection",
+        "seconds": 0.0559404
+      },
+      {
+        "name": "native-desktop-provider-arbitration",
+        "seconds": 2.74373
+      },
+      {
+        "name": "native-desktop-protocol",
+        "seconds": 5.18857
+      },
+      {
+        "name": "native-desktop-arbitrated-kde-consumer",
+        "seconds": 0.678705
+      },
+      {
+        "name": "native-desktop-control-wire",
+        "seconds": 0.0506577
+      },
+      {
+        "name": "surface-geometry",
+        "seconds": 0.0467214
+      },
+      {
+        "name": "isolated-local-configuration",
+        "seconds": 24.516
+      }
+    ],
+    "output": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan\n    Start 1: desktop-workspace-projection\n1/7 Test #1: desktop-workspace-projection .............   Passed    0.06 sec\n    Start 2: native-desktop-provider-arbitration\n2/7 Test #2: native-desktop-provider-arbitration ......   Passed    2.74 sec\n    Start 3: native-desktop-protocol\n3/7 Test #3: native-desktop-protocol ..................   Passed    5.19 sec\n    Start 4: native-desktop-arbitrated-kde-consumer\n4/7 Test #4: native-desktop-arbitrated-kde-consumer ...   Passed    0.68 sec\n    Start 5: native-desktop-control-wire\n5/7 Test #5: native-desktop-control-wire ..............   Passed    0.05 sec\n    Start 6: surface-geometry\n6/7 Test #6: surface-geometry .........................   Passed    0.05 sec\n    Start 7: isolated-local-configuration\n7/7 Test #7: isolated-local-configuration .............   Passed   24.52 sec\n\n100% tests passed, 0 tests failed out of 7\n\nTotal Test time (real) =  33.28 sec\n"
+  },
+  "asanOptions": "detect_leaks=0:halt_on_error=1",
+  "liveAccessAndDefaultNoop": {
+    "optionalPluginInstalled": false,
+    "realConfigurationNoop": {
+      "version": 1,
+      "retryMs": 0,
+      "adapters": [
+        {
+          "skin": "plasma",
+          "active": false,
+          "applied": false
+        }
+      ]
+    },
+    "sharedCoordinatorTypeErrorInReadLog": false,
+    "ipcProbes": [
+      {
+        "api": "hyprctl -j version",
+        "exitCode": 1,
+        "error": "Couldn't open a socket (1)"
+      },
+      {
+        "api": "qs -c ii ipc call sharedSettings status",
+        "exitCode": 255,
+        "error": "QLocalSocket::UnsupportedSocketOperationError"
+      }
+    ],
+    "sessionLoadVerified": false
+  },
+  "assertions": [
+    "No installed optional module in current configuration gives inactive/retry0 without adapter or IPC",
+    "Default9/Retro11/Breeze9 respect user text, and no user/unknown fields or kwinrc overwritten",
+    "Headless QML→actual dispatcher→actual adapter→same C++ receipt code delivers3/7/5 across default/Retro/Breeze on private fake hyprctl",
+    "Rapid changes coalesce with nonoverlapping start/end process records",
+    "Armed retry proceeds without input changes",
+    "Malformed receipt/timeout is not application",
+    "FailedToStart recovers from missing exited",
+    "Not-ready settings perform no delivery",
+    "Escaping script/prerequisite and invalid interval rejected; external skins skipped"
+  ],
+  "sourceLinkedToSession": true,
+  "automaticShellReloadPossible": true,
+  "automaticShellReloadVerified": false,
+  "explicitShellRestartPerformed": false,
+  "pluginInstalledByAgent": false,
+  "pluginLoadedByAgent": false,
+  "compositorRestarted": false,
+  "nativePanelActivated": false,
+  "limitations": [
+    "Real shell/compositor IPC remains inaccessible; readable log absence of type error is not proof of new component load",
+    "Live linked shell.qml modified, so lack of explicit restart does not prove untouched session",
+    "Offscreen QS/private XDG/fake hyprctl into C++ code, no live Hyprland delivery",
+    "Main shell must run to coordinate; real boot/skin acceptance pending",
+    "Only reviewed bundled adapters registered; not downloaded package execution framework",
+    "New install while inactive needs trigger/start; generation and daily fallback policies unchanged",
+    "No physical surfaces/input/Task.qml acceptance; leak sanitizer disabled"
+  ],
+  "newProductionPackages": [],
+  "operationalVerified": false,
+  "replacementReady": false,
+  "r4Complete": false
+}

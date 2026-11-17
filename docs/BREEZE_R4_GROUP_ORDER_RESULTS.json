@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "date": "2026-11-16",
+  "phase": "R4",
+  "historySection": 234,
+  "scope": "Cold native task group activation via original installed TaskTools.js and real grouped TasksModel, offscreen numeric-model regression",
+  "sourceSha256": {
+    "src/bwm-plasma-host/tasksource.cpp": "6c1d458479de3b92db8e7c80c8c1d40b3a9711362bbceeb708041a80f948adf5",
+    "src/bwm-plasma-host/test-tasks.cpp": "eab10bcd269d5d2dcdad15452960dd982d77987375a141372571668a5fb1d56e",
+    "config/hypr/skins/plasma/scripts/native-tasks.py": "89263b3b3e41bee7eacac6ac5c30633847e63bab94cb1830443f5c864081f7df",
+    "tests/test_r4_native_tasks.py": "e6e083ae84dd5c959f0289d2792cadc2d4067b1a4e9218d1ebcba36f1f9d842b",
+    "src/bwm-plasma-host/catalog.cpp": "ca00aeaca84514a598b94910a4073bc9bdbf0fe6e88f2597df26deb4ad048fd7",
+    "src/bwm-plasma-host/test-ui.cpp": "8a9e6ff42682ab00c82e113fe7aec3614ebebc816992f63a094c87377287be16",
+    "AGENTS.md": "2a2e78768b6fd1f2180e3fbc25454b5ca9d6febb7e5afc7a2f858377ca7173a7",
+    "CLAUDE.md": "2a2e78768b6fd1f2180e3fbc25454b5ca9d6febb7e5afc7a2f858377ca7173a7",
+    "BWM_CONTEXT.md": "1fe39acf67b5d39b2176c64e5a64bea72a1399f5c5dbb74ef31bc477a1493461",
+    "THIRD_PARTY_NOTICES.md": "58dcec1355a9e7a4cd6d6cd59748816efc0569cd5224f2a835b04ff9c2866f0a",
+    "docs/BREEZE_R4_RESULTS.md": "0da77e7ff001121a7e140fc782bcb8d011f23823c9fb753c1e5b3133fe419acb",
+    "docs/BREEZE_R4_ARCH.md": "d718315e8d8660878cfef8ace3986f8f3490504ce53f8cd108741886d9b470de",
+    "docs/BREEZE_R4_HANDOFF_CLAUDE.md": "50d9458b9858f96f510eaf14fcd281777c03ef2bdf0c0121d8e9184470c4e503",
+    "src/bwm-plasma-host/README.md": "15c0be8fd3e815a790cb63a4155d651dcd471d7ec998081964d92590794846ee"
+  },
+  "references": {
+    "plasma-desktop-6.7.5.tar.xz": {
+      "plasma-desktop-6.7.5/applets/taskmanager/qml/code/TaskTools.js": "74e0b23971ef8f4c53d5693bf4a03f985500ae21ce4e84975244f718bfc57a77"
+    },
+    "hyprland-0.56.2.gh.tar.gz": {
+      "hyprland-source/src/debug/HyprCtl.cpp": "798b7c6c4c1684557842463d46ac99c96629be4179e0e461dca77670247b91fa",
+      "hyprland-source/src/desktop/state/WindowState.cpp": "2e06622b84e9063d91e39a85c643ab5dfaa56a8574f41b2df480009be42aa477"
+    }
+  },
+  "beforeOutput": "********* Start testing of TaskTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : TaskTest::initTestCase()\nQWARN  : TaskTest::coldGroupUsesOriginalKdeStackingFallback() kf.windowsystem: Could not find any platform plugin\nQWARN  : TaskTest::coldGroupUsesOriginalKdeStackingFallback() \"Could not convert argument 0 from undefined to QModelIndex\"\nQWARN  : TaskTest::coldGroupUsesOriginalKdeStackingFallback() \t \"activateTask@qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/TaskTools.js:172\"\nQWARN  : TaskTest::coldGroupUsesOriginalKdeStackingFallback() \t \"activate@:15\"\nQWARN  : TaskTest::coldGroupUsesOriginalKdeStackingFallback() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/TaskTools.js:172: TypeError: Passing incompatible arguments to C++ functions from JavaScript is not allowed.\nFAIL!  : TaskTest::coldGroupUsesOriginalKdeStackingFallback() Compared values are not the same\n   Actual   (actions.count()): 0\n   Expected (1)              : 1\n   Loc: [/mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/test-tasks.cpp(81)]\nPASS   : TaskTest::cleanupTestCase()\nTotals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 44ms\n********* Finished testing of TaskTest *********\n\n\n",
+  "afterOutput": "********* Start testing of TaskTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : TaskTest::initTestCase()\nQWARN  : TaskTest::coldGroupUsesOriginalKdeStackingFallback() kf.windowsystem: Could not find any platform plugin\nPASS   : TaskTest::coldGroupUsesOriginalKdeStackingFallback()\nPASS   : TaskTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 49ms\n********* Finished testing of TaskTest *********\n\n\n",
+  "pythonOutput": "..........\n----------------------------------------------------------------------\nRan 10 tests in 0.005s\n\nOK\n",
+  "normalRegression": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n    Start 1: desktop-workspace-projection\n1/3 Test #1: desktop-workspace-projection .....   Passed    0.04 sec\n    Start 7: surface-geometry\n2/3 Test #7: surface-geometry .................   Passed    0.03 sec\n    Start 8: isolated-local-configuration\n3/3 Test #8: isolated-local-configuration .....   Passed   23.79 sec\n\n100% tests passed, 0 tests failed out of 3\n\nTotal Test time (real) =  23.86 sec\n",
+  "asanRegression": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan\n    Start 1: desktop-workspace-projection\n1/3 Test #1: desktop-workspace-projection .....   Passed    0.07 sec\n    Start 7: surface-geometry\n2/3 Test #7: surface-geometry .................   Passed    0.05 sec\n    Start 8: isolated-local-configuration\n3/3 Test #8: isolated-local-configuration .....   Passed   25.20 sec\n\n100% tests passed, 0 tests failed out of 3\n\nTotal Test time (real) =  25.32 sec\n",
+  "normalTaskTests": "********* Start testing of TaskTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : TaskTest::initTestCase()\nQWARN  : TaskTest::coldGroupUsesOriginalKdeStackingFallback() kf.windowsystem: Could not find any platform plugin\nPASS   : TaskTest::coldGroupUsesOriginalKdeStackingFallback()\nPASS   : TaskTest::stackingSnapshotValidationAndLegacyOrder()\nPASS   : TaskTest::persistentIndicesSurviveDataAndRejectReusedIdentity()\nPASS   : TaskTest::malformedSnapshotIsAtomic()\nPASS   : TaskTest::fullscreenCapabilityAndDesiredStateFollowSnapshots()\nPASS   : TaskTest::nativeTaskModelsShareCommonSourceAndApplyGuardedActions()\nPASS   : TaskTest::suspensionDrainsCurrentTaskAndDiscardsQueuedActions()\nPASS   : TaskTest::controlAcknowledgesWithdrawalOnlyAfterNativeMutationFinishes()\nPASS   : TaskTest::cleanupTestCase()\nTotals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 5417ms\n********* Finished testing of TaskTest *********\n",
+  "asanTaskTests": "********* Start testing of TaskTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : TaskTest::initTestCase()\nQWARN  : TaskTest::coldGroupUsesOriginalKdeStackingFallback() kf.windowsystem: Could not find any platform plugin\nPASS   : TaskTest::coldGroupUsesOriginalKdeStackingFallback()\nPASS   : TaskTest::stackingSnapshotValidationAndLegacyOrder()\nPASS   : TaskTest::persistentIndicesSurviveDataAndRejectReusedIdentity()\nPASS   : TaskTest::malformedSnapshotIsAtomic()\nPASS   : TaskTest::fullscreenCapabilityAndDesiredStateFollowSnapshots()\nPASS   : TaskTest::nativeTaskModelsShareCommonSourceAndApplyGuardedActions()\nPASS   : TaskTest::suspensionDrainsCurrentTaskAndDiscardsQueuedActions()\nPASS   : TaskTest::controlAcknowledgesWithdrawalOnlyAfterNativeMutationFinishes()\nPASS   : TaskTest::cleanupTestCase()\nTotals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 5601ms\n********* Finished testing of TaskTest *********\n",
+  "asanOptions": "detect_leaks=0:halt_on_error=1",
+  "normalBuildOutput": "[  0%] Built target bwm-window-system_autogen_timestamp_deps\n[  4%] Built target bwm-desktop-protocol_autogen_timestamp_deps\n[  4%] Built target bwm-desktop-protocol_autogen\n[  5%] Built target bwm-window-system_autogen\n[ 12%] Built target bwm-desktop-protocol\n[ 15%] Built target bwm-window-system\n[ 15%] Built target desktop-provider-teardown-module_autogen_timestamp_deps\n[ 15%] Built target test-workspace-projection_autogen_timestamp_deps\n[ 17%] Built target test-desktop-control-wire_autogen_timestamp_deps\n[ 20%] Built target desktop-test-display_autogen_timestamp_deps\n[ 20%] Built target desktop-provider-test-display_autogen_timestamp_deps\n[ 26%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 27%] Built target test-workspace-projection_autogen\n[ 27%] Built target test-desktop_autogen_timestamp_deps\n[ 27%] Built target desktop-provider-teardown-module_autogen\n[ 28%] Built target test-desktop-control-wire_autogen\n[ 29%] Built target desktop-test-display_autogen\n[ 30%] Automatic MOC for target desktop-provider-test-display\n[ 31%] Automatic MOC for target test-desktop\n[ 31%] Built target desktop-provider-test-display_autogen\n[ 32%] Automatic MOC for target bwm-plasma-configuration\n[ 35%] Built target test-workspace-projection\n[ 35%] Built target test-desktop_autogen\n[ 35%] Built target bwm-plasma-configuration_autogen\n[ 38%] Built target desktop-provider-teardown-module\n[ 40%] Built target test-desktop-control-wire\n[ 42%] Building CXX object desktop-protocol/CMakeFiles/desktop-provider-test-display.dir/test-display.cpp.o\n[ 44%] Built target desktop-test-display\n[ 47%] Built target test-desktop\n[ 48%] Built target test-desktop-provider_autogen_timestamp_deps\n[ 49%] Building CXX object CMakeFiles/bwm-plasma-configuration.dir/catalog.cpp.o\n[ 50%] Built target test-desktop-provider_autogen\n[ 52%] Built target test-desktop-provider\n[ 52%] Linking CXX executable desktop-provider-test-display\n[ 54%] Built target desktop-provider-test-display\n[ 55%] Linking CXX static library libbwm-plasma-configuration.a\n[ 75%] Built target bwm-plasma-configuration\n[ 75%] Built target test-taskmenu_autogen_timestamp_deps\n[ 75%] Built target bwm-plasma-host_autogen_timestamp_deps\n[ 75%] Built target test-taskmetadata_autogen_timestamp_deps\n[ 75%] Built target test-taskdelegate_autogen_timestamp_deps\n[ 75%] Built target test-desktops_autogen_timestamp_deps\n[ 75%] Built target test-tasks_autogen_timestamp_deps\n[ 75%] Built target test-plasma-ui_autogen_timestamp_deps\n[ 75%] Built target test-surfaces_autogen_timestamp_deps\n[ 76%] Automatic MOC for target bwm-plasma-host\n[ 76%] Built target bwm-plasma-host_autogen\n[ 77%] Built target test-taskmetadata_autogen\n[ 78%] Automatic MOC for target test-taskmenu\n[ 78%] Built target test-taskmenu_autogen\n[ 79%] Automatic MOC for target test-desktops\n[ 80%] Built target test-taskdelegate_autogen\n[ 80%] Built target test-desktops_autogen\n[ 81%] Automatic MOC for target test-tasks\n[ 81%] Automatic MOC for target test-surfaces\n[ 81%] Automatic MOC for target test-plasma-ui\n[ 81%] Built target test-surfaces_autogen\n[ 81%] Linking CXX executable bwm-plasma-host\n[ 81%] Built target test-tasks_autogen\n[ 81%] Linking CXX executable test-taskmetadata\n[ 81%] Built target test-plasma-ui_autogen\n[ 82%] Linking CXX executable test-taskmenu\n[ 84%] Built target bwm-plasma-host\n[ 84%] Linking CXX executable test-desktops\n[ 86%] Built target test-taskmetadata\n[ 87%] Linking CXX executable test-taskdelegate\n[ 88%] Built target test-taskmenu\n[ 89%] Building CXX object CMakeFiles/test-tasks.dir/test-tasks.cpp.o\n[ 91%] Built target test-desktops\n[ 92%] Linking CXX executable test-surfaces\n[ 93%] Built target test-taskdelegate\n[ 94%] Building CXX object CMakeFiles/test-plasma-ui.dir/test-ui.cpp.o\n[ 96%] Built target test-surfaces\n[ 97%] Linking CXX executable test-tasks\n[ 98%] Built target test-tasks\n[ 99%] Linking CXX executable test-plasma-ui\n[100%] Built target test-plasma-ui\n",
+  "asanBuildOutput": "[  4%] Built target bwm-desktop-protocol_autogen_timestamp_deps\n[  4%] Built target bwm-window-system_autogen_timestamp_deps\n[  4%] Built target bwm-desktop-protocol_autogen\n[  5%] Built target bwm-window-system_autogen\n[ 12%] Built target bwm-desktop-protocol\n[ 15%] Built target bwm-window-system\n[ 15%] Built target test-workspace-projection_autogen_timestamp_deps\n[ 15%] Built target desktop-provider-teardown-module_autogen_timestamp_deps\n[ 17%] Built target test-desktop-control-wire_autogen_timestamp_deps\n[ 20%] Built target desktop-test-display_autogen_timestamp_deps\n[ 20%] Built target desktop-provider-test-display_autogen_timestamp_deps\n[ 26%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 26%] Built target test-desktop_autogen_timestamp_deps\n[ 27%] Built target test-workspace-projection_autogen\n[ 27%] Built target desktop-provider-teardown-module_autogen\n[ 28%] Built target test-desktop-control-wire_autogen\n[ 29%] Built target desktop-test-display_autogen\n[ 30%] Automatic MOC for target desktop-provider-test-display\n[ 31%] Automatic MOC for target bwm-plasma-configuration\n[ 32%] Automatic MOC for target test-desktop\n[ 32%] Built target desktop-provider-test-display_autogen\n[ 35%] Built target test-workspace-projection\n[ 35%] Built target test-desktop_autogen\n[ 35%] Built target bwm-plasma-configuration_autogen\n[ 38%] Built target desktop-provider-teardown-module\n[ 40%] Built target test-desktop-control-wire\n[ 43%] Built target desktop-test-display\n[ 44%] Building CXX object desktop-protocol/CMakeFiles/desktop-provider-test-display.dir/test-display.cpp.o\n[ 45%] Building CXX object CMakeFiles/bwm-plasma-configuration.dir/catalog.cpp.o\n[ 48%] Built target test-desktop\n[ 49%] Built target test-desktop-provider_autogen_timestamp_deps\n[ 50%] Building CXX object CMakeFiles/bwm-plasma-configuration.dir/tasksource.cpp.o\n[ 50%] Linking CXX executable desktop-provider-test-display\n[ 52%] Built target desktop-provider-test-display\n[ 53%] Built target test-desktop-provider_autogen\n[ 55%] Built target test-desktop-provider\n[ 56%] Linking CXX static library libbwm-plasma-configuration.a\n[ 75%] Built target bwm-plasma-configuration\n[ 75%] Built target bwm-plasma-host_autogen_timestamp_deps\n[ 75%] Built target test-taskmenu_autogen_timestamp_deps\n[ 75%] Built target test-taskmetadata_autogen_timestamp_deps\n[ 75%] Built target test-tasks_autogen_timestamp_deps\n[ 75%] Built target test-desktops_autogen_timestamp_deps\n[ 75%] Built target test-taskdelegate_autogen_timestamp_deps\n[ 75%] Built target test-surfaces_autogen_timestamp_deps\n[ 75%] Built target test-plasma-ui_autogen_timestamp_deps\n[ 76%] Automatic MOC for target bwm-plasma-host\n[ 76%] Built target bwm-plasma-host_autogen\n[ 77%] Built target test-taskmetadata_autogen\n[ 78%] Automatic MOC for target test-taskmenu\n[ 79%] Automatic MOC for target test-desktops\n[ 79%] Built target test-taskmenu_autogen\n[ 80%] Built target test-taskdelegate_autogen\n[ 80%] Built target test-desktops_autogen\n[ 80%] Automatic MOC for target test-tasks\n[ 81%] Automatic MOC for target test-surfaces\n[ 81%] Automatic MOC for target test-plasma-ui\n[ 81%] Built target test-surfaces_autogen\n[ 81%] Linking CXX executable bwm-plasma-host\n[ 81%] Built target test-tasks_autogen\n[ 81%] Linking CXX executable test-taskmetadata\n[ 81%] Built target test-plasma-ui_autogen\n[ 82%] Linking CXX executable test-taskmenu\n[ 84%] Built target bwm-plasma-host\n[ 84%] Linking CXX executable test-desktops\n[ 86%] Built target test-taskmetadata\n[ 87%] Linking CXX executable test-taskdelegate\n[ 88%] Built target test-taskmenu\n[ 89%] Building CXX object CMakeFiles/test-tasks.dir/test-tasks.cpp.o\n[ 91%] Built target test-desktops\n[ 92%] Linking CXX executable test-surfaces\n[ 93%] Built target test-taskdelegate\n[ 94%] Building CXX object CMakeFiles/test-plasma-ui.dir/test-ui.cpp.o\n[ 96%] Built target test-surfaces\n[ 97%] Linking CXX executable test-tasks\n[ 98%] Built target test-tasks\n[ 99%] Linking CXX executable test-plasma-ui\n[100%] Built target test-plasma-ui\n",
+  "stackingContract": {
+    "source": "Hyprland0.56.2 clientsRequest/WindowState.windows, bottom-to-top",
+    "mruSourceNotUsed": "focusHistoryID",
+    "jsonField": "stackingOrder",
+    "range": "integer 0..INT_MAX",
+    "legacyFallback": "position in accepted snapshot, not physically verified",
+    "modelRole": "TaskManager::AbstractTasksModel::StackingOrder",
+    "rowUuidIdentityPreserved": true
+  },
+  "originalHandlerResults": {
+    "noMruChoosesUpperWindow": true,
+    "newStackingRankChangesTarget": true,
+    "observedMruKeepsPriority": true,
+    "scriptCopiedOrPatched": false
+  },
+  "validation": {
+    "pythonTests": 10,
+    "taskQtTestsIncludingLifecycle": 10,
+    "selectedCtestPerBuild": 3,
+    "normalPassed": true,
+    "asanPassed": true,
+    "pythonCompiled": true,
+    "fullCtestRun": false,
+    "nativeDelegateRenderingRetestedAfterChange": false
+  },
+  "catalogDiagnosticsUpdated": {
+    "fullscreenListed": true,
+    "barrierProtocolVersion": 2,
+    "activationReadbackVersion": 1,
+    "operationalVerified": false
+  },
+  "stableHostBinarySha256": "32b3c77f678ba1d59f211b60ae245532db603ba1558b946efc7c1f35063291ac",
+  "sessionRestarted": false,
+  "liveSessionTestPerformed": false,
+  "hyprlandPluginInstalledOrLoaded": false,
+  "dailyPanelReplaced": false,
+  "runtimeDependenciesAdded": false,
+  "operationalVerified": false,
+  "replacementReady": false,
+  "r4Complete": false,
+  "limitations": [
+    "Not a physical click/input or Wayland surface test",
+    "Startup zero-column fixture used offscreen; no fake group model or copied KDE activation function",
+    "Physical session stacking/occlusion and future Hyprland ordering semantics not certified",
+    "Native render result section233 remains historical, not rerun against this build",
+    "Remaining frontend/startup/shared delivery/session capabilities/daily authority and fallback still pending"
+  ],
+  "commitCreated": false,
+  "pushPerformed": false,
+  "pendingSessionCheck": {
+    "command": "python3 /mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/preview-isolated.py \\\n  --binary /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host/bwm-plasma-host \\\n  --builtin org.kde.plasma.taskmanager --native-panel --layer-panel \\\n  --follow-skin --task-actions \\\n  --output \"Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101\"",
+    "scope": "Basic native text task manager minimize/restore/focus in two temporary applet instances; no native desktop provider required",
+    "executed": false,
+    "sessionIpcQuery": {
+      "command": "hyprctl -j version",
+      "exitCode": 2,
+      "error": "Couldn't set socket timeout (2)"
+    },
+    "configuredSkinFromRepo": "plasma",
+    "requiresUserTerminal": true
+  }
+}

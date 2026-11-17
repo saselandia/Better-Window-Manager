@@ -1,0 +1,99 @@
+--- a/src/managers/screenshare/ScreenshareSession.cpp
++++ b/src/managers/screenshare/ScreenshareSession.cpp
+@@ -1,4 +1,5 @@
+ #include "ScreenshareManager.hpp"
++#include "BwmCaptureGuard.hpp"
+ #include "../../render/OpenGL.hpp"
+ #include "../../Compositor.hpp"
+ #include "../../render/Renderer.hpp"
+@@ -8,6 +9,16 @@
+ 
+ using namespace Screenshare;
+ 
++namespace {
++// Legacy capability marker retained in the running ELF. File capabilities can
++// prevent clients from reading /proc/PID/exe; the IPC report uses the function below.
++[[gnu::used, gnu::retain]] const char BWM_SCREENSHARE_GUARD[] = "BWM_SCREENSHARE_MONITOR_GUARD_V1";
++}
++
++int Screenshare::bwmMonitorGuardVersion() {
++    return 1;
++}
++
+ CScreenshareSession::CScreenshareSession(PHLMONITOR monitor, wl_client* client) : m_type(SHARE_MONITOR), m_monitor(monitor), m_client(client) {
+     if UNLIKELY (!m_monitor)
+         return;
+@@ -25,8 +36,15 @@
+         m_events.constraintsChanged.emit();
+     });
+     m_listeners.windowMonitorChanged = m_window->m_events.monitorChanged.listen([this]() {
+-        m_listeners.monitorDestroyed   = monitor()->m_events.disconnect.listen([this]() { stop(); });
+-        m_listeners.monitorModeChanged = monitor()->m_events.modeChanged.listen([this]() {
++        if (m_stopped)
++            return;
++        const auto PMONITOR = monitor();
++        if (!PMONITOR) {
++            stop();
++            return;
++        }
++        m_listeners.monitorDestroyed   = PMONITOR->m_events.disconnect.listen([this]() { stop(); });
++        m_listeners.monitorModeChanged = PMONITOR->m_events.modeChanged.listen([this]() {
+             calculateConstraints();
+             m_events.constraintsChanged.emit();
+         });
+@@ -66,6 +84,12 @@
+ }
+ 
+ void CScreenshareSession::init() {
++    const auto PMONITOR = monitor();
++    if (!PMONITOR) {
++        stop();
++        return;
++    }
++
+     uintptr_t ptr = m_type == SHARE_WINDOW && !m_window.expired() ? (uintptr_t)m_window.get() : (m_monitor.expired() ? (uintptr_t)nullptr : (uintptr_t)m_monitor.get());
+     LOGM(Log::TRACE, "Created screenshare session for ({}): {}, {:x}", m_type, m_name, ptr);
+ 
+@@ -82,10 +106,10 @@
+ 
+     // scale capture box since it's in logical coords; round to integer pixel
+     // dims so m_bufferSize matches the int32 size we send to the client
+-    m_captureBox.scale(monitor()->m_scale).round();
+-
+-    m_listeners.monitorDestroyed   = monitor()->m_events.disconnect.listen([this]() { stop(); });
+-    m_listeners.monitorModeChanged = monitor()->m_events.modeChanged.listen([this]() {
++    m_captureBox.scale(PMONITOR->m_scale).round();
++
++    m_listeners.monitorDestroyed   = PMONITOR->m_events.disconnect.listen([this]() { stop(); });
++    m_listeners.monitorModeChanged = PMONITOR->m_events.modeChanged.listen([this]() {
+         calculateConstraints();
+         m_events.constraintsChanged.emit();
+     });
+--- /dev/null
++++ b/src/managers/screenshare/BwmCaptureGuard.hpp
+@@ -0,0 +1,6 @@
++// SPDX-License-Identifier: BSD-3-Clause
++#pragma once
++namespace Screenshare {
++// Implemented beside the actual session guards, not inferred from a package file.
++int bwmMonitorGuardVersion();
++}
+--- a/src/helpers/SystemInfo.cpp
++++ b/src/helpers/SystemInfo.cpp
+@@ -1,4 +1,6 @@
+ #include "SystemInfo.hpp"
++#include "../managers/screenshare/BwmCaptureGuard.hpp"
++#include <unistd.h>
+ 
+ #include "../Compositor.hpp"
+ #include "../version.h"
+@@ -136,7 +138,8 @@
+ 
+         trimTrailingComma(result);
+ 
+-        result += "]\n}";
++        result += std::format("],\n    \"bwmScreenshareMonitorGuard\": {{\"version\": {}, \"pid\": {}}}\n}}",
++                              Screenshare::bwmMonitorGuardVersion(), getpid());
+ 
+         return result;
+     }

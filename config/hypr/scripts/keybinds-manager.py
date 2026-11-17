@@ -674,7 +674,7 @@ def build_dispatcher_call(action_type: str, exec_cmd: Optional[str], dispatcher:
     elif action_type == "dispatcher":
         d = dispatcher.strip() if dispatcher else ""
         if d == "window.close":
-            return "hl.dsp.window.close()"
+            return "(is_plasma and close_window_target or hl.dsp.window.close)()"
         elif d == "window.fullscreen":
             return 'hl.dsp.window.fullscreen({ mode = fullscreen_mode, action = "toggle" })'
         elif d == "window.drag":
@@ -721,6 +721,28 @@ def generate_lua(binds: List[Dict[str, Any]]) -> str:
         "local is_plasma = ok_theme and (active_theme.name == \"plasma\" or (active_theme.name and string.find(active_theme.name, \"plasma\") ~= nil))",
         "local fullscreen_mode = is_plasma and 1 or 0",
         "local active_skin = ok_theme and active_theme.name or \"\"",
+        "",
+        "local function close_window_target()",
+        "    if is_plasma then",
+        "        local c = hl.get_cursor_pos()",
+        "        local m = hl.get_monitor_at_cursor()",
+        "        local ws = m and (hl.get_active_special_workspace(m) or m.active_workspace)",
+        "        local best = nil",
+        "        if c and m then",
+        "            for _, w in ipairs(hl.get_windows()) do",
+        "                if w.mapped and not w.hidden and (w.pinned or (ws and w.workspace and w.workspace.id == ws.id)) then",
+        "                    local b = (hl.plugin and hl.plugin.breezebars and hl.plugin.breezebars.decoration and hl.plugin.breezebars.decoration(w.address, w.pid)) or nil",
+        "                    local ext = (b and b.visible and b.borders) or {}",
+        "                    if c.x >= w.at.x - (ext.left or 0) and c.x <= w.at.x + w.size.x + (ext.right or 0) and c.y >= w.at.y - (ext.top or 0) and c.y <= w.at.y + w.size.y + (ext.bottom or 0) then",
+        "                        if not best or (w.focus_history_id or 999999) < (best.focus_history_id or 999999) then best = w end",
+        "                    end",
+        "                end",
+        "            end",
+        "        end",
+        "        if best then return hl.dsp.window.close({ window = best }) end",
+        "    end",
+        "    return hl.dsp.window.close()",
+        "end",
         ""
     ]
 

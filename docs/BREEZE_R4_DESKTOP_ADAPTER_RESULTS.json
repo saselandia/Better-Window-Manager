@@ -1,0 +1,269 @@
+{
+  "date": "2026-11-14",
+  "phase": "R4",
+  "implemented": "Opt-in host-local static KWindowSystem V5 showingDesktop adapter to common BWM minimize/restore",
+  "abi": "KF6 KWindowSystem 6.29.0 EXACT, installed private headers",
+  "sourceSha256": {
+    "src/bwm-plasma-host/desktopbridge.h": "4a98899b32919ce43bc30ed70be110959fe683dd2773658c4e570878fe7dbdd7",
+    "src/bwm-plasma-host/desktopbridge.cpp": "468032548b989cd81e559d6d7b0870bfd4ff8ccb35afb8f8431a3f6fe3fa2967",
+    "src/bwm-plasma-host/windowsystemplugin.cpp": "60df8b225677c7a7b9442d7e232df1da3394434a5257b57eb000c03169ba2f0b",
+    "src/bwm-plasma-host/windowsystemplugin.json": "6370d827eb2d7902b8d8add63b8699fc0f6dc0c22a83ae63019f6a69d1c0c361",
+    "src/bwm-plasma-host/test-desktop.cpp": "463520dbf2b621617eecfcf660f29350a537d138f8fc350ff3fc54daed1cd2af",
+    "src/bwm-plasma-host/tests/desktop-hyprctl.py": "d7a9c54bc5939e612a909c43f8841575f4d64a2c557534907c95bd427d37171e",
+    "src/bwm-plasma-host/CMakeLists.txt": "123cf67648c88812eddf1f5cf83ea8def8632e08c95198552306f6a4e318f672",
+    "src/bwm-plasma-host/main.cpp": "41766f67999bdadc6a12414370328584712670ad7ab97d936ab9c15a50d95dc8",
+    "src/bwm-plasma-host/test-ui.cpp": "7a5d90e92224f670354b61a2fc591aab9c79e2aa695cf73b48096317622b806f",
+    "src/bwm-plasma-host/check-local.py": "07ca4a43a1b11dc24646bf4a8680c77a9e7fe7a97c4211ba98b3db94d9ed03e1",
+    "src/bwm-plasma-host/check-isolated.py": "84041f82cd3aed56c3bae89a81fedd30efdec6abd8fdd421ffe33c383e281e73",
+    "src/bwm-plasma-host/kns-cycle.py": "d7237e87ae6e220a796633881c7a47fcec2308f50f6c793c2fe6796753d388fb",
+    "src/bwm-plasma-host/preview-isolated.py": "419216a2af5f3b8719767cf02be8eea27077ab5ee3f039dcd54c76e070822923",
+    "src/bwm-plasma-host/catalog.cpp": "76c6a3ab850267ac75353a07576c59e6da323d62f8bc4cee12a724d64826d1c0",
+    "config/hypr/scripts/toggle-minimize.py": "cd9fb769c67c3509ae501481e017eeda3a6b59b5c14f9dfd12b542abf1ba6eb2",
+    "config/hypr/skins/plasma/scripts/kwin-window.py": "a8c34e65e75035c0a30be821814315f0166a532b0581b97fad601fd3cf8fd681",
+    "config/hypr/skins/requirements.json": "e4c7c3c7245bf2abb75b3cd099877cd1fec5e1bb167433875eb7f5ae51e16a3e",
+    "tests/test_kwin_window.py": "b03fdc229649db5bf48d94675912b14cf23039e17cc57257433cd592eff2fe3d",
+    "tests/test_minimize.py": "958684af3050359f0fa5248b8fcd652c5cc35a247a59f11ee340fa39dd09495f"
+  },
+  "references": {
+    "plasma-desktop-6.7.5.tar.xz": {
+      "archiveSha256": "079fcf6b87d7bf65e3f2a4670d605fac9469344c279a285a98ad549332d7b53e",
+      "inspectedSources": {
+        "applets/showdesktop/showdesktop.cpp": "fdc0e6491262c709eec022db2f6a3fc279b738dfb6ab74f35e99c8a017474d0a",
+        "applets/showdesktop/PeekController.qml": "2b4f2290e5c17654a53e97503c79b5c66549e6105b827548e79b306a7a201d8d",
+        "applets/showdesktop/MinimizeAllController.qml": "8e7e4bee49fdf849a5ab5ced4b4a4ad15574c901eb9f66c48a2ee7b0c2cd08ea"
+      }
+    },
+    "kwindowsystem-6.29.0.tar.xz": {
+      "archiveSha256": "d2717dcf501707b14736faecf7a2d3381f09fc3e4b7a1b77fc298e4aa9f8368e",
+      "inspectedSources": {
+        "src/pluginwrapper.cpp": "6e7d3f0173d6fe6067d55ed512f7dd9541d9603febc458f5310bc85a734c3d5f",
+        "src/kwindowsystem_p.h": "2ef00994bbbf9ab03b6df9028b885bd8fffeffa1207cdf54d1229ee929ae619e",
+        "src/kwindowsystemplugininterface_p.h": "f93777b87c6ae1e191218fa03bde6e0e50ccd50bdb408170fea86dada547d823"
+      }
+    }
+  },
+  "nativeModule": "installed original org.kde.plasma.showdesktop, original ShowDesktop QML type",
+  "nativePluginSha256": "fad6c3414a795ff9cbb824c8e3406539c87b37fe7265e34c943e58a55d08cb1c",
+  "results": {
+    "normal": {
+      "ctest": "Test project /tmp/bwm-r4-build\n    Start 1: surface-geometry\n1/2 Test #1: surface-geometry .................   Passed    0.03 sec\n    Start 2: isolated-local-configuration\n2/2 Test #2: isolated-local-configuration .....   Passed   14.84 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =  14.88 sec\n",
+      "localReport": {
+        "version": 1,
+        "sessionModified": false,
+        "externalWidgetGateVerified": false,
+        "networkUsed": false,
+        "packages": [
+          {
+            "id": "org.bwm.r4.callback-config",
+            "exercise": {
+              "cancelDoesNotWrite": true,
+              "defaultsStaged": true,
+              "expectedValue": false,
+              "key": "flag",
+              "pageReopened": true,
+              "reloadedValue": false,
+              "saved": true,
+              "secondInstanceUnchanged": true
+            },
+            "freshProcessReadback": true
+          },
+          {
+            "id": "org.bwm.r4.shared-config",
+            "exercise": {
+              "cancelDoesNotWrite": true,
+              "defaultsStaged": true,
+              "expectedValue": false,
+              "key": "enabled",
+              "pageReopened": true,
+              "reloadedValue": false,
+              "saved": true,
+              "secondInstanceUnchanged": true
+            },
+            "freshProcessReadback": true
+          },
+          {
+            "id": "org.bwm.r4.module-config",
+            "moduleAndSourcePagesLoaded": true
+          }
+        ],
+        "ui": [
+          {
+            "test": "liveCatalogRefreshAndNativeMetadata",
+            "passed": true
+          },
+          {
+            "test": "backendInventoryUsesLiveInstancesAndNativeMetadata",
+            "passed": true
+          },
+          {
+            "test": "previewStatusRequiresRenderedFrameAndFreshAcknowledgement",
+            "passed": true
+          },
+          {
+            "test": "sharedConfigurationTransactions",
+            "passed": true
+          },
+          {
+            "test": "sharedConfigurationFreshProcessReadback",
+            "passed": true
+          },
+          {
+            "test": "moduleConfigurationTransactions",
+            "passed": true
+          },
+          {
+            "test": "moduleConfigurationFreshProcessReadback",
+            "passed": true
+          }
+        ],
+        "defaultSessionFixtureNativePanelVerifiedOffscreen": true,
+        "nativeDesktopWidgetLoads": true,
+        "nativeDesktopControllerOutput": "********* Start testing of DesktopTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : DesktopTest::initTestCase()\nPASS   : DesktopTest::originalNativeControllerUsesCommonManager()\nPASS   : DesktopTest::malformedStateCannotLaunchActions()\nPASS   : DesktopTest::timedOutActionDoesNotLeaveRunningChild()\nPASS   : DesktopTest::cleanupTestCase()\nTotals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 6167ms\n********* Finished testing of DesktopTest *********\n",
+        "desktopFakeActions": "(function()\n        local cur = hl.get_cursor_pos()\n        local w = hl.get_window(\"address:0xabc\")\n        if w and w.pid == 123 then\n            \n            -- \"+\" sets the tag (a bare tag name toggles it in Hyprland)\n            pcall(function() hl.dispatch(hl.dsp.window.tag({ tag = \"+omarchy-minimized-from-1\", window = w })) end)\n            hl.dispatch(hl.dsp.window.move({ workspace = \"special:minimized\", follow = false, window = w }))\n            local active = hl.get_active_workspace()\n            if active and active.id == 1 then\n                pcall(function() hl.dispatch(hl.dsp.focus({ workspace = \"1\" })) end)\n            end\n            if cur and cur.x and cur.y then\n                pcall(function() hl.dispatch(hl.dsp.cursor.move({ x = cur.x, y = cur.y })) end)\n            end\n        end\n        return hl.dsp.no_op()\n    end)()\n(function()\n        local cur = hl.get_cursor_pos()\n        local w = hl.get_window(\"address:0xabc\")\n        if w and w.pid == 123 then\n            local target = 1\n            \n            hl.dispatch(hl.dsp.window.move({ workspace = target, follow = false, window = w }))\n            \n            \n        local ws = w.workspace\n        if not ws or ws.name == \"special:minimized\" or ws.id == 99 then return hl.dsp.no_op() end\n        if ws.id < 0 then\n            hl.dispatch(hl.dsp.focus({ workspace = ws.name }))\n        end\n        hl.dispatch(hl.dsp.focus({ window = w }))\n        hl.dispatch(hl.dsp.window.bring_to_top({ window = w }))\n        hl.dispatch(hl.dsp.window.alter_zorder({ mode = \"top\", window = w }))\n    \n            pcall(function() hl.dispatch(hl.dsp.window.tag({ tag = \"-omarchy-minimized-from-1\", window = w })) end)\n            \n            if cur and cur.x and cur.y then\n                pcall(function() hl.dispatch(hl.dsp.cursor.move({ x = cur.x, y = cur.y })) end)\n            end\n        end\n        return hl.dsp.no_op()\n    end)()\n",
+        "desktopFakeFinalClient": {
+          "address": "0xabc",
+          "pid": 123,
+          "workspace": {
+            "id": 1,
+            "name": "1"
+          },
+          "mapped": true,
+          "floating": false,
+          "hidden": false,
+          "tags": []
+        },
+        "nativeDesktopControllerWithFakeIpcPassed": true,
+        "cleanupVerified": true,
+        "passed": true
+      }
+    },
+    "asan": {
+      "ctest": "Test project /tmp/bwm-r4-desktop-asan\n    Start 1: surface-geometry\n1/2 Test #1: surface-geometry .................   Passed    0.05 sec\n    Start 2: isolated-local-configuration\n2/2 Test #2: isolated-local-configuration .....   Passed   15.70 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =  15.75 sec\n",
+      "localReport": {
+        "version": 1,
+        "sessionModified": false,
+        "externalWidgetGateVerified": false,
+        "networkUsed": false,
+        "packages": [
+          {
+            "id": "org.bwm.r4.callback-config",
+            "exercise": {
+              "cancelDoesNotWrite": true,
+              "defaultsStaged": true,
+              "expectedValue": false,
+              "key": "flag",
+              "pageReopened": true,
+              "reloadedValue": false,
+              "saved": true,
+              "secondInstanceUnchanged": true
+            },
+            "freshProcessReadback": true
+          },
+          {
+            "id": "org.bwm.r4.shared-config",
+            "exercise": {
+              "cancelDoesNotWrite": true,
+              "defaultsStaged": true,
+              "expectedValue": false,
+              "key": "enabled",
+              "pageReopened": true,
+              "reloadedValue": false,
+              "saved": true,
+              "secondInstanceUnchanged": true
+            },
+            "freshProcessReadback": true
+          },
+          {
+            "id": "org.bwm.r4.module-config",
+            "moduleAndSourcePagesLoaded": true
+          }
+        ],
+        "ui": [
+          {
+            "test": "liveCatalogRefreshAndNativeMetadata",
+            "passed": true
+          },
+          {
+            "test": "backendInventoryUsesLiveInstancesAndNativeMetadata",
+            "passed": true
+          },
+          {
+            "test": "previewStatusRequiresRenderedFrameAndFreshAcknowledgement",
+            "passed": true
+          },
+          {
+            "test": "sharedConfigurationTransactions",
+            "passed": true
+          },
+          {
+            "test": "sharedConfigurationFreshProcessReadback",
+            "passed": true
+          },
+          {
+            "test": "moduleConfigurationTransactions",
+            "passed": true
+          },
+          {
+            "test": "moduleConfigurationFreshProcessReadback",
+            "passed": true
+          }
+        ],
+        "defaultSessionFixtureNativePanelVerifiedOffscreen": true,
+        "nativeDesktopWidgetLoads": true,
+        "nativeDesktopControllerOutput": "********* Start testing of DesktopTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : DesktopTest::initTestCase()\nPASS   : DesktopTest::originalNativeControllerUsesCommonManager()\nPASS   : DesktopTest::malformedStateCannotLaunchActions()\nPASS   : DesktopTest::timedOutActionDoesNotLeaveRunningChild()\nPASS   : DesktopTest::cleanupTestCase()\nTotals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 6027ms\n********* Finished testing of DesktopTest *********\n",
+        "desktopFakeActions": "(function()\n        local cur = hl.get_cursor_pos()\n        local w = hl.get_window(\"address:0xabc\")\n        if w and w.pid == 123 then\n            \n            -- \"+\" sets the tag (a bare tag name toggles it in Hyprland)\n            pcall(function() hl.dispatch(hl.dsp.window.tag({ tag = \"+omarchy-minimized-from-1\", window = w })) end)\n            hl.dispatch(hl.dsp.window.move({ workspace = \"special:minimized\", follow = false, window = w }))\n            local active = hl.get_active_workspace()\n            if active and active.id == 1 then\n                pcall(function() hl.dispatch(hl.dsp.focus({ workspace = \"1\" })) end)\n            end\n            if cur and cur.x and cur.y then\n                pcall(function() hl.dispatch(hl.dsp.cursor.move({ x = cur.x, y = cur.y })) end)\n            end\n        end\n        return hl.dsp.no_op()\n    end)()\n(function()\n        local cur = hl.get_cursor_pos()\n        local w = hl.get_window(\"address:0xabc\")\n        if w and w.pid == 123 then\n            local target = 1\n            \n            hl.dispatch(hl.dsp.window.move({ workspace = target, follow = false, window = w }))\n            \n            \n        local ws = w.workspace\n        if not ws or ws.name == \"special:minimized\" or ws.id == 99 then return hl.dsp.no_op() end\n        if ws.id < 0 then\n            hl.dispatch(hl.dsp.focus({ workspace = ws.name }))\n        end\n        hl.dispatch(hl.dsp.focus({ window = w }))\n        hl.dispatch(hl.dsp.window.bring_to_top({ window = w }))\n        hl.dispatch(hl.dsp.window.alter_zorder({ mode = \"top\", window = w }))\n    \n            pcall(function() hl.dispatch(hl.dsp.window.tag({ tag = \"-omarchy-minimized-from-1\", window = w })) end)\n            \n            if cur and cur.x and cur.y then\n                pcall(function() hl.dispatch(hl.dsp.cursor.move({ x = cur.x, y = cur.y })) end)\n            end\n        end\n        return hl.dsp.no_op()\n    end)()\n",
+        "desktopFakeFinalClient": {
+          "address": "0xabc",
+          "pid": 123,
+          "workspace": {
+            "id": 1,
+            "name": "1"
+          },
+          "mapped": true,
+          "floating": false,
+          "hidden": false,
+          "tags": []
+        },
+        "nativeDesktopControllerWithFakeIpcPassed": true,
+        "cleanupVerified": true,
+        "passed": true
+      }
+    }
+  },
+  "python": {
+    "python": {
+      "passed": 89,
+      "log": "...............................................BWM: hook de cambio de plasma: unacknowledged\nBWM: hook de cambio de retro: unacknowledged\n.BWM: hook de cambio de plasma: El hook debe estar dentro de su skin\nBWM: hook de cambio de retro: El hook debe estar dentro de su skin\n.........................................\n----------------------------------------------------------------------\nRan 89 tests in 0.132s\n\nOK\n"
+    },
+    "manager": {
+      "passed": 14,
+      "log": "..............\n----------------------------------------------------------------------\nRan 14 tests in 0.005s\n\nOK\n"
+    },
+    "minimize": {
+      "passed": 7,
+      "log": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.002s\n\nOK\n"
+    },
+    "skins": {
+      "passed": 7,
+      "log": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.026s\n\nOK\n"
+    }
+  },
+  "totalPythonTests": 117,
+  "asanDetectLeaks": false,
+  "liveSessionVerified": false,
+  "liveIpc": "ipc-unavailable",
+  "desktopActionsEnabledInUserSession": false,
+  "dailyPanelReplaced": false,
+  "hyprlandPluginChanged": false,
+  "globalPluginInstalled": false,
+  "dbusServiceAdded": false,
+  "operationalVerified": false,
+  "remaining": [
+    "real Wayland and delegated activation/shadows/export validation",
+    "TaskManager secondary action/window/desktop adapters",
+    "KWin Peek visuals (R7)",
+    "daily profile selection/start/fallback authorities and remaining session matrix"
+  ],
+  "testIsolation": "offscreen, disposable XDG, no session bus, fake hyprctl first in PATH, no compositor instance signature; real Python manager and simulated clients only",
+  "cleanup": "timeout test stops own helper process group and its child; dead/zombie child accepted as not running"
+}

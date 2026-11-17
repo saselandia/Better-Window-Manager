@@ -1538,6 +1538,7 @@
     "enabled": true,
     "skins": [
       "plasma"
-    ]
+    ],
+    "is_modified": false
   }
 ]

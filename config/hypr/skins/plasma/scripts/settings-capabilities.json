@@ -1,0 +1,329 @@
+{
+  "schema": 1,
+  "host": "systemsettings",
+  "live_verified": false,
+  "authority": [
+    {
+      "file": "kwinrc",
+      "group": "Windows",
+      "keys": [
+        "FocusPolicy"
+      ],
+      "owner": "KDE",
+      "consumer": "kwin.lua input.follow_mouse",
+      "status": "approximation",
+      "detail": "ClickToFocus=2 (pointer hover follows mouse, click focuses window); all other policies=1. DelayFocusInterval, AutoRaise and ClickRaise are unsupported."
+    },
+    {
+      "file": "kwinrc",
+      "group": "Windows",
+      "keys": [
+        "Placement"
+      ],
+      "owner": "KDE",
+      "consumer": "placement.lua",
+      "status": "adapter"
+    },
+    {
+      "file": "kwinrc",
+      "group": "Windows",
+      "keys": [
+        "BorderSnapZone",
+        "WindowSnapZone",
+        "CenterSnapZone",
+        "SnapOnlyWhenOverlapping",
+        "ElectricBorderTiling",
+        "ElectricBorderMaximize",
+        "ElectricBorderCornerRatio"
+      ],
+      "owner": "KDE",
+      "consumer": "breezebars.snap_config",
+      "status": "adapter-requires-loaded-plugin"
+    },
+    {
+      "file": "kwinrc",
+      "group": "org.kde.kdecoration2",
+      "keys": [
+        "library",
+        "theme",
+        "BorderSize",
+        "ButtonsOnLeft",
+        "ButtonsOnRight"
+      ],
+      "owner": "KDE",
+      "consumer": "bwm-decorator KDecoration3",
+      "status": "native-decoration",
+      "configuration": "X-KDE-ConfigModule from org.kde.kdecoration3 metadata; factory org.kde.kdecoration3.kcm"
+    },
+    {
+      "file": "breezerc",
+      "group": "Windeco",
+      "keys": [
+        "*"
+      ],
+      "owner": "decoration-plugin",
+      "consumer": "installed Breeze factory",
+      "status": "native-plugin",
+      "detail": "Unknown and third-party keys are not rewritten by BWM."
+    },
+    {
+      "file": "kdeglobals",
+      "group": "KDE",
+      "keys": [
+        "AnimationDurationFactor"
+      ],
+      "owner": "KDE",
+      "consumer": "kwin.lua + KDE components",
+      "status": "duration-only",
+      "effects": "R7"
+    },
+    {
+      "file": "kcminputrc",
+      "group": "Mouse",
+      "keys": [
+        "cursorTheme",
+        "cursorSize"
+      ],
+      "owner": "BWM",
+      "direction": "export-only",
+      "consumer": "cursor-manager.py",
+      "kcm": "kcm_bwm_cursor"
+    },
+    {
+      "file": "kwinrc",
+      "group": "Desktops",
+      "keys": [
+        "Number",
+        "Rows"
+      ],
+      "owner": "BWM",
+      "direction": "export-only",
+      "consumer": "monitor-manager.py / bar.workspaces.shown",
+      "kcm": "kcm_bwm_workspaces",
+      "detail": "KCM edits per-monitor workspace assignments; does not promise KWin virtual-desktop APIs."
+    },
+    {
+      "file": "kxkbrc",
+      "group": "Layout",
+      "keys": [
+        "Use",
+        "LayoutList",
+        "VariantList",
+        "Model",
+        "Options",
+        "SwitchMode"
+      ],
+      "owner": "BWM",
+      "direction": "export-only",
+      "consumer": "Hyprland input config",
+      "status": "native-keyboard-kcm-not-adapted"
+    },
+    {
+      "file": "kcminputrc",
+      "group": "Keyboard",
+      "keys": [
+        "RepeatDelay",
+        "RepeatRate",
+        "KeyRepeat",
+        "NumLock"
+      ],
+      "owner": "BWM",
+      "direction": "export-only",
+      "status": "native-keyboard-kcm-not-adapted"
+    },
+    {
+      "file": "kwinrc",
+      "group": "NightColor",
+      "keys": [
+        "Active",
+        "Mode",
+        "NightTemperature",
+        "DayTemperature"
+      ],
+      "owner": "BWM",
+      "direction": "export-only",
+      "consumer": "nightlight.py",
+      "kcm": "kcm_bwm_nightlight"
+    },
+    {
+      "file": "kdeglobals",
+      "group": "General",
+      "keys": [
+        "TerminalApplication",
+        "TerminalService"
+      ],
+      "owner": "BWM",
+      "direction": "export-only",
+      "consumer": "default-apps.py",
+      "kcm": "kcm_bwm_apps"
+    },
+    {
+      "file": "mimeapps.list",
+      "group": "Default Applications",
+      "keys": [
+        "*"
+      ],
+      "owner": "XDG",
+      "consumer": "xdg-mime + default-apps.py",
+      "kcm": "kcm_bwm_apps"
+    },
+    {
+      "file": "plasma-localerc",
+      "group": "Translations",
+      "keys": [
+        "LANGUAGE"
+      ],
+      "owner": "BWM",
+      "direction": "export-only",
+      "consumer": "language.ui"
+    },
+    {
+      "file": "kdeglobals",
+      "group": "General",
+      "keys": [
+        "font",
+        "fixed",
+        "menuFont"
+      ],
+      "owner": "KDE-user-overlay-last",
+      "direction": "bidirectional",
+      "consumer": "appearance.fonts"
+    },
+    {
+      "file": "kdeglobals",
+      "group": "WM",
+      "keys": [
+        "activeFont"
+      ],
+      "owner": "KDE-user-overlay-last",
+      "direction": "bidirectional",
+      "consumer": "appearance.fonts.title"
+    },
+    {
+      "file": "kdeglobals",
+      "group": "Icons",
+      "keys": [
+        "Theme"
+      ],
+      "owner": "KDE",
+      "consumer": "KIconLoader + Qt",
+      "status": "shell-restart-may-be-needed"
+    },
+    {
+      "file": "plasmarc",
+      "group": "Theme",
+      "keys": [
+        "name"
+      ],
+      "owner": "KDE",
+      "consumer": "libplasma + KSvg"
+    },
+    {
+      "file": "kwinrc",
+      "group": "Windows",
+      "keys": [
+        "TitlebarDoubleClickCommand"
+      ],
+      "owner": "KDE",
+      "consumer": "breezebars.on_double_click -> kwin-window.py",
+      "status": "supported-action-subset",
+      "kcm": "kcm_bwm_windows"
+    },
+    {
+      "file": "kwinrc",
+      "group": "MouseBindings",
+      "keys": [
+        "CommandTitlebarWheel"
+      ],
+      "owner": "KDE",
+      "consumer": "breezebars.on_wheel",
+      "status": "subset-no-native-control",
+      "detail": "Raise/Lower, Maximize/Restore, Previous/Next Desktop; not all KWin actions exist."
+    },
+    {
+      "file": "kdeglobals",
+      "group": "Colors:* / ColorEffects:*",
+      "keys": [
+        "*"
+      ],
+      "owner": "KDE",
+      "consumer": "plasma-theme.py sync + KColorScheme",
+      "status": "native-colors"
+    },
+    {
+      "file": "kdeglobals",
+      "group": "KDE",
+      "keys": [
+        "widgetStyle",
+        "LookAndFeelPackage",
+        "SingleClick"
+      ],
+      "owner": "KDE",
+      "consumer": "Qt/KDE applications and interface-theme.py",
+      "status": "native-applications-subset"
+    }
+  ],
+  "service_contracts": [
+    {
+      "area": "screens",
+      "native_requires": "KScreen backend / KWin output-management protocol",
+      "replacement": "monitor-manager.py",
+      "kcm": "kcm_bwm_screens",
+      "starts_service": false
+    },
+    {
+      "area": "shortcuts",
+      "native_requires": "org.kde.kglobalaccel component action registry",
+      "replacement": "keybinds-manager.py",
+      "kcm": "kcm_bwm_shortcuts",
+      "starts_service": false
+    },
+    {
+      "area": "energy",
+      "native_requires": "org.kde.Solid.PowerManagement / PowerDevil profiles",
+      "replacement": "Config.idle + BwmIdle.qml + bwm-power",
+      "kcm": "kcm_bwm_energy",
+      "starts_service": false
+    },
+    {
+      "area": "startup",
+      "native_requires": "XDG autostart + Plasma session units",
+      "replacement": "autostart-manager.py",
+      "kcm": "kcm_bwm_startup",
+      "starts_service": false
+    },
+    {
+      "area": "desktops",
+      "native_requires": "org.kde.KWin.VirtualDesktopManager",
+      "replacement": "monitor-manager.py",
+      "kcm": "kcm_bwm_workspaces",
+      "starts_service": false
+    }
+  ],
+  "r7_contract": {
+    "version": 1,
+    "duration": {
+      "file": "kdeglobals",
+      "group": "KDE",
+      "key": "AnimationDurationFactor",
+      "range": [
+        0,
+        20
+      ],
+      "zero": "disabled"
+    },
+    "effect_requests": {
+      "file": "kwinrc",
+      "group": "Plugins",
+      "pattern": "<id>Enabled"
+    },
+    "effect_options": {
+      "file": "kwinrc",
+      "group_pattern": "Effect-<id>",
+      "preserve_unknown": true
+    },
+    "capability_rule": "Only an implemented BWM renderer can advertise supported=true; installed KWin metadata is discovery, not capability.",
+    "supported_effects": [],
+    "kcm": "R7 must expose only supported capabilities, with load/save/defaults and readback. No KWin D-Bus impersonation."
+  }
+}

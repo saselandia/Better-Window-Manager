@@ -1,0 +1,1215 @@
+{
+  "version": 1,
+  "date": "2026-11-16",
+  "phase": "R4",
+  "historySection": 239,
+  "scope": "Native Plasma tooltip endpoint adaptation, memory-only stable-window capture and compositor crash guard; live captures remain blocked pending a patched running compositor and native validation",
+  "userObservation": {
+    "appearanceAndRequestedActionsAccepted": true,
+    "hoverThumbnailPassed": false,
+    "missingModule": "org.kde.pipewire",
+    "sourceWindows": 7,
+    "visibleWindowOrGroupRowsAcrossTwoViews": 12,
+    "launcherRowsAcrossTwoViews": 6,
+    "ctrlCReturnedToPrompt": true,
+    "cleanupIndependentlyMeasured": false
+  },
+  "causes": {
+    "missingVideoConsumer": true,
+    "originalCaptureBackend": "KDE ScreencastingRequest requires zkde_screencast_unstable_v1; installing a PipeWire QML consumer alone does not add the protocol or valid KWin UUIDs.",
+    "knownCompositorIncident": "docs/BREEZE_RECOVERY.md identifies SIGSEGV in ScreenshareSession::init. New and old capture protocols share that core; source 0.56.2 dereferences missing monitor in init and monitor-change callback."
+  },
+  "implementation": {
+    "flag": "--task-thumbnails",
+    "scopeGuards": "Disposable --follow-skin task preview only; saved profiles rejected. Production captures require monitor-guard marker in the executable of the actual Wayland socket peer.",
+    "qml": "Original tooltip layout/actions/style retained. Only exact reviewed PipeWireThumbnail.qml qrc URL redirected with public QQmlAbstractUrlInterceptor; original source SHA256 b76fc7105bb69bf00a1cad94533fc0292a6ca7171409ec89bee75d2f68077e6b.",
+    "capture": "Existing Qt Wayland connection, ext foreign toplevel list + full64bit Hyprland mapping + stable foreign-handle source + ext image copy capture with wl_shm.",
+    "identity": "Bind stable handle before requiring a snapshot started later. Current UUID/address/PID generation identity; normal workspace and known positive monitor geometry required. Minimized/special/unknown-monitor rows rejected; close/hidden view/skin/withdrawal invalidates.",
+    "limits": {
+      "bufferBytesMax": 67108864,
+      "totalBufferBytesMax": 134217728,
+      "sessionsMax": 8,
+      "dimensionMax": 8192,
+      "imageDimensionMax": 512,
+      "requestsPerSecondMax": 4,
+      "pixelBits": 32,
+      "channelDepths": [
+        8,
+        10
+      ]
+    },
+    "memory": "memfd CLOEXEC, detached image before unmapping, no screenshots written to disk. No output capture/crop or portal. Later frames wait for damage on a static window without clearing the last image.",
+    "compositorGate": "SO_PEERCRED on wl_display fd; same-UID /proc/PID/exe must contain BWM_SCREENSHARE_MONITOR_GUARD_V1. Tracks the loaded inode, not installation path/version/config marker or inherited flag. No production CLI/env bypass.",
+    "patch": "Versioned 0.56.2 guard retains a strong valid monitor in init and monitorChanged; stops if missing and ignores monitor changes after stop. No header/ABI changes. User Portage patch and package rebuild required; not installed.",
+    "syntheticTestAuthorization": "Only the separate C++ private-fixture client explicitly permits its own test display; production entry point does not call that hook."
+  },
+  "upstreamSources": {
+    "plasma-desktop-6.7.5.tar.xz": {
+      "sha256": "079fcf6b87d7bf65e3f2a4670d605fac9469344c279a285a98ad549332d7b53e",
+      "membersSha256": {
+        "plasma-desktop-6.7.5/applets/taskmanager/qml/PipeWireThumbnail.qml": "b76fc7105bb69bf00a1cad94533fc0292a6ca7171409ec89bee75d2f68077e6b",
+        "plasma-desktop-6.7.5/applets/taskmanager/qml/ToolTipInstance.qml": "ac6aa4634eed80dbde289a3c8f82f893f23e3339ec85663c6081bc80ec815633",
+        "plasma-desktop-6.7.5/applets/taskmanager/qml/ToolTipDelegate.qml": "b1c0c8fee21ac6e3232f7c6c982d0286f989e88d9375e58f35f9b6f85a55f4ee"
+      }
+    },
+    "plasma-workspace-6.7.5.tar.xz": {
+      "sha256": "94ab21e2243b7876f65c315f1e545081c6437f5bd0a041ca4fb6c2533ae874c9",
+      "membersSha256": {
+        "plasma-workspace-6.7.5/libtaskmanager/screencasting.cpp": "dd94df1602c6abb644c0aa3db4c3684d91ab863b75ab6f79d9a35527d830e907",
+        "plasma-workspace-6.7.5/libtaskmanager/screencastingrequest.cpp": "816b9f3e1d873658da1e0ca526c452ee5ececd28d893f49185c6790f4eef98b9"
+      }
+    },
+    "hyprland-0.56.2.gh.tar.gz": {
+      "sha256": "03ad3f5ef152ff44116ffd56fcf808486211ecabf4f0ba567108ee746ba5cd2e",
+      "membersSha256": {
+        "hyprland-source/src/managers/screenshare/ScreenshareSession.cpp": "b6b2ce5d682080131f374510e7cecae54925356bea541ef99feeff3aba394c99",
+        "hyprland-source/src/protocols/ImageCopyCapture.cpp": "d1953224b89ca9582b5c181ec43c3a01784ab75d496b396a6a0945ade27b4ec3",
+        "hyprland-source/src/protocols/ImageCaptureSource.cpp": "494a257b06fd2bb91f79b7543522732dc48344d06246d170ab2b783a15fa376f",
+        "hyprland-source/src/managers/ProtocolManager.cpp": "b4a91b2647f3bb80dd28b41377465916c00ba84da9f3494370bd90302b9e8622",
+        "hyprland-source/protocols/wlr-foreign-toplevel-management-unstable-v1.xml": "4ecc4588858e29fe680a33521e1f22bcf22071d66d1553fe96b4ddec03d591d2"
+      }
+    },
+    "libplasma-6.7.5.tar.xz": {
+      "sha256": "27b28823254aa489c094c40a314ce1575fd7906eeb521e636bb8fd2dc2981f2f",
+      "membersSha256": {
+        "libplasma-6.7.5/src/plasmaquick/sharedqmlengine.cpp": "1a9a7c665622972f5d8c45fdc4b32d0624b989f4b9ca8e6e6de0568eb1347c73"
+      }
+    }
+  },
+  "installedProtocolSha256": {
+    "/usr/share/wayland-protocols/staging/ext-foreign-toplevel-list/ext-foreign-toplevel-list-v1.xml": "6b2ffb3a07d679d1c4170263adfefb9a7c37dd34ed3db5180bf58cb8ff8fbd0b",
+    "/usr/share/wayland-protocols/staging/ext-image-capture-source/ext-image-capture-source-v1.xml": "4ef41d15e4cdb9f550158391358ceec724a6708b43b7efedec03121a6bb8458d",
+    "/usr/share/wayland-protocols/staging/ext-image-copy-capture/ext-image-copy-capture-v1.xml": "41a446653f788fabb404cab3168c0bd667c1ff4b54f1f0bb1e18810a1f47d73f",
+    "/usr/share/hyprland-protocols/protocols/hyprland-toplevel-mapping-v1.xml": "05464521a13c96ed274a8545d84ac03980d94b32bd55a8467c7949ed1a1ee96e"
+  },
+  "sourceSha256": {
+    "src/bwm-plasma-host/taskthumbnail.h": "9f2a27f32fadd15501852a3f4733387ca90464a8d622917f7283cac3ba8a7276",
+    "src/bwm-plasma-host/taskthumbnail.cpp": "29afe4735d00e9498e3d3554e8c5c1abb8bec1a69ac999bcc1e31a3dec6428cd",
+    "src/bwm-plasma-host/qml/TaskThumbnail.qml": "9a4127a22edcc00d8b8aa4b0eed947ea953a02aa522615f12b62524c2d0ed8ee",
+    "src/bwm-plasma-host/tasksource.h": "ca77948c85e53ebc643dbdb2a65aebe7ca653c19a403fee148b75f5221cdb058",
+    "src/bwm-plasma-host/tasksource.cpp": "d0e91e87315ded92c87d2e84e2587613fd42dc9465ee7c6f5f0432e802dfecea",
+    "src/bwm-plasma-host/taskbridge.h": "7f0730987f261b18cdc81bc89fc2479f12ed23d3e96cc73140ca909aa13e61f8",
+    "src/bwm-plasma-host/taskbridge.cpp": "ae02342e15dcbcc120929369ddcb15c32530384c456435f0f1c27f6010df3f34",
+    "src/bwm-plasma-host/main.cpp": "8def08e1d0481f03153aaeabd96c293b7d94d0e737efceb4ad27fbcb517ced9c",
+    "src/bwm-plasma-host/catalog.cpp": "8403d282a39801dc0e10990ddf824ebce75d05646a4ce5e283cdd3e56cdeb552",
+    "src/bwm-plasma-host/preview-isolated.py": "097a7f31474351731955aca414e7f9492765506e12bf0d44c72f88e4e0f854a5",
+    "src/bwm-plasma-host/previewchecks.py": "f4f45b39248a288286e728bf0b97526cf476618d72c7aefcfd2349c29fef3794",
+    "src/bwm-plasma-host/check-desktops.py": "1d855d7a3ad2c3108f2586c88d535bec10af27cb886d816ab8905b9ecdd8fd63",
+    "src/bwm-plasma-host/check-thumbnail-local.py": "113491598cbdc989ddb321f2a14fbef48b58c9a691ab99e527850cfe1463fdc2",
+    "src/bwm-plasma-host/check-screenshare-guard.py": "caa2d03738b5f063c97ede3c1294ebf316b72c254ed140ba5c8572c429f0cedb",
+    "src/bwm-plasma-host/test-taskthumbnail.cpp": "ee34afe874dad54d17909739f40829d4aa722142fcce9f110f4aee31a72b2baf",
+    "src/bwm-plasma-host/test-taskthumbnail-native.cpp": "1a39c337ea920b7409e542342a83fe54a271249bf6a6ade393c9209f7d85eb1a",
+    "src/bwm-plasma-host/tests/thumbnail-server.h": "9a1c4453bf79d5cf7d3c76dfa000e3357ceef0be6b9dd3bd69d903c7603215a7",
+    "src/bwm-plasma-host/tests/thumbnail-server.cpp": "3b39ae55e9afbcf494914b056067e44f06d0903bc30a6b048d81f40d31866945",
+    "src/bwm-plasma-host/tests/upstream/Hyprland-0.56.2-ScreenshareSession.cpp": "b6b2ce5d682080131f374510e7cecae54925356bea541ef99feeff3aba394c99",
+    "src/bwm-plasma-host/protocols/wlr-foreign-toplevel-management-unstable-v1.xml": "4ecc4588858e29fe680a33521e1f22bcf22071d66d1553fe96b4ddec03d591d2",
+    "src/bwm-plasma-host/CMakeLists.txt": "5734b341aaf730b5aa77e6c7bd034e45097e857e2d5fec663935d34472ca592c",
+    "src/bwm-plasma-desktops/test-display.cpp": "6bb120477378cfea47404c8a1776d6c21325d746869f408837790b9a585fc04a",
+    "tests/test_r4_preview.py": "17c23c9552300eb9fbf0559af1dcaf2fb0a0253952cf6ad482834bee02c9558c",
+    "patches/hyprland/0.56.2-screenshare-monitor-guard.patch": "cf55ba59c718c0d1fabd3f75a3a0e2571e772d0c22e93cf4923211ac9ba1480b",
+    "config/hypr/skins/requirements.json": "eb428c4b283fee51fd034dcd4e573a5f8b3d8c8cd02d647fcc82e70b1fe1d31d",
+    "docs/REQUIREMENTS.md": "6e0e30b84a05723ff6de50f5707ac5333520d00a63d495f22569c9a89f6522b3",
+    "docs/BREEZE_R4_THUMBNAILS.md": "0e8fdcfac5e1e03e0baa496bea1f56a3211f02dfb9ee669a0e24e99206a89b34",
+    "docs/BREEZE_R4_APPEARANCE_RESULTS.json": "fbd75310f93236e3d77aaf4634a459ede813cab313ee87c121a56435a495e5ac",
+    "AGENTS.md": "279875d833aaa90f45cca3f9070056402a812e88795b796d10f7b63ab02d50b9",
+    "CLAUDE.md": "279875d833aaa90f45cca3f9070056402a812e88795b796d10f7b63ab02d50b9",
+    "BWM_CONTEXT.md": "070f5a3873c001db66946c465553349fe636bb1c746aa16a299ad7df435422f9",
+    "docs/BREEZE_R4_RESULTS.md": "523629e9bc3a6a260a6892ace532877024a29520af86d2d9664bb0e3af7ab5e3",
+    "docs/BREEZE_R4_ARCH.md": "987091a670d7b991701059fd1c73a3e3a6524b2f8ea2a430d1ff055d52952fbb",
+    "docs/BREEZE_R4_HANDOFF_CLAUDE.md": "b847e640e78b4e16e58ea873fbbddd81cd5bd4f23592d992883901813554f7e8",
+    "src/bwm-plasma-host/README.md": "eca2df25be8ebf02bb7fa53591be516acc7cd219d5fb24bf977cd0db165d2fea",
+    "docs/BREEZE_PLAN_V2.md": "4b2ea686e6914ec87cfda15b1ec045b57d3981d35859d9ddc021c7c5cd6e9b3e",
+    "THIRD_PARTY_NOTICES.md": "be92bc16abe33b508bf8132cebb0461fcf30aa5749aa9f47f84454107e42827b",
+    "licenses/Hyprland-BSD-3-Clause.txt": "e01df754903af0ab26babb317b5f5a62dd95f770b733c5275414dd3245d00ae7",
+    "licenses/wayland-protocols-image-capture-MIT.txt": "ead29069d6251c89fa7820f06d85c3f81a6f565c508fde08f8acff5ac414af00",
+    "licenses/hyprland-toplevel-mapping-BSD-3-Clause.txt": "c87fdb9f3218aa1c8dc55ed95434b0eaa84f1ec833ecd8f38d8906db10e9fd63"
+  },
+  "normalCtestOutput": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n    Start  1: isolated-screenshare-monitor-guard\n1/6 Test  #1: isolated-screenshare-monitor-guard ...   Passed    1.52 sec\n    Start  2: isolated-task-thumbnail\n2/6 Test  #2: isolated-task-thumbnail ..............   Passed    0.19 sec\n    Start  3: isolated-preview-appearance\n3/6 Test  #3: isolated-preview-appearance ..........   Passed    0.30 sec\n    Start  5: desktop-workspace-projection\n4/6 Test  #5: desktop-workspace-projection .........   Passed    0.04 sec\n    Start 11: surface-geometry\n5/6 Test #11: surface-geometry .....................   Passed    0.03 sec\n    Start 12: isolated-local-configuration\n6/6 Test #12: isolated-local-configuration .........   Passed   24.93 sec\n\n100% tests passed, 0 tests failed out of 6\n\nTotal Test time (real) =  27.03 sec\n",
+  "asanCtestOutput": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan\n    Start  1: isolated-screenshare-monitor-guard\n1/6 Test  #1: isolated-screenshare-monitor-guard ...   Passed    1.58 sec\n    Start  2: isolated-task-thumbnail\n2/6 Test  #2: isolated-task-thumbnail ..............   Passed    0.32 sec\n    Start  3: isolated-preview-appearance\n3/6 Test  #3: isolated-preview-appearance ..........   Passed    0.46 sec\n    Start  5: desktop-workspace-projection\n4/6 Test  #5: desktop-workspace-projection .........   Passed    0.06 sec\n    Start 11: surface-geometry\n5/6 Test #11: surface-geometry .....................   Passed    0.05 sec\n    Start 12: isolated-local-configuration\n6/6 Test #12: isolated-local-configuration .........   Passed   26.36 sec\n\n100% tests passed, 0 tests failed out of 6\n\nTotal Test time (real) =  28.83 sec\n",
+  "localThumbnailNormal": {
+    "version": 1,
+    "sessionModified": false,
+    "nativeWindowCaptureVerified": false,
+    "passed": true,
+    "clientExit": 0,
+    "clientOutput": "********* Start testing of ThumbnailTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : ThumbnailTest::initTestCase()\nPASS   : ThumbnailTest::bufferBounds()\nPASS   : ThumbnailTest::nativePixelFormats()\nPASS   : ThumbnailTest::transformsAndDetachedPixels()\nPASS   : ThumbnailTest::taskUuidRejectsReusedIdentityAndMinimizedWindow()\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() kf.windowsystem: Could not find any platform plugin\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.pulseaudio: Failed to connect context\nPASS   : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire()\nPASS   : ThumbnailTest::cleanupTestCase()\nTotals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 114ms\n********* Finished testing of ThumbnailTest *********\n",
+    "clientDiagnostics": ""
+  },
+  "localThumbnailAsan": {
+    "version": 1,
+    "sessionModified": false,
+    "nativeWindowCaptureVerified": false,
+    "passed": true,
+    "clientExit": 0,
+    "clientOutput": "********* Start testing of ThumbnailTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : ThumbnailTest::initTestCase()\nPASS   : ThumbnailTest::bufferBounds()\nPASS   : ThumbnailTest::nativePixelFormats()\nPASS   : ThumbnailTest::transformsAndDetachedPixels()\nPASS   : ThumbnailTest::taskUuidRejectsReusedIdentityAndMinimizedWindow()\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() kf.windowsystem: Could not find any platform plugin\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.pulseaudio: Failed to connect context\nPASS   : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire()\nPASS   : ThumbnailTest::cleanupTestCase()\nTotals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 232ms\n********* Finished testing of ThumbnailTest *********\n",
+    "clientDiagnostics": ""
+  },
+  "monitorGuardNormal": {
+    "version": 1,
+    "sessionModified": false,
+    "fullHyprlandBuildVerified": false,
+    "installed": false,
+    "runtimeVerified": false,
+    "originalSha256": "b6b2ce5d682080131f374510e7cecae54925356bea541ef99feeff3aba394c99",
+    "patchedSha256": "d3230f6bfade2b6392e081fdecc3257ac971b3ea4ddc0b7b26caf71ca83a3916",
+    "before": {
+      "null-init": {
+        "exit": -11,
+        "diagnostics": ""
+      },
+      "null-change": {
+        "exit": -11,
+        "diagnostics": ""
+      }
+    },
+    "after": {
+      "null-init": {
+        "exit": 0,
+        "diagnostics": ""
+      },
+      "drop-init": {
+        "exit": 0,
+        "diagnostics": ""
+      },
+      "null-change": {
+        "exit": 0,
+        "diagnostics": ""
+      },
+      "drop-change": {
+        "exit": 0,
+        "diagnostics": ""
+      },
+      "valid-init": {
+        "exit": 0,
+        "diagnostics": ""
+      },
+      "valid-change": {
+        "exit": 0,
+        "diagnostics": ""
+      },
+      "stopped-change": {
+        "exit": 0,
+        "diagnostics": ""
+      }
+    },
+    "passed": true,
+    "patchAppliedToReviewedSource": true,
+    "actualBodiesCompiled": true,
+    "guardMarkerRetainedInTestElf": true
+  },
+  "monitorGuardAsan": {
+    "version": 1,
+    "sessionModified": false,
+    "fullHyprlandBuildVerified": false,
+    "installed": false,
+    "runtimeVerified": false,
+    "originalSha256": "b6b2ce5d682080131f374510e7cecae54925356bea541ef99feeff3aba394c99",
+    "patchedSha256": "d3230f6bfade2b6392e081fdecc3257ac971b3ea4ddc0b7b26caf71ca83a3916",
+    "before": {
+      "null-init": {
+        "exit": 1,
+        "diagnostics": "AddressSanitizer:DEADLYSIGNAL\n=================================================================\n==416==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000000 (pc 0x55b33c966b6c bp 0x7ffdf4cb74f0 sp 0x7ffdf4cb72b0 T0)\n==416==The signal is caused by a READ memory access.\n==416==Hint: address points to the zero page.\n    #0 0x55b33c966b6c in CScreenshareSession::init() /tmp/bwm-screenshare-guard-c0wk034c/before.cpp:48\n    #1 0x55b33c9691a9 in main /tmp/bwm-screenshare-guard-c0wk034c/before.cpp:73\n    #2 0x7f8e7ca3547d  (/usr/lib64/libc.so.6+0x2747d) (BuildId: 04e1561f2cb1e5afac028167672ef4549f8cbf26)\n    #3 0x7f8e7ca3559a in __libc_start_main (/usr/lib64/libc.so.6+0x2759a) (BuildId: 04e1561f2cb1e5afac028167672ef4549f8cbf26)\n    #4 0x55b33c965384 in _start (/tmp/bwm-screenshare-guard-c0wk034c/before+0x2384) (BuildId: a69ae0b87d7e46c31ddad59ab19b3b7609832003)\n\n==416==Register values:\nrax = 0x0000000000000000  rbx = 0x00007b8e7a9f01e0  rcx = 0x0000000000000000  rdx = 0x00000f71cf53e019  \nrdi = 0x0000000000000000  rsi = 0x0000000000000001  rbp = 0x00007ffdf4cb74f0  rsp = 0x00007ffdf4cb72b0  \n r8 = 0x00007f8e7cb91980   r9 = 0x0000000000000000  r10 = 0x0000000000000005  r11 = 0x00007f8e7d368290  \nr12 = 0x00007b8e7aaf01b0  r13 = 0x00000f71cf53e000  r14 = 0x00007b8e7a9f0000  r15 = 0x00007b8e7aaf01dc  \nAddressSanitizer can not provide additional info.\nSUMMARY: AddressSanitizer: SEGV /tmp/bwm-screenshare-guard-c0wk034c/before.cpp:48 in CScreenshareSession::init()\n==416==ABORTING\n"
+      },
+      "null-change": {
+        "exit": 1,
+        "diagnostics": "000000000008 (pc 0x5605f5961692 bp 0x7fff116a4d10 sp 0x7fff116a4bf0 T0)\n==417==The signal is caused by a READ memory access.\n==417==Hint: address points to the zero page.\n    #0 0x5605f5961692 in listen<CScreenshareSession::changed()::<lambda()> > /tmp/bwm-screenshare-guard-c0wk034c/before.cpp:12\n    #1 0x5605f5961692 in CScreenshareSession::changed() /tmp/bwm-screenshare-guard-c0wk034c/before.cpp:59\n    #2 0x5605f5965870 in main /tmp/bwm-screenshare-guard-c0wk034c/before.cpp:73\n    #3 0x7f18ff63547d  (/usr/lib64/libc.so.6+0x2747d) (BuildId: 04e1561f2cb1e5afac028167672ef4549f8cbf26)\n    #4 0x7f18ff63559a in __libc_start_main (/usr/lib64/libc.so.6+0x2759a) (BuildId: 04e1561f2cb1e5afac028167672ef4549f8cbf26)\n    #5 0x5605f5961384 in _start (/tmp/bwm-screenshare-guard-c0wk034c/before+0x2384) (BuildId: a69ae0b87d7e46c31ddad59ab19b3b7609832003)\n\n==417==Register values:\nrax = 0x0000000000000000  rbx = 0x00007b18fd4f00c0  rcx = 0x0000000000000000  rdx = 0x0000000000000003  \nrdi = 0x0000000000000008  rsi = 0x0000000000000001  rbp = 0x00007fff116a4d10  rsp = 0x00007fff116a4bf0  \n r8 = 0x00007f18ff791980   r9 = 0x00000000000000f3  r10 = 0x0000000000001000  r11 = 0x00007f18ff787ac0  \nr12 = 0x00007b18fd6f01b0  r13 = 0x00007b18fd4f0000  r14 = 0x00000f631fa9e000  r15 = 0x00007fff116a6d16  \nAddressSanitizer can not provide additional info.\nSUMMARY: AddressSanitizer: SEGV /tmp/bwm-screenshare-guard-c0wk034c/before.cpp:12 in listen<CScreenshareSession::changed()::<lambda()> >\n==417==ABORTING\n"
+      }
+    },
+    "after": {
+      "null-init": {
+        "exit": 0,
+        "diagnostics": ""
+      },
+      "drop-init": {
+        "exit": 0,
+        "diagnostics": ""
+      },
+      "null-change": {
+        "exit": 0,
+        "diagnostics": ""
+      },
+      "drop-change": {
+        "exit": 0,
+        "diagnostics": ""
+      },
+      "valid-init": {
+        "exit": 0,
+        "diagnostics": ""
+      },
+      "valid-change": {
+        "exit": 0,
+        "diagnostics": ""
+      },
+      "stopped-change": {
+        "exit": 0,
+        "diagnostics": ""
+      }
+    },
+    "passed": true,
+    "patchAppliedToReviewedSource": true,
+    "actualBodiesCompiled": true,
+    "guardMarkerRetainedInTestElf": true
+  },
+  "nativeThumbnailAttempt": {
+    "version": 1,
+    "sessionModified": false,
+    "hyprlandPluginLoaded": false,
+    "dailyPanelReplaced": false,
+    "renderingVerified": false,
+    "arbitratedProvider": false,
+    "syntheticWindowCaptureRequested": true,
+    "syntheticWindowCaptureVerified": false,
+    "syntheticTaskSourcePrepared": true,
+    "passed": false,
+    "error": "Invalid fixture handshake (exit 4): fixture first wl_client_create: Operation not permitted\n"
+  },
+  "patchApplyValidation": {
+    "version": 1,
+    "gitApplyCheckPassed": true,
+    "gitApplyPassed": true,
+    "matchesNativePatchParser": true,
+    "patchedSha256": "d3230f6bfade2b6392e081fdecc3257ac971b3ea4ddc0b7b26caf71ca83a3916",
+    "systemModified": false
+  },
+  "fullTranslationUnitCompileAttempt": {
+    "version": 1,
+    "fullHyprlandBuildVerified": false,
+    "systemModified": false,
+    "passed": false,
+    "error": "Matching installed development headers or pkg-config unavailable"
+  },
+  "pythonOutputs": {
+    "bwm-r4-thumbnail-python.log": ".............\n----------------------------------------------------------------------\nRan 13 tests in 2.325s\n\nOK\n",
+    "bwm-r4-thumbnail-native-python.log": "..........\n----------------------------------------------------------------------\nRan 10 tests in 0.005s\n\nOK\n",
+    "bwm-r4-thumbnail-skins.log": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.006s\n\nOK\n"
+  },
+  "validation": {
+    "normalSelectedPassed": 6,
+    "asanSelectedPassed": 6,
+    "asanOptions": "detect_leaks=0:halt_on_error=1",
+    "previewPythonPassed": 13,
+    "nativeTasksPythonPassed": 10,
+    "skinsPythonPassed": 7,
+    "pythonCompilePassed": true,
+    "ownDiffCheckPassed": true,
+    "instructionsSynchronized": true,
+    "hostAndNativeFixturesCompiledNormalAndAsan": true,
+    "nativeSyntheticWindowCaptureExecuted": false,
+    "nativeBlockedBeforeClient": true,
+    "syntheticTaskSourcePreflightPassed": true,
+    "fullHyprlandBuildVerified": false,
+    "compositorPatchInstalled": false,
+    "runningCompositorGuardVerified": false,
+    "physicalHoverThumbnailVerified": false,
+    "fullCtestRun": false,
+    "approvedDelegateRenderRepeated": false
+  },
+  "installedPackageEvidence": {
+    "package": "gui-wm/hyprland-0.56.2",
+    "repository": "hyproverlay",
+    "availableEbuildVerified": true,
+    "userPatchPathPreviouslyAbsent": true,
+    "prepare": "cmake_src_prepare calls default_src_prepare; user patches use Portage standard directory"
+  },
+  "hostBinarySha256": {
+    "normal": "d000539c701b0bb7b182ffe5d99c42f6cbc85aa715ba703b5ff3f595dc76a20a",
+    "asan": "bbeb55b3a7e014e287e960aa433e326594fa2b6c4d4a4ea4ca24370a3f0368d0"
+  },
+  "limitations": [
+    "Native synthetic capture suite compiles but is blocked here by wl_client_create EPERM; not a pass.",
+    "Compositor guard tests compile actual init/callback bodies against data-only scaffolding; not a full compositor build or exact incident reproduction.",
+    "Matching private development headers unavailable for full translation-unit compile attempt.",
+    "No capture enabled on the live session; first private native test, then user package patch/rebuild and future login required.",
+    "Exact HDR colorimetry, other formats, physical monitor/tooltip placement and every application/window lifecycle remain unverified.",
+    "Recovery containments for the daily panel/switcher remain in force; no daily takeover."
+  ],
+  "sudoUsed": false,
+  "hyprlandPluginInstalledOrLoaded": false,
+  "hyprlandRestarted": false,
+  "quickshellRestarted": false,
+  "dailyPanelReplaced": false,
+  "userConfigurationWritten": false,
+  "operationalVerified": false,
+  "replacementReady": false,
+  "r4Complete": false,
+  "commitCreated": false,
+  "pushPerformed": false,
+  "followUp240": {
+    "date": "2026-11-16",
+    "historySection": 240,
+    "userLocalAttempt": {
+      "origin": "User terminal transcript",
+      "ctestName": "native-task-thumbnail",
+      "passed": false,
+      "ctestFailed": 1,
+      "ctestPassed": 0,
+      "seconds": 4.4,
+      "clientExit": -11,
+      "clientFunctionMilliseconds": 4165,
+      "signal": "SIGSEGV",
+      "faultAddress": "0x10",
+      "fixtureExit": 0,
+      "fixtureDiagnostics": "",
+      "syntheticTaskSourcePrepared": true,
+      "nativeMilestonesIndividuallyVerified": false,
+      "coreAvailable": false
+    },
+    "cause": "QQuickItem base destructor emits windowChanged after TaskThumbnail State has been destroyed. QObject automatic signal disconnection happens later. Callback dereferences State::window at null offset0x10.",
+    "beforeOffscreenReproduction": {
+      "version": 1,
+      "sessionModified": false,
+      "nativeWindowCaptureVerified": false,
+      "passed": false,
+      "clientExit": -11,
+      "clientOutput": "********* Start testing of ThumbnailTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : ThumbnailTest::initTestCase()\n",
+      "clientDiagnostics": "Received signal 11 (SIGSEGV), code SEGV_MAPERR, at instruction address 0x0000561b84cebc98, accessing address 0x0000000000000010\n         windowAssociatedItemCanBeDestroyed function time: 0ms, total time: 0ms\n"
+    },
+    "beforeAsanReproduction": {
+      "version": 1,
+      "sessionModified": false,
+      "nativeWindowCaptureVerified": false,
+      "passed": false,
+      "clientExit": 1,
+      "clientOutput": "********* Start testing of ThumbnailTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : ThumbnailTest::initTestCase()\n",
+      "clientDiagnostics": "Received signal 11 (SIGSEGV), code SEGV_MAPERR, at instruction address 0x0000562116fde72d, accessing address 0x0000000000000010\n         windowAssociatedItemCanBeDestroyed function time: 0ms, total time: 1ms\nAddressSanitizer:DEADLYSIGNAL\n=================================================================\n==99==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000010 (pc 0x562116fde72d bp 0x7ffe6944bc10 sp 0x7ffe6944bc00 T0)\n==99==The signal is caused by a READ memory access.\n==99==Hint: address points to the zero page.\n    #0 0x562116fde72d in QWeakPointer<QObject>::isNull() const (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x7a72d) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #1 0x562117042a7b in QPointer<QQuickWindow>::isNull() const (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0xdea7b) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #2 0x562117040981 in QPointer<QQuickWindow>::operator bool() const (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0xdc981) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #3 0x5621171c696a in TaskThumbnail::TaskThumbnail(QQuickItem*)::{lambda(QQuickWindow*)#1}::operator()(QQuickWindow*) const (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x26296a) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #4 0x5621171d1213 in QtPrivate::FunctorCall<std::integer_sequence<unsigned long, 0ul>, QtPrivate::List<QQuickWindow*>, void, TaskThumbnail::TaskThumbnail(QQuickItem*)::{lambda(QQuickWindow*)#1}>::call(TaskThumbnail::TaskThumbnail(QQuickItem*)::{lambda(QQuickWindow*)#1}&, void**)::{lambda()#1}::operator()() const (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x26d213) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #5 0x5621171d1bd9 in void QtPrivate::FunctorCallBase::call_internal<void, QtPrivate::FunctorCall<std::integer_sequence<unsigned long, 0ul>, QtPrivate::List<QQuickWindow*>, void, TaskThumbnail::TaskThumbnail(QQuickItem*)::{lambda(QQuickWindow*)#1}>::call(TaskThumbnail::TaskThumbnail(QQuickItem*)::{lambda(QQuickWindow*)#1}&, void**)::{lambda()#1}>(void**, QtPrivate::FunctorCall<std::integer_sequence<unsigned long, 0ul>, QtPrivate::List<QQuickWindow*>, void, TaskThumbnail::TaskThumbnail(QQuickItem*)::{lambda(QQuickWindow*)#1}>::call(TaskThumbnail::TaskThumbnail(QQuickItem*)::{lambda(QQuickWindow*)#1}&, void**)::{lambda()#1}&&) (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x26dbd9) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #6 0x5621171d1331 in QtPrivate::FunctorCall<std::integer_sequence<unsigned long, 0ul>, QtPrivate::List<QQuickWindow*>, void, TaskThumbnail::TaskThumbnail(QQuickItem*)::{lambda(QQuickWindow*)#1}>::call(TaskThumbnail::TaskThumbnail(QQuickItem*)::{lambda(QQuickWindow*)#1}&, void**) (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x26d331) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #7 0x5621171d0886 in void QtPrivate::FunctorCallable<TaskThumbnail::TaskThumbnail(QQuickItem*)::{lambda(QQuickWindow*)#1}, QQuickWindow*>::call<QtPrivate::List<QQuickWindow*>, void>(TaskThumbnail::TaskThumbnail(QQuickItem*)::{lambda(QQuickWindow*)#1}&, void*, void**) (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x26c886) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #8 0x5621171d01a0 in QtPrivate::QCallableObject<TaskThumbnail::TaskThumbnail(QQuickItem*)::{lambda(QQuickWindow*)#1}, QtPrivate::List<QQuickWindow*>, void>::impl(int, QtPrivate::QSlotObjectBase*, QObject*, void**, bool*) (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x26c1a0) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #9 0x7f35ab35ef01  (/usr/lib64/libQt6Core.so.6+0x35ef01) (BuildId: 653eb959826870a97ab086c4bdc6ecd0dfd0b782)\n    #10 0x7f35ad35c33a in QQuickItem::itemChange(QQuickItem::ItemChange, QQuickItem::ItemChangeData const&) (/usr/lib64/libQt6Quick.so.6+0x55c33a) (BuildId: d3116c9b799639eb16f16751d8dfe4c7f312c8a2)\n    #11 0x7f35ad3acf1b in QQuickItemPrivate::derefWindow() (/usr/lib64/libQt6Quick.so.6+0x5acf1b) (BuildId: d3116c9b799639eb16f16751d8dfe4c7f312c8a2)\n    #12 0x7f35ad3b3532 in QQuickItem::setParentItem(QQuickItem*) (/usr/lib64/libQt6Quick.so.6+0x5b3532) (BuildId: d3116c9b799639eb16f16751d8dfe4c7f312c8a2)\n    #13 0x7f35ad3b86af in QQuickItem::~QQuickItem() (/usr/lib64/libQt6Quick.so.6+0x5b86af) (BuildId: d3116c9b799639eb16f16751d8dfe4c7f312c8a2)\n    #14 0x5621171c7377 in TaskThumbnail::~TaskThumbnail() (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x263377) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #15 0x5621171c73a3 in TaskThumbnail::~TaskThumbnail() (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x2633a3) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #16 0x562116fdefc8 in std::default_delete<TaskThumbnail>::operator()(TaskThumbnail*) const (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x7afc8) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #17 0x562116fdf089 in std::__uniq_ptr_impl<TaskThumbnail, std::default_delete<TaskThumbnail> >::reset(TaskThumbnail*) (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x7b089) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #18 0x562116fdc149 in std::unique_ptr<TaskThumbnail, std::default_delete<TaskThumbnail> >::reset(TaskThumbnail*) (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x78149) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #19 0x562116fd033f in ThumbnailTest::windowAssociatedItemCanBeDestroyed() (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x6c33f) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #20 0x562116fc7997 in ThumbnailTest::qt_static_metacall(QObject*, QMetaObject::Call, int, void**) (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x63997) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #21 0x7f35ab30fd30 in QMetaMethodInvoker::invokeImpl(QMetaMethod, void*, Qt::ConnectionType, long long, void const* const*, char const* const*, QtPrivate::QMetaTypeInterface const* const*) (/usr/lib64/libQt6Core.so.6+0x30fd30) (BuildId: 653eb959826870a97ab086c4bdc6ecd0dfd0b782)\n    #22 0x7f35ab310870 in QMetaMethod::invokeImpl(QMetaMethod, void*, Qt::ConnectionType, long long, void const* const*, char const* const*, QtPrivate::QMetaTypeInterface const* const*) (/usr/lib64/libQt6Core.so.6+0x310870) (BuildId: 653eb959826870a97ab086c4bdc6ecd0dfd0b782)\n    #23 0x7f35aeb7beaa  (/usr/lib64/libQt6Test.so.6+0x19eaa) (BuildId: 8e9f3a3d764b94436104e2eaccec02a5d6cb4b0b)\n    #24 0x7f35aeba78dc  (/usr/lib64/libQt6Test.so.6+0x458dc) (BuildId: 8e9f3a3d764b94436104e2eaccec02a5d6cb4b0b)\n    #25 0x7f35aeba8654  (/usr/lib64/libQt6Test.so.6+0x46654) (BuildId: 8e9f3a3d764b94436104e2eaccec02a5d6cb4b0b)\n    #26 0x7f35aeba93cb  (/usr/lib64/libQt6Test.so.6+0x473cb) (BuildId: 8e9f3a3d764b94436104e2eaccec02a5d6cb4b0b)\n    #27 0x7f35aebaf133 in QTest::qRun() (/usr/lib64/libQt6Test.so.6+0x4d133) (BuildId: 8e9f3a3d764b94436104e2eaccec02a5d6cb4b0b)\n    #28 0x7f35aebaf581 in QTest::qExec(QObject*, int, char**) (/usr/lib64/libQt6Test.so.6+0x4d581) (BuildId: 8e9f3a3d764b94436104e2eaccec02a5d6cb4b0b)\n    #29 0x562116fc7826 in main (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x63826) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n    #30 0x7f35aaa3547d  (/usr/lib64/libc.so.6+0x2747d) (BuildId: 04e1561f2cb1e5afac028167672ef4549f8cbf26)\n    #31 0x7f35aaa3559a in __libc_start_main (/usr/lib64/libc.so.6+0x2759a) (BuildId: 04e1561f2cb1e5afac028167672ef4549f8cbf26)\n    #32 0x562116fc1ea4 in _start (/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan/test-taskthumbnail+0x5dea4) (BuildId: 32261b16f99fd4ae9c17d08c68bc0d6751afd490)\n==99==ABORTING"
+    },
+    "fix": "Record/disconnect only owned connections in the derived destructor before State/capture destruction. Keep unrelated Qt/QML destroyed observers; watch the initial C++ parent window as well as later window changes.",
+    "newRegressionCoverage": [
+      "Explicit item destruction while window-associated",
+      "Window reassociation/detach/reattach",
+      "Destruction by parent window",
+      "External destroyed signal and QPointer invalidation preserved",
+      "Compiled native fixture now exercises active-capture destruction/recreation and logs bounded named checkpoints"
+    ],
+    "afterNormal": {
+      "version": 1,
+      "sessionModified": false,
+      "nativeWindowCaptureVerified": false,
+      "passed": true,
+      "clientExit": 0,
+      "clientOutput": "********* Start testing of ThumbnailTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : ThumbnailTest::initTestCase()\nPASS   : ThumbnailTest::windowAssociatedItemCanBeDestroyed()\nPASS   : ThumbnailTest::parentWindowCanDestroyItsThumbnail()\nPASS   : ThumbnailTest::bufferBounds()\nPASS   : ThumbnailTest::nativePixelFormats()\nPASS   : ThumbnailTest::transformsAndDetachedPixels()\nPASS   : ThumbnailTest::taskUuidRejectsReusedIdentityAndMinimizedWindow()\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() kf.windowsystem: Could not find any platform plugin\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.pulseaudio: Failed to connect context\nPASS   : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire()\nPASS   : ThumbnailTest::cleanupTestCase()\nTotals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 111ms\n********* Finished testing of ThumbnailTest *********\n",
+      "clientDiagnostics": ""
+    },
+    "afterAsan": {
+      "version": 1,
+      "sessionModified": false,
+      "nativeWindowCaptureVerified": false,
+      "passed": true,
+      "clientExit": 0,
+      "clientOutput": "********* Start testing of ThumbnailTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : ThumbnailTest::initTestCase()\nPASS   : ThumbnailTest::windowAssociatedItemCanBeDestroyed()\nPASS   : ThumbnailTest::parentWindowCanDestroyItsThumbnail()\nPASS   : ThumbnailTest::bufferBounds()\nPASS   : ThumbnailTest::nativePixelFormats()\nPASS   : ThumbnailTest::transformsAndDetachedPixels()\nPASS   : ThumbnailTest::taskUuidRejectsReusedIdentityAndMinimizedWindow()\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() kf.windowsystem: Could not find any platform plugin\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.pulseaudio: Failed to connect context\nPASS   : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire()\nPASS   : ThumbnailTest::cleanupTestCase()\nTotals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 233ms\n********* Finished testing of ThumbnailTest *********\n",
+      "clientDiagnostics": ""
+    },
+    "normalSelectedOutput": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n    Start  1: isolated-screenshare-monitor-guard\n1/6 Test  #1: isolated-screenshare-monitor-guard ...   Passed    1.51 sec\n    Start  2: isolated-task-thumbnail\n2/6 Test  #2: isolated-task-thumbnail ..............   Passed    0.19 sec\n    Start  3: isolated-preview-appearance\n3/6 Test  #3: isolated-preview-appearance ..........   Passed    0.29 sec\n    Start  5: desktop-workspace-projection\n4/6 Test  #5: desktop-workspace-projection .........   Passed    0.04 sec\n    Start 11: surface-geometry\n5/6 Test #11: surface-geometry .....................   Passed    0.03 sec\n    Start 12: isolated-local-configuration\n6/6 Test #12: isolated-local-configuration .........   Passed   25.56 sec\n\n100% tests passed, 0 tests failed out of 6\n\nTotal Test time (real) =  27.64 sec\n",
+    "asanSelectedOutput": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan\n    Start  1: isolated-screenshare-monitor-guard\n1/6 Test  #1: isolated-screenshare-monitor-guard ...   Passed    1.58 sec\n    Start  2: isolated-task-thumbnail\n2/6 Test  #2: isolated-task-thumbnail ..............   Passed    0.33 sec\n    Start  3: isolated-preview-appearance\n3/6 Test  #3: isolated-preview-appearance ..........   Passed    0.46 sec\n    Start  5: desktop-workspace-projection\n4/6 Test  #5: desktop-workspace-projection .........   Passed    0.06 sec\n    Start 11: surface-geometry\n5/6 Test #11: surface-geometry .....................   Passed    0.05 sec\n    Start 12: isolated-local-configuration\n6/6 Test #12: isolated-local-configuration .........   Passed   26.45 sec\n\n100% tests passed, 0 tests failed out of 6\n\nTotal Test time (real) =  28.92 sec\n",
+    "nativeCorrectedAttempt": {
+      "version": 1,
+      "sessionModified": false,
+      "hyprlandPluginLoaded": false,
+      "dailyPanelReplaced": false,
+      "renderingVerified": false,
+      "arbitratedProvider": false,
+      "syntheticWindowCaptureRequested": true,
+      "syntheticWindowCaptureVerified": false,
+      "syntheticTaskSourcePrepared": true,
+      "passed": false,
+      "error": "Invalid fixture handshake (exit 4): fixture first wl_client_create: Operation not permitted\n"
+    },
+    "validation": {
+      "normalSelectedPassed": 6,
+      "asanSelectedPassed": 6,
+      "qtTestNormalPassedIncludingInitCleanup": 9,
+      "qtTestAsanPassedIncludingInitCleanup": 9,
+      "asanOptions": "detect_leaks=0:halt_on_error=1",
+      "normalAndAsanHostAndNativeClientsRecompiled": true,
+      "pythonCompilePassed": true,
+      "ownDiffCheckPassed": true,
+      "fullNativeCorrectedTestExecutedHere": false,
+      "nativeBlockedBeforeClient": true,
+      "userNativeRerunPending": true,
+      "physicalCaptureVerified": false,
+      "compositorGuardChanged": false,
+      "compositorPatchInstalled": false
+    },
+    "sourceSha256": {
+      "src/bwm-plasma-host/taskthumbnail.h": "5870772307d137b5f76e65cd84c396ed804e33996b64f7d0d5b6371eb5aa6167",
+      "src/bwm-plasma-host/taskthumbnail.cpp": "8b29ad83eab8f063249aefd014af6b46ed8cf751f6bfa490a46e944301e1ea04",
+      "src/bwm-plasma-host/test-taskthumbnail.cpp": "e7761f9a7f9e6f95c331687dc5deae5287c0ea02eb3988b5b4044470be157ae9",
+      "src/bwm-plasma-host/test-taskthumbnail-native.cpp": "3061140289e03af06cc7a0b0eb3357af96a867f4d67b0efc3a3d76239b866ab9",
+      "src/bwm-plasma-host/check-thumbnail-local.py": "294153b08a618b531474e7b91aaad44eb926cd572b58a2d3b0866710dc8b5722",
+      "BWM_CONTEXT.md": "9720a8324786ca898b755bbb58e3949d1c0a72c50ae699aff3a5f709a6040732",
+      "AGENTS.md": "4ff111fc163221c2fbcaa836411d1da8e91787d5ad6eb8d04438f771fda021e9",
+      "CLAUDE.md": "4ff111fc163221c2fbcaa836411d1da8e91787d5ad6eb8d04438f771fda021e9",
+      "docs/BREEZE_R4_RESULTS.md": "42230964c5f492b9b5598d37c2f4b9fc87f27887a9b8f812119ae24a4df46357",
+      "docs/BREEZE_R4_ARCH.md": "decb2d7a6bba8e4b8104f524233015d0f02fd2275b1b1012547a7b161aea9659",
+      "docs/BREEZE_R4_HANDOFF_CLAUDE.md": "c2f7481f776ea3e7ed8e4e5f6ed53a979a6a61cfe9bb4127dc5957c1f8c18da7",
+      "docs/BREEZE_R4_THUMBNAILS.md": "b6abc4e25096ec582790aa003df26c89e2f29c02e20af10dd7c0413e7eb8628c",
+      "src/bwm-plasma-host/README.md": "d1d317a70e439c03a849753d0c2c3c8669d3f3fa3f3e62afb33cfd1c14e79d39",
+      "docs/BREEZE_PLAN_V2.md": "6722f2eb2672049760c33eaf86a254fe1a84106d07ac6abb99c34c36a16ec93a",
+      "THIRD_PARTY_NOTICES.md": "2a3a215f1900b8d5774c575b8b8c5e52994d60019557b0c1f8f824b3833e5756"
+    },
+    "binarySha256": {
+      "build/bwm-plasma-host/bwm-plasma-host": "3cd2643565a3d649cf691c001bb4e74a90e598b813c6bdefa3007cb1e3725adf",
+      "build/bwm-plasma-host/test-taskthumbnail-native": "b0751832e9c796f40816690e93ba130b189a8d84960dedd87df17f0a2d17a8b7",
+      "build/bwm-plasma-host-asan/bwm-plasma-host": "72de84d6e955f6396acc30eac78a24c1bf6760c147c0c56f30ef60814b903381",
+      "build/bwm-plasma-host-asan/test-taskthumbnail-native": "5a58eb9d495d1c16bee851e709d2fd83ddbaafa7c9ee51bf7a1823f7769a974c"
+    },
+    "newDependencies": false,
+    "sessionModified": false,
+    "sudoUsed": false,
+    "hyprlandPluginInstalledOrLoaded": false,
+    "hyprlandRestarted": false,
+    "quickshellRestarted": false,
+    "dailyPanelReplaced": false,
+    "operationalVerified": false,
+    "replacementReady": false,
+    "r4Complete": false,
+    "commitCreated": false,
+    "pushPerformed": false
+  },
+  "latestHistorySection": 247,
+  "latestValidation": "userFollowUp243",
+  "userFollowUp241": {
+    "date": "2026-11-16",
+    "historySection": 241,
+    "origin": "User terminal transcript and workspace native-results report read directly",
+    "userCtest": {
+      "name": "native-task-thumbnail",
+      "passed": 1,
+      "failed": 0,
+      "seconds": 4.3
+    },
+    "nativeReport": {
+      "version": 1,
+      "sessionModified": false,
+      "hyprlandPluginLoaded": false,
+      "dailyPanelReplaced": false,
+      "renderingVerified": false,
+      "arbitratedProvider": false,
+      "syntheticWindowCaptureRequested": true,
+      "syntheticWindowCaptureVerified": true,
+      "syntheticTaskSourcePrepared": true,
+      "clientExit": 0,
+      "clientOutput": "********* Start testing of NativeThumbnailTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : NativeThumbnailTest::initTestCase()\nQWARN  : NativeThumbnailTest::nativeWindowPixelsAndLifecycle() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : NativeThumbnailTest::nativeWindowPixelsAndLifecycle() org.kde.plasma.libtaskmanager: The PlasmaWindowManagement protocol hasn't activated in time. The client possibly got denied by kwin? Check kwin output.\nQINFO  : NativeThumbnailTest::nativeWindowPixelsAndLifecycle() thumbnail-check: synthetic pixels verified\nQINFO  : NativeThumbnailTest::nativeWindowPixelsAndLifecycle() thumbnail-check: static image, visibility and resize verified\nQINFO  : NativeThumbnailTest::nativeWindowPixelsAndLifecycle() thumbnail-check: active-capture destruction and recreation verified\nQINFO  : NativeThumbnailTest::nativeWindowPixelsAndLifecycle() thumbnail-check: identity, close and withdrawal verified\nQINFO  : NativeThumbnailTest::nativeWindowPixelsAndLifecycle() thumbnail-check: teardown complete\nPASS   : NativeThumbnailTest::nativeWindowPixelsAndLifecycle()\nPASS   : NativeThumbnailTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 4116ms\n********* Finished testing of NativeThumbnailTest *********\n",
+      "clientDiagnostics": "",
+      "fixtureExit": 0,
+      "fixtureDiagnostics": "",
+      "fixtureOutput": "{\"accepted\":0,\"cancelled\":0,\"rejected\":0}\n",
+      "passed": true,
+      "cleanupVerified": true
+    },
+    "verifiedCheckpoints": [
+      "synthetic pixels verified",
+      "static image, visibility and resize verified",
+      "active-capture destruction and recreation verified",
+      "identity, close and withdrawal verified",
+      "teardown complete"
+    ],
+    "normalNativeSyntheticCaptureAccepted": true,
+    "nativeAsanVerified": false,
+    "physicalSessionCaptureVerified": false,
+    "sourceSha256": {
+      "BWM_CONTEXT.md": "5415ff0be96941a38d6837be46be60b783c88050327cac00dc23a6debd903829",
+      "AGENTS.md": "6013ef70d39a2e7f5e3ab1c62088b1d614179ec35db3b64ff7dea95ea70d6cb9",
+      "CLAUDE.md": "6013ef70d39a2e7f5e3ab1c62088b1d614179ec35db3b64ff7dea95ea70d6cb9",
+      "docs/BREEZE_R4_RESULTS.md": "3f52a5e91ab69b6b09680ac55fbdf73c544f525a95a0b7d5e6080eead94de0ae",
+      "docs/BREEZE_R4_ARCH.md": "113b8ab6d73e946753bb605e6cae65f0ed1b060b1b64e68d151c7bb33de0920f",
+      "docs/BREEZE_R4_HANDOFF_CLAUDE.md": "c1ffdc3198c2cb3b4ca3871e6c5b3a05e6e32d6ca2d2c97dd55e1d432fd528d5",
+      "src/bwm-plasma-host/README.md": "41a0818759fafb0f2594571660c86c7dce3dd2a4e5e75986ff94a0409a155b40",
+      "docs/BREEZE_PLAN_V2.md": "9dcbfd7d5e8e8372774063c3213833d535f9bfedc2ea441623fa6edd8c02c70e",
+      "docs/BREEZE_R4_THUMBNAILS.md": "6e2cfa055fc0be45c0da236683f374d4f22fd15b9d475171c4796719571f4862"
+    },
+    "testsRepeated": false,
+    "codeChanged": false,
+    "binaryRebuilt": false,
+    "compositorPatchInstalled": false,
+    "sessionRestarted": false,
+    "next": "User Portage patch and source rebuild of =gui-wm/hyprland-0.56.2::hyproverlay, then future login; verify live thumbnail afterward",
+    "operationalVerified": false,
+    "replacementReady": false,
+    "r4Complete": false
+  },
+  "currentValidation": {
+    "date": "2026-11-16",
+    "source": "userFollowUp247",
+    "nativeSyntheticCaptureNormalPassed": true,
+    "nativeSyntheticCaptureAsanPassed": false,
+    "liveThumbnailAccepted": true,
+    "compositorPatchInstalled": true,
+    "nextStage": "Thumbnail hover generally accepted by user; continue remaining R4 task operations without repeating accepted tests",
+    "operationalVerified": false,
+    "replacementReady": false,
+    "r4Complete": false,
+    "installedCompositorGuardMarkerVerified": true,
+    "runningCompositorPeerGuardVerified": true,
+    "compositorReportingPatchInstalled": true
+  },
+  "userFollowUp242": {
+    "date": "2026-11-16",
+    "historySection": 242,
+    "verbatim": "listo",
+    "userCompletionReported": true,
+    "installedPatchExists": true,
+    "installedPatchMatchesReviewed": true,
+    "installedPatchSha256": "cf55ba59c718c0d1fabd3f75a3a0e2571e772d0c22e93cf4923211ac9ba1480b",
+    "installedHyprlandGuardMarkerVerified": true,
+    "installedHyprlandSha256": "f6a8a6269b95e61c6b4136b0155aaff7161ca818c4c78b17501ac47ae778f164",
+    "runningCompositorIpcExit": 2,
+    "runningCompositorIpcOutput": "Couldn't set socket timeout (2)",
+    "runningWaylandPeerVerified": false,
+    "sessionRestartIndividuallyConfirmed": false,
+    "configuredSkin": "plasma",
+    "physicalHoverVerified": false,
+    "previewStartedByAssistant": false,
+    "testsRepeated": false,
+    "codeChanged": false,
+    "sudoUsedByAssistant": false,
+    "sourceSha256": {
+      "BWM_CONTEXT.md": "7dc3b1ac4e5f85d75ab7a8fbb4edef7e45d8aff2815e906ddc7cb32e99d39067",
+      "docs/BREEZE_R4_RESULTS.md": "8ed8cd3e7af6c552ce6348a404f010cbe178e3fbf4c97792424cc55f8716ecd3",
+      "docs/BREEZE_R4_ARCH.md": "ed30967979a6dbd1398321e53d6484ea1520bca63a4907f136a27391f776df50",
+      "docs/BREEZE_R4_HANDOFF_CLAUDE.md": "eb50e1ccdd1e06b3da0d3c92b28d983f5935b0fdd438b37e927b386a5df0ed1c",
+      "src/bwm-plasma-host/README.md": "0a55fa8c8888fb15042d0441252557611a7aa0937d0ef58ff36794ddc5b212fa",
+      "docs/BREEZE_PLAN_V2.md": "7df55a07c72ffdaac5e5b31262deb13dd8779922d1ee14d79c901c6abf06beaa",
+      "docs/BREEZE_R4_THUMBNAILS.md": "ddcb2282c4543eb305a4020fc860d4bb2815dac93dc7a5c2d245fcf445397109"
+    },
+    "next": "Run explicit task preview with --task-thumbnails; its production peer guard must pass, then user verifies hover image/update/close.",
+    "operationalVerified": false,
+    "replacementReady": false,
+    "r4Complete": false
+  },
+  "userFollowUp243": {
+    "date": "2026-11-16",
+    "historySection": 243,
+    "userAttempt": {
+      "origin": "User terminal transcript",
+      "captureStarted": false,
+      "guardRejected": true,
+      "oldMessage": "Window capture blocked: the running compositor lacks BWM_SCREENSHARE_MONITOR_GUARD_V1.",
+      "secondaryError": "Missing temporary control/ack.json",
+      "physicalPreviewPassed": false
+    },
+    "observed": {
+      "installedHyprlandContainsMarker": true,
+      "installedFileCapabilities": "cap_sys_nice=ep",
+      "gentooUseFilecaps": true,
+      "livePeerProcessVisibleToExecutor": false
+    },
+    "causeStatus": "Unknown for the actual peer. Existing boolean conflated unavailable credentials, UID/PID restrictions, unreadable file, size/read errors and a genuinely missing marker. File capabilities may account for denied /proc access; not confirmed.",
+    "changes": {
+      "guard": "Structured exact failure reasons and bounded peer metadata. No weaker verification, installed-file fallback or permission/capability changes.",
+      "cli": "--check-thumbnail-compositor, read-only Qt Wayland peer guard status before panel/profile creation",
+      "runner": "check-thumbnail-compositor.py uses temporary XDG/D-Bus, correct display endpoint, no capture/action flags and no core dumps",
+      "startup": "wait_initial_ack distinguishes dead child, missing ack and timeout before register; suppresses misleading secondary FileNotFoundError while preserving original guard cause"
+    },
+    "normalSelectedOutput": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n    Start  1: isolated-screenshare-monitor-guard\n1/6 Test  #1: isolated-screenshare-monitor-guard ...   Passed    1.49 sec\n    Start  2: isolated-task-thumbnail\n2/6 Test  #2: isolated-task-thumbnail ..............   Passed    0.22 sec\n    Start  3: isolated-preview-appearance\n3/6 Test  #3: isolated-preview-appearance ..........   Passed    0.30 sec\n    Start  5: desktop-workspace-projection\n4/6 Test  #5: desktop-workspace-projection .........   Passed    0.04 sec\n    Start 11: surface-geometry\n5/6 Test #11: surface-geometry .....................   Passed    0.03 sec\n    Start 12: isolated-local-configuration\n6/6 Test #12: isolated-local-configuration .........   Passed   25.20 sec\n\n100% tests passed, 0 tests failed out of 6\n\nTotal Test time (real) =  27.29 sec\n",
+    "asanSelectedOutput": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan\n    Start  1: isolated-screenshare-monitor-guard\n1/6 Test  #1: isolated-screenshare-monitor-guard ...   Passed    1.58 sec\n    Start  2: isolated-task-thumbnail\n2/6 Test  #2: isolated-task-thumbnail ..............   Passed    0.38 sec\n    Start  3: isolated-preview-appearance\n3/6 Test  #3: isolated-preview-appearance ..........   Passed    0.45 sec\n    Start  5: desktop-workspace-projection\n4/6 Test  #5: desktop-workspace-projection .........   Passed    0.06 sec\n    Start 11: surface-geometry\n5/6 Test #11: surface-geometry .....................   Passed    0.05 sec\n    Start 12: isolated-local-configuration\n6/6 Test #12: isolated-local-configuration .........   Passed   27.09 sec\n\n100% tests passed, 0 tests failed out of 6\n\nTotal Test time (real) =  29.61 sec\n",
+    "pythonOutput": "................\n----------------------------------------------------------------------\nRan 16 tests in 2.188s\n\nOK\n",
+    "localNormal": {
+      "version": 1,
+      "sessionModified": false,
+      "nativeWindowCaptureVerified": false,
+      "passed": true,
+      "clientExit": 0,
+      "clientOutput": "********* Start testing of ThumbnailTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : ThumbnailTest::initTestCase()\nPASS   : ThumbnailTest::missingNativeDisplayIsNotReportedAsMissingMarker()\nPASS   : ThumbnailTest::windowAssociatedItemCanBeDestroyed()\nPASS   : ThumbnailTest::parentWindowCanDestroyItsThumbnail()\nPASS   : ThumbnailTest::bufferBounds()\nPASS   : ThumbnailTest::nativePixelFormats()\nPASS   : ThumbnailTest::transformsAndDetachedPixels()\nPASS   : ThumbnailTest::taskUuidRejectsReusedIdentityAndMinimizedWindow()\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() kf.windowsystem: Could not find any platform plugin\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.pulseaudio: Failed to connect context\nPASS   : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire()\nPASS   : ThumbnailTest::cleanupTestCase()\nTotals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 114ms\n********* Finished testing of ThumbnailTest *********\n",
+      "clientDiagnostics": "",
+      "readOnlyGuardCliVerified": true,
+      "readOnlyGuardCli": {
+        "capturesStarted": false,
+        "reason": "no-native-wayland-display",
+        "uid": 1000,
+        "verified": false,
+        "version": 1
+      }
+    },
+    "localAsan": {
+      "version": 1,
+      "sessionModified": false,
+      "nativeWindowCaptureVerified": false,
+      "passed": true,
+      "clientExit": 0,
+      "clientOutput": "********* Start testing of ThumbnailTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : ThumbnailTest::initTestCase()\nPASS   : ThumbnailTest::missingNativeDisplayIsNotReportedAsMissingMarker()\nPASS   : ThumbnailTest::windowAssociatedItemCanBeDestroyed()\nPASS   : ThumbnailTest::parentWindowCanDestroyItsThumbnail()\nPASS   : ThumbnailTest::bufferBounds()\nPASS   : ThumbnailTest::nativePixelFormats()\nPASS   : ThumbnailTest::transformsAndDetachedPixels()\nPASS   : ThumbnailTest::taskUuidRejectsReusedIdentityAndMinimizedWindow()\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() kf.windowsystem: Could not find any platform plugin\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.pulseaudio: Failed to connect context\nPASS   : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire()\nPASS   : ThumbnailTest::cleanupTestCase()\nTotals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 235ms\n********* Finished testing of ThumbnailTest *********\n",
+      "clientDiagnostics": "",
+      "readOnlyGuardCliVerified": true,
+      "readOnlyGuardCli": {
+        "capturesStarted": false,
+        "reason": "no-native-wayland-display",
+        "uid": 1000,
+        "verified": false,
+        "version": 1
+      }
+    },
+    "validation": {
+      "normalSelectedPassed": 6,
+      "asanSelectedPassed": 6,
+      "asanOptions": "detect_leaks=0:halt_on_error=1",
+      "wrapperPythonPassed": 16,
+      "thumbnailQtTestPassedIncludingInitCleanup": 10,
+      "readOnlyActualHostCliVerifiedOffscreen": true,
+      "realWaylandDiagnosticExecuted": false,
+      "approvedNativeCaptureTestRepeated": false,
+      "normalAndAsanBinariesRebuilt": true,
+      "pythonCompilePassed": true,
+      "ownDiffCheckPassed": true
+    },
+    "sourceSha256": {
+      "src/bwm-plasma-host/taskthumbnail.cpp": "54b0460ac37c1aeb72e6c03ebd7287df17c7fe407834fda01b41cfb9acd25483",
+      "src/bwm-plasma-host/taskthumbnail.h": "7172bbde0b82028bd49867366cb238752baeee6fe073e0a907b643cf54af71be",
+      "src/bwm-plasma-host/main.cpp": "6b45bcbac2c1dd693b9c2c42db4c689645450eed47a2cb18c0fefcdfde08a06b",
+      "src/bwm-plasma-host/previewchecks.py": "9e544746ab29b0c8aa279b704fa4938f43155edd4858df5032bc16ea037db956",
+      "src/bwm-plasma-host/preview-isolated.py": "0637da9aad40ede4def11bd9a9daebcfeff10c3d51bf08251127a7fdde13f78c",
+      "src/bwm-plasma-host/check-thumbnail-compositor.py": "8ce03ba5aa1392a4f6a0d36e444234ffb9c694186789d31aec978cf7ed3f5e7a",
+      "src/bwm-plasma-host/check-thumbnail-local.py": "019bd6422df5f45b7a476cfeb3cab838fda22d513e65c1678cbcef7aa326f628",
+      "src/bwm-plasma-host/test-taskthumbnail.cpp": "aa13e074a5d4198c666130c62c07aa3bddd6acb8525207a4ac6c357b21afdc0d",
+      "src/bwm-plasma-host/CMakeLists.txt": "2ac43903bc139970f2757fee46628ba6a1598625665d8dbe74d476edddc31d91",
+      "tests/test_r4_preview.py": "9b5d9380f3e18af534ea9da0a900928f6884fc90c59685c096916a22f8774abb",
+      "BWM_CONTEXT.md": "4fb862a46e93672fea1566e96dee0c32576d0fa110214d80ffb455533255a650",
+      "AGENTS.md": "6bf882c349805ad03aa15c336b84c6dfe3264a7cad81194a039db3b861ec10a3",
+      "CLAUDE.md": "6bf882c349805ad03aa15c336b84c6dfe3264a7cad81194a039db3b861ec10a3",
+      "docs/BREEZE_R4_RESULTS.md": "b73f44114f38e37a6eda93b758429b9a4af8803fb34d0bf9d5aaa190f7d11eff",
+      "docs/BREEZE_R4_ARCH.md": "db4cd44ec9c97e1e8946253a24373210545a6524213dc94a45e349d515c894d3",
+      "docs/BREEZE_R4_HANDOFF_CLAUDE.md": "8496b25e759fb89a272373970caebe1a1494b5d7bfdba39babe1e49634bf2eee",
+      "src/bwm-plasma-host/README.md": "a5f60bfc19b7650d7a98bb3c641ef5082d82cfa6dd6bcefddeaaa1a088297af5",
+      "docs/BREEZE_PLAN_V2.md": "ec413395d6165c78f4eed30762e1b755692af8c1d05ac4aaf0c12a6e98379f92",
+      "docs/BREEZE_R4_THUMBNAILS.md": "763d3060a379a612b0e18b58751b17deb2855e1a2bce96ae01d91f9eb14a2ee8",
+      "THIRD_PARTY_NOTICES.md": "4d98d469901bd1367529cf7e10b8b4bc7deb8b42a4ec00cacba4150a255885ef"
+    },
+    "hostSha256": {
+      "build/bwm-plasma-host/bwm-plasma-host": "dbccbf81e1383188bda969cdc6dcf34f0079d8d4b313aa77177991ad72574227",
+      "build/bwm-plasma-host-asan/bwm-plasma-host": "4c570faa2cafedf55c7eb0e45535cb996e424ad7a1ff105eb8674f660789ee5b"
+    },
+    "next": "User runs check-thumbnail-compositor.py and returns structured peer diagnosis; no recompile/relogin assumption.",
+    "newDependencies": false,
+    "sudoUsed": false,
+    "permissionsOrCapabilitiesChanged": false,
+    "compositorRestarted": false,
+    "quickshellRestarted": false,
+    "dailyPanelReplaced": false,
+    "operationalVerified": false,
+    "replacementReady": false,
+    "r4Complete": false,
+    "commitCreated": false,
+    "pushPerformed": false
+  },
+  "userFollowUp244": {
+    "date": "2026-11-16",
+    "historySection": 244,
+    "userDiagnostic": {
+      "version": 1,
+      "sessionModified": false,
+      "capturesStarted": false,
+      "clientExit": 2,
+      "guard": {
+        "capturesStarted": false,
+        "error": "Permission denied",
+        "peerPid": 5178,
+        "peerProcess": "Hyprland",
+        "peerUid": 1000,
+        "reason": "cannot-read-peer-executable",
+        "uid": 1000,
+        "verified": false,
+        "version": 1
+      }
+    },
+    "diagnosis": "Actual loaded-executable access denial is confirmed. Gentoo filecaps are present and consistent with this restriction; the exact kernel denial mechanism was not independently instrumented. This does not establish that the running compositor lacks monitor guards.",
+    "changes": {
+      "core": "Same actual guarded translation unit implements version getter; SystemInfo getVersion JSON adds guard version and getpid without IO, blocking or plugin ABI structure changes. Legacy ELF marker retained.",
+      "helper": "Same-UID Wayland SO_PEERCRED required. Direct ELF proof retained; fresh hyprctl -j version fallback must report exact peer PID and numeric version 1. Bounded 2s/64KiB, errors and mismatches fail closed.",
+      "runtime": "Actual runtime passed only to IPC subprocess; diagnostic clears inherited BWM_R4 flags then supplies actual guard runtime. Runtime is never evidence or authorization.",
+      "tests": "Original pinned SystemInfo/getVersion compiled before/after; actual response PID compared against subprocess PID. Helper predicate and QProcess success/wrong PID/absent/invalid/failed/oversized/timed-out replies tested offline."
+    },
+    "patchApply": {
+      "passed": true,
+      "targets": [
+        "src/managers/screenshare/ScreenshareSession.cpp",
+        "src/helpers/SystemInfo.cpp",
+        "src/managers/screenshare/BwmCaptureGuard.hpp"
+      ],
+      "freshUpstreamApplyVerified": true,
+      "sessionModified": false
+    },
+    "installedPatchComparison": {
+      "/etc/portage/patches/gui-wm/hyprland-0.56.2/9000-bwm-screenshare-monitor-guard.patch": {
+        "sha256": "cf55ba59c718c0d1fabd3f75a3a0e2571e772d0c22e93cf4923211ac9ba1480b",
+        "includesIpcReport": false
+      },
+      "patches/hyprland/0.56.2-screenshare-monitor-guard.patch": {
+        "sha256": "239aa61b67ca0f9d1ab536814027f3d18bbc74cb9f3aa008554e60b80ee9ff8c",
+        "includesIpcReport": true
+      }
+    },
+    "coreBodyNormal": {
+      "version": 1,
+      "sessionModified": false,
+      "fullHyprlandBuildVerified": false,
+      "installed": false,
+      "runtimeVerified": false,
+      "systemInfoOriginalSha256": "d8bc38f86d8cb89b10616a4ac42fe4feb32e257e7fb03167277b7a69f867dc12",
+      "originalSha256": "b6b2ce5d682080131f374510e7cecae54925356bea541ef99feeff3aba394c99",
+      "patchedSha256": "0d864abedeb36ba37040bd78dabbfd717ce04980ac589727fde2b126d1723cf8",
+      "before": {
+        "null-init": {
+          "exit": -11,
+          "diagnostics": ""
+        },
+        "null-change": {
+          "exit": -11,
+          "diagnostics": ""
+        }
+      },
+      "beforeVersionReply": {
+        "branch": "fixture",
+        "commit": "own-fixture-commit",
+        "version": "0.56.2",
+        "dirty": false,
+        "commit_message": "Own fixture",
+        "commit_date": "fixture",
+        "tag": "v0.56.2",
+        "commits": "0",
+        "buildAquamarine": "fixture",
+        "buildHyprlang": "fixture",
+        "buildHyprutils": "fixture",
+        "buildHyprcursor": "fixture",
+        "buildHyprgraphics": "fixture",
+        "systemAquamarine": "fixture",
+        "systemHyprlang": "fixture",
+        "systemHyprutils": "fixture",
+        "systemHyprcursor": "fixture",
+        "systemHyprgraphics": "fixture",
+        "abiHash": "own-fixture-ABI",
+        "flags": []
+      },
+      "after": {
+        "null-init": {
+          "exit": 0,
+          "diagnostics": ""
+        },
+        "drop-init": {
+          "exit": 0,
+          "diagnostics": ""
+        },
+        "null-change": {
+          "exit": 0,
+          "diagnostics": ""
+        },
+        "drop-change": {
+          "exit": 0,
+          "diagnostics": ""
+        },
+        "valid-init": {
+          "exit": 0,
+          "diagnostics": ""
+        },
+        "valid-change": {
+          "exit": 0,
+          "diagnostics": ""
+        },
+        "stopped-change": {
+          "exit": 0,
+          "diagnostics": ""
+        }
+      },
+      "afterVersionReply": {
+        "branch": "fixture",
+        "commit": "own-fixture-commit",
+        "version": "0.56.2",
+        "dirty": false,
+        "commit_message": "Own fixture",
+        "commit_date": "fixture",
+        "tag": "v0.56.2",
+        "commits": "0",
+        "buildAquamarine": "fixture",
+        "buildHyprlang": "fixture",
+        "buildHyprutils": "fixture",
+        "buildHyprcursor": "fixture",
+        "buildHyprgraphics": "fixture",
+        "systemAquamarine": "fixture",
+        "systemHyprlang": "fixture",
+        "systemHyprutils": "fixture",
+        "systemHyprcursor": "fixture",
+        "systemHyprgraphics": "fixture",
+        "abiHash": "own-fixture-ABI",
+        "flags": [],
+        "bwmScreenshareMonitorGuard": {
+          "version": 1,
+          "pid": 38
+        }
+      },
+      "passed": true,
+      "patchAppliedToReviewedSource": true,
+      "actualBodiesCompiled": true,
+      "guardMarkerRetainedInTestElf": true
+    },
+    "coreBodyAsan": {
+      "version": 1,
+      "sessionModified": false,
+      "fullHyprlandBuildVerified": false,
+      "installed": false,
+      "runtimeVerified": false,
+      "systemInfoOriginalSha256": "d8bc38f86d8cb89b10616a4ac42fe4feb32e257e7fb03167277b7a69f867dc12",
+      "originalSha256": "b6b2ce5d682080131f374510e7cecae54925356bea541ef99feeff3aba394c99",
+      "patchedSha256": "0d864abedeb36ba37040bd78dabbfd717ce04980ac589727fde2b126d1723cf8",
+      "before": {
+        "null-init": {
+          "exit": 1,
+          "diagnostics": "AddressSanitizer:DEADLYSIGNAL\n=================================================================\n==23==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000000 (pc 0x557d80e6580d bp 0x7ffebdf5a370 sp 0x7ffebdf5a130 T0)\n==23==The signal is caused by a READ memory access.\n==23==Hint: address points to the zero page.\n    #0 0x557d80e6580d in CScreenshareSession::init() /tmp/bwm-screenshare-guard-w7fzlxet/before.cpp:157\n    #1 0x557d80e6afe4 in main /tmp/bwm-screenshare-guard-w7fzlxet/before.cpp:183\n    #2 0x7f41bd03547d  (/usr/lib64/libc.so.6+0x2747d) (BuildId: 04e1561f2cb1e5afac028167672ef4549f8cbf26)\n    #3 0x7f41bd03559a in __libc_start_main (/usr/lib64/libc.so.6+0x2759a) (BuildId: 04e1561f2cb1e5afac028167672ef4549f8cbf26)\n    #4 0x557d80e63a64 in _start (/tmp/bwm-screenshare-guard-w7fzlxet/before+0x4a64) (BuildId: 231db0caaca27224f14464459d5444bc5dcfe5ee)\n\n==23==Register values:\nrax = 0x0000000000000000  rbx = 0x00007b41baff01e0  rcx = 0x0000000000000000  rdx = 0x00000f68375fe019  \nrdi = 0x0000000000000000  rsi = 0x0000000000000001  rbp = 0x00007ffebdf5a370  rsp = 0x00007ffebdf5a130  \n r8 = 0x00007f41bd191980   r9 = 0x0000000000000000  r10 = 0x0000000000000005  r11 = 0x00007f41bd92d8fc  \nr12 = 0x00007b41bb0f01d0  r13 = 0x00000f68375fe000  r14 = 0x00007b41baff0000  r15 = 0x00007b41bb0f01fc  \nAddressSanitizer can not provide additional info.\nSUMMARY: AddressSanitizer: SEGV /tmp/bwm-screenshare-guard-w7fzlxet/before.cpp:157 in CScreenshareSession::init()\n==23==ABORTING\n"
+        },
+        "null-change": {
+          "exit": 1,
+          "diagnostics": "0x000000000008 (pc 0x55a445f356d8 bp 0x7ffc0c216eb0 sp 0x7ffc0c216d90 T0)\n==24==The signal is caused by a READ memory access.\n==24==Hint: address points to the zero page.\n    #0 0x55a445f356d8 in listen<CScreenshareSession::changed()::<lambda()> > /tmp/bwm-screenshare-guard-w7fzlxet/before.cpp:14\n    #1 0x55a445f356d8 in CScreenshareSession::changed() /tmp/bwm-screenshare-guard-w7fzlxet/before.cpp:168\n    #2 0x55a445f3c486 in main /tmp/bwm-screenshare-guard-w7fzlxet/before.cpp:183\n    #3 0x7fccfc43547d  (/usr/lib64/libc.so.6+0x2747d) (BuildId: 04e1561f2cb1e5afac028167672ef4549f8cbf26)\n    #4 0x7fccfc43559a in __libc_start_main (/usr/lib64/libc.so.6+0x2759a) (BuildId: 04e1561f2cb1e5afac028167672ef4549f8cbf26)\n    #5 0x55a445f34a64 in _start (/tmp/bwm-screenshare-guard-w7fzlxet/before+0x4a64) (BuildId: 231db0caaca27224f14464459d5444bc5dcfe5ee)\n\n==24==Register values:\nrax = 0x0000000000000000  rbx = 0x00007bccfa2f00c0  rcx = 0x0000000000000000  rdx = 0x0000000000000003  \nrdi = 0x0000000000000008  rsi = 0x0000000000000001  rbp = 0x00007ffc0c216eb0  rsp = 0x00007ffc0c216d90  \n r8 = 0x00007fccfc591980   r9 = 0x00000000000000f3  r10 = 0x0000000000001000  r11 = 0x00007fccfc587ac0  \nr12 = 0x00007bccfa4f01d0  r13 = 0x00007bccfa2f0000  r14 = 0x00000f799f45e000  r15 = 0x00007ffc0c2172a8  \nAddressSanitizer can not provide additional info.\nSUMMARY: AddressSanitizer: SEGV /tmp/bwm-screenshare-guard-w7fzlxet/before.cpp:14 in listen<CScreenshareSession::changed()::<lambda()> >\n==24==ABORTING\n"
+        }
+      },
+      "beforeVersionReply": {
+        "branch": "fixture",
+        "commit": "own-fixture-commit",
+        "version": "0.56.2",
+        "dirty": false,
+        "commit_message": "Own fixture",
+        "commit_date": "fixture",
+        "tag": "v0.56.2",
+        "commits": "0",
+        "buildAquamarine": "fixture",
+        "buildHyprlang": "fixture",
+        "buildHyprutils": "fixture",
+        "buildHyprcursor": "fixture",
+        "buildHyprgraphics": "fixture",
+        "systemAquamarine": "fixture",
+        "systemHyprlang": "fixture",
+        "systemHyprutils": "fixture",
+        "systemHyprcursor": "fixture",
+        "systemHyprgraphics": "fixture",
+        "abiHash": "own-fixture-ABI",
+        "flags": []
+      },
+      "after": {
+        "null-init": {
+          "exit": 0,
+          "diagnostics": ""
+        },
+        "drop-init": {
+          "exit": 0,
+          "diagnostics": ""
+        },
+        "null-change": {
+          "exit": 0,
+          "diagnostics": ""
+        },
+        "drop-change": {
+          "exit": 0,
+          "diagnostics": ""
+        },
+        "valid-init": {
+          "exit": 0,
+          "diagnostics": ""
+        },
+        "valid-change": {
+          "exit": 0,
+          "diagnostics": ""
+        },
+        "stopped-change": {
+          "exit": 0,
+          "diagnostics": ""
+        }
+      },
+      "afterVersionReply": {
+        "branch": "fixture",
+        "commit": "own-fixture-commit",
+        "version": "0.56.2",
+        "dirty": false,
+        "commit_message": "Own fixture",
+        "commit_date": "fixture",
+        "tag": "v0.56.2",
+        "commits": "0",
+        "buildAquamarine": "fixture",
+        "buildHyprlang": "fixture",
+        "buildHyprutils": "fixture",
+        "buildHyprcursor": "fixture",
+        "buildHyprgraphics": "fixture",
+        "systemAquamarine": "fixture",
+        "systemHyprlang": "fixture",
+        "systemHyprutils": "fixture",
+        "systemHyprcursor": "fixture",
+        "systemHyprgraphics": "fixture",
+        "abiHash": "own-fixture-ABI",
+        "flags": [],
+        "bwmScreenshareMonitorGuard": {
+          "version": 1,
+          "pid": 38
+        }
+      },
+      "passed": true,
+      "patchAppliedToReviewedSource": true,
+      "actualBodiesCompiled": true,
+      "guardMarkerRetainedInTestElf": true
+    },
+    "normalSelectedOutput": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n    Start  1: isolated-screenshare-monitor-guard\n1/6 Test  #1: isolated-screenshare-monitor-guard ...   Passed    3.63 sec\n    Start  2: isolated-task-thumbnail\n2/6 Test  #2: isolated-task-thumbnail ..............   Passed    2.22 sec\n    Start  3: isolated-preview-appearance\n3/6 Test  #3: isolated-preview-appearance ..........   Passed    0.29 sec\n    Start  5: desktop-workspace-projection\n4/6 Test  #5: desktop-workspace-projection .........   Passed    0.04 sec\n    Start 11: surface-geometry\n5/6 Test #11: surface-geometry .....................   Passed    0.03 sec\n    Start 12: isolated-local-configuration\n6/6 Test #12: isolated-local-configuration .........   Passed   24.98 sec\n\n100% tests passed, 0 tests failed out of 6\n\nTotal Test time (real) =  31.20 sec\n",
+    "asanSelectedOutput": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan\n    Start  1: isolated-screenshare-monitor-guard\n1/6 Test  #1: isolated-screenshare-monitor-guard ...   Passed    5.59 sec\n    Start  2: isolated-task-thumbnail\n2/6 Test  #2: isolated-task-thumbnail ..............   Passed    2.41 sec\n    Start  3: isolated-preview-appearance\n3/6 Test  #3: isolated-preview-appearance ..........   Passed    0.45 sec\n    Start  5: desktop-workspace-projection\n4/6 Test  #5: desktop-workspace-projection .........   Passed    0.05 sec\n    Start 11: surface-geometry\n5/6 Test #11: surface-geometry .....................   Passed    0.05 sec\n    Start 12: isolated-local-configuration\n6/6 Test #12: isolated-local-configuration .........   Passed   26.72 sec\n\n100% tests passed, 0 tests failed out of 6\n\nTotal Test time (real) =  35.28 sec\n",
+    "pythonOutput": "................\n----------------------------------------------------------------------\nRan 16 tests in 2.187s\n\nOK\n",
+    "localNormal": {
+      "version": 1,
+      "sessionModified": false,
+      "nativeWindowCaptureVerified": false,
+      "passed": true,
+      "clientExit": 0,
+      "clientOutput": "********* Start testing of ThumbnailTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : ThumbnailTest::initTestCase()\nPASS   : ThumbnailTest::missingNativeDisplayIsNotReportedAsMissingMarker()\nPASS   : ThumbnailTest::guardReportMustMatchKernelPeer()\nPASS   : ThumbnailTest::ipcGuardUsesFreshBoundedReplyAndActualRuntime()\nPASS   : ThumbnailTest::windowAssociatedItemCanBeDestroyed()\nPASS   : ThumbnailTest::parentWindowCanDestroyItsThumbnail()\nPASS   : ThumbnailTest::bufferBounds()\nPASS   : ThumbnailTest::nativePixelFormats()\nPASS   : ThumbnailTest::transformsAndDetachedPixels()\nPASS   : ThumbnailTest::taskUuidRejectsReusedIdentityAndMinimizedWindow()\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() kf.windowsystem: Could not find any platform plugin\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.pulseaudio: Failed to connect context\nPASS   : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire()\nPASS   : ThumbnailTest::cleanupTestCase()\nTotals: 12 passed, 0 failed, 0 skipped, 0 blacklisted, 2114ms\n********* Finished testing of ThumbnailTest *********\n",
+      "clientDiagnostics": "",
+      "readOnlyGuardCliVerified": true,
+      "readOnlyGuardCli": {
+        "capturesStarted": false,
+        "reason": "no-native-wayland-display",
+        "uid": 1000,
+        "verified": false,
+        "version": 1
+      }
+    },
+    "localAsan": {
+      "version": 1,
+      "sessionModified": false,
+      "nativeWindowCaptureVerified": false,
+      "passed": true,
+      "clientExit": 0,
+      "clientOutput": "********* Start testing of ThumbnailTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : ThumbnailTest::initTestCase()\nPASS   : ThumbnailTest::missingNativeDisplayIsNotReportedAsMissingMarker()\nPASS   : ThumbnailTest::guardReportMustMatchKernelPeer()\nPASS   : ThumbnailTest::ipcGuardUsesFreshBoundedReplyAndActualRuntime()\nPASS   : ThumbnailTest::windowAssociatedItemCanBeDestroyed()\nPASS   : ThumbnailTest::parentWindowCanDestroyItsThumbnail()\nPASS   : ThumbnailTest::bufferBounds()\nPASS   : ThumbnailTest::nativePixelFormats()\nPASS   : ThumbnailTest::transformsAndDetachedPixels()\nPASS   : ThumbnailTest::taskUuidRejectsReusedIdentityAndMinimizedWindow()\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() kf.windowsystem: Could not find any platform plugin\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.pulseaudio: Failed to connect context\nPASS   : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire()\nPASS   : ThumbnailTest::cleanupTestCase()\nTotals: 12 passed, 0 failed, 0 skipped, 0 blacklisted, 2267ms\n********* Finished testing of ThumbnailTest *********\n",
+      "clientDiagnostics": "",
+      "readOnlyGuardCliVerified": true,
+      "readOnlyGuardCli": {
+        "capturesStarted": false,
+        "reason": "no-native-wayland-display",
+        "uid": 1000,
+        "verified": false,
+        "version": 1
+      }
+    },
+    "validation": {
+      "normalSelectedPassed": 6,
+      "asanSelectedPassed": 6,
+      "asanOptions": "detect_leaks=0:halt_on_error=1",
+      "wrapperPythonPassed": 16,
+      "thumbnailQtTestPassedIncludingInitCleanup": 12,
+      "normalAndAsanBinariesRebuilt": true,
+      "pythonCompilePassed": true,
+      "freshOriginalPatchApplyVerified": true,
+      "fullHyprlandBuildVerified": false,
+      "liveIpcGuardVerified": false,
+      "approvedNativeCaptureTestRepeated": false
+    },
+    "sourceSha256": {
+      "patches/hyprland/0.56.2-screenshare-monitor-guard.patch": "239aa61b67ca0f9d1ab536814027f3d18bbc74cb9f3aa008554e60b80ee9ff8c",
+      "src/bwm-plasma-host/taskthumbnail.cpp": "461e10a17e5cf80958d487613ee02e0ed99b49b105b00471c67daf5b712d864a",
+      "src/bwm-plasma-host/taskthumbnail.h": "d753acc9c1c50f370a69831407365b1277518c431eea39127415afafc2ca700b",
+      "src/bwm-plasma-host/test-taskthumbnail.cpp": "1b20c3ab3ba68d2261608da0e11bfe5f2545f78fbbfeb5a0cd176e6e4a7208cf",
+      "src/bwm-plasma-host/check-screenshare-guard.py": "4ca5dbfd6102ac9ccf62aa07b1b9820a60fe702eb2466bcccf5ad3c2d3fd5c06",
+      "src/bwm-plasma-host/check-thumbnail-compositor.py": "5987df555951cc5ca722c841caa898d095f8a3774e2f1e685ca4d5adb2f3d5ff",
+      "src/bwm-plasma-host/preview-isolated.py": "621ed2675bcb39d6c1292482e4fae4f43cd168ecabedbcc2d001e40565b459cd",
+      "src/bwm-plasma-host/tests/upstream/Hyprland-0.56.2-SystemInfo.cpp": "d8bc38f86d8cb89b10616a4ac42fe4feb32e257e7fb03167277b7a69f867dc12",
+      "tests/test_r4_preview.py": "09e6a56ec1eba91c382a1347fddef1eefbd640b81f0fdcad0c28f18297d97370",
+      "AGENTS.md": "15d469a410438c6ea44b3ac3afb5ddee1f92e3e86f2dac1ef031377f7a73793f",
+      "CLAUDE.md": "15d469a410438c6ea44b3ac3afb5ddee1f92e3e86f2dac1ef031377f7a73793f",
+      "BWM_CONTEXT.md": "2183ae47ecf155c88eea1979abafccdcccf5f5b80d9476e7691ef656d82d2587",
+      "THIRD_PARTY_NOTICES.md": "72c54dee5d791ff2884057d801de7f797aa6c5137cb2d3f0f341fe5d1c787a5c",
+      "docs/BREEZE_R4_THUMBNAILS.md": "2f8924ccd3c7ad989c1fb2a6c50c73afa16e65d566dfff765f5a3a5aa61c67d6",
+      "docs/BREEZE_R4_RESULTS.md": "8e56f3c39a966cb08dc4fc25cf6711bda9de04a0f4d44d26e27defeac3f5e45c",
+      "docs/BREEZE_R4_ARCH.md": "9edba27cc72bc43c4691b1b8667f0844591a7b8fa41806a79835e087ba4278da",
+      "docs/BREEZE_R4_HANDOFF_CLAUDE.md": "5647b6ebc15e27d62e966d1058126ba303379c31376436b6f3397fde7b31da45",
+      "docs/BREEZE_PLAN_V2.md": "6a1c3b2c4de2ca3012058e369113652e8c820619c1ca4ee6d8691dadd064ba8f",
+      "src/bwm-plasma-host/README.md": "34c3d2870465578a99d7073ddbd51db347217b96a97b909a8e5f74cd805c8d36"
+    },
+    "hostSha256": {
+      "build/bwm-plasma-host/bwm-plasma-host": "86e8ab1fc7b288d13b4bf4b959f3a13d13eeef665a717dbdb816a4b008c0e701",
+      "build/bwm-plasma-host-asan/bwm-plasma-host": "b00bf3cd93855f208e3409bfc79d172dd75faa8813ddb1da83053e2384245c75"
+    },
+    "newDependencies": false,
+    "sudoUsed": false,
+    "permissionsOrCapabilitiesChanged": false,
+    "compositorReportingPatchInstalled": false,
+    "compositorRestarted": false,
+    "quickshellRestarted": false,
+    "dailyPanelReplaced": false,
+    "liveThumbnailAccepted": false,
+    "operationalVerified": false,
+    "replacementReady": false,
+    "r4Complete": false,
+    "commitCreated": false,
+    "pushPerformed": false,
+    "next": "Replace Portage user patch with expanded version and source rebuild by user, adopt at next login, then run check-thumbnail-compositor.py; no new native capture test needed."
+  },
+  "userFollowUp245": {
+    "date": "2026-11-16",
+    "historySection": 245,
+    "origin": "User terminal transcript, not assistant live compositor access",
+    "diagnostic": {
+      "version": 1,
+      "sessionModified": false,
+      "capturesStarted": false,
+      "clientExit": 0,
+      "guard": {
+        "capturesStarted": false,
+        "executableError": "Permission denied",
+        "executableReason": "cannot-read-peer-executable",
+        "ipc": {
+          "reason": "guard-reported-by-wayland-peer",
+          "reportedGuard": {
+            "pid": 496181,
+            "version": 1
+          },
+          "verificationMethod": "compositor-ipc",
+          "verified": true
+        },
+        "peerPid": 496181,
+        "peerProcess": "Hyprland",
+        "peerUid": 1000,
+        "reason": "guard-reported-by-wayland-peer",
+        "uid": 1000,
+        "verificationMethod": "compositor-ipc",
+        "verified": true,
+        "version": 1
+      }
+    },
+    "installedUserPatchMatchesReviewedPatch": true,
+    "patchSha256": "239aa61b67ca0f9d1ab536814027f3d18bbc74cb9f3aa008554e60b80ee9ff8c",
+    "runningCompositorPeerGuardVerified": true,
+    "liveThumbnailAccepted": false,
+    "newCodeChanges": false,
+    "buildOrTestsRepeated": false,
+    "sudoUsed": false,
+    "assistantSessionModified": false,
+    "dailyPanelReplaced": false,
+    "operationalVerified": false,
+    "replacementReady": false,
+    "r4Complete": false,
+    "next": "Run isolated preview with task thumbnails; verify image/update over non-minimized task and tooltip teardown/task actions. No repeat rebuild/relogin or approved native CTest."
+  },
+  "userFollowUp246": {
+    "date": "2026-11-16",
+    "historySection": 246,
+    "userReport": {
+      "previewVisible": true,
+      "centeredLikeOrdinaryWindow": true,
+      "duplicated": true,
+      "previewListedAsTaskWindow": true,
+      "leftRunningForInspection": true,
+      "visualAcceptance": false
+    },
+    "inspection": {
+      "directHyprctlAvailable": false,
+      "directHyprctlError": "Couldn't set socket timeout (2)",
+      "existingStartupAckRead": true,
+      "ackIsFreshHoverSample": false,
+      "ackTaskAppletCount": 2,
+      "ackProtocolsReady": true,
+      "privateWindowMetadataOrTokenStored": false,
+      "userSurfaceVisuallyInspected": false
+    },
+    "cause": "Original C++ ToolTipDialog has no QML context and inherits PopupPlasmaWindow rather than legacy Dialog; old adapter ignores it. Disposable preview deliberately created two taskmanager widgets.",
+    "changes": {
+      "surface": "Public LayerShellQt role setup at SurfaceCreated before Qt Wayland initWindow shell-role selection; original KDE tooltip content/interaction retained. Anchored through current visual applet owner, one adapter, bounded lifetime connections, no focus/activation request for tooltip. Existing requested-position legacy Dialog behavior preserved.",
+      "ownership": "Shared tooltip retargeted/suspended only by current owner; public hide/destroy + role teardown before reuse in an ordinary window, reprepare before returning to BWM panel. Unowned windows untouched.",
+      "instances": "Following disposable task-action panel defaults to one widget; --instances 1|2 explicit override, saved profiles rejected, inherited env cleared. Other probes preserve two-instance coverage.",
+      "diagnostics": "Existing PackageWindows policy metadata exposed by panel runtime; no pixels or tooltip text."
+    },
+    "normalSelectedOutput": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n    Start  2: isolated-task-thumbnail\n1/4 Test  #2: isolated-task-thumbnail ..........   Passed    2.27 sec\n    Start  3: isolated-preview-appearance\n2/4 Test  #3: isolated-preview-appearance ......   Passed    0.34 sec\n    Start 11: surface-geometry\n3/4 Test #11: surface-geometry .................   Passed    0.04 sec\n    Start 12: isolated-local-configuration\n4/4 Test #12: isolated-local-configuration .....   Passed   25.53 sec\n\n100% tests passed, 0 tests failed out of 4\n\nTotal Test time (real) =  28.18 sec\n",
+    "asanSelectedOutput": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan\n    Start  2: isolated-task-thumbnail\n1/4 Test  #2: isolated-task-thumbnail ..........   Passed    2.48 sec\n    Start  3: isolated-preview-appearance\n2/4 Test  #3: isolated-preview-appearance ......   Passed    0.47 sec\n    Start 11: surface-geometry\n3/4 Test #11: surface-geometry .................   Passed    0.05 sec\n    Start 12: isolated-local-configuration\n4/4 Test #12: isolated-local-configuration .....   Passed   26.53 sec\n\n100% tests passed, 0 tests failed out of 4\n\nTotal Test time (real) =  29.57 sec\n",
+    "pythonOutput": "..................\n----------------------------------------------------------------------\nRan 18 tests in 2.336s\n\nOK\n",
+    "localNormal": {
+      "version": 1,
+      "sessionModified": false,
+      "nativeWindowCaptureVerified": false,
+      "passed": true,
+      "clientExit": 0,
+      "clientOutput": "********* Start testing of ThumbnailTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : ThumbnailTest::initTestCase()\nPASS   : ThumbnailTest::missingNativeDisplayIsNotReportedAsMissingMarker()\nPASS   : ThumbnailTest::guardReportMustMatchKernelPeer()\nPASS   : ThumbnailTest::ipcGuardUsesFreshBoundedReplyAndActualRuntime()\nPASS   : ThumbnailTest::windowAssociatedItemCanBeDestroyed()\nPASS   : ThumbnailTest::parentWindowCanDestroyItsThumbnail()\nPASS   : ThumbnailTest::bufferBounds()\nPASS   : ThumbnailTest::nativePixelFormats()\nPASS   : ThumbnailTest::transformsAndDetachedPixels()\nPASS   : ThumbnailTest::taskUuidRejectsReusedIdentityAndMinimizedWindow()\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() kf.windowsystem: Could not find any platform plugin\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() org.kde.pulseaudio: Failed to connect context\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x56330cc03db0)\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() layershellqt: ToolTipDialog(0x56330cc03db0) already has a shell integration. Call QWindow::close() first and show it again.\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() layershellqt: ToolTipDialog(0x56330cc03db0) is not a wayland window. Not creating zwlr_layer_surface\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() layershellqt: ToolTipDialog(0x56330cc03db0) is not a wayland window. Not creating zwlr_layer_surface\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() kf.plasma.quick: Couldn't create KWindowShadow for ToolTipDialog(0x56330cc03db0)\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() kf.plasma.quick: Couldn't create KWindowShadow for ToolTipDialog(0x56330cc03db0)\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() kf.plasma.quick: Couldn't create KWindowShadow for ToolTipDialog(0x56330cc03db0)\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() layershellqt: ToolTipDialog(0x56330cc03db0) is not a wayland window. Not creating zwlr_layer_surface\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() kf.plasma.quick: Couldn't create KWindowShadow for ToolTipDialog(0x56330cc03db0)\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7fff808069c0)\nPASS   : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner()\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nPASS   : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire()\nPASS   : ThumbnailTest::cleanupTestCase()\nTotals: 13 passed, 0 failed, 0 skipped, 0 blacklisted, 2149ms\n********* Finished testing of ThumbnailTest *********\n",
+      "clientDiagnostics": "",
+      "readOnlyGuardCliVerified": true,
+      "readOnlyGuardCli": {
+        "capturesStarted": false,
+        "reason": "no-native-wayland-display",
+        "uid": 1000,
+        "verified": false,
+        "version": 1
+      }
+    },
+    "localAsan": {
+      "version": 1,
+      "sessionModified": false,
+      "nativeWindowCaptureVerified": false,
+      "passed": true,
+      "clientExit": 0,
+      "clientOutput": "********* Start testing of ThumbnailTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : ThumbnailTest::initTestCase()\nPASS   : ThumbnailTest::missingNativeDisplayIsNotReportedAsMissingMarker()\nPASS   : ThumbnailTest::guardReportMustMatchKernelPeer()\nPASS   : ThumbnailTest::ipcGuardUsesFreshBoundedReplyAndActualRuntime()\nPASS   : ThumbnailTest::windowAssociatedItemCanBeDestroyed()\nPASS   : ThumbnailTest::parentWindowCanDestroyItsThumbnail()\nPASS   : ThumbnailTest::bufferBounds()\nPASS   : ThumbnailTest::nativePixelFormats()\nPASS   : ThumbnailTest::transformsAndDetachedPixels()\nPASS   : ThumbnailTest::taskUuidRejectsReusedIdentityAndMinimizedWindow()\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() kf.windowsystem: Could not find any platform plugin\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() org.kde.pulseaudio: Failed to connect context\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7bbbf760a7c0)\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() layershellqt: ToolTipDialog(0x7bbbf760a7c0) already has a shell integration. Call QWindow::close() first and show it again.\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() layershellqt: ToolTipDialog(0x7bbbf760a7c0) is not a wayland window. Not creating zwlr_layer_surface\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() layershellqt: ToolTipDialog(0x7bbbf760a7c0) is not a wayland window. Not creating zwlr_layer_surface\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() kf.plasma.quick: Couldn't create KWindowShadow for ToolTipDialog(0x7bbbf760a7c0)\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() kf.plasma.quick: Couldn't create KWindowShadow for ToolTipDialog(0x7bbbf760a7c0)\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() kf.plasma.quick: Couldn't create KWindowShadow for ToolTipDialog(0x7bbbf760a7c0)\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() layershellqt: ToolTipDialog(0x7bbbf760a7c0) is not a wayland window. Not creating zwlr_layer_surface\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() kf.plasma.quick: Couldn't create KWindowShadow for ToolTipDialog(0x7bbbf760a7c0)\nQWARN  : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7b0bf64fba20)\nPASS   : ThumbnailTest::originalCppTooltipGetsLayerRoleBeforeShowAndFollowsCurrentOwner()\nQWARN  : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nPASS   : ThumbnailTest::originalQmlEndpointLoadsWithoutPipeWire()\nPASS   : ThumbnailTest::cleanupTestCase()\nTotals: 13 passed, 0 failed, 0 skipped, 0 blacklisted, 2324ms\n********* Finished testing of ThumbnailTest *********\n",
+      "clientDiagnostics": "",
+      "readOnlyGuardCliVerified": true,
+      "readOnlyGuardCli": {
+        "capturesStarted": false,
+        "reason": "no-native-wayland-display",
+        "uid": 1000,
+        "verified": false,
+        "version": 1
+      }
+    },
+    "validation": {
+      "normalSelectedPassed": 4,
+      "asanSelectedPassed": 4,
+      "asanOptions": "detect_leaks=0:halt_on_error=1",
+      "thumbnailQtTestPassedIncludingInitCleanup": 13,
+      "wrapperPythonPassed": 18,
+      "normalAndAsanBinariesRebuilt": true,
+      "originalLazyCppTooltipInstantiated": true,
+      "rolePolicyAndEventOrderingVerifiedOffscreen": true,
+      "liveWaylandRoleAndTaskExclusionVerified": false,
+      "approvedNativeCaptureTestRepeated": false,
+      "pythonCompilePassed": true
+    },
+    "reviewedPrimarySourceSha256": {
+      "/tmp/bwm-tooltip-tooltiparea.cpp": "693631dd91a652262fca09050a44c657f98977675c41b40f8172beaf5cca3358",
+      "/tmp/bwm-tooltip-tooltipdialog.cpp": "e3ff55872a04046effbab7659a2df75368c952f9a0c599c149852607e204cee9",
+      "/tmp/bwm-tooltip-popupplasmawindow.cpp": "b3979a4c715c7a49a3d84efcf55c66c3d4bf60c6244f7ecfe67bf44db6dd23e2",
+      "/tmp/bwm-tooltip-qwindow.cpp": "8bb44c08236e92eb069679c0429dff60c0da23554c60b225a2367a84992523f4",
+      "/tmp/bwm-tooltip-qwaylandwindow.cpp": "d1cc3816f86e1cb7b2671a035d0943b3826c30de176e3f29766da3b0c87fe58c",
+      "/tmp/bwm-tooltip-window.cpp": "dd8141c4b08c9bfc7c2d0c7f51d4092a1552a96a8791b5d74bffd95921ddbfa3"
+    },
+    "sourceSha256": {
+      "src/bwm-plasma-host/packagewindows.cpp": "cb6ea7c9a57ddd52bf8955467685d34fd0f71a21a70c92fa0dce7960a7788bce",
+      "src/bwm-plasma-host/packagewindows.h": "5a53c19f56fb70eba041ee6989078817157bf0e0944285738ed396f19e5b0ae1",
+      "src/bwm-plasma-host/surfaces.cpp": "a1e3d370fd302ce67feef794960b36469c6bcdb10fbb6e287551289cf1ef73d8",
+      "src/bwm-plasma-host/main.cpp": "4049b8107422fe09e61b4af397efea383ec267cd5690272e528d3e24d70ee703",
+      "src/bwm-plasma-host/panelruntime.cpp": "8dccea96ae0dad3c58faea561edec8e24a0c9ab5bc1f845c87ef26aef0692926",
+      "src/bwm-plasma-host/preview-isolated.py": "3683e57ec713f8a739efccc8127bc4183187c70be6931507b3ddfc1aca111155",
+      "src/bwm-plasma-host/test-taskthumbnail.cpp": "283cd206d31ab6de66b3fca875f65d236762d288ab6a42bafdf9c92e518b7932",
+      "tests/test_r4_preview.py": "097f76123ee17575c4beebb9fccf2c135160840014c78214c6513bae21dc272e",
+      "AGENTS.md": "4ba51a265ace3049a393ce33a1a645fd244236549b4900295a240bea2ee4a570",
+      "CLAUDE.md": "4ba51a265ace3049a393ce33a1a645fd244236549b4900295a240bea2ee4a570",
+      "BWM_CONTEXT.md": "18ceb63d720826a9d03f9d93f5dfc5e205af8e30a3e8458fc6b54ffda9325c29",
+      "THIRD_PARTY_NOTICES.md": "e2ffa427e25a9e37f2391ccc8eeca4fe038a7bbaaaec66f2ddeca370f295ffa9",
+      "docs/BREEZE_R4_THUMBNAILS.md": "006558cd99ba548d385cbb5d62bbf4f28e7d0e766fcebbee90c053ca71b44d6e"
+    },
+    "hostSha256": {
+      "build/bwm-plasma-host/bwm-plasma-host": "0b65901a1b01e2e5bba3f52cc01a894d39622ee761aeb34aad0d97e2d9f6400a",
+      "build/bwm-plasma-host-asan/bwm-plasma-host": "0652927a1ce51225c580458a6440932d8cdf3b64ba3f83c59b97bb4332fcd4b9"
+    },
+    "newDependencies": false,
+    "sudoUsed": false,
+    "compositorModified": false,
+    "quickshellModifiedOrRestarted": false,
+    "runningPreviewRestartedByAssistant": false,
+    "dailyPanelReplaced": false,
+    "liveThumbnailAccepted": false,
+    "operationalVerified": false,
+    "replacementReady": false,
+    "r4Complete": false,
+    "commitCreated": false,
+    "pushPerformed": false,
+    "next": "User closes old helper using Ctrl+C then reruns preview with --instances 1; verify tooltip next to icon, no new task entry or duplicate view, update/close/activation behavior."
+  },
+  "userFollowUp247": {
+    "date": "2026-11-16",
+    "historySection": 247,
+    "origin": "User report",
+    "quote": "perfecto ya tiene miniaturas, continua, te lo dejo abierto por si acaso",
+    "liveThumbnailAccepted": true,
+    "acceptanceScope": "General visual acceptance after tooltip/one-instance correction. No individual telemetry or exhaustive output/update/focus matrix is inferred.",
+    "runningHelperLeftOpen": true,
+    "assistantRestartedHelper": false,
+    "approvedNativeCaptureTestRepeated": false,
+    "compositorDiagnosticRepeated": false,
+    "dailyPanelReplaced": false,
+    "operationalVerified": false,
+    "replacementReady": false,
+    "r4Complete": false
+  }
+}

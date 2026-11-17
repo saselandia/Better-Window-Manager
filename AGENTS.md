@@ -328,6 +328,196 @@ siendo el nombre del escritorio original que imita Breeze.
   ni activa el panel. No ampliar esa autoridad a cualquier carpeta privada ni sobrescribir nombres.
   panel-session.py status exige respuesta nueva, no basta PID/ack viejo. renderReady sólo
   comprueba el marco Qt; replacementReady sigue false y no permite retirar el panel diario.
+  widgetBackends informa instancias directas y dependencias/metadatos, no certifica servicios.
+  Ni renderReady ni un inventario vacío habilitan sustitución. Revisar también hijos de bandeja
+  y las autoridades/recuperación diarias antes de implementar takeover (§211).
+  Adaptador KWindowSystem estático sólo en el auxiliar (§212): ABI privada V5 fijada a
+  6.29.0 EXACT. No instalarlo globalmente ni dentro de Hyprland. --desktop-actions es opt-in
+  de preview: usa el gestor común de minimizar/restaurar, no el efecto Peek de KWin/R7 ni
+  el modelo TaskManager. Probes/export/KNS no habilitan acciones de escritorio.
+  Binario de sesión R4: build/bwm-plasma-host/bwm-plasma-host dentro del repo (ignorado por
+  Git); no asumir /tmp compartido/duradero entre ejecutores y terminales (§213).
+  TaskManager experimental (§215): --task-actions sustituye sólo la fuente WindowTasksModel
+  estándar dentro del auxiliar, usando APIs públicas Qt y LibTaskManager 6.7.5 EXACT.
+  Conservar las fuentes personalizadas de terceros y mantener el panel diario.
+  Transacciones nativas (§216): tareas y Mostrar escritorio comparten flock privado acotado;
+  revalidar skin/PID/inicio tras adquirirlo. No cubre los llamadores diarios sin ese flag.
+  Antes de confirmar retirada, suspender colas y esperar acciones en curso sin matarlas;
+  RuntimeControl reintenta sin ack mientras quiescing. Conservar el fallo seguro del hook.
+  VirtualDesktopInfo usa backend privado sin factoría pública; no intercambiar su puntero
+  estático ni duplicar símbolos de la biblioteca. Menús/escritorios siguen sin certificar.
+  No anunciar el widget entero operativo mientras falten esas capacidades y validaciones.
+  Proveedor por protocolo (§218): src/bwm-plasma-desktops, extensión separada compilada
+  pero NO instalada/cargada/autoiniciada. Empieza disabled. Núcleo y módulo deben llevar
+  -fno-gnu-unique (verificar readelf), ABI Hyprland guardada y XML KDE privado fijado por hash.
+  Fixture Wayland por socketpair prueba VirtualDesktopInfo/filtros/roles KDE originales;
+  no acredita frontend real ni Task.qml pintado. Faltan barrera/conflictos y capacidades;
+  no habilitar el proveedor sólo porque el fixture pase. Nunca bloquear el hilo compositor
+  con flock/procesos: el propietario puede estar esperando su IPC. Despliegue futuro sólo
+  make install atómico y carga al iniciar sesión, nunca hot load/unload.
+  Barrera nativa (§219): bwm_plasma_desktop_control_v1 controla sólo el mismo wl_client.
+  Todas las conexiones empiezan sólo lectura; propietario/resume habilita activaciones.
+  Pause/destruir propietario cancela cola propia; otros clientes siguen. Cola en el núcleo,
+  con recurso/serial de vida, y ack después del callback anterior. NativeDesktopControl
+  correlaciona serial/estado con plazo 1 s; no admitir ack tardío como éxito ni bloquear la
+  retirada porque el propio proveedor desapareció. Entrada/reanudación exigen confirmación.
+  --native-desktops sólo consulta proveedor ya cargado/habilitado; nunca cargar desde el
+  launcher. Qt generado init(nullptr) no es deinit: conservar regresión de pérdida/rebind.
+  Menú nativo (§220): TaskMenuPolicy sólo opera dentro de raíces TaskManager registradas,
+  con índices de capacidad BWM y ContextMenu.qml original revisado/fijado por SHA256.
+  Máscara mediante QActionGroup público, no sobrescribir bindings enabled de QML ni copiar
+  el menú. Un grupo no exclusivo por acción: removeAction solo no recalcula enabled;
+  reactivar primero esa máscara conserva el estado explícito más reciente. Mantener encima,
+  debajo y excluir captura siguen deshabilitados. Fuente desconocida bloquea el menú afectado.
+  El test del menú carga KDE original pero Task.qml avisa de roles undefined en offscreen:
+  prueba acciones/modelos, no el pintado de la barra ni su aceptación Wayland.
+  Pantalla completa nativa (§221): snapshot fullscreenable opcional (ausente=false), sólo
+  ventanas normales mapeadas/no ocultas/no fijadas/no minimizadas. El handler envía estado deseado, nunca
+  toggle; kwin-window exige identidad/inicio y --state on|off bajo el bloqueo nativo.
+  Revalidar también en Lua skin/PID/mapped/hidden/pinned/workspace. hyprctl repl devuelve recibo
+  sólo con result.ok y modo interno leído igual al solicitado; exit=0 o «ok» no bastan. Lua sólo
+  en BUILD_TESTING, sin compositor; no extender esta prueba a geometría/aceptación de sesión.
+  Metadatos de tareas (§222): KSycoca::databaseChanged invalida la caché por fila tras 100 ms
+  y se resuelve con TaskTools al leer roles de aplicación. No resetear filas/UUID ni agregar
+  un watcher por ventana. El test reconstruye una base KDE real sólo con XDG temporales y
+  KDESYCOCA eliminado; kbuildsycoca6 se requiere únicamente para BUILD_TESTING. No confundir
+  esta actualización de aplicaciones .desktop con catálogo de plasmoides o prueba visual.
+  Registro de escritorios (§223): el auxiliar exige control v2, inventario único visible y
+  asociación desktop_global con el global KDE en la misma conexión. Enlace explícito por ID,
+  no QWaylandClientExtension automático: Qt 6.11.2 trata la retirada por interfaz, no por ID.
+  Duplicar el global KDE deja un bloqueo hasta reiniciar sólo el auxiliar; no resetear el
+  backend privado de VirtualDesktopInfo. Permitir retirada/salir aun con conflicto. Controles
+  retirados del servidor quedan inertes hasta destroy/desconexión para aceptar peticiones en
+  vuelo. No habilitar/cargar el plugin por estas pruebas: aceptación de frontend/arranque
+  en sesión sigue pendiente; ver el alcance limitado del arbitraje de §225.
+  Arbitraje de servidor (§225): DesktopProvider inventaría el mismo display por socketpair
+  asíncrono antes de publicar; inicialmente disabled sin globals. Claim elige entre BWM,
+  sólo observa lo visible bajo el filtro; no impide globals ajenos/duplicación transitoria.
+  Retirar con wl_global_remove conservando core/recursos/ofertas de UNA generación; no
+  vaciar snapshot/resetear core ni reintentar cada 500 ms. providerRestartRequired pide
+  futuro inicio de sesión del módulo, nunca hot unload. El latch cliente §223 sólo exige
+  auxiliar nuevo. Launcher exige arbitraje v1 active además de barrera v2. Probado aislado
+  normal/ASan y consumidor KDE, sin despliegue ni aceptación real del frontend/arranque.
+  Vida del módulo (§226): Hyprland0.56.2 descarga plugins antes de destruir clientes.
+  withdraw conserva core/recursos; destructor definitivo destruye TODOS los controles y
+  recursos de claim antes de descargar .so. No dejar callbacks/interfaz del módulo en
+  recursos con userdata=null tras destruir core. Retirados siguen asociados y niegan por
+  withdrawn. Fixture retiene cores al retirar. DSO real de ensayo cubre orden de cierre,
+  sin despachar requests después; NO autoriza hot unload ni certifica logout de sesión.
+  Observer/peer/deadline nacen sólo en idle tras snapshot+opt-in, no durante constructor;
+  cancelar antes del claim permite volver a pedirlo. Mantener filtro del compositor intacto.
+  Launcher exige providerLifecycleVersion=1 e inicio diferido; rechazar módulos anteriores
+  sin cargarlos/actualizarlos en caliente.
+  Contador nativo (§227): CountMirror sólo copia en memoria; no volver a leer config.json
+  en plugin/refresh. Puente existente resuelve opciones comunes+usuario y envía IPC fuera
+  del compositor. No persistir otra preferencia ni cargar/habilitar módulo por estar instalado.
+  Coordinación común §228 y reconcile usan bloqueo existente: auxiliar LOCK_NB, reconcile
+  ya dentro; no adquirirlo recursivamente ni introducir espera/proceso en compositor. Rechazos/parcial
+  conservan dato previo; primer valor desconocido bloquea publicación. Preflight sólo lee
+  countMirrorVersion=1/copia conocida. Recibo no acredita frescura/panel operativo. Efectos
+  sobre modelo probados en fixture; arranque/entrega reales pendientes. Puente en curso no
+  reiniciado: necesita reinicio/inicio de sesión para adoptar nuevo módulo Python.
+  Entrega entre skins (§228): SharedSettingsRuntime sólo en shell.qml y fuera de loaders,
+  nunca en Config/Ajustes (evita duplicados). Dispatcher shared usa manifiestos incluidos,
+  no scripts descargados. Prerequisito instala/arma sólo datos: jamás cargar/habilitar plugin.
+  Auxiliar resuelve opciones de la skin actual, sin mantener/importar KDE bridge en Retro/
+  default; no restaurar counts.tick del watch KDE. Process único + pending y retry, sin nuevo
+  demonio/FileView/thread. FailedToStart de QS0.3.2 sólo runningChanged, manejar sin quedarse
+  busy. sharedSettings status diagnostica, no valida panel. Fuente QML viva puede autorecargar;
+  no afirmar carga/ausencia de cambios de sesión sin comprobar. IPC aquí sigue inaccesible.
+  Delegado de tareas §229: test-taskdelegate exige backend Wayland original. TasksModel
+  y WindowTasksModel consultan sus fuentes privadas al resolver roleNames; no sustituir
+  símbolos/estado privado ni certificar Wayland con roles de fixture offscreen. Ensayo
+  nativo normal aprobado por usuario (§233): ambos Task.qml dibujan en QImage, sin ventana
+  ni superficie visible. Aquí wl_client_create sigue bloqueado; native ASan no ejecutado.
+  No confundir QQuickRenderControl/QImage con entrada/superficies de sesión o widget entero.
+  WAYLAND_SOCKET se consume al arrancar Qt/libwayland (§230): capturar identidad antes
+  de QApplication y comprobar el wl_display activo; no exigir esa variable después.
+  QQmlContext.baseUrl no identifica la fuente del objeto (§231): resolver recurso y
+  verificar hash; la selección del delegado original se comprueba aparte por interfaz/raíz.
+  Metadatos del test §232: usar .desktop/PNG y caché KDE temporales propios; un appId
+  sin servicio puede resolverse por PID. Modelo conserva .desktop; Task.qml lo elimina.
+  Grupo sin MRU (§234): TaskTools original requiere StackingOrder. clients sigue el orden
+  inferior→superior de WindowState en0.56.2; focusHistoryID es MRU, no apilado. Conservar
+  índices/UUID al cambiar el rol; fallback de snapshot legado no acredita orden físico.
+  Registro del panel (§235): los applets pueden ser sólo hijos QQuickItem, no QObject.
+  Recorrer ambos árboles sin reparentar ni forzar itemForApplet; probar PanelSession real,
+  no sólo attach manual del widget. Startup de tareas exige fuente/snapshot, no basta PID.
+  Filtro de escritorio (§236): showOnlyCurrentDesktop=true de KDE necesita VirtualDesktopInfo;
+  probar geometría de QScreen coincidente y configuración nativa, no setters de TasksModel.
+  Preview sin proveedor exige --all-desktops explícito, sólo XDG temporal y nunca --profile;
+  no considerar boundModels/snapshot como prueba de ventanas visibles. Estado añade filas.
+  special:minimized es almacén compartido entre monitores: regla común no_anim sólo allí
+  suprime traslado animado; no prometer efecto KWin hacia el icono ni comprobación visual.
+  Apariencia del preview (§238): --session-appearance sólo snapshot desechable, sin --profile.
+  Preparar valores KDE permitidos con QCoreApplication antes de QApplication; no setThemeName,
+  enlaces/copia completa de config ni layouts. KConfig SimpleConfig ignora addConfigSources:
+  leer con NoGlobals/ruta absoluta, defaults explícitos y escribir destino nuevo SimpleConfig.
+  Se respetan valores efectivos inmutables/borrados; no se migran sus restricciones al snapshot.
+  Miniaturas del preview (§239): instalar kpipewire no aporta el protocolo KDE de captura.
+  --task-thumbnails adapta sólo PipeWireThumbnail.qml original por URL/hash revisados en el
+  motor compartido; no re-registrar tipos KDE ni manipular estado privado. Backend por
+  handle extranjero estable + mapping64bits, sólo ventanas y snapshot iniciado tras vincular
+  handle; UUID/PID/generación actuales. Nunca fallback a captura de salida/recorte de pantalla.
+  Imágenes desacopladas de mmap, memfd CLOEXEC y límites; cerrar al ocultar/retirar/cambiar
+  identidad. Captura posterior puede esperar daño en ventana estática: no timeout tras tener
+  imagen. Prueba nativa compilada pero EPERM aquí no es pase ni aceptación de sesión.
+  Captura R4 comparte ScreenshareSession del incidente BREEZE_RECOVERY: no reactivar sólo
+  cambiando protocolo. Backend exige prueba de guarda de monitor del peer Wayland activo
+  (SO_PEERCRED; ELF o informe IPC con PID coincidente); adoptar al próximo login. Parche
+  0.56.2 en patches/hyprland guarda init/monitorChanged, probado por cuerpos aislados; no
+  anunciar build completo de compositor, captura o resolución total del incidente. Sólo
+  el binario de fixture autoriza su display sintético; no hay override CLI/env en el host.
+  Parche local de Portage exige compilar fuente (--usepkg=n --getbinpkg=n), no reutilizar
+  un binpkg. Ensayo native-task-thumbnail normal aprobado por usuario (§241): no repetir
+  sin cambios; no equivale a native ASan, compositor parcheado o captura de sesión aceptada.
+  Guarda del peer (§243): cap_sys_nice/filecaps de Gentoo puede impedir /proc/PID/exe.
+  No confundir lectura denegada con marca ausente o sesión antigua; ejecutar diagnóstico
+  check-thumbnail-compositor.py antes de pedir otra compilación/relogin. Preservar guarda,
+  diagnosticar sin panel/capturas ni cambiar capacidades/permisos. wait_initial_ack debe
+  detectar child muerto antes de register, conservando causa en vez de ENOENT de ack.json.
+  Denegación confirmada por usuario (§244): no debilitar filecaps/ptrace/permisos. Parche
+  ampliado informa bwmScreenshareMonitorGuard {version:1,pid:getpid()} en hyprctl -j version;
+  getter implementado junto a guardas reales, sin E/S/esperas dentro del compositor. Auxiliar
+  contrasta PID con SO_PEERCRED y UID propio, consulta fresca acotada; otra instancia falla.
+  Subproceso usa runtime real BWM_R4_TASK_RUNTIME/BWM_R4_GUARD_RUNTIME, pues XDG propio es
+  temporal. Esas rutas sólo seleccionan IPC, nunca autorizan. ELF directo sigue permitido.
+  Extensión requiere sustituir user patch y recompilar desde fuente/reentrar por usuario;
+  extensión adoptada y guarda IPC verificada por usuario (§245), PID/UID coincidentes.
+  No pedir otro rebuild/relogin ni repetir CTest; siguiente paso es hover real del preview.
+  Tooltips R4 (§246): ToolTipDialog6.7.5 deriva PopupPlasmaWindow, se crea desde C++ sin
+  contexto QML. Resolver dueño por visualParent/árbol visual, no sólo Dialog/plasmoid. Rol
+  LayerShellQt en SurfaceCreated antes de QWaylandWindow::setVisible/initWindow (Qt6.11.2),
+  nunca cambiar rol mapeado. Un PopupAnchor, seguir dueño actual del tooltip compartido,
+  conservar puntero y no pedir teclado/activación; al salir a ventana normal restaurar
+  backend con hide/destroy. No ocultar PID propio en tareas para tapar un rol equivocado.
+  Preview de tareas desechable ahora una instancia; --instances2 permite comparación sin
+  tocar perfiles/probes. Local/ASan4/4 y ToolTipArea original pasan; miniaturas aceptadas
+  por usuario en §247 (general, sin medición por caso). No repetir el ensayo aprobado.
+  Lanzamientos de tareas (§248): fuera del host con entorno XDG/D-Bus/Qt original permitido,
+  restaurado sólo para ese hijo. Sin contexto válido, rechazar; no filtrar todo el entorno
+  del proceso al informe. KIO ApplicationLauncherJob/KService originales, no interpretar Exec
+  ni ejecutar fallback de PID. Recibo CLOEXEC separado de stdout de apps, nueva sesión de
+  proceso fuera del kill-group de acciones; no esperar su salida ni cerrar apps al retirar.
+  CanLaunchNewInstance es visibilidad de menú, no veto de peticiones explícitas (KDE original).
+  Su helper no exportado se adapta por KService público con créditos LGPL, no interposición.
+  Cola/bloqueo y comprobación de skin/dirección/PID/inicio siguen obligatorios. Rutas de
+  lanzadores puros/acciones específicas: §250 (abajo).
+  Lanzadores anclados y Actions (§250): BwmLaunchRouter entre TaskFilterProxyModel y la
+  concatenación de KDE; nunca sustituir LauncherTasksModel (TasksModel hace mapFromSource de
+  su concatenación para el orden manual). Actions del menú original se identifican contra el
+  .desktop (sin mnemónicos de KAcceleratorManager); no matching → enmascarar, nunca lanzar.
+  El host desechable lleva KIOSK inmutable run_desktop_files/shell_access=false en su
+  XDG_CONFIG_DIRS: ningún KIO job dentro del auxiliar; el handler KDE queda conectado y
+  denegado. Lugares (§252): sólo desde la copia de solo lectura de user-places.xbel y casando
+  título+icono con KFilePlacesModel; Recientes enmascarados. Acciones de ventana nativas
+  (§252) siempre con estado deseado + recibo + relectura, nunca conmutar. «Sin borde» del menú
+  KDE 6.7.5 está deshabilitado por la errata CanSetNoBoder de su QML: no parchearlo.
+  Vida de TaskThumbnail (§240): QQuickItem::~QQuickItem emite windowChanged después de
+  destruir miembros derivados; QObject auto-disconnect llega tarde. Desconectar nuestras
+  conexiones en el destructor derivado antes de liberar State, conservando destroyed/Qt/QML
+  ajenos. Padre C++ puede haber emitido windowChanged durante construcción base: observar
+  también window() inicial. Probar destrucción/reparentado/ventana padre, no sólo carga QML.
   «Obtener nuevos» sin diálogo (--kns-*, kns-cycle.py): sólo raíces XDG temporales, preguntas
   KNS siempre Cancelar; no cargar widgets que ejecutan órdenes sin revisarlos. Paquetes con
   KPlugin.ServiceTypes sin KPackageStructure no los lista KPackage 6.29 ni Plasma: no forzarlos.

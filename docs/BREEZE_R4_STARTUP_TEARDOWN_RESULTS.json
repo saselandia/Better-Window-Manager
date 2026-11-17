@@ -1,0 +1,369 @@
+{
+  "version": 1,
+  "date": "2026-11-15",
+  "phase": "R4",
+  "historySection": 226,
+  "scope": "Deferred observer startup and final protocol-resource teardown before module dlclose; isolated tests, not live Hyprland frontend acceptance",
+  "gitHeadAtValidation": "aa2cfd704e05682a9ff2def82f9d087f6a3745ef",
+  "sourceSha256": {
+    "src/bwm-plasma-desktops/desktops.cpp": "abe61090027cd38f93e27d7e46f9d61d7c5e2f7f14c7cc0751f583f3a73d9e42",
+    "src/bwm-plasma-desktops/desktops.h": "01b2597d5068613b8325cb469cdbc52f99a71d25d5654c5e137f7676bd2bd886",
+    "src/bwm-plasma-desktops/provider.cpp": "9be99ad57755cd6ca695e70bed3efa677195b2f04a5f86c00d44e7dc1084a3e3",
+    "src/bwm-plasma-desktops/provider.h": "914414c6aa5d3f351ec28d2f23e8850ac846a5b7d39d654e21be99f9f36ba939",
+    "src/bwm-plasma-desktops/plugin.cpp": "fef950bcf83533390439b055f5cc0326c951760a3bc9a1d86cdab7addbbc6288",
+    "src/bwm-plasma-desktops/test-provider.cpp": "ac0d8abf1dc25594e10c51f4b78a189339f12fc37a7ce2a710cd86b9285c580b",
+    "src/bwm-plasma-desktops/test-teardown-module.cpp": "54479238484a764328deea63abbc43f1051c1dedd5e57f6e47907da6aa5ccf78",
+    "src/bwm-plasma-desktops/test-display.cpp": "524bdb993912474dc9ff75a00d3aab88590a85e0cd673ba6d6c272452db324e9",
+    "src/bwm-plasma-desktops/CMakeLists.txt": "092c0de424bbd2d9c604710ecfe736acb78df8bc45db7913d28bb505bd7d2ea5",
+    "src/bwm-plasma-desktops/README.md": "5955ce01572178fe8fdbd37f444c8d5de027813cc99e255093a7d734fd2e4ea1",
+    "src/bwm-plasma-host/CMakeLists.txt": "3138fe9ca10c799b84fd152780acfced0ae5d7d208b752ebc233bc2bb0313b71",
+    "src/bwm-plasma-host/check-desktops.py": "ac1a1409f6d1c0c104ab34a724f274469c8004fc0ae204ff0ff33061a19b8193",
+    "src/bwm-plasma-host/test-desktops.cpp": "6db2839a028ba8a864ce8e80a79d126f9b3f75440ddf826ad2b886cf0bdb7fd7",
+    "src/bwm-plasma-host/README.md": "f74bb0f2934795aa614c90aee8745be5168f3b65ec2554f332b4601f2b8cdad7",
+    "AGENTS.md": "546156bcf7eb9fc0bafe06f0ae78063fd9c63feba28e27e5bb59faf8b117c221",
+    "CLAUDE.md": "546156bcf7eb9fc0bafe06f0ae78063fd9c63feba28e27e5bb59faf8b117c221",
+    "BWM_CONTEXT.md": "44419edd7527c9c70395066c28258d38c6025cf4c78c8cf0c23885f51430716b",
+    "THIRD_PARTY_NOTICES.md": "fba75a237cedbb3cc3c4c575c1b1d47d5b12fe436bdd5d8796b62c7880a01d58",
+    "docs/BREEZE_R4_RESULTS.md": "2f2acfa1b45f5ec511fbff1c36fe63bb1180aeeb489c8f64eb7875e761fffab0",
+    "docs/BREEZE_R4_ARCH.md": "7376fcb66614fe7e4f02c04913560e94833aa36f009195332092648832d67dcc",
+    "docs/BREEZE_R4_HANDOFF_CLAUDE.md": "bb30ac363c30afcc6389d3478536e0b2e10feb09cb0628d34ea1d61f697947ae",
+    "docs/BREEZE_PLAN_V2.md": "fab16daf8824e53c299590e99bc888020d2b128703b9b6ed486f617f7b757d4d",
+    "src/bwm-plasma-host/preview-isolated.py": "80a80e16a10ceffc85e19e403f96842bae561e29a7e665c0d1ee16e902bbaffa",
+    "tests/test_r4_preview.py": "db46df7fa28c7652687a3ab9446aa055963f8bde0672dde0cd5821ece1167749",
+    "config/hypr/skins/requirements.json": "79e3f4b71193ff01454c0d0eb4cd2cb0db74adb60ff9210875bac2b696a16c57",
+    "docs/REQUIREMENTS.md": "6e0e30b84a05723ff6de50f5707ac5333520d00a63d495f22569c9a89f6522b3"
+  },
+  "references": {
+    "hyprland-0.56.2.gh.tar.gz": {
+      "archiveSha256": "03ad3f5ef152ff44116ffd56fcf808486211ecabf4f0ba567108ee746ba5cd2e",
+      "consultedMembers": {
+        "hyprland-source/src/Compositor.cpp": "74833ecbf0e2b6f8ad84345ac0716a3295a0e347420a188be0ab4f6a684af7c0",
+        "hyprland-source/src/managers/ProtocolManager.cpp": "b4a91b2647f3bb80dd28b41377465916c00ba84da9f3494370bd90302b9e8622",
+        "hyprland-source/src/protocols/SecurityContext.cpp": "4789a1bb29c876de09a1d8cee6029337ada3e9a313e07bc30e98385fc45424df",
+        "hyprland-source/src/plugins/PluginSystem.cpp": "966d00f8bda2f254a8f19c375218b9049a07f3b7893af3270abdce457d81f7f9"
+      }
+    },
+    "wayland-1.26.0.tar.xz": {
+      "archiveSha256": "64176eaa46e4969903e286f8e5ef8331affc17fdf03ac9b58381d2b23162b7a3",
+      "consultedMembers": {
+        "wayland-1.26.0/src/wayland-server.c": "77bfc0fdf911cf8288430b40227f22c4e37dcd4abaa4cc1f367d597e75abf893"
+      }
+    }
+  },
+  "primarySourceFindings": {
+    "HyprlandCompositorCleanup": "unloadAllPlugins precedes wl_display_destroy_clients, before wl_display_destroy",
+    "HyprlandGlobalFilter": "Unsandboxed direct clients are allowed. Sandboxed clients require protocols not considered privileged by ProtocolManager whitelist",
+    "SecurityContextMembership": "Only clients registered through security-context are in the sandboxed-client vector; the provider socketpair peer is not registered there",
+    "PluginInit": "PluginSystem schedules a config reload after successful init. Observer startup now waits for the existing event loop, not constructor wall-clock time",
+    "liveVerification": false,
+    "filterModified": false
+  },
+  "contract": {
+    "initialState": "disabled without observer peer/socketpair or inventory deadline",
+    "start": "valid snapshot plus explicit availability request schedules one idle on the existing server loop; peer, registry and 1s deadline start there",
+    "beforeClaimCancellation": "Disabling before idle cancels initialization and does not consume a publication generation",
+    "diagnostics": "observerStartup=deferred-event-loop; failed hyprctl diagnostic registration aborts initialization before requesting publication",
+    "withdraw": "Retain core/globals/resources/offers for in-flight requests; withdrawn controls have a tracked owner and ignore pause/resume; no acknowledgement/activation",
+    "finalize": "Destroy all module-defined resources, active/retired/late controls, claim bindings, event sources and peer before module unload. No subsequent request dispatch is supported",
+    "resourceLimits": {
+      "controlsPerCore": 4096,
+      "claimBindingsPerProvider": 256
+    },
+    "generationPolicy": "Unchanged: one generation after creating a claim; no hot reload or daily activation added",
+    "launcher": "Requires providerLifecycleVersion exactly integer 1 and observerStartup=deferred-event-loop, in addition to previous arbitration v1 and barrier v2 guard. Rejects old module diagnostics before auxiliary launch; read-only, no load/install/enable"
+  },
+  "moduleTest": {
+    "module": "test-teardown-module.cpp linked to the same provider/core, with static archive symbols hidden to prevent executable interposition",
+    "operations": [
+      "dlopen private test DSO",
+      "create provider on private data-only display",
+      "client binds management/desktop/control/claim",
+      "retired case adds a control from a previously offered global",
+      "destroy provider and assert zero own resources",
+      "dlclose",
+      "RTLD_NOLOAD must return null",
+      "destroy clients without dispatching queued requests"
+    ],
+    "activeAndRetired": true,
+    "unloadingActuallyVerified": true,
+    "realHyprlandPluginLoaded": false,
+    "doesNotAuthorizeLiveUnload": true
+  },
+  "normalCtest": {
+    "summary": {
+      "name": "Linux-c++",
+      "tests": "7",
+      "failures": "0",
+      "disabled": "0",
+      "skipped": "0",
+      "hostname": "THE-MAXINE",
+      "time": "31",
+      "timestamp": "2026-11-15T22:12:29"
+    },
+    "tests": [
+      {
+        "name": "desktop-workspace-projection",
+        "seconds": 0.00170536,
+        "failed": false
+      },
+      {
+        "name": "native-desktop-provider-arbitration",
+        "seconds": 2.72953,
+        "failed": false
+      },
+      {
+        "name": "native-desktop-protocol",
+        "seconds": 4.92674,
+        "failed": false
+      },
+      {
+        "name": "native-desktop-arbitrated-kde-consumer",
+        "seconds": 0.280652,
+        "failed": false
+      },
+      {
+        "name": "native-desktop-control-wire",
+        "seconds": 0.0442016,
+        "failed": false
+      },
+      {
+        "name": "surface-geometry",
+        "seconds": 0.0712205,
+        "failed": false
+      },
+      {
+        "name": "isolated-local-configuration",
+        "seconds": 23.4682,
+        "failed": false
+      }
+    ],
+    "providerOutput": "PASS disabled/opt-in/withdrawal\nPASS existing provider and removal\nPASS simultaneous BWM election\nPASS late foreign conflict\nPASS in-flight manager/desktop/control\nPASS in-flight offered binds\nPASS invalid backend state\nPASS hidden claim preserves global filter\nPASS hidden provider preserves global filter\nPASS bounded registry inventory\nPASS withdrawal inside backend callback\nPASS observer disconnect\nPASS inventory timeout\nPASS slow startup and cancelled idle\nPASS descriptor lifecycle over 20 displays\nPASS module unload before client destruction\n{\"arbitrationScenariosPassed\":16,\"hyprlandSessionModified\":false,\"renderingVerified\":false}\n",
+    "output": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n    Start 1: desktop-workspace-projection\n1/7 Test #1: desktop-workspace-projection .............   Passed    0.00 sec\n    Start 2: native-desktop-provider-arbitration\n2/7 Test #2: native-desktop-provider-arbitration ......   Passed    2.73 sec\n    Start 3: native-desktop-protocol\n3/7 Test #3: native-desktop-protocol ..................   Passed    4.93 sec\n    Start 4: native-desktop-arbitrated-kde-consumer\n4/7 Test #4: native-desktop-arbitrated-kde-consumer ...   Passed    0.28 sec\n    Start 5: native-desktop-control-wire\n5/7 Test #5: native-desktop-control-wire ..............   Passed    0.04 sec\n    Start 6: surface-geometry\n6/7 Test #6: surface-geometry .........................   Passed    0.07 sec\n    Start 7: isolated-local-configuration\n7/7 Test #7: isolated-local-configuration .............   Passed   23.47 sec\n\n100% tests passed, 0 tests failed out of 7\n\nTotal Test time (real) =  31.54 sec\n"
+  },
+  "asanCtest": {
+    "summary": {
+      "name": "Linux-c++",
+      "tests": "7",
+      "failures": "0",
+      "disabled": "0",
+      "skipped": "0",
+      "hostname": "THE-MAXINE",
+      "time": "32",
+      "timestamp": "2026-11-15T22:12:48"
+    },
+    "tests": [
+      {
+        "name": "desktop-workspace-projection",
+        "seconds": 0.0107214,
+        "failed": false
+      },
+      {
+        "name": "native-desktop-provider-arbitration",
+        "seconds": 2.74416,
+        "failed": false
+      },
+      {
+        "name": "native-desktop-protocol",
+        "seconds": 4.87542,
+        "failed": false
+      },
+      {
+        "name": "native-desktop-arbitrated-kde-consumer",
+        "seconds": 0.30031,
+        "failed": false
+      },
+      {
+        "name": "native-desktop-control-wire",
+        "seconds": 0.0489513,
+        "failed": false
+      },
+      {
+        "name": "surface-geometry",
+        "seconds": 0.0896088,
+        "failed": false
+      },
+      {
+        "name": "isolated-local-configuration",
+        "seconds": 24.3247,
+        "failed": false
+      }
+    ],
+    "providerOutput": "PASS disabled/opt-in/withdrawal\nPASS existing provider and removal\nPASS simultaneous BWM election\nPASS late foreign conflict\nPASS in-flight manager/desktop/control\nPASS in-flight offered binds\nPASS invalid backend state\nPASS hidden claim preserves global filter\nPASS hidden provider preserves global filter\nPASS bounded registry inventory\nPASS withdrawal inside backend callback\nPASS observer disconnect\nPASS inventory timeout\nPASS slow startup and cancelled idle\nPASS descriptor lifecycle over 20 displays\nPASS module unload before client destruction\n{\"arbitrationScenariosPassed\":16,\"hyprlandSessionModified\":false,\"renderingVerified\":false}\n",
+    "output": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan\n    Start 1: desktop-workspace-projection\n1/7 Test #1: desktop-workspace-projection .............   Passed    0.01 sec\n    Start 2: native-desktop-provider-arbitration\n2/7 Test #2: native-desktop-provider-arbitration ......   Passed    2.74 sec\n    Start 3: native-desktop-protocol\n3/7 Test #3: native-desktop-protocol ..................   Passed    4.88 sec\n    Start 4: native-desktop-arbitrated-kde-consumer\n4/7 Test #4: native-desktop-arbitrated-kde-consumer ...   Passed    0.30 sec\n    Start 5: native-desktop-control-wire\n5/7 Test #5: native-desktop-control-wire ..............   Passed    0.05 sec\n    Start 6: surface-geometry\n6/7 Test #6: surface-geometry .........................   Passed    0.09 sec\n    Start 7: isolated-local-configuration\n7/7 Test #7: isolated-local-configuration .............   Passed   24.32 sec\n\n100% tests passed, 0 tests failed out of 7\n\nTotal Test time (real) =  32.40 sec\n"
+  },
+  "asanOptions": "detect_leaks=0:halt_on_error=1",
+  "nativeReports": {
+    "normal": {
+      "desktop-protocol-results": {
+        "version": 1,
+        "sessionModified": false,
+        "hyprlandPluginLoaded": false,
+        "dailyPanelReplaced": false,
+        "renderingVerified": false,
+        "arbitratedProvider": false,
+        "clientExit": 0,
+        "clientOutput": "********* Start testing of DesktopTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : DesktopTest::initTestCase()\nSKIP   : DesktopTest::arbitratedProviderFeedsOriginalKdeAndWithdraws() Run separately with the arbitrated provider fixture\n   Loc: [/mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/test-desktops.cpp(41)]\nPASS   : DesktopTest::registryRequiresUniqueAndAssociatedControl()\nPASS   : DesktopTest::registryTimeoutRequiresFreshRevisionAfterLateInventory()\nQWARN  : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting() org.kde.plasma.libtaskmanager: The PlasmaWindowManagement protocol hasn't activated in time. The client possibly got denied by kwin? Check kwin output.\nQWARN  : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting() kf.i18n: KLocalizedString: Domain is not set for this string, translation will not work. Please see https://api.kde.org/frameworks/ki18n/html/prg_guide.html msgid: \"New Desktop\" msgid_plural: \"\" msgctxt: \"\"\nPASS   : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting()\nQWARN  : DesktopTest::nativeConnectionBarrierControlsRuntimeAndHandlesProviderLoss() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nPASS   : DesktopTest::nativeConnectionBarrierControlsRuntimeAndHandlesProviderLoss()\nQWARN  : DesktopTest::desktopAmbiguityRequiresFreshAuxiliaryProcess() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nPASS   : DesktopTest::desktopAmbiguityRequiresFreshAuxiliaryProcess()\nPASS   : DesktopTest::cleanupTestCase()\nTotals: 7 passed, 0 failed, 1 skipped, 0 blacklisted, 4786ms\n********* Finished testing of DesktopTest *********\n",
+        "clientDiagnostics": "",
+        "fixtureExit": 0,
+        "fixtureDiagnostics": "",
+        "fixtureOutput": "{\"accepted\":0,\"cancelled\":0,\"rejected\":0}\n",
+        "passed": true,
+        "cleanupVerified": true
+      },
+      "desktop-arbitrated-kde-results": {
+        "version": 1,
+        "sessionModified": false,
+        "hyprlandPluginLoaded": false,
+        "dailyPanelReplaced": false,
+        "renderingVerified": false,
+        "arbitratedProvider": true,
+        "clientExit": 0,
+        "clientOutput": "********* Start testing of DesktopTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : DesktopTest::initTestCase()\nQWARN  : DesktopTest::arbitratedProviderFeedsOriginalKdeAndWithdraws() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nPASS   : DesktopTest::arbitratedProviderFeedsOriginalKdeAndWithdraws()\nPASS   : DesktopTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 205ms\n********* Finished testing of DesktopTest *********\n",
+        "clientDiagnostics": "",
+        "fixtureExit": 0,
+        "fixtureDiagnostics": "",
+        "fixtureOutput": "{\"accepted\":1,\"cancelled\":0,\"rejected\":0}\n",
+        "passed": true,
+        "cleanupVerified": true
+      },
+      "desktop-control-wire-results": {
+        "version": 1,
+        "sessionModified": false,
+        "hyprlandPluginLoaded": false,
+        "dailyPanelReplaced": false,
+        "renderingVerified": false,
+        "arbitratedProvider": false,
+        "clientExit": 0,
+        "clientOutput": "{\"unownedConnectionDenied\":true,\"sameFlushPendingActivationCancelled\":true,\"perClientIsolationPassed\":true,\"destroyedOwnerStaysPaused\":true,\"rebindAndResumePassed\":true,\"retiredControlsAcceptInFlightRequestsInertly\":true}\n",
+        "clientDiagnostics": "",
+        "fixtureExit": 0,
+        "fixtureDiagnostics": "",
+        "fixtureOutput": "",
+        "passed": true,
+        "cleanupVerified": true
+      }
+    },
+    "asan": {
+      "desktop-protocol-results": {
+        "version": 1,
+        "sessionModified": false,
+        "hyprlandPluginLoaded": false,
+        "dailyPanelReplaced": false,
+        "renderingVerified": false,
+        "arbitratedProvider": false,
+        "clientExit": 0,
+        "clientOutput": "********* Start testing of DesktopTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : DesktopTest::initTestCase()\nSKIP   : DesktopTest::arbitratedProviderFeedsOriginalKdeAndWithdraws() Run separately with the arbitrated provider fixture\n   Loc: [/mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/test-desktops.cpp(41)]\nPASS   : DesktopTest::registryRequiresUniqueAndAssociatedControl()\nPASS   : DesktopTest::registryTimeoutRequiresFreshRevisionAfterLateInventory()\nQWARN  : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting() org.kde.plasma.libtaskmanager: The PlasmaWindowManagement protocol hasn't activated in time. The client possibly got denied by kwin? Check kwin output.\nQWARN  : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting() kf.i18n: KLocalizedString: Domain is not set for this string, translation will not work. Please see https://api.kde.org/frameworks/ki18n/html/prg_guide.html msgid: \"New Desktop\" msgid_plural: \"\" msgctxt: \"\"\nPASS   : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting()\nQWARN  : DesktopTest::nativeConnectionBarrierControlsRuntimeAndHandlesProviderLoss() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nPASS   : DesktopTest::nativeConnectionBarrierControlsRuntimeAndHandlesProviderLoss()\nQWARN  : DesktopTest::desktopAmbiguityRequiresFreshAuxiliaryProcess() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nPASS   : DesktopTest::desktopAmbiguityRequiresFreshAuxiliaryProcess()\nPASS   : DesktopTest::cleanupTestCase()\nTotals: 7 passed, 0 failed, 1 skipped, 0 blacklisted, 4728ms\n********* Finished testing of DesktopTest *********\n",
+        "clientDiagnostics": "",
+        "fixtureExit": 0,
+        "fixtureDiagnostics": "",
+        "fixtureOutput": "{\"accepted\":0,\"cancelled\":0,\"rejected\":0}\n",
+        "passed": true,
+        "cleanupVerified": true
+      },
+      "desktop-arbitrated-kde-results": {
+        "version": 1,
+        "sessionModified": false,
+        "hyprlandPluginLoaded": false,
+        "dailyPanelReplaced": false,
+        "renderingVerified": false,
+        "arbitratedProvider": true,
+        "clientExit": 0,
+        "clientOutput": "********* Start testing of DesktopTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : DesktopTest::initTestCase()\nQWARN  : DesktopTest::arbitratedProviderFeedsOriginalKdeAndWithdraws() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nPASS   : DesktopTest::arbitratedProviderFeedsOriginalKdeAndWithdraws()\nPASS   : DesktopTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 208ms\n********* Finished testing of DesktopTest *********\n",
+        "clientDiagnostics": "",
+        "fixtureExit": 0,
+        "fixtureDiagnostics": "",
+        "fixtureOutput": "{\"accepted\":1,\"cancelled\":0,\"rejected\":0}\n",
+        "passed": true,
+        "cleanupVerified": true
+      },
+      "desktop-control-wire-results": {
+        "version": 1,
+        "sessionModified": false,
+        "hyprlandPluginLoaded": false,
+        "dailyPanelReplaced": false,
+        "renderingVerified": false,
+        "arbitratedProvider": false,
+        "clientExit": 0,
+        "clientOutput": "{\"unownedConnectionDenied\":true,\"sameFlushPendingActivationCancelled\":true,\"perClientIsolationPassed\":true,\"destroyedOwnerStaysPaused\":true,\"rebindAndResumePassed\":true,\"retiredControlsAcceptInFlightRequestsInertly\":true}\n",
+        "clientDiagnostics": "",
+        "fixtureExit": 0,
+        "fixtureDiagnostics": "",
+        "fixtureOutput": "",
+        "passed": true,
+        "cleanupVerified": true
+      }
+    }
+  },
+  "buildOutputs": {
+    "normal": "CMake Warning at /usr/lib64/cmake/Qt6/QtPublicDependencyHelpers.cmake:339 (message):\n  This project is using headers of the GuiPrivate module and will therefore\n  be tied to this specific Qt module build version.  Running this project\n  against other versions of the Qt modules may crash at any arbitrary point.\n  This is not a bug, but a result of using Qt internals.  You have been\n  warned!\n\n  You can disable this warning by setting QT_NO_PRIVATE_MODULE_WARNING to ON.\nCall Stack (most recent call first):\n  /usr/lib64/cmake/Qt6GuiPrivate/Qt6GuiPrivateConfig.cmake:58 (_qt_internal_show_private_module_warning)\n  /usr/lib64/cmake/Qt6/Qt6Config.cmake:267 (find_package)\n  CMakeLists.txt:18 (find_package)\n\n\n-- Configuring done (0.7s)\n-- Generating done (0.3s)\n-- Build files have been written to: /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n[  0%] Built target bwm-window-system_autogen_timestamp_deps\n[  4%] Built target bwm-desktop-protocol_autogen_timestamp_deps\n[  5%] Automatic MOC for target bwm-desktop-protocol\n[  6%] Built target bwm-window-system_autogen\n[  6%] Built target bwm-desktop-protocol_autogen\n[  9%] Built target bwm-window-system\n[  9%] Built target test-desktop_autogen_timestamp_deps\n[ 15%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 16%] Built target test-desktop_autogen\n[ 17%] Built target bwm-plasma-configuration_autogen\n[ 18%] Building CXX object desktop-protocol/CMakeFiles/bwm-desktop-protocol.dir/desktops.cpp.o\n[ 19%] Building CXX object desktop-protocol/CMakeFiles/bwm-desktop-protocol.dir/provider.cpp.o\n[ 21%] Built target test-desktop\n[ 22%] Building CXX object desktop-protocol/CMakeFiles/bwm-desktop-protocol.dir/workspaces.cpp.o\n[ 45%] Built target bwm-plasma-configuration\n[ 45%] Built target bwm-plasma-host_autogen_timestamp_deps\n[ 45%] Built target test-taskmetadata_autogen_timestamp_deps\n[ 45%] Built target test-taskmenu_autogen_timestamp_deps\n[ 45%] Built target test-desktops_autogen_timestamp_deps\n[ 45%] Built target test-tasks_autogen_timestamp_deps\n[ 45%] Built target test-surfaces_autogen_timestamp_deps\n[ 45%] Built target test-plasma-ui_autogen_timestamp_deps\n[ 46%] Built target bwm-plasma-host_autogen\n[ 47%] Built target test-taskmetadata_autogen\n[ 48%] Built target test-taskmenu_autogen\n[ 49%] Built target test-desktops_autogen\n[ 50%] Built target test-tasks_autogen\n[ 51%] Built target test-surfaces_autogen\n[ 52%] Built target test-plasma-ui_autogen\n[ 55%] Built target bwm-plasma-host\n[ 57%] Built target test-taskmetadata\n[ 60%] Built target test-taskmenu\n[ 63%] Built target test-desktops\n[ 65%] Built target test-tasks\n[ 67%] Built target test-surfaces\n[ 69%] Built target test-plasma-ui\n[ 69%] Linking CXX static library libbwm-desktop-protocol.a\n[ 71%] Built target bwm-desktop-protocol\n[ 71%] Built target desktop-provider-teardown-module_autogen_timestamp_deps\n[ 71%] Built target test-workspace-projection_autogen_timestamp_deps\n[ 73%] Built target desktop-test-display_autogen_timestamp_deps\n[ 74%] Built target test-desktop-control-wire_autogen_timestamp_deps\n[ 76%] Built target desktop-provider-test-display_autogen_timestamp_deps\n[ 77%] Automatic MOC for target desktop-provider-teardown-module\n[ 78%] Automatic MOC for target test-workspace-projection\n[ 79%] Automatic MOC for target desktop-test-display\n[ 80%] Automatic MOC for target test-desktop-control-wire\n[ 80%] Built target desktop-provider-teardown-module_autogen\n[ 80%] Automatic MOC for target desktop-provider-test-display\n[ 80%] Built target test-workspace-projection_autogen\n[ 81%] Building CXX object desktop-protocol/CMakeFiles/desktop-provider-teardown-module.dir/desktop-provider-teardown-module_autogen/mocs_compilation.cpp.o\n[ 82%] Building CXX object desktop-protocol/CMakeFiles/desktop-provider-teardown-module.dir/test-teardown-module.cpp.o\n[ 82%] Built target test-desktop-control-wire_autogen\n[ 82%] Built target desktop-provider-test-display_autogen\n[ 82%] Built target desktop-test-display_autogen\n[ 83%] Building CXX object desktop-protocol/CMakeFiles/test-workspace-projection.dir/test-workspaces.cpp.o\n[ 84%] Linking CXX executable test-desktop-control-wire\n[ 85%] Building CXX object desktop-protocol/CMakeFiles/desktop-provider-test-display.dir/test-display.cpp.o\n[ 87%] Built target test-desktop-control-wire\n[ 88%] Building CXX object desktop-protocol/CMakeFiles/desktop-test-display.dir/test-display.cpp.o\n[ 88%] Linking CXX shared module libdesktop-provider-teardown-module.so\n[ 88%] Built target desktop-provider-teardown-module\n[ 89%] Built target test-desktop-provider_autogen_timestamp_deps\n[ 90%] Automatic MOC for target test-desktop-provider\n[ 90%] Built target test-desktop-provider_autogen\n[ 91%] Linking CXX executable test-workspace-projection\n[ 92%] Building CXX object desktop-protocol/CMakeFiles/test-desktop-provider.dir/test-desktop-provider_autogen/mocs_compilation.cpp.o\n[ 93%] Building CXX object desktop-protocol/CMakeFiles/test-desktop-provider.dir/test-provider.cpp.o\n[ 94%] Built target test-workspace-projection\n[ 95%] Linking CXX executable desktop-provider-test-display\n[ 97%] Built target desktop-provider-test-display\n[ 97%] Linking CXX executable desktop-test-display\n[ 99%] Built target desktop-test-display\n[100%] Linking CXX executable test-desktop-provider\n[100%] Built target test-desktop-provider\n",
+    "asan": "CMake Warning at /usr/lib64/cmake/Qt6/QtPublicDependencyHelpers.cmake:339 (message):\n  This project is using headers of the GuiPrivate module and will therefore\n  be tied to this specific Qt module build version.  Running this project\n  against other versions of the Qt modules may crash at any arbitrary point.\n  This is not a bug, but a result of using Qt internals.  You have been\n  warned!\n\n  You can disable this warning by setting QT_NO_PRIVATE_MODULE_WARNING to ON.\nCall Stack (most recent call first):\n  /usr/lib64/cmake/Qt6GuiPrivate/Qt6GuiPrivateConfig.cmake:58 (_qt_internal_show_private_module_warning)\n  /usr/lib64/cmake/Qt6/Qt6Config.cmake:267 (find_package)\n  CMakeLists.txt:18 (find_package)\n\n\n-- Configuring done (0.6s)\n-- Generating done (0.2s)\n-- Build files have been written to: /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan\n[  0%] Built target bwm-window-system_autogen_timestamp_deps\n[  4%] Built target bwm-desktop-protocol_autogen_timestamp_deps\n[  5%] Automatic MOC for target bwm-desktop-protocol\n[  5%] Built target bwm-desktop-protocol_autogen\n[  6%] Built target bwm-window-system_autogen\n[  7%] Building CXX object desktop-protocol/CMakeFiles/bwm-desktop-protocol.dir/workspaces.cpp.o\n[  9%] Building CXX object desktop-protocol/CMakeFiles/bwm-desktop-protocol.dir/desktops.cpp.o\n[  9%] Building CXX object desktop-protocol/CMakeFiles/bwm-desktop-protocol.dir/provider.cpp.o\n[ 12%] Built target bwm-window-system\n[ 18%] Built target bwm-plasma-configuration_autogen_timestamp_deps\n[ 18%] Built target test-desktop_autogen_timestamp_deps\n[ 19%] Built target bwm-plasma-configuration_autogen\n[ 20%] Built target test-desktop_autogen\n[ 43%] Built target bwm-plasma-configuration\n[ 45%] Built target test-desktop\n[ 45%] Built target test-surfaces_autogen_timestamp_deps\n[ 45%] Built target test-plasma-ui_autogen_timestamp_deps\n[ 45%] Built target bwm-plasma-host_autogen_timestamp_deps\n[ 45%] Built target test-taskmetadata_autogen_timestamp_deps\n[ 45%] Built target test-taskmenu_autogen_timestamp_deps\n[ 45%] Built target test-desktops_autogen_timestamp_deps\n[ 45%] Built target test-tasks_autogen_timestamp_deps\n[ 46%] Built target test-surfaces_autogen\n[ 47%] Built target test-plasma-ui_autogen\n[ 48%] Built target bwm-plasma-host_autogen\n[ 49%] Built target test-taskmetadata_autogen\n[ 50%] Built target test-taskmenu_autogen\n[ 51%] Built target test-desktops_autogen\n[ 52%] Built target test-tasks_autogen\n[ 54%] Built target test-plasma-ui\n[ 58%] Built target test-surfaces\n[ 59%] Built target bwm-plasma-host\n[ 61%] Built target test-taskmetadata\n[ 64%] Built target test-taskmenu\n[ 67%] Built target test-desktops\n[ 69%] Built target test-tasks\n[ 69%] Linking CXX static library libbwm-desktop-protocol.a\n[ 71%] Built target bwm-desktop-protocol\n[ 73%] Built target desktop-test-display_autogen_timestamp_deps\n[ 74%] Built target test-desktop-control-wire_autogen_timestamp_deps\n[ 74%] Built target desktop-provider-teardown-module_autogen_timestamp_deps\n[ 74%] Built target test-workspace-projection_autogen_timestamp_deps\n[ 75%] Automatic MOC for target desktop-provider-teardown-module\n[ 75%] Built target desktop-provider-teardown-module_autogen\n[ 77%] Built target desktop-provider-test-display_autogen_timestamp_deps\n[ 78%] Building CXX object desktop-protocol/CMakeFiles/desktop-provider-teardown-module.dir/desktop-provider-teardown-module_autogen/mocs_compilation.cpp.o\n[ 79%] Automatic MOC for target test-desktop-control-wire\n[ 80%] Building CXX object desktop-protocol/CMakeFiles/desktop-provider-teardown-module.dir/test-teardown-module.cpp.o\n[ 81%] Automatic MOC for target test-workspace-projection\n[ 82%] Automatic MOC for target desktop-test-display\n[ 82%] Built target test-desktop-control-wire_autogen\n[ 82%] Automatic MOC for target desktop-provider-test-display\n[ 82%] Built target desktop-test-display_autogen\n[ 82%] Built target test-workspace-projection_autogen\n[ 83%] Linking CXX executable test-desktop-control-wire\n[ 83%] Built target desktop-provider-test-display_autogen\n[ 84%] Building CXX object desktop-protocol/CMakeFiles/desktop-test-display.dir/test-display.cpp.o\n[ 85%] Building CXX object desktop-protocol/CMakeFiles/test-workspace-projection.dir/test-workspaces.cpp.o\n[ 87%] Built target test-desktop-control-wire\n[ 88%] Building CXX object desktop-protocol/CMakeFiles/desktop-provider-test-display.dir/test-display.cpp.o\n[ 88%] Linking CXX shared module libdesktop-provider-teardown-module.so\n[ 88%] Built target desktop-provider-teardown-module\n[ 89%] Built target test-desktop-provider_autogen_timestamp_deps\n[ 90%] Automatic MOC for target test-desktop-provider\n[ 90%] Built target test-desktop-provider_autogen\n[ 91%] Building CXX object desktop-protocol/CMakeFiles/test-desktop-provider.dir/test-desktop-provider_autogen/mocs_compilation.cpp.o\n[ 92%] Building CXX object desktop-protocol/CMakeFiles/test-desktop-provider.dir/test-provider.cpp.o\n[ 93%] Linking CXX executable test-workspace-projection\n[ 94%] Built target test-workspace-projection\n[ 94%] Linking CXX executable desktop-test-display\n[ 95%] Linking CXX executable desktop-provider-test-display\n[ 97%] Built target desktop-test-display\n[ 99%] Built target desktop-provider-test-display\n[100%] Linking CXX executable test-desktop-provider\n[100%] Built target test-desktop-provider\n",
+    "plugin": "[ 83%] Built target bwm-desktop-protocol\n[ 91%] Building CXX object CMakeFiles/bwm-plasma-desktops.dir/plugin.cpp.o\n[100%] Linking CXX shared module bwm-plasma-desktops.so\n[100%] Built target bwm-plasma-desktops\n"
+  },
+  "pythonR4": {
+    "tests": 113,
+    "exitCode": 0,
+    "output": "................................................BWM: native transaction unavailable or rejected\n.usage: python3 -m unittest [-h] [--pid PID] [--native-serialized]\n                           [--expected-generation EXPECTED_GENERATION]\n                           {maximize,minimize,toggle-minimize,state,unminimize,activate,focus,show-desktop,fullscreen,menu,no-border,no-capture,pin,close,interactive,to-desktop,to-screen,rules} ...\npython3 -m unittest: error: Native fullscreen requires --expected-generation, --pid and --state on|off\nusage: python3 -m unittest [-h] [--pid PID] [--native-serialized]\n                           [--expected-generation EXPECTED_GENERATION]\n                           {maximize,minimize,toggle-minimize,state,unminimize,activate,focus,show-desktop,fullscreen,menu,no-border,no-capture,pin,close,interactive,to-desktop,to-screen,rules} ...\npython3 -m unittest: error: Native fullscreen requires --expected-generation, --pid and --state on|off\nusage: python3 -m unittest [-h] [--pid PID] [--native-serialized]\n                           [--expected-generation EXPECTED_GENERATION]\n                           {maximize,minimize,toggle-minimize,state,unminimize,activate,focus,show-desktop,fullscreen,menu,no-border,no-capture,pin,close,interactive,to-desktop,to-screen,rules} ...\npython3 -m unittest: error: Native fullscreen requires --expected-generation, --pid and --state on|off\n...BWM: native transaction unavailable or rejected\n...............BWM: hook de cambio de plasma: unacknowledged\nBWM: hook de cambio de retro: unacknowledged\n.BWM: hook de cambio de plasma: El hook debe estar dentro de su skin\nBWM: hook de cambio de retro: El hook debe estar dentro de su skin\n.............................................\n----------------------------------------------------------------------\nRan 113 tests in 1.936s\n\nOK\n"
+  },
+  "artifacts": {
+    "build/bwm-plasma-desktops/bwm-plasma-desktops.so": {
+      "sha256": "8588c648a563375af2e06d63f5e209f1ec3d95ab5f478d6883a40070a782e91f",
+      "gnuUniqueSymbols": 0,
+      "sizeBytes": 2611256
+    },
+    "build/bwm-plasma-host/desktop-protocol/libdesktop-provider-teardown-module.so": {
+      "sha256": "242290d65611b9542fb82e6ffbcac0b2b3d32b451f05919f6e260c71fdbb1993",
+      "gnuUniqueSymbols": 0,
+      "sizeBytes": 384472
+    },
+    "build/bwm-plasma-host-asan/desktop-protocol/libdesktop-provider-teardown-module.so": {
+      "sha256": "6deb0f7f0a9e4b01662af8b30e5d21fb7b45f2b41933294c8205d87a1d3f81ee",
+      "gnuUniqueSymbols": 0,
+      "sizeBytes": 590968
+    }
+  },
+  "testOnlyNewLinkLibraries": [
+    "CMAKE_DL_LIBS"
+  ],
+  "newProductionPackages": [],
+  "stableAuxiliary": {
+    "path": "build/bwm-plasma-host/bwm-plasma-host",
+    "sha256": "3d3e5d2ddd103ba6a3d1395b6090a9498d88630de8b0b2b023a2b483ea4673fe"
+  },
+  "assertions": [
+    "Disabled constructor creates no observer descriptors",
+    "More than 1s elapsed before loop dispatch cannot time out an unstarted inventory",
+    "Cancelled startup idle creates no peer and can be requested again before any claim",
+    "Normal inventory deadline still fails closed for unflushed fixture responses",
+    "Original KDE consumers retain registry/association, activation, update and withdrawal behavior",
+    "Active and retired controls and claim resources are gone before their DSO is unmapped",
+    "A control bound from an old global offer is also destroyed at final module teardown",
+    "The test DSO is actually unmapped before server-side client resource destruction",
+    "Core/claim callbacks and interface metadata do not survive final teardown in the tested cases",
+    "Launcher rejects missing/old/boolean lifecycle versions and wrong eager/missing observer startup diagnostics"
+  ],
+  "limitations": [
+    "No live Hyprland frontend, startup, logout, input or rendering tested",
+    "The dynamic module is a private core/provider test fixture, not the real Hyprland plugin",
+    "No queued client requests are dispatched after final module destruction; this does not certify safe live hot unload/load",
+    "Hyprland filter findings are a primary-source audit for 0.56.2, not certification of every version or patched runtime",
+    "Observer still sees only its allowed registry; foreign modules can publish transient duplicates",
+    "One publication generation remains a restriction",
+    "The frontend still reads shared config.json on its 500ms reconciliation; review this IO before daily deployment",
+    "Other plugins and physical logout stability are outside this test",
+    "Leak sanitizer remains disabled; no memory-leak certification"
+  ],
+  "sessionModified": false,
+  "compositorRestarted": false,
+  "hyprlandPluginInstalled": false,
+  "hyprlandPluginLoaded": false,
+  "hyprlandPluginAutostarted": false,
+  "dailyPanelReplaced": false,
+  "operationalVerified": false,
+  "replacementReady": false,
+  "r4Complete": false,
+  "skinsRegression": {
+    "tests": 7,
+    "exitCode": 0,
+    "output": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.025s\n\nOK\n"
+  }
+}

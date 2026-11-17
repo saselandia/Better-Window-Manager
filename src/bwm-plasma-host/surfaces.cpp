@@ -250,7 +250,7 @@ void PopupAnchor::update() {
     role->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorTop)|LayerShellQt::Window::AnchorLeft);
     role->setExclusiveZone(-1);
     role->setKeyboardInteractivity(m_nonInteractive ? LayerShellQt::Window::KeyboardInteractivityNone : LayerShellQt::Window::KeyboardInteractivityOnDemand);
-    role->setCloseOnDismissed(true);role->setScreen(screen);
+    role->setCloseOnDismissed(true);role->setScreen(screen);role->setActivateOnShow(!m_nonInteractive);
     const auto edge=Qt::Edge(m_panel->property("bwmPanelEdge").toInt());
     QRect placed=BwmSurface::placePopup(area,anchor,m_popup->size(),edge);
     if(m_requestedPosition && !placed.isEmpty()) {

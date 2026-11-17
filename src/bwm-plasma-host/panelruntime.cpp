@@ -6,6 +6,9 @@
 #include "panelsession.h"
 #include "packagewindows.h"
 #include "surfaces.h"
+#include "taskbridge.h"
+#include "desktopbridge.h"
+#include "nativedesktopcontrol.h"
 #include <Plasma/Containment>
 #include <QGuiApplication>
 #include <QScreen>
@@ -21,6 +24,23 @@ PanelRuntime::PanelRuntime(ViewCorona *corona,QString settings,bool layers,QObje
     :QObject(parent),m_corona(corona),m_settingsFile(std::move(settings)),m_layerSurfaces(layers),m_nativePanelPolicy(nativePanelPolicy) {
     m_reconcile.setSingleShot(true);m_reconcile.setInterval(0);
     connect(&m_reconcile,&QTimer::timeout,this,&PanelRuntime::reconcile);
+    if(auto *control=NativeDesktopControl::requiredControl(this))connect(control,&NativeDesktopControl::changed,this,[this,control]{
+        if(m_skin=="plasma"){
+            if(!control->resumed()){
+                BwmTaskBridge::suspendAll(true);DesktopBridge::suspendAll(true);
+                // Hide input surfaces before returning to Wayland event
+                // dispatch. Actual teardown stays in the queued reconcile.
+                const auto frames=m_views.values();
+                for(const auto &frame:frames)if(frame){
+                    frame->setProperty("bwmControlWithdrawn",true);
+                    frame->hide();
+                    if(frame && frame->panelSession())frame->panelSession()->packageWindows()->suspend();
+                }
+            }
+            else if(!m_quiescing){BwmTaskBridge::suspendAll(false);DesktopBridge::suspendAll(false);}
+        }
+        m_reconcile.start();
+    });
     for(auto *screen:QGuiApplication::screens())observe(screen);
     connect(qApp,&QGuiApplication::screenAdded,this,[this](QScreen *screen){observe(screen);m_reconcile.start();});
     // Withdraw immediately: never leave a panel visible on Qt's fallback output.
@@ -54,6 +74,20 @@ QVariantMap PanelRuntime::readiness()const {
             row.value("status")=="visible";
         const bool ready=matched && presentation.value("renderReady").toBool();rendered=rendered && ready;
         QStringList reasons;
+        const auto widgets=frame && frame->panelSession() ? frame->panelSession()->widgetBackends() : QVariantList();
+        bool backendsVerified=frame && frame->panelSession() && !widgets.isEmpty();
+        if(widgets.isEmpty())reasons.append("widget-inventory-unavailable-or-empty");
+        for(const auto &widget:widgets) {
+            const auto data=widget.toMap(),assessment=data.value("runtime").toMap();
+            const bool verified=assessment.value("operationalVerified").toBool() && !data.value("failedToLaunch").toBool();
+            backendsVerified=backendsVerified && verified;
+            const QString reason=data.value("failedToLaunch").toBool()?"widget-launch-failed":
+                assessment.value("status")=="requires-backend-adapter"?"widget-backend-adapter-required":"widget-runtime-unverified";
+            if(!verified && !reasons.contains(reason))reasons.append(reason);
+        }
+        row["widgetBackends"]=widgets;row["widgetBackendsVerified"]=backendsVerified;
+        row["packageWindows"]=frame && frame->panelSession() ? frame->panelSession()->packageWindows()->capabilities() : QVariantList();
+        row["widgetInventoryScope"]="direct-panel-instances";
         if(!matched)reasons.append(row.value("status")=="visible"?QString("output-changed"):row.value("status").toString());
         if(frame && !presentation.value("nativeViewLoaded").toBool())reasons.append("native-view-not-loaded");
         if(frame && !presentation.value("exposed").toBool())reasons.append("surface-not-exposed");
@@ -73,7 +107,9 @@ QVariantMap PanelRuntime::readiness()const {
     // No production authority is installed. Even a successful software-rendered
     // frame cannot authorize withdrawing the user's existing daily panel.
     return {{"version",1},{"scope","isolated-preview"},{"skin",m_skin},{"renderReady",rendered},
-        {"qtPlatform",QGuiApplication::platformName()},{"availableOutputs",outputs},
+        {"nativeActionsQuiescing",m_quiescing},
+        {"nativeDesktopControl",NativeDesktopControl::diagnostics()},
+        {"qtPlatform",QGuiApplication::platformName()},{"availableOutputs",outputs},{"taskSource",BwmTaskBridge::diagnostics()},
         {"replacementReady",false},{"nativePanelPolicy",m_nativePanelPolicy},{"blockers",blockers},{"panels",panels}};
 }
 void PanelRuntime::observe(QScreen *screen) {
@@ -100,6 +136,14 @@ bool PanelRuntime::setAssignments(const QHash<uint,QString> &outputs) {
 }
 bool PanelRuntime::setSkin(const QString &value) {
     if(value!="plasma" && value!="retro" && value!="default"){m_error=tr("Unknown BWM skin.");emit changed();return false;}
+    auto *control=NativeDesktopControl::requiredControl();
+    const auto peer=control?control->ensurePaused(value!="plasma"):NativeDesktopControl::Status::Ready;
+    const bool suspend=value!="plasma" || peer!=NativeDesktopControl::Status::Ready;
+    const bool taskIdle=BwmTaskBridge::suspendAll(suspend);
+    const bool desktopIdle=DesktopBridge::suspendAll(suspend);
+    m_quiescing=peer==NativeDesktopControl::Status::Pending || (value!="plasma" && (!taskIdle || !desktopIdle));
+    if(peer==NativeDesktopControl::Status::Unavailable){m_error=control->state().value("lastError").toString();m_quiescing=false;return false;}
+    if(m_quiescing){m_error=tr("Waiting for native panel actions to finish.");return false;}
     const auto before=m_status;const bool notify=m_skin!=value || !m_error.isEmpty();
     m_skin=value;m_error.clear();reconcile();if(notify && before==m_status)emit changed();return true;
 }
@@ -132,6 +176,7 @@ void PanelRuntime::reconcile() {
         QString state;auto *screen=BwmOutput::resolveScreen(m_assignments.value(id),&state);
         const auto side=edge(c->location());
         if(m_skin!="plasma")state="skin-inactive";
+        else if(auto *control=NativeDesktopControl::requiredControl();control && !control->resumed())state="native-desktop-not-ready";
         else if(m_nativePanelPolicy && nativeOutputs.value(screen)>1)state="native-policy-output-conflict";
         else if(side==Qt::Edge(0))state="unsupported-panel-edge";
         else if((side==Qt::LeftEdge || side==Qt::RightEdge)!=(c->formFactor()==Plasma::Types::Vertical))state="inconsistent-panel-orientation";
@@ -160,7 +205,12 @@ void PanelRuntime::reconcile() {
                 frame->show();
             }
         }
-        if(frame)state="visible";
+        if(frame){
+            if(frame->property("bwmControlWithdrawn").toBool()){
+                frame->setProperty("bwmControlWithdrawn",false);frame->show();
+            }
+            state="visible";
+        }
         status.append(QVariantMap{{"containmentId",id},{"outputDescription",m_assignments.value(id)},
             {"status",state},{"error",error},{"visible",frame && frame->isVisible()},
             {"waylandVerified",false},{"reservedArea",false}});

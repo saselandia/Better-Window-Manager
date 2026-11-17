@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "date": "2026-11-17",
+  "section": "BWM_CONTEXT §3.252",
+  "scope": "R4 only: remaining native task-menu window actions with a BWM backend and the Places section",
+  "implemented": {
+    "moveResize": "IsMovable/IsResizable from snapshot field movable (ordinary floating, not fullscreen, not minimized/special); requestMove/requestResize -> native-tasks move|resize -> kwin-window --native-serialized interactive (breezebars-interactive must answer \"ok\").",
+    "noBorderAndCapture": "HasNoBorder/CanSetNoBorder/IsExcludedFromCapture and excludeFromCapture capability from windowTagsSettable/noBorder/excludedFromCapture; desired state (never toggle) -> kwin-window --native-serialized no-border|no-capture --state on|off: guarded Lua dispatch receipt + fresh hyprctl clients readback, idempotent. Daily callers keep toggle (default --state toggle).",
+    "places": "preview-isolated.py --task-actions copies the caller user-places.xbel read-only (O_EXCL, 1 MiB limit) into the disposable data root. TaskMenuPolicy matches each Backend place QAction (title without mnemonics/elision + icon) against the host KFilePlacesModel visible rows and routes a unique match as {action:launcher, launcherUrl:file .desktop path, urls:[place]} (Backend places lambda equivalent). \"N more Places…\" and group submenus stay enabled; Recent Files stay masked.",
+    "unchanged": "Keep above/below stay masked (no Hyprland backend). KDE 6.7.5 ContextMenu.qml binds the no-border item to the misspelled role CanSetNoBoder, so it stays disabled exactly as in Plasma; the role is still provided."
+  },
+  "localTests": {
+    "ctestNormal": "13/13",
+    "ctestAsan": "13/13 (detect_leaks=0, halt_on_error=1)",
+    "qt": "TaskTest 11/11 (new moveResizeBorderAndCaptureUseCommonManagerStates), MenuTest 3/3 (move/resize routed from original menu; capture mask lifted; offscreen hides Hide-from-Screencast by KDE design), PanelTaskTest 4/4 (Places routed with launcher+url, none masked)",
+    "python": "R4 163 OK (new tests/test_r4_native_window_actions.py 8 incl. real Lua guards), skins+bridge+kwin_window 41 OK"
+  },
+  "sessionCheck": {
+    "origin": "assistant in the user Hyprland session on a throwaway kitty (temporary rule to workspace 9, closed afterwards), no clicks",
+    "results": [
+      "no-capture on/on/off/off: exit 0, tag readback matches, idempotent",
+      "no_screen_share property true then false",
+      "no-border on/off: exit 0, readback matches",
+      "wrong pid and stale generation: exit 1, no change"
+    ],
+    "cleanup": "test window closed, hyprctl reload, configerrors empty, workspace 1 and focused window unchanged"
+  },
+  "notVerified": [],
+  "operationalVerified": false,
+  "replacementReady": false,
+  "r4Complete": false,
+  "files": {
+    "src/bwm-plasma-host/tasksource.h": "8d0074a6c803995ded150a7b6b4654c50bc9c7e5541e64614b29d82792e8e255",
+    "src/bwm-plasma-host/tasksource.cpp": "54782e58614437e8987d4a6640f25c2c82ef13f4cb1774b5c5da6fb3f4115539",
+    "src/bwm-plasma-host/taskmenupolicy.cpp": "48ea43a6c7666e4194e2ddbfec92df928db996dcf39d37575dc98662325d0d72",
+    "src/bwm-plasma-host/taskbridge.cpp": "388464b399ebfb03443d8b75a640245e2cf13dfcf6e5ecbae47649160985c5a8",
+    "src/bwm-plasma-host/CMakeLists.txt": "da2febbe7b11e1a7afff97859ee2e50a546072e31c07204bb8f3be82b3d4431a",
+    "src/bwm-plasma-host/preview-isolated.py": "a5340e2ce600f697bdd958570000494be46aae48f8bb038eda6324776491801a",
+    "src/bwm-plasma-host/test-tasks.cpp": "59a8f30175f9ddefe2a2538498a44602dedc007a86ff261935bb05c6c14e252f",
+    "src/bwm-plasma-host/test-taskmenu.cpp": "a39df5f71e65ee5f4e79df3d7383dffa842f95dc980d99d998e98f2e480710d5",
+    "src/bwm-plasma-host/test-paneltasks.cpp": "2355741e023a44eb151fd03c1b06ef5cce5d18a2b69ef7c06ba82c4916fb2199",
+    "config/hypr/skins/plasma/scripts/kwin-window.py": "c7b0ab3ef46494cd0bbbf66b7b438f97b569364bb9cc5ace41c316f5d11487e4",
+    "config/hypr/skins/plasma/scripts/native-tasks.py": "4a458091fe25d587f078246872a66213577205e5f919e128c4570f4a7b579dc5",
+    "config/hypr/skins/plasma/scripts/native_launch.py": "fbceeb4c65e6d6bc901638c2ce4c29b8c6e554b794f00174b3ba674ef042a5fa",
+    "tests/test_r4_native_window_actions.py": "ce391ce923f680f2c4a4511877d7b736651301fbe11160432bf25bbb547845dc"
+  },
+  "userAcceptance": {
+    "section": "BWM_CONTEXT §3.253",
+    "statement": "todo revisado, funciona",
+    "scope": [
+      "move",
+      "resize",
+      "hide from screencast",
+      "keep above/below disabled",
+      "no border disabled",
+      "own Places open in Files"
+    ],
+    "note": "general confirmation, no per-case measurements",
+    "hostTelemetry": {
+      "routedLaunchActions": 16,
+      "maskedLaunchActions": 0,
+      "lastError": ""
+    }
+  }
+}

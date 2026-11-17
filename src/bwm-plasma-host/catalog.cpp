@@ -8,8 +8,8 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QJsonObject>
-namespace {
-QVariantMap runtimeAssessment(const QString &id) {
+QVariantMap Catalog::runtimeAssessment(const KPluginMetaData &metadata) {
+    const auto id=metadata.pluginId();
     // Dependency evidence for reviewed upstream packages, NOT a widget allowlist.
     // Every unknown package remains discoverable and explicitly unassessed.
     QStringList dependencies;
@@ -27,8 +27,29 @@ QVariantMap runtimeAssessment(const QString &id) {
         dependencies={"StatusNotifierWatcher","per-child applet services and capabilities"};
         status="requires-runtime-validation";
     }
-    return {{"status",status},{"operationalVerified",false},{"dependencies",dependencies}};
-}
+    const QVariantMap desktopAdapter=id=="org.kde.plasma.showdesktop" ? QVariantMap{
+        {"api","KWindowSystem.showingDesktop"},{"implementation","experimental-common-BWM-minimize"},
+        {"optInRequired",true},{"liveSessionVerified",false},
+        {"remaining",QStringList{"KWin Peek visual effect","TaskManager minimize-all secondary action"}}}:QVariantMap();
+    const QVariantMap taskAdapter=(id=="org.kde.plasma.icontasks" || id=="org.kde.plasma.taskmanager") ? QVariantMap{
+        {"scope","experimental-window-model-only"},{"optInRequired",true},{"liveSessionVerified",false},
+        {"operations",QStringList{"focus","minimize/restore","maximize","close","fullscreen","new-instance","open-urls"}},
+        {"ordering","compositor-client-order-with-legacy-snapshot-fallback"},
+        {"thumbnails",QVariantMap{{"implementation","opt-in-native-toplevel-image-capture"},{"sessionVerified",false},{"kwinScreencastProtocol",false}}},
+        {"remaining",QStringList{"native desktop frontend/session acceptance","native menu input/session acceptance","pinned-launcher/application-specific launch environment","other window operations","delegate geometry"}}}:QVariantMap();
+    const QVariantMap desktopProtocol=dependencies.contains("org_kde_plasma_virtual_desktop_management") ? QVariantMap{
+        {"implementation","experimental-bwm-plasma-desktops"},{"protocolVersion",4},{"autoLoaded",false},
+        {"barrierProtocolVersion",2},{"serverArbitrationVersion",1},{"providerLifecycleVersion",1},
+        {"countMirrorVersion",1},{"activationReadbackVersion",1},
+        {"activationRequiresControl",true},{"withdrawalScope","same-wayland-connection"},
+        {"defaultEnabled",false},{"nativeProviderVerifiedInFixture",true},{"liveSessionVerified",false},
+        {"creationSupported",false},{"removalSupported",false},{"crossOutputRelocationSupported",false}}:QVariantMap();
+    return {{"version",1},{"status",status},{"operationalVerified",false},{"dependencies",dependencies},
+        {"experimentalDesktopAdapter",desktopAdapter},
+        {"experimentalTaskSource",taskAdapter},
+        {"experimentalNativeDesktopProtocol",desktopProtocol},
+        {"declaredExtensions",metadata.rawData().value("X-Plasma-RequiredExtensions").toVariant()},
+        {"evidence",status=="unassessed"?"not-reviewed":"reviewed-api-dependencies"}};
 }
 Catalog::Catalog() {
     m_debounce.setSingleShot(true);m_debounce.setInterval(150);
@@ -56,7 +77,7 @@ QVariantList Catalog::discover() {
             {"catalogVisible",visible},
             {"formFactors",data.value("X-Plasma-FormFactors").toVariant()},
             {"requiredExtensions",data.value("X-Plasma-RequiredExtensions").toVariant()},
-            {"runtime",runtimeAssessment(m.pluginId())}});
+            {"runtime",runtimeAssessment(m)}});
     }
     return entries;
 }

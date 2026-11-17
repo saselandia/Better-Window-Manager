@@ -28,6 +28,7 @@ public:
     QString error()const{return m_error;}
     PanelViewHost *view(uint containmentId)const;
     QVariantMap readiness()const;
+    bool quiescing()const{return m_quiescing;}
 Q_SIGNALS:
     void changed();
 private:
@@ -38,6 +39,7 @@ private:
     QString m_settingsFile,m_skin="default",m_error;
     bool m_layerSurfaces,m_reconciling=false;
     bool m_nativePanelPolicy=false;
+    bool m_quiescing=false;
     QHash<uint,QString> m_assignments;
     QHash<uint,QPointer<PanelViewHost>> m_views;
     QSet<uint> m_observed;

@@ -90,6 +90,8 @@ try:
                    XDG_CONFIG_DIRS=str(root / 'defaults'), XDG_DATA_DIRS='/usr/local/share:/usr/share',
                    DBUS_SESSION_BUS_ADDRESS='unix:path=' + str(root / 'no-bus'))
         env.pop('WAYLAND_DISPLAY', None); env.pop('DISPLAY', None); env.pop('HYPRLAND_INSTANCE_SIGNATURE', None)
+        env.pop('BWM_R4_DESKTOP_ACTIONS',None);env.pop('BWM_R4_DESKTOP_RUNTIME',None);env.pop('BWM_R4_DESKTOP_CONFIG',None)
+        for key in ('BWM_R4_TASK_ACTIONS','BWM_R4_TASK_RUNTIME','BWM_R4_TASK_CONFIG','BWM_R4_NATIVE_DESKTOPS'):env.pop(key,None)
         search, _ = run(env, '--kns-search', a.term, 0, timeout=90)
         report['provider'] = search['provider']
         report['searchCount'] = len(search['results'])

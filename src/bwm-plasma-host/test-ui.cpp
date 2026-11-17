@@ -12,6 +12,10 @@
 #include "runtimecontrol.h"
 #include "profilestore.h"
 #include "migration.h"
+#include "desktopbridge.h"
+#include <KWindowSystem>
+#include <QtPlugin>
+Q_IMPORT_PLUGIN(BwmWindowSystemPlugin)
 #include <qpa/qplatformscreen.h>
 #include <qpa/qwindowsysteminterface.h>
 #include <QLockFile>
@@ -140,6 +144,44 @@ private Q_SLOTS:
         QVERIFY2(remove->error()==0,qPrintable(remove->errorString()));delete remove;
         QTRY_VERIFY_WITH_TIMEOUT(!has(id),5000);
         QVERIFY(!changes.isEmpty());
+    }
+    void backendInventoryUsesLiveInstancesAndNativeMetadata() {
+        const auto unknown=KPluginMetaData(QJsonObject{
+            {"KPlugin",QJsonObject{{"Id","org.vendor.unseen"},{"Name","Unseen"}}},
+            {"X-Plasma-RequiredExtensions",QJsonArray{"org.vendor.runtime"}}},QString());
+        const auto assessment=Catalog::runtimeAssessment(unknown);
+        QCOMPARE(assessment.value("status").toString(),"unassessed");
+        QCOMPARE(assessment.value("declaredExtensions").toList(),QVariantList{"org.vendor.runtime"});
+        QVERIFY(!assessment.value("operationalVerified").toBool());
+        for(const auto &id:{"org.kde.plasma.icontasks","org.kde.plasma.pager","org.kde.plasma.showdesktop"}) {
+            const auto metadata=KPluginMetaData(QJsonObject{{"KPlugin",QJsonObject{{"Id",id},{"Name",id}}}},QString());
+            const auto data=Catalog::runtimeAssessment(metadata);
+            QCOMPARE(data.value("status").toString(),"requires-backend-adapter");
+            QVERIFY(!data.value("dependencies").toStringList().isEmpty());
+            QVERIFY(!data.value("operationalVerified").toBool());
+            if(QString(id)=="org.kde.plasma.icontasks"){
+                const auto tasks=data.value("experimentalTaskSource").toMap();
+                QVERIFY(tasks.value("operations").toStringList().contains("fullscreen"));
+                QCOMPARE(tasks.value("ordering").toString(),"compositor-client-order-with-legacy-snapshot-fallback");
+                const auto desktops=data.value("experimentalNativeDesktopProtocol").toMap();
+                QCOMPARE(desktops.value("barrierProtocolVersion").toInt(),2);
+                QCOMPARE(desktops.value("activationReadbackVersion").toInt(),1);
+            }
+        }
+        TestCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        auto *c=corona.createContainment("null");QVERIFY(c);
+        auto *a=c->createApplet("org.bwm.r4.shared-config"),*b=c->createApplet("org.bwm.r4.shared-config");
+        QVERIFY(a && b);const auto first=a->id(),second=b->id();
+        PanelSession session(c,false);
+        const auto rows=session.widgetBackends();QCOMPARE(rows.size(),2);
+        QSet<uint> ids;for(const auto &row:rows) {
+            const auto data=row.toMap();ids.insert(data.value("id").toUInt());
+            QCOMPARE(data.value("package").toString(),"org.bwm.r4.shared-config");
+            QCOMPARE(data.value("runtime").toMap().value("status").toString(),"unassessed");
+        }
+        QCOMPARE(ids,(QSet<uint>{first,second}));
+        a->destroy();QTRY_COMPARE(session.widgetBackends().size(),1);
+        QCOMPARE(session.widgetBackends().first().toMap().value("id").toUInt(),second);
     }
     void previewLoadsAndOpensOriginalConfig() {
         TestCorona corona;
@@ -1318,10 +1360,20 @@ private Q_SLOTS:
         QVERIFY(!runtime.readiness().value("renderReady").toBool());
         QTRY_VERIFY(frame->presentationState().value("frameSubmitted").toBool());
         QTRY_VERIFY(runtime.readiness().value("renderReady").toBool());
+        // A brief control withdrawal can be confirmed again before queued
+        // teardown runs. Restore that same hidden view, not a fresh instance.
+        frame->setProperty("bwmControlWithdrawn",true);frame->hide();runtime.reconcile();
+        QCOMPARE(runtime.view(c->id()),frame.data());QVERIFY(frame->isVisible());
+        QVERIFY(!frame->property("bwmControlWithdrawn").toBool());
         QVERIFY(request(1,"status"));QTRY_COMPARE(control.revision(),1);
         QVERIFY(snapshot().value("renderReady").toBool());QVERIFY(!snapshot().value("replacementReady").toBool());
         QVERIFY(snapshot().value("blockers").toArray().contains("reserved-area-unavailable"));
         QVERIFY(snapshot().value("blockers").toArray().contains("isolated-preview-only"));
+        const auto panelState=snapshot().value("panels").toArray().first().toObject();
+        QCOMPARE(panelState.value("widgetInventoryScope").toString(),"direct-panel-instances");
+        QVERIFY(!panelState.value("widgetBackendsVerified").toBool());
+        QCOMPARE(panelState.value("widgetBackends").toArray().size(),1);
+        QVERIFY(snapshot().value("blockers").toArray().contains("widget-runtime-unverified"));
         QCOMPARE(runtime.view(c->id()),frame.data());QCOMPARE(runtime.skin(),"plasma");
         // A late old-frame swap must not certify a newly visible surface.
         frame->beforeRendering();frame->hide();frame->show();frame->frameSwapped();

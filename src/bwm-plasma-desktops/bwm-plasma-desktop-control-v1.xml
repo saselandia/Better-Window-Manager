@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="bwm_plasma_desktop_control_v1">
+  <copyright>SPDX-License-Identifier: GPL-2.0-or-later
+    Copyright 2026 BWM contributors</copyright>
+  <interface name="bwm_plasma_desktop_control_v1" version="2">
+    <description summary="Per-connection activation barrier for the experimental BWM host">
+      Applies only to native desktop activation requests from this same Wayland
+      client. Read events continue. All connections start paused; activation
+      requires a bound control and an explicit resume. Pause discards queued
+      activations of this connection; acknowledged means no such activation can
+      run after the acknowledgement until resumed. Other clients are unaffected.
+      Destroying the control leaves this connection paused until explicitly
+      rebound/resumed or disconnected. No configuration or global mode is changed.
+      When the provider withdraws its globals, existing control resources remain
+      valid but inert until destroyed by the client or disconnected. In-flight
+      requests to retired controls perform no work and produce no acknowledgement.
+    </description>
+    <enum name="error"><entry name="already_bound" value="1" summary="One control owner per connection"/><entry name="invalid_state" value="2" summary="Paused must be zero or one"/></enum>
+    <request name="destroy" type="destructor"/>
+    <request name="set_paused"><arg name="serial" type="uint"/><arg name="paused" type="uint"/></request>
+    <event name="availability"><arg name="available" type="uint"/></event>
+    <event name="acknowledged"><arg name="serial" type="uint"/><arg name="paused" type="uint"/></event>
+    <event name="desktop_global" since="2">
+      <description summary="Registry name of this provider's desktop management global">
+        Identifies the KDE desktop management global on this same connection.
+        Clients must check registry uniqueness and this association before resume.
+        Zero means that no corresponding global is visible to this client.
+      </description>
+      <arg name="name" type="uint"/>
+    </event>
+  </interface>
+</protocol>

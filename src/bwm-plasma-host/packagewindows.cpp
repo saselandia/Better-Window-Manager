@@ -6,6 +6,9 @@
 #include <PlasmaQuick/AppletQuickItem>
 #include <PlasmaQuick/Dialog>
 #include <PlasmaQuick/AppletPopup>
+#include <PlasmaQuick/PopupPlasmaWindow>
+#include <QPlatformSurfaceEvent>
+#include <LayerShellQt/Window>
 #include <QQmlContext>
 #include <QGuiApplication>
 #include <QEvent>
@@ -17,7 +20,14 @@ PackageWindows::PackageWindows(Plasma::Containment *containment,QObject *parent)
     connect(containment,&Plasma::Containment::appletAdded,this,[this]{schedule();});
 }
 QVariantList PackageWindows::capabilities()const {
-    QVariantList result;for(const auto &record:m_records)result.append(record);return result;
+    QVariantList result;
+    for(auto it=m_records.cbegin();it!=m_records.cend();++it){
+        auto record=it.value();record["visible"]=it.key()->isVisible();
+        record["popupRect"]=it.key()->property("bwmPopupRect");
+        record["rolePreparedAtSurfaceCreation"]=it.key()->property("bwmPackageRoleAtSurfaceCreation").toBool();
+        result.append(record);
+    }
+    return result;
 }
 void PackageWindows::schedule() {
     if(m_scheduled)return;m_scheduled=true;
@@ -35,58 +45,108 @@ void PackageWindows::suspend() {
         if(auto *popup=qobject_cast<PlasmaQuick::AppletPopup*>(quick)) {
             auto *item=qobject_cast<PlasmaQuick::AppletQuickItem*>(popup->appletInterface());if(item)owner=item->applet();
         }
+        if(!owner)if(auto *popup=qobject_cast<PlasmaQuick::PopupPlasmaWindow*>(quick)) {
+            for(auto *anchor=popup->visualParent();anchor;anchor=anchor->parentItem())
+                if(auto *item=qobject_cast<PlasmaQuick::AppletQuickItem*>(anchor)){owner=item->applet();break;}
+        }
         if(!owner)if(auto *context=qmlContext(quick))owner=context->contextProperty("plasmoid").value<Plasma::Applet*>();
         if(owner && (owner==m_containment || m_containment->applets().contains(owner)))targets.append(quick);
     }
     // A package's onVisibleChanged may destroy another window in the snapshot.
     for(const auto &window:targets)if(window)window->hide();
 }
-bool PackageWindows::eventFilter(QObject *,QEvent *event) {
+namespace {
+Plasma::Applet *visualOwner(QQuickItem *anchor){
+    for(auto *item=anchor;item;item=item->parentItem())
+        if(auto *applet=qobject_cast<PlasmaQuick::AppletQuickItem*>(item))return applet->applet();
+    return nullptr;
+}
+}
+bool PackageWindows::eventFilter(QObject *object,QEvent *event) {
+    // PopupPlasmaWindow/ToolTipDialog can be created and shown in one C++ call,
+    // without a QML context. SurfaceCreated precedes QWaylandWindow::setVisible
+    // and its shell-role selection in Qt 6.11.2. LayerShellQt supports assigning
+    // its integration at this boundary through its public Window API.
+    if(event->type()==QEvent::PlatformSurface &&
+       static_cast<QPlatformSurfaceEvent*>(event)->surfaceEventType()==QPlatformSurfaceEvent::SurfaceCreated){
+        if(auto *popup=qobject_cast<PlasmaQuick::PopupPlasmaWindow*>(object))prepare(popup,true);
+    }
     if(event->type()==QEvent::ChildAdded || event->type()==QEvent::Show || event->type()==QEvent::PolishRequest)schedule();
     return false;
 }
 void PackageWindows::refresh() {
     if(!m_containment)return;
-    for(auto *window:QGuiApplication::allWindows()) {
-        auto *quick=qobject_cast<QQuickWindow*>(window);
-        if(!quick || qobject_cast<PlasmaQuick::AppletPopup*>(quick))continue;
-        auto *dialog=qobject_cast<PlasmaQuick::Dialog*>(window);
-        // Ownership is determined before considering a role. Other Qt windows,
-        // including the configuration host, are never rewritten globally.
-        auto *context=qmlContext(quick);
-        auto *owner=context ? context->contextProperty("plasmoid").value<Plasma::Applet*>() : nullptr;
-        if(!owner || !m_containment->applets().contains(owner))continue;
-        auto *item=PlasmaQuick::AppletQuickItem::itemForApplet(owner);
-        if(!item || !item->window())continue;
-        QVariantMap record{{"appletId",owner->id()},{"package",owner->pluginMetaData().pluginId()},
-            {"window",quick->objectName()},{"adapted",false},{"waylandVerified",false}};
-        auto *anchor=dialog ? dialog->visualParent() : nullptr;
-        const bool requested=!anchor;
-        if(!anchor)anchor=item;
-        if(!dialog)record["status"]="requires-explicit-window-type-adapter";
-        else if(dialog->property("bwmPackageWindowAdapted").toBool()) {
-            record["status"]="layer-role-prepared";record["adapted"]=true;
-        } else if(!item->window()->property("bwmLayerPanel").toBool())record["status"]="normal-window-preview";
-        else if(anchor->window()!=item->window())record["status"]="unsupported-foreign-anchor";
-        else if(dialog->isVisible() || dialog->handle())record["status"]="requires-pre-surface-registration";
-        else {
-            // Notification/OSD/tooltip/output-only Dialogs keep their type, flags and input
-            // region (Qt maps WindowTransparentForInput to an empty region); they only get
-            // an overlay role without keyboard interactivity instead of an xdg toplevel.
-            const bool nonInteractive=dialog->isOutputOnly() || dialog->type()==PlasmaQuick::Dialog::Tooltip
-                || dialog->type()==PlasmaQuick::Dialog::Notification || dialog->type()==PlasmaQuick::Dialog::OnScreenDisplay;
-            auto *adapter=new PopupAnchor(dialog);
+    for(auto *window:QGuiApplication::allWindows())if(auto *quick=qobject_cast<QQuickWindow*>(window))prepare(quick);
+}
+void PackageWindows::prepare(QQuickWindow *quick,bool creatingSurface) {
+    if(!m_containment || !quick || qobject_cast<PlasmaQuick::AppletPopup*>(quick))return;
+    auto *dialog=qobject_cast<PlasmaQuick::Dialog*>(quick);
+    auto *popup=qobject_cast<PlasmaQuick::PopupPlasmaWindow*>(quick);
+    if(popup && !m_observedPopups.contains(quick)){
+        m_observedPopups.insert(quick);
+        connect(popup,&PlasmaQuick::PopupPlasmaWindow::visualParentChanged,this,[this,popup]{prepare(popup);});
+        connect(popup,&QObject::destroyed,this,[this,quick]{m_observedPopups.remove(quick);});
+    }
+    auto *anchor=popup?popup->visualParent():dialog?dialog->visualParent():nullptr;
+    // If the shared tooltip moves into an ordinary configuration window, restore
+    // its original backend. A Wayland role cannot be changed on a mapped surface.
+    if(popup && anchor && anchor->window() && !anchor->window()->property("bwmLayerPanel").toBool() &&
+       quick->property("bwmPackageWindowAdapted").toBool()){
+        const bool visible=quick->isVisible();quick->hide();quick->destroy();
+        delete quick->findChild<PopupAnchor*>(QStringLiteral("bwmPackagePopupAnchor"),Qt::FindDirectChildrenOnly);
+        delete LayerShellQt::Window::get(quick);
+        quick->setProperty("bwmPackageWindowAdapted",false);
+        quick->setProperty("bwmPackageWindowNonInteractive",false);
+        quick->setProperty("bwmPopupRect",QVariant());
+        if(visible)quick->show();
+    }
+    // The current visual owner wins for a C++ shared tooltip, which is reused
+    // across applets/containments. Never infer ownership from process/window title.
+    auto *context=qmlContext(quick);
+    auto *owner=popup?visualOwner(anchor):context?context->contextProperty("plasmoid").value<Plasma::Applet*>():nullptr;
+    if(!owner || !m_containment->applets().contains(owner)){
+        if(m_records.remove(quick))Q_EMIT changed();return;
+    }
+    auto *item=PlasmaQuick::AppletQuickItem::itemForApplet(owner);
+    if(!item || !item->window())return;
+    QVariantMap record{{"appletId",owner->id()},{"package",owner->pluginMetaData().pluginId()},
+        {"window",quick->objectName()},{"windowClass",quick->metaObject()->className()},
+        {"adapted",false},{"waylandVerified",false}};
+    const bool requested=!anchor;
+    if(!anchor)anchor=item;
+    auto *adapter=quick->findChild<PopupAnchor*>(QStringLiteral("bwmPackagePopupAnchor"),Qt::FindDirectChildrenOnly);
+    if(popup && !adapter && !creatingSurface && quick->property("bwmPackagePopupManaged").toBool() &&
+       item->window()->property("bwmLayerPanel").toBool() && anchor->window()==item->window() &&
+       (quick->isVisible() || quick->handle())){
+        const bool visible=quick->isVisible();quick->hide();quick->destroy();
+        prepare(quick);if(visible)quick->show();return;
+    }
+    if(!dialog && !popup)record["status"]="requires-explicit-window-type-adapter";
+    else if(!item->window()->property("bwmLayerPanel").toBool())record["status"]="normal-window-preview";
+    else if(anchor->window()!=item->window())record["status"]="unsupported-foreign-anchor";
+    else if(!adapter && !creatingSurface && (quick->isVisible() || quick->handle()))record["status"]="requires-pre-surface-registration";
+    else {
+        const bool nonInteractive=popup?quick->flags().testFlag(Qt::WindowDoesNotAcceptFocus):
+            dialog->isOutputOnly() || dialog->type()==PlasmaQuick::Dialog::Tooltip ||
+            dialog->type()==PlasmaQuick::Dialog::Notification || dialog->type()==PlasmaQuick::Dialog::OnScreenDisplay;
+        if(!adapter){
+            adapter=new PopupAnchor(quick);adapter->setObjectName("bwmPackagePopupAnchor");
             adapter->setIndependentWindow(true);
             adapter->setNonInteractive(nonInteractive);
             adapter->setUseRequestedPosition(requested);
-            adapter->setPopup(dialog);adapter->setVisualParent(anchor);
-            dialog->setProperty("bwmPackageWindowAdapted",true);
-            dialog->setProperty("bwmPackageWindowNonInteractive",nonInteractive);
-            record["status"]="layer-role-prepared";record["adapted"]=true;
-        }
-        record["nonInteractive"]=dialog && dialog->property("bwmPackageWindowNonInteractive").toBool();
-        record["placement"]=requested ? "package-requested-global-position" : "native-visual-parent";
-        if(!m_records.contains(quick))connect(quick,&QObject::destroyed,this,[this,quick]{m_records.remove(quick);Q_EMIT changed();});
-        if(m_records.value(quick)!=record){m_records.insert(quick,record);Q_EMIT changed();}
+            adapter->setVisualParent(anchor);adapter->setPopup(quick);
+            quick->setProperty("bwmPackageWindowAdapted",true);
+            if(popup)quick->setProperty("bwmPackagePopupManaged",true);
+            quick->setProperty("bwmPackageWindowNonInteractive",nonInteractive);
+            quick->setProperty("bwmPackageRoleAtSurfaceCreation",creatingSurface);
+        } else adapter->setVisualParent(anchor);
+        record["status"]="layer-role-prepared";record["adapted"]=true;
     }
+    record["nonInteractive"]=quick->property("bwmPackageWindowNonInteractive").toBool();
+    record["placement"]=requested ? "package-requested-global-position" : "native-visual-parent";
+    if(!m_trackedWindows.contains(quick)){
+        m_trackedWindows.insert(quick);
+        connect(quick,&QObject::destroyed,this,[this,quick]{m_trackedWindows.remove(quick);m_records.remove(quick);Q_EMIT changed();});
+    }
+    if(m_records.value(quick)!=record){m_records.insert(quick,record);Q_EMIT changed();}
 }

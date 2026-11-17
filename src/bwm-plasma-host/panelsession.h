@@ -18,6 +18,7 @@ class PanelSession : public QObject {
     Q_OBJECT
     Q_PROPERTY(QVariantMap panelInfo READ panelInfo NOTIFY changed)
     Q_PROPERTY(QVariantList widgets READ widgets NOTIFY changed)
+    Q_PROPERTY(QVariantList widgetBackends READ widgetBackends NOTIFY changed)
     Q_PROPERTY(QVariantList order READ order NOTIFY changed)
     Q_PROPERTY(QString error READ error NOTIFY errorChanged)
 public:
@@ -26,6 +27,7 @@ public:
     Q_INVOKABLE bool configure(uint appletId);
     QVariantMap panelInfo() const;
     QVariantList widgets() const;
+    QVariantList widgetBackends() const;
     QVariantList order() const;
     QString error() const {return m_error;}
     void bindPanelItem(PlasmaQuick::AppletQuickItem *item);

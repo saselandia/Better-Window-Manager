@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "date": "2026-11-15",
+  "phase": "R4",
+  "scope": "Native Plasma desktop protocol plus original KDE C++/QML consumer regression; separate Hyprland frontend compiled only",
+  "sourceSha256": {
+    "config/hypr/skins/plasma/skin.json": "ed278d31eb9da24ec8c9cda3291a29c2bb90c5bbc60ffb4d89de5ceb4b3d5100",
+    "config/hypr/skins/requirements.json": "75ce015548473404c62e59f9ccc23c5c3c4635c605f961d255151f7d6cbe7428",
+    "licenses/nlohmann-json-MIT.txt": "46a65cffd1ea955132d95a8dd921640714a8d6b537d2e4e482d31145ae95b603",
+    "licenses/plasma-wayland-protocols-LGPL-2.1-or-later.txt": "1ccf09bf2f598308df4bed9cd8e9657dc5cd0973d2800318f2e241486e2edf3f",
+    "licenses/wayland-protocols-xdg-shell-MIT.txt": "fb776ff03facaeedba0f3ab1203f9d6c30b504aad2c5c265e84a7e908f5d6579",
+    "src/bwm-plasma-desktops/CMakeLists.txt": "f7c341f28926013297d63b4f9bbec783b99743acbefe03089927f108c670187d",
+    "src/bwm-plasma-desktops/Makefile": "81652eb6d4f75ec0f7da3eea1971045e90d354ba034cf5ad7bc61bc33c2335bc",
+    "src/bwm-plasma-desktops/README.md": "69a5c50f77572e75de1e2b8c6a5960b286481502fac71cfe8520711ccb6a70e1",
+    "src/bwm-plasma-desktops/desktops.cpp": "d5e05a743f294f6f9f56b59c1f734a1a48ee76aa54be7dc12a5f36f5fa193705",
+    "src/bwm-plasma-desktops/desktops.h": "869ccbe25c9ea44776b2df60241986090a2a72e103d379cee8f7aabb57bc0ce4",
+    "src/bwm-plasma-desktops/plugin.cpp": "604979ce48c82b1a92eb73d7d789821f2ed03f3d2bdff6d3691104639f93f51d",
+    "src/bwm-plasma-desktops/test-display.cpp": "81c5e6e27c479243e621c23d3568505327453fb81bb7ccea3cbf1dea5511f6f8",
+    "src/bwm-plasma-desktops/test-workspaces.cpp": "fbf18b032360d7f0cf1c99b8e4d4aaaf1cde93d702256396e43f2545ec888493",
+    "src/bwm-plasma-desktops/workspaces.cpp": "2555d0b94276a859910e727aa0b693ea6bb8f547090612d8925c1cc4256fce78",
+    "src/bwm-plasma-desktops/workspaces.h": "53db683eacf6566fa94113ae4ed4bda7a8e66812fd73d55ef9e3610488f4f4cc",
+    "src/bwm-plasma-host/CMakeLists.txt": "08ba826791e11481a0b87b96a9bd944fc1ce2dfc62046d61353d28212913bb30",
+    "src/bwm-plasma-host/catalog.cpp": "12c87410b2b5a9a5bb0e21a9ad0dbfda695c9270310bc73c0a0dd9bdb27c69a1",
+    "src/bwm-plasma-host/check-desktops.py": "4d4d03bfabd62fc26dd00bb06bde2b58b68a4d3a34cf316a3d3061b708e7dcb1",
+    "src/bwm-plasma-host/test-desktops.cpp": "a51d279759d6f8b3d7acd3ffede2acbf9f45f3962c37dd9ecc6a920045845d15"
+  },
+  "references": {
+    "plasma-wayland-protocols-1.23.0.tar.xz": {
+      "archiveSha256": "16c5ad917bde2ed795942dacba76654819ddc6a1566842325ef34e0b553ef138",
+      "consultedMembers": {
+        "plasma-wayland-protocols-1.23.0/src/protocols/org-kde-plasma-virtual-desktop.xml": "8551063295644bceaaaca2757aa5f99f3855c6ef50c7200eb74462faab9f3fa9",
+        "plasma-wayland-protocols-1.23.0/LICENSES/LGPL-2.1-or-later.txt": "1ccf09bf2f598308df4bed9cd8e9657dc5cd0973d2800318f2e241486e2edf3f"
+      }
+    },
+    "plasma-workspace-6.7.5.tar.xz": {
+      "archiveSha256": "94ab21e2243b7876f65c315f1e545081c6437f5bd0a041ca4fb6c2533ae874c9",
+      "consultedMembers": {
+        "plasma-workspace-6.7.5/libtaskmanager/virtualdesktopinfo.cpp": "3f9cc8147618d3185ee34e2c896589c86491da585c8d2d79dd75b699e091d6ba",
+        "plasma-workspace-6.7.5/libtaskmanager/virtualdesktopinfo.h": "9f386016e1f6b73a8eaeeb71fa830bdb24b914dfc511f86beb56ec023df3c91a",
+        "plasma-workspace-6.7.5/libtaskmanager/tasksmodel.cpp": "e2b131effdeec961bfd1880065963d74fcdc8cfdf8be7d6bdcb62d8a0564d430",
+        "plasma-workspace-6.7.5/libtaskmanager/taskfilterproxymodel.cpp": "3ef2561cbf52a5c7d39b44e0ee78eea748ec1eca9e3e1fa147d6037df1447aca"
+      }
+    },
+    "kwin-6.7.5.tar.xz": {
+      "archiveSha256": "6baa910b732d93c48c90f9c1cc685cc93d0b8de0cdf138c24192c045bc3a48e2",
+      "consultedMembers": {
+        "kwin-6.7.5/src/wayland/plasmavirtualdesktop.cpp": "f42cd3b4dca6f60ebf878d9e863b9b82bf63936b507fcf3ff785f572984dafdb"
+      }
+    },
+    "hyprland-0.56.2.gh.tar.gz": {
+      "archiveSha256": "03ad3f5ef152ff44116ffd56fcf808486211ecabf4f0ba567108ee746ba5cd2e",
+      "consultedMembers": {
+        "hyprland-source/src/config/lua/bindings/LuaBindingsDispatchers.cpp": "a109eeb982856e0fe2ac9d88c29115a09984511787e19a20e7b4804e14a9d4de"
+      }
+    },
+    "nlohmann_json-3.12.0.tar.gz": {
+      "archiveSha256": "4b92eb0c06d10683f7447ce9406cb97cd4b453be18d7279320f7b2f025c10187",
+      "consultedMembers": {
+        "json-3.12.0/LICENSE.MIT": "46a65cffd1ea955132d95a8dd921640714a8d6b537d2e4e482d31145ae95b603"
+      }
+    },
+    "installedDesktopXml": {
+      "package": "dev-libs/plasma-wayland-protocols-1.23.0",
+      "path": "/usr/share/plasma-wayland-protocols/org-kde-plasma-virtual-desktop.xml",
+      "sha256": "8551063295644bceaaaca2757aa5f99f3855c6ef50c7200eb74462faab9f3fa9"
+    },
+    "testXdgShellXml": {
+      "package": "dev-libs/wayland-protocols-1.49",
+      "sha256": "7ba7f9c8473deee674cb1f154a18abd0bb0cc072604fc055b0c15e459fc4c7df"
+    }
+  },
+  "results": {
+    "normal": {
+      "ctest": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n    Start 1: desktop-workspace-projection\n1/4 Test #1: desktop-workspace-projection .....   Passed    0.00 sec\n    Start 2: native-desktop-protocol\n2/4 Test #2: native-desktop-protocol ..........   Passed    0.63 sec\n    Start 3: surface-geometry\n3/4 Test #3: surface-geometry .................   Passed    0.03 sec\n    Start 4: isolated-local-configuration\n4/4 Test #4: isolated-local-configuration .....   Passed   18.85 sec\n\n100% tests passed, 0 tests failed out of 4\n\nTotal Test time (real) =  19.51 sec\n",
+      "desktopProtocolReport": {
+        "version": 1,
+        "sessionModified": false,
+        "hyprlandPluginLoaded": false,
+        "dailyPanelReplaced": false,
+        "renderingVerified": false,
+        "clientExit": 0,
+        "clientOutput": "********* Start testing of DesktopTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : DesktopTest::initTestCase()\nQWARN  : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting() org.kde.plasma.libtaskmanager: The PlasmaWindowManagement protocol hasn't activated in time. The client possibly got denied by kwin? Check kwin output.\nQWARN  : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting() kf.i18n: KLocalizedString: Domain is not set for this string, translation will not work. Please see https://api.kde.org/frameworks/ki18n/html/prg_guide.html msgid: \"New Desktop\" msgid_plural: \"\" msgctxt: \"\"\nPASS   : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting()\nPASS   : DesktopTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 553ms\n********* Finished testing of DesktopTest *********\n",
+        "clientDiagnostics": "",
+        "fixtureExit": 0,
+        "fixtureDiagnostics": "",
+        "passed": true,
+        "cleanupVerified": true
+      },
+      "projectionOutput": "{\"workspaceProjectionPassed\":true,\"specialAndLegacyMinimizedExcluded\":true,\"duplicateBackendRejected\":true}\n",
+      "localRegressionPassed": true
+    },
+    "asan": {
+      "ctest": "Test project /tmp/bwm-r4-tasks-asan\n    Start 1: desktop-workspace-projection\n1/4 Test #1: desktop-workspace-projection .....   Passed    0.00 sec\n    Start 2: native-desktop-protocol\n2/4 Test #2: native-desktop-protocol ..........   Passed    0.71 sec\n    Start 3: surface-geometry\n3/4 Test #3: surface-geometry .................   Passed    0.05 sec\n    Start 4: isolated-local-configuration\n4/4 Test #4: isolated-local-configuration .....   Passed   19.64 sec\n\n100% tests passed, 0 tests failed out of 4\n\nTotal Test time (real) =  20.41 sec\n",
+      "desktopProtocolReport": {
+        "version": 1,
+        "sessionModified": false,
+        "hyprlandPluginLoaded": false,
+        "dailyPanelReplaced": false,
+        "renderingVerified": false,
+        "clientExit": 0,
+        "clientOutput": "********* Start testing of DesktopTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : DesktopTest::initTestCase()\nQWARN  : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting() org.kde.plasma.libtaskmanager: The PlasmaWindowManagement protocol hasn't activated in time. The client possibly got denied by kwin? Check kwin output.\nQWARN  : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting() kf.i18n: KLocalizedString: Domain is not set for this string, translation will not work. Please see https://api.kde.org/frameworks/ki18n/html/prg_guide.html msgid: \"New Desktop\" msgid_plural: \"\" msgctxt: \"\"\nPASS   : DesktopTest::originalKdeProviderFeedsCppQmlFiltersAndSorting()\nPASS   : DesktopTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 613ms\n********* Finished testing of DesktopTest *********\n",
+        "clientDiagnostics": "",
+        "fixtureExit": 0,
+        "fixtureDiagnostics": "",
+        "passed": true,
+        "cleanupVerified": true
+      },
+      "projectionOutput": "{\"workspaceProjectionPassed\":true,\"specialAndLegacyMinimizedExcluded\":true,\"duplicateBackendRejected\":true}\n",
+      "localRegressionPassed": true
+    },
+    "pythonR4": "..............................................BWM: native transaction unavailable or rejected\n.............BWM: hook de cambio de plasma: unacknowledged\nBWM: hook de cambio de retro: unacknowledged\n.BWM: hook de cambio de plasma: El hook debe estar dentro de su skin\nBWM: hook de cambio de retro: El hook debe estar dentro de su skin\n...........................................\n----------------------------------------------------------------------\nRan 103 tests in 0.445s\n\nOK\n",
+    "skinManifest": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.006s\n\nOK\n"
+  },
+  "pluginBuild": {
+    "headersVersion": "0.56.2",
+    "headersVersionFileSha256": "dbedffa593494a4f610d8a8eaac5a32c2daed3e2e0998f47d875587370397c58",
+    "binarySha256": "f8ef2cbafb8740d18d28e0471e7ef264b538e7b50ea0714e95247febf79e5afd",
+    "gnuUniqueSymbols": 0,
+    "sourceDefaultEnabled": false,
+    "installedByThisWork": false,
+    "loadedByThisWork": false,
+    "startupModified": false,
+    "runtimeAbiCheckExecuted": false
+  },
+  "verifiedInFixture": [
+    "Original VirtualDesktopInfo reads ids/names/current/rows/positions and per-screen mappings on Wayland.",
+    "Two original C++ provider instances and original QML type update together after requests.",
+    "Original TaskFilterProxyModel follows its output active desktop and native TasksModel initially sorts an unsorted BWM source by desktop.",
+    "Original QML TasksModel feeds an Instantiator test delegate with required display through real role names, without a surface or offscreen startup workaround.",
+    "Rename/reorder/removal/recreation of an ID, invalid duplicate snapshot rejection, and unsupported create/remove requests not changing inventory.",
+    "Pure BWM projection includes configured and live/active normal workspaces, preserves names/IDs and excludes specials/legacy 99; rejects ambiguous backend data."
+  ],
+  "capabilityLimits": [
+    "Test-only data display uses inherited socketpair, not a listening socket or a session compositor connection. Rendering/real Task.qml appearance unverified.",
+    "Hyprland frontend only compiled; not installed, loaded, started or tested against real Hyprland state/activation/hotplug/ABI.",
+    "Create/remove requests unsupported. Protocol lacks universal capability flags for all client controls; full pager/task menus remain unverified.",
+    "Fixture allows activation between outputs; real frontend only permits an already materialized desktop assigned to that output and focuses that monitor first. Cross-output relocation unsupported.",
+    "No asynchronous integration with native host withdrawal barrier yet; do not block the compositor thread on common-manager flock/processes.",
+    "Global-provider conflict preflight, navigation wrapping/DBus policy, special task filtering, legacy protocol client versions, automatic task re-sort after desktop reorder, remaining task actions and daily authorities pending.",
+    "No new KNS/external widget gate or live session matrix. Earlier evidence remains at its original scope.",
+    "ASan detect_leaks=0 does not certify leaks or uninstrumented KDE libraries."
+  ],
+  "sessionModified": false,
+  "newProductionServer": false,
+  "compositorReplaced": false,
+  "dailyPanelReplaced": false,
+  "wholeWidgetOperationalVerified": false,
+  "replacementReady": false,
+  "r4Complete": false
+}

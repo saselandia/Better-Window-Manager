@@ -55,7 +55,7 @@ AppletHost {
                         ColumnLayout {
                             PC3.Label { text:row.modelData.address; textFormat:Text.PlainText }
                             PC3.Label { visible:row.modelData.batteryAvailable; text:root.i18n("Battery")+": "+Math.round(row.modelData.battery*100)+" %" }
-                            PC3.Button { text:root.i18n("Forget Device"); enabled:!root.readOnly&&row.modelData.paired; onClicked: { confirm.device=row.modelData; confirm.open(); } }
+                            PC3.Button { text:root.i18n("Forget Device"); enabled:!root.readOnly&&!row.isBusy; onClicked: { confirm.device=row.modelData; confirm.open(); } }
                         }
                     }
                 }
@@ -70,9 +70,15 @@ AppletHost {
     PC3.Dialog {
         id:confirm
         property var device:null
+        anchors.centerIn:parent
+        modal:true
+        closePolicy:QQC2.Popup.CloseOnEscape|QQC2.Popup.CloseOnPressOutside
         title:root.i18n("Forget Device")
         standardButtons:QQC2.Dialog.Ok|QQC2.Dialog.Cancel
+        width:Math.min(Math.max(root.width-Kirigami.Units.largeSpacing*2,Kirigami.Units.gridUnit*12),Math.max(Kirigami.Units.gridUnit*14,confirmLabel.implicitWidth+leftPadding+rightPadding))
+        implicitHeight:implicitHeaderHeight+confirmLabel.implicitHeight+implicitFooterHeight+topPadding+bottomPadding
+        header:Kirigami.Heading { level:3; text:confirm.title; padding:Kirigami.Units.smallSpacing; horizontalAlignment:Text.AlignHCenter; elide:Text.ElideRight }
         onAccepted:if(!root.readOnly&&device)device.forget()
-        PC3.Label { text:confirm.device?.name??"" }
+        PC3.Label { id:confirmLabel; width:confirm.availableWidth; text:confirm.device?.name||confirm.device?.address||""; wrapMode:Text.WordWrap; horizontalAlignment:Text.AlignHCenter }
     }
 }

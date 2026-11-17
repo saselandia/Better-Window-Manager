@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-14",
+  "phase": "R4",
+  "executedBy": "user in local Hyprland session",
+  "evidenceType": "manual user confirmation and pasted terminal output; no automated window telemetry",
+  "command": "preview-isolated.py --binary build/bwm-plasma-host/bwm-plasma-host --builtin org.kde.plasma.showdesktop --native-panel --layer-panel --follow-skin --desktop-actions --output MSI description",
+  "outputDescription": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+  "binarySha256WhenRecorded": "f32d2c2db29fb62a321de47468a6d6e6973614ec0965905a8756f24877f69ce0",
+  "userConfirmed": [
+    "Clicking temporary panel button minimizes windows and reveals desktop",
+    "Clicking again restores windows"
+  ],
+  "registrationObserved": true,
+  "warningsObserved": [
+    "Session D-Bus intentionally isolated/no-bus",
+    "TaskManager PlasmaWindowManagement protocol unavailable",
+    "Native Toolbox not loading",
+    "KWindowShadow could not be created for ToolTipDialog"
+  ],
+  "assistantExecutedLiveActions": false,
+  "secondaryTaskManagerActionVerified": false,
+  "kwinPeekVisualEffectVerified": false,
+  "restorationGeometryOrMonitorMatrixMeasured": false,
+  "cleanupVerifiedByTelemetry": false,
+  "dailyPanelReplacementVerified": false,
+  "r4Complete": false,
+  "limits": [
+    "User confirmation of normal click cycle only; no fresh machine-readable window measurements",
+    "No proof of shadows, exact restored geometry/focus/order, hotplug or skin transitions",
+    "Whole widget and daily replacement remain uncertified"
+  ]
+}

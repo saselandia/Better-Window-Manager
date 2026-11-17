@@ -1,0 +1,105 @@
+{
+  "date": "2026-11-14",
+  "phase": "R4",
+  "baseCommit": "e41c28d",
+  "implemented": "Live direct-instance widget backend inventory shared with catalog metadata assessments and fresh runtime status",
+  "productionPanelControllerImplemented": false,
+  "dailyPanelReplaced": false,
+  "backendOperationalVerificationGranted": false,
+  "liveSessionRun": false,
+  "newDependencies": false,
+  "scope": "direct-panel-instances; not recursive tray children or a functional backend adapter",
+  "sourceSha256": {
+    "src/bwm-plasma-host/catalog.h": "a257393dbe0e7eafcf5a1b69319eb69d21feaf8d128db6445ab9a44e52dd2177",
+    "src/bwm-plasma-host/catalog.cpp": "1d745140dcd430bdc84bc18db97d3c9e6227c8fa5bbbb931bf6ab1f12b56f750",
+    "src/bwm-plasma-host/panelsession.h": "3774a4d4b778c827f6ae30ed8fcd9da6086b2b88bfb80f2617166a2c0cfda1b6",
+    "src/bwm-plasma-host/panelsession.cpp": "d0f182b9061ab75b923fecb4df51ebe4e1fe058538dba080103885cb28cbd12f",
+    "src/bwm-plasma-host/panelruntime.cpp": "ce3f15991c5e97c1415875bc0816a32a26c48e3d7fcc9a2a43c53865ed59e69d",
+    "src/bwm-plasma-host/test-ui.cpp": "829b24a8cbdc3f4306b2f9b4ca4dc3cc1e3604fedfb8515c9338a2b6f01254cc",
+    "src/bwm-plasma-host/check-local.py": "c56aee1ea0bf29c38ac3781cd0931b43f624d83850b1d624ac00ba3a99120a8b"
+  },
+  "ctestLocal": "Test project /tmp/bwm-r4-build\n    Start 1: surface-geometry\n1/2 Test #1: surface-geometry .................   Passed    0.03 sec\n    Start 2: isolated-local-configuration\n2/2 Test #2: isolated-local-configuration .....   Passed    7.55 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =   7.58 sec\n",
+  "localReport": {
+    "version": 1,
+    "sessionModified": false,
+    "externalWidgetGateVerified": false,
+    "networkUsed": false,
+    "packages": [
+      {
+        "id": "org.bwm.r4.callback-config",
+        "exercise": {
+          "cancelDoesNotWrite": true,
+          "defaultsStaged": true,
+          "expectedValue": false,
+          "key": "flag",
+          "pageReopened": true,
+          "reloadedValue": false,
+          "saved": true,
+          "secondInstanceUnchanged": true
+        },
+        "freshProcessReadback": true
+      },
+      {
+        "id": "org.bwm.r4.shared-config",
+        "exercise": {
+          "cancelDoesNotWrite": true,
+          "defaultsStaged": true,
+          "expectedValue": false,
+          "key": "enabled",
+          "pageReopened": true,
+          "reloadedValue": false,
+          "saved": true,
+          "secondInstanceUnchanged": true
+        },
+        "freshProcessReadback": true
+      },
+      {
+        "id": "org.bwm.r4.module-config",
+        "moduleAndSourcePagesLoaded": true
+      }
+    ],
+    "ui": [
+      {
+        "test": "liveCatalogRefreshAndNativeMetadata",
+        "passed": true
+      },
+      {
+        "test": "backendInventoryUsesLiveInstancesAndNativeMetadata",
+        "passed": true
+      },
+      {
+        "test": "previewStatusRequiresRenderedFrameAndFreshAcknowledgement",
+        "passed": true
+      },
+      {
+        "test": "sharedConfigurationTransactions",
+        "passed": true
+      },
+      {
+        "test": "sharedConfigurationFreshProcessReadback",
+        "passed": true
+      },
+      {
+        "test": "moduleConfigurationTransactions",
+        "passed": true
+      },
+      {
+        "test": "moduleConfigurationFreshProcessReadback",
+        "passed": true
+      }
+    ],
+    "defaultSessionFixtureNativePanelVerifiedOffscreen": true,
+    "cleanupVerified": true,
+    "passed": true
+  },
+  "pythonR4": "...............................................BWM: hook de cambio de plasma: unacknowledged\nBWM: hook de cambio de retro: unacknowledged\n.BWM: hook de cambio de plasma: El hook debe estar dentro de su skin\nBWM: hook de cambio de retro: El hook debe estar dentro de su skin\n.........................................\n----------------------------------------------------------------------\nRan 89 tests in 0.130s\n\nOK\n",
+  "cppBuildPassed": true,
+  "asanRepeated": false,
+  "externalMatrixRepeated": false,
+  "remaining": [
+    "native daily profile selection/start/fallback authorities",
+    "BWM window/desktop backend adapters and nested widget services",
+    "remaining session acceptance matrix and graphical KNS dialog"
+  ],
+  "externalGateEvidence": "BREEZE_R4_KNS_RESULTS.json"
+}

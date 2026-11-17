@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "runtimecontrol.h"
 #include "panelruntime.h"
+#include "nativedesktopcontrol.h"
 #include <QLockFile>
 #include <QDir>
 #include <QFile>
@@ -30,10 +31,11 @@ bool RuntimeControl::start() {
     }
     m_lock=std::make_unique<QLockFile>(m_directory+"/control-owner.lock");
     if(!m_lock->tryLock(0)){m_lock.reset();m_error=QStringLiteral("Another preview owns this control channel.");return false;}
-    if(!m_watcher.addPath(m_directory) || !read()){m_watcher.removePaths(m_watcher.directories());m_lock.reset();return false;}
+    if(!m_watcher.addPath(m_directory) || (!read() && !m_pendingRead)){m_watcher.removePaths(m_watcher.directories());m_lock.reset();return false;}
     return true;
 }
 bool RuntimeControl::read() {
+    m_pendingRead=false;
     if(m_stopped || !m_runtime)return false;
     const auto reject=[this](const QString &error){m_error=error;return false;};
     const QFileInfo input(m_directory+"/control.json");
@@ -51,7 +53,13 @@ bool RuntimeControl::read() {
     const auto action=command.value("command").toString();const auto skin=command.value("skin").toString();
     if(action!="skin" && action!="stop" && action!="status")return reject(QStringLiteral("Unknown preview control command."));
     if(action=="skin" && skin!="plasma" && skin!="retro" && skin!="default")return reject(QStringLiteral("Unknown preview skin."));
-    if(action!="status" && !m_runtime->setSkin(action=="stop" ? "default" : skin))return reject(m_runtime->error());
+    if(action!="status")if(auto *control=NativeDesktopControl::requiredControl())control->beginRevision(revision);
+    if(action!="status" && !m_runtime->setSkin(action=="stop" ? "default" : skin)){
+        // Do not acknowledge withdrawal while a common-manager mutation is in
+        // flight. Retry without a nested event loop or killing that mutation.
+        if(m_runtime->quiescing()){m_pendingRead=true;m_read.start();}
+        return reject(m_runtime->error());
+    }
     m_revision=revision;m_last=command;
     const QJsonObject ack{{"version",1},{"token",m_token},{"revision",double(revision)},{"ok",true},
         {"command",action},{"skin",m_runtime->skin()},{"panels",QJsonArray::fromVariantList(m_runtime->panels())},

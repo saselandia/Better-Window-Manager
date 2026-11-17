@@ -228,7 +228,120 @@ Estado al 2026-11-12 tras la primera ejecución:
 Informes individuales BREEZE_R0/R1/R2/R6_RESULTS.md. El sandbox de esta ejecución no permite
 acceso a los sockets Hyprland/Wayland/D-Bus; las verificaciones de sesión quedan para mañana.
 
+Inventario por instancia para la integración diaria añadido (§211): estado fresco del
+panel expone dependencias y bloqueos, sin certificar backends ni activar takeover.
+Evidencia: BREEZE_R4_BACKEND_INVENTORY_RESULTS.json.
+
+Adaptador KWindowSystem experimental implementado (§212), sólo en el auxiliar y con opt-in:
+controlador KDE original → gestor común BWM, probado con IPC ficticio normal/ASan. Faltan
+sesión real, acción secundaria TaskManager, efectos Peek e integración diaria. No aumenta
+operationalVerified ni replacementReady. BREEZE_R4_DESKTOP_ADAPTER_RESULTS.json.
+
+Usuario confirma ciclo de clics nativo minimizar/restaurar en Hyprland (§214), con evidencia
+manual en BREEZE_R4_DESKTOP_SESSION_RESULTS.json. No mide geometría/foco ni certifica sombras,
+TaskManager/Peek o sustitución diaria.
+
+Continuación R4 §216: las dos entradas nativas comparten bloqueo acotado con revalidación
+tras la espera; retirada confirmada sólo después de la mutación en curso, colas descartadas
+y reanudación probadas. Ver BREEZE_R4_NATIVE_TRANSACTIONS_RESULTS.json. No sincroniza aún
+los llamadores diarios. VirtualDesktopInfo carece de factoría pública; queda pendiente una
+integración coherente de sus consumidores C++/QML, igual que menús y aceptación Wayland.
+
+Continuación R4 §218: protocolo nativo de escritorios implementado y probado con los
+consumidores KDE C++/QML originales en Wayland aislado, incluidos filtro, orden inicial y
+roles de modelo. Frontend Hyprland separado compilado/desactivado y sin despliegue/carga.
+BREEZE_R4_NATIVE_DESKTOPS_RESULTS.json: 4/4 CTest normal/ASan. Falta validar frontend,
+coordinar retirada, menús/acciones/capacidades y sesión real antes de activar el panel.
+
+Continuación R4 §219: barrera por conexión Wayland entre proveedor/auxiliar, cola compartida
+real y confirmación asíncrona antes de retirar, con pérdida/reconexión/timeout probados.
+Preflight --native-desktops sólo de lectura y handshake real, sin carga/despliegue de plugin.
+BREEZE_R4_DESKTOP_CONTROL_RESULTS.json: 5/5 CTest normal/ASan. Falta aceptación del frontend
+en sesión, menús/capacidades y autoridades diarias; sin certificar widget entero/takeover.
+
+Continuación R4 §220: el menú TaskManager original conserva sus handlers/bindings; capacidades
+BWM deshabilitan encima/debajo/excluir captura sin backend. Individual/grupo y retirada pasan
+normal/ASan; CTest 5/5 y Python R4 105/manifiestos7. BREEZE_R4_TASK_MENU_RESULTS.json conserva
+avisos de roles offscreen: no acredita Task.qml pintado o menú Wayland. Siguen pendientes
+aceptación del frontend/proveedor, resto de capacidades y autoridad/fallback del panel diario.
+
+Continuación R4 §221: pantalla completa del TaskManager original conectada al gestor BWM
+con estado deseado, capacidad por ventana y recibo con lectura de modo interno. Individual/
+grupo y on/on/off pasan con IPC/Lua simulados normal/ASan; CTest 5/5, Python R4 113 y
+regresión ventanas14/minimizar7/skins7. BREEZE_R4_FULLSCREEN_RESULTS.json. Sin prueba física
+de fullscreen/restauración o pintado de Task.qml; R4 sigue abierta por integración/aceptación.
+
+Continuación R4 §222: las fichas de aplicaciones del modelo nativo siguen la base KSycoca
+real, con invalidación agrupada y resolución diferida. Actualizar/quitar/reinstalar .desktop
+refresca dos fuentes conservando identidad; prueba aislada normal/ASan y regresión 5/5,
+Python R4 113/skins7. BREEZE_R4_TASK_METADATA_RESULTS.json incluye el fallo previo. No equivale
+a render de Task.qml o catálogo de plasmoides; integración/aceptación de sesión siguen pendientes.
+
+Continuación R4 §223: registro Wayland único y asociación declarada del proveedor antes de
+resume; control BWM v2 y binding explícito por ID. Conflictos permiten retirar; duplicar KDE
+exige proceso nuevo del auxiliar (VDI viejo pierde lista, nuevo ve cuatro). Controles retirados
+inertes, timeout/revisión y visibilidad Qt probados. CTest 5/5 normal/ASan, Qt Wayland7/7,
+Python R4 113/skins7. BREEZE_R4_REGISTRY_RESULTS.json. Arbitraje de servidor, frontend/arranque,
+capacidades y aceptación de sesión siguen pendientes; no despliegue o takeover.
+
+Continuación R4 §225: frontend sin globals cuando está inicialmente desactivado. Inventario,
+elección entre proveedores BWM y publicación comprobada son asíncronos; conflictos visibles
+y snapshots inválidos retiran sin destruir recursos en vuelo. CTest7/7 normal/ASan, 14 casos
+C++, consumidor KDE original y Python R4 113/skins7. BREEZE_R4_PROVIDER_ARBITRATION_RESULTS.json.
+Alcance de observador visible, una generación por vida del módulo; futura sesión para recuperar,
+nunca hot unload. Sin despliegue: frontend/arranque real, capacidades y autoridades siguen pendientes.
+
+Continuación R4 §226: el observer/deadline nace en idle bajo demanda, sin falso timeout antes
+del primer dispatch. Cierre definitivo destruye controles/claim antes de descargar el módulo;
+Hyprland descarga plugins antes de destruir clientes. Un DSO de prueba del proveedor confirma
+descarga real y cero recursos propios, activo/retirado. CTest7/7 normal/ASan, 16 escenarios y
+Python R4 113. BREEZE_R4_STARTUP_TEARDOWN_RESULTS.json. No certifica arranque/logout real ni
+permite hot unload. Frontend, E/S del contador, generaciones y aceptación diaria pendientes.
+
+Continuación R4 §227: contador común efectivo enviado por el puente existente a CountMirror
+en memoria; sin leer JSON desde el frontend, nueva preferencia, daemon o reload. Primera
+publicación espera dato y preflight sólo lee versión/copia conocida. Reducción conserva vivos/
+activos. CTest7/7 normal/ASan, Python R4 122/puente20; BREEZE_R4_COUNT_MIRROR_RESULTS.json.
+Pendientes entrega/arranque y aceptación reales, generaciones/capacidades/autoridad diarias.
+
+Continuación R4 §228: entrega común desde una instancia en shell.qml, fuera de loaders de
+skins/paneles. Manifiesto de adaptador incluido + dispatcher común; opciones actuales/usuario
+sin mantener watch KDE fuera de Breeze. Un proceso, debounce/retry, sin daemon/watcher nuevo.
+Pruebas Quickshell offscreen y cadena real de procesos default/Retro/Breeze3/7/5 con recibo
+C++ de ensayo. R4 134/puente20/skins7 y CTest7/7 normal/ASan. BREEZE_R4_SHARED_DELIVERY_RESULTS.json.
+Fuente shell integrada/autorecarga posible; carga no verificada por IPC inaccesible. Sin
+plugin instalado/cargado ni panel nativo. Persisten validación real y aceptación diaria.
+
+
+
+R4 §229: test-taskdelegate/native-task-delegate-render prepara los dos widgets de tareas
+KDE originales sobre Wayland privado + QQuickRenderControl/QImage sin superficie. No usar
+proxies de roles offscreen como prueba nativa: TasksModel consulta WindowTasksModel estático.
+Compila normal/ASan; ejecución nueva bloqueada ANTES de Qt por wl_client_create EPERM,
+reproducido en suite anterior. Sólo3 suites sin esos clientes pasan normal/ASan; no afirmar
+render validado ni CTest completo. Ver BREEZE_R4_TASK_DELEGATE_RESULTS.json y comando local en
+BREEZE_R4_RESULTS.md §229. Sin producción/plugin/panel diario/reinicio/R5/R7.
+
+
+
+§233: usuario supera native-task-delegate-render (CTest1/1, QtTest4/4). Ambos widgets
+originales KDE, roles/metadatos/estados/título/índices/retirada y dibujo QImage comprobados
+sobre conexión Wayland privada, ventana oculta/sin handle. Sustituye los pendientes de
+§§229–232; no repetir sin motivo. Sólo native normal; ASan nativo no ejecutado. No acredita
+superficies/entrada ni backends de sesión/panel diario. Evidencia currentValidation en
+BREEZE_R4_TASK_DELEGATE_RESULTS.json. R4 sigue abierta por integración/aceptación diarias.
+
 ## 5. Prompts listos para pegar
+
+Continuación R4 §215 (2026-11-15): fuente BWM opt-in dentro de WindowTasksModel original,
+sin parchear KDE; acciones comunes, índices persistentes y dos modelos nativos probados con
+IPC simulado normal/ASan. Ver BREEZE_R4_TASK_SOURCE_RESULTS.json. Faltan VirtualDesktopInfo,
+menús/acciones restantes, delegados Wayland y coordinación diaria. No se habilita takeover.
+
+Continuación sobre e41c28d: CTest local reproducible sin fuentes externas añadido
+(BREEZE_R4_REPRO_RESULTS.json); runner de sesión usa build convencional y fixture del repo.
+Conservar los tres metadata.json propios omitidos por el commit. La puerta KNS de Claude
+sigue superada; integración diaria/backends y aceptación restante siguen pendientes.
 
 ### R0 — Auditoría profunda y referencia — HIGH
 
@@ -383,6 +496,20 @@ Puerta de salida: un widget externo no conocido de antemano muestra y guarda su 
 Si no la supera, deja R4 pendiente y no disfraces la lista fija como soporte de plugins.
 Entrega BREEZE_R4_RESULTS.md, arquitectura y guía para actualizar desde upstream.
 ```
+
+Continuación R4 §§237–238 (2026-11-16): usuario confirma funcionamiento del preview de
+activación/restauración con --all-desktops. Nueva opción --session-appearance prepara sólo
+apariencia KDE nativa en XDG temporal antes de QApplication; motores nativos de iconos,
+paleta/fuentes/SVG y protección de origen pasan aislados normal/ASan. Snapshot inicial,
+sin seguimiento vivo, migración de perfil o aceptación visual de sesión. Evidencia
+BREEZE_R4_DESKTOP_FILTER_RESULTS.json y BREEZE_R4_APPEARANCE_RESULTS.json. R4/integración
+diaria siguen abiertas; no se avanza a R5/R7.
+
+Continuación R4 §239: aspecto/acciones del auxiliar aceptados por usuario; falta miniatura
+hover. Adaptación opt-in del endpoint revisado de Plasma hacia captura por ventana nativa
+Hyprland preparada, sin compositor/plugin nuevo ni módulo PipeWire requerido por esa vía.
+Pruebas locales pasan; captura nativa sintética compilada pero bloqueada por EPERM del
+ejecutor. Ejecución terminal y miniatura en sesión pendientes; R4 sigue abierta.
 
 ### R5 — Modo edición de Plasma, escritorio y panel — MEDIUM
 
@@ -561,3 +688,171 @@ No se considera cerrado este plan sin: Magic común sin el fallo reportado; syst
 con módulos BWM; edición con los controles originales; opción propia de un complemento externo
 descubierta y persistente; sombras verificadas; animaciones comparadas y configurables; y
 regresión entre las tres skins. El inventario final debe hacer visibles las diferencias restantes.
+
+La continuación de §239 mantiene el veto del incidente BREEZE_RECOVERY: los protocolos
+nuevos usan el mismo ScreenshareSession. Backend real bloqueado hasta que el peer Wayland
+activo tenga BWM_SCREENSHARE_MONITOR_GUARD_V1 (SO_PEERCRED y /proc/PID/exe, no versión
+instalada o archivo de configuración). Parche0.56.2 prepara monitor válido/referencia fuerte
+en init y monitorChanged, sin cambiar ABI. Los cuerpos originales reproducen SIGSEGV con
+monitor nulo y los siete casos corregidos pasan normal/ASan; no se compiló el compositor
+completo ni se reprodujo el incidente real. CTest final6/6 local normal/ASan. Guía
+BREEZE_R4_THUMBNAILS.md con prueba privada, parche Portage/emerge por el usuario y adopción
+al próximo inicio de sesión. NO ejecutar el preview con capturas en el compositor antiguo;
+no desactivar la guarda ni las contenciones diarias. Captura nativa pendiente por EPERM,
+parche sin instalar y panel diario intacto.
+
+§240 (2026-11-16): el CTest nativo del usuario falla con cliente SIGSEGV/acceso0x10,
+fixture0. Repro mínimo local sin Wayland: destruir TaskThumbnail asociado a QQuickWindow.
+ASan confirma callback windowChanged desde QQuickItem::~QQuickItem tras liberar State;
+QObject todavía no ha desconectado. Destructor explícito desconecta conexiones propias
+antes de liberar estado/captura; conserva destroyed y observadores ajenos. Se registra
+window() inicial para padres C++ que ya emitieron la señal antes de conectar el callback.
+Reparentado/desasociación, destrucción explícita y por ventana padre + destroyed/QPointer:
+QtTest9/9 incluyendo init/cleanup, CTest seleccionado6/6 normal/ASan. Binarios recompilados.
+El test nativo añade destrucción/recreación activa y checkpoints de etapa. Sigue EPERM aquí
+al crear cliente privado; repetir native-task-thumbnail desde terminal. No se aceptan aún
+píxeles/teardown nativos. Parche del compositor sin instalar y veto de sesión intacto.
+No cambia backend, dependencias, panel diario o guardas; sin sudo/reinicio/commit/R5/R7.
+Evidencia followUp240 en BREEZE_R4_THUMBNAIL_RESULTS.json.
+
+§241 (2026-11-16): usuario aprueba native-task-thumbnail, CTest1/1 en4.30s. Informe leído:
+cliente0/fixture0, QtTest3/3 incluyendo init/cleanup,4.116s, syntheticWindowCaptureVerified y
+cleanupVerified true. Cinco checkpoints de píxeles sintéticos en QImage, estático/ocultación/
+resize, destrucción/recreación con captura activa, identidad/cierre/retirada y teardown.
+Supera el fallo §240 para ese ensayo normal privado; no native ASan o miniatura real de sesión.
+No repetir ni recompilar sin cambio. Siguiente: user patch de Portage0.56.2 y emerge exacto
+hyproverlay desde fuente (--usepkg=n --getbinpkg=n), por usuario, y próximo inicio de sesión.
+Parche no instalado, capturas de sesión aún bloqueadas; panel diario intacto. Ver
+BREEZE_R4_THUMBNAILS.md y userFollowUp241 de BREEZE_R4_THUMBNAIL_RESULTS.json. R4 abierta.
+
+§242 (2026-11-16): usuario responde «listo» al paso de instalación/reentrada. Se verifican
+patch /etc/portage idéntico al revisado y marca BWM_SCREENSHARE_MONITOR_GUARD_V1 en el
+Hyprland instalado. El ejecutor no accede al IPC ni verifica proceso/peer activo; el auxiliar
+exige esa validación automáticamente antes de capturar. No se infiere reinicio individual
+por la respuesta ni se declara prueba visual. Config actual plasma; ejecutar preview con
+--task-thumbnails --all-desktops --session-appearance y comprobar hover sobre no minimizada.
+No repetir CTest aprobado. Sin código/build/tests/sudo/sesión cambiados desde el asistente.
+Evidencia userFollowUp242; R4/panel diario/aceptación de captura real pendientes.
+
+§243 (2026-11-16): preview del usuario bloquea en guarda y luego ENOENT de ack.json.
+El antiguo bool no distinguía credenciales/permisos/lectura de una marca ausente. Marca en
+archivo instalado y cap_sys_nice=ep de Gentoo verificados; causa del peer aún desconocida,
+no asumir sesión antigua ni repetir emerge/relogin. Estado de guarda ahora tiene motivos
+separados, peer PID/nombre/error/bytes, y mantiene el mismo requisito de marca real.
+--check-thumbnail-compositor / runner check-thumbnail-compositor.py diagnostican usando
+Qt Wayland, XDG/D-Bus privados, sin panel/capturas o cambios de permisos/capacidades.
+wait_initial_ack detecta salida temprana/timeout antes de register y evita ENOENT secundario.
+Regresión6/6 normal/ASan, wrapper16 y QtTest10/10 contando init/cleanup; binarios recompilados.
+No repetir native§241 ni afirmar validación de guarda/hover en sesión. Pedir salida del runner;
+userFollowUp243 conserva intento/hipótesis/límites. R4 abierta y panel diario intacto.
+
+§244 (2026-11-16): el diagnóstico del usuario confirma Permission denied al leer el
+executable de Hyprland PID5178/UID1000. La comprobación anterior por /proc no contemplaba esta
+configuración Gentoo/filecaps; no prueba ausencia de guardas. Parche ampliado publica
+bwmScreenshareMonitorGuard {version:1,pid:getpid()} en el JSON original de hyprctl -j version.
+Getter junto a guardas reales, cabecera interna nueva; sin E/S/espera en compositor ni cambio
+de estructuras/ABI. Auxiliar conserva prueba ELF y acepta informe fresco sólo con PID exacto
+de SO_PEERCRED y UID propio. Runtime real para IPC desde XDG temporal; límite2s/64KiB,
+rechazo de otra instancia/tipos inválidos/campo ausente/error/timeout. Sin override ni
+cambios de permisos/capacidades. Diagnóstico conserva causa de /proc separada de la de IPC.
+Aplicación del parche completo a dos originales0.56.2 + cabecera comprobada con git apply;
+cuerpos originales/corregidos de guardas y getVersion compilados, JSON/PID real validados.
+Build auxiliar normal/ASan, CTest seleccionado6/6 en ambos, wrapper16 y QtTest12/12 contando
+init/cleanup pasan. No build completo de Hyprland ni prueba IPC/captura de sesión aquí;
+ensayo nativo§241 no repetido. Guardas anteriores instaladas, parche instalado comparado:
+carece del informe IPC. Extensión aún SIN instalar/adoptar: usuario debe reemplazar user
+patch, recompilar desde fuente y entrar de nuevo; después ejecutar diagnóstico sin capturas.
+Ver BREEZE_R4_THUMBNAILS.md y userFollowUp244. Panel diario intacto; R4 sigue abierta.
+
+§245 (2026-11-16): usuario ejecuta diagnóstico corregido: clientExit0, verified=true,
+verificationMethod=compositor-ipc, guarda version1 y PID496181 coincidente con SO_PEERCRED,
+Hyprland/UID1000. /proc sigue denegado; alternativa IPC funciona manteniendo el requisito de
+PID/UID. Runner sin cambios de sesión ni capturas (sessionModified/capturesStarted false).
+Parche de Portage ampliado ahora idéntico al del repo (SHA256239aa61b67ca0f9d1ab536814027f3d18bbc74cb9f3aa008554e60b80ee9ff8c).
+Informe activo comprobado por salida de terminal, sin inferir detalles del rebuild/relogin.
+Siguiente: preview con --task-thumbnails --all-desktops --session-appearance y hover sobre
+tarea no minimizada, comprobar imagen/actualización y cierre del tooltip/acciones. No repetir
+CTest nativo aprobado ni pedir recompilar/reentrar otra vez. Miniatura física aún pendiente;
+sin cambios de código/build/tests/sudo/sesión por el asistente. Panel diario intacto, R4 abierta.
+Evidencia userFollowUp245 en BREEZE_R4_THUMBNAIL_RESULTS.json.
+
+§246 (2026-11-16): usuario ve preview centrada/duplicada y listada como ventana en la
+barra; deja auxiliar abierto. Ensayo visual NO aceptado. Lectura del último ack existente
+confirma panel visible/protocolos preparados y dos applets taskmanager; no es un muestreo
+actual de fotogramas. hyprctl directo sigue inaccesible aquí (Couldn't set socket timeout(2));
+sin captura ni control visual de la superficie del usuario.
+Causa de adaptación reproducida con tooltip original: ToolTipDialog6.7.5 se crea desde C++,
+sin contexto QML propio, deriva PopupPlasmaWindow y no Dialog. PackageWindows sólo reconocía
+Dialog/contexto plasmoid. Ahora resuelve propiedad visualParent por árbol visual de applet,
+configura overlay/posición al SurfaceCreated antes de la selección de rol Wayland y sigue
+visualParentChanged al reutilizar el tooltip. API pública LayerShellQt/PlasmaQuick; sin
+parchear tooltip/QML KDE ni filtrar PID propio para ocultar el fallo. NonInteractive retiene
+entrada de puntero, keyboardNone/activateOnShow=false; sin reserva de área. Una sola instancia
+de PopupAnchor por ventana; conexiones de vida acotadas. Suspender sólo el dueño vigente.
+Tooltip compartido que pasa a ventana normal recupera backend original tras hide/destroy;
+al volver al panel se recrea su rol, nunca se cambia rol sobre superficie mapeada. Ventanas
+ajenas quedan intactas. Diagnóstico packageWindows añade tipo/rol/geometría, sin contenido.
+Preview desechable --task-actions --native-panel usa una instancia por defecto. --instances
+1|2 permite comparación explícita sólo con --follow-skin y sin --profile; perfiles guardados
+no cambian y probes/otros modos conservan las dos instancias. Env heredado se descarta.
+Build normal/ASan; CTest seleccionado4/4 ambos (thumbnail, appearance, surfaces, local config),
+QtTest13/13 contando init/cleanup y wrapper18 pasan. Prueba usa Core.ToolTipArea original:
+creación perezosa C++, rol al crear superficie, posición/tamaño, cambio de applet/containment,
+reutilización, ocultación, salida a ventana normal y vuelta; sin duplicar adaptador ni pedir
+foco. Offscreen verifica política/orden de eventos, NO rol real del compositor o lista de
+ventanas de sesión. Fuentes locales Qt6.11.2/LayerShellQt6.7.5 revisadas para ese límite.
+Aviso LayerShellQt de ventana visible en SurfaceCreated se basa en flag Qt, que cambia antes
+de crear su shell surface; se conserva en informes, no se usa como prueba de rol nativo.
+Auxiliar abierto sigue con código anterior; siguiente Ctrl+C y mismo comando con --instances1,
+comprobar hover anclado, sin ventana nueva en tareas, una sola vista y acciones/cierre.
+Sin recompilar Hyprland/relogin, repetir ensayo nativo§241, nuevo requisito o tocar panel diario.
+Evidencia userFollowUp246; captura/colocación física tras corrección pendientes y R4 abierta.
+
+§247 (2026-11-16): usuario confirma «perfecto ya tiene miniaturas» tras §246 y pide continuar,
+dejando el auxiliar abierto. Aceptación visual general del hover nativo registrada; no se
+infiere medición individual de actualización/foco/geometría ni matriz completa de monitores.
+No repetir el CTest nativo§241 ni el diagnóstico de guarda ya aprobados. El asistente no
+cierra ni reinicia el auxiliar abierto. R4 sigue abierta por capacidades/aceptación restantes;
+panel diario intacto. Evidencia userFollowUp247 en BREEZE_R4_THUMBNAIL_RESULTS.json.
+
+§248 (2026-11-16): continúa R4 por Nueva ventana/abrir URL de una tarea con ventana. La
+fuente BwmTaskSource antes heredaba los dos métodos vacíos de AbstractTasksModel. Añadidos
+requestNewInstance/requestOpenUrls, índices/identidad vigentes y URL acotadas; TasksModel
+original reenvía ambos. CanLaunchNewInstance se invalida con metadatos KSycoca. La política
+del menú sigue datos .desktop originales (NoDisplay, SingleMainWindow, X-GNOME-SingleWindow,
+acciones New Window). No confundir visibilidad del menú con permiso de ejecutar una petición
+explícita: WaylandTasksModel original también permite clic central/modificadores aunque la
+entrada genérica esté oculta. Helper canLauchNewInstance no está exportado; adaptación mínima
+por KService público con licencia/créditos LGPL2.1 conservados, sin duplicar símbolos KDE.
+Acciones pasan por cola/quiescencia del puente y bloqueo nativo común. native-tasks revalida
+skin y dirección/PID/inicio dentro del bloqueo, resuelve appId de clients actual, y reejecuta
+sólo el host conocido con --launch-task-application. Éste usa AppData/KService nativos y
+KIO::ApplicationLauncherJob, sin interpretar Exec, comandos de PID o URL lanzadora arbitraria.
+Se exige aplicación registrada; fallback a ejecutable sin .desktop no se ejecuta. Aceptación
+del job confirma traspaso de arranque, nunca app lista/ventana/foco verificados.
+El wrapper conserva sólo claves permitidas del entorno original en contexto de proceso;
+auxiliar de lanzamiento restaura XDG/D-Bus/Qt/Wayland para que la app no use almacenes del
+preview. Contexto ausente/malformado falla. No se restauran flags BWM_R4, BWM_SKIN_SWITCH ni
+WAYLAND_SOCKET consumido. Host de lanzamiento sin panel/capturas, entrada/tiempo acotados y
+sesión de proceso aparte: timeout/retirada no terminan apps lanzadas. Recibo por descriptor
+CLOEXEC separado; stdout/stderr de apps no contaminan JSON ni retienen el canal abierto.
+Prueba real de job KDE sólo con aplicación Python propia en XDG/D-Bus privados: args/espacios/
+Unicode/metacaracteres y URL nativa, entorno, proceso que sigue vivo tras recibo, identidad
+antigua, URL vacías y servicio retirado. Prueba C++ por TasksModel original verifica peticiones,
+capacidad de menú y refresco KSycoca conservando índices. Política de visibilidad no bloquea
+petición explícita; no promete que una app de ventana única abra otra ventana.
+KIOGui declarado en CMake/requisito de build (Gentoo kio/Arch kio), tabla regenerada; skin ya
+recomienda ese requisito experimental. Código/diagnósticos no certifican rutas restantes:
+lanzadores puros/acciones específicas de aplicaciones mantienen su camino nativo anterior y
+su entorno aún requiere revisión; activación/foco de apps nuevas y sesión real pendientes.
+Sin nueva dependencia de captura, plugin, cambio de skin o panel diario. Auxiliar abierto
+sigue con binario anterior; para probar el nuevo hay que cerrar sólo éste y relanzar wrapper.
+No se instalan/recargan Hyprland/Quickshell ni se ejecutan aplicaciones del usuario desde aquí.
+Ver BREEZE_R4_TASK_LAUNCH_RESULTS.json. R4/replacementReady/operationalVerified siguen false.
+
+Validación §248: CTest seleccionado5/5 normal y ASan (launch/thumbnail/appearance/surface/local),
+Python R4152 y manifiestos7. QtTest Metadata5/5 y Thumbnail13/13 (init/cleanup incluidos).
+Job KDE ejecutado con fixture propio; stdout/stderr de app y vida tras recibo probados también
+normal/ASan. No se repite native-task-thumbnail ni diagnóstico/hover aceptados. Alcance real
+pendiente: peticiones de arranque/archivos desde el auxiliar actualizado en la sesión del usuario,
+activación/foco, lanzadores puros y acciones específicas de aplicaciones; no prometer R4 cerrada.

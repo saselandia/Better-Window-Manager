@@ -1,0 +1,21 @@
+{
+  "date": "2026-11-14",
+  "phase": "R4",
+  "observedUserFailure": "Missing /tmp/bwm-r4-build/bwm-plasma-host after Breeze activation; child was never started",
+  "stableBinary": "/mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host/bwm-plasma-host",
+  "binarySha256": "f32d2c2db29fb62a321de47468a6d6e6973614ec0965905a8756f24877f69ce0",
+  "buildSucceeded": true,
+  "ctest": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n    Start 1: surface-geometry\n1/2 Test #1: surface-geometry .................   Passed    0.05 sec\n    Start 2: isolated-local-configuration\n2/2 Test #2: isolated-local-configuration .....   Passed   14.78 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =  14.83 sec\n",
+  "pythonR4": "...............................................BWM: hook de cambio de plasma: unacknowledged\nBWM: hook de cambio de retro: unacknowledged\n.BWM: hook de cambio de plasma: El hook debe estar dentro de su skin\nBWM: hook de cambio de retro: El hook debe estar dentro de su skin\n...........................................\n----------------------------------------------------------------------\nRan 91 tests in 0.286s\n\nOK\n",
+  "startupCases": "missing binary, non-executable file, executable with absent interpreter; no skin or live IPC needed",
+  "sessionDesktopActionsRun": false,
+  "realWindowsVerified": false,
+  "sourceSha256": {
+    ".gitignore": "bb04303445b154472a5a923ecf926dc4142721127e52b6aaaa10b5d04cdab260",
+    "src/bwm-plasma-host/preview-isolated.py": "decf9206a9ebc421a5784f5569928c6f6a7caac8b9077a2530cfcf821a937a02",
+    "config/hypr/skins/plasma/scripts/r4-reservation-smoke.py": "d7a211d565193a9f52a595235199340dd56e08778a19d430bddda700ba6a2cb9",
+    "tests/test_r4_preview.py": "843c8ca383b617fbd5e99491c9044417730af9a898605a71ddc86880c795a740"
+  },
+  "asanRepeated": false,
+  "existingAdapterEvidence": "BREEZE_R4_DESKTOP_ADAPTER_RESULTS.json"
+}

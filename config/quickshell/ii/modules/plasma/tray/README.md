@@ -19,7 +19,8 @@ El README de ../applets describe los applets y sus licencias distintas.
   Se guarda por ID estable en bar.plasma.trayItems; no cambia las preferencias comunes de la
   bandeja de otras skins. «Configurar» ofrece los tres modos para todos los elementos presentes.
 - SNI: clic izquierdo (o menú si onlyMenu), central, derecho, rueda horizontal/vertical y atención.
-  TrayMenu usa QsMenuOpener y PC3, incluidos submenús, porque QMenu no abre desde layer-shell.
+  TrayMenu usa QsMenuOpener y PC3 (incluidos submenús) alojado en `MenuHost.qml` (`PlasmaMenus.openFor("tray", …)`),
+  para no quedar recortado a la altura del panel y cerrarse al pulsar fuera o con Escape.
 - Los applets se crean sólo al abrir su página. La configuración del usuario en texto sigue
   prevaleciendo; Config.blockWrites protege las pruebas. appletProperties permite inyectar un
   proveedor al embeber/probar una página sin acceder a dispositivos o datos reales.

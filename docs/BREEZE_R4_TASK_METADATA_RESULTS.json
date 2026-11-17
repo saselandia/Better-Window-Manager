@@ -1,0 +1,308 @@
+{
+  "version": 1,
+  "date": "2026-11-15",
+  "phase": "R4",
+  "historySection": 222,
+  "scope": "Native KSycoca database notification invalidates BWM task AppData cache; real disposable application database lifecycle",
+  "beforeFix": {
+    "sourceSha256": {
+      "src/bwm-plasma-host/tasksource.cpp": "c071a20d1a853a96e23407781070c15f018233000bb1bc196434d0ea0b4d4838",
+      "src/bwm-plasma-host/tasksource.h": "a0ff30bf66f4edb054610a0f69ac09d8178b7b86a08b8ebc2390e664badac6cf"
+    },
+    "failure": "test-taskmetadata: exit 1\n********* Start testing of MetadataTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : MetadataTest::initTestCase()\nFAIL!  : MetadataTest::nativeDatabaseRefreshesBothSourcesWithoutReplacingWindows() Compared values are not the same\n   Actual   (held.data(Roles::AppName).toString()): \"First metadata\"\n   Expected (\"Updated metadata\")                  : Updated metadata\n   Loc: [/mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/test-taskmetadata.cpp(58)]\nPASS   : MetadataTest::cleanupTestCase()\nTotals: 2 passed, 1 failed, 0 skipped, 0 blacklisted, 15747ms\n********* Finished testing of MetadataTest *********\n\n"
+  },
+  "sourceSha256": {
+    "src/bwm-plasma-host/tasksource.cpp": "d3a3f8f42fab7bfc7b463f7597d91abd8d50faf9ec3b92a950d4836afbcc8d8b",
+    "src/bwm-plasma-host/tasksource.h": "f4960f7bee351dcdc357c4b59a0db90d84c9147ce1b72e45be55a91f53f9b7bd",
+    "src/bwm-plasma-host/test-taskmetadata.cpp": "fd9be6c93d082eebb180b9d1fb1ae8410bdda938e21ab0a4e7892798db6deaf9",
+    "src/bwm-plasma-host/CMakeLists.txt": "d4d91fe25cdfae0607e92615560e81eb8b72fd0dc65043ef3a2562d0f072e1a2",
+    "src/bwm-plasma-host/check-local.py": "889f2a5a7d9e338cdfd746d9e3c1cc6e19f12ea09e95096d4b6fc54313b0b710",
+    "src/bwm-plasma-host/README.md": "cf8c60dd4c547f866e3f30ed4b43cc9098dbd04aff84a072b47e7705170a9583",
+    "AGENTS.md": "7aa201ffdd9f1d2b5a123bca64b27ada7fe825aded760534d1c045bf6d8b0377",
+    "CLAUDE.md": "7aa201ffdd9f1d2b5a123bca64b27ada7fe825aded760534d1c045bf6d8b0377",
+    "BWM_CONTEXT.md": "88151f6a0367fdaf774f2867e11f6cca0ff3f65cb4951d6c62bdfec68820585a",
+    "THIRD_PARTY_NOTICES.md": "9e0f955916b618235e3167a36243ad3886c2e6006d69e75cd3b8e4538a5b458c",
+    "docs/BREEZE_R4_RESULTS.md": "fb58a1eef2c8d46664fac1132e90107f4952973232f6810ef20d9d98c71f3188",
+    "docs/BREEZE_R4_ARCH.md": "39db099e7dec19f14239a9a784804e3672c2dd8d625333d1b6d5eff023ee8e2e",
+    "docs/BREEZE_R4_HANDOFF_CLAUDE.md": "2c65f65df7dda79d8a02c0e7f5b79bc685b7153d0cb7ed58cac6681b44aabd9e",
+    "docs/BREEZE_PLAN_V2.md": "8be0aaba58da76707364a126363ed2b1685bb659d5a5a27a5ed8faba175282c4"
+  },
+  "references": {
+    "plasma-workspace-6.7.5.tar.xz": {
+      "archiveSha256": "94ab21e2243b7876f65c315f1e545081c6437f5bd0a041ca4fb6c2533ae874c9",
+      "consultedMembers": {
+        "plasma-workspace-6.7.5/libtaskmanager/waylandtasksmodel.cpp": "30fa3dd0de60d978700d654d7e2a86a7c9187bc76c280eee0eaedfb5422d9475",
+        "plasma-workspace-6.7.5/libtaskmanager/tasktools.cpp": "65ad59ba3ec98e0a7b01b47f7d7c95448e3128630616b7e52bc5a819ea670a6d",
+        "plasma-workspace-6.7.5/libtaskmanager/tasktools.h": "791a1019cb84eb545c623953b9ba59532c0f021c216f884c6ca31b843e18d05a"
+      }
+    },
+    "kservice-6.29.0.tar.xz": {
+      "archiveSha256": "0ebde9435d0c0badecec2f96daef972de7b5600d92dddbfc1f5f81c01cfff87c",
+      "consultedMembers": {
+        "kservice-6.29.0/src/sycoca/ksycoca.cpp": "403dfb8fc7604658add7505b08df30b4e9e184a2de38133e70f77d786da12535",
+        "kservice-6.29.0/src/sycoca/ksycoca.h": "9d08cd899af94a391fffc3d2c68ba08b07a5e0ddaf623eefde9017fc920e9ba6"
+      }
+    }
+  },
+  "stableBinary": {
+    "path": "build/bwm-plasma-host/bwm-plasma-host",
+    "sha256": "92aed5ccb5039d9956222a4ff36cb64dea5784ff5acbc64800dcbf1ded3d11dd"
+  },
+  "contract": {
+    "authority": "TaskManager TaskTools/KService for application metadata; IPC snapshot for window state/identity",
+    "notification": "KSycoca::databaseChanged, real native file/cache notification",
+    "coalescing": "one single-shot 100ms QTimer per source; shared native KSycoca watch, no per-window watcher",
+    "cache": "mark AppData dirty; resolve lazily on application-role reads",
+    "roles": [
+      "DecorationRole",
+      "AppId",
+      "AppName",
+      "GenericName",
+      "LauncherUrl",
+      "LauncherUrlWithoutIcon"
+    ],
+    "identity": "no source modelReset, replacement rows, PID/address/serial/UUID changes for metadata update",
+    "emptySource": "skip invalid dataChanged ranges; normal fresh metadata when repopulated",
+    "lifetime": "QObject connections and parented timer scoped to source; tested destruction during notification",
+    "productionDependenciesAdded": [],
+    "testOnlyProgram": "kbuildsycoca6, explicitly found by CMake inside BUILD_TESTING",
+    "testCacheIsolation": "private XDG data/cache; KDESYCOCA override removed; test requires wrapper-owned root before file writes"
+  },
+  "assertions": [
+    "unmodified source reproducibly retained First metadata after real database notification for Updated metadata",
+    "fixed source receives real KSycoca cache notification and updates two independent sources without another IPC snapshot",
+    "absolute PNG QIcon red->blue verified by pixel colour",
+    "all six application metadata roles signalled; window title/UUID/persistent source index stable and no modelReset",
+    "removal clears old GenericName and uses native fresh launcher fallback",
+    "reinstallation is discovered with a new name while retaining existing window identity",
+    "source destruction during notification and clearing/repopulating another source are safe",
+    "test does not emit a synthetic databaseChanged signal and never executes application Exec"
+  ],
+  "validation": {
+    "normalCtest": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n    Start 1: desktop-workspace-projection\n1/5 Test #1: desktop-workspace-projection .....   Passed    0.00 sec\n    Start 2: native-desktop-protocol\n2/5 Test #2: native-desktop-protocol ..........   Passed    3.08 sec\n    Start 3: native-desktop-control-wire\n3/5 Test #3: native-desktop-control-wire ......   Passed    0.05 sec\n    Start 4: surface-geometry\n4/5 Test #4: surface-geometry .................   Passed    0.03 sec\n    Start 5: isolated-local-configuration\n5/5 Test #5: isolated-local-configuration .....   Passed   23.09 sec\n\n100% tests passed, 0 tests failed out of 5\n\nTotal Test time (real) =  26.26 sec\n",
+    "asanCtest": "Test project /tmp/bwm-r4-tasks-asan\n    Start 1: desktop-workspace-projection\n1/5 Test #1: desktop-workspace-projection .....   Passed    0.00 sec\n    Start 2: native-desktop-protocol\n2/5 Test #2: native-desktop-protocol ..........   Passed    3.27 sec\n    Start 3: native-desktop-control-wire\n3/5 Test #3: native-desktop-control-wire ......   Passed    0.05 sec\n    Start 4: surface-geometry\n4/5 Test #4: surface-geometry .................   Passed    0.05 sec\n    Start 5: isolated-local-configuration\n5/5 Test #5: isolated-local-configuration .....   Passed   24.49 sec\n\n100% tests passed, 0 tests failed out of 5\n\nTotal Test time (real) =  27.87 sec\n",
+    "pythonR4": "................................................BWM: native transaction unavailable or rejected\n.usage: python3 -m unittest [-h] [--pid PID] [--native-serialized]\n                           [--expected-generation EXPECTED_GENERATION]\n                           {maximize,minimize,toggle-minimize,state,unminimize,activate,focus,show-desktop,fullscreen,menu,no-border,no-capture,pin,close,interactive,to-desktop,to-screen,rules} ...\npython3 -m unittest: error: Native fullscreen requires --expected-generation, --pid and --state on|off\nusage: python3 -m unittest [-h] [--pid PID] [--native-serialized]\n                           [--expected-generation EXPECTED_GENERATION]\n                           {maximize,minimize,toggle-minimize,state,unminimize,activate,focus,show-desktop,fullscreen,menu,no-border,no-capture,pin,close,interactive,to-desktop,to-screen,rules} ...\npython3 -m unittest: error: Native fullscreen requires --expected-generation, --pid and --state on|off\nusage: python3 -m unittest [-h] [--pid PID] [--native-serialized]\n                           [--expected-generation EXPECTED_GENERATION]\n                           {maximize,minimize,toggle-minimize,state,unminimize,activate,focus,show-desktop,fullscreen,menu,no-border,no-capture,pin,close,interactive,to-desktop,to-screen,rules} ...\npython3 -m unittest: error: Native fullscreen requires --expected-generation, --pid and --state on|off\n...BWM: native transaction unavailable or rejected\n...............BWM: hook de cambio de plasma: unacknowledged\nBWM: hook de cambio de retro: unacknowledged\n.BWM: hook de cambio de plasma: El hook debe estar dentro de su skin\nBWM: hook de cambio de retro: El hook debe estar dentro de su skin\n.............................................\n----------------------------------------------------------------------\nRan 113 tests in 1.023s\n\nOK\n",
+    "pythonSkins": ".......\n----------------------------------------------------------------------\nRan 7 tests in 0.006s\n\nOK\n",
+    "normalLocalRegression": {
+      "version": 1,
+      "sessionModified": false,
+      "externalWidgetGateVerified": false,
+      "networkUsed": false,
+      "packages": [
+        {
+          "id": "org.bwm.r4.callback-config",
+          "exercise": {
+            "cancelDoesNotWrite": true,
+            "defaultsStaged": true,
+            "expectedValue": false,
+            "key": "flag",
+            "pageReopened": true,
+            "reloadedValue": false,
+            "saved": true,
+            "secondInstanceUnchanged": true
+          },
+          "freshProcessReadback": true
+        },
+        {
+          "id": "org.bwm.r4.shared-config",
+          "exercise": {
+            "cancelDoesNotWrite": true,
+            "defaultsStaged": true,
+            "expectedValue": false,
+            "key": "enabled",
+            "pageReopened": true,
+            "reloadedValue": false,
+            "saved": true,
+            "secondInstanceUnchanged": true
+          },
+          "freshProcessReadback": true
+        },
+        {
+          "id": "org.bwm.r4.module-config",
+          "moduleAndSourcePagesLoaded": true
+        }
+      ],
+      "ui": [
+        {
+          "test": "liveCatalogRefreshAndNativeMetadata",
+          "passed": true
+        },
+        {
+          "test": "backendInventoryUsesLiveInstancesAndNativeMetadata",
+          "passed": true
+        },
+        {
+          "test": "previewStatusRequiresRenderedFrameAndFreshAcknowledgement",
+          "passed": true
+        },
+        {
+          "test": "sharedConfigurationTransactions",
+          "passed": true
+        },
+        {
+          "test": "sharedConfigurationFreshProcessReadback",
+          "passed": true
+        },
+        {
+          "test": "moduleConfigurationTransactions",
+          "passed": true
+        },
+        {
+          "test": "moduleConfigurationFreshProcessReadback",
+          "passed": true
+        }
+      ],
+      "defaultSessionFixtureNativePanelVerifiedOffscreen": true,
+      "nativeDesktopWidgetLoads": true,
+      "nativeDesktopControllerOutput": "********* Start testing of DesktopTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : DesktopTest::initTestCase()\nPASS   : DesktopTest::originalNativeControllerUsesCommonManager()\nPASS   : DesktopTest::malformedStateCannotLaunchActions()\nPASS   : DesktopTest::timedOutActionDoesNotLeaveRunningChild()\nPASS   : DesktopTest::cleanupTestCase()\nTotals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 5620ms\n********* Finished testing of DesktopTest *********\n",
+      "desktopFakeActions": "(function()\n        local cur = hl.get_cursor_pos()\n        local w = hl.get_window(\"address:0xabc\")\n        if w and w.pid == 285 then\n            \n            -- \"+\" sets the tag (a bare tag name toggles it in Hyprland)\n            pcall(function() hl.dispatch(hl.dsp.window.tag({ tag = \"+omarchy-minimized-from-1\", window = w })) end)\n            hl.dispatch(hl.dsp.window.move({ workspace = \"special:minimized\", follow = false, window = w }))\n            local active = hl.get_active_workspace()\n            if active and active.id == 1 then\n                pcall(function() hl.dispatch(hl.dsp.focus({ workspace = \"1\" })) end)\n            end\n            if cur and cur.x and cur.y then\n                pcall(function() hl.dispatch(hl.dsp.cursor.move({ x = cur.x, y = cur.y })) end)\n            end\n        end\n        return hl.dsp.no_op()\n    end)()\n(function()\n        local cur = hl.get_cursor_pos()\n        local w = hl.get_window(\"address:0xabc\")\n        if w and w.pid == 285 then\n            local target = 1\n            \n            hl.dispatch(hl.dsp.window.move({ workspace = target, follow = false, window = w }))\n            \n            \n        local ws = w.workspace\n        if not ws or ws.name == \"special:minimized\" or ws.id == 99 then return hl.dsp.no_op() end\n        if ws.id < 0 then\n            hl.dispatch(hl.dsp.focus({ workspace = ws.name }))\n        end\n        hl.dispatch(hl.dsp.focus({ window = w }))\n        hl.dispatch(hl.dsp.window.bring_to_top({ window = w }))\n        hl.dispatch(hl.dsp.window.alter_zorder({ mode = \"top\", window = w }))\n    \n            pcall(function() hl.dispatch(hl.dsp.window.tag({ tag = \"-omarchy-minimized-from-1\", window = w })) end)\n            \n            if cur and cur.x and cur.y then\n                pcall(function() hl.dispatch(hl.dsp.cursor.move({ x = cur.x, y = cur.y })) end)\n            end\n        end\n        return hl.dsp.no_op()\n    end)()\n",
+      "desktopFakeFinalClient": {
+        "address": "0xabc",
+        "pid": 285,
+        "workspace": {
+          "id": 1,
+          "name": "1"
+        },
+        "mapped": true,
+        "floating": false,
+        "hidden": false,
+        "tags": []
+      },
+      "nativeDesktopControllerWithFakeIpcPassed": true,
+      "nativeTasksModelOutput": "********* Start testing of TaskTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : TaskTest::initTestCase()\nPASS   : TaskTest::persistentIndicesSurviveDataAndRejectReusedIdentity()\nPASS   : TaskTest::malformedSnapshotIsAtomic()\nPASS   : TaskTest::fullscreenCapabilityAndDesiredStateFollowSnapshots()\nPASS   : TaskTest::nativeTaskModelsShareCommonSourceAndApplyGuardedActions()\nPASS   : TaskTest::suspensionDrainsCurrentTaskAndDiscardsQueuedActions()\nPASS   : TaskTest::controlAcknowledgesWithdrawalOnlyAfterNativeMutationFinishes()\nPASS   : TaskTest::cleanupTestCase()\nTotals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 5446ms\n********* Finished testing of TaskTest *********\n",
+      "nativeTasksModelWithFakeIpcPassed": true,
+      "nativeTaskMenuOutput": "********* Start testing of MenuTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : MenuTest::initTestCase()\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() kf.windowsystem: Could not find any platform plugin\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qt.qml.propertyCache.append: Member enabled of the object DeclarativeDropArea overrides a member of the base object. Consider renaming it or adding final or override specifier\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() org.kde.pulseaudio: Failed to connect context\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() kf.plasma.quick: Toolbox not loading, toolbox package is either invalid or disabled.\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() org.kde.plasma.taskmanager: failed to register Update signal\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() org.kde.plasma.notificationmanager: Failed to register JobViewServer DBus object\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:648:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:664:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:672:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:244: Unable to assign [undefined] to QUrl\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:61:5: Unable to assign [undefined] to int\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:60:5: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:56: TypeError: Cannot call method 'replace' of undefined\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:55:5: Unable to assign [undefined] to QString\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:54:5: Unable to assign [undefined] to int\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:603:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:150:5: Unable to assign [undefined] to QString\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x55eee9da82e0)\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support raise()\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support grabbing the keyboard\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support raise()\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support grabbing the keyboard\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:648:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:664:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:672:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:244: Unable to assign [undefined] to QUrl\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:61:5: Unable to assign [undefined] to int\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:60:5: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:56: TypeError: Cannot call method 'replace' of undefined\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:55:5: Unable to assign [undefined] to QString\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:54:5: Unable to assign [undefined] to int\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:603:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:150:5: Unable to assign [undefined] to QString\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support raise()\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support grabbing the keyboard\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support raise()\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support grabbing the keyboard\nPASS   : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction()\nPASS   : MenuTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 157ms\n********* Finished testing of MenuTest *********\n",
+      "nativeTaskMenuPassed": true,
+      "nativeTaskMetadataOutput": "********* Start testing of MetadataTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : MetadataTest::initTestCase()\nPASS   : MetadataTest::nativeDatabaseRefreshesBothSourcesWithoutReplacingWindows()\nPASS   : MetadataTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 3065ms\n********* Finished testing of MetadataTest *********\n",
+      "nativeTaskMetadataPassed": true,
+      "cleanupVerified": true,
+      "passed": true
+    },
+    "asanLocalRegression": {
+      "version": 1,
+      "sessionModified": false,
+      "externalWidgetGateVerified": false,
+      "networkUsed": false,
+      "packages": [
+        {
+          "id": "org.bwm.r4.callback-config",
+          "exercise": {
+            "cancelDoesNotWrite": true,
+            "defaultsStaged": true,
+            "expectedValue": false,
+            "key": "flag",
+            "pageReopened": true,
+            "reloadedValue": false,
+            "saved": true,
+            "secondInstanceUnchanged": true
+          },
+          "freshProcessReadback": true
+        },
+        {
+          "id": "org.bwm.r4.shared-config",
+          "exercise": {
+            "cancelDoesNotWrite": true,
+            "defaultsStaged": true,
+            "expectedValue": false,
+            "key": "enabled",
+            "pageReopened": true,
+            "reloadedValue": false,
+            "saved": true,
+            "secondInstanceUnchanged": true
+          },
+          "freshProcessReadback": true
+        },
+        {
+          "id": "org.bwm.r4.module-config",
+          "moduleAndSourcePagesLoaded": true
+        }
+      ],
+      "ui": [
+        {
+          "test": "liveCatalogRefreshAndNativeMetadata",
+          "passed": true
+        },
+        {
+          "test": "backendInventoryUsesLiveInstancesAndNativeMetadata",
+          "passed": true
+        },
+        {
+          "test": "previewStatusRequiresRenderedFrameAndFreshAcknowledgement",
+          "passed": true
+        },
+        {
+          "test": "sharedConfigurationTransactions",
+          "passed": true
+        },
+        {
+          "test": "sharedConfigurationFreshProcessReadback",
+          "passed": true
+        },
+        {
+          "test": "moduleConfigurationTransactions",
+          "passed": true
+        },
+        {
+          "test": "moduleConfigurationFreshProcessReadback",
+          "passed": true
+        }
+      ],
+      "defaultSessionFixtureNativePanelVerifiedOffscreen": true,
+      "nativeDesktopWidgetLoads": true,
+      "nativeDesktopControllerOutput": "********* Start testing of DesktopTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : DesktopTest::initTestCase()\nPASS   : DesktopTest::originalNativeControllerUsesCommonManager()\nPASS   : DesktopTest::malformedStateCannotLaunchActions()\nPASS   : DesktopTest::timedOutActionDoesNotLeaveRunningChild()\nPASS   : DesktopTest::cleanupTestCase()\nTotals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 5630ms\n********* Finished testing of DesktopTest *********\n",
+      "desktopFakeActions": "(function()\n        local cur = hl.get_cursor_pos()\n        local w = hl.get_window(\"address:0xabc\")\n        if w and w.pid == 285 then\n            \n            -- \"+\" sets the tag (a bare tag name toggles it in Hyprland)\n            pcall(function() hl.dispatch(hl.dsp.window.tag({ tag = \"+omarchy-minimized-from-1\", window = w })) end)\n            hl.dispatch(hl.dsp.window.move({ workspace = \"special:minimized\", follow = false, window = w }))\n            local active = hl.get_active_workspace()\n            if active and active.id == 1 then\n                pcall(function() hl.dispatch(hl.dsp.focus({ workspace = \"1\" })) end)\n            end\n            if cur and cur.x and cur.y then\n                pcall(function() hl.dispatch(hl.dsp.cursor.move({ x = cur.x, y = cur.y })) end)\n            end\n        end\n        return hl.dsp.no_op()\n    end)()\n(function()\n        local cur = hl.get_cursor_pos()\n        local w = hl.get_window(\"address:0xabc\")\n        if w and w.pid == 285 then\n            local target = 1\n            \n            hl.dispatch(hl.dsp.window.move({ workspace = target, follow = false, window = w }))\n            \n            \n        local ws = w.workspace\n        if not ws or ws.name == \"special:minimized\" or ws.id == 99 then return hl.dsp.no_op() end\n        if ws.id < 0 then\n            hl.dispatch(hl.dsp.focus({ workspace = ws.name }))\n        end\n        hl.dispatch(hl.dsp.focus({ window = w }))\n        hl.dispatch(hl.dsp.window.bring_to_top({ window = w }))\n        hl.dispatch(hl.dsp.window.alter_zorder({ mode = \"top\", window = w }))\n    \n            pcall(function() hl.dispatch(hl.dsp.window.tag({ tag = \"-omarchy-minimized-from-1\", window = w })) end)\n            \n            if cur and cur.x and cur.y then\n                pcall(function() hl.dispatch(hl.dsp.cursor.move({ x = cur.x, y = cur.y })) end)\n            end\n        end\n        return hl.dsp.no_op()\n    end)()\n",
+      "desktopFakeFinalClient": {
+        "address": "0xabc",
+        "pid": 285,
+        "workspace": {
+          "id": 1,
+          "name": "1"
+        },
+        "mapped": true,
+        "floating": false,
+        "hidden": false,
+        "tags": []
+      },
+      "nativeDesktopControllerWithFakeIpcPassed": true,
+      "nativeTasksModelOutput": "********* Start testing of TaskTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : TaskTest::initTestCase()\nPASS   : TaskTest::persistentIndicesSurviveDataAndRejectReusedIdentity()\nPASS   : TaskTest::malformedSnapshotIsAtomic()\nPASS   : TaskTest::fullscreenCapabilityAndDesiredStateFollowSnapshots()\nPASS   : TaskTest::nativeTaskModelsShareCommonSourceAndApplyGuardedActions()\nPASS   : TaskTest::suspensionDrainsCurrentTaskAndDiscardsQueuedActions()\nPASS   : TaskTest::controlAcknowledgesWithdrawalOnlyAfterNativeMutationFinishes()\nPASS   : TaskTest::cleanupTestCase()\nTotals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 5446ms\n********* Finished testing of TaskTest *********\n",
+      "nativeTasksModelWithFakeIpcPassed": true,
+      "nativeTaskMenuOutput": "********* Start testing of MenuTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : MenuTest::initTestCase()\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() kf.windowsystem: Could not find any platform plugin\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qt.qml.propertyCache.append: Member enabled of the object DeclarativeDropArea overrides a member of the base object. Consider renaming it or adding final or override specifier\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() org.kde.plasma.libtaskmanager: Could not connect to org.kde.KWin.VirtualDesktopManager.navigationWrappingAroundChanged signal\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() org.kde.pulseaudio: Failed to connect context\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() kf.plasma.quick: Toolbox not loading, toolbox package is either invalid or disabled.\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() org.kde.plasma.taskmanager: failed to register Update signal\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() org.kde.plasma.notificationmanager: Failed to register JobViewServer DBus object\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:648:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:664:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:672:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:244: Unable to assign [undefined] to QUrl\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:61:5: Unable to assign [undefined] to int\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:60:5: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:56: TypeError: Cannot call method 'replace' of undefined\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:55:5: Unable to assign [undefined] to QString\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:54:5: Unable to assign [undefined] to int\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:603:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:150:5: Unable to assign [undefined] to QString\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() kf.plasma.quick: Couldn't create KWindowShadow for PlasmaQuick::PlasmaWindow(0x7c82bdec0280)\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support raise()\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support grabbing the keyboard\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support raise()\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support grabbing the keyboard\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:648:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:664:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:672:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:244: Unable to assign [undefined] to QUrl\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:61:5: Unable to assign [undefined] to int\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:60:5: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:56: TypeError: Cannot call method 'replace' of undefined\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:55:5: Unable to assign [undefined] to QString\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:54:5: Unable to assign [undefined] to int\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:603:13: Unable to assign [undefined] to bool\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/Task.qml:150:5: Unable to assign [undefined] to QString\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support raise()\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support grabbing the keyboard\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support raise()\nQWARN  : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction() This plugin does not support grabbing the keyboard\nPASS   : MenuTest::originalTaskManagerMenuUsesCapabilityMaskAndRoutesSupportedAction()\nPASS   : MenuTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 333ms\n********* Finished testing of MenuTest *********\n",
+      "nativeTaskMenuPassed": true,
+      "nativeTaskMetadataOutput": "********* Start testing of MetadataTest *********\nConfig: Using QtTest library 6.11.2, Qt 6.11.2 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 15.3.0), 'gentoo' '2.18'\nPASS   : MetadataTest::initTestCase()\nPASS   : MetadataTest::nativeDatabaseRefreshesBothSourcesWithoutReplacingWindows()\nPASS   : MetadataTest::cleanupTestCase()\nTotals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 3113ms\n********* Finished testing of MetadataTest *********\n",
+      "nativeTaskMetadataPassed": true,
+      "cleanupVerified": true,
+      "passed": true
+    },
+    "asanOptions": "detect_leaks=0:halt_on_error=1",
+    "normalCtestPassed": 5,
+    "asanCtestPassed": 5,
+    "metadataQtTestPassedIncludingInitCleanup": 3,
+    "metadataQtTestSubstantiveCases": 1,
+    "pythonR4Passed": 113,
+    "pythonSkinsPassed": 7,
+    "pythonSyntax": "check-local.py py_compile passed, cache under /tmp",
+    "contextInstructionsSynchronized": true
+  },
+  "limitations": [
+    "test explicitly rebuilds the native private database; does not certify automatic discovery by arbitrary installers that only write .desktop files",
+    "preview has its own private cache; daily cache authority and installer lifecycle are not replaced by this fix",
+    "two BwmTaskSource instances and actual KSycoca/TaskTools used, not painted TaskManager delegates",
+    "not a KPackage widget catalog refresh or proof of all icon-theme changes",
+    "100ms trailing coalescing follows native strategy; no latency/performance benchmark of installation storms",
+    "existing offscreen Task.qml role warnings and test-only StartupTasksModel workaround remain in local regression output",
+    "no new visual/keyboard/pointer/monitor/scale or skin-transition acceptance in live Hyprland",
+    "native desktop frontend, remaining capabilities and daily panel authorities/fallback remain pending"
+  ],
+  "sessionModified": false,
+  "compositorRestarted": false,
+  "hyprlandPluginLoadedOrInstalled": false,
+  "systemKdeMetadataModified": false,
+  "realUserCacheRebuilt": false,
+  "applicationExecLaunched": false,
+  "dailyPanelReplaced": false,
+  "r4Complete": false,
+  "operationalVerified": false,
+  "replacementReady": false,
+  "r5Started": false,
+  "r7Started": false
+}

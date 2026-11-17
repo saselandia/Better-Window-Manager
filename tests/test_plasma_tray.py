@@ -336,3 +336,252 @@ ShellRoot {
         self.assertTrue(data['desktopHidden'], data)
         self.assertEqual(data['desktopTogglesOnFirstClick'], 1, data)
 
+
+class BluetoothAppletTests(unittest.TestCase):
+    @unittest.skipUnless(os.environ.get('BWM_RUN_QML_TESTS') == '1' and shutil.which('qs'),
+                         'optional isolated Wayland UI tests')
+    def test_bluetooth_forget_device_unpaired_and_dialog_geometry(self):
+        harness = r'''//@ pragma UseQApplication
+import QtQuick
+import QtTest
+import Quickshell
+import Quickshell.Bluetooth
+import qs.modules.plasma.applets as Applets
+ShellRoot {
+    id: root
+    property int forgot: 0
+    QtObject {
+        id: dev
+        property string name: "Gamepad"
+        property string address: "11:22:33:44:55:66"
+        property string icon: "input-gaming"
+        property bool connected: false
+        property bool paired: false
+        property bool pairing: false
+        property int state: BluetoothDeviceState.Disconnected
+        property bool batteryAvailable: false
+        property real battery: 0
+        function forget() { root.forgot++; }
+        function connect() {}
+        function disconnect() {}
+        function pair() {}
+    }
+    QtObject { id: mockBackend; property bool available: true; property bool enabled: true; property var friendlyDeviceList: [dev] }
+    QtObject { id: mockAdapter; property bool discovering: false; property bool enabled: true }
+    FloatingWindow {
+        id: win
+        title: "bwm-bt-forget-test"
+        implicitWidth: 360; implicitHeight: 420
+        Applets.BluetoothApplet { id: applet; anchors.fill: parent; backend: mockBackend; adapter: mockAdapter }
+        TestCase { id: driver; name: "BtForget"; when: false }
+    }
+    Timer { running: true; interval: 4000; onTriggered: Qt.quit() }
+    function findText(item, txt) {
+        if (!item) return null;
+        if (item.text === txt && item.visible) return item;
+        for (const c of (item.children || [])) { const r = findText(c, txt); if (r) return r; }
+        return null;
+    }
+    function findDialog(item) {
+        if (!item) return null;
+        if (item.standardButtons !== undefined && item.open !== undefined) return item;
+        for (const c of (item.children || [])) { const r = findDialog(c); if (r) return r; }
+        for (const d of (item.data || [])) { const r = findDialog(d); if (r) return r; }
+        return null;
+    }
+    Timer {
+        running: true; interval: 400
+        onTriggered: {
+            const row = findText(applet, "Gamepad");
+            if (row) {
+                const pos = row.mapToItem(applet, row.width / 2, row.height / 2);
+                driver.mouseClick(applet, pos.x, pos.y);
+                driver.wait(200);
+            }
+            const btn = findText(applet, "Forget Device");
+            const btnEnabled = btn ? btn.enabled : false;
+            if (btn && btn.enabled) {
+                const bpos = btn.mapToItem(applet, btn.width / 2, btn.height / 2);
+                driver.mouseClick(applet, bpos.x, bpos.y);
+                driver.wait(200);
+            }
+            const dlg = findDialog(applet);
+            const dlgVisible = dlg ? dlg.visible : false;
+            const dlgX = dlg ? dlg.x : -1;
+            const dlgY = dlg ? dlg.y : -1;
+            const dlgH = dlg ? dlg.height : 0;
+            if (dlg && dlg.visible) {
+                const okBtn = findText(dlg.footer, "OK") || findText(dlg.contentItem?.parent, "OK");
+                if (okBtn) {
+                    const opos = okBtn.mapToItem(win.contentItem, okBtn.width / 2, okBtn.height / 2);
+                    driver.mouseClick(win.contentItem, opos.x, opos.y);
+                    driver.wait(150);
+                }
+            }
+            console.log("BTFORGET " + JSON.stringify({ btnEnabled, dlgVisible, dlgX, dlgY, dlgH, forgot: root.forgot }));
+            Qt.quit();
+        }
+    }
+}
+'''
+        rule = 'hl.window_rule({name="tmp-bwm-bt-forget",match={title="^bwm-bt-forget-test$"},workspace="9 silent"})'
+        if shutil.which('hyprctl'):
+            subprocess.run(['hyprctl', 'eval', rule], capture_output=True, text=True, timeout=5)
+        tmp = tempfile.NamedTemporaryFile('w', dir=ROOT / 'config/quickshell/ii', prefix='zz_prueba_bt_', suffix='.qml', delete=False)
+        try:
+            tmp.write(harness)
+            tmp.close()
+            r = subprocess.run(['qs', '-p', tmp.name], env={**os.environ, 'LC_ALL': 'C.UTF-8'}, capture_output=True, text=True, timeout=12)
+        finally:
+            Path(tmp.name).unlink(missing_ok=True)
+            if shutil.which('hyprctl'):
+                subprocess.run(['hyprctl', 'reload'], capture_output=True, text=True, timeout=5)
+        log = r.stdout + r.stderr
+        self.assertEqual(r.returncode, 0, log)
+        line = next((l for l in log.splitlines() if 'BTFORGET ' in l), '')
+        self.assertTrue(line, log)
+        data = json.loads(line.split('BTFORGET ', 1)[1])
+        self.assertTrue(data['btnEnabled'], data)
+        self.assertTrue(data['dlgVisible'], data)
+        self.assertGreater(data['dlgX'], 0, data)
+        self.assertGreater(data['dlgY'], 0, data)
+        self.assertGreater(data['dlgH'], 80, data)
+        self.assertEqual(data['forgot'], 1, data)
+
+
+class TrayMenuAndCursorCloseTests(unittest.TestCase):
+    @unittest.skipUnless(os.environ.get('BWM_RUN_QML_TESTS') == '1' and shutil.which('qs'),
+                         'optional isolated Wayland UI tests')
+    def test_tray_sni_menu_opens_in_overlay_above_44px_panel_and_closes_on_outside_click(self):
+        harness = r'''//@ pragma UseQApplication
+import QtQuick
+import QtTest
+import Quickshell
+import Quickshell.Wayland
+import qs.modules.common
+import qs.modules.plasma.menus as M
+import qs.modules.plasma.tray as TrayPort
+ShellRoot {
+    id: root
+    Component.onCompleted: Config.blockWrites = true
+    M.MenuHost { id: menuHost }
+    PanelWindow {
+        id: panelWin
+        implicitWidth: 600; implicitHeight: 44
+        anchors { bottom: true; left: true; right: true }
+        WlrLayershell.layer: WlrLayer.Top
+        exclusionMode: ExclusionMode.Ignore
+        TrayPort.SystemTray {
+            id: tray
+            anchors.centerIn: parent
+            items: [mockItem]
+            applets: []
+            settings: ({ demo: "shown" })
+        }
+        TestCase { id: driver; name: "TrayMenuOverlay"; when: false }
+    }
+    QtObject {
+        id: subEntry
+        property bool hasChildren: false
+        property bool isSeparator: false
+        property string text: "Sub Action"
+        property bool enabled: true
+        property int buttonType: 0
+        property int checkState: Qt.Unchecked
+        property string icon: ""
+        function triggered() {}
+    }
+    QtObject {
+        id: entry1
+        property bool hasChildren: true
+        property bool isSeparator: false
+        property string text: "Options"
+        property var mockEntries: [subEntry]
+    }
+    QtObject {
+        id: sepEntry
+        property bool hasChildren: false
+        property bool isSeparator: true
+    }
+    QtObject {
+        id: entry2
+        property bool hasChildren: false
+        property bool isSeparator: false
+        property string text: "Quit Application"
+        property bool enabled: true
+        property int buttonType: 0
+        property int checkState: Qt.Unchecked
+        property string icon: "application-exit"
+        function triggered() {}
+    }
+    QtObject {
+        id: mockMenu
+        property var mockEntries: [entry1, sepEntry, entry2]
+    }
+    QtObject {
+        id: mockItem
+        property string id: "demo"
+        property string title: "Demo SNI"
+        property string tooltipTitle: "Demo SNI"
+        property string tooltipDescription: ""
+        property string icon: "applications-system"
+        property int status: 1
+        property bool onlyMenu: false
+        property var menu: mockMenu
+    }
+    Timer { running: true; interval: 4000; onTriggered: Qt.quit() }
+    Timer {
+        running: true; interval: 450
+        onTriggered: {
+            tray.openMenu(mockItem, tray);
+            driver.wait(200);
+            const m = menuHost.menu;
+            const opened = M.PlasmaMenus.opened && !!m && m.opened;
+            const kind = M.PlasmaMenus.kind;
+            const menuH = m ? m.height : 0;
+            const menuW = m ? m.width : 0;
+            const count = m ? m.count : 0;
+            const subTitle = m && m.count > 0 && m.itemAt(0).subMenu ? m.itemAt(0).subMenu.title : "";
+            // Click outside the menu on the MenuHost overlay catcher
+            const hostItem = m ? m.parent : null;
+            const catcher = hostItem ? hostItem.parent.children[0] : null;
+            if (catcher) {
+                driver.mouseClick(catcher, 10, 10);
+                driver.wait(100);
+            }
+            const closedOnOutsideClick = !M.PlasmaMenus.opened && !menuHost.menu;
+            console.log("TRAYMENUHOST " + JSON.stringify({
+                opened, kind, menuH, menuW, count, subTitle, closedOnOutsideClick
+            }));
+            Qt.quit();
+        }
+    }
+}
+'''
+        tmp = tempfile.NamedTemporaryFile('w', dir=ROOT / 'config/quickshell/ii', prefix='zz_prueba_traymenu_', suffix='.qml', delete=False)
+        try:
+            tmp.write(harness)
+            tmp.close()
+            r = subprocess.run(['qs', '-p', tmp.name], env={**os.environ, 'LC_ALL': 'C.UTF-8'}, capture_output=True, text=True, timeout=12)
+        finally:
+            Path(tmp.name).unlink(missing_ok=True)
+        log = r.stdout + r.stderr
+        self.assertEqual(r.returncode, 0, log)
+        self.assertNotIn('TypeError:', log)
+        line = next((l for l in log.splitlines() if 'TRAYMENUHOST ' in l), '')
+        self.assertTrue(line, log)
+        data = json.loads(line.split('TRAYMENUHOST ', 1)[1])
+        self.assertTrue(data['opened'], data)
+        self.assertEqual(data['kind'], 'tray', data)
+        self.assertGreater(data['menuH'], 60, data)  # Not clipped to the 44px panel!
+        self.assertGreater(data['menuW'], 100, data)
+        self.assertEqual(data['count'], 3, data)
+        self.assertEqual(data['subTitle'], 'Options', data)
+        self.assertTrue(data['closedOnOutsideClick'], data)
+
+    def test_breeze_window_close_targets_window_under_cursor(self):
+        user_binds = (ROOT / 'config/hypr/modules/user_binds.lua').read_text(encoding='utf-8')
+        self.assertIn('local function close_window_target()', user_binds)
+        self.assertIn('(is_plasma and close_window_target or hl.dsp.window.close)()', user_binds)
+
+

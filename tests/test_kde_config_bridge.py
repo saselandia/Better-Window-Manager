@@ -136,6 +136,31 @@ class BridgeTest(unittest.TestCase):
         self.m.reconcile()
         self.assertEqual(sum(c.args[0] == ["hyprctl", "reload"] for c in self.calls.call_args_list), 1)
 
+    def test_native_count_follows_common_user_authority_and_reentry_without_reload(self):
+        self.write(self.config / "hypr/plugins/bwm-plasma-desktops.so", "test-only marker")
+        def ipc(argv, **kwargs):
+            value = {"version": 1, "accepted": True, "configuredCount": int(argv[-1]), "revision": 1} if argv[:2] == ["hyprctl", "bwm-plasma-desktops-count"] else None
+            return subprocess.CompletedProcess(argv, 0, json.dumps(value) if value else "", "")
+        self.calls.side_effect = ipc
+        self.m.enter();self.calls.reset_mock()
+        options = self.m.load_json(self.options);options["bar"]["workspaces"]["shown"] = 12
+        self.write(self.options, json.dumps(options));self.m.reconcile()
+        self.assertIn(["hyprctl", "bwm-plasma-desktops-count", "12"], [c.args[0] for c in self.calls.call_args_list])
+        self.assertNotIn(["hyprctl", "reload"], [c.args[0] for c in self.calls.call_args_list])
+        user = self.config / "bwm/user/shell.jsonc"
+        text = '{"all":{"bar":{"workspaces":{"shown":9}}}}'
+        self.write(user, text);self.calls.reset_mock();self.m.reconcile()
+        self.assertIn(["hyprctl", "bwm-plasma-desktops-count", "9"], [c.args[0] for c in self.calls.call_args_list])
+        self.assertEqual(user.read_text(), text)
+        options = self.m.load_json(self.options);options["appearance"]["bwmTheme"] = "retro"
+        self.write(self.options, json.dumps(options));self.calls.reset_mock()
+        self.assertFalse(self.m.reconcile());self.calls.assert_not_called()
+        options["appearance"]["bwmTheme"] = "plasma";self.write(self.options, json.dumps(options))
+        self.m.reconcile(reload=False)
+        self.assertIn(["hyprctl", "bwm-plasma-desktops-count", "9"], [c.args[0] for c in self.calls.call_args_list])
+        self.assertEqual(self.m.load_json(self.options)["unknown"], {"keep": 42})
+        self.assertEqual(user.read_text(), text)
+
     def test_failed_application_is_persisted_and_retried(self):
         self.m.enter()
         self.write(self.config / "kwinrc", "[Windows]\nBorderSnapZone=29\n")

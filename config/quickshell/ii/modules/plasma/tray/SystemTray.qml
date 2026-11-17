@@ -13,6 +13,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.ksvg as KSvg
 import qs.modules.common
 import qs.services
+import qs.modules.plasma.menus
 import "TrayLogic.js" as Logic
 Item {
     id:root
@@ -57,7 +58,11 @@ Item {
     implicitWidth:vertical?Kirigami.Units.iconSizes.medium:contentLength
     implicitHeight:vertical?contentLength:Kirigami.Units.iconSizes.medium
     function openApplet(id) { TrayState.toggle(id,screenName); }
-    function openMenu(item,button) { if(readOnly)return; menu.openFor(item.menu,button); }
+    function openMenu(item,button) {
+        if(readOnly||!item)return;
+        if(TrayState.expanded)TrayState.close();
+        PlasmaMenus.openFor("tray",button,root.edge,{trayMenu:item.menu!==undefined?item.menu:item});
+    }
     function setMode(id,value) { if(!readOnly)Config.options.bar.plasma.trayItems=Logic.update(settings,id,value); }
     GridLayout {
         anchors.fill:parent;rowSpacing:0;columnSpacing:0
@@ -160,7 +165,6 @@ Item {
         Behavior on width { enabled:currentItemHighLight.animationEnabled;NumberAnimation { duration:Kirigami.Units.longDuration;easing.type:Easing.InOutCubic } }
         Behavior on height { enabled:currentItemHighLight.animationEnabled;NumberAnimation { duration:Kirigami.Units.longDuration;easing.type:Easing.InOutCubic } }
     }
-    TrayMenu { id:menu }
     readonly property alias popupWindow:expandedWindow
     TrayPopup { id:expandedWindow;tray:root; anchorItem:expander }
 }

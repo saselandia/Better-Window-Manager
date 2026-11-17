@@ -31,4 +31,5 @@ private:
     QTimer m_read;
     std::unique_ptr<QLockFile> m_lock;
     bool m_stopped=false;
+    bool m_pendingRead=false;
 };

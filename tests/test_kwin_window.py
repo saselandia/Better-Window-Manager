@@ -18,6 +18,14 @@ FRAME = (300, 900, 1000, 700)    # marco de la ventana (barra incluida)
 
 
 class ModesTest(unittest.TestCase):
+    def test_native_desktop_setters_use_explicit_enter_and_leave(self):
+        manager=mock.Mock()
+        with mock.patch.object(kw,'minimizer',return_value=manager),mock.patch.object(kw,'hypr_json',return_value={}):
+            self.assertEqual(kw.main(['show-desktop','enter']),0)
+            manager.show_desktop.assert_called_once_with([],leave=False,keep_focus='',enter=True)
+            manager.reset_mock()
+            self.assertEqual(kw.main(['show-desktop','leave']),0)
+            manager.show_desktop.assert_called_once_with([],leave=True,keep_focus='')
     def test_next_mode_like_kwin(self):
         self.assertEqual(kw.next_mode(kw.RESTORE, "toggle"), kw.FULL)
         self.assertEqual(kw.next_mode(kw.FULL, "toggle"), kw.RESTORE)

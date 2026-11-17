@@ -1,0 +1,218 @@
+{
+  "version": 1,
+  "date": "2026-11-16",
+  "phase": "R4",
+  "historySection": 238,
+  "scope": "Native KDE appearance in an explicit disposable startup preview, without personal configuration writes",
+  "motivation": {
+    "origin": "Earlier user report of incorrect task icons in the preview, followed by general activation/restore acceptance in section237",
+    "newPhysicalIconMeasurement": false
+  },
+  "implementation": {
+    "flag": "--session-appearance",
+    "operation": "--stage-preview-appearance CONFIG_ROOT",
+    "nativeFiles": [
+      "kdeglobals",
+      "plasmarc"
+    ],
+    "configurationReader": "QCoreApplication before QApplication; KConfig NoGlobals, absolute selected source and explicit native XDG/kdedefaults sources. SimpleConfig only for output.",
+    "configScope": "Only selected appearance fields/groups; no complete configuration copies/symlinks, layout execution, app configuration or wallpaper/cursor/service settings.",
+    "precedence": "Native effective defaults, local override, immutable and deleted values respected. Restrictions themselves are not migrated to snapshot.",
+    "graphics": "QT_QPA_PLATFORMTHEME=kde, original KDE QIcon/palette/font engine and Plasma::Theme. No QIcon::setThemeName or copied QML.",
+    "assets": "Original XDG_DATA_HOME and XDG_DATA_DIRS are readable, including with --package; new writes/caches/runtime remain temporary.",
+    "guards": [
+      "Only disposable following preview; wrapper rejects saved profile mode",
+      "Canonical temporary XDG directories required",
+      "Source/destination aliases rejected",
+      "Existing preview kdeglobals or plasmarc cannot be overwritten"
+    ],
+    "liveThemeFollowing": false,
+    "newWatchers": 0,
+    "sessionDbusConnected": false
+  },
+  "nativeRegressionNormal": {
+    "version": 1,
+    "sessionModified": false,
+    "nativeAppearanceVerified": true,
+    "liveThemeFollowing": false,
+    "beforeNativeProbe": {
+      "fontSize": 10,
+      "iconNull": true,
+      "iconPixel": "",
+      "iconTheme": "breeze",
+      "plasmaTheme": "default",
+      "qtPlatform": "offscreen",
+      "version": 1,
+      "windowColor": "#eff0f1"
+    },
+    "staging": {
+      "entries": 9,
+      "files": [
+        "kdeglobals",
+        "plasmarc"
+      ],
+      "layoutScriptsExecuted": false,
+      "liveThemeFollowing": false,
+      "scope": "disposable-startup-snapshot",
+      "sourceWritten": false,
+      "version": 1
+    },
+    "afterNativeProbe": {
+      "fontSize": 15,
+      "iconNull": false,
+      "iconPixel": "#39b574",
+      "iconTheme": "bwm-r4-appearance-fixture",
+      "plasmaTheme": "breeze-dark",
+      "qtPlatform": "offscreen",
+      "version": 1,
+      "windowColor": "#112233"
+    },
+    "sourceAndSystemUnchanged": true,
+    "unrelatedKeysExcluded": true,
+    "nativeDefaultsMerged": true,
+    "nativeDeletedValueRespected": true,
+    "snapshotRemainsIndependent": true,
+    "existingPreviewNotOverwritten": true,
+    "nativeImmutableValueRespected": true,
+    "sourceDestinationAliasRejected": true,
+    "passed": true
+  },
+  "nativeRegressionAsan": {
+    "version": 1,
+    "sessionModified": false,
+    "nativeAppearanceVerified": true,
+    "liveThemeFollowing": false,
+    "beforeNativeProbe": {
+      "fontSize": 10,
+      "iconNull": true,
+      "iconPixel": "",
+      "iconTheme": "breeze",
+      "plasmaTheme": "default",
+      "qtPlatform": "offscreen",
+      "version": 1,
+      "windowColor": "#eff0f1"
+    },
+    "staging": {
+      "entries": 9,
+      "files": [
+        "kdeglobals",
+        "plasmarc"
+      ],
+      "layoutScriptsExecuted": false,
+      "liveThemeFollowing": false,
+      "scope": "disposable-startup-snapshot",
+      "sourceWritten": false,
+      "version": 1
+    },
+    "afterNativeProbe": {
+      "fontSize": 15,
+      "iconNull": false,
+      "iconPixel": "#39b574",
+      "iconTheme": "bwm-r4-appearance-fixture",
+      "plasmaTheme": "breeze-dark",
+      "qtPlatform": "offscreen",
+      "version": 1,
+      "windowColor": "#112233"
+    },
+    "sourceAndSystemUnchanged": true,
+    "unrelatedKeysExcluded": true,
+    "nativeDefaultsMerged": true,
+    "nativeDeletedValueRespected": true,
+    "snapshotRemainsIndependent": true,
+    "existingPreviewNotOverwritten": true,
+    "nativeImmutableValueRespected": true,
+    "sourceDestinationAliasRejected": true,
+    "passed": true
+  },
+  "selectedNormalCtestOutput": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host\n    Start 1: isolated-preview-appearance\n1/4 Test #1: isolated-preview-appearance ......   Passed    0.29 sec\n    Start 2: desktop-workspace-projection\n2/4 Test #2: desktop-workspace-projection .....   Passed    0.07 sec\n    Start 8: surface-geometry\n3/4 Test #8: surface-geometry .................   Passed    0.07 sec\n    Start 9: isolated-local-configuration\n4/4 Test #9: isolated-local-configuration .....   Passed   25.27 sec\n\n100% tests passed, 0 tests failed out of 4\n\nTotal Test time (real) =  25.70 sec\n",
+  "selectedAsanCtestOutput": "Test project /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host-asan\n    Start 1: isolated-preview-appearance\n1/4 Test #1: isolated-preview-appearance ......   Passed    0.47 sec\n    Start 2: desktop-workspace-projection\n2/4 Test #2: desktop-workspace-projection .....   Passed    0.06 sec\n    Start 8: surface-geometry\n3/4 Test #8: surface-geometry .................   Passed    0.09 sec\n    Start 9: isolated-local-configuration\n4/4 Test #9: isolated-local-configuration .....   Passed   26.59 sec\n\n100% tests passed, 0 tests failed out of 4\n\nTotal Test time (real) =  27.23 sec\n",
+  "pythonPreviewOutput": "...........\n----------------------------------------------------------------------\nRan 11 tests in 2.094s\n\nOK\n",
+  "validation": {
+    "selectedCtestNormalPassed": 4,
+    "selectedCtestAsanPassed": 4,
+    "asanOptions": "detect_leaks=0:halt_on_error=1",
+    "previewPythonPassed": 11,
+    "pythonCompilePassed": true,
+    "modifiedFilesDiffCheckPassed": true,
+    "instructionsSynchronized": true,
+    "normalAndAsanHostRebuilt": true,
+    "fullCtestRun": false,
+    "nativeWaylandRenderRepeated": false,
+    "newPhysicalPreviewStarted": false,
+    "physicalIconAcceptance": false
+  },
+  "sourceSha256": {
+    "src/bwm-plasma-host/previewappearance.h": "1d62e114ca2403d4ad5ef06e915029a0146571b9d5e8d0483f8a2d968008e12a",
+    "src/bwm-plasma-host/previewappearance.cpp": "379facbcd40327a81dc72f504c1ccff1a6a35238fdc7dc35763e10fee7d7461a",
+    "src/bwm-plasma-host/test-previewappearance.cpp": "69903c9c89ac017f4d767623b3d6aef910cef7aeb80f83fe7102b43906975fc9",
+    "src/bwm-plasma-host/check-preview-appearance.py": "c82dc210276f2caf0ab6747e44cc729290159342f08d115a8bdbd2071362dd42",
+    "src/bwm-plasma-host/main.cpp": "b02c79e0fedb06c23f929aadfb30a9da72487d17d1c9fe7f68ae339d6f6c355b",
+    "src/bwm-plasma-host/preview-isolated.py": "388adbc65ff00bb26df317db7592c246523a38a45097536d1fd86451677680be",
+    "src/bwm-plasma-host/CMakeLists.txt": "911f91d8306a945e8793fafcecc60284ba9050df9a529aaacaa2e48a0fe0d20a",
+    "tests/test_r4_preview.py": "0a7548a6cee652a01dff840fe722e67e34908aaf32030a0abab22957d0f71596",
+    "AGENTS.md": "4908351168b3628fd385c511241187bcb466fcf389fdd7093ba7901133aa0a7b",
+    "CLAUDE.md": "4908351168b3628fd385c511241187bcb466fcf389fdd7093ba7901133aa0a7b",
+    "BWM_CONTEXT.md": "298baf902c92d426d285539d19204d40f20516918edb0347ad3cf85c31c5af4f",
+    "docs/BREEZE_PLAN_V2.md": "fb19052da2301b1fcceb6a30bb346a13821a896f97a52c5d5ed8d57a73f6fac7",
+    "docs/BREEZE_R4_ARCH.md": "ebf1a549d92bffd467da5357442cf62a90c4c64765ebbd59f10dda1119811ca9",
+    "docs/BREEZE_R4_HANDOFF_CLAUDE.md": "b731ccc87efc7cf810d159abedfe9c236f2dea50b468a4928d5b2c3b0727b9b8",
+    "docs/BREEZE_R4_RESULTS.md": "b45e8be7d6bad0c23d45982e77fb758852fe173b40dc5b455cb43a9891c07b7c",
+    "src/bwm-plasma-host/README.md": "7356e4160f68b5846a1cce99092361b977070df985fb9e37267f886ca52905e5",
+    "THIRD_PARTY_NOTICES.md": "0c57c4a5276abced04d1d8480a2caba87da930cfe04eab1e1a70db6672d848ae"
+  },
+  "upstreamSources": {
+    "plasma-integration-6.7.5.tar.xz": {
+      "sha256": "0786c49f2f357744e0f4cfda49f55284faa1a97da85a667ca6cf1d8ab07aff89",
+      "membersSha256": {
+        "plasma-integration-6.7.5/qt6/src/platformtheme/kdeplatformtheme.cpp": "e2c55b299b690964271b375dae3e66ea114fd584c503778c63aa5cfcd34a8070",
+        "plasma-integration-6.7.5/qt6/src/platformtheme/khintssettings.cpp": "187dfcce74a351443ebb3db51b3e6f05b9334dcb85dfe7ab4993cef0ffb59f6b",
+        "plasma-integration-6.7.5/qt6/src/platformtheme/kfontsettingsdata.cpp": "209ed9930efdecf667508ca0e5e6c255849c1c981845639399b97e17275808db"
+      }
+    },
+    "kconfig-6.29.0.tar.xz": {
+      "sha256": "a0e902865763fd4cd1c86973c316069f210492923d7b8065d5052c539ae46b91",
+      "membersSha256": {
+        "kconfig-6.29.0/src/core/kconfig.cpp": "679a6d335ff4bbeee349d7adf32df89031f4be6470ab18e0f4ac61605c00d825"
+      }
+    }
+  },
+  "hostBinarySha256": {
+    "normal": "15e39bc847f15bb67dd86d4c8c7ffe6d65755604a52e1efad48957fa99d5bb23",
+    "asan": "2e457861d6aaa8681299d5c58a5f74725baaf72f193eb7420508e7453706b1a5"
+  },
+  "dependencies": "All runtime dependencies already declared, including plasma-integration, KConfig and libplasma; no new packages.",
+  "limitations": [
+    "Startup snapshot; later theme changes require restarting preview.",
+    "Known native appearance fields only; QStyle-specific configuration such as Kvantum is not copied.",
+    "Offscreen fixture proves native icon pixels, palette, fonts and SVG selection, not the real monitor or every application/theme.",
+    "Native desktop provider, further capabilities and daily authority/fallback still pending."
+  ],
+  "dailyPanelReplaced": false,
+  "quickshellRestarted": false,
+  "hyprlandPluginInstalledOrLoaded": false,
+  "userConfigurationWritten": false,
+  "operationalVerified": false,
+  "replacementReady": false,
+  "r4Complete": false,
+  "commitCreated": false,
+  "pushPerformed": false,
+  "userFollowUp239": {
+    "date": "2026-11-16",
+    "origin": "User terminal transcript and direct report",
+    "verbatim": "todo lo que me pediste que comprobara va bien, lo unico malo es que no sale la preview cuando pones el cursor com en la barra real, lo demas todo perfecto",
+    "appearanceAndRequestedTaskBehaviorAcceptedByUser": true,
+    "hoverThumbnailPassed": false,
+    "startupCounts": {
+      "sourceWindows": 7,
+      "visibleWindowOrGroupRowsAcrossViews": 12,
+      "launcherRowsAcrossViews": 6
+    },
+    "missingQmlModule": "org.kde.pipewire",
+    "tooltipShadowWarningsPresent": true,
+    "ctrlCReturnedToPrompt": true,
+    "cleanupIndependentlyMeasured": false,
+    "newCaptureBackendTestedByUser": false,
+    "dailyPanelAccepted": false,
+    "r4Complete": false
+  }
+}

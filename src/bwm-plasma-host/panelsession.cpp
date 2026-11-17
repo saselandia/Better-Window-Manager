@@ -3,6 +3,7 @@
 #include "configurationsession.h"
 #include "packagewindows.h"
 #include "catalog.h"
+#include "taskbridge.h"
 #include <Plasma/Containment>
 #include <Plasma/Applet>
 #include <PlasmaQuick/ConfigView>
@@ -64,6 +65,7 @@ void PanelSession::bindPanelItem(PlasmaQuick::AppletQuickItem *item) {
         connect(item,&QObject::destroyed,&m_notify,qOverload<>(&QTimer::start));
     }
     m_notify.start();setError({});
+    BwmTaskBridge::attachEnabled(item);
 }
 QVariantMap PanelSession::panelInfo() const {
     if(!m_containment || m_containment->destroyed())return {};
@@ -97,6 +99,19 @@ QVariantList PanelSession::widgets() const {
         result.append(QVariantMap{{"id",a->id()},{"package",a->pluginMetaData().pluginId()},
             {"title",a->title()},{"icon",a->icon()},{"immutable",a->immutable()},
             {"failedToLaunch",a->failedToLaunch()},{"launchError",a->launchErrorMessage()}});
+    return result;
+}
+QVariantList PanelSession::widgetBackends() const {
+    QVariantList result;
+    // Use live instances, not a fresh global catalog lookup: two copies of one
+    // package remain distinct, and removed widgets disappear on the next query.
+    for(const auto &id:order())if(auto *a=findApplet(id.toUInt())) {
+        auto assessment=Catalog::runtimeAssessment(a->pluginMetaData());
+        if(a->failedToLaunch())assessment["status"]="launch-failed";
+        result.append(QVariantMap{{"id",a->id()},{"package",a->pluginMetaData().pluginId()},
+            {"failedToLaunch",a->failedToLaunch()},{"launchError",a->launchErrorMessage()},
+            {"runtime",assessment}});
+    }
     return result;
 }
 uint PanelSession::addWidget(const QString &pluginId) {

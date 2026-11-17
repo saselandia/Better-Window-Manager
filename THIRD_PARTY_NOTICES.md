@@ -311,6 +311,57 @@ El perfil local utiliza las restricciones KAuthorized documentadas en KF6 Config
 
 ### Anfitrión experimental libplasma R4 (2026-11-12)
 
+El protocolo bwm-plasma-desktop-control-v1.xml, su cola/barrera por wl_client, NativeDesktopControl
+y las pruebas de retirada/reconexión son propios GPL-2.0-or-later. Las interfaces C y Qt se
+generan desde ese XML propio con wayland-scanner/qtwaylandscanner instalados. No sustituyen
+el protocolo KDE ni lo presentan como API KDE; comparten su conexión sólo para integración
+BWM. Procedencia/hashes y límites en BREEZE_R4_DESKTOP_CONTROL_RESULTS.json.
+
+`src/bwm-plasma-desktops/{desktops,workspaces,plugin,test-*}` y la nueva regresión del
+anfitrión son propios GPL-2.0-or-later (texto completo en licenses/KDE-GPL-2.0-or-later.txt).
+El protocolo KDE org-kde-plasma-virtual-desktop.xml, de plasma-wayland-protocols 1.23.0,
+atribuye copyright 2018 Marco Martin y LGPL-2.1-or-later; wayland-scanner genera interfaces
+sin modificar el XML instalado y conserva ese aviso. Su texto de licencia se conserva en
+licenses/plasma-wayland-protocols-LGPL-2.1-or-later.txt, copiado sin cambios del tarball.
+El fixture usa además xdg-shell.xml de wayland-protocols 1.49, licencia MIT y avisos
+conservados en licenses/wayland-protocols-xdg-shell-MIT.txt. Los generados quedan en build,
+no se venden como implementación original BWM del protocolo KDE. La extensión utiliza las
+APIs/headers Hyprland 0.56.2 instaladas y su guarda de hash, sin copiar el compositor.
+La lectura JSON del frontend utiliza nlohmann_json 3.12.0 instalado (MIT), con su licencia
+conservada en licenses/nlohmann-json-MIT.txt (del tarball original). Se revisaron KWin plasmavirtualdesktop y plasma-workspace 6.7.5
+para contrato/vida de recursos y consumidores, sin copiar su implementación. Hashes/versiones
+y límites en BREEZE_R4_NATIVE_DESKTOPS_RESULTS.json; núcleo/fixture no certifican sesión real.
+
+native_guard.py y test_r4_native_guard.py y las modificaciones de transacción/retirada
+son propios GPL-2.0-or-later, usando stdlib Python (fcntl/flock Linux) y Qt instalados.
+Se revisan también VirtualDesktopInfo y TaskFilterProxyModel de plasma-workspace 6.7.5;
+no se copia ni modifica su backend privado. Procedencia y hashes adicionales en
+BREEZE_R4_NATIVE_TRANSACTIONS_RESULTS.json.
+
+tasksource.*, taskbridge.*, test-tasks.cpp y native-tasks.py son propios GPL-2.0-or-later.
+Enlazan LibTaskManager 6.7.5 y KF6 Service instalados, usando sus headers públicos y APIs de
+modelos Qt; no redistribuyen ni modifican libtaskmanager o el QML original. Se consultan
+tasksmodel/windowtasksmodel/concatenatetasksproxymodel/abstracttasksmodel y VirtualDesktopInfo
+de plasma-workspace 6.7.5. TaskManager::windowUrlFromMetadata/appDataFromUrl resuelven apps e
+iconos con la lógica KDE existente. Hashes/procedencia en BREEZE_R4_TASK_SOURCE_RESULTS.json.
+
+desktopbridge.*, windowsystemplugin.* y test-desktop.cpp son propios GPL-2.0-or-later.
+Usan headers privados instalados de KWindowSystem 6.29.0 (ABI V5, versión EXACT en CMake)
+y su contrato de plugins estáticos, sin copiar headers ni implementación. El plugin es parte
+del ejecutable auxiliar: delega al backend KDE instalado y no se instala globalmente. Se
+consultaron los tarballs plasma-desktop 6.7.5 y kwindowsystem 6.29.0 de Portage para contrastar
+el controlador original y la carga de plugins. La prueba carga el módulo original ShowDesktop
+instalado sin redistribuirlo ni modificar su QML/C++; el hyprctl sustituto es fixture propio
+sin acceso al compositor. Procedencia/hashes en BREEZE_R4_DESKTOP_ADAPTER_RESULTS.json.
+
+La ampliación de inventario de backends en Catalog/PanelSession/PanelRuntime es propia
+GPL-2.0-or-later y consulta KPluginMetaData y las instancias Plasma existentes. No copia
+implementaciones de servicios ni añade dependencias; los metadatos sintéticos son fixtures BWM.
+
+check-local.py es propio GPL-2.0-or-later y usa los fixtures BWM de configuración ya incluidos,
+QtTest y las herramientas KDE instaladas. No añade paquetes de terceros ni dependencias.
+El nuevo ensayo local no descarga ni redistribuye widgets externos.
+
 `src/bwm-plasma-host` es código propio BWM GPL-2.0-or-later que utiliza las APIs instaladas
 libplasma/PlasmaQuick 6.7.5, KF6 Config/KPackage y Qt. Se estudió CustomCorona y los contratos
 de la distribución upstream fijada en BREEZE_R4_RESULTS.md; no se incluyen esos ejemplos ni
@@ -452,3 +503,195 @@ La auditoría de transición de skins utiliza el código propio GPL-2.0-or-later
 plasma-integration 6.7.5 y KIconThemes 6.29.0 instalados; sus implementaciones no se copian.
 Los iconos PNG de prueba se generan en directorios temporales. El contrato privado del
 receptor KF6 se usa sólo en el test local, no en los componentes desplegados.
+
+TaskMenuPolicy y test-taskmenu.cpp son propios GPL-2.0-or-later. Usan APIs públicas de Qt
+(QMenu/QAction/QActionGroup) ya enlazadas, y cargan el widget/menú original instalado sin
+copiar ni redistribuir su QML. Se consultaron ContextMenu.qml, Task.qml y main.qml de
+plasma-desktop 6.7.5; QMenuProxy/QMenuItem de libplasma 6.7.5, y el proxy agrupador de
+plasma-workspace 6.7.5. El contrato privado se fija al hash del ContextMenu.qml original;
+no se copian sus implementaciones ni se modifican metadatos del sistema. Archivos consultados,
+hashes y resultados en BREEZE_R4_TASK_MENU_RESULTS.json. El fixture no certifica render ni
+entrada real de la barra. No añade bibliotecas/protocolos o recursos de terceros.
+
+La continuación de fullscreen nativo en tasksource/native-tasks/kwin-window y sus tests es
+propia GPL-2.0-or-later; no copia el menú o los bindings de KDE/Hyprland. Se consultaron
+WaylandTasksModel/ContextMenu de Plasma 6.7.5 y las fuentes Hyprland 0.56.2 de HyprCtl,
+ConfigManager Lua, bindings dispatch/result/window y FullscreenController para comprobar
+set/unset, repl y lectura de modo interno. El intérprete Lua se usa sólo en BUILD_TESTING
+para ejecutar el Lua generado contra un hl simulado; no se incorpora código Lua de terceros
+ni otro compositor/servidor. Referencias exactas, hashes y límites en BREEZE_R4_FULLSCREEN_RESULTS.json.
+
+La invalidación de AppData de BwmTaskSource y test-taskmetadata.cpp son propios GPL-2.0-or-later.
+Usan la API pública KSycoca/TaskTools de las bibliotecas ya enlazadas; contrastan la estrategia
+de invalidación de WaylandTasksModel (plasma-workspace 6.7.5) y la notificación de archivo de
+KService 6.29.0 sin copiar sus implementaciones. kbuildsycoca6 instalado sólo se ejecuta en el
+test con cache XDG privado. Las entradas .desktop y PNG del test son propios y desechables,
+no ejecutan aplicaciones y no incorporan assets de terceros. Procedencia/hashes/evidencia en
+BREEZE_R4_TASK_METADATA_RESULTS.json. No se añaden dependencias de producción.
+
+NativeDesktopRegistry, la ampliación v2 del protocolo BWM y las modificaciones de control,
+runtime y fixtures son propias GPL-2.0-or-later. Usan APIs públicas de Qt/Wayland y bindings
+generados del XML propio, sin copiar ni parchear el consumidor KDE. Se consultaron Qt 6.11.2
+(qwaylanddisplay, QWaylandClientExtension, NativeInterface), VirtualDesktopInfo de
+plasma-workspace 6.7.5 y wl_global_get_name/recursos de Wayland 1.26.0. Esa API de nombre está
+disponible desde 1.22. No se copian esas implementaciones. El fixture crea globals alternativos
+propios y un proceso Qt adicional sobre un endpoint privado ya existente; no redistribuye
+componentes ni inicia otro compositor. Procedencia/hashes: BREEZE_R4_REGISTRY_RESULTS.json.
+
+
+DesktopProvider, el marcador de elección y test-provider.cpp (§225) son propios GPL-2.0-or-later.
+Enlazan las bibliotecas Wayland client/server ya declaradas, usando APIs públicas sin copiar
+implementaciones. Se consultaron wayland-server.c, wayland-client.c y connection.c de Wayland
+1.26.0 para global_remove, ofertas/binds en vuelo, get_name/filtros, propiedad de fds y E/S
+no bloqueante. El consumidor de prueba carga VirtualDesktopInfo original de plasma-workspace
+6.7.5, sin modificarlo/copiarlo. El XML privado KDE y sus avisos/pins siguen iguales. No hay
+nuevo recurso de terceros ni daemon/compositor incorporado. Fuentes exactas, hashes y límites
+en BREEZE_R4_PROVIDER_ARBITRATION_RESULTS.json.
+
+
+La continuación §226 de arranque/cierre, el DSO test-teardown-module.cpp y su test son propios
+GPL-2.0-or-later. Se consultaron Compositor.cpp (filterGlobals/cleanup), ProtocolManager.cpp,
+SecurityContext.cpp y PluginSystem.cpp de Hyprland 0.56.2 para orden de cierre, filtro y
+recarga posterior a init; no se copian sus implementaciones. dlopen/dlclose/libdl sólo en
+la prueba aislada, enlazada mediante CMAKE_DL_LIBS, no en el proveedor de producción.
+No se introduce dependencia nueva de producción ni se incorpora otro compositor/servidor.
+Wayland y XML originales mantienen avisos y contratos. Hashes/referencias/evidencia en
+BREEZE_R4_STARTUP_TEARDOWN_RESULTS.json.
+
+
+CountMirror, native_workspaces.py, check-count-mirror.py y las extensiones de tests/puente
+§227 son propios GPL-2.0-or-later. Usan C++/Python estándar y el IPC existente HyprCtl; se
+consultó src/debug/HyprCtl.cpp de Hyprland0.56.2 para orden exact/prefix y entrega del request
+completo, y el Config.qml común ya incluido para su default del contador. No se copian
+implementaciones nuevas de terceros ni se añaden dependencias de producción, protocolos de
+preferencias o servidores. El consumidor original KDE sigue instalado/intacto. Fuentes,
+hashes y límites de prueba: BREEZE_R4_COUNT_MIRROR_RESULTS.json.
+
+
+SharedSettingsRuntime.qml, shared dispatcher/effective_options, el auxiliar shared y sus tests
+§228 son propios GPL-2.0-or-later. Se consultaron process.cpp/process.hpp y datastream.cpp de
+Quickshell0.3.2 para orden streamEnded/exited y FailedToStart sin señal exited; no se copian
+sus implementaciones. Se usan QtQuick/Quickshell.Io y Python estándar ya declarados. El QML
+de prueba no representa superficies ni accede al compositor; transporte de recibos hacia
+el mismo núcleo C++ de BWM. No dependencias/activos nuevos de terceros ni scripts descargados
+ejecutados. Procedencia/hashes/evidencia: BREEZE_R4_SHARED_DELIVERY_RESULTS.json.
+
+
+El test-taskdelegate y las mejoras de diagnóstico del fixture/runner (§229) son propios
+GPL-2.0-or-later. Consultan WindowTasksModel::roleNames, TasksModel::roleNames, fuentes QML
+Task.qml/main.qml originales de Plasma6.7.5 y usan las APIs Qt6 QQuickRenderControl/
+QQuickRenderTarget/QImage ya enlazadas. Cargan los widgets instalados sin copiarlos o
+modificarlos; sin activos o dependencias nuevos de terceros. No se incorpora otro compositor
+ni servidor de sesión. Prueba nativa preparada, ejecución bloqueada por EPERM del cliente
+Wayland privado; no resultado de render aprobado. Referencias/hashes y alcance exacto en
+BREEZE_R4_TASK_DELEGATE_RESULTS.json.
+
+
+La guarda compartida de pruebas tests/task-qml-source.h (§231) es propia GPL-2.0-or-later.
+Lee/verifica el recurso Task.qml instalado sin copiarlo; SHA256 fijado al original Plasma6.7.5.
+Se consultaron QQmlContext, QQuickRenderControl y QSGSoftwareRenderer de Qt6.11.2 para
+resolución y secuencia de dibujo en memoria. Sin implementación/activo/dependencia nuevos
+de terceros. La prueba de API Qt no certifica el render del widget KDE. Evidencia §231.
+
+
+La preparación tests/task-app-fixture.h (§232), su .desktop/PNG generados y las comprobaciones
+son propios GPL-2.0-or-later. Usan KService/KSycoca/TaskTools instalados sin copiar su código;
+se consultó windowUrlFromMetadata/appDataFromUrl de Plasma6.7.5 para fallback por PID y sufijo
+de AppId. kbuildsycoca6 sigue sólo en BUILD_TESTING, ya declarado. Sin dependencia/activo nuevo
+de producción; datos sólo en XDG temporal. Resultados y límites en evidencia §232.
+
+
+La proyección stackingOrder, el rol BWM y pruebas de §234 son propios GPL-2.0-or-later.
+El ensayo importa TaskTools.js original instalado de Plasma6.7.5 (GPL-2.0-or-later), fijado
+por SHA256, sin copiar/parchear sus handlers. Se consultaron clientsRequest de HyprCtl.cpp
+y WindowState.cpp de Hyprland0.56.2 para orden inferior/superior; no se copian implementaciones.
+Sin activos/dependencias nuevos ni formatos de temas propios. Referencias/evidencia en
+BREEZE_R4_GROUP_ORDER_RESULTS.json.
+
+
+El recorrido visual/propietario de BwmTaskBridge, test-paneltasks y previewchecks (§235)
+son propios GPL-2.0-or-later. Usan QObject/QQuickItem y modelos KDE originales mediante APIs
+públicas, sin copiar/parchear applets. Datos .desktop/PNG propios y helper/IPC ficticio dentro
+de XDG temporal; sin nuevos activos/dependencias. Alcance y evidencia en
+BREEZE_R4_PANEL_TASK_REGISTRATION_RESULTS.json.
+
+La preparación explícita del preview de todos los escritorios (§236, taskpreview.*),
+diagnósticos/tests y regla del almacén minimizado son propios GPL-2.0-or-later. Configuran
+el campo original showOnlyCurrentDesktop con APIs públicas Plasma/KConfigLoader, sin copiar
+ni parchear QML. Fuentes consultadas: plasma-desktop/plasma-workspace6.7.5 (main.xml,
+main.qml y TaskFilterProxyModel) e Hyprland0.56.2 (GlobalWindowController, Window,
+AnimationManager, WindowRuleApplicator). Licencias de esos originales conservadas; sin
+nuevos recursos o dependencias. Referencias/hashes en BREEZE_R4_DESKTOP_FILTER_RESULTS.json.
+
+La preparación de apariencia del preview (§238, previewappearance.*, check-preview-appearance.py
+ y test-previewappearance.cpp) es propia GPL-2.0-or-later, usando KConfig/libplasma y Qt públicos.
+Consulta de fuentes plasma-integration6.7.5 (proveedor Qt6 KDE), KConfig6.29 (cascada y fuentes
+adicionales); sin copia/parche del motor de iconos o QML. El PNG/index.theme de prueba son
+datos originales mínimos, sin imágenes externas. plasma-integration ya figura en requisitos;
+sin dependencias nuevas. Referencias/hashes en BREEZE_R4_APPEARANCE_RESULTS.json.
+
+Miniaturas de R4 (§239): taskthumbnail.*, fixtures y runners nuevos son propios
+GPL-2.0-or-later. qml/TaskThumbnail.qml adapta únicamente PipeWireThumbnail.qml de
+plasma-desktop6.7.5, Copyright2020 Aleix Pol Gonzalez, LGPL-2.0-or-later (avisos conservados).
+Se mantiene todo el tooltip upstream instalado; la URL/hash revisados seleccionan el endpoint.
+No se copia ni sustituye código privado de LibTaskManager o el proveedor PipeWire de KDE.
+
+protocols/wlr-foreign-toplevel-management-unstable-v1.xml es copia íntegra sin cambios de
+Hyprland0.56.2, Copyright2018 Ilia Bozhinov, con su licencia permisiva íntegra en el XML.
+Sólo se necesitan sus descriptores de tipo referidos por el XML mapping; no se vincula el
+manager WLR. Los XML ext-foreign-toplevel-list/ext-image-capture-source/ext-image-copy-capture
+se usan desde wayland-protocols instalado; MIT y créditos completos en
+licenses/wayland-protocols-image-capture-MIT.txt. hyprland-toplevel-mapping-v1.xml se usa desde
+hyprland-protocols instalado; BSD-3-Clause, Copyright2025 WhySoBad, en
+licenses/hyprland-toplevel-mapping-BSD-3-Clause.txt. Generación con wayland-scanner; sin cambios
+a los protocolos. Fuentes/versión/hash y límites en BREEZE_R4_THUMBNAIL_RESULTS.json.
+
+El parche patches/hyprland/0.56.2-screenshare-monitor-guard.patch sigue BSD-3-Clause de
+Hyprland0.56.2; no cambia la licencia del compositor. Fixture tests/upstream/Hyprland-0.56.2-
+ScreenshareSession.cpp copiado sin cambios del archivo original para aplicar/revisar el
+parche y compilar sus dos cuerpos con scaffolding de prueba propio GPL-2.0-or-later.
+Texto original en licenses/Hyprland-BSD-3-Clause.txt. check-screenshare-guard.py y la guarda
+de ELF del auxiliar son propios GPL-2.0-or-later. Sin binario de compositor distribuido,
+recompilación/instalación de sistema o capturas reactivadas por este cambio.
+
+La corrección de conexiones/destructor de TaskThumbnail y sus regresiones de vida (§240)
+son propias GPL-2.0-or-later, mediante QObject/QQuickItem públicos. Sin cambios a Qt/KDE,
+QML upstream, XML, licencias o dependencias del backend descrito en §239.
+
+El diagnóstico estructurado de peer/guarda, runner privado y espera de ack inicial (§243)
+son propios GPL-2.0-or-later, usando Qt/Linux/Python públicos. Sin copiar/parchear KDE,
+retirar guardas, cambiar permisos/capacidades del compositor o añadir dependencias.
+
+La ampliación §244 del parche BSD-3-Clause añade una cabecera interna propia y el informe
+JSON de guarda/PID en SystemInfo.cpp, sin cambiar formatos KDE ni estructuras de plugins.
+tests/upstream/Hyprland-0.56.2-SystemInfo.cpp es copia íntegra sin cambios de
+hyprland-0.56.2.gh.tar.gz, src/helpers/SystemInfo.cpp (misma licencia Hyprland incluida).
+El test compila su getVersion original/corregido con scaffolding propio. Consulta IPC,
+validación de PID/UID y pruebas del auxiliar son propias GPL-2.0-or-later mediante Qt/Linux.
+Sin recursos externos o dependencias nuevas; hashes y evidencia en userFollowUp244 de
+BREEZE_R4_THUMBNAIL_RESULTS.json. La extensión no está instalada ni activa por este trabajo.
+
+La adaptación de PopupPlasmaWindow/ToolTipDialog en el auxiliar (§246) es propia
+GPL-2.0-or-later, mediante APIs públicas PlasmaQuick/Qt/LayerShellQt; no copia ni sustituye
+el tooltip o código privado de KDE/Qt. Prueba instancia Core.ToolTipArea original instalado.
+Fuentes primarias locales consultadas: libplasma6.7.5 tooltiparea/tooltipdialog/
+popupplasmawindow, QtBase6.11.2 QWindow/QWaylandWindow y LayerShellQt6.7.5 Window, conservando
+sus licencias originales existentes. Sin dependencias o recursos de terceros nuevos.
+
+Lanzamiento de aplicaciones de tareas (§248): tasklauncher.cpp adapta la política de
+canLauchNewInstance de plasma-workspace6.7.5/libtaskmanager/tasktools.cpp, copyright2016 Eike
+Hein y2023 Harald Sitter. El original permite LGPL-2.1-only OR LGPL-3.0-only OR
+LicenseRef-KDE-Accepted-LGPL; esta adaptación y la supervisión añadida eligen LGPL-2.1-only.
+Avisos en el archivo y texto íntegro original en licenses/plasma-tasktools-LGPL-2.1-only.txt.
+Sólo se adapta esa política de datos .desktop; no se reimplementa el ejecutor ni se copian
+privados KDE. AppData/KService, ApplicationLauncherJob/KJob públicos realizan resolución y
+arranque. tasklauncher.h, native_launch.py, peticiones/puente y fixtures propios son
+GPL-2.0-or-later. Origen/versiones/hashes en BREEZE_R4_TASK_LAUNCH_RESULTS.json; sin binarios
+externos o recursos gráficos nuevos. KIOGui ahora es dependencia explícita de build.
+Lanzadores anclados y Actions (§250): launchrouter.cpp reconstruye con APIs públicas de
+KService/KDesktopFile la resolución y el filtro de Backend::jumpListActions y
+tryDecodeApplicationsUrl de plasma-desktop 6.7.5 (applets/taskmanager/backend.cpp,
+copyright 2012–2016 Eike Hein, GPL-2.0-or-later); el archivo es GPL-2.0-or-later. La
+resolución de lanzadores de tasklauncher.cpp sigue runApp de plasma-workspace 6.7.5
+(libtaskmanager/tasktools.cpp, mismos términos LGPL que §248). No se copia ni modifica QML ni
+C++ de KDE; la política KIOSK usa el formato kdeglobals estándar.

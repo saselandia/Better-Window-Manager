@@ -21,6 +21,16 @@ ShellRoot {
     id: root
     property bool panelsEnabled: true
 
+    // Shared adapters outlive panel/skin loaders. Settings windows do not
+    // instantiate this coordinator; the existing main shell owns it once.
+    SharedSettingsRuntime {
+        ready: Config.ready && !Config.blockWrites
+        workspaceCount: Config.options.bar.workspaces.shown
+        skin: Config.options.appearance.bwmTheme
+        dispatcherCommand: ["python3", (Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config")
+            + "/hypr/scripts/bwm_settings_hooks.py", "shared"]
+    }
+
     // Cambiar de skin conserva el proceso, los servicios y sus cachés. Sólo se recrean paneles.
     Timer {
         id: skinReloadTimer

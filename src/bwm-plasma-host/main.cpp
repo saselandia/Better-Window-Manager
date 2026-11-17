@@ -27,6 +27,7 @@
 #include <PlasmaQuick/AppletQuickItem>
 #include <PlasmaQuick/ConfigView>
 #include <PlasmaQuick/ConfigModel>
+#include <PlasmaQuick/SharedQmlEngine>
 #include <cstdio>
 #include <csignal>
 #include "configurationsession.h"
@@ -41,11 +42,34 @@
 #include "packagewindows.h"
 #include "panelviewhost.h"
 #include "panelruntime.h"
+#include "taskpreview.h"
+#include "tasklauncher.h"
+#include "previewappearance.h"
+#include "taskthumbnail.h"
 #include "outputidentity.h"
 #include "runtimecontrol.h"
 #include "profilestore.h"
 #include <memory>
+#include <QtPlugin>
+Q_IMPORT_PLUGIN(BwmWindowSystemPlugin)
 int main(int argc, char **argv) {
+    if(argc==3 && QString::fromLocal8Bit(argv[1])=="--stage-preview-appearance") {
+        // This operation only reads/writes native configuration data. In
+        // particular, do not initialize a platform theme against the empty store.
+        QCoreApplication app(argc,argv);
+        QJsonObject report;QString error;
+        if(!stagePreviewAppearance(QString::fromLocal8Bit(argv[2]),&report,&error)) {
+            fprintf(stderr,"%s\n",qPrintable(error));return 2;
+        }
+        puts(QJsonDocument(report).toJson(QJsonDocument::Compact).constData());return 0;
+    }
+    const bool desktopPreview=argc==3 && (QString::fromLocal8Bit(argv[1])=="--follow-panel-preview" ||
+        QString::fromLocal8Bit(argv[1])=="--serve-profile");
+    if(!desktopPreview){qunsetenv("BWM_R4_DESKTOP_ACTIONS");qunsetenv("BWM_R4_DESKTOP_RUNTIME");qunsetenv("BWM_R4_DESKTOP_CONFIG");}
+    if(!desktopPreview){qunsetenv("BWM_R4_TASK_ACTIONS");qunsetenv("BWM_R4_TASK_RUNTIME");qunsetenv("BWM_R4_TASK_CONFIG");}
+    if(!desktopPreview)qunsetenv("BWM_R4_NATIVE_DESKTOPS");
+    if(!desktopPreview)qunsetenv("BWM_R4_TASK_ALL_DESKTOPS");
+    if(!desktopPreview)qunsetenv("BWM_R4_TASK_THUMBNAILS");
     // Same platform setup as plasmashell 6.7.5 (shell/main.cpp): Qt Wayland otherwise moves
     // every top-level QWindow to its output origin, so mapToGlobal() and the positions that
     // packages request for their own PlasmaCore.Dialog are lost. Child processes do not inherit it.
@@ -57,6 +81,25 @@ int main(int argc, char **argv) {
     PanelViewHost::registerTypes();
     app.setApplicationName("bwm-plasma-host");
     const auto args=app.arguments();
+    if(args.size()==2 && args[1]=="--check-thumbnail-compositor"){
+        const auto status=thumbnailCompositorGuardStatus();puts(QJsonDocument::fromVariant(status).toJson().constData());
+        return status.value("verified").toBool()?0:2;
+    }
+    if(args.size()==2 && args[1]=="--launch-task-application")return runNativeTaskLauncher();
+    const bool allDesktopTasks=qEnvironmentVariable("BWM_R4_TASK_ALL_DESKTOPS")=="1";
+    const bool taskThumbnails=qEnvironmentVariable("BWM_R4_TASK_THUMBNAILS")=="1";
+    if(taskThumbnails && !(args.size()==3 && args[1]=="--follow-panel-preview" && qEnvironmentVariable("BWM_R4_TASK_ACTIONS")=="1")){
+        fprintf(stderr,"Task thumbnails require a disposable following task preview.\n");return 2;
+    }
+    if(allDesktopTasks && !(args.size()==3 && args[1]=="--follow-panel-preview" && qEnvironmentVariable("BWM_R4_TASK_ACTIONS")=="1")){
+        fprintf(stderr,"All-desktops task mode requires a disposable following task preview, not a saved profile.\n");return 2;
+    }
+    if(allDesktopTasks){
+        for(const auto *name:{"XDG_CONFIG_HOME","XDG_DATA_HOME","XDG_CACHE_HOME","XDG_RUNTIME_DIR"})
+            if(!QFileInfo(qEnvironmentVariable(name)).canonicalFilePath().startsWith(QDir::tempPath()+"/")){
+                fprintf(stderr,"All-desktops task mode requires disposable XDG directories.\n");return 2;
+            }
+    }
     if(args.size()==3 && args[1]=="--maximize-fixture") {
         if(!QRegularExpression("^org\\.bwm\\.r4\\.maximize\\.[a-f0-9]{32}$").match(args[2]).hasMatch())return 2;
         for(const auto *name:{"XDG_CONFIG_HOME","XDG_DATA_HOME","XDG_CACHE_HOME","XDG_RUNTIME_DIR"})
@@ -185,8 +228,23 @@ int main(int argc, char **argv) {
     containment->setLocation(Plasma::Types::BottomEdge);
     QList<Plasma::Applet*> existing;
     for(auto *candidate:containment->applets()) if(candidate->pluginMetaData().pluginId()==args[2]) existing.append(candidate);
+    const auto instanceOption=qEnvironmentVariable("BWM_R4_PREVIEW_INSTANCES");
+    if(!instanceOption.isEmpty() && (!followPreview || (instanceOption!="1" && instanceOption!="2"))){
+        fprintf(stderr,"Preview instance count requires a disposable following panel and must be 1 or 2.\n");return 8;
+    }
+    const int instanceCount=instanceOption=="1"?1:2;
     auto *a=existing.size()>0 ? existing[0] : containment->createApplet(args[2]);
-    auto *b=existing.size()>1 ? existing[1] : containment->createApplet(args[2]);
+    auto *b=instanceCount==2 ? (existing.size()>1 ? existing[1] : containment->createApplet(args[2])) : nullptr;
+    const QList<Plasma::Applet*> previewApplets=b?QList<Plasma::Applet*>{a,b}:QList<Plasma::Applet*>{a};
+    std::unique_ptr<PlasmaQuick::SharedQmlEngine> thumbnailEngine;
+    if(taskThumbnails){
+        thumbnailEngine=std::make_unique<PlasmaQuick::SharedQmlEngine>();QString error;
+        if(!installTaskThumbnails(thumbnailEngine->engine().get(),&error)){fprintf(stderr,"%s\n",qPrintable(error));return 8;}
+    }
+    if(allDesktopTasks){
+        QString error;
+        if(!prepareAllDesktopTaskPreview(previewApplets,&error)){fprintf(stderr,"%s\n",qPrintable(error));return 8;}
+    }
     if(followPreview) {
         const auto output=qEnvironmentVariable("BWM_R4_OUTPUT");
         if(output.isEmpty()){fprintf(stderr,"A persistent output description is required for the following preview.\n");return 8;}

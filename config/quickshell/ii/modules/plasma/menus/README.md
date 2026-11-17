@@ -10,6 +10,7 @@ cargan en Breeze (`IllogicalImpulseFamily.qml`, por ruta).
 | Gestor de tareas | plasma-desktop `applets/taskmanager/qml/ContextMenu.qml` | `TaskMenu.qml` |
 | Escritorio (botón derecho en el fondo) | plasma-workspace `containmentactions/contextmenu/menu.cpp` | `DesktopMenu.qml` + `DesktopCatcher.qml` |
 | Panel (botón derecho en un hueco) | el mismo complemento, rama de paneles | `PanelMenu.qml` |
+| Bandeja (botón derecho en un icono SNI) | `StatusNotifierItem` DBusMenu | ` ../tray/TrayMenu.qml` (`kind: "tray"`) |
 
 - `MenuHost.qml`: una capa transparente a pantalla completa en la pantalla donde se abre el menú
   (pulsar fuera o Escape lo cierran). IPC `plasmaWindowMenu open <dirección> <x> <y>` (la usan

@@ -1,9 +1,62 @@
 """Avisos de los gestores comunes a la skin activa (sin datos de ninguna skin aquí)."""
 import json
+import importlib.machinery
+import importlib.util
 import os
 from pathlib import Path
 import subprocess
 import sys
+
+
+def effective_options():
+    """Read current common options and user overrides without writing/applying a skin."""
+    config=Path(os.environ.get('XDG_CONFIG_HOME',Path.home()/'.config'))
+    options=json.loads((config/'illogical-impulse/config.json').read_text())
+    active=options.get('appearance',{}).get('bwmTheme','default')
+    if not isinstance(active,str):raise ValueError('Invalid active skin')
+    loader=importlib.machinery.SourceFileLoader('bwm_shared_user_options',str(Path(__file__).with_name('bwm-user-config')))
+    spec=importlib.util.spec_from_loader(loader.name,loader);module=importlib.util.module_from_spec(spec);loader.exec_module(module)
+    module.apply_shell(options,active)
+    return options
+
+
+def shared():
+    """Notify reviewed bundled adapters independently of the active skin.
+
+    A prerequisite only arms delivery, never loads/enables a provider. Downloaded
+    skins/packages do not acquire automatic background execution by declaring it.
+    """
+    import bwm_skins
+    config=Path(os.environ.get('XDG_CONFIG_HOME',Path.home()/'.config'))
+    report={'version':1,'retryMs':0,'adapters':[]}
+    for skin in bwm_skins.all_skins():
+        if skin.get('builtin') is not True:continue
+        entry=skin.get('hooks',{}).get('sharedSettings')
+        if not entry:continue
+        status={'skin':skin['id'],'active':False,'applied':False}
+        try:
+            if not isinstance(entry,dict):raise ValueError('Invalid shared settings hook')
+            interval=entry.get('intervalMs')
+            if type(interval) is not int or not 1000<=interval<=30000:raise ValueError('Invalid shared settings interval')
+            relative=Path(entry['requiresConfigFile'])
+            if relative.is_absolute() or '..' in relative.parts or str(relative)=='.':raise ValueError('Invalid shared settings prerequisite')
+            directory=Path(skin['dir']).resolve();script=(directory/entry['script']).resolve()
+            if directory not in script.parents:raise ValueError('Shared settings hook escapes skin')
+            if not (config/relative).is_file():
+                report['adapters'].append(status);continue
+            status['active']=True
+            report['retryMs']=interval if not report['retryMs'] else min(report['retryMs'],interval)
+            result=subprocess.run([sys.executable,str(script),'shared'],capture_output=True,text=True,timeout=3,check=True)
+            if len(result.stdout)>65536:raise ValueError('Oversized shared settings receipt')
+            receipt=json.loads(result.stdout)
+            if not isinstance(receipt,dict) or type(receipt.get('version')) is not int or receipt['version']!=1 or type(receipt.get('applied')) is not bool:
+                raise ValueError('Invalid shared settings receipt')
+            status['applied']=receipt['applied']
+            if not status['applied'] and isinstance(receipt.get('error'),str):status['error']=receipt['error'][:256]
+        except (OSError,KeyError,TypeError,ValueError,subprocess.SubprocessError) as error:
+            status['error']=str(error)
+        report['adapters'].append(status)
+    return report
 
 
 def changed():
@@ -51,6 +104,8 @@ def skin_changed(phase, previous, current):
 
 
 if __name__ == "__main__":
+    if sys.argv[1:] == ['shared']:
+        print(json.dumps(shared(),ensure_ascii=False));raise SystemExit(0)
     if sys.argv[1:2] == ['skin']:
         if len(sys.argv) != 5: raise SystemExit('Uso: bwm_settings_hooks.py skin before|after ANTERIOR ACTUAL')
         raise SystemExit(0 if skin_changed(*sys.argv[2:]) else 1)

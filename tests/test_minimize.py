@@ -12,6 +12,13 @@ spec.loader.exec_module(tm)
 
 
 class MinimizeTests(unittest.TestCase):
+    def test_explicit_desktop_enter_is_idempotent_with_hidden_windows(self):
+        client={'address':'0xabc','workspace':{'id':-98,'name':'special:minimized'}}
+        with mock.patch.object(tm,'read_show_desktop_state',return_value=['0xabc']), \
+             mock.patch.object(tm,'restore_win') as restore, mock.patch.object(tm,'minimize_win') as minimize, \
+             mock.patch.object(tm,'write_show_desktop_state') as write:
+            tm.show_desktop([client],enter=True)
+        restore.assert_not_called();minimize.assert_not_called();write.assert_not_called()
     def test_special_workspace_and_legacy_99_are_minimized(self):
         self.assertTrue(tm.is_minimized({"workspace": {"id": -98, "name": "special:minimized"}}))
         self.assertTrue(tm.is_minimized({"workspace": {"id": 99, "name": "99"}}))

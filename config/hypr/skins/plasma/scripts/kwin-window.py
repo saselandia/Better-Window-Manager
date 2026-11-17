@@ -6,7 +6,7 @@
   kwin-window.py unminimize <dirección>
   kwin-window.py activate <dirección>     (tarea del panel: restaura, enfoca o minimiza la activa)
   kwin-window.py toggle-minimize [dirección]
-  kwin-window.py show-desktop [leave]
+  kwin-window.py show-desktop [enter|leave]
   kwin-window.py state [dirección]          (JSON: modo, geometría de restauración, bordes)
 
 Acciones del menú de la ventana (F9, useractions.cpp de KWin), todas con la dirección:
@@ -41,6 +41,7 @@ from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parents[3] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bwm_windows
 
 RESTORE = 0
@@ -302,6 +303,85 @@ def window_lua(client: dict, body: str) -> str:
     end)()"""
 
 
+def native_fullscreen_allowed(client: dict, *, minimized=None) -> bool:
+    """Native task capability: ordinary mapped windows, never minimized/special storage."""
+    space = client.get("workspace")
+    number = space.get("id") if isinstance(space, dict) else None
+    return (client.get("mapped") is True and not client.get("hidden", False) and not client.get("pinned", False)
+            and type(number) is int and number > 0 and number != 99
+            and not (minimizer().is_minimized(client) if minimized is None else minimized))
+
+
+def native_fullscreen_lua(client: dict, state: bool) -> str:
+    """Set a desired state with live guards and an explicit dispatcher receipt."""
+    action = "set" if state else "unset"
+    return f'''(function()
+        local theme = package.loaded["modules.theme"]
+        local w = hl.get_window("address:{client['address']}")
+        if not theme or theme.name ~= "plasma" or not w or w.pid ~= {int(client['pid'])}
+            or not w.mapped or w.hidden or w.pinned then return "bwm-r4-fullscreen-rejected" end
+        local ws = w.workspace
+        if not ws or ws.id < 1 or ws.id == 99 or ws.name == "special:minimized" then return "bwm-r4-fullscreen-rejected" end
+        local result = hl.dispatch(hl.dsp.window.fullscreen({{ mode = 0, action = "{action}", window = w }}))
+        local mode = w.fullscreen
+        if type(result) == "table" and result.ok == true and type(mode) == "number"
+            and (mode == 2) == {str(state).lower()} then return "bwm-r4-fullscreen-ok" end
+        return "bwm-r4-fullscreen-rejected"
+    end)()'''
+
+
+def native_fullscreen(client: dict, state: bool) -> bool:
+    if not native_fullscreen_allowed(client):
+        return False
+    reply = subprocess.run(["hyprctl", "repl", native_fullscreen_lua(client, state)],
+                           capture_output=True, text=True, timeout=2)
+    return reply.returncode == 0 and reply.stdout.strip() == "bwm-r4-fullscreen-ok"
+
+
+def native_window_allowed(client: dict) -> bool:
+    """Native move/resize/no-border/no-capture: same ordinary-window guard as fullscreen."""
+    return native_fullscreen_allowed(client)
+
+
+def native_tag_lua(client: dict, tag: str, state: bool) -> str:
+    sign = "+" if state else "-"
+    return f'''(function()
+        local theme = package.loaded["modules.theme"]
+        local w = hl.get_window("address:{client['address']}")
+        if not theme or theme.name ~= "plasma" or not w or w.pid ~= {int(client['pid'])}
+            or not w.mapped or w.hidden or w.pinned then return "bwm-r4-tag-rejected" end
+        local ws = w.workspace
+        if not ws or ws.id < 1 or ws.id == 99 or ws.name == "special:minimized" then return "bwm-r4-tag-rejected" end
+        local result = hl.dispatch(hl.dsp.window.tag({{ tag = "{sign}{tag}", window = w }}))
+        if type(result) == "table" and result.ok == true then return "bwm-r4-tag-ok" end
+        return "bwm-r4-tag-rejected"
+    end)()'''
+
+
+def native_tag(client: dict, tag: str, state: bool) -> bool:
+    """Desired tag state with live guards, dispatcher receipt and a fresh IPC readback."""
+    if not native_window_allowed(client):
+        return False
+    if has_tag(client, tag) == state:
+        return True  # Idempotent: duplicated requests never invert the state.
+    reply = subprocess.run(["hyprctl", "repl", native_tag_lua(client, tag, state)],
+                           capture_output=True, text=True, timeout=2)
+    if reply.returncode != 0 or reply.stdout.strip() != "bwm-r4-tag-ok":
+        return False
+    fresh = next((c for c in hypr_json("clients") or [] if c.get("address") == client.get("address")
+                  and c.get("pid") == client.get("pid")), None)
+    return bool(fresh) and has_tag(fresh, tag) == state
+
+
+def native_interactive(client: dict, operation: str) -> bool:
+    """Pointer-driven move/resize of breezebars; its hyprctl handler answers "ok"."""
+    if not native_window_allowed(client) or not client.get("floating") or client.get("fullscreen", 0):
+        return False
+    reply = subprocess.run(["hyprctl", "breezebars-interactive", f"{operation} {client['address']}"],
+                           capture_output=True, text=True, timeout=2)
+    return reply.returncode == 0 and reply.stdout.strip() == "ok"
+
+
 def toggle_tag(client: dict, tag: str):
     sign = "-" if has_tag(client, tag) else "+"
     run_lua(window_lua(client, f'hl.dispatch(hl.dsp.window.tag({{ tag = "{sign}{tag}", window = w }}))'))
@@ -352,6 +432,8 @@ def open_rules(client: dict, kind: str):
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--pid", type=int, help="Expected process for a panel task")
+    parser.add_argument("--native-serialized", action="store_true", help="Experimental native adapter transaction; requires Breeze and a private runtime")
+    parser.add_argument("--expected-generation", help="Expected Linux process start, rechecked after acquiring the native transaction")
     sub = parser.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("maximize")
     p.add_argument("--mode", choices=["toggle", "full", "vertical", "horizontal", "restore"], default="toggle")
@@ -360,9 +442,16 @@ def main(argv=None) -> int:
         sub.add_parser(name).add_argument("address", nargs="?")
     for name in ("unminimize", "activate", "focus"):
         sub.add_parser(name).add_argument("address")
-    sub.add_parser("show-desktop").add_argument("leave", nargs="?", choices=["leave"])
-    for name in ("menu", "fullscreen", "no-border", "no-capture", "pin", "close"):
+    sub.add_parser("show-desktop").add_argument("leave", nargs="?", choices=["enter", "leave"])
+    p = sub.add_parser("fullscreen")
+    p.add_argument("--state", choices=("toggle", "on", "off"), default="toggle")
+    p.add_argument("address", nargs="?")
+    for name in ("menu", "pin", "close"):
         sub.add_parser(name).add_argument("address", nargs="?")
+    for name in ("no-border", "no-capture"):
+        p = sub.add_parser(name)
+        p.add_argument("--state", choices=("toggle", "on", "off"), default="toggle")
+        p.add_argument("address", nargs="?")
     p = sub.add_parser("interactive")
     p.add_argument("operation", choices=["move", "resize"])
     p.add_argument("address", nargs="?")
@@ -377,14 +466,39 @@ def main(argv=None) -> int:
     p.add_argument("address", nargs="?")
     args = parser.parse_args(argv)
 
+    if args.expected_generation and (not args.native_serialized or args.pid is None):
+        parser.error('--expected-generation requires --native-serialized and --pid')
+    if args.native_serialized:
+        if args.cmd not in ('focus','toggle-minimize','maximize','close','show-desktop','fullscreen','interactive','no-border','no-capture'):
+            parser.error('Unsupported native adapter operation')
+        if args.cmd in ('fullscreen','no-border','no-capture') and (not args.expected_generation or args.pid is None or args.state == 'toggle'):
+            parser.error('Native state changes require --expected-generation, --pid and --state on|off')
+        if args.cmd == 'interactive' and (not args.expected_generation or args.pid is None):
+            parser.error('Native interactive operations require --expected-generation and --pid')
+        from native_guard import action_lock, require_breeze
+        try:
+            with action_lock():
+                require_breeze()
+                return execute(args)
+        except (OSError,KeyError,ValueError,TimeoutError,subprocess.SubprocessError):
+            print('BWM: native transaction unavailable or rejected',file=sys.stderr)
+            return 1
+    return execute(args)
+
+
+def execute(args) -> int:
+
     if args.cmd == "show-desktop":
         tm = minimizer()
         active = hypr_json("activewindow") or {}
-        tm.show_desktop(hypr_json("clients") or [], leave=bool(args.leave), keep_focus=active.get("address", ""))
+        tm.show_desktop(hypr_json("clients") or [], leave=args.leave == "leave", keep_focus=active.get("address", ""),
+                        **({"enter": True} if args.leave == "enter" else {}))
         return 0
 
     client = find_client(getattr(args, "address", None))
     if not client or (args.pid is not None and client.get("pid") != args.pid):
+        return 1
+    if args.expected_generation and bwm_windows.process_generation(client.get('pid'))!=args.expected_generation:
         return 1
     if args.cmd == "maximize":
         maximize(client, args.mode)
@@ -413,14 +527,23 @@ def main(argv=None) -> int:
     elif args.cmd == "menu":
         open_menu(client)
     elif args.cmd == "interactive":
+        if args.native_serialized:
+            return 0 if native_interactive(client, args.operation) else 1
         subprocess.run(["hyprctl", "breezebars-interactive", f"{args.operation} {client['address']}"],
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     elif args.cmd == "fullscreen":
-        run_lua(window_lua(client, "hl.dispatch(hl.dsp.window.fullscreen({ mode = 0, action = 'toggle', window = w }))"))
-    elif args.cmd == "no-border":
-        toggle_tag(client, TAG_NO_BORDER)
-    elif args.cmd == "no-capture":
-        toggle_tag(client, TAG_NO_CAPTURE)
+        if args.native_serialized:
+            return 0 if native_fullscreen(client, args.state == "on") else 1
+        action = {"toggle": "toggle", "on": "set", "off": "unset"}[args.state]
+        run_lua(window_lua(client, f"hl.dispatch(hl.dsp.window.fullscreen({{ mode = 0, action = '{action}', window = w }}))"))
+    elif args.cmd in ("no-border", "no-capture"):
+        tag = TAG_NO_BORDER if args.cmd == "no-border" else TAG_NO_CAPTURE
+        if args.native_serialized:
+            return 0 if native_tag(client, tag, args.state == "on") else 1
+        if args.state == "toggle":
+            toggle_tag(client, tag)
+        elif has_tag(client, tag) != (args.state == "on"):
+            toggle_tag(client, tag)
     elif args.cmd == "pin":
         if not client.get("floating"):
             run_lua(window_lua(client, "hl.dispatch(hl.dsp.window.float({ action = 'enable', window = w }))"))

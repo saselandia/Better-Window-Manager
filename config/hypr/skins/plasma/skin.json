@@ -51,7 +51,13 @@
     "iconNerd": "JetBrains Mono NF"
   },
   "hooks": {
-    "settingsChanged": "scripts/kde-config-bridge.py"
+    "settingsChanged": "scripts/kde-config-bridge.py",
+    "skinChanged": "scripts/panel-session.py",
+    "sharedSettings": {
+      "script": "scripts/native_workspaces.py",
+      "requiresConfigFile": "hypr/plugins/bwm-plasma-desktops.so",
+      "intervalMs": 2000
+    }
   },
   "parts": {
     "quickshell": [
@@ -94,17 +100,33 @@
       "src/breezebars",
       "src/bwm-decorator",
       "src/bwm-kcmhost",
+      "src/bwm-systemsettings",
       "config/hypr/skins/plasma/scripts/decorator.py",
       "config/hypr/skins/plasma/scripts/csd-audit.py",
       "config/hypr/skins/plasma/scripts/kwin_rules.py",
       "config/hypr/skins/plasma/scripts/kwin_tiles.py",
       "config/hypr/skins/plasma/scripts/kwin-tiles.py",
       "config/hypr/skins/plasma/scripts/interface-theme.py",
-      "config/hypr/skins/plasma/scripts/krunner.sh"
+      "config/hypr/skins/plasma/scripts/krunner.sh",
+      "config/hypr/skins/plasma/scripts/settings-native.sh",
+      "config/hypr/skins/plasma/scripts/native-settings.py",
+      "config/hypr/skins/plasma/scripts/panel-session.py",
+      "config/hypr/skins/plasma/scripts/native-tasks.py",
+      "config/hypr/skins/plasma/scripts/native_guard.py",
+      "config/hypr/skins/plasma/scripts/r4-session-check.py",
+      "config/hypr/skins/plasma/scripts/r4-reservation-smoke.py",
+      "config/hypr/skins/plasma/scripts/r4-maximized-check.py",
+      "config/hypr/skins/plasma/scripts/kwin_area.py",
+      "config/hypr/skins/plasma/scripts/settings-capabilities.json",
+      "config/hypr/skins/plasma/settings-profile",
+      "config/hypr/scripts/bwm-shared-settings.py",
+      "src/bwm-plasma-host",
+      "src/bwm-plasma-desktops"
     ]
   },
   "requires": [
     "breeze-icons",
+    "plasma-integration",
     "breezebars",
     "ksvg",
     "libplasma",
@@ -146,9 +168,14 @@
     "kactivitymanagerd",
     "bwm-decorator",
     "bwm-kcmhost",
+    "bwm-systemsettings",
+    "bwm-systemsettings-build",
     "kcmshell6",
     "kwin-rules-kcm",
-    "ki18n"
+    "ki18n",
+    "bwm-plasma-host-build",
+    "bwm-plasma-desktops-build",
+    "plasma-desktop-widgets"
   ],
   "polkitAgent": [
     "/usr/libexec/polkit-kde-authentication-agent-1",

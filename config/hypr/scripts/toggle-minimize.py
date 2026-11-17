@@ -276,11 +276,14 @@ def write_show_desktop_state(addresses: list):
         json.dump({"windows": addresses}, f)
     os.replace(tmp, SHOW_DESKTOP_STATE)
 
-def show_desktop(clients: list, leave: bool = False, keep_focus: str = ""):
-    """Toggle KDE-style Show Desktop over the active workspace of every monitor."""
+def show_desktop(clients: list, leave: bool = False, keep_focus: str = "", enter: bool = False):
+    """Toggle desktop over visible workspaces; enter/leave are explicit idempotent setters."""
     hidden = read_show_desktop_state()
     by_addr = {c.get("address"): c for c in clients}
     still_hidden = [by_addr[a] for a in hidden if a in by_addr and is_minimized(by_addr[a])]
+
+    if enter and still_hidden:
+        return # Explicit setters from native backends must not toggle off an active mode.
 
     if still_hidden:
         # Restore least recently focused first so the previously active window ends on top
