@@ -55,7 +55,7 @@
     "skinChanged": "scripts/panel-session.py",
     "sharedSettings": {
       "script": "scripts/native_workspaces.py",
-      "requiresConfigFile": "hypr/plugins/bwm-plasma-desktops.so",
+      "requiresConfigFile": "bwm/native-desktops.json",
       "intervalMs": 2000
     }
   },

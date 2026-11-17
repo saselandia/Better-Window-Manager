@@ -1,5 +1,19 @@
 # Traspaso R4 para Claude
 
+## Traspaso actualizado — 2026-11-17 (§255)
+
+Proveedor instalado (make install) y opt-in activado; se carga al iniciar Hyprland mediante
+native-desktops.py startup (guarda contra bucles). Tras el próximo inicio de sesión: comprobar
+`native-desktops.py status` y `hyprctl -j bwm-plasma-desktops`, y probar el preview con
+--native-desktops (sin --all-desktops). Desactivar: native-desktops.py disable + volver a entrar.
+
+## Traspaso actualizado — 2026-11-17 (§254)
+
+Proveedor de escritorios validado en Hyprland real anidado con check-desktops-hyprland.py
+(cliente normal y ASan); corregida la guarda de versión de PLUGIN_INIT que impedía cargarlo.
+Nunca cargado en el compositor de la sesión. Siguiente decisión del usuario: instalarlo y cargarlo
+al iniciar sesión (make install + arranque + volver a entrar). Panel diario sigue pendiente.
+
 ## Traspaso actualizado — 2026-11-17 (§252)
 
 Hecho tras §251: Mover/Redimensionar, Ocultar de capturas y Sin borde del menú original por el

@@ -45,13 +45,22 @@ def shared():
             if not (config/relative).is_file():
                 report['adapters'].append(status);continue
             status['active']=True
-            report['retryMs']=interval if not report['retryMs'] else min(report['retryMs'],interval)
-            result=subprocess.run([sys.executable,str(script),'shared'],capture_output=True,text=True,timeout=3,check=True)
-            if len(result.stdout)>65536:raise ValueError('Oversized shared settings receipt')
-            receipt=json.loads(result.stdout)
-            if not isinstance(receipt,dict) or type(receipt.get('version')) is not int or receipt['version']!=1 or type(receipt.get('applied')) is not bool:
-                raise ValueError('Invalid shared settings receipt')
-            status['applied']=receipt['applied']
+            # Retry only while delivery is pending: an applied value is kept by the
+            # provider and later changes come from the shell's own change signals.
+            # An adapter reporting "inactive" (provider not loaded in this session)
+            # has nothing to deliver and is not polled.
+            retry=True
+            try:
+                result=subprocess.run([sys.executable,str(script),'shared'],capture_output=True,text=True,timeout=3,check=True)
+                if len(result.stdout)>65536:raise ValueError('Oversized shared settings receipt')
+                receipt=json.loads(result.stdout)
+                if not isinstance(receipt,dict) or type(receipt.get('version')) is not int or receipt['version']!=1 or type(receipt.get('applied')) is not bool:
+                    raise ValueError('Invalid shared settings receipt')
+                status['applied']=receipt['applied']
+                if receipt.get('inactive') is True and not receipt['applied']:status['inactive']=True;retry=False
+                elif receipt['applied']:retry=False
+            finally:
+                if retry:report['retryMs']=interval if not report['retryMs'] else min(report['retryMs'],interval)
             if not status['applied'] and isinstance(receipt.get('error'),str):status['error']=receipt['error'][:256]
         except (OSError,KeyError,TypeError,ValueError,subprocess.SubprocessError) as error:
             status['error']=str(error)

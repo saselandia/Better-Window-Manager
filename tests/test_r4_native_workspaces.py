@@ -3,12 +3,13 @@ import contextlib
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock,patch
 
 ROOT=Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('r4_native_workspaces',ROOT/'config/hypr/skins/plasma/scripts/native_workspaces.py')
@@ -19,12 +20,25 @@ class SharedCountTest(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
         self.root=Path(self.tmp.name);self.plugin=self.root/'hypr/plugins/bwm-plasma-desktops.so'
+        self.rt=tempfile.TemporaryDirectory();self.addCleanup(self.rt.cleanup)
+        env=patch.dict(os.environ,{'XDG_RUNTIME_DIR':self.rt.name,'HYPRLAND_INSTANCE_SIGNATURE':'bwm-r4-fixture'});env.start();self.addCleanup(env.stop)
         self.time=0
         self.bridge=SimpleNamespace(CONFIG=self.root,effective_options=Mock(return_value={'bar':{'workspaces':{'shown':7}}}),run=Mock(side_effect=self.reply))
         self.runtime=m.Runtime(self.bridge,clock=lambda:self.time)
 
-    def installed(self):
-        self.plugin.parent.mkdir(parents=True);self.plugin.touch()
+    def installed(self,instance='bwm-r4-fixture'):
+        # Loaded in this session by native-desktops.py startup (runtime marker).
+        self.plugin.parent.mkdir(parents=True,exist_ok=True);self.plugin.touch()
+        (Path(self.rt.name)/'bwm-native-desktops.json').write_text(json.dumps({'version':1,'instance':instance,'loaded':True}))
+
+    def test_installed_but_not_loaded_in_this_session_costs_no_ipc(self):
+        self.plugin.parent.mkdir(parents=True);self.plugin.touch() # make install alone
+        self.assertFalse(self.runtime.tick(force=True));self.bridge.run.assert_not_called()
+        self.installed(instance='previous-session')
+        self.assertFalse(self.runtime.tick(force=True));self.bridge.run.assert_not_called()
+        (Path(self.rt.name)/'bwm-native-desktops.json').write_text('not json')
+        self.assertFalse(self.runtime.tick(force=True));self.bridge.run.assert_not_called()
+        self.installed();self.assertTrue(self.runtime.tick(force=True));self.bridge.run.assert_called_once()
 
     def reply(self,argv,**kwargs):
         return subprocess.CompletedProcess(argv,0,json.dumps({'version':1,'accepted':True,'configuredCount':int(argv[-1]),'revision':1}),'')

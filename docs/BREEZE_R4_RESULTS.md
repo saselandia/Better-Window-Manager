@@ -3157,3 +3157,22 @@ true→false y rechazos por PID/generación sobre una kitty desechable. Pendient
 Usuario confirma «todo revisado, funciona»: mover, redimensionar, ocultar de capturas,
 encima/debajo y sin borde deshabilitados, y sus Lugares en el menú de Archivos. Sin desglose
 medido por caso. Auxiliar: 16 acciones enrutadas, ninguna enmascarada, sin errores.
+
+## Continuación R4 §254 — proveedor de escritorios en Hyprland real anidado (2026-11-17)
+
+Corregida la guarda de versión de PLUGIN_INIT (comparaba punteros const char*; el módulo nunca
+cargaba). Nuevo `check-desktops-hyprland.py` + `test-desktops-hyprland`: Hyprland 0.56.2 anidado y
+desechable, módulo cargado sólo allí. Pasan con cliente normal y ASan: activación KDE→Hyprland y
+Hyprland→KDE, filtro de escritorio actual con instantánea real, contador 4→6→4, barrera pausa/
+reanudación, crear/quitar rechazados; limpieza completa, módulo nunca en el compositor de la sesión.
+Pendiente: carga al iniciar sesión real, preview completo con --native-desktops, varias salidas.
+Evidencia `BREEZE_R4_NESTED_PROVIDER_RESULTS.json`.
+
+## Continuación R4 §255 — carga opt-in al iniciar sesión (2026-11-17)
+
+`native-desktops.py` (enable/disable/status/startup) y bloque de `autostart.sh`: carga única al
+iniciar Hyprland con comprobación de versión, habilitación verificada, marca de sesión, contador
+inicial y guarda contra bucles de fallo. Contador común sin sondeo tras aplicar y sin IPC mientras
+el módulo no está cargado. Ruta de inicio probada en Hyprland anidado (`--via-startup`) y 7 pruebas
+unitarias. Instalado con make install; opt-in activado; pendiente el primer inicio de sesión real.
+Evidencia `BREEZE_R4_PROVIDER_STARTUP_RESULTS.json`.

@@ -328,6 +328,11 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   §252: Mover/Redimensionar, ocultar de capturas y sin borde del menú original por el gestor
   común (estado deseado + recibo + relectura); Lugares reales (copia de user-places.xbel)
   enrutados. Encima/debajo siguen sin backend. Usuario acepta todo en sesión (§253).
+  §254: primera validación del proveedor de escritorios en Hyprland real (anidado desechable):
+  encontrado y corregido un fallo que impedía cargar el módulo; KDE VirtualDesktopInfo,
+  activación, filtro, contador y barrera pasan.
+  §255: carga opt-in al iniciar Hyprland (native-desktops.py, guarda contra bucles de fallo);
+  instalado con make install y opt-in activado; se cargará en el próximo inicio de sesión.
 
   Inventario vivo de backends por instancia añadido (§211), compartido con el catálogo;
   readiness distingue render de servicios. Todos sin certificar; integración diaria pendiente.
@@ -3958,6 +3963,65 @@ panel diario intacto. Pérdida temporal del ejecutor no demuestra un fallo del o
   Respuesta general, sin desglose medido por caso. Auxiliar: 16 acciones enrutadas, ninguna
   enmascarada, sin errores; parada limpia (sin proceso, registro ni capas; skin plasma).
 * El usuario pide commit y push de este trabajo.
+
+### 254. R4: proveedor de escritorios validado en un Hyprland anidado (2026-11-17)
+
+* **Petición:** seguir con R4. Frente elegido: el proveedor nativo de escritorios, compilado
+  desde §218 pero nunca ejecutado en un Hyprland real.
+* **Fallo encontrado:** `PLUGIN_INIT` comparaba `__hyprland_api_get_hash()` y
+  `__hyprland_api_get_client_hash()` como punteros `const char*`: el módulo lanzaba siempre
+  «headers/runtime mismatch» y no podía cargarse nunca. Corregido comparando el texto
+  (`std::string`, como breezebars). Ninguna prueba anterior cargaba el módulo real.
+* **Método:** `src/bwm-plasma-host/check-desktops-hyprland.py` arranca Hyprland 0.56.2 (el
+  mismo binario parcheado) como ventana cliente enviada en silencio al workspace 9 de la sesión,
+  carga el módulo SÓLO en esa instancia, fija contador 4 y lo habilita, abre dos kitty propias
+  (escritorios 1 y 2) y ejecuta `test-desktops-hyprland`: VirtualDesktopInfo y
+  TaskFilterProxyModel originales de KDE, BwmTaskSource alimentada por el `native-tasks.py`
+  real y la barrera NativeDesktopControl. Después SIGTERM al grupo del anidado y se retira la
+  regla temporal (redefinida sin coincidencias). No es una prueba de CTest: necesita sesión.
+* **Resultado (cliente normal y ASan):** arbitraje activo, 4 escritorios; requestActivate de KDE
+  aplicado por el dispatcher de Hyprland y cambios de Hyprland reflejados en KDE; el filtro de
+  escritorio actual muestra sólo la ventana del workspace activo y sigue la activación;
+  contador 4→6→4 en vivo; conexión en pausa ignora peticiones y reanuda; crear/quitar
+  rechazados. 6 activaciones aplicadas/observadas, 3 rechazadas, sin error. Módulo nunca
+  cargado en tu compositor; foco y workspace intactos; sin instancias residuales.
+  Evidencia `docs/BREEZE_R4_NESTED_PROVIDER_RESULTS.json`.
+* **Pendiente:** cargarlo al iniciar sesión en tu sesión (make install + arranque + volver a
+  entrar; decisión del usuario), preview completo con --native-desktops (la salida anidada no
+  tiene descripción para --output), varias salidas reales, estabilidad y cierre de sesión;
+  sustitución del panel diario. Sin commit.
+
+### 255. R4: carga opt-in del proveedor de escritorios al iniciar sesión (2026-11-17)
+
+* **Petición:** preparar la carga del proveedor al iniciar sesión (aceptado volver a entrar).
+* **Opt-in:** `skins/plasma/scripts/native-desktops.py enable|disable|status` escribe
+  `~/.config/bwm/native-desktops.json` (zona gestionada por BWM, no la configuración de texto del
+  usuario). Efecto en el siguiente inicio de sesión; nunca carga ni descarga en caliente.
+* **Arranque:** `autostart.sh` (bloque 9, sólo al iniciar Hyprland) lanza en segundo plano
+  `native-desktops.py startup`: comprueba opt-in, módulo instalado y compilado para el commit en
+  ejecución, escribe una guarda pendiente, `hyprctl plugin load`, habilita
+  `plugin:bwm_plasma_desktops:enabled`, verifica el diagnóstico, deja la marca
+  `$XDG_RUNTIME_DIR/bwm-native-desktops.json` con la instancia y publica el contador una vez;
+  a los 60 s estables borra la guarda. Habilitado en todas las skins (una generación por vida
+  del módulo; el contador ya se entrega en todas, §228).
+* **Guarda contra bucles:** si al arrancar encuentra la guarda pendiente de otra instancia (el
+  inicio anterior no se estabilizó: cierre o fallo en los primeros 60 s), desactiva el opt-in,
+  avisa y no carga. Un cierre de sesión normal en ese minuto también lo desactiva: se reactiva
+  con `enable`.
+* **Contador sin sondeo:** el prerrequisito de `hooks.sharedSettings` pasa a ser el opt-in;
+  `native_workspaces.py` sólo envía con el módulo cargado en esta instancia (marca de sesión) y
+  si no responde `inactive`. El dispatcher reintenta sólo entregas pendientes (no aplicadas ni
+  inactivas): fuera el lanzamiento de Python cada 2 s tras aplicar (diseño anterior de §228).
+* **Instalación:** `make install` (temporal + mv atómico) con el módulo NO cargado en la sesión;
+  idéntico al validado, sin símbolos UNIQUE. Opt-in activado por el asistente a petición.
+* **Pruebas:** Python R4 172 (startup 7 nuevas: no opt-in, carga+marca, guarda tras inicio
+  inestable, ventana interrumpida, módulo de otra versión/carga fallida/habilitación fallida,
+  ya cargado, desactivar), puente/skins/kwin 41; `check-desktops-hyprland.py --via-startup`
+  ejecuta la ruta de inicio real en el Hyprland anidado (carga, habilita, contador 4, estable) y
+  después pasan los consumidores KDE; sin marca residual ni módulo en el compositor de la sesión.
+  Evidencia `docs/BREEZE_R4_PROVIDER_STARTUP_RESULTS.json`.
+* **Pendiente:** primer inicio de sesión real con el módulo (status/diagnóstico), preview con
+  `--native-desktops` en la sesión, varias salidas; panel diario. Sin commit.
 
 ## 4. 📂 Estructura del repositorio
 

@@ -26,6 +26,13 @@ class SharedDeliveryTest(unittest.TestCase):
         self.options=self.config/'illogical-impulse/config.json';self.options.parent.mkdir(parents=True)
         self.options.write_text(json.dumps({'appearance':{'bwmTheme':'retro'},'bar':{'workspaces':{'shown':6}},'unknown':42}))
 
+    def provider_loaded(self,runtime):
+        """native-desktops.py startup contract: opt-in + marker of this Hyprland instance."""
+        opt=self.config/'bwm/native-desktops.json';opt.parent.mkdir(parents=True,exist_ok=True)
+        opt.write_text('{"version":1,"enabled":true}')
+        runtime.mkdir(parents=True,exist_ok=True,mode=0o700)
+        (runtime/'bwm-native-desktops.json').write_text(json.dumps({'version':1,'instance':'bwm-r4-fixture','loaded':True}))
+
     def skin(self,**entry):
         return {'id':'reviewed','builtin':True,'dir':str(self.root/'skin'),'hooks':{'sharedSettings':{'script':'hook.py','requiresConfigFile':'hypr/plugins/test.so','intervalMs':2000,**entry}}}
 
@@ -66,9 +73,22 @@ class SharedDeliveryTest(unittest.TestCase):
                 self.assertTrue(report['adapters'][0]['active']);self.assertFalse(report['adapters'][0]['applied'])
                 if not isinstance(result,Exception) and 'fixture unavailable' in result.stdout:self.assertEqual(report['adapters'][0]['error'],'fixture unavailable')
 
+    def test_opted_in_but_not_loaded_this_session_is_inactive_and_not_polled(self):
+        opt=self.config/'bwm/native-desktops.json';opt.parent.mkdir(parents=True);opt.write_text('{"version":1,"enabled":true}')
+        runtime=self.root/'runtime';runtime.mkdir(mode=0o700)
+        (runtime/'bwm-native-desktops.json').write_text(json.dumps({'version':1,'instance':'previous','loaded':True}))
+        bindir=self.root/'bin';bindir.mkdir();log=self.root/'calls';hyprctl=bindir/'hyprctl'
+        hyprctl.write_text('#!'+sys.executable+f'\nopen({str(log)!r},"a").write("call\\n")\n');hyprctl.chmod(0o700)
+        with mock.patch.dict(os.environ,{'PATH':str(bindir)+os.pathsep+os.environ['PATH'],'XDG_RUNTIME_DIR':str(runtime),
+                                         'HYPRLAND_INSTANCE_SIGNATURE':'current'}):
+            report=hooks.shared()
+        plasma=next(a for a in report['adapters'] if a['skin']=='plasma')
+        self.assertEqual(report['retryMs'],0);self.assertTrue(plasma['active'] and plasma['inactive']);self.assertFalse(plasma['applied'])
+        self.assertFalse(log.exists()) # No IPC to a compositor without the module.
+
     @unittest.skipUnless((ROOT/'build/bwm-plasma-host/desktop-protocol/test-workspace-projection').is_file(),'native receipt fixture not built')
     def test_actual_hook_cli_tracks_default_retro_breeze_with_native_receipts(self):
-        plugin=self.config/'hypr/plugins/bwm-plasma-desktops.so';plugin.parent.mkdir(parents=True);plugin.touch()
+        runtime=self.root/'runtime';self.provider_loaded(runtime)
         user=self.config/'bwm/user/shell.jsonc';user.parent.mkdir(parents=True)
         user_text='{"all":{"bar":{"workspaces":{"shown":9}}},"skins":{"retro":{"bar":{"workspaces":{"shown":11}}}}}'
         user.write_text(user_text)
@@ -78,10 +98,11 @@ class SharedDeliveryTest(unittest.TestCase):
             +f'with open({str(log)!r},"a") as f:f.write(json.dumps(sys.argv[1:])+"\\n")\n'
             +f'r=subprocess.run([{str(binary)!r},"--receipt"," ".join(sys.argv[1:])],capture_output=True,text=True,check=True)\nprint(r.stdout,end="")\n')
         hyprctl.chmod(0o700)
-        with mock.patch.dict(os.environ,{'PATH':str(bindir)+os.pathsep+os.environ['PATH']}):
+        with mock.patch.dict(os.environ,{'PATH':str(bindir)+os.pathsep+os.environ['PATH'],'XDG_RUNTIME_DIR':str(runtime),
+                                         'HYPRLAND_INSTANCE_SIGNATURE':'bwm-r4-fixture'}):
             for skin in ['default','retro','plasma']:
                 options=json.loads(self.options.read_text());options['appearance']['bwmTheme']=skin;self.options.write_text(json.dumps(options))
-                report=hooks.shared();self.assertEqual(report['retryMs'],2000)
+                report=hooks.shared();self.assertEqual(report['retryMs'],0) # Applied: no polling.
                 self.assertTrue(next(a for a in report['adapters'] if a['skin']=='plasma')['applied'])
         self.assertEqual([json.loads(line) for line in log.read_text().splitlines()],
             [['bwm-plasma-desktops-count','9'],['bwm-plasma-desktops-count','11'],['bwm-plasma-desktops-count','9']])
@@ -90,7 +111,7 @@ class SharedDeliveryTest(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which('qs') and (ROOT/'build/bwm-plasma-host/desktop-protocol/test-workspace-projection').is_file(),'shared pipeline fixtures unavailable')
     def test_headless_coordinator_to_dispatcher_adapter_and_native_receipts(self):
-        plugin=self.config/'hypr/plugins/bwm-plasma-desktops.so';plugin.parent.mkdir(parents=True);plugin.touch()
+        self.provider_loaded(self.root/'runtime')
         options=json.loads(self.options.read_text());options['appearance']['bwmTheme']='default';options['bar']['workspaces']['shown']=3
         self.options.write_text(json.dumps(options))
         log=self.root/'pipeline.jsonl';bindir=self.root/'bin';bindir.mkdir()
@@ -102,7 +123,7 @@ class SharedDeliveryTest(unittest.TestCase):
             +f'r=subprocess.run([{str(binary)!r},"--receipt"," ".join(sys.argv[1:])],capture_output=True,text=True,check=True)\n'
             +'if n<2:\n v=json.loads(config.read_text());v["appearance"]["bwmTheme"]=["retro","plasma"][n];v["bar"]["workspaces"]["shown"]=[7,5][n];config.write_text(json.dumps(v))\n'
             +'print(r.stdout,end="")\n');script.chmod(0o700)
-        runtime=self.root/'runtime';runtime.mkdir(mode=0o700)
+        runtime=self.root/'runtime';runtime.mkdir(mode=0o700,exist_ok=True)
         command=json.dumps([sys.executable,str(ROOT/'config/hypr/scripts/bwm_settings_hooks.py'),'shared'])
         qml=self.root/'pipeline.qml';qml.write_text('''import QtQuick
 import Quickshell
@@ -124,6 +145,7 @@ Scope {
         env={**os.environ,'PATH':str(bindir)+os.pathsep+os.environ['PATH'],'QT_QPA_PLATFORM':'offscreen',
              'XDG_RUNTIME_DIR':str(runtime),'DBUS_SESSION_BUS_ADDRESS':'unix:path='+str(self.root/'no-bus')}
         for name in ['DISPLAY','WAYLAND_DISPLAY','WAYLAND_SOCKET','HYPRLAND_INSTANCE_SIGNATURE']:env.pop(name,None)
+        env['HYPRLAND_INSTANCE_SIGNATURE']='bwm-r4-fixture' # Read only by the provider gate; hyprctl is the fixture.
         result=subprocess.run(['qs','-p',str(qml)],env=env,capture_output=True,text=True,timeout=10)
         self.assertEqual(result.returncode,0,result.stdout+result.stderr);self.assertIn('PIPELINE true',result.stdout+result.stderr)
         self.assertEqual([json.loads(line) for line in log.read_text().splitlines()],

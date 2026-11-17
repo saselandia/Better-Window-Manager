@@ -188,6 +188,10 @@ fi
             fi
         fi
     fi
+    # R4 §255: native Plasma desktop provider, only if opted in (native-desktops.py enable).
+    # Loaded once here at Hyprland start, never on a skin change; protected against
+    # crash loops by its own startup guard. Runs in background (stability window).
+    python3 "$HOME/.config/hypr/skins/plasma/scripts/native-desktops.py" startup >/dev/null 2>&1 &
     if "$breeze_startup"; then
         # F10: the plugin reloads configuration once at initialization, using those files.
         # Subsequent changes are debounced by the single F2 bridge.

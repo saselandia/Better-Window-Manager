@@ -119,7 +119,9 @@ std::unique_ptr<Extension> extension;
 APICALL EXPORT std::string PLUGIN_API_VERSION(){return HYPRLAND_API_VERSION;}
 APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE pluginHandle){
     handle=pluginHandle;
-    if(__hyprland_api_get_hash()!=__hyprland_api_get_client_hash())throw std::runtime_error("bwm-plasma-desktops: Hyprland headers/runtime mismatch");
+    // Both functions return C strings: compare their contents, never the pointers.
+    if(std::string{__hyprland_api_get_hash()}!=std::string{__hyprland_api_get_client_hash()})
+        throw std::runtime_error("bwm-plasma-desktops: Hyprland headers/runtime mismatch");
     auto pending=std::make_unique<Extension>();auto *e=pending.get();
     e->enabled=makeShared<Config::Values::CBoolValue>("plugin:bwm_plasma_desktops:enabled","Experimental native Plasma desktop provider",false);
     if(!HyprlandAPI::addConfigValueV2(handle,e->enabled))throw std::runtime_error("Cannot register native desktop opt-in");

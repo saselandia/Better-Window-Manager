@@ -148,6 +148,11 @@ if(BUILD_TESTING)
         --fixture $<TARGET_FILE:desktop-test-display> --client $<TARGET_FILE:test-desktop-control-wire>
         --report ${CMAKE_CURRENT_BINARY_DIR}/desktop-control-wire-results.json)
     set_tests_properties(native-desktop-control-wire PROPERTIES TIMEOUT 55)
+    # Real-Hyprland acceptance: built only, run by check-desktops-hyprland.py
+    # against a disposable nested Hyprland (never registered with CTest).
+    add_executable(test-desktops-hyprland test-desktops-hyprland.cpp)
+    target_link_libraries(test-desktops-hyprland PRIVATE bwm-plasma-configuration Qt6::Test)
+    target_compile_definitions(test-desktops-hyprland PRIVATE BWM_TASK_HELPER_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../../config/hypr/skins/plasma/scripts/native-tasks.py")
     add_executable(test-tasks test-tasks.cpp)
     target_link_libraries(test-tasks PRIVATE bwm-plasma-configuration Qt6::Test)
     target_compile_definitions(test-tasks PRIVATE BWM_TASK_HELPER_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/../../config/hypr/skins/plasma/scripts/native-tasks.py")

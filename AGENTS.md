@@ -513,6 +513,14 @@ siendo el nombre del escritorio original que imita Breeze.
   título+icono con KFilePlacesModel; Recientes enmascarados. Acciones de ventana nativas
   (§252) siempre con estado deseado + recibo + relectura, nunca conmutar. «Sin borde» del menú
   KDE 6.7.5 está deshabilitado por la errata CanSetNoBoder de su QML: no parchearlo.
+  Proveedor de escritorios en Hyprland real (§254): validar sólo con
+  check-desktops-hyprland.py (Hyprland anidado desechable; el módulo nunca se carga en el
+  compositor de la sesión). __hyprland_api_get_hash()/client_hash() devuelven const char*:
+  comparar como std::string, nunca punteros (el módulo no cargaba por eso).
+  Carga en sesión (§255): sólo native-desktops.py startup desde autostart.sh, con opt-in
+  ~/.config/bwm/native-desktops.json y guarda contra bucles de fallo; nunca desde un cambio de
+  skin ni en caliente. El contador común sólo se envía con la marca de sesión de esta instancia
+  y el dispatcher compartido no reintenta entregas aplicadas o inactivas.
   Vida de TaskThumbnail (§240): QQuickItem::~QQuickItem emite windowChanged después de
   destruir miembros derivados; QObject auto-disconnect llega tarde. Desconectar nuestras
   conexiones en el destructor derivado antes de liberar State, conservando destroyed/Qt/QML

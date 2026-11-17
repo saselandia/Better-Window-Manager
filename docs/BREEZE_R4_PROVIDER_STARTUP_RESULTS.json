@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "date": "2026-11-17",
+  "section": "BWM_CONTEXT §3.255",
+  "scope": "R4: opt-in loading of the native desktop provider at Hyprland start in the user session",
+  "design": {
+    "optIn": "~/.config/bwm/native-desktops.json {\"version\":1,\"enabled\":true} via native-desktops.py enable|disable (BWM-managed, not bwm/user text config); effective at next login",
+    "startup": "autostart.sh block 9 runs native-desktops.py startup in background once per Hyprland start: checks opt-in, module installed and built for the running commit, writes a pending guard, hyprctl plugin load, enables plugin:bwm_plasma_desktops:enabled, verifies the diagnostic, writes $XDG_RUNTIME_DIR/bwm-native-desktops.json for this instance, publishes the shared count once, clears the guard after 60 s",
+    "crashLoopGuard": "a pending guard from another instance at start means the previous start did not stabilise: opt-in switched off, notification, no load",
+    "countDelivery": "skin.json sharedSettings prerequisite is now the opt-in file; native_workspaces delivers only when the provider is loaded in this Hyprland instance (runtime marker) and otherwise reports inactive; the dispatcher retries only pending deliveries (not applied, not inactive), so no periodic python polling after success or while not loaded",
+    "scope": "enabled in every skin once loaded (one provider generation per module lifetime); never loaded/unloaded on skin change"
+  },
+  "install": {
+    "method": "make install (temporary + atomic mv) while the module was NOT loaded in the session",
+    "identicalToValidatedBuild": true,
+    "uniqueSymbols": 0
+  },
+  "localTests": {
+    "python": "R4 172 OK (new test_r4_native_desktops_startup 7, shared/inactive cases), skins+bridge+kwin 41 OK",
+    "ctestNormal": "13/13"
+  },
+  "nestedLoginPath": {
+    "passed": true,
+    "testExit": 0,
+    "cleanupVerified": true,
+    "sessionCompositorModuleLoaded": false,
+    "startup": {
+      "version": 1,
+      "action": "startup",
+      "loaded": true,
+      "stable": true
+    },
+    "sessionMarkerForNestedInstance": true,
+    "providerBefore": {
+      "enabled": true,
+      "providerAvailable": true,
+      "arbitrationState": "active",
+      "desktops": 4,
+      "current": "1"
+    },
+    "providerAfter": {
+      "appliedActivations": 6,
+      "observedActivations": 6,
+      "rejectedRequests": 3,
+      "cancelledActivations": 0,
+      "lastError": "",
+      "desktops": 4,
+      "current": "1"
+    }
+  },
+  "userSessionState": "opted in, installed, builtForRunningHyprland true, not loaded (loads at next login); shared dispatcher inactive retryMs 0",
+  "notVerified": [
+    "first real login with the module loaded in the user session",
+    "preview with --native-desktops in the user session",
+    "multi-output activation in the session"
+  ],
+  "operationalVerified": false,
+  "liveSessionVerified": false,
+  "replacementReady": false,
+  "r4Complete": false,
+  "files": {
+    "config/hypr/skins/plasma/scripts/native-desktops.py": "402656192309fbc8f8a26d4670f56d292f20ef289ef45617630370abfe830976",
+    "config/hypr/skins/plasma/scripts/native_workspaces.py": "42dfc6d3e7ecb3b3d4b45d8457464e876d04829884a130b1e8b77459d1c3187d",
+    "config/hypr/scripts/bwm_settings_hooks.py": "ea7ba6e7e3a6aa9f054c0128a5d1c4966aff8e5841c549c6a83a36a80f52837c",
+    "config/hypr/scripts/autostart.sh": "629fd8923a292c91b62723fa82daefd12622ac187a4c987f3a4f9a2ca1d30390",
+    "config/hypr/skins/plasma/skin.json": "a20485333ca2df4f218080411e223f61dc4f5c2323835ce4015153069692359c",
+    "src/bwm-plasma-host/check-desktops-hyprland.py": "a9a495615280f76119cbb8121ea7e02d527ee99f274c659e09a6ebc04d5a74ff",
+    "config/hypr/plugins/bwm-plasma-desktops.so": "213f28853228621d64b22ab9a7d84923da3340c72b5357c89e3947840d3462eb",
+    "tests/test_r4_native_desktops_startup.py": "bea0e0ad6c6471c259f48ef63900d191ab4c8b85db84d7f75b9728e8cf8158f3",
+    "tests/test_r4_shared_settings.py": "80d4ac5c6b6a3630da9ad7039d4e526db69fba9dd4f41741a0429d9ed6c4a92d",
+    "tests/test_r4_native_workspaces.py": "8a0468d6715fb8c35033a9b8cff582fbe9d09d3ddb0b846f858943ec4635c084",
+    "tests/test_kde_config_bridge.py": "d96254d3895bedfd8400d6c5bb1878c115f89294e77531a35ca7a0ba2230dc85"
+  }
+}

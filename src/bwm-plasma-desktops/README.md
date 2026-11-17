@@ -291,3 +291,23 @@ Retro/Breeze3/7/5 y prioridades del texto. No verifican IPC/visibilidad del plug
 real. Fuente del shell integrada; autorecarga posible, no verificada: IPC sigue inaccesible
 aquí. No reinicio forzado ni instalación/carga del módulo. BREEZE_R4_SHARED_DELIVERY_RESULTS.json.
 Persisten arranque/entrega reales y autoridades/capacidades de R4 antes de seleccionar panel diario.
+
+## Validación en Hyprland real anidado (§254)
+
+`src/bwm-plasma-host/check-desktops-hyprland.py --module build/bwm-plasma-desktops/bwm-plasma-desktops.so
+--test build/bwm-plasma-host/test-desktops-hyprland --report <json>` desde una terminal de la sesión
+Hyprland. Arranca un Hyprland anidado desechable (ventana cliente en un workspace oculto), carga el
+módulo sólo allí, lo habilita y ejecuta los consumidores KDE originales contra su frontend real;
+termina el anidado y retira la regla temporal. Nunca carga, descarga ni habilita el módulo en el
+compositor de la sesión. Corregida aquí la guarda de versión de PLUGIN_INIT (comparaba punteros).
+Validado: activación en ambos sentidos, filtro de escritorio actual, contador en vivo, barrera de
+pausa y rechazo de crear/quitar, con cliente normal y ASan. La carga al iniciar sesión sigue pendiente.
+
+## Carga al iniciar sesión, opt-in (§255)
+
+`config/hypr/skins/plasma/scripts/native-desktops.py enable|disable|status`. Con opt-in,
+`autostart.sh` ejecuta `native-desktops.py startup` una vez al iniciar Hyprland: comprueba versión,
+carga, habilita, deja la marca de sesión y publica el contador; guarda contra bucles de fallo
+(si el inicio anterior no llegó a 60 s estables, se desactiva solo y avisa). Instalar con
+`make install` sólo con el módulo sin cargar. Prueba de la ruta de inicio:
+`check-desktops-hyprland.py --via-startup ...` en el Hyprland anidado.

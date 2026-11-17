@@ -137,7 +137,11 @@ class BridgeTest(unittest.TestCase):
         self.assertEqual(sum(c.args[0] == ["hyprctl", "reload"] for c in self.calls.call_args_list), 1)
 
     def test_native_count_follows_common_user_authority_and_reentry_without_reload(self):
-        self.write(self.config / "hypr/plugins/bwm-plasma-desktops.so", "test-only marker")
+        # Loaded in THIS session by native-desktops.py startup (§255): runtime marker.
+        runtime = self.root / "runtime";runtime.mkdir(mode=0o700)
+        self.write(runtime / "bwm-native-desktops.json", json.dumps({"version": 1, "instance": "bridge-fixture", "loaded": True}))
+        session = mock.patch.dict(os.environ, {"XDG_RUNTIME_DIR": str(runtime), "HYPRLAND_INSTANCE_SIGNATURE": "bridge-fixture"})
+        session.start();self.addCleanup(session.stop)
         def ipc(argv, **kwargs):
             value = {"version": 1, "accepted": True, "configuredCount": int(argv[-1]), "revision": 1} if argv[:2] == ["hyprctl", "bwm-plasma-desktops-count"] else None
             return subprocess.CompletedProcess(argv, 0, json.dumps(value) if value else "", "")

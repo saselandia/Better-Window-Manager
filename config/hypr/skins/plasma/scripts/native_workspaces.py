@@ -26,10 +26,19 @@ def configured_count(options):
     return value
 
 
+def provider_session_ready():
+    """True only when native-desktops.py startup loaded the provider in THIS Hyprland
+    instance (opt-in + runtime marker). Installation alone never loads/enables it and
+    costs no IPC; a loaded old module cannot forge a valid receipt."""
+    current=os.environ.get('HYPRLAND_INSTANCE_SIGNATURE','')
+    runtime=Path(os.environ.get('XDG_RUNTIME_DIR',f'/run/user/{os.getuid()}'))
+    try:marker=json.loads((runtime/'bwm-native-desktops.json').read_text())
+    except (OSError,ValueError):return False
+    return bool(current) and isinstance(marker,dict) and marker.get('instance')==current and marker.get('loaded') is True
+
+
 def publish(bridge):
-    # Installation alone never enables/loads the plugin. An absent optional
-    # module costs no IPC; a loaded old module cannot forge a valid receipt.
-    if not (bridge.CONFIG/'hypr/plugins/bwm-plasma-desktops.so').is_file():return False
+    if not provider_session_ready():return False
     count=configured_count(bridge.effective_options())
     reply=bridge.run(['hyprctl','bwm-plasma-desktops-count',str(count)],timeout=2)
     if reply.returncode:raise RuntimeError('Workspace count IPC failed')
@@ -52,7 +61,7 @@ class Runtime:
         if not force and now<self.next:return False
         self.next=now+2
         try:
-            if not (self.bridge.CONFIG/'hypr/plugins/bwm-plasma-desktops.so').is_file():return False
+            if not provider_session_ready():return False
             # Serialize with reconcile using its existing lock, outside the
             # compositor. Never block the watch loop or acquire it recursively.
             guard=self.bridge.lock(blocking=False) if not locked and hasattr(self.bridge,'lock') else contextlib.nullcontext()
@@ -77,6 +86,10 @@ def shared_main():
     def run(argv,timeout):return subprocess.run(argv,capture_output=True,text=True,timeout=timeout)
     bridge=SimpleNamespace(CONFIG=config,effective_options=bwm_settings_hooks.effective_options,
         run=run,lock=lambda blocking=True:bridge_lock(state,blocking))
+    if not provider_session_ready():
+        # Not loaded in this Hyprland session: nothing to deliver, nothing to retry.
+        # native-desktops.py startup publishes once after loading it at login.
+        return {'version':1,'applied':False,'inactive':True}
     runtime=Runtime(bridge)
     applied=runtime.tick(force=True)
     result={'version':1,'applied':applied}

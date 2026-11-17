@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "date": "2026-11-17",
+  "section": "BWM_CONTEXT §3.254",
+  "scope": "R4: first real-Hyprland validation of the native desktop provider frontend, in a disposable nested Hyprland",
+  "bugFound": {
+    "file": "src/bwm-plasma-desktops/plugin.cpp",
+    "description": "PLUGIN_INIT compared __hyprland_api_get_hash() and __hyprland_api_get_client_hash() as const char* pointers, so the module always threw \"headers/runtime mismatch\" and could never load. Fixed by comparing std::string contents (as breezebars does). No earlier test loaded the real module into Hyprland."
+  },
+  "method": "check-desktops-hyprland.py starts Hyprland 0.56.2 (same patched binary as the session) as a client window sent silently to session workspace 9, loads the module only there, sets count 4, enables it, opens two own kitty windows (workspace 1 and 2) and runs test-desktops-hyprland (original KDE VirtualDesktopInfo, TaskFilterProxyModel, BwmTaskSource fed by the real native-tasks.py snapshot, NativeDesktopControl barrier). Then SIGTERM to the nested process group and the temporary session rule is retired.",
+  "results": {
+    "normal": {
+      "passed": true,
+      "testExit": 0,
+      "cleanupVerified": true,
+      "sessionCompositorModuleLoaded": false,
+      "providerBefore": {
+        "enabled": true,
+        "providerAvailable": true,
+        "arbitrationState": "active",
+        "desktops": 4,
+        "current": "1"
+      },
+      "providerAfter": {
+        "appliedActivations": 6,
+        "observedActivations": 6,
+        "rejectedRequests": 3,
+        "cancelledActivations": 0,
+        "lastError": "",
+        "desktops": 4,
+        "current": "1"
+      },
+      "nestedVersion": "v0.56.2"
+    },
+    "asanClient": {
+      "passed": true,
+      "testExit": 0,
+      "cleanupVerified": true,
+      "sessionCompositorModuleLoaded": false,
+      "providerAfter": {
+        "appliedActivations": 6,
+        "observedActivations": 6,
+        "rejectedRequests": 3,
+        "cancelledActivations": 0,
+        "lastError": "",
+        "desktops": 4,
+        "current": "1"
+      }
+    }
+  },
+  "verified": [
+    "arbitration active, 4 desktops, current 1 in a real Hyprland",
+    "KDE requestActivate applied by the Hyprland dispatcher (activeworkspace)",
+    "Hyprland-side workspace change reflected in KDE currentDesktop",
+    "original current-desktop filter shows only the window of the active workspace and follows activation",
+    "live count mirror 4->6->4",
+    "paused connection ignores requests; resume restores them",
+    "create/remove stay unsupported (rejected)",
+    "module never loaded into the session compositor; focus/workspace unchanged; no leftover instance"
+  ],
+  "notVerified": [
+    "loading the module at login in the user session (requires make install, startup hook and re-login)",
+    "full auxiliary preview with --native-desktops (nested monitor has no description for --output)",
+    "multi-output/per-screen activation in a real compositor",
+    "long-running stability, logout teardown in the session"
+  ],
+  "operationalVerified": false,
+  "liveSessionVerified": false,
+  "replacementReady": false,
+  "r4Complete": false,
+  "files": {
+    "src/bwm-plasma-desktops/plugin.cpp": "cbcb14d017037bdd7ae694a53007f37b30e3847675b9a2a0c16210f55fa125b2",
+    "src/bwm-plasma-host/test-desktops-hyprland.cpp": "d68e7486d75f8229d1d4e61758f767705dc9611a40af1965fe2361131a5be5a3",
+    "src/bwm-plasma-host/check-desktops-hyprland.py": "51c14b3f133702a0266c0c613ffa78f8ac17d9941f0eaa1dbf5c09f47adbc22e",
+    "src/bwm-plasma-host/CMakeLists.txt": "1bcc893cec2da2122289910c748570a38b5a903586184e451263392cd36a8327"
+  }
+}
