@@ -1,0 +1,1103 @@
+{
+  "date": "2026-11-18",
+  "section": "§302",
+  "scope": "Temporary Hyprland headless output, physical monitors untouched",
+  "compositor": "Hyprland 0.56.2",
+  "runner": "config/hypr/skins/plasma/scripts/r4-geometry-check.py --run --refresh-area-watcher",
+  "executedBy": "assistant, with IPC access in this session",
+  "firstAttempt": {
+    "summary": "Explicit maximize matched in the four geometries; automatic adjustment failed in all of them",
+    "cause": "kwin_area rejected the whole snapshot when any monitor had an empty description (bridge.log: Invalid monitor/client identity)",
+    "report": {
+      "version": 1,
+      "scope": "temporary-headless-output",
+      "physicalOutputsTouched": false,
+      "cases": [
+        {
+          "mode": "1920x1200",
+          "scale": 1.25,
+          "transform": 1,
+          "logicalArea": [
+            12000,
+            0,
+            960,
+            1536
+          ],
+          "before": {
+            "reserved": [
+              0,
+              0,
+              0,
+              44
+            ],
+            "expected": [
+              12000,
+              0,
+              960,
+              1492
+            ],
+            "observedFrame": [
+              12000,
+              0,
+              960,
+              1492
+            ],
+            "mode": 3,
+            "borders": {
+              "left": 0,
+              "top": 28,
+              "right": 0,
+              "bottom": 0
+            },
+            "decorationRecordAvailable": true,
+            "matches": true
+          },
+          "withReserved": {
+            "reserved": [
+              0,
+              48,
+              0,
+              44
+            ],
+            "automatic": {
+              "expected": [
+                12000,
+                48,
+                960,
+                1444
+              ],
+              "observedFrame": [
+                12000,
+                0,
+                960,
+                1492
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": false,
+              "reason": "Marco distinto del área útil"
+            },
+            "remaximized": true,
+            "explicit": {
+              "expected": [
+                12000,
+                48,
+                960,
+                1444
+              ],
+              "observedFrame": [
+                12000,
+                48,
+                960,
+                1444
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": true
+            }
+          },
+          "after": {
+            "reserved": [
+              0,
+              0,
+              0,
+              44
+            ],
+            "automatic": {
+              "expected": [
+                12000,
+                0,
+                960,
+                1492
+              ],
+              "observedFrame": [
+                12000,
+                48,
+                960,
+                1444
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": false,
+              "reason": "Marco distinto del área útil"
+            },
+            "remaximized": true,
+            "explicit": {
+              "expected": [
+                12000,
+                0,
+                960,
+                1492
+              ],
+              "observedFrame": [
+                12000,
+                0,
+                960,
+                1492
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": true
+            }
+          },
+          "explicitVerified": true,
+          "dynamicVerified": false
+        },
+        {
+          "mode": "1920x1080",
+          "scale": 1.5,
+          "transform": 3,
+          "logicalArea": [
+            12000,
+            0,
+            720,
+            1280
+          ],
+          "before": {
+            "reserved": [
+              0,
+              0,
+              0,
+              44
+            ],
+            "expected": [
+              12000,
+              0,
+              720,
+              1236
+            ],
+            "observedFrame": [
+              12000,
+              0,
+              720,
+              1236
+            ],
+            "mode": 3,
+            "borders": {
+              "left": 0,
+              "top": 28,
+              "right": 0,
+              "bottom": 0
+            },
+            "decorationRecordAvailable": true,
+            "matches": true
+          },
+          "withReserved": {
+            "reserved": [
+              0,
+              48,
+              0,
+              44
+            ],
+            "automatic": {
+              "expected": [
+                12000,
+                48,
+                720,
+                1188
+              ],
+              "observedFrame": [
+                12000,
+                0,
+                720,
+                1236
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": false,
+              "reason": "Marco distinto del área útil"
+            },
+            "remaximized": true,
+            "explicit": {
+              "expected": [
+                12000,
+                48,
+                720,
+                1188
+              ],
+              "observedFrame": [
+                12000,
+                48,
+                720,
+                1188
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": true
+            }
+          },
+          "after": {
+            "reserved": [
+              0,
+              0,
+              0,
+              44
+            ],
+            "automatic": {
+              "expected": [
+                12000,
+                0,
+                720,
+                1236
+              ],
+              "observedFrame": [
+                12000,
+                48,
+                720,
+                1188
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": false,
+              "reason": "Marco distinto del área útil"
+            },
+            "remaximized": true,
+            "explicit": {
+              "expected": [
+                12000,
+                0,
+                720,
+                1236
+              ],
+              "observedFrame": [
+                12000,
+                0,
+                720,
+                1236
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": true
+            }
+          },
+          "explicitVerified": true,
+          "dynamicVerified": false
+        },
+        {
+          "mode": "2560x1600",
+          "scale": 1.6,
+          "transform": 2,
+          "logicalArea": [
+            12000,
+            0,
+            1600,
+            1000
+          ],
+          "before": {
+            "reserved": [
+              0,
+              0,
+              0,
+              44
+            ],
+            "expected": [
+              12000,
+              0,
+              1600,
+              956
+            ],
+            "observedFrame": [
+              12000,
+              0,
+              1600,
+              956
+            ],
+            "mode": 3,
+            "borders": {
+              "left": 0,
+              "top": 28,
+              "right": 0,
+              "bottom": 0
+            },
+            "decorationRecordAvailable": true,
+            "matches": true
+          },
+          "withReserved": {
+            "reserved": [
+              0,
+              48,
+              0,
+              44
+            ],
+            "automatic": {
+              "expected": [
+                12000,
+                48,
+                1600,
+                908
+              ],
+              "observedFrame": [
+                12000,
+                0,
+                1600,
+                956
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": false,
+              "reason": "Marco distinto del área útil"
+            },
+            "remaximized": true,
+            "explicit": {
+              "expected": [
+                12000,
+                48,
+                1600,
+                908
+              ],
+              "observedFrame": [
+                12000,
+                48,
+                1600,
+                908
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": true
+            }
+          },
+          "after": {
+            "reserved": [
+              0,
+              0,
+              0,
+              44
+            ],
+            "automatic": {
+              "expected": [
+                12000,
+                0,
+                1600,
+                956
+              ],
+              "observedFrame": [
+                12000,
+                48,
+                1600,
+                908
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": false,
+              "reason": "Marco distinto del área útil"
+            },
+            "remaximized": true,
+            "explicit": {
+              "expected": [
+                12000,
+                0,
+                1600,
+                956
+              ],
+              "observedFrame": [
+                12000,
+                0,
+                1600,
+                956
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": true
+            }
+          },
+          "explicitVerified": true,
+          "dynamicVerified": false
+        },
+        {
+          "mode": "1920x1200",
+          "scale": 1.25,
+          "transform": 5,
+          "logicalArea": [
+            12000,
+            0,
+            960,
+            1536
+          ],
+          "before": {
+            "reserved": [
+              0,
+              0,
+              0,
+              44
+            ],
+            "expected": [
+              12000,
+              0,
+              960,
+              1492
+            ],
+            "observedFrame": [
+              12000,
+              0,
+              960,
+              1492
+            ],
+            "mode": 3,
+            "borders": {
+              "left": 0,
+              "top": 28,
+              "right": 0,
+              "bottom": 0
+            },
+            "decorationRecordAvailable": true,
+            "matches": true
+          },
+          "withReserved": {
+            "reserved": [
+              0,
+              48,
+              0,
+              44
+            ],
+            "automatic": {
+              "expected": [
+                12000,
+                48,
+                960,
+                1444
+              ],
+              "observedFrame": [
+                12000,
+                0,
+                960,
+                1492
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": false,
+              "reason": "Marco distinto del área útil"
+            },
+            "remaximized": true,
+            "explicit": {
+              "expected": [
+                12000,
+                48,
+                960,
+                1444
+              ],
+              "observedFrame": [
+                12000,
+                48,
+                960,
+                1444
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": true
+            }
+          },
+          "after": {
+            "reserved": [
+              0,
+              0,
+              0,
+              44
+            ],
+            "automatic": {
+              "expected": [
+                12000,
+                0,
+                960,
+                1492
+              ],
+              "observedFrame": [
+                12000,
+                48,
+                960,
+                1444
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": false,
+              "reason": "Marco distinto del área útil"
+            },
+            "remaximized": true,
+            "explicit": {
+              "expected": [
+                12000,
+                0,
+                960,
+                1492
+              ],
+              "observedFrame": [
+                12000,
+                0,
+                960,
+                1492
+              ],
+              "mode": 3,
+              "borders": {
+                "left": 0,
+                "top": 28,
+                "right": 0,
+                "bottom": 0
+              },
+              "decorationRecordAvailable": true,
+              "matches": true
+            }
+          },
+          "explicitVerified": true,
+          "dynamicVerified": false
+        }
+      ],
+      "errors": [],
+      "areaObserverReload": {
+        "ready": true,
+        "version": 1,
+        "startedAt": 1795033558.3734138
+      },
+      "cleanupVerified": true,
+      "explicitVerified": true,
+      "dynamicVerified": false,
+      "passed": false
+    }
+  },
+  "afterFix": {
+    "version": 1,
+    "scope": "temporary-headless-output",
+    "physicalOutputsTouched": false,
+    "cases": [
+      {
+        "mode": "1920x1200",
+        "scale": 1.25,
+        "transform": 1,
+        "logicalArea": [
+          12000,
+          0,
+          960,
+          1536
+        ],
+        "before": {
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ],
+          "expected": [
+            12000,
+            0,
+            960,
+            1492
+          ],
+          "observedFrame": [
+            12000,
+            0,
+            960,
+            1492
+          ],
+          "mode": 3,
+          "borders": {
+            "left": 0,
+            "top": 28,
+            "right": 0,
+            "bottom": 0
+          },
+          "decorationRecordAvailable": true,
+          "matches": true
+        },
+        "withReserved": {
+          "reserved": [
+            0,
+            48,
+            0,
+            44
+          ],
+          "automatic": {
+            "expected": [
+              12000,
+              48,
+              960,
+              1444
+            ],
+            "observedFrame": [
+              12000,
+              48,
+              960,
+              1444
+            ],
+            "mode": 3,
+            "borders": {
+              "left": 0,
+              "top": 28,
+              "right": 0,
+              "bottom": 0
+            },
+            "decorationRecordAvailable": true,
+            "matches": true
+          },
+          "remaximized": false
+        },
+        "after": {
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ],
+          "automatic": {
+            "expected": [
+              12000,
+              0,
+              960,
+              1492
+            ],
+            "observedFrame": [
+              12000,
+              0,
+              960,
+              1492
+            ],
+            "mode": 3,
+            "borders": {
+              "left": 0,
+              "top": 28,
+              "right": 0,
+              "bottom": 0
+            },
+            "decorationRecordAvailable": true,
+            "matches": true
+          },
+          "remaximized": false
+        },
+        "explicitVerified": true,
+        "dynamicVerified": true
+      },
+      {
+        "mode": "1920x1080",
+        "scale": 1.5,
+        "transform": 3,
+        "logicalArea": [
+          12000,
+          0,
+          720,
+          1280
+        ],
+        "before": {
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ],
+          "expected": [
+            12000,
+            0,
+            720,
+            1236
+          ],
+          "observedFrame": [
+            12000,
+            0,
+            720,
+            1236
+          ],
+          "mode": 3,
+          "borders": {
+            "left": 0,
+            "top": 28,
+            "right": 0,
+            "bottom": 0
+          },
+          "decorationRecordAvailable": true,
+          "matches": true
+        },
+        "withReserved": {
+          "reserved": [
+            0,
+            48,
+            0,
+            44
+          ],
+          "automatic": {
+            "expected": [
+              12000,
+              48,
+              720,
+              1188
+            ],
+            "observedFrame": [
+              12000,
+              48,
+              720,
+              1188
+            ],
+            "mode": 3,
+            "borders": {
+              "left": 0,
+              "top": 28,
+              "right": 0,
+              "bottom": 0
+            },
+            "decorationRecordAvailable": true,
+            "matches": true
+          },
+          "remaximized": false
+        },
+        "after": {
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ],
+          "automatic": {
+            "expected": [
+              12000,
+              0,
+              720,
+              1236
+            ],
+            "observedFrame": [
+              12000,
+              0,
+              720,
+              1236
+            ],
+            "mode": 3,
+            "borders": {
+              "left": 0,
+              "top": 28,
+              "right": 0,
+              "bottom": 0
+            },
+            "decorationRecordAvailable": true,
+            "matches": true
+          },
+          "remaximized": false
+        },
+        "explicitVerified": true,
+        "dynamicVerified": true
+      },
+      {
+        "mode": "2560x1600",
+        "scale": 1.6,
+        "transform": 2,
+        "logicalArea": [
+          12000,
+          0,
+          1600,
+          1000
+        ],
+        "before": {
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ],
+          "expected": [
+            12000,
+            0,
+            1600,
+            956
+          ],
+          "observedFrame": [
+            12000,
+            0,
+            1600,
+            956
+          ],
+          "mode": 3,
+          "borders": {
+            "left": 0,
+            "top": 28,
+            "right": 0,
+            "bottom": 0
+          },
+          "decorationRecordAvailable": true,
+          "matches": true
+        },
+        "withReserved": {
+          "reserved": [
+            0,
+            48,
+            0,
+            44
+          ],
+          "automatic": {
+            "expected": [
+              12000,
+              48,
+              1600,
+              908
+            ],
+            "observedFrame": [
+              12000,
+              48,
+              1600,
+              908
+            ],
+            "mode": 3,
+            "borders": {
+              "left": 0,
+              "top": 28,
+              "right": 0,
+              "bottom": 0
+            },
+            "decorationRecordAvailable": true,
+            "matches": true
+          },
+          "remaximized": false
+        },
+        "after": {
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ],
+          "automatic": {
+            "expected": [
+              12000,
+              0,
+              1600,
+              956
+            ],
+            "observedFrame": [
+              12000,
+              0,
+              1600,
+              956
+            ],
+            "mode": 3,
+            "borders": {
+              "left": 0,
+              "top": 28,
+              "right": 0,
+              "bottom": 0
+            },
+            "decorationRecordAvailable": true,
+            "matches": true
+          },
+          "remaximized": false
+        },
+        "explicitVerified": true,
+        "dynamicVerified": true
+      },
+      {
+        "mode": "1920x1200",
+        "scale": 1.25,
+        "transform": 5,
+        "logicalArea": [
+          12000,
+          0,
+          960,
+          1536
+        ],
+        "before": {
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ],
+          "expected": [
+            12000,
+            0,
+            960,
+            1492
+          ],
+          "observedFrame": [
+            12000,
+            0,
+            960,
+            1492
+          ],
+          "mode": 3,
+          "borders": {
+            "left": 0,
+            "top": 28,
+            "right": 0,
+            "bottom": 0
+          },
+          "decorationRecordAvailable": true,
+          "matches": true
+        },
+        "withReserved": {
+          "reserved": [
+            0,
+            48,
+            0,
+            44
+          ],
+          "automatic": {
+            "expected": [
+              12000,
+              48,
+              960,
+              1444
+            ],
+            "observedFrame": [
+              12000,
+              48,
+              960,
+              1444
+            ],
+            "mode": 3,
+            "borders": {
+              "left": 0,
+              "top": 28,
+              "right": 0,
+              "bottom": 0
+            },
+            "decorationRecordAvailable": true,
+            "matches": true
+          },
+          "remaximized": false
+        },
+        "after": {
+          "reserved": [
+            0,
+            0,
+            0,
+            44
+          ],
+          "automatic": {
+            "expected": [
+              12000,
+              0,
+              960,
+              1492
+            ],
+            "observedFrame": [
+              12000,
+              0,
+              960,
+              1492
+            ],
+            "mode": 3,
+            "borders": {
+              "left": 0,
+              "top": 28,
+              "right": 0,
+              "bottom": 0
+            },
+            "decorationRecordAvailable": true,
+            "matches": true
+          },
+          "remaximized": false
+        },
+        "explicitVerified": true,
+        "dynamicVerified": true
+      }
+    ],
+    "errors": [],
+    "areaObserverReload": {
+      "ready": true,
+      "version": 1,
+      "startedAt": 1795033644.7801456
+    },
+    "cleanupVerified": true,
+    "explicitVerified": true,
+    "dynamicVerified": true,
+    "passed": true
+  },
+  "sources": {
+    "config/hypr/skins/plasma/scripts/kwin_area.py": "16fcd8ecba8392de0ae59b8ed0cd02f7acedf0b0d35796941f11843f615c9b70",
+    "config/hypr/skins/plasma/scripts/r4-geometry-check.py": "ac46c50e384e484bd2139b3751de4cdb7ce0094d8c954cd92db3104ffb9d49cc",
+    "config/hypr/skins/plasma/scripts/r4-maximized-check.py": "2c6589b6d83ac438f432063b162dcf4a30861ecdf4c6c30b2baf8addfeec2df2",
+    "tests/test_r4_kwin_area.py": "5f5243412d6190b39cca0deff4f7c3f8f4885be31ed9a801a927ab056f642a63",
+    "tests/test_r4_geometry_check.py": "512e81ceac1941516d751ffdc245995b346f867e0070364cd4d1fe1559631fa5"
+  },
+  "tests": {
+    "r4Python": "254 OK",
+    "kwinWindowBridgeSkins": "42 OK",
+    "regressionFailsBeforeFix": true
+  },
+  "limits": [
+    "Clean-divisor scales only: Hyprland 0.56 rejects scales that leave half logical pixels, so the §301 rounding regression stays covered by unit tests",
+    "Reservation changed through the monitor rule field reserved, not by a native panel: the native host keeps description-only output identity and is not run on headless outputs",
+    "No physical display shows the headless output; no visual inspection"
+  ]
+}

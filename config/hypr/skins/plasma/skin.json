@@ -116,6 +116,7 @@
       "config/hypr/skins/plasma/scripts/r4-session-check.py",
       "config/hypr/skins/plasma/scripts/r4-reservation-smoke.py",
       "config/hypr/skins/plasma/scripts/r4-maximized-check.py",
+      "config/hypr/skins/plasma/scripts/r4-geometry-check.py",
       "config/hypr/skins/plasma/scripts/kwin_area.py",
       "config/hypr/skins/plasma/scripts/settings-capabilities.json",
       "config/hypr/skins/plasma/settings-profile",

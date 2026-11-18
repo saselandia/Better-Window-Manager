@@ -84,8 +84,12 @@ def select_client(clients, pid, app_id):
 
 
 class Fixture:
-    def __init__(self, binary, output):
+    def __init__(self, binary, output, selector=None):
         self.binary, self.output = binary, output
+        # Monitor selector for kwin-window to-screen. Physical outputs are always
+        # addressed by description; only the temporary headless geometry check
+        # passes the connector name of the output it created itself.
+        self.selector = selector or 'desc:' + output
         self.app_id = 'org.bwm.r4.maximize.' + uuid.uuid4().hex
         self.child = None
         self.directory = None
@@ -126,7 +130,7 @@ class Fixture:
                 if time.monotonic() >= deadline or self.child.poll() is not None: raise
                 time.sleep(.1)
         # The real CLI signature is: to-screen MONITOR [ADDRESS].
-        self.command('to-screen', 'desc:' + self.output)
+        self.command('to-screen', self.selector)
 
     def measure(self, monitor, remaximize=True):
         expected = useful_area(monitor)

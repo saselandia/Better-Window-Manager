@@ -178,8 +178,9 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   con un único maximizado inicial (§297). El ensayo inferior simultáneo pasó
   con un marco por salida (§§298–299). La expectativa del comprobador admite
   escala y giro (§300). El maximizador y el observador aplican también el
-  redondeo de Hyprland en geometrías fraccionarias (§301). Falta medir una
-  disposición distinta de la actual en sesión.
+  redondeo de Hyprland en geometrías fraccionarias (§301). Una salida headless
+  temporal confirmó maximizado y reajuste con escalas 1,25/1,5/1,6 y giros
+  1/2/3/5. El observador ya no se detiene con salidas sin EDID (§302).
   Inventario de plasmoides internos de la bandeja nativa y comprobación de su guardado
   en otro proceso (§274). `r4-session-check.py --tray` lee el dueño y los contadores SNI
   de la sesión sin activar servicios.
@@ -4854,6 +4855,32 @@ panel diario intacto. Pérdida temporal del ejecutor no demuestra un fallo del o
   selección de monitor, puente y cambio de skin. La medición en una nueva
   escala o giro sigue pendiente. El puente en ejecución adoptará la corrección
   Python al recargarse por su mecanismo existente.
+
+### 302. R4: maximizado con otras escalas y giros en una salida temporal (2026-11-18)
+
+* Esta sesión tiene acceso IPC a Hyprland. Para no reconfigurar los monitores
+  físicos, `r4-geometry-check.py --run` crea una salida headless con nombre
+  único y le aplica modo, escala y giro con `hl.monitor`. Cambia la reserva con
+  el campo `reserved` de la misma regla, que Hyprland suma a las capas. La ventana
+  de prueba de R4 se abre en esa salida sin foco y se maximiza con el gestor común.
+  La salida, la regla temporal de ventana y la ventana se retiran al terminar.
+* Primer intento: el maximizado explícito coincidió en las cuatro geometrías y
+  el reajuste automático falló en todas. `kwin_area.py` rechazaba la instantánea
+  entera si un monitor tenía descripción vacía. Con un monitor sin EDID (headless,
+  virtual o real sin EDID) el observador dejaba de actuar en todas las salidas.
+  La descripción sólo se usa en la firma en memoria. Ahora, si falta, usa el
+  nombre del conector. Una salida sin descripción ni nombre sigue rechazada.
+* Tras recargar el puente pasaron explícito y automático, sin remaximizar, en
+  `1920x1200` escala 1,25 giro 1 y 5, `1920x1080` 1,5 giro 3 y `2560x1600` 1,6
+  giro 2. La reserva superior de 48 px se añadió y retiró con el panel diario
+  de 44 px en esa salida. Limpieza verificada: salidas físicas, workspaces y
+  ventana con foco iguales. Evidencia `docs/BREEZE_R4_GEOMETRY_SESSION_RESULTS.json`.
+* Límites: Hyprland 0.56 rechaza escalas que dejan medios píxeles lógicos. El
+  redondeo de §301 queda cubierto por pruebas unitarias. La reserva no la crea
+  el panel nativo: su identidad exige descripción y no se ejecuta en headless.
+* Regresión del observador (falla antes, pasa después) y cinco pruebas del
+  comprobador; 254 pruebas R4 y 42 de ventanas/puente/skins pasan. `Fixture`
+  admite un selector opcional; por defecto sigue usando `desc:`.
 
 ## 4. 📂 Estructura del repositorio
 

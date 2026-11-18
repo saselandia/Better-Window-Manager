@@ -51,6 +51,18 @@ class AreaTest(unittest.TestCase):
         self.assertEqual(len(self.actions),1)
         self.assertTrue(all(timeout==2 for _,timeout in self.calls))
 
+    def test_output_without_edid_description_does_not_stop_tracking(self):
+        # Headless/virtual outputs and monitors without EDID report an empty
+        # description. They must not make the whole snapshot invalid.
+        self.monitors.append(dict(self.monitors[0],id=1,name='HEADLESS-2',description='',x=4000,y=0,width=1920,height=1080,reserved=[0,0,0,44]))
+        self.monitors[0]['name']='DP-2'
+        self.tick();self.assertEqual(self.actions,[])
+        self.monitors[0]['reserved'][3]=44;self.tick()
+        self.assertEqual(len(self.actions),1)
+        self.assertIn('y=1368',self.actions[0])
+        self.monitors[1]['name']='';self.monitors[1]['reserved'][1]=10
+        with self.assertRaisesRegex(ValueError,'identity'):self.runtime.tick()
+
     def test_shrink_reflows_and_each_axis_preserves_the_other(self):
         self.clients[0]['size'][1]=1368;self.tick()
         self.assertIn('y=1320',self.actions[0])

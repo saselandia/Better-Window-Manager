@@ -136,8 +136,12 @@ class Runtime:
         if transition_busy():return
         monitors=self.query('monitors');clients=self.query('clients')
         if not isinstance(monitors,list) or not monitors or not isinstance(clients,list):raise ValueError('Invalid area observer snapshot')
-        if any(not isinstance(m,dict) or type(m.get('id')) is not int or not isinstance(m.get('description'),str) or not m['description'] for m in monitors) or any(not isinstance(c,dict) for c in clients):raise ValueError('Invalid monitor/client identity')
-        areas={m['id']:(m.get('description'),area(m,self.kw)) for m in monitors}
+        if any(not isinstance(m,dict) or type(m.get('id')) is not int or not isinstance(m.get('description',''),str) or not (m.get('description') or (isinstance(m.get('name'),str) and m['name'])) for m in monitors) or any(not isinstance(c,dict) for c in clients):raise ValueError('Invalid monitor/client identity')
+        # The identity only lives in this in-memory signature, to notice an id
+        # reused by another output. Outputs without EDID (headless, virtual or
+        # a monitor that sends none) have an empty description: use their
+        # connector for this purpose instead of rejecting every monitor.
+        areas={m['id']:(m.get('description') or 'connector:'+m['name'],area(m,self.kw)) for m in monitors}
         if len(areas)!=len(monitors):raise ValueError('Duplicate monitor identity')
         if not self.marked:self.mark_ready()
         live={(c.get('address'),c.get('pid')) for c in clients if isinstance(c.get('address'),str) and type(c.get('pid')) is int}

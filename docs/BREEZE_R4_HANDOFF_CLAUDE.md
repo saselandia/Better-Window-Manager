@@ -1,5 +1,15 @@
 # Traspaso R4 para Claude
 
+## Traspaso actualizado — 2026-11-18 (§302)
+
+Esta sesión tenía IPC. `r4-geometry-check.py --run --refresh-area-watcher`
+midió maximizado y reajuste en una salida headless temporal con escalas
+1,25/1,5/1,6 y giros 1/2/3/5: todo pasó tras corregir `kwin_area.py`, que se
+paraba en todas las salidas si una no tenía descripción (sin EDID). El puente
+en ejecución ya usa la corrección. Pendiente sólo el panel nativo con otras
+escalas en una salida física. Siguiente frente posible: bandeja nativa en la
+vista del panel o la comprobación física del monitor del ensayo `--menu-wayland`.
+
 ## Traspaso actualizado — 2026-11-18 (§301)
 
 El maximizador y el observador de área usan ahora el redondeo de Hyprland

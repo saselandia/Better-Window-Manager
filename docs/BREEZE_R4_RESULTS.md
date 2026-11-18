@@ -3932,3 +3932,29 @@ El comprobador conserva su cálculo independiente. Las demás llamadas de
 Pasan 248 pruebas de R4, la suite de maximizado y las de selección de salida,
 puente y cambio de skin. La comprobación de geometrías distintas en el
 compositor sigue pendiente y el puente requiere recarga para adoptar el cambio.
+
+## Escalas y giros en una salida headless temporal R4 §302
+
+`r4-geometry-check.py --run` crea una salida headless con nombre único, aplica
+modo, escala y giro con una regla `hl.monitor` y cambia su reserva con el campo
+`reserved` de esa regla. Mide la ventana propia de R4 maximizada en esa salida
+con `useful_area()` del comprobador y lee primero el reajuste automático. Los
+monitores físicos no se reconfiguran.
+
+El primer intento acertó el maximizado explícito pero no el reajuste: el
+observador de `kwin_area.py` rechazaba toda la instantánea si un monitor tenía
+descripción vacía. Las salidas sin EDID desactivaban el seguimiento en todos los
+monitores. La firma en memoria usa ahora el conector cuando falta la descripción.
+
+| Modo | Escala | Giro | Área lógica | Explícito | Automático |
+| :--- | ---: | ---: | :--- | :--- | :--- |
+| 1920x1200 | 1,25 | 1 | 960 × 1536 | Sí | Sí |
+| 1920x1080 | 1,5 | 3 | 720 × 1280 | Sí | Sí |
+| 2560x1600 | 1,6 | 2 | 1600 × 1000 | Sí | Sí |
+| 1920x1200 | 1,25 | 5 | 960 × 1536 | Sí | Sí |
+
+Reserva `[0, 0, 0, 44] → [0, 48, 0, 44] → [0, 0, 0, 44]`, sin remaximizar.
+Limpieza verificada (salidas físicas, workspaces y foco iguales). Los medios
+píxeles lógicos no se pueden producir: Hyprland 0.56 rechaza esas escalas. La
+reserva no procede del panel nativo, que no admite salidas sin descripción.
+Evidencia en `BREEZE_R4_GEOMETRY_SESSION_RESULTS.json`.

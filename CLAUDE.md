@@ -549,6 +549,9 @@ siendo el nombre del escritorio original que imita Breeze.
   privado sólo confirma baseline/proceso; la aceptación dinámica requiere medir al aparecer
   y retirar el panel sin remaximizar. Validado en sesión por el usuario para MSI inferior,
   escala 1/giro 0 y modo completo (§208); no extender a otras combinaciones ni takeover.
+  Otras escalas/giros: probar en una salida headless temporal (r4-geometry-check.py, §302),
+  nunca reconfigurando los monitores físicos. Un monitor sin descripción (sin EDID) no debe
+  invalidar la instantánea de todas las salidas: la firma en memoria usa entonces el conector.
 - Kitty recuerda también el estado maximizado: `remember_window_size no` evita restaurarlo. La regla global
   `suppress-maximize-events` bloquea peticiones de maximizado de apps (también botones CSD); el compositor
   conserva el control manual y las peticiones de fullscreen de juegos/vídeo siguen permitidas.
