@@ -30,11 +30,20 @@ hl.window_rule({
     float = true,
 })
 
--- com.stremio.Stremio
+-- dev.vencord.Vesktop
 hl.window_rule({
-    name  = "persist_com_stremio_stremio",
+    name  = "persist_dev_vencord_vesktop",
     match = {
-        class = "^com\\.stremio\\.Stremio$",
+        class = "^dev\\.vencord\\.Vesktop$",
+    },
+    float = true,
+})
+
+-- firefox-bin
+hl.window_rule({
+    name  = "persist_firefox_bin",
+    match = {
+        class = "^firefox\\-bin$",
     },
     float = true,
 })
@@ -44,6 +53,15 @@ hl.window_rule({
     name  = "persist_kitty",
     match = {
         class = "^kitty$",
+    },
+    float = true,
+})
+
+-- md.obsidian.Obsidian
+hl.window_rule({
+    name  = "persist_md_obsidian_obsidian",
+    match = {
+        class = "^md\\.obsidian\\.Obsidian$",
     },
     float = true,
 })
@@ -80,6 +98,15 @@ hl.window_rule({
     name  = "persist_org_quickshell",
     match = {
         class = "^org\\.quickshell$",
+    },
+    float = true,
+})
+
+-- signal
+hl.window_rule({
+    name  = "persist_signal",
+    match = {
+        class = "^signal$",
     },
     float = true,
 })

@@ -1,10 +1,10 @@
 * {
-    accent: #8bcbb1;
-    secondary: #8bcbb1;
-    bg: #142620f5;
-    bg-input: #0f1e19;
-    fg: #dfede5;
-    muted: #64887b;
-    dim: #91ad9f;
-    bg-selected-text: #0a1713;
+    accent: #f38d70;
+    secondary: #f38d70;
+    bg: #2c2525f5;
+    bg-input: #211b1b;
+    fg: #e6d9db;
+    muted: #72696a;
+    dim: #72696a;
+    bg-selected-text: #181414;
 }

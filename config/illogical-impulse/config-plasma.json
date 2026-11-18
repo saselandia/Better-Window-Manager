@@ -22,13 +22,13 @@
     "extraBackgroundTint": true,
     "fakeScreenRounding": 0,
     "fonts": {
-      "main": "Noto Sans",
-      "numbers": "Noto Sans",
-      "title": "Noto Sans",
-      "monospace": "Hack",
-      "reading": "Noto Sans",
       "expressive": "Noto Sans",
-      "iconNerd": "JetBrains Mono NF"
+      "iconNerd": "JetBrains Mono NF",
+      "main": "Noto Sans",
+      "monospace": "Hack",
+      "numbers": "Noto Sans",
+      "reading": "Noto Sans",
+      "title": "Noto Sans"
     },
     "palette": {
       "accentColor": "",
@@ -153,6 +153,7 @@
     "plasma": {
       "alignment": "center",
       "centerTasks": false,
+      "clock": {},
       "color": "#000000",
       "edge": "",
       "floating": false,
@@ -193,8 +194,11 @@
       "showDate": true,
       "showSeconds": false,
       "style": "opaque",
+      "systemTray": {},
+      "taskManager": {},
       "taskOrder": [],
       "thickness": 44,
+      "trayItems": {},
       "visibility": "always",
       "widgets": [
         "kickoff",
@@ -285,7 +289,8 @@
     "monochromeIcons": true,
     "omarchy": false,
     "pinnedApps": [
-      "org.gnome.Nautilus"
+      "org.gnome.Nautilus",
+      "org.kde.dolphin"
     ],
     "pinnedOnStartup": false
   },

@@ -90,14 +90,6 @@
         },
         "float": true
     },
-    "chatgpt": {
-        "name": "persist_chatgpt",
-        "description": "Chatgpt",
-        "match": {
-            "class": "^Chatgpt$"
-        },
-        "float": false
-    },
     "kitty": {
         "name": "persist_kitty",
         "description": "kitty",
@@ -114,11 +106,43 @@
         },
         "float": true
     },
-    "com_stremio_stremio": {
-        "name": "persist_com_stremio_stremio",
-        "description": "com.stremio.Stremio",
+    "md_obsidian_obsidian": {
+        "name": "persist_md_obsidian_obsidian",
+        "description": "md.obsidian.Obsidian",
         "match": {
-            "class": "^com\\.stremio\\.Stremio$"
+            "class": "^md\\.obsidian\\.Obsidian$"
+        },
+        "float": true
+    },
+    "firefox_bin": {
+        "name": "persist_firefox_bin",
+        "description": "firefox-bin",
+        "match": {
+            "class": "^firefox\\-bin$"
+        },
+        "float": true
+    },
+    "signal": {
+        "name": "persist_signal",
+        "description": "signal",
+        "match": {
+            "class": "^signal$"
+        },
+        "float": true
+    },
+    "chatgpt": {
+        "name": "persist_chatgpt",
+        "description": "Chatgpt",
+        "match": {
+            "class": "^Chatgpt$"
+        },
+        "float": false
+    },
+    "dev_vencord_vesktop": {
+        "name": "persist_dev_vencord_vesktop",
+        "description": "dev.vencord.Vesktop",
+        "match": {
+            "class": "^dev\\.vencord\\.Vesktop$"
         },
         "float": true
     }
