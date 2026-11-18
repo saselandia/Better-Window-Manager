@@ -100,11 +100,21 @@ close_all_windows() {
   return 0
 }
 
+stop_plasma_preview() {
+  local hook
+  hook="$(dirname -- "$(realpath -- "$0")")/../skins/plasma/scripts/panel-session.py"
+  [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} && -f $hook ]] || return 0
+  if ! timeout 8s python3 "$hook" session-exit >/dev/null; then
+    printf '%s\n' '[BWM] No se pudo confirmar el guardado del panel de prueba antes de cerrar la sesión.' >&2
+  fi
+}
+
 exit_session() {
   if [[ $dry_run == 1 ]]; then
     echo "[dry-run] aviso: $message"
   else
     notify-send -a BWM -u low -t 5000 "$message" 2>/dev/null || true
+    stop_plasma_preview
   fi
   close_all_windows
   run "${command[@]}"

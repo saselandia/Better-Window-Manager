@@ -1,0 +1,222 @@
+{
+  "version": 1,
+  "date": "2026-11-17",
+  "section": "BWM_CONTEXT §3.264",
+  "scope": "User-verified same-output navigation MSI/1 → MSI/3 → MSI/1, with LG/10 unchanged; daily panel certification remains pending",
+  "command": "python3 src/bwm-plasma-host/check-desktops-activation.py --workspace-cycle",
+  "selection": {
+    "target": "Configured ordinary ID, absent from all live workspaces, explicitly bound to focused output",
+    "rejects": [
+      "99/special IDs",
+      "existing personal workspaces even with no windows",
+      "foreign/ambiguous monitor bindings",
+      "persistent targets",
+      "onCreatedEmpty commands",
+      "unreviewable non-literal bindings/hooks",
+      "changed focus/selection before client start"
+    ],
+    "source": "Read-only workspaces/workspacerules/monitors IPC; no rule/config writes or environment dumps",
+    "upstreamReason": "Hyprland 0.56.2 WorkspaceState::create obeys workspace monitor bindings even with an explicit monitor argument"
+  },
+  "nativeClient": {
+    "api": "Original TaskManager::VirtualDesktopInfo::requestActivate",
+    "route": "Target on focused output, then initial desktop; all other outputs unchanged",
+    "guards": "Existing skin/native action locks, Breeze, no visible specials, verified provider/barrier, stable output identity/geometry/desktop inventory",
+    "receipts": "Two accepted/applied/observed/dispatched, zero new failed/rejected/cancelled/noop; final initial state and pause",
+    "failurePolicy": "Pause and stop; no stale-focus fallback. Final restoration check always uses original assignments.",
+    "materialization": "May materialize an already-projected ID; no create/remove protocol requests or new preferences",
+    "concurrencyLimit": "Read/act brackets are not an atomic exclusion of external keyboard/rule edits"
+  },
+  "validation": {
+    "pythonR4Passed": 212,
+    "newWorkspaceTestsPassed": 10,
+    "normalHostAndNativeTestBuilt": true,
+    "asanHostAndNativeTestBuilt": true,
+    "nonWaylandRejectedNormal": true,
+    "nonWaylandRejectedAsan": true,
+    "nonWaylandActivationRequests": 0,
+    "isolatedLocalConfigurationPassed": true,
+    "nativeProtocol": {
+      "passed": false,
+      "newCaseCompiled": true,
+      "newCaseExecuted": false,
+      "error": "fixture first wl_client_create: Operation not permitted (before Qt)",
+      "test": "nativeWorkspaceCycleVisitsInactiveDesktopOnTheSameOutput"
+    },
+    "realSessionExecuted": true,
+    "realSessionExecutedBy": "user in local terminal",
+    "realSessionCasePassed": true
+  },
+  "pluginChanged": false,
+  "runtimePanelChanged": false,
+  "loginRequired": false,
+  "requirementsChanged": false,
+  "sameOutputNavigationVerified": true,
+  "replacementReady": false,
+  "r4Complete": false,
+  "files": {
+    "src/bwm-plasma-host/check-desktops-activation.py": "13a6e7ccd6cc5cd6920cd8cf0dbd5d4ed258c8d7eddff3459475be5856f0e530",
+    "src/bwm-plasma-host/desktopsessioncheck.cpp": "f47778d41e6a1717ed41e55046c56df8e3a66829914b6b16f6d61ebdc212018b",
+    "src/bwm-plasma-host/desktopsessioncheck.h": "03035c420e83007bcfc9cc48891967dcab3a4d7d9914dd35ed52324c7f9c6b7b",
+    "src/bwm-plasma-host/main.cpp": "594505966e476b4d12f1ca40e08ccb31dbd45829236faf3d06f9792e3e76d65d",
+    "src/bwm-plasma-host/test-desktops.cpp": "08e2ac97b4e5f314f951873ec0cfb034f80ca0e0b6044f9023707aef0fd8ef4e",
+    "tests/test_r4_workspace_cycle.py": "03e7c46d30c9c549228d6f7da85a18c6f1e23ba90d6897a7872c773a1ad62c7c"
+  },
+  "successfulRealSessionAttempt": {
+    "section": "BWM_CONTEXT §3.265",
+    "date": "2026-11-17",
+    "source": "User-pasted --workspace-cycle terminal JSON",
+    "version": 1,
+    "readOnly": false,
+    "passed": true,
+    "activationAttempted": true,
+    "configurationChanged": false,
+    "panelsOpened": false,
+    "capturesStarted": false,
+    "replacementReady": false,
+    "nativeDiagnostic": {
+      "version": 1,
+      "readOnly": false,
+      "passed": true,
+      "activationRequestsSent": 2,
+      "initialCurrent": "1",
+      "initialOutputs": [
+        {
+          "description": "LG Electronics LG ULTRAFINE 405NTVS2J655",
+          "geometry": [
+            2560,
+            0,
+            3840,
+            2160
+          ],
+          "match": "matched",
+          "currentByName": "10",
+          "currentByGeometry": "10"
+        },
+        {
+          "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+          "geometry": [
+            0,
+            720,
+            2560,
+            1440
+          ],
+          "match": "matched",
+          "currentByName": "1",
+          "currentByGeometry": "1"
+        }
+      ],
+      "finalObservation": {
+        "assignmentsMatch": true,
+        "current": "1",
+        "outputs": [
+          {
+            "description": "LG Electronics LG ULTRAFINE 405NTVS2J655",
+            "geometry": [
+              2560,
+              0,
+              3840,
+              2160
+            ],
+            "match": "matched",
+            "currentByName": "10",
+            "currentByGeometry": "10"
+          },
+          {
+            "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+            "geometry": [
+              0,
+              720,
+              2560,
+              1440
+            ],
+            "match": "matched",
+            "currentByName": "1",
+            "currentByGeometry": "1"
+          }
+        ],
+        "control": {
+          "bindingKnown": true,
+          "bindingVerified": true,
+          "confirmed": true,
+          "confirmedPaused": true,
+          "connected": true,
+          "desiredPaused": true,
+          "lastError": "",
+          "managementGlobal": 75,
+          "operationalVerified": false,
+          "pending": false,
+          "providerAvailable": true,
+          "registry": {
+            "complete": true,
+            "controlGlobals": 1,
+            "managementGlobals": 1,
+            "overflow": false,
+            "restartRequired": false,
+            "scope": "current-wayland-connection-visible-globals",
+            "topologyCompatible": true
+          },
+          "registryTimedOut": false,
+          "registryWaiting": false,
+          "required": true,
+          "resumed": false,
+          "scope": "same-wayland-connection",
+          "serial": 2
+        }
+      },
+      "paused": true,
+      "restoredInitialOutput": true,
+      "steps": [
+        {
+          "current": "3",
+          "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+          "verified": true
+        },
+        {
+          "current": "1",
+          "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+          "verified": true
+        }
+      ],
+      "requestedDesktop": "1",
+      "requestedOutput": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+      "windowCount": 0,
+      "activationMethod": "requestActivate",
+      "navigationTarget": "3"
+    },
+    "restoredInitialOutput": true,
+    "paused": true,
+    "current": "1",
+    "steps": [
+      {
+        "current": "3",
+        "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+        "verified": true
+      },
+      {
+        "current": "1",
+        "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+        "verified": true
+      }
+    ],
+    "providerCounterDelta": {
+      "acceptedRequests": 2,
+      "appliedActivations": 2,
+      "observedActivations": 2,
+      "dispatchedActivations": 2,
+      "failedActivations": 0,
+      "rejectedRequests": 0,
+      "cancelledActivations": 0,
+      "activationNoops": 0
+    },
+    "activationRequestsSent": 2,
+    "windowCount": 0,
+    "selectedDesktop": "3"
+  },
+  "verificationLimits": [
+    "One unused target (3) on MSI in the recorded output arrangement",
+    "No proof of why selection skipped ID 2",
+    "No window/pointer focus measurements",
+    "No occupied workspace, cross-output relocation, logout/teardown or daily panel certification"
+  ]
+}

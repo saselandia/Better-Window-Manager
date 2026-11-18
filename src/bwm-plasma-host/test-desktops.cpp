@@ -3,6 +3,7 @@
 #include "nativedesktopcontrol.h"
 #include "panelruntime.h"
 #include "runtimecontrol.h"
+#include "desktopsessioncheck.h"
 #include <virtualdesktopinfo.h>
 #include <tasksmodel.h>
 #include <taskfilterproxymodel.h>
@@ -15,6 +16,7 @@
 #include <QSaveFile>
 #include <QTemporaryDir>
 #include <QProcess>
+#include <QScopeGuard>
 #include <QProcessEnvironment>
 #include <QQmlEngine>
 #include <QQmlComponent>
@@ -37,6 +39,75 @@ class DesktopTest:public QObject {
             {"maximized",false},{"fullscreen",false},{"urgent",false},{"onAllDesktops",false}};
     }
 private Q_SLOTS:
+    void readOnlyDesktopDiagnosticDoesNotResumeOrCreateWindows(){
+        const auto report=nativeDesktopSessionSnapshot({"BWM fixture r4-output-A","BWM fixture r4-output-B"});
+        QVERIFY2(report.value("ready").toBool(),qPrintable(QJsonDocument(report).toJson()));
+        QCOMPARE(report.value("desktopIds").toArray(),QJsonArray({"1","2","3"}));
+        QCOMPARE(report.value("windowCount").toInt(),0);
+        const auto control=report.value("control").toObject();
+        QVERIFY(control.value("bindingVerified").toBool());
+        QVERIFY(!control.value("resumed").toBool());QCOMPARE(control.value("serial").toInt(),0);
+        const auto outputs=report.value("outputs").toArray();QCOMPARE(outputs.size(),2);
+        QCOMPARE(outputs[0].toObject().value("currentByName").toString(),"1");
+        QCOMPARE(outputs[0].toObject().value("currentByGeometry").toString(),"1");
+        QCOMPARE(outputs[1].toObject().value("currentByName").toString(),"2");
+        QCOMPARE(outputs[1].toObject().value("currentByGeometry").toString(),"2");
+        // The native backend stays unprivileged: even an accidental call through
+        // KDE on this connection is rejected until explicitly resumed elsewhere.
+        TaskManager::VirtualDesktopInfo info;info.requestActivate(QString("3"));QTest::qWait(40);
+        QCOMPARE(info.currentDesktop().toString(),"1");
+        QVERIFY(!nativeDesktopSessionSnapshot({"BWM fixture r4-output-A","BWM fixture r4-output-A"},80).value("ready").toBool());
+        QVERIFY(!nativeDesktopSessionSnapshot({"Unrecognized output"},80).value("ready").toBool());
+    }
+    void nativeFocusCycleVisitsExistingOutputsAndReturns(){
+        const QStringList outputs{"BWM fixture r4-output-A","BWM fixture r4-output-B"};
+        const auto report=nativeDesktopFocusCycle(outputs[0],outputs);
+        QVERIFY2(report.value("passed").toBool(),qPrintable(QJsonDocument(report).toJson()));
+        QVERIFY(!report.value("readOnly").toBool());QVERIFY(report.value("paused").toBool());
+        QVERIFY(report.value("restoredInitialOutput").toBool());QCOMPARE(report.value("activationRequestsSent").toInt(),2);
+        const auto steps=report.value("steps").toArray();QCOMPARE(steps.size(),2);
+        QCOMPARE(steps[0].toObject().value("current").toString(),"2");
+        QCOMPARE(steps[1].toObject().value("current").toString(),"1");
+        QCOMPARE(report.value("windowCount").toInt(),0);
+        const auto rejected=nativeDesktopFocusCycle(outputs[1],outputs);
+        QVERIFY(!rejected.value("passed").toBool());QCOMPARE(rejected.value("activationRequestsSent").toInt(),0);
+    }
+    void nativeFocusCycleFailureKeepsObservationAndDoesNotRetry(){
+        command("activation-pretend-on");
+        const auto restore=qScopeGuard([&]{command("activation-pretend-off");});
+        const auto report=nativeDesktopFocusCycle("BWM fixture r4-output-A",{"BWM fixture r4-output-A","BWM fixture r4-output-B"});
+        QVERIFY(!report.value("passed").toBool());QVERIFY(report.value("paused").toBool());
+        QVERIFY(report.value("restoredInitialOutput").toBool());
+        QCOMPARE(report.value("activationRequestsSent").toInt(),1);QCOMPARE(report.value("steps").toArray().size(),0);
+        QCOMPARE(report.value("requestedDesktop").toString(),"2");
+        QCOMPARE(report.value("failedObservation").toObject().value("current").toString(),"1");
+        QVERIFY(report.value("failedObservation").toObject().value("assignmentsMatch").toBool());
+        QCOMPARE(report.value("finalObservation").toObject().value("current").toString(),"1");
+    }
+    void nativeWorkspaceCycleVisitsInactiveDesktopOnTheSameOutput(){
+        const QStringList outputs{"BWM fixture r4-output-A","BWM fixture r4-output-B"};
+        const auto report=nativeDesktopWorkspaceCycle(outputs[0],"3",outputs);
+        QVERIFY2(report.value("passed").toBool(),qPrintable(QJsonDocument(report).toJson()));
+        QVERIFY(report.value("paused").toBool());QVERIFY(report.value("restoredInitialOutput").toBool());
+        QCOMPARE(report.value("activationRequestsSent").toInt(),2);
+        QCOMPARE(report.value("activationMethod").toString(),"requestActivate");
+        const auto steps=report.value("steps").toArray();QCOMPARE(steps.size(),2);
+        QCOMPARE(steps[0].toObject().value("description").toString(),outputs[0]);
+        QCOMPARE(steps[0].toObject().value("current").toString(),"3");
+        QCOMPARE(steps[1].toObject().value("current").toString(),"1");
+        QCOMPARE(report.value("finalObservation").toObject().value("outputs").toArray()[1].toObject().value("currentByName").toString(),"2");
+        for(const auto &target:{"2","9","99","03"}){
+            const auto rejected=nativeDesktopWorkspaceCycle(outputs[0],target,outputs);
+            QVERIFY(!rejected.value("passed").toBool());QCOMPARE(rejected.value("activationRequestsSent").toInt(),0);
+        }
+        command("activation-pretend-on");
+        const auto restore=qScopeGuard([&]{command("activation-pretend-off");});
+        const auto failed=nativeDesktopWorkspaceCycle(outputs[0],"3",outputs);
+        QVERIFY(!failed.value("passed").toBool());QVERIFY(failed.value("paused").toBool());
+        QVERIFY(failed.value("restoredInitialOutput").toBool());
+        QCOMPARE(failed.value("activationRequestsSent").toInt(),1);
+        QVERIFY(!failed.value("failedObservation").toObject().value("assignmentsMatch").toBool());
+    }
     void nativeActivationRequiresObservedAbsoluteState(){
         NativeDesktopControl gate;TaskManager::VirtualDesktopInfo info;
         QTRY_VERIFY(gate.ensurePaused(false)==NativeDesktopControl::Status::Ready);

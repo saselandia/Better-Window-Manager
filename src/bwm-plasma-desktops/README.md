@@ -6,9 +6,16 @@ D-Bus KWin ni servidor de escritorio. Separa el núcleo de protocolo, la proyecc
 workspaces BWM y una extensión opcional de Hyprland. Código propio GPL-2.0-or-later;
 licencias de XML/generados y procedencia en ../../THIRD_PARTY_NOTICES.md.
 
-Estado: núcleo y consumidores originales KDE probados en una conexión Wayland aislada;
-extensión compilada contra headers 0.56.2, sin instalar, cargar ni validar en sesión.
-No se selecciona el panel diario. No anuncia un pager o widget de tareas completo.
+Estado (§254–265): núcleo y consumidores KDE probados aislados y en Hyprland anidado;
+extensión instalada y cargada mediante opt-in al iniciar la sesión real. El usuario confirma
+ABI coincidente, arbitraje activo, contador común 10 y ausencia de errores. Filtro de tareas
+aceptado por el usuario en MSI (§257); lectura medida LG/10 y MSI/1 aceptada en sesión (§259).
+Ciclo de activación fallido en sesión (§261); doble acción de foco reproducida/corregida e
+instalada atómicamente (§262, activationRoutingVersion=2). Ciclo real corregido LG/10 → MSI/1
+validado por el usuario (§263): dos acciones aplicadas/observadas, sin fallo y pausa final.
+Navegación real MSI/1 → MSI/3 → MSI/1 validada (§265), LG/10 conservado y sin fallos. Cierre
+y autoridades/recuperación diarias siguen pendientes. No se selecciona el panel diario
+ni se anuncia un pager o widget de tareas completo.
 
 ## Construcción y pruebas aisladas
 
@@ -31,7 +38,7 @@ El XML privado KDE se genera con wayland-scanner desde plasma-wayland-protocols 
 instalado; CMake fija su SHA256 porque admite cambios incompatibles sin cambiar versión.
 El XML xdg-shell de wayland-protocols sólo se usa en el fixture. No se modifica KDE.
 
-## Extensión de Hyprland: sólo construcción
+## Extensión de Hyprland: construcción y arranque opt-in
 
 ```bash
 cmake -S src/bwm-plasma-desktops -B build/bwm-plasma-desktops -DBWM_BUILD_HYPRLAND_PLUGIN=ON
@@ -39,17 +46,20 @@ cmake --build build/bwm-plasma-desktops --target bwm-plasma-desktops -j3
 ```
 
 El resultado queda en build/bwm-plasma-desktops/bwm-plasma-desktops.so. Tanto núcleo como
-módulo se compilan con -fno-gnu-unique. No hay hook de carga/autoinicio ni cambios del panel.
+módulo se compilan con -fno-gnu-unique. No hay cambios del panel diario.
 La guarda de inicialización compara el hash del Hyprland en ejecución con el de headers.
-El opt-in plugin:bwm_plasma_desktops:enabled empieza en false. make install existe para
-un despliegue futuro y usa temporal + rename atómico; NO se ha ejecutado en esta fase.
+El opt-in plugin:bwm_plasma_desktops:enabled empieza en false. make install usa copia
+temporal y rename atómico y se ejecutó antes del primer inicio real (§255).
 No cargar/descargar en caliente ni sobrescribir un .so cargado. Revisar compatibilidad y
 presencia de otro proveedor antes de una carga en un nuevo inicio de sesión.
 
-La integración de arranque/habilitación queda pendiente de la aceptación real. La barrera
-por conexión del auxiliar ya se ha implementado y probado con el núcleo aislado (§219),
-sin certificar todavía su frontend en Hyprland. No habilitarla automáticamente por el éxito
-de la prueba del núcleo. El diagnóstico de hyprctl bwm-plasma-desktops, cuando esté cargada,
+autostart.sh carga/habilita sólo al iniciar Hyprland si se activó expresamente el opt-in:
+`python3 ~/.config/hypr/skins/plasma/scripts/native-desktops.py enable` (siguiente login).
+`disable` evita la carga en el siguiente login; `status` sólo consulta. La guarda contra
+bucles desactiva el opt-in si el inicio anterior no alcanzó 60 segundos estables (§255).
+El primer arranque real está confirmado; la barrera del auxiliar se probó aislada y anidada,
+sin certificar todavía su frontend en la sesión del usuario. No habilitarla automáticamente
+por el éxito de una prueba. El diagnóstico de hyprctl bwm-plasma-desktops, cuando esté cargada,
 expone estado/contadores/capacidades; operationalVerified y liveSessionVerified siguen false.
 
 ## Autoridad y capacidades
@@ -309,5 +319,69 @@ pausa y rechazo de crear/quitar, con cliente normal y ASan. La carga al iniciar 
 `autostart.sh` ejecuta `native-desktops.py startup` una vez al iniciar Hyprland: comprueba versión,
 carga, habilita, deja la marca de sesión y publica el contador; guarda contra bucles de fallo
 (si el inicio anterior no llegó a 60 s estables, se desactiva solo y avisa). Instalar con
-`make install` sólo con el módulo sin cargar. Prueba de la ruta de inicio:
+`make install` mediante temporal + mv atómico: el inodo cargado queda intacto; el módulo
+corregido se adopta al siguiente login, nunca recargándolo en caliente. Prueba de la ruta de inicio:
 `check-desktops-hyprland.py --via-startup ...` en el Hyprland anidado.
+
+## Diagnóstico de la sesión sin acciones (§258)
+
+```bash
+python3 /mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/check-desktops-session.py
+```
+
+Compara el inventario proyectado y los escritorios activos por salida con VirtualDesktopInfo
+original, por nombre efímero y geometría. Asociación de proveedor verificada, sin reanudar
+la conexión (serial 0), crear ventanas/paneles, activar escritorios ni cargar/habilitar el
+módulo. Raíces XDG temporales; puede coexistir con el preview. Descripción única con BwmOutput,
+geometría lógica del gestor común y lecturas antes/después coincidentes. Ante cambios durante
+la medición o ambigüedad, repetir con pantallas/workspaces estables; no elegir una salida
+arbitraria. No certifica activación ni navegación, cierre de sesión o panel diario.
+
+## Ensayo explícito de activación por salida (§260)
+
+```bash
+python3 /mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/check-desktops-activation.py --focus-cycle
+```
+
+Pide enfocar los escritorios ya visibles de otras salidas y volver a la inicial mediante
+VirtualDesktopInfo.requestActivateOnScreen. Cambia brevemente el foco. No crea escritorios ni
+reubica/cambia qué escritorio muestra cada pantalla. Requiere Breeze y 2–8 salidas distintas;
+bloqueos existentes de skin/acciones impiden solapar cambios. Rechaza especiales visibles
+antes/después. Resume y pause de la misma
+conexión, lectura por paso y deltas exactos del proveedor; si falla no aplica acciones de
+respaldo para recuperar un foco que podría haberse quedado obsoleto. Sigue siendo un ensayo,
+sin certificar navegación entre escritorios no visibles, foco de ventana o panel diario.
+
+Primer intento real fallido (§261). Leer contadores/motivo actuales sin repetir el ciclo:
+
+```bash
+python3 /mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/check-desktops-activation.py --diagnose-last
+```
+
+El diagnóstico conserva datos del hijo/proveedor incluso al fallar. No interpretar
+restoredInitialOutput=true como prueba de haber visitado otra salida: sólo es estado final.
+El comando corto native-desktops.py no está en PATH; para consultar el arranque usar
+`python3 ~/.config/hypr/skins/plasma/scripts/native-desktops.py status`.
+
+Corrección §262: un workspace ya activo requiere sólo Actions::focusMonitor; añadir
+changeWorkspace al mismo workspace puede devolver el foco al puntero con destino vacío
+y no_warps=true. Para uno inactivo, changeWorkspace por objeto conserva su propio flujo
+entre salidas. check-activation-routing.py ejecuta cuerpos originales 0.56.2 con andamiaje
+de datos y el applyExact actual (48 casos normal/ASan); no certifica el compositor real.
+El diagnóstico expone activationRoutingVersion=2 y el ciclo exige esa generación cargada.
+
+## Ensayo de workspace no visible (§264)
+
+```bash
+python3 /mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/check-desktops-activation.py --workspace-cycle
+```
+
+Visita un ID configurado no materializado vinculado explícitamente al monitor actual y
+vuelve al original. Descarta persistencia/comandos al crearlo, reglas ambiguas y workspaces
+ya existentes, aunque estén vacíos. Usa requestActivate original, con lectura global y por
+salida, manteniendo las demás salidas y comprobando recibos/pausa. Puede materializar un ID
+ya anunciado; no añade preferencias ni usa requestCreateDesktop/remove. Un cambio externo
+o fallo invalida el ensayo y no dispara recuperaciones de foco obsoletas. No requiere plugin
+nuevo ni otro login. Aceptado en sesión (§265): MSI/1 → MSI/3 → MSI/1, LG/10 conservado,
+dos acciones aplicadas/observadas sin fallos, asignaciones finales y pausa confirmadas.
+No certifica relocalización entre salidas, escritorios ocupados, foco de app o panel diario.

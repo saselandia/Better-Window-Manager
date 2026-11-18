@@ -1,0 +1,418 @@
+{
+  "version": 1,
+  "date": "2026-11-17",
+  "section": "BWM_CONTEXT §3.260",
+  "scope": "Prepared opt-in focus cycle using original KDE requests on already-active desktop/output pairs; real session execution pending",
+  "entryPoint": "src/bwm-plasma-host/check-desktops-activation.py --focus-cycle",
+  "nativeMode": "bwm-plasma-host --check-native-desktops-focus-cycle ORIGINAL_OUTPUT OUTPUT_DESCRIPTION...",
+  "implementation": {
+    "consumer": "TaskManager::VirtualDesktopInfo::requestActivateOnScreen",
+    "route": "Every other already-active desktop/output pair, then the initially focused output",
+    "preconditions": "Breeze, 2–8 distinct outputs, verified binding and unchanged inventory, output geometries and assignments; no visible special workspaces before/after",
+    "coordination": "Shared nonblocking flock on the same skin-manager inode, without truncate/unlink; native_guard action lock; require_breeze under locks",
+    "waylandControl": "Resume before actions; bounded per-step readback; pause/drain on completion or failure",
+    "failurePolicy": "No fallback activation/restoration after changed assignments or failed step; report whether original output was restored",
+    "readback": "KDE global current desktop follows each request with per-output assignments unchanged; final Hyprland snapshot equals initial",
+    "receipts": "Exact accepted/applied/observed/dispatched deltas equal route length; no new failed/rejected/cancelled/noop",
+    "isolation": "Disposable XDG and nonexistent session bus; no windows/panels/captures, desktop creation/removal/relocation or configuration changes"
+  },
+  "validation": {
+    "normalHostAndNativeTestBuilt": true,
+    "asanHostAndNativeTestBuilt": true,
+    "nonWaylandRejection": {
+      "normal": true,
+      "asan": true,
+      "activationRequestsSent": 0,
+      "asanOptions": "detect_leaks=0"
+    },
+    "pythonR4": {
+      "passed": 197,
+      "newActivationTests": 13
+    },
+    "isolatedLocalConfiguration": {
+      "passed": true,
+      "ctestTests": 1
+    },
+    "nativeProtocol": {
+      "passed": false,
+      "clientCodeExecuted": false,
+      "error": "fixture first wl_client_create: Operation not permitted (before Qt)",
+      "newCase": "DesktopTest::nativeFocusCycleVisitsExistingOutputsAndReturns",
+      "caseCompiled": true,
+      "caseExecuted": false
+    },
+    "realSessionCycleExecutedByAssistant": false
+  },
+  "realSessionFocusCycleVerified": true,
+  "sameOutputDesktopNavigationVerified": true,
+  "windowFocusAndPointerRestorationVerified": false,
+  "hyprlandPluginChanged": false,
+  "replacementReady": false,
+  "r4Complete": false,
+  "files": {
+    "src/bwm-plasma-host/check-desktops-activation.py": "6545edf65f1d7e98c084ec963283ad6237ddb3b6e9913b09871a384fc6c85241",
+    "src/bwm-plasma-host/desktopsessioncheck.cpp": "3d4c08d6544578a7f55a377860abc706291558b5c5bacbd2028beb478013564a",
+    "src/bwm-plasma-host/desktopsessioncheck.h": "ac880737683b14acdd889eb8646102b9e4c158d11acbfb630f6a6fd4afc60094",
+    "src/bwm-plasma-host/main.cpp": "f220ceddd785f6a66c40c59b3af5af4e472b31330f55522a0f0a739fc30c8264",
+    "src/bwm-plasma-host/test-desktops.cpp": "8a58d798dad8c47c2f63fdae88cde1f6f5cad8ea1ca75a484d65dcc837764c08",
+    "tests/test_r4_desktops_activation.py": "a93a95d5b70d7186a7be7444fee41cc01fd898d841244cfb6aae5699426fbb99"
+  },
+  "firstRealSessionAttempt": {
+    "section": "BWM_CONTEXT §3.261",
+    "date": "2026-11-17",
+    "source": "User-pasted terminal JSON",
+    "version": 1,
+    "readOnly": false,
+    "passed": false,
+    "activationAttempted": true,
+    "configurationChanged": false,
+    "panelsOpened": false,
+    "capturesStarted": false,
+    "replacementReady": false,
+    "restoredInitialOutput": true,
+    "paused": true,
+    "error": "Native activation diagnostic failed: Native activation was not observed with unchanged output assignments",
+    "rootCause": null,
+    "stepAndProviderTelemetryUnavailableInOriginalReport": true,
+    "interpretation": "Final state equals initial; it does not prove a visit to the other output or identify which step failed"
+  },
+  "failureDiagnostics": {
+    "section": "BWM_CONTEXT §3.261",
+    "readOnlyCommand": "python3 src/bwm-plasma-host/check-desktops-activation.py --diagnose-last",
+    "actionsRepeated": false,
+    "realProviderCauseRead": true,
+    "rootCauseStillPending": false,
+    "changes": [
+      "Keep nativeDiagnostic and providerAfter on child failure",
+      "Native requested output/desktop and failed/final observations with control state",
+      "Read-only provider counters/errors and current output assignments, without native host or action locks",
+      "Partial read failure preserves the other diagnostic",
+      "Historical activation error no longer permanently blocks a future explicit retry; final checks unchanged",
+      "Full native-desktops.py path in help/notification/handoff; no PATH symlink created"
+    ],
+    "validation": {
+      "normalHostAndNativeTestBuilt": true,
+      "asanHostAndNativeTestBuilt": true,
+      "pythonR4Passed": 201,
+      "activationTestsPassed": 17,
+      "isolatedLocalConfigurationPassed": true,
+      "newNativeFailureCaseCompiled": true,
+      "newNativeFailureCaseExecuted": false,
+      "nativeFixtureBlocker": "Known wl_client_create EPERM before Qt; not re-run for this change",
+      "executorReadOnlyDiagnostic": "readOnly true, activationAttempted false, provider/session IPC reads blocked"
+    },
+    "files": {
+      "src/bwm-plasma-host/check-desktops-activation.py": "ae4aa85f8a6c3c697993475f18ddaa5d7aab7ae3bba38f6fbba4b58c01587643",
+      "src/bwm-plasma-host/desktopsessioncheck.cpp": "7f00dac4ca520b25c4264027dac74129d59c59742ea6c74108416cfd05b6528c",
+      "src/bwm-plasma-host/test-desktops.cpp": "ac24bddd93106a9467559bcf415fac14314668d8f7100778f081848e5f388494",
+      "tests/test_r4_desktops_activation.py": "a1b1f9789680aec4a08ecfe8222f57a7348db673c0ef893347b44c3b03c78894",
+      "config/hypr/skins/plasma/scripts/native-desktops.py": "3bd8661c4547cd6ab283123a768d718f0b2e4786957de37f350fe422198cbd17"
+    }
+  },
+  "providerFailureReadback": {
+    "section": "BWM_CONTEXT §3.262",
+    "source": "User-pasted --diagnose-last JSON",
+    "diagnosticComplete": true,
+    "activationAttempted": false,
+    "provider": {
+      "acceptedRequests": 1,
+      "appliedActivations": 0,
+      "observedActivations": 0,
+      "dispatchedActivations": 1,
+      "failedActivations": 1,
+      "rejectedRequests": 1,
+      "cancelledActivations": 0,
+      "activationNoops": 0,
+      "version": 1,
+      "enabled": true,
+      "providerAvailable": true,
+      "arbitrationState": "active",
+      "providerRestartRequired": false,
+      "desktops": 10,
+      "current": "1",
+      "queuedActivations": 0,
+      "lastError": "",
+      "lastActivationError": "activation-readback-mismatch",
+      "lastActivationOutcome": "activation-readback-mismatch",
+      "lastRejectedOperation": "activation-application-denied"
+    },
+    "session": {
+      "desktopIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10"
+      ],
+      "current": "1",
+      "configuredCount": 10,
+      "countRevision": 1,
+      "outputs": [
+        {
+          "description": "LG Electronics LG ULTRAFINE 405NTVS2J655",
+          "geometry": [
+            2560,
+            0,
+            3840,
+            2160
+          ],
+          "current": "10"
+        },
+        {
+          "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+          "geometry": [
+            0,
+            720,
+            2560,
+            1440
+          ],
+          "current": "1"
+        }
+      ]
+    }
+  },
+  "routingFix": {
+    "section": "BWM_CONTEXT §3.262",
+    "activationRoutingVersion": 2,
+    "behavior": "Active workspace: focusMonitor only. Inactive workspace: absolute changeWorkspace only, without pre-focus.",
+    "reproducedCause": "Previous focusMonitor + changeWorkspace sequence can refocus the pointer output for an empty active target when no_warps prevents moving the pointer.",
+    "scope": "Original Hyprland 0.56.2 function bodies with data-only focus/pointer scaffolding, actual BWM applyExact and WorkspaceActivator; not a running compositor",
+    "userTargetEmptinessOrLiveNoWarpsMeasured": false,
+    "normalRegression": {
+      "version": 1,
+      "passed": true,
+      "sessionModified": false,
+      "hyprlandPluginLoaded": false,
+      "realCompositorVerified": false,
+      "asan": false,
+      "result": {
+        "cases": 48,
+        "legacyEmptyTargetNoWarpFailuresReproduced": 3,
+        "activeWorkspaceRoutingPassed": true,
+        "readbackGuardPreserved": true
+      },
+      "originalSha256": "b168802c7436b44b0d8f48b208b9c928cb585790c674bea7f6f88426ce18bc49"
+    },
+    "asanRegression": {
+      "version": 1,
+      "passed": true,
+      "sessionModified": false,
+      "hyprlandPluginLoaded": false,
+      "realCompositorVerified": false,
+      "asan": true,
+      "result": {
+        "cases": 48,
+        "legacyEmptyTargetNoWarpFailuresReproduced": 3,
+        "activeWorkspaceRoutingPassed": true,
+        "readbackGuardPreserved": true
+      },
+      "originalSha256": "b168802c7436b44b0d8f48b208b9c928cb585790c674bea7f6f88426ce18bc49"
+    },
+    "ctestNormal": {
+      "passed": true,
+      "tests": 1,
+      "name": "isolated-workspace-activation-routing"
+    },
+    "ctestAsan": {
+      "passed": true,
+      "tests": 1,
+      "name": "isolated-workspace-activation-routing",
+      "options": "detect_leaks=0"
+    },
+    "pythonR4Passed": 202,
+    "activationTestsPassed": 18,
+    "hyprlandModuleBuilt": true,
+    "builtForCommit": "efb50993780079460b0cbed1363e2166a2de1d9f",
+    "uniqueSymbols": 0,
+    "installation": {
+      "method": "make install (temporary + atomic mv)",
+      "oldInodeUnmodified": true,
+      "inodeChanged": true,
+      "installedEqualsBuild": true,
+      "previousSha256": "213f28853228621d64b22ab9a7d84923da3340c72b5357c89e3947840d3462eb",
+      "installedSha256": "4304230d892209cc1919f28542c7f6528f4ec7c21d58efc07dda52532b91fd9f",
+      "runtimeReloadAttempted": false,
+      "nextLoginRequired": true
+    },
+    "adoptedByRunningSessionVerified": true,
+    "realSessionFixVerified": true,
+    "preflight": "Explicit cycle requires loaded activationRoutingVersion=2; read-only diagnostics remain compatible with older provider",
+    "knownRemainingLimit": "Inactive empty target readback mismatches in upstream-model scenarios remain rejected; no cursor/focus policy override added",
+    "files": {
+      "src/bwm-plasma-desktops/plugin.cpp": "ccfd0b7ae63d1b40bde9b6ce6f063f201d28228cb9c5eeacd38b1e1a330dd4a0",
+      "src/bwm-plasma-desktops/check-activation-routing.py": "f542c668614584fca5ca75df0e9e71c8227e57a5bf76efe164f3fed5fc4807ad",
+      "src/bwm-plasma-desktops/tests/upstream/Hyprland-0.56.2-WorkspaceActions.cpp": "b168802c7436b44b0d8f48b208b9c928cb585790c674bea7f6f88426ce18bc49",
+      "src/bwm-plasma-host/CMakeLists.txt": "2fd7228c0cf85d01628375a672dbad7470bfcebeda5d21bde958b194c8045606",
+      "src/bwm-plasma-host/check-desktops-activation.py": "870dd264908dc2ac611f252da11c4008aa6310e1d034bc56b741ac222fb3b835",
+      "tests/test_r4_desktops_activation.py": "83d60c6fa119507de65b94c5e4b3aa8ffbf5c550c8b47a90fd713cd5b3d50ff9",
+      "config/hypr/plugins/bwm-plasma-desktops.so": "4304230d892209cc1919f28542c7f6528f4ec7c21d58efc07dda52532b91fd9f"
+    },
+    "adoptionEvidence": "User passed --focus-cycle, whose preflight requires loaded activationRoutingVersion=2; no independent executor IPC query"
+  },
+  "successfulRealSessionAttempt": {
+    "section": "BWM_CONTEXT §3.263",
+    "date": "2026-11-17",
+    "source": "User-pasted --focus-cycle terminal JSON",
+    "version": 1,
+    "readOnly": false,
+    "passed": true,
+    "activationAttempted": true,
+    "configurationChanged": false,
+    "panelsOpened": false,
+    "capturesStarted": false,
+    "replacementReady": false,
+    "nativeDiagnostic": {
+      "version": 1,
+      "readOnly": false,
+      "passed": true,
+      "activationRequestsSent": 2,
+      "initialCurrent": "1",
+      "initialOutputs": [
+        {
+          "description": "LG Electronics LG ULTRAFINE 405NTVS2J655",
+          "geometry": [
+            2560,
+            0,
+            3840,
+            2160
+          ],
+          "match": "matched",
+          "currentByName": "10",
+          "currentByGeometry": "10"
+        },
+        {
+          "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+          "geometry": [
+            0,
+            720,
+            2560,
+            1440
+          ],
+          "match": "matched",
+          "currentByName": "1",
+          "currentByGeometry": "1"
+        }
+      ],
+      "finalObservation": {
+        "assignmentsMatch": true,
+        "current": "1",
+        "outputs": [
+          {
+            "description": "LG Electronics LG ULTRAFINE 405NTVS2J655",
+            "geometry": [
+              2560,
+              0,
+              3840,
+              2160
+            ],
+            "match": "matched",
+            "currentByName": "10",
+            "currentByGeometry": "10"
+          },
+          {
+            "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+            "geometry": [
+              0,
+              720,
+              2560,
+              1440
+            ],
+            "match": "matched",
+            "currentByName": "1",
+            "currentByGeometry": "1"
+          }
+        ],
+        "control": {
+          "bindingKnown": true,
+          "bindingVerified": true,
+          "confirmed": true,
+          "confirmedPaused": true,
+          "connected": true,
+          "desiredPaused": true,
+          "lastError": "",
+          "managementGlobal": 75,
+          "operationalVerified": false,
+          "pending": false,
+          "providerAvailable": true,
+          "registry": {
+            "complete": true,
+            "controlGlobals": 1,
+            "managementGlobals": 1,
+            "overflow": false,
+            "restartRequired": false,
+            "scope": "current-wayland-connection-visible-globals",
+            "topologyCompatible": true
+          },
+          "registryTimedOut": false,
+          "registryWaiting": false,
+          "required": true,
+          "resumed": false,
+          "scope": "same-wayland-connection",
+          "serial": 2
+        }
+      },
+      "paused": true,
+      "restoredInitialOutput": true,
+      "steps": [
+        {
+          "description": "LG Electronics LG ULTRAFINE 405NTVS2J655",
+          "current": "10",
+          "verified": true
+        },
+        {
+          "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+          "current": "1",
+          "verified": true
+        }
+      ],
+      "requestedDesktop": "1",
+      "requestedOutput": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+      "windowCount": 0
+    },
+    "restoredInitialOutput": true,
+    "paused": true,
+    "current": "1",
+    "steps": [
+      {
+        "description": "LG Electronics LG ULTRAFINE 405NTVS2J655",
+        "current": "10",
+        "verified": true
+      },
+      {
+        "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+        "current": "1",
+        "verified": true
+      }
+    ],
+    "providerCounterDelta": {
+      "acceptedRequests": 2,
+      "appliedActivations": 2,
+      "observedActivations": 2,
+      "dispatchedActivations": 2,
+      "failedActivations": 0,
+      "rejectedRequests": 0,
+      "cancelledActivations": 0,
+      "activationNoops": 0
+    },
+    "activationRequestsSent": 2,
+    "windowCount": 0
+  },
+  "providerOriginatedActivationVerified": true,
+  "verificationScope": "Active LG/10 and MSI/1 focus cycle plus free MSI/3 workspace navigation and return; no window/pointer focus, occupied workspace, cross-output relocation, teardown or daily panel certification",
+  "sameOutputNavigationAcceptance": {
+    "section": "BWM_CONTEXT §3.265",
+    "evidence": "BREEZE_R4_WORKSPACE_NAVIGATION_RESULTS.json",
+    "passed": true,
+    "scope": "MSI/1 → MSI/3 → MSI/1, LG/10 unchanged",
+    "applied": 2,
+    "observed": 2,
+    "failed": 0,
+    "rejected": 0,
+    "paused": true
+  }
+}

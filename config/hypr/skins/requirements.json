@@ -849,6 +849,18 @@
         "debian": "libkf6i18n-dev"
       }
     },
+    "r4-native-tray-proxy": {
+      "label": "Proxy D-Bus para el ensayo de bandeja nativa R4",
+      "why": "Permite ensayar el modelo SNI de Plasma con el watcher actual y permisos limitados",
+      "check": {"type": "cmd", "all": ["xdg-dbus-proxy"]},
+      "packages": {"gentoo": "sys-apps/xdg-dbus-proxy", "arch": "xdg-dbus-proxy"}
+    },
+    "r4-native-tray-proxy-build": {
+      "label": "Compilación local del filtro de bandeja R4 por nombre único",
+      "why": "Prueba iconos SNI sin alias D-Bus mediante una variante local del proxy",
+      "check": {"type": "pkgconfig", "modules": ["gio-unix-2.0"], "cmds": ["cc", "meson", "ninja", "patch"]},
+      "packages": {"gentoo": "dev-libs/glib dev-build/meson dev-build/ninja sys-devel/patch", "arch": "glib2 meson ninja patch"}
+    },
     "bwm-plasma-host-build": {
       "label": "Anfitrión experimental libplasma R4 (compilación y pruebas)",
       "why": "Prueba aislada de Corona, PlasmoidItem, páginas y KPackage; no sustituye todavía el panel",
@@ -857,6 +869,7 @@
         "modules": [
           "Qt6Widgets",
           "Qt6Quick",
+          "Qt6DBus",
           "Qt6WaylandClient",
           "wayland-client",
           "wayland-protocols",
@@ -877,7 +890,7 @@
         "debian": null
       },
       "notes": {
-        "all": "CMake valida Plasma/PlasmaQuick 6.7.5, LayerShellQt >=6.7.5, KF6 CoreAddons/Package/Config/ConfigQml/NewStuffWidgets/Svg, Qt6 WaylandClient y hyprland-protocols (focus grab para cerrar menús al pulsar fuera). El adaptador KWindowSystem usa ABI privada V5 y exige 6.29.0 EXACT y sus headers private; sólo dentro del auxiliar, sin instalar un plugin global. LibTaskManager 6.7.5 EXACT de plasma-workspace y KF6 Service aportan el modelo nativo y metadatos de apps; la fuente BWM es opt-in y no acredita escritorios virtuales ni compatibilidad completa del widget. Qt Test con BUILD_TESTING. Las pruebas de org.kde.panel, Panel.qml original y la migración necesitan plasma-desktop. Vistas y staging aislados: no sustituyen el panel ni activan una migración. Instalar recursos no demuestra compatibilidad de sus servicios con Hyprland. KIOGui aporta ApplicationLauncherJob nativo para Nueva ventana/abrir archivos de una tarea, lanzadores anclados y Actions .desktop; proceso separado con entorno de sesión restaurado, sin interpretar Exec a mano. KIOFileWidgets (mismo paquete kio) aporta KFilePlacesModel para identificar los Lugares del menú original. Miniaturas opt-in del preview: wayland-protocols con ext-foreign-toplevel-list/ext-image-capture-source/ext-image-copy-capture y hyprland-protocols con toplevel-mapping; sólo captura por ventana en memoria con guarda verificada del compositor activo; aceptación visual por entorno. No requiere org.kde.pipewire para esa adaptación. BUILD_TESTING añade servidor Wayland sólo de fixture por socketpair privado y usa los XML plasma-wayland-protocols 1.23.0 (hash fijado) y wayland-protocols; no conecta a la sesión."
+        "all": "CMake valida Plasma/PlasmaQuick 6.7.5, LayerShellQt >=6.7.5, KF6 CoreAddons/Package/Config/ConfigQml/NewStuffWidgets/Svg, Qt6 WaylandClient y sus headers privados (registro de layer-shell v5), además de hyprland-protocols (focus grab para cerrar menús al pulsar fuera). El adaptador KWindowSystem usa ABI privada V5 y exige 6.29.0 EXACT y sus headers private; sólo dentro del auxiliar, sin instalar un plugin global. LibTaskManager 6.7.5 EXACT de plasma-workspace y KF6 Service aportan el modelo nativo y metadatos de apps; la fuente BWM es opt-in y no acredita escritorios virtuales ni compatibilidad completa del widget. Qt Test con BUILD_TESTING. Las pruebas de org.kde.panel, Panel.qml original y la migración necesitan plasma-desktop. Vistas y staging aislados: no sustituyen el panel ni activan una migración. Instalar recursos no demuestra compatibilidad de sus servicios con Hyprland. KIOGui aporta ApplicationLauncherJob nativo para Nueva ventana/abrir archivos de una tarea, lanzadores anclados y Actions .desktop; proceso separado con entorno de sesión restaurado, sin interpretar Exec a mano. KIOFileWidgets (mismo paquete kio) aporta KFilePlacesModel para identificar los Lugares del menú original. Miniaturas opt-in del preview: wayland-protocols con ext-foreign-toplevel-list/ext-image-capture-source/ext-image-copy-capture y hyprland-protocols con toplevel-mapping; sólo captura por ventana en memoria con guarda verificada del compositor activo; aceptación visual por entorno. No requiere org.kde.pipewire para esa adaptación. BUILD_TESTING añade servidor Wayland sólo de fixture por socketpair privado y usa los XML plasma-wayland-protocols 1.23.0 (hash fijado) y wayland-protocols; no conecta a la sesión."
       }
     },
 

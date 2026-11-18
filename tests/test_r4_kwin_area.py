@@ -57,6 +57,27 @@ class AreaTest(unittest.TestCase):
         self.assertEqual(m.target_frame((100,900,800,400),(0,720,2560,1348),1),(100,720,800,1348))
         self.assertEqual(m.target_frame((100,900,800,400),(0,720,2560,1348),2),(0,900,2560,400))
 
+    def test_reservation_restored_before_shrink_confirmation_reflows_to_original_area(self):
+        self.monitors[0].update(x=2560, y=0, width=3840, height=2160, reserved=[0,0,0,44])
+        self.clients[0].update(at=[2560,28], size=[3840,2088])
+        self.tick()  # Cache the original area as confirmed.
+        self.assertEqual(self.actions, [])
+
+        self.monitors[0]['reserved'][3] = 92
+        self.tick()
+        self.assertEqual(len(self.actions), 1)
+        self.assertIn('y=2040', self.actions[0])
+
+        # The shrink applied, but the panel disappeared before the next poll.
+        self.clients[0]['size'][1] = 2040
+        self.monitors[0]['reserved'][3] = 44
+        self.tick()
+        self.assertEqual(len(self.actions), 2)
+        self.assertIn('y=2088', self.actions[1])
+        self.clients[0]['size'][1] = 2088
+        self.tick()
+        self.assertEqual(len(self.actions), 2)
+
     def test_normal_native_fullscreen_special_hidden_and_optout_are_excluded(self):
         variants=[{'tags':[]},{'floating':False},{'mapped':False},{'hidden':True},{'fullscreen':2},{'fullscreen':1},
                   {'fullscreenClient':2},{'workspace':{'id':-1,'name':'special:magic'}},{'workspace':{'id':99,'name':'99'}},
@@ -83,6 +104,21 @@ class AreaTest(unittest.TestCase):
             self.assertEqual(len(self.actions),3);self.assertEqual(log.call_count,1)
         self.monitors[0]['reserved'][3]=100;self.tick();self.assertEqual(len(self.actions),4)
 
+    def test_area_transition_without_decoration_resets_old_retry_budget(self):
+        self.clients[0]['size'][1] = 1368
+        for _ in range(5): self.tick()
+        self.assertEqual(len(self.actions), 3)
+
+        records, self.records = self.records, []
+        self.monitors[0]['reserved'][3] = 44
+        self.tick()
+        self.assertEqual(len(self.actions), 3)
+
+        self.records = records
+        self.monitors[0]['reserved'][3] = 92
+        self.tick()
+        self.assertEqual(len(self.actions), 4)
+
     def test_explicit_kde_force_geometry_wins_and_removal_reconsiders_window(self):
         self.runtime.rules=types.SimpleNamespace(rules=[],last_text='force size')
         resolver=Mock(return_value={'size':{'mode':2}})
@@ -100,6 +136,11 @@ class AreaTest(unittest.TestCase):
     def test_projection_uses_logical_rotated_scaled_geometry(self):
         monitor=dict(self.monitors[0],x=-1920,y=0,width=3840,height=2160,scale=1.5,transform=1,reserved=[10,20,30,40])
         self.assertEqual(m.area(monitor,self.runtime.kw),(-1910,20,1400,2500))
+
+    def test_reflow_matches_rounded_logical_extents(self):
+        monitor = dict(self.monitors[0], x=-200, y=10, width=251, height=333, scale=2,
+                       transform=1, reserved=[2, 3, 4, 5])
+        self.assertEqual(m.area(monitor, self.runtime.kw), (-198, 13, 161, 118))
 
     def test_unchanged_other_output_is_not_reflowed(self):
         self.monitors.append(dict(self.monitors[0],id=1,description='Other fixture',x=2560,y=0,width=1000,height=800,reserved=[0,0,0,44]))

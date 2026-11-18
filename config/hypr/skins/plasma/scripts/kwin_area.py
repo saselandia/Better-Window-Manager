@@ -64,7 +64,7 @@ def area(monitor,kw):
     if type(monitor.get('transform',0)) is not int or not 0<=monitor.get('transform',0)<=7:raise ValueError('Invalid output transform')
     reserved=monitor.get('reserved')
     if not isinstance(reserved,list) or len(reserved)!=4 or any(type(n) not in (int,float) or not math.isfinite(n) or n<0 for n in reserved):raise ValueError('Invalid reserved area')
-    x,y,w,h=kw.bwm_windows.monitor_box(monitor)
+    x,y,w,h=kw.bwm_windows.monitor_box(monitor,round_to_nearest=True)
     left,top,right,bottom=reserved
     result=tuple(int(n) for n in (x+left,y+top,w-left-right,h-top-bottom))
     if min(result[2:])<=0:raise ValueError('Empty work area')
@@ -149,7 +149,14 @@ class Runtime:
             if not eligible(c,self.kw) or c.get('monitor') not in areas:
                 self.done.pop(ident,None);self.attempts.pop(ident,None);continue
             signature=(areas[c['monitor']],self.kw.mode_from_tags(c.get('tags',[])),c['workspace']['id'],getattr(self.rules,'last_text',None))
-            if self.done.get(ident)!=signature:pending.append((c,ident,signature))
+            if self.done.get(ident)==signature:continue
+            # The old frame is no longer confirmed once we observe a transition.
+            # Its signature can return before the new frame is confirmed.
+            self.done.pop(ident,None)
+            attempt=self.attempts.get(ident)
+            if attempt is not None and attempt[0]!=signature:
+                self.attempts.pop(ident)
+            pending.append((c,ident,signature))
         if not pending:return
         data=self.query('breezebars-csd')
         if not isinstance(data,dict) or data.get('version')!=1 or data.get('api')!='breezebars-csd':raise ValueError('Area observer needs decoration authority')
@@ -168,8 +175,7 @@ class Runtime:
             borders=self.kw.bwm_windows.normalized_extents(raw)
             lua=command(c,signature[0][1],borders,self.kw)
             if lua is None:self.done[ident]=signature;self.attempts.pop(ident,None);continue
-            old_signature,count=self.attempts.get(ident,(signature,0))
-            if old_signature!=signature:count=0
+            _,count=self.attempts.get(ident,(signature,0))
             if count>=3:
                 self.done[ident]=signature # Retry only after area/eligibility changes.
                 self.log_error('Resize not confirmed after 3 attempts; respecting possible forced geometry policy')

@@ -174,6 +174,8 @@
     "kwin-rules-kcm",
     "ki18n",
     "bwm-plasma-host-build",
+    "r4-native-tray-proxy",
+    "r4-native-tray-proxy-build",
     "bwm-plasma-desktops-build",
     "plasma-desktop-widgets"
   ],

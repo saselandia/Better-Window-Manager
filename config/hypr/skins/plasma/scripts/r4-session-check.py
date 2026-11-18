@@ -6,6 +6,8 @@ import json
 import math
 import os
 from pathlib import Path
+import re
+import shlex
 import stat
 import subprocess
 import sys
@@ -103,6 +105,63 @@ def collect(run=subprocess.run, environment=None):
     return result
 
 
+TRAY_WATCHER = 'org.kde.StatusNotifierWatcher'
+
+
+def tray_services(run=subprocess.run):
+    return tray_observation(run)[0]
+
+
+def tray_observation(run=subprocess.run):
+    """Inspect the current watcher on its unique name without starting or registering services."""
+    base = ['busctl', '--user', '--auto-start=no', '--timeout=1']
+    bus = ['org.freedesktop.DBus', '/org/freedesktop/DBus', 'org.freedesktop.DBus']
+    result = {'version': 1, 'scope': 'status-notifier-watcher', 'readOnly': True,
+              'sessionModified': False, 'watcherVerified': False, 'replacementReady': False}
+
+    def call(arguments):
+        reply = run(base + arguments, capture_output=True, text=True, timeout=2, check=True)
+        return shlex.split(reply.stdout)
+
+    def owner():
+        value = call(['call', *bus, 'GetNameOwner', 's', TRAY_WATCHER])
+        if len(value) != 2 or value[0] != 's' or not re.fullmatch(r':\d+\.\d+', value[1]):
+            raise ValueError('Nombre único de D-Bus inválido')
+        return value[1]
+
+    phase = 'bus-unavailable'
+    try:
+        present = call(['call', *bus, 'NameHasOwner', 's', TRAY_WATCHER])
+        if present == ['b', 'false']:
+            return {**result, 'status': 'watcher-absent'}, None
+        if present != ['b', 'true']:
+            raise ValueError('La consulta de propietario de D-Bus devolvió un valor inválido')
+        phase = 'watcher-unverified'
+        current = owner()
+        pid_reply = call(['call', *bus, 'GetConnectionUnixProcessID', 's', current])
+        if len(pid_reply) != 2 or pid_reply[0] != 'u' or not pid_reply[1].isdigit() or int(pid_reply[1]) <= 0:
+            raise ValueError('PID del dueño de la bandeja inválido')
+        process = Path('/proc') / pid_reply[1]
+        try:
+            name = (process/'exe').resolve(strict=True).name if process.stat().st_uid == os.getuid() else ''
+        except OSError:
+            name = ''
+        watcher = ['get-property', current, '/StatusNotifierWatcher', TRAY_WATCHER]
+        items = call(watcher + ['RegisteredStatusNotifierItems'])
+        host = call(watcher + ['IsStatusNotifierHostRegistered'])
+        if (len(items) < 2 or items[0] != 'as' or not items[1].isdigit() or int(items[1]) != len(items)-2 or
+                host not in (['b', 'true'], ['b', 'false'])):
+            raise ValueError('Las propiedades de la bandeja no tienen el formato esperado')
+        if owner() != current:
+            return {**result, 'status': 'watcher-owner-changed'}, None
+        kind = name if name in ('quickshell', 'kded6', 'plasmashell') else 'other' if name else 'unknown'
+        return ({**result, 'status': 'watcher-observed', 'watcherVerified': True, 'ownerKind': kind,
+                 'registeredItemCount': int(items[1]), 'hostRegistered': host[1] == 'true'},
+                (current, tuple(sorted(items[2:]))))
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return {**result, 'status': phase}, None
+
+
 def save_report(path, result):
     path = Path(path).absolute()
     if path.exists() or path.is_symlink():
@@ -121,8 +180,15 @@ def save_report(path, result):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--report', type=Path, default=Path(tempfile.gettempdir()) / f'bwm-r4-access-{os.getuid()}.json')
+    parser.add_argument('--tray', action='store_true', help='Read-only StatusNotifierWatcher ownership and counts over D-Bus')
+    parser.add_argument('--report', type=Path)
     args = parser.parse_args()
+    if args.tray:
+        result = tray_services()
+        if args.report is not None: save_report(args.report, result)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result['watcherVerified'] else 2
+    if args.report is None: args.report = Path(tempfile.gettempdir()) / f'bwm-r4-access-{os.getuid()}.json'
     result = collect()
     save_report(args.report, result)
     print(json.dumps({'status': result['status'], 'report': str(args.report.absolute()),

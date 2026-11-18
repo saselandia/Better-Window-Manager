@@ -3176,3 +3176,759 @@ inicial y guarda contra bucles de fallo. Contador común sin sondeo tras aplicar
 el módulo no está cargado. Ruta de inicio probada en Hyprland anidado (`--via-startup`) y 7 pruebas
 unitarias. Instalado con make install; opt-in activado; pendiente el primer inicio de sesión real.
 Evidencia `BREEZE_R4_PROVIDER_STARTUP_RESULTS.json`.
+
+## Continuación R4 §256 — primer inicio real del proveedor (2026-11-17)
+
+Salida del terminal del usuario: módulo instalado/cargado en esta sesión y compilado para
+el Hyprland en ejecución; guarda vacía, proveedor habilitado/disponible, arbitraje activo,
+sin petición de reinicio ni errores. Contador 10 desde shared-bwm-bridge, escritorio actual 1.
+Registro de arranque leído por el asistente: loaded/stable true. Contadores de activación
+cero: operationalVerified/liveSessionVerified siguen false. Falta probar el consumidor KDE
+en la sesión, varias salidas y cierre; el panel diario sigue activo.
+
+Siguiente prueba (desde terminal del usuario; el IPC está bloqueado para el ejecutor):
+
+```sh
+python3 /mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/preview-isolated.py \
+  --binary /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host/bwm-plasma-host \
+  --builtin org.kde.plasma.taskmanager --native-panel --layer-panel \
+  --follow-skin --task-actions --native-desktops --session-appearance --task-thumbnails \
+  --output "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101"
+```
+
+Se omite --all-desktops para comprobar el filtro nativo. Cambiar entre dos workspaces del
+MSI con ventanas distintas y comprobar que cada uno muestra sus tareas (los lanzadores
+anclados pueden permanecer). Desde otro terminal, consultar estado fresco con
+`python3 ~/.config/hypr/skins/plasma/scripts/panel-session.py status` y
+`hyprctl -j bwm-plasma-desktops`. Ctrl+C en el terminal del preview cierra sólo el auxiliar.
+Ensayo preparado, todavía no ejecutado/aceptado.
+
+## Continuación R4 §257–258 — filtro aceptado y diagnóstico por salida (2026-11-17)
+
+El usuario ejecuta el preview de §256 y confirma «correcto, funciona» para el filtro de
+tareas del workspace actual en MSI. No se extiende esa aceptación a activación KDE,
+mediciones por caso o el panel diario. Auxiliar no cerrado por el asistente.
+
+Nuevo diagnóstico, compatible con dejar el preview abierto:
+
+```sh
+python3 /mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/check-desktops-session.py
+```
+
+El wrapper compara la proyección de IDs (contador común + workspaces vivos/activos) y todas
+las salidas con VirtualDesktopInfo original en el anfitrión. Asociación de proveedor y
+topología verificadas; conexión sin resume, serial 0 y ninguna ventana. Resuelve salidas
+por descripción única usando BwmOutput; escritorio por nombre y geometría deben coincidir
+con Hyprland y con el área lógica de monitor_box. Las lecturas antes/después deben coincidir;
+cambio de salida/workspace, espejo con rectángulos idénticos, descripción ambigua, timeout
+o error se rechazan. El consumidor usa XDG temporal y bus inexistente, no abre paneles,
+captura ni registra otra prueba. Informe sin títulos/apps/PID o nombres de escritorios.
+
+Compilaciones normal/ASan y rechazo real de offscreen correctos; Python R4 184/184,
+CTest isolated-local-configuration pasa. Caso nativo nuevo compilado en test-desktops,
+pero native-desktop-protocol bloqueado por wl_client_create EPERM antes de Qt. Wrapper
+real bloqueado por IPC del ejecutor. No se declara ejecución Wayland/lectura real de las
+dos salidas ni activación probada por este diagnóstico. No exige otro login ni cambia
+plugins/requisitos/perfiles. Evidencia BREEZE_R4_DESKTOP_OUTPUTS_RESULTS.json.
+
+## Continuación R4 §259–260 — lectura real por salida y ciclo de activación preparado
+
+2026-11-17: el usuario ejecuta el diagnóstico de §258; passed/readOnly/bindingVerified true.
+LG [2560,0,3840,2160] en escritorio 10, MSI [0,720,2560,1440] en 1; IDs 1–10, contador común
+10, global 1. Cero peticiones de activación y ventanas. Evidencia de lectura real conservada
+en BREEZE_R4_DESKTOP_OUTPUTS_RESULTS.json; no implica activación ni panel diario.
+
+Siguiente ensayo explícito:
+
+```sh
+python3 /mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/check-desktops-activation.py --focus-cycle
+```
+
+En esta disposición pedirá enfocar LG/10 y volver a MSI/1 mediante requestActivateOnScreen
+original. Sólo usa los escritorios ya visibles: no pide nuevos ni relocaliza/cambia asignaciones
+de salida. Resume/pause correlacionados y lectura Qt en cada paso; debe volver al estado inicial
+en Hyprland con deltas exactos de accepted/applied/observed/dispatched, sin fallo/no-op/rechazo/
+cancelación. Cambios de salidas/asignaciones invalidan la medición y no disparan restauración
+obsoleta. El ciclo sí cambia brevemente el foco, por eso requiere --focus-cycle; la consulta
+check-desktops-session.py continúa siendo sólo lectura.
+
+El wrapper mantiene bloqueo compartido en el inodo existente del gestor de skins (sin
+truncar/borrar), bloqueo nativo de acciones y comprueba Breeze bajo ellos. Rechaza especiales
+visibles antes/después para no ocultar Magic al volver al escritorio normal. El consumidor
+temporal no abre superficies/capturas/paneles ni registra una prueba; al fallar pausa la
+conexión y no lanza acciones alternativas. No demuestra foco de una app/puntero ni navegación
+a escritorios no visibles. No se ha ejecutado en sesión desde el asistente.
+
+Normal/ASan compilados, rechazo offscreen sin peticiones probado en ambos; Python R4 197,
+isolated-local-configuration pasa. Prueba C++ nueva compilada, ejecución bloqueada antes de
+Qt por wl_client_create EPERM. Evidencia BREEZE_R4_DESKTOP_ACTIVATION_RESULTS.json.
+
+## Continuación R4 §261 — fallo real de activación, diagnóstico conservado
+
+2026-11-17: primer ciclo real falla: destino no observado, paused/restoredInitialOutput true.
+El estado final igual al inicial no acredita que llegara a enfocar otra salida. La causa aún
+se desconoce; el informe anterior perdía la telemetría del hijo/servidor al salir con error.
+
+Ahora conserva destino, observación fallida/final, estado de control, pasos y diagnóstico
+del proveedor. Se puede leer el fallo ya registrado sin repetir acciones:
+
+```sh
+python3 /mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/check-desktops-activation.py --diagnose-last
+```
+
+No necesita binario Qt ni toma bloqueos de acciones; consulta sólo errores/contadores y
+asignaciones. Un fallo de lectura parcial conserva los otros datos. El último error de
+activación previo deja de vetar para siempre un futuro reintento explícito; al finalizar
+se mantienen las comprobaciones estrictas de recibos y errores. No hay reintentos automáticos.
+Ayuda/notificación/traspaso corrigen el nombre corto de native-desktops.py a su ruta completa.
+
+Normal/ASan compilados; Python R4 201/201. Caso C++ nuevo de fallo/observaciones sin reintento
+compilado, sin ejecución Wayland aquí por el bloqueo conocido. --diagnose-last no puede leer
+el IPC desde este ejecutor. Falta su resultado desde terminal antes de atribuir la causa o
+modificar el proveedor. Sin despliegue de plugin ni nuevo login solicitado.
+
+## Continuación R4 §262 — una sola acción nativa de foco por activación
+
+Diagnóstico del usuario: la primera petición se acepta/despacha, pero el backend devuelve
+activation-readback-mismatch (0 applied/observed, 1 failed/rejected). Se reproduce con la
+integración anterior y cuerpos exactos de Hyprland 0.56.2: focusMonitor seguido de
+changeWorkspace en el workspace ya activo recalcula el puntero y puede volver al monitor
+anterior con destino vacío y no_warps=true. No se ha medido si el destino real estaba vacío.
+
+applyExact usa ahora sólo focusMonitor para workspaces ya activos; para inactivos usa sólo
+changeWorkspace por objeto (absoluto). Respeta no_warps y conserva el rechazo si el backend
+no confirma el resultado. activationRoutingVersion=2 permite comprobar la generación
+cargada y el preflight impide repetir el ciclo sobre el módulo anterior.
+
+Regresión con funciones upstream fijadas por SHA256 y andamiaje de datos: 48 combinaciones
+normal/ASan, tres reproducciones del fallo anterior. Compila el applyExact actual y el
+WorkspaceActivator real; no es prueba de compositor o superficies. CTest nuevo pasa en ambos
+builds, Python R4 202/202, plugin compilado con commit correcto y sin símbolos UNIQUE.
+
+Instalado mediante make install atómico; inodo anterior conservado sin cambios comprobando
+un descriptor abierto. La sesión conserva el módulo anterior: cerrar sesión y volver a
+entrar antes de ejecutar el ciclo. Sin emerge/sudo, hot load/unload ni reinicio de Quickshell.
+La aceptación real corregida, navegación/resto R4 y panel diario siguen pendientes.
+Evidencia ampliada en BREEZE_R4_DESKTOP_ACTIVATION_RESULTS.json.
+
+## Aceptación real R4 §263 — activación por salida corregida
+
+2026-11-17: el usuario ejecuta --focus-cycle con la ruta v2 y aporta passed true. KDE activa
+LG/10 y vuelve a MSI/1: dos peticiones, deltas accepted/applied/observed/dispatched de 2,
+sin fallo/rechazo/cancelación/no-op. Geometrías/asignaciones iniciales conservadas y barrera
+final confirmada en pausa (serial 2, resumed false, asociación verificada, sin error).
+El preflight exige activationRoutingVersion=2; este pase acredita su adopción en el ensayo.
+
+Se cierra este fallo para los pares ya visibles de la disposición probada. No se extiende
+a navegación a escritorios no visibles, foco de ventana/puntero, otras escalas/disposiciones,
+teardown/logout ni panel diario. replacementReady/r4Complete siguen false. Evidencia
+BREEZE_R4_DESKTOP_ACTIVATION_RESULTS.json; no se repiten pruebas o cambios de runtime.
+
+## Continuación R4 §264 — navegación a un escritorio no visible del mismo monitor
+
+Preparado, sin otro login ni cambio de plugin:
+
+```sh
+python3 /mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/check-desktops-activation.py --workspace-cycle
+```
+
+Selecciona un ID configurado que aún no tenga workspace materializado y que sus reglas
+vinculen explícitamente al monitor enfocado, sin persistencia ni onCreatedEmpty. No reutiliza
+workspaces existentes, aunque estén vacíos. Reglas de vínculo/creación no literales fuera
+de alcance se rechazan; no se cambia configuración del usuario. La selección se revalida
+antes de arrancar. WorkspaceState::create 0.56.2 puede obedecer vínculos y por eso no basta
+con pasarle el monitor del foco; también se evita ejecutar comandos de creación del usuario.
+
+Cliente KDE original: requestActivate(target) → lectura global y por salida → requestActivate
+del ID inicial. Cada paso permite cambiar sólo el workspace del monitor original; todas
+las otras salidas y geometrías/inventario deben conservarse. Puede materializar un ID que
+ya estaba anunciado; no usa crear/quitar del protocolo ni añade un ajuste. Barrera/recibos
+exactos y vuelta al estado inicial como en §260; un fallo no provoca acciones de respaldo
+que recuperen un foco obsoleto. No garantiza exclusión de toda entrada/edición externa.
+
+212 pruebas Python (10 nuevas), compilaciones normal/ASan, rechazo offscreen sin acciones
+y regresión local pasan. Caso nativo Qt/Wayland sólo compilado: wl_client_create EPERM
+impide iniciarlo aquí. Pendiente de ejecutar este comando en la sesión. El ensayo por
+salidas de §263 no se repite; R4 y panel diario siguen abiertos. Evidencia
+BREEZE_R4_WORKSPACE_NAVIGATION_RESULTS.json.
+
+## Aceptación real R4 §265 — escritorio libre no visible en el mismo monitor
+
+2026-11-17: el usuario aporta passed true, selectedDesktop 3 y dos pasos verificados de
+requestActivate original: MSI/1 → MSI/3 → MSI/1. Deltas accepted/applied/observed/dispatched
+de 2; cero fallos/rechazos/cancelaciones/noops. LG/10 se conserva en las comprobaciones por
+salida y al final; geometrías y asignaciones originales coinciden, pausa final confirmada
+(serial 2, resumed false, asociación verificada y sin error). Sin ventanas/paneles/capturas
+ni cambios de configuración. No se midió foco de una app/puntero ni otras disposiciones.
+
+Este caso de navegación queda aceptado. No se extiende a escritorios ocupados, relocalización
+entre salidas, logout/teardown o panel diario. Persistencia/autoridad/recuperación diarias
+y cierre de R4 siguen pendientes. Evidencia BREEZE_R4_WORKSPACE_NAVIGATION_RESULTS.json.
+No se repiten las pruebas aceptadas.
+
+## Recuperación explícita de perfil R4 §266 — estado actual ilegible
+
+2026-11-17: restore requería una generación actual válida para poder abrir ProfileStore.
+La nueva operación estática recover toma el mismo lease pero verifica directamente el
+snapshot elegido. Conserva sus cinco archivos completos, crea otra generación y archiva
+el head anterior byte por byte (o registra su ausencia), con hash y copia elegida. Publica
+los directorios de generación/registro completos antes de reemplazar head atómicamente.
+No selecciona automáticamente una copia y no cambia las rutas nativas de la generación vieja.
+
+| Caso | Resultado comprobado |
+| :--- | :--- |
+| Generación actual incompleta | Constructor normal rechaza; recuperación desde copia íntegra pasa |
+| Head roto, vacío, no objeto, generación inválida o archivo ausente | Recuperación pasa y registra bytes originales o ausencia |
+| Campos nativos/metadata desconocidos | Archivos completos conservados; campos de head legible retenidos |
+| KSharedConfig viejo escribe tarde | Sólo modifica su ruta vieja, no la recuperada |
+| Datos de copia alterados o inventario incompleto | Rechazo con head/generaciones/registros intactos |
+| Layout inválido con hash recalculado | Corona/bindings rechazan la copia; no basta con rehashear |
+| Head de versión futura, aliases, ID/ruta inválidos | Rechazo sin redirigir ni sustituir datos |
+| Otro proceso conserva el lease | CLI rechaza antes de recuperar y conserva el head roto |
+| Autoridad XDG fuera de /tmp | Exportación a fixture, recuperación CLI real y reapertura en otro proceso pasan |
+| CLI/envoltorio reales | CLI recupera JSON roto; wrapper evita preflight sobre head ausente y termina offscreen |
+| Lectura nativa posterior | Otro proceso carga Corona y relee widget/opciones/desconocidos recuperados |
+
+Tres casos Qt dedicados incorporados a isolated-local-configuration y tres pruebas Python
+del envoltorio. Compilaciones/regresión local normal y ASan pasan; 215 pruebas Python R4
+pasan. ASan usa detect_leaks=0, sin afirmar ausencia de fugas de Qt/KDE. No se depende del
+fixture Wayland bloqueado por el ejecutor. Evidencia BREEZE_R4_PROFILE_RECOVERY_RESULTS.json.
+
+CLI: --recover-profile SNAPSHOT_DIR. Envoltorio: --profile DIR --recover-snapshot ID,
+con raíces/D-Bus auxiliares desechables y sin compositor ni registro de preview. Snapshots
+y generaciones viejas se conservan. Registros recoveries permanecen en el perfil original;
+exportToState copia estado elegido y snapshots, no esos archivos de diagnóstico. El lease
+serializa escritores cooperantes; comparación de presencia/bytes no es CAS global. Una
+interrupción anterior a seleccionar head puede dejar directorios completos no elegidos;
+no se ha ensayado crash/corte de energía ni se promete durabilidad frente a ellos.
+
+No se ejecutó recuperación sobre perfiles personales ni se seleccionó/retiró la barra
+diaria. replacementReady, r4Complete y verificación global siguen false. Autoridades,
+selección/activación/fallback diarios y logout siguen pendientes. No repetir §263/§265.
+
+## Elección persistente del perfil R4 §267
+
+2026-11-17: ProfileSelection añade intención persistente por nombre y procedencia, con
+revisión esperada para cambiar/vaciar. Datos en la autoridad XDG existente, separados de
+los archivos KDE. No fija generación ni duplica opciones. Consulta sin crear estado ausente;
+publicación atómica y campos desconocidos conservados. Repetir la elección vigente no escribe.
+
+| Caso | Resultado comprobado |
+| :--- | :--- |
+| Consulta inicial | Sin perfil/revisión 0, sin crear la autoridad XDG |
+| Elección y consulta en proceso nuevo | Mismo nombre/procedencia/revisión; archivos KDE validados |
+| Revisión antigua o candidato ausente | Rechazo sin cambiar el registro |
+| Misma elección | Sin escritura ni incremento de revisión |
+| Perfil ya abierto por otro host | Rechazo de nueva apertura, cambio y clear |
+| Editar y recuperar el perfil elegido | Nueva generación, elección intacta y opción nativa releída |
+| Head roto/perfil desaparecido | Consulta informa fallo; clear puede retirar la elección |
+| Procedencia distinta | Apertura rechazada; reelección explícita renueva la elección |
+| JSON/futuro esquema/revisión/tipo/ruta inválidos | Rechazo; sin reset automático ni elección alternativa |
+| Contador agotado o lease de selección ocupado | Rechazo sin publicación |
+| Metadata como enlace | Rechazo sin modificar el destino |
+| Servidor seleccionado real, offscreen | Confirma control, conserva lease, recibe stop, guarda/sincroniza/cierra y publica checkpoint |
+| Envoltorio de metadata real | select/status/clear con revisiones correctas y archivos auxiliares eliminados |
+| Preview de selección | Pide --serve-selected-profile, sin capturar una ruta previa; conserva restricciones de perfiles guardados |
+
+Prueba Qt usa XDG_STATE_HOME privado físicamente fuera de /tmp. El servidor hijo real
+no tiene salidas visibles del perfil; prueba ciclo de vida y guardado, no pintado Wayland.
+Cinco pruebas Python nuevas cubren entorno offscreen/D-Bus/acciones descartadas, revisión
+obligatoria, conflictos sin reintento y modo de preview seleccionado. 220 pruebas Python R4
+y regresión local normal/ASan pasan. ASan con detect_leaks=0; sin certificación de fugas de
+Qt/KDE. Evidencia BREEZE_R4_PROFILE_SELECTION_RESULTS.json.
+
+openSelected adquiere ProfileStore bajo el lease de selección y el host lo retiene hasta
+cerrar/checkpoint; no autorizar con una ruta de status. profileValidated sólo indica una
+inspección puntual, y puede ser false por propietario activo: no diagnostica salud de sesión.
+Nombre/procedencia no firma una instalación; leases y comprobación optimista de bytes no
+prometen CAS global/durabilidad ante corte de energía. Selección JSON corrupta no se repara
+automáticamente. No hay autostart, autoridad de retirada o consumidor diario instalado.
+
+Sólo fixtures; elecciones/perfiles personales y barra diaria intactos. R4, servicios,
+activación/fallback diarios y logout siguen abiertos; indicadores globales false. Sin
+repetir pruebas de sesión aceptadas, desplegar plugin, reiniciar, cambiar requisitos o
+hacer commit/push. AGENTS/CLAUDE, estado, plan y traspaso actualizados.
+
+## Cierre ordenado del preview R4 §268
+
+`bwm-power` ejecuta `panel-session.py session-exit` antes del cierre de aplicaciones y
+Hyprland. Selecciona el registro por instancia del compositor y comprueba el PID y su
+inicio. Espera primero la retirada de vistas y luego el recibo del envoltorio, identificado
+por token y revisión. El recibo sólo certifica éxito si el proceso sale con código cero.
+En el caso de un perfil guardado eso requiere guardar el layout de Corona, sincronizar
+su configuración, publicar un checkpoint y terminar liberando el bloqueo del perfil.
+Se reutiliza la revisión de una parada que ya está en curso. La ejecución total queda
+limitada a ocho segundos. Un error deja un diagnóstico y el cierre continúa.
+
+La regresión local ejecutó el envoltorio y el servidor seleccionado reales con Qt offscreen.
+Forzó la caída del anfitrión mientras esperaba órdenes y verificó que se retirara el registro
+y que la caída no generara un checkpoint. Después reabrió el mismo perfil y verificó un
+checkpoint nuevo de la generación vigente al parar con `session-exit`. Pasan la regresión
+normal y con AddressSanitizer (`detect_leaks=0`), las 223 pruebas Python R4 y las cinco
+pruebas de `bwm-power`. La prueba del orden de cierre usa operaciones Bash simuladas.
+Quedan por verificar el logout real de Hyprland y la activación del panel de uso diario,
+que requiere comprobar servicios de widgets y reservas en sesión.
+
+## Ensayo de reservas en varias salidas R4 §269
+
+`r4-reservation-smoke.py` permite comprobar el mismo borde en varios monitores con
+`--edge` y `--output` repetido. El anfitrión crea un panel nativo temporal de 48 px
+en cada salida solicitada. El informe distingue solicitud y reserva efectiva de
+Hyprland, y verifica que todos los vectores vuelvan a su valor inicial al retirarlo.
+
+Normal y AddressSanitizer (`detect_leaks=0`) pasan `isolated-local-configuration`.
+El anfitrión crea perfiles de dos salidas para cada uno de los cuatro bordes y los
+reabre en otro proceso. Las 224 pruebas Python R4 pasan. El comparador admite
+grosores distintos por salida en los datos observados, y rechaza bordes ausentes o
+incorrectos, salidas o capas duplicadas y una limpieza parcial.
+
+El intento desde el ejecutor se detuvo antes de iniciar el panel porque la consulta a
+Hyprland devolvió `Couldn't set socket timeout (2)`. La evidencia de la reserva inferior
+del MSI sigue en `BREEZE_R4_AREA_SESSION_RESULTS.json`.
+
+## Reserva superior real en dos salidas R4 §270
+
+El usuario ejecutó `--edge top` en MSI MAG 274Q X24 y LG UltraFine. El informe
+`/tmp/bwm-r4-reservation-session-1000.json` confirma `reservationDeltaVerified: true`
+y cero errores, con escala 1 y giro 0 en ambos monitores.
+
+| Salida | Antes | Durante | Después |
+| :--- | :--- | :--- | :--- |
+| MSI | `[0, 0, 0, 44]` | `[0, 48, 0, 44]` | `[0, 0, 0, 44]` |
+| LG | `[0, 0, 0, 44]` | `[0, 48, 0, 44]` | `[0, 0, 0, 44]` |
+
+Hyprland observó una capa superior de 640 × 48 por monitor. La retirada automática
+terminó con código 130, sin capas ni registro de preview. El ensayo no incluía
+maximizado. Sigue pendiente probar las reservas laterales, otras escalas y el panel diario.
+
+## Secuencia lateral y salida confirmada R4 §271
+
+`--edge left --edge right` recorre ambos bordes con un perfil temporal por ensayo. El
+segundo exige la geometría y los vectores de reserva originales en todos los monitores.
+Si el primero falla, el informe conserva su diagnóstico y el siguiente queda sin ejecutar.
+Cada parada comprueba el parentesco del proceso registrado con el envoltorio, su identidad
+y la instancia de Hyprland. Espera el recibo de salida y guardado antes de certificar el
+resultado. Restaurar la reserva tras un cierre forzado no basta para que pase.
+
+Pasan 227 pruebas Python de R4 y `isolated-local-configuration` normal y con AddressSanitizer
+(`detect_leaks=0`). El caso offscreen usa el anfitrión real, espera el recibo y confirma
+checkpoint y limpieza. El intento desde el ejecutor se detuvo en la primera consulta IPC,
+antes de abrir un panel. La medición lateral real queda pendiente.
+
+## Fallo lateral en sesión y corrección R4 §272
+
+El ensayo real pidió 48 px a la izquierda en MSI y LG. En ambas salidas el vector
+quedó en `[0, 0, 0, 44]`, frente a `[48, 0, 0, 44]` esperado. Se observaron capas de
+48 × 24 px y la salida terminó con código cero y recibo confirmado. Después no quedó
+ninguna capa de prueba. El borde derecho quedó sin ejecutar.
+
+LayerShellQt 6.7.5 convierte el eje con dos anclajes opuestos en una dimensión cero.
+Hyprland 0.56.2 calcula esa dimensión sobre el área útil y resta el margen final.
+La barra inferior restaba 44 px a la altura cada vez que el anfitrión la recalculaba.
+Hyprland descarta geometrías no positivas antes de aplicar su reserva. En la conexión
+que ofrece layer-shell v5, el anfitrión pide ahora un tamaño explícito, con dos anclajes
+adyacentes y `exclusive_edge`. Conserva los anclajes y el margen anteriores si la
+versión no está disponible. La lectura del registro usa los headers privados de
+Qt Wayland, dentro del auxiliar.
+
+Se recompiló `bwm-plasma-host`. Pasan `surface-geometry` e
+`isolated-local-configuration` tanto normal como con AddressSanitizer
+(`detect_leaks=0`), y 227 pruebas Python de R4. Las pruebas locales comprueban
+anclajes y márgenes para los cuatro bordes. Queda por medir en Hyprland la reserva
+con el anfitrión corregido. La consulta IPC desde el ejecutor sigue fallando.
+
+## Reservas laterales reales en dos salidas R4 §273
+
+El usuario repitió `--edge left --edge right` tras recompilar el anfitrión. El informe
+confirma ambas pruebas sin errores. MSI y LG conservaron escala 1 y giro 0, y Hyprland
+observó una capa de 48 × 640 px en cada salida durante cada prueba.
+
+| Ensayo en ambos monitores | Antes | Durante | Después |
+| :--- | :--- | :--- | :--- |
+| Izquierda | `[0, 0, 0, 44]` | `[48, 0, 0, 44]` | `[0, 0, 0, 44]` |
+| Derecha | `[0, 0, 0, 44]` | `[0, 0, 48, 44]` | `[0, 0, 0, 44]` |
+
+Cada cierre devolvió código 0 y recibo `exitConfirmed: true`. Después de cada borde,
+el registro de prueba y las capas habían desaparecido. Esto confirma la corrección
+de §272 para la disposición ensayada. Maximizado, escalas distintas y la integración
+del panel de uso diario quedan fuera de estos resultados.
+
+## Plasmoides de la bandeja y dueño de SNI R4 §274
+
+El anfitrión inventaría ahora los plasmoides vivos dentro del `CustomEmbedded` de la
+bandeja original de Plasma. Los muestra bajo `embeddedApplets`, con su estado de carga
+y la declaración de activación D-Bus si existe. Las filas directas y su orden permanecen
+como antes. Los iconos SNI externos y los hijos todavía inactivos quedan fuera de esa lista.
+
+La prueba Qt usa la bandeja original con un plasmoide temporal reconocido por su registro.
+La preferencia editada se guarda con Corona, pasa el checkpoint y se relee en otro proceso.
+Al destruir el hijo deja de aparecer en el inventario. Pasan la regresión local normal y
+con AddressSanitizer (`detect_leaks=0`) y las 230 pruebas Python R4. El primer intento ASan
+se interrumpió por `EAGAIN` después de que pasaran los dos casos nuevos. La repetición aislada
+completó toda la regresión.
+
+`r4-session-check.py --tray` consulta el nombre único del dueño de StatusNotifierWatcher
+y confirma que sigue vigente tras leer las dos propiedades del servicio. Devuelve la
+clase de dueño, el contador de iconos y si hay host registrado. Las pruebas cubren un
+servicio ausente, una lectura incoherente y un cambio de dueño. El ejecutor devolvió
+`bus-unavailable`. Queda pendiente la lectura de la sesión y probar el uso del watcher
+por el anfitrión nativo, además de menús y clics.
+
+## Dueño real de la bandeja SNI R4 §275
+
+La consulta del usuario confirma que Quickshell posee `org.kde.StatusNotifierWatcher`
+y devuelve dos iconos registrados. La comprobación de dueño no detectó cambios durante
+la lectura. `watcherVerified: true`, `sessionModified: false`, `replacementReady: false`.
+
+El fuente de Quickshell 0.3.2 confirma que `RegisterStatusNotifierHost` admite varios
+nombres de host válidos. Su propiedad `IsStatusNotifierHostRegistered` siempre devuelve
+true. El `hostRegistered: true` observado no identifica al host de KDE. Las fuentes
+de Plasma 6.7.5 muestran que el widget usa el watcher existente para enumerar iconos y
+suscribirse a sus cambios. Falta validar esa conexión y el manejo de iconos desde el
+auxiliar nativo en sesión.
+
+## Ensayo de enumeración con el modelo nativo de la bandeja R4 §276
+
+`check-native-tray.py` requiere que Quickshell posea el watcher y que haya iconos
+registrados. Lanza un proceso offscreen con la bandeja original. La lista de referencia
+sale de `RegisteredStatusNotifierItems` del watcher. El anfitrión lee su propio
+modelo `systemTrayModel`, filtra `itemType == StatusNotifier` y compara `DataEngineSource`
+con la lista inicial. La comparación exige coincidencia de identificadores y nombre temporal
+de host registrado por esa conexión. El nombre del dueño y la lista deben coincidir también
+al terminar. La salida pública contiene contadores y booleanos.
+
+`xdg-dbus-proxy` concede exclusivamente un nombre de host basado en el PID y reglas
+del watcher para consultar propiedades, registrar el host y recibir altas/bajas. No
+autoriza llamadas a los servicios de cada icono. El proceso nativo espera que el proxy
+esté listo antes de `exec`. Los procesos de prueba verifican el PID, las reglas y las
+raíces desechables. La prueba local de Qt verifica los roles en el modelo original. El
+binario rechaza un bus fuera de su ruta desechable y devuelve el fallo previsto si esa
+ruta no tiene bus.
+
+Pasaron 232 pruebas Python de R4 e `isolated-local-configuration` normal y con
+AddressSanitizer (`detect_leaks=0`).
+
+El ejecutor se detuvo en la consulta inicial al bus de sesión. Queda por comprobar
+la coincidencia en la sesión del usuario. El ensayo de enumeración no verifica los
+datos de cada icono, entradas/salidas de items en vivo, clics ni menús.
+
+## Enumeración SNI confirmada en sesión R4 §277
+
+El ensayo del usuario devolvió `passed: true`, `nativeModelMatches: true` y
+`nativeHostNameOwned: true`. El modelo original de KDE recibió las dos filas SNI
+con los mismos identificadores que publicó Quickshell. La comparación antes y después
+confirmó que el dueño y la lista seguían iguales.
+
+`panelShown: false` y `replacementReady: false`. La aceptación cubre la enumeración
+de los iconos registrados. Quedan las propiedades, las altas/bajas durante el ensayo,
+el pintado, los clics y los menús.
+
+## Lectura de propiedades e iconos SNI R4 §278
+
+La opción `--properties` conserva la comparación con el watcher de Quickshell y añade
+reglas `GetAll` exactas por nombre y ruta de item. Se excluyen nombres activables.
+Si un item usa nombre único, se confirma un alias adquirido por el mismo dueño.
+Sin alias no hay permiso para ese objeto y la cobertura queda incompleta. El informe
+exige los mismos dueños y la misma lista al principio y al final.
+
+El anfitrión lee estado SNI y categoría del modelo original, y cuenta los iconos de los
+que KDE obtiene un pixmap lógico de 22 px. Publica contadores agregados, sin títulos,
+rutas ni contenido de iconos. El modo comprueba la carga fuera de pantalla. El pintado
+del panel, los cambios en vivo y las acciones siguen pendientes.
+
+Compilaciones normal y ASan, `isolated-local-configuration` en ambos modos y 234
+pruebas Python de R4 pasan. Se comprobaron reglas por objeto, rechazo de alias con
+otro dueño, exclusión de activables y resultados incompletos. La sonda nativa devuelve
+`filtered-bus-unavailable` sin proxy. La consulta desde el ejecutor se detiene en el
+bus de sesión y queda pendiente medir los iconos de la sesión del usuario.
+
+## Cobertura del filtro SNI en sesión R4 §279
+
+El intento del usuario conservó dos filas coincidentes y el mismo watcher, pero
+`filterableItemCount`, `nativePropertiesCount` y `nativeUsableIconCount` fueron cero.
+Ese resultado sólo localiza el fallo en la obtención de los permisos por objeto.
+
+La actualización pregunta al daemon por nombres y dueños. Distingue un nombre único
+sin alias, un nombre activable excluido y un dueño no disponible. Para los objetos
+excluidos con dueño conocido consulta `Status`, `Category` e `IconName` directamente
+al nombre único. Sólo devuelve contadores. La lectura directa queda separada de
+`nativePropertiesVerified`, que exige las propiedades y el pixmap en el modelo KDE.
+
+Pasan 235 pruebas Python R4, incluidas resolución de alias, cambio de dueño,
+exclusión de activables, desaparición y lectura escalar directa. La repetición en
+sesión queda pendiente. El ejecutor sigue sin acceso al bus de sesión.
+
+## Lectura directa por nombre único en el proxy local R4 §280
+
+La prueba del usuario confirmó dos iconos con nombre único, ambos sin alias y con
+metadatos escalares accesibles. Uno anuncia icono por nombre. El watcher y los
+identificadores KDE coincidieron. El proxy estándar dejó cero objetos autorizados.
+
+La copia local de `xdg-dbus-proxy` añade una regla `GetAll` para el objeto exacto de
+un nombre único. Conserva el filtro de método y ruta. La prueba C ejercita el
+despacho real del proxy, y el parser rechaza activación, comodines y señales como
+reglas por nombre único. `--properties` usa el binario ya compilado, verifica su
+versión y contrasta también la identidad del bus antes y después. Se mantienen la
+copia y el servicio del sistema.
+
+Pasan la compilación, las pruebas del filtro y 237 pruebas Python. El ejecutor no
+puede abrir un bus privado para una prueba integrada. Queda por verificar en la
+sesión real que KDE obtenga las propiedades y los pixmaps de los dos iconos.
+
+## Arranque del proxy con nombres únicos R4 §281
+
+El usuario obtuvo dos reglas exactas y `native-tray-probe-timeout` sin contadores
+del modelo KDE. La instantánea inicial mostró dos iconos registrados por Quickshell.
+
+El código de inicio pedía al daemon el dueño de cada nombre filtrado. Para un nombre
+único, la respuesta es el propio nombre. La variante anterior guardaba esa respuesta
+como alias y la evaluación recorría el alias de forma recursiva. La versión
+`0.1.8+bwm-sni-unique-2` evita esa consulta para nombres únicos y protege la tabla de
+alias. Mantiene las suscripciones de dueño y las reglas exactas por método y ruta.
+
+La regresión C falló antes de la corrección y pasa con el binario recompilado. Pasan
+237 pruebas Python. El comprobador añade `timeoutStage` si se agota el plazo. Esta
+ejecución encontró el bus de sesión inaccesible. La lectura de las propiedades y los
+pixmaps de KDE queda pendiente de `--properties` en Breeze.
+
+## Lectura del estado del modelo SNI R4 §282
+
+El usuario obtuvo dos reglas por objeto y las dos filas nativas, con el watcher
+de Quickshell y los objetos estables hasta el final. El informe anterior dio
+`nativePropertiesCount: 0` y `nativeUsableIconCount: 0`.
+
+En Plasma 6.7.5, `StatusNotifierModel::data` llama a `extractStatus` en ambos
+roles de estado. Convierte el texto SNI del bus a `Plasma::Types::ItemStatus`. La
+sonda comparaba el `QVariant` con las cadenas del bus y sólo probaba el pixmap si
+pasaba esa condición. La corrección lee el valor del enum, exige categoría y
+mide los pixmaps de 22 px por separado. El éxito sigue requiriendo ambas medidas
+para todas las filas. La regresión cubre el retorno implícito del modelo, que
+guarda el estado como entero en `QVariant`, además de los estados sin datos y
+las categorías vacías. Pasan `isolated-local-configuration` y 237 pruebas Python.
+Pendiente medir las dos filas en la sesión Breeze.
+
+## Aceptación de propiedades y pixmaps SNI en Breeze R4 §283
+
+El usuario ejecutó `check-native-tray.py --properties` y obtuvo `passed: true`.
+El modelo de Plasma coincidió con los dos elementos que anunció Quickshell. El
+proxy acotó las consultas a los dos objetos exactos. `nativePropertiesCount` y
+`nativeUsableIconCount` fueron 2 y `nativePropertiesVerified` fue true. El dueño,
+el inventario y los objetos seguían iguales al cerrar el ensayo.
+
+El anfitrión poseyó su nombre temporal. `panelShown` y `replacementReady` fueron
+false. Quedan por probar los cambios en vivo, la presentación y las acciones.
+
+## Ciclo de un elemento SNI en bus privado R4 §284
+
+El nuevo ensayo crea una bandeja original de Plasma fuera de pantalla. En un bus
+privado sin servicios activables, registra un elemento de prueba con pixmap rojo,
+emite `NewStatus` para pasar a pasivo y `NewIcon` para sustituir el pixmap por uno
+azul. Cierra la conexión del elemento y exige su retirada del modelo. Cada fase
+espera la observación correspondiente antes de pasar a la siguiente. El watcher
+de prueba se retira con su bus y se borran las raíces XDG temporales.
+
+Pasan compilación, firma D-Bus `a(iiay)` de los pixmaps del elemento y 237 pruebas
+Python R4. El ciclo integrado quedó bloqueado antes de iniciar Qt por la denegación
+al abrir el socket del bus privado en el ejecutor. Quedan por comprobar el ciclo
+en terminal, los eventos bajo el proxy, la presentación y las acciones del panel.
+
+## Aceptación del ciclo SNI original R4 §285
+
+La ejecución del usuario en terminal obtuvo cuatro pases y cero fallos en 222 ms.
+El modelo de KDE incorporó el elemento, cambió su estado e imagen y retiró la fila
+al desaparecer el productor. El aviso de KWindowSystem sobre el plugin de
+plataforma se produjo en Qt offscreen. El ciclo ejecutado fue el del bus privado.
+
+## Ciclo SNI con filtro por objeto R4 §286
+
+El modo `--filtered` conserva el bus privado y conecta el cliente KDE al proxy
+local. El proxy permite el registro temporal del anfitrión, la lectura y las
+señales de alta/baja del watcher, `Properties.GetAll` para el icono de prueba y
+sus dos señales `NewStatus` y `NewIcon`. El test exige `AccessDenied` al consultar
+otra ruta del productor y verifica después los cuatro cambios del modelo.
+
+El proxy `0.1.8+bwm-sni-unique-3` valida los permisos por nombre único, ruta e
+interfaz. Sus pruebas C comprueban el despacho de llamadas y broadcasts, y el
+constructor rechaza reglas con comodines o miembros no previstos. La consulta de
+propiedades en Breeze continúa usando sólo `GetAll`. Pasan la compilación del
+ensayo, la firma de los pixmaps, el filtro C y 237 pruebas Python. La ejecución
+integrada del modo filtrado queda pendiente en la terminal del usuario.
+
+## Aceptación del ciclo SNI filtrado R4 §287
+
+El usuario ejecutó `check-native-tray-events.py --filtered`. QtTest registró cuatro
+pases, cero fallos y cero omisiones en 229 ms. El proxy rechazó la consulta a otra
+ruta y el cliente KDE recibió el alta, los cambios y la retirada. El aviso de
+KWindowSystem se produjo con Qt offscreen. El ensayo se limitó al bus privado.
+
+## Peticiones SNI desde el plasmoide original R4 §288
+
+`check-native-tray-events.py --actions` invoca los métodos del plasmoide con el
+identificador que obtuvo el modelo. El icono de prueba devuelve cuatro recibos
+con los argumentos exactos de `Activate`, `SecondaryActivate`, `Scroll` y
+`ContextMenu`. Como no exporta un menú importable, KDE usa la solicitud SNI de
+menú contextual. La activación usa el token vacío que ofrece KWindowSystem en
+Qt offscreen. El modo filtrado conserva sus reglas y comprueba que el icono
+de prueba no recibe `Activate`.
+
+Pasan la compilación, la firma D-Bus de pixmaps, la prueba Qt del token vacío y
+237 pruebas Python. El ejecutor no pudo abrir el socket del bus privado. Queda
+pendiente la comprobación de los cuatro recibos en terminal, así como los tokens
+de Wayland, la importación y la presentación del menú.
+
+## Aceptación de peticiones SNI en bus privado R4 §289
+
+El usuario ejecutó `--actions` y obtuvo cinco pases, cero fallos y cero omisiones
+en 432 ms. El productor recibió los argumentos esperados para las cuatro peticiones.
+El aviso de KWindowSystem se produjo con Qt offscreen. El de `ContextMenu` confirma
+la ruta prevista para el productor sin menú D-Bus.
+
+## Importación y acción de menú D-Bus R4 §290
+
+El modo `--menu` ejecuta el importador del plasmoide original contra el menú
+exportado por `KStatusNotifierItem`, con raíces XDG y bus privados. Comprueba
+que se muestre el menú importado en Qt offscreen, que conserve las opciones y
+su estado y que el evento de la opción habilitada llegue al productor.
+
+Pasan la compilación del binario y 237 pruebas Python. La ejecución integrada del
+menú queda pendiente en la terminal del usuario. El ensayo usa una acción Qt
+programática y una ventana offscreen. La entrada y colocación reales bajo Wayland
+siguen pendientes. `replacementReady` permanece false.
+
+## Aceptación de la importación y acción D-Bus R4 §291
+
+El usuario ejecutó `--menu` con cinco pases, cero fallos y cero omisiones en
+223 ms. El menú importado de Plasma conservó ambas acciones y una selección
+llegó al productor. Qt offscreen avisó sobre elevación y teclado. Al finalizar
+la prueba, el daemon privado registró un `UnknownObject` del productor. El
+ensayo siguió pasando y las dos comprobaciones se aceptaron fuera de pantalla.
+
+## Menú importado con capa e input Wayland R4 §292
+
+El modo `--menu-wayland` agrega un botón temporal en una capa superior sin
+reserva de espacio. La apertura desde un clic comprueba el asiento y el serial
+Wayland. La prueba exige que el menú quede expuesto, tenga rol `xdg_popup`,
+conserve esa capa como padre transitorio y use los anclajes de borde superior.
+Un clic en la acción habilitada debe llegar al productor del bus privado.
+
+El importador original envía `Event("closed")` al ocultar el menú. El ensayo
+cierra el menú y espera una lectura de su versión antes de destruir al productor,
+de modo que el objeto permanezca publicado durante el cierre. Pendiente verificar
+el resultado en terminal. Pasan la compilación y 237 pruebas Python. En el
+ejecutor, el daemon se detuvo al abrir el socket del bus privado.
+
+## Aceptación del menú Wayland y selección de monitor R4 §293
+
+El usuario ejecutó `--menu-wayland` y completó los clics. QtTest informó cuatro
+pases y cero fallos en 15,157 s. El ensayo confirmó el popup anclado a la capa
+de prueba y que la acción llegó al productor. El aviso `UnknownObject` no apareció.
+La capa se abrió en otro monitor, según el usuario.
+
+El lanzador obtiene ahora la descripción de la salida enfocada en Hyprland al
+inicio. `--output` permite elegir otra salida por descripción. El auxiliar usa
+el resolver común y fija la pantalla antes de mapear la capa. Comprueba que la
+capa y el popup correspondan en Qt a la pantalla elegida. Pasan la compilación,
+la comprobación Qt de descripciones y las pruebas Python. Queda verificar la
+ubicación física en la sesión con los dos monitores.
+
+## Maximizado en los bordes superior y laterales R4 §294
+
+Las reservas en esos bordes ya pasaron en dos salidas (§§270–273). El marco
+maximizado y su reajuste automático estaban comprobados en MSI con reserva
+inferior (§208). El comprobador permite ahora medir un marco propio en varios
+bordes sucesivos de una salida. Cada ensayo conserva su informe y se exige la
+línea base de la primera prueba antes de avanzar. El resumen distingue reserva,
+marco explícito y reajuste automático por borde.
+
+Las 241 pruebas Python incluyen la secuencia y la medida horizontal al añadir
+una reserva izquierda. Qt offscreen importó perfiles nativos con los bordes
+superior e izquierdo y derecho persistidos. El intento de sesión desde el
+ejecutor se detuvo en el acceso a Hyprland. Las medidas reales siguen pendientes.
+
+## Aceptación de maximizado en MSI R4 §295
+
+El usuario confirmó la reserva, el marco y el reajuste automático en los tres
+bordes. El informe de sesión confirmó los recibos de salida, una reserva de 48 px
+por ensayo y la vuelta a `[0, 720, 2560, 1396]`. El LG conservó su reserva inferior
+de 44 px en toda la secuencia.
+
+| Borde en MSI | Marco observado con panel (`x, y, ancho, alto`) |
+| :--- | :--- |
+| Superior | `0, 768, 2560, 1348` |
+| Izquierdo | `48, 720, 2512, 1396` |
+| Derecho | `0, 720, 2512, 1396` |
+
+El comprobador actualizado conserva el maximizado inicial si las observaciones
+automáticas coinciden con el área útil. Registra `during` o `after` en
+`remaximizedPhases` si tuvo que repetir el maximizado para medir el marco en
+alguna fase. Las pruebas cubren las cuatro combinaciones de coincidencia entre
+aparición y retirada. Pendiente aplicar el ensayo actualizado al LG.
+
+## Maximizado en LG y retorno rápido del área R4 §296
+
+El informe del usuario confirmó reservas, marco y salida limpia en los cuatro
+bordes del LG. Superior e izquierdo y derecho completaron el reajuste con
+`remaximizedPhases: []`. Abajo la reserva volvió de 92 a 44 px y el marco quedó
+en `[2560, 0, 3840, 2068]` hasta remaximizar `after`, cuando volvió a 2116 px.
+
+La prueba reproduce que la reducción se aplique y se retire el panel antes
+del siguiente sondeo. El observador reutilizaba la confirmación del área previa
+cuando reaparecía su firma. La corrección la invalida al detectar el cambio.
+Cada transición descarta el presupuesto de intentos de la firma anterior. El
+límite por firma sigue vigente. Pendiente confirmar el borde inferior del LG
+con el puente recargado.
+
+## Aceptación de la retirada inferior en LG R4 §297
+
+El usuario repitió el borde inferior con el puente recargado. El informe de
+sesión muestra la reserva `44 → 92 → 44`, el marco de altura
+`2116 → 2068 → 2116` y `remaximizedPhases: []`. El proceso de prueba confirmó
+su salida. El MSI conservó su reserva de 44 px. Reservas, marco y reajuste
+automático del LG inferior pasaron.
+
+## Ventanas maximizadas en ambas salidas R4 §298
+
+El comprobador admite una ventana propia por monitor solicitado. Las maximiza
+antes de crear los paneles y lee las transiciones automáticas de todas antes
+de intervenir en una. El informe privado registra las medidas por descripción
+en `maximizedByOutput`. La prueba de arranque parcial confirma la limpieza de
+las dos ventanas de prueba si falla el inicio de la segunda.
+
+Qt offscreen importó un perfil temporal con dos paneles y sus asociaciones
+de salida. Las regresiones comprueban la independencia de las medidas y el
+cierre. El intento simultáneo se detuvo en el acceso a Hyprland desde el
+ejecutor. Pendiente la medida en sesión de los dos marcos simultáneos.
+
+## Aceptación del maximizado inferior simultáneo R4 §299
+
+El usuario obtuvo las tres verificaciones positivas en ambas pantallas con
+`--maximize --edge bottom`. El informe confirma aumento y retirada de 48 px
+por salida, `remaximizedPhases: []` en las dos ventanas y cierre del auxiliar.
+
+| Salida | Altura inicial | Altura con panel | Altura tras retirarlo |
+| :--- | ---: | ---: | ---: |
+| MSI MAG 274Q X24 | 1396 | 1348 | 1396 |
+| LG UltraFine | 2116 | 2068 | 2116 |
+
+## Escala y transformaciones en la medición R4 §300
+
+El comprobador calcula el marco esperado con la escala efectiva y la
+transformación que publica Hyprland. Usa los píxeles físicos del modo para
+obtener dimensiones lógicas redondeadas, y aplica las reservas ya lógicas.
+La expectativa sigue siendo independiente del maximizador de BWM. Se conserva
+la comprobación de marco completo y la tolerancia de un píxel lógico.
+
+247 pruebas Python y 32 comparaciones con el redondeo de hyprutils 0.14.2 pasan.
+La aceptación en sesión sigue acreditando sólo la escala y giro de §299.
+
+## Redondeo de marco en el maximizador y el observador R4 §301
+
+Las regresiones usaron un modo físico de 251 × 333, escala 2, giro 1 y reservas
+de 2, 3, 4 y 5 px. Antes, ambos cálculos de Breeze daban un área de 160 × 117.
+Con el redondeo de dimensiones de Hyprland, los dos devuelven 161 × 118.
+El comprobador conserva su cálculo independiente. Las demás llamadas de
+`monitor_box` conservan su semántica previa, incluida la lectura de estado.
+
+Pasan 248 pruebas de R4, la suite de maximizado y las de selección de salida,
+puente y cambio de skin. La comprobación de geometrías distintas en el
+compositor sigue pendiente y el puente requiere recarga para adoptar el cambio.

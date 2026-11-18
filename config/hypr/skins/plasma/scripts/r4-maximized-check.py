@@ -40,12 +40,29 @@ def refresh_area_observer():
 
 
 def useful_area(monitor):
-    if monitor.get('scale') != 1 or monitor.get('transform', 0) != 0:
-        raise ValueError('Este ensayo de maximizado sólo certifica escala 1 y giro 0')
-    left, top, right, bottom = monitor['reserved']
-    area = [monitor['x'] + left, monitor['y'] + top,
-            monitor['width'] - left - right, monitor['height'] - top - bottom]
-    if any(type(n) not in (int, float) or not math.isfinite(n) for n in area) or min(area[2:]) <= 0:
+    x, y, width, height, scale = (monitor.get(key) for key in ('x', 'y', 'width', 'height', 'scale'))
+    if any(type(value) not in (int, float) or not math.isfinite(value) for value in (x, y, width, height, scale)):
+        raise ValueError('Geometría de monitor inválida')
+    if min(width, height, scale) <= 0:
+        raise ValueError('Tamaño o escala de monitor inválidos')
+    transform = monitor.get('transform', 0)
+    if type(transform) is not int or not 0 <= transform <= 7:
+        raise ValueError('Transformación de monitor inválida')
+    reserved = monitor.get('reserved')
+    if not isinstance(reserved, list) or len(reserved) != 4 or any(
+            type(value) not in (int, float) or not math.isfinite(value) or value < 0 for value in reserved):
+        raise ValueError('Reserva de monitor inválida')
+
+    # Hyprland 0.56 reports mode pixels and rounds the transformed size / scale.
+    # The origin and reservations already use logical coordinates.
+    if transform % 2:
+        width, height = height, width
+    width, height = width / scale, height / scale
+    if not math.isfinite(width) or not math.isfinite(height):
+        raise ValueError('Tamaño lógico inválido')
+    left, top, right, bottom = reserved
+    area = [x + left, y + top, math.floor(width + 0.5) - left - right, math.floor(height + 0.5) - top - bottom]
+    if not all(math.isfinite(value) for value in area) or min(area[2:]) <= 0:
         raise ValueError('Área útil inválida')
     return area
 

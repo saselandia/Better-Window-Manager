@@ -48,11 +48,10 @@
       "current": "1"
     }
   },
-  "userSessionState": "opted in, installed, builtForRunningHyprland true, not loaded (loads at next login); shared dispatcher inactive retryMs 0",
+  "userSessionState": "first real login confirmed by user in §256: opted in, installed, builtForRunningHyprland true, loaded in this session; active provider, 10 desktops from shared-bwm-bridge, no errors; native task filter by current workspace in MSI accepted by user (§257)",
   "notVerified": [
-    "first real login with the module loaded in the user session",
-    "preview with --native-desktops in the user session",
-    "multi-output activation in the session"
+    "logout with the module loaded in the user session",
+    "occupied workspaces, cross-output relocation, window/pointer focus and daily panel authorities"
   ],
   "operationalVerified": false,
   "liveSessionVerified": false,
@@ -70,5 +69,82 @@
     "tests/test_r4_shared_settings.py": "80d4ac5c6b6a3630da9ad7039d4e526db69fba9dd4f41741a0429d9ed6c4a92d",
     "tests/test_r4_native_workspaces.py": "8a0468d6715fb8c35033a9b8cff582fbe9d09d3ddb0b846f858943ec4635c084",
     "tests/test_kde_config_bridge.py": "d96254d3895bedfd8400d6c5bb1878c115f89294e77531a35ca7a0ba2230dc85"
+  },
+  "firstRealLogin": {
+    "section": "BWM_CONTEXT §3.256",
+    "source": "User-provided terminal output; executor cannot access compositor IPC",
+    "optedIn": true,
+    "installed": true,
+    "builtForRunningHyprland": true,
+    "loadedInThisSession": true,
+    "startupGuard": {},
+    "startupReportReadByAssistant": {
+      "loaded": true,
+      "stable": true
+    },
+    "provider": {
+      "enabled": true,
+      "providerAvailable": true,
+      "arbitrationState": "active",
+      "providerRestartRequired": false,
+      "desktops": 10,
+      "current": "1",
+      "configuredCount": 10,
+      "configuredCountAvailable": true,
+      "configuredCountSource": "shared-bwm-bridge",
+      "countRevision": 1,
+      "acceptedRequests": 0,
+      "appliedActivations": 0,
+      "observedActivations": 0,
+      "lastError": "",
+      "lastActivationError": "",
+      "liveSessionVerified": false,
+      "operationalVerified": false
+    },
+    "previewStartedByAssistant": false,
+    "panelSessionStatus": {
+      "active": false
+    }
+  },
+  "nativeTaskFilterSessionAcceptance": {
+    "section": "BWM_CONTEXT §3.257",
+    "source": "User confirmation: correcto, funciona",
+    "preview": "org.kde.plasma.taskmanager with --native-desktops, without --all-desktops",
+    "output": "MSI",
+    "currentWorkspaceFilterAccepted": true,
+    "perWindowOrOutputMeasurements": false,
+    "providerOriginatedActivationVerified": false
+  },
+  "multiOutputReadOnlyAcceptance": {
+    "section": "BWM_CONTEXT §3.259",
+    "passed": true,
+    "LG": "10",
+    "MSI": "1",
+    "geometryVerified": true,
+    "bindingVerified": true,
+    "activationTested": false
+  },
+  "realSessionActivationAcceptance": {
+    "section": "BWM_CONTEXT §3.263",
+    "passed": true,
+    "scope": "Active LG/10 → active MSI/1; assignments unchanged",
+    "applied": 2,
+    "observed": 2,
+    "failed": 0,
+    "rejected": 0,
+    "cancelled": 0,
+    "noops": 0,
+    "paused": true
+  },
+  "sameOutputNavigationAcceptance": {
+    "section": "BWM_CONTEXT §3.265",
+    "evidence": "BREEZE_R4_WORKSPACE_NAVIGATION_RESULTS.json",
+    "passed": true,
+    "scope": "MSI/1 → MSI/3 → MSI/1, LG/10 unchanged",
+    "applied": 2,
+    "observed": 2,
+    "failed": 0,
+    "rejected": 0,
+    "paused": true
   }
 }

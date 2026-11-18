@@ -65,6 +65,30 @@ timeout() { :; }
         self.assertEqual(actions, [])
         self.assertIn('3 ventanas', output)
 
+    def test_session_exit_orders_panel_flush_before_app_and_compositor_close(self):
+        source=SCRIPT.read_text()
+        functions=source[source.index('stop_plasma_preview() {'):source.index('\nif [[ $stage == "--inhibited" ]]')]
+        harness=r'''
+notify-send() { :; }
+timeout() { printf 'panel-hook %s %s\n' "$1" "${*: -1}" >&2; return "$HOOK_STATUS"; }
+close_all_windows() { echo apps >&2; }
+run() { echo compositor >&2; }
+message=closing
+command=(hyprshutdown)
+'''
+        for status,dry_run,instance,expected in (
+            ('0','0','fixture',['panel-hook 8s session-exit','apps','compositor']),
+            ('1','0','fixture',['panel-hook 8s session-exit','[BWM] No se pudo confirmar el guardado del panel de prueba antes de cerrar la sesión.','apps','compositor']),
+            ('0','1','fixture',['apps','compositor']),
+            ('0','0','',['apps','compositor']),
+        ):
+            with self.subTest(status=status,dry_run=dry_run,instance=instance):
+                result=subprocess.run(['bash','-c',harness+functions+'\nexit_session',str(SCRIPT)],
+                    env=dict(os.environ,HOOK_STATUS=status,dry_run=dry_run,HYPRLAND_INSTANCE_SIGNATURE=instance),
+                    capture_output=True,text=True,timeout=5)
+                self.assertEqual(result.returncode,0,result.stderr)
+                self.assertEqual(result.stderr.splitlines(),expected)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -504,12 +504,13 @@ incluido el fallback antiguo. Reabrir un perfil con NormalPanel requiere --nativ
 
 BwmSurface pide la reserva mediante LayerShellQt::Window::setExclusiveZone(thickness).
 La superficie conserva el espacio de flotación del SVG, pero la petición excluye ese padding,
-como PanelView::updateExclusiveZone 6.7.5 fuera de edición. Se usa margen del borde cero y
-tres anclajes (borde + ambos perpendiculares), válidos para reserva positiva antes del
-protocolo v5. El margen perpendicular final conserva la longitud personalizada y alineación
-inicial: 360 px en salida de 1280 → margen final 920, con tamaño cero solicitado por
-LayerShellQt en el eje restringido. También se envía exclusiveEdge cuando la biblioteca/
-protocolo lo admite. No se depende de una reserva positiva anclada sólo a una esquina.
+como PanelView::updateExclusiveZone 6.7.5 fuera de edición. Con `zwlr_layer_shell_v1` v5 se
+fijan los dos anclajes de la esquina, se pide el tamaño explícito sin margen final y se
+designa el borde de reserva por separado. El anfitrión consulta la versión en el registro
+de la conexión Qt activa. LayerShellQt 6.7.5 negocia hasta v5. Si la versión no está
+disponible, se conservan los tres anclajes anteriores, con tamaño cero y margen final en
+el eje estirado. §272 documenta por qué éstos acortaban un panel lateral con otra reserva
+perpendicular en Hyprland 0.56.2. En v5 el mismo panel conserva su longitud solicitada.
 
 La geometría de la salida/tamaño, visibilidad y reflow actualizan la petición. WindowsGoBelow,
 ocultar/salir de skin o una superficie que no cabe retiran la reserva (-1). Longitudes fuera
@@ -527,6 +528,16 @@ exclusiveZoneRequested de reservedArea/waylandVerified, que siguen false. Un ped
 da reserved-area-unverified. replacementReady continúa false y no se retira el panel diario.
 La migración sigue archivando la visibilidad diferida: habilitar este ensayo no certifica
 su activación completa ni reescribe automáticamente staging o disposición.
+
+El comprobador de reservas (§269) acepta varias descripciones de salida y un borde común.
+Genera un perfil temporal mediante `--stage-migration` y `--import-profile`, con un panel
+por salida. Lee el borde de cada containment en el estado del anfitrión y compara su
+petición con el incremento correspondiente de `monitors.reserved` (izquierda, arriba,
+derecha, abajo). Exige una capa de política nativa por salida solicitada, geometría e
+identidad estables, y el retorno al estado original en todas las salidas. El informe
+conserva los vectores antes, durante y después. Esto mide reservas en la sesión que
+ejecuta la prueba. Las pruebas offscreen sólo verifican preparación y reapertura del
+perfil, y las pruebas Python comparan observaciones simuladas.
 
 Fuentes fijadas: distfiles de plasma-workspace 6.7.5 (PanelView::restore,
 setVisibilityMode/updateLayerWindow/updateExclusiveZone) y layer-shell-qt 6.7.5
@@ -592,6 +603,7 @@ desconocidos. Las versiones/rutas/IDs/symlinks inválidos se rechazan.
 | info / assignments / layoutFile / viewSettingsFile | Entrega metadatos y rutas nativas de la generación seleccionada; no certifica backends ni activa el panel diario |
 | checkpoint | Tras flush y cierre de propietarios nativos, captura los cinco archivos, valida la copia e inventaría hashes; publica el directorio de snapshot completo |
 | restore(snapshot-id) | Verifica inventario/hashes y datos nativos; copia a una generación nueva y cambia head.json atómicamente. No sobrescribe la generación anterior |
+| recover(root, snapshot-id) | Toma el mismo lease sin abrir la generación actual; valida la copia explícita, conserva head anterior en recoveries y publica una generación nueva antes de cambiar head |
 | serve-profile | Carga el archivo propietario con Corona y todos sus paneles con PanelRuntime; usa RuntimeControl y, al detenerse, sync/cierre de propietarios antes del checkpoint |
 
 Conservar una ruta nueva al restaurar es necesario: un KSharedConfig antiguo puede retener
@@ -601,6 +613,21 @@ Un restore interrumpido antes de seleccionar su head puede dejar una generación
 sin sustituir la vigente. El lease serializa escritores cooperantes; la comprobación
 optimista de head detecta ediciones ajenas, no promete CAS global con escritores que ignoren
 el bloqueo. Hashes son comprobación de integridad, no firma ni garantía ante corte de energía.
+
+La recuperación explícita (§266) resuelve el caso que restore no puede abrir: head ausente,
+JSON roto o generación actual incompleta. No elige «la última» copia: exige un snapshot ID
+concreto. Usa el mismo lease antes de leer/verificar y conserva los bytes de head en
+recoveries/<nueva-generación>/head.json (si existía), con un recovery.json que registra hash,
+snapshot y nueva generación. Copia los cinco archivos a una ruta nueva y publica la
+generación y el registro completos antes de seleccionar head con QSaveFile. Si falla antes
+de ese último paso, no sustituye el head anterior; pueden quedar directorios no seleccionados.
+Compara presencia/bytes de head antes de publicar para detectar escritores ajenos; no
+promete exclusión frente a procesos que ignoren el lease. Conserva campos desconocidos de
+un objeto legible y rechaza una versión explícita de head distinta de 1. No atraviesa aliases
+ni reconstruye archivos faltantes de la copia. El CLI --recover-profile SNAPSHOT_DIR y el
+envoltorio --profile DIR --recover-snapshot ID no arrancan paneles; el envoltorio usa QPA
+offscreen sin acceso al compositor. Los registros de recuperación quedan en el perfil
+original y no forman parte del historial de snapshots que copia exportToState.
 
 preview-isolated.py --profile DIR --follow-skin reabre el perfil existente y conserva sus
 bindings, IDs, widgets y opciones; no recrea dos widgets ni fuerza BottomEdge. Usa lookup XDG
@@ -616,6 +643,39 @@ pendientes. La prueba Qt añade/configura un widget propio mediante las APIs nat
 dos paneles y grosor/opciones independientes, restaura baseline/editado y relee en proceso
 nuevo. El CLI/envoltorio reabre dos veces y rechaza perfil ocupado/copia alterada. Evidencia:
 BREEZE_R4_PROFILE_RESULTS.json.
+
+### Selección persistente y adquisición del perfil (§267)
+
+ProfileSelection guarda intención en `panel-profiles/.selection/selection.json`, dentro de
+la autoridad XDG existente, reservando un nombre que no puede exportarse como perfil.
+Metadatos v1: revision entera 1–(2^53−1), profile (nombre simple o null) y sourceSha256 cuando
+hay elección. Estado ausente equivale a revisión 0 sin perfil. Clear conserva el registro y
+avanza la revisión para evitar reutilizar una revisión antigua tras vaciarlo. Campos ajenos
+se conservan; metadata corrupta o futura se rechaza, sin reset ni elección automática.
+
+Orden de leases no bloqueantes: selección → perfil anterior si difiere → perfil candidato.
+Select verifica Corona/archivos nativos del candidato y exige la revisión esperada antes
+de publicar con QSaveFile; repetir elección/procedencia no escribe ni avanza revisión.
+Clear necesita sólo el lease del perfil anterior, por lo que admite head/generación rotos
+o perfil ausente sin abrir Corona. Un anfitrión activo impide cambiar/vaciar la elección.
+Las comparaciones optimistas de bytes detectan edición ajena; no son CAS global ni garantía
+de durabilidad. Nombre+hash de procedencia no es identidad criptográfica de una instalación.
+
+openSelected lee la intención y adquiere ProfileStore bajo el lease de selección; contrasta
+procedencia y head antes de devolverlo. El llamador conserva el lease de ProfileStore toda
+la vida de Corona. Así no hay una ventana entre consultar status y abrir una ruta obsoleta.
+La elección no fija generación: restaurar/recuperar el mismo perfil conserva su nombre y
+procedencia; la siguiente apertura toma sus archivos nuevos. Otro origen exige seleccionar
+explícitamente otra vez. Info valida puntualmente si puede adquirir el perfil; ocupado/roto
+se informa sin cambiar la elección. No confundir profileValidated con salud de proceso.
+
+El CLI --serve-selected-profile reutiliza el ciclo nativo load/save/sync/cierre/checkpoint
+de --serve-profile. preview-isolated.py --selected-profile --follow-skin pide ese modo sin
+resolver previamente un nombre a una ruta. Sigue siendo preview registrado, no autostart.
+profile-selection.py ejecuta consulta/select/clear offscreen sin sesión/compositor ni acciones.
+No existe un controlador que retire la barra diaria a partir de esta elección; readiness
+y los indicadores globales conservan sus bloqueos. Evidencia normal/ASan sobre fixtures y
+CLI/envoltorios: BREEZE_R4_PROFILE_SELECTION_RESULTS.json. Logout/fallback diarios pendientes.
 
 ### Exportación a estado XDG persistente
 
@@ -750,8 +810,22 @@ readiness/status añade widgetBackends, widgetBackendsVerified y
 widgetInventoryScope=direct-panel-instances por panel. Sus blockers distinguen
 widget-backend-adapter-required, widget-runtime-unverified, widget-launch-failed y
 widget-inventory-unavailable-or-empty. Se consulta el estado vivo, sin ejecutar acciones,
-alterar configuración ni crear servicios. No acredita hijos de bandeja, todo un tema ni
-capacidad universal. Un inventario vacío/ausente no cuenta como verificación.
+alterar configuración ni crear servicios. Un inventario vacío o ausente no cuenta como
+verificación.
+
+Desde §274, la fila de `org.kde.plasma.systemtray` incluye `embeddedApplets` para sus
+plasmoides nativos vivos. Plasma 6.7.5 los mantiene bajo el `CustomEmbedded` dentro del
+panel. Cada hijo conserva su ID, paquete, estado de carga y servicio de activación declarado
+por el paquete. Estos hijos quedan fuera del orden de applets directos. La lista tampoco
+incluye iconos externos SNI, aplicaciones en segundo plano o plasmoides aún no activados.
+Un checkpoint y un proceso nuevo comprueban que Corona conserva la configuración de un
+hijo sin tratarlo como un panel independiente.
+
+`r4-session-check.py --tray` consulta D-Bus para observar quién ofrece
+`org.kde.StatusNotifierWatcher`. Lee las propiedades del nombre único, vuelve a comprobar
+que conserva la propiedad y devuelve solo la clase de proceso y el número de iconos.
+No autoactiva el watcher ni registra un host. El resultado confirma una lectura puntual
+del servicio, sin acreditar menús, clics, iconos ni servicios de los plasmoides internos.
 
 Este contrato es diagnóstico para el futuro controlador de selección/recuperación. No
 instala dicho controlador ni autoridades diarias y no activa backends; replacementReady

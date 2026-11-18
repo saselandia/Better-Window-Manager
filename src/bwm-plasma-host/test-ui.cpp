@@ -13,6 +13,7 @@
 #include "profilestore.h"
 #include "migration.h"
 #include "desktopbridge.h"
+#include "trayprobe.h"
 #include <KWindowSystem>
 #include <QtPlugin>
 Q_IMPORT_PLUGIN(BwmWindowSystemPlugin)
@@ -30,6 +31,8 @@ Q_IMPORT_PLUGIN(BwmWindowSystemPlugin)
 #include <QCryptographicHash>
 #include <QSaveFile>
 #include <QProcess>
+#include <QProcessEnvironment>
+#include <QAbstractItemModel>
 #include <QDir>
 #include <QApplication>
 #include <QAction>
@@ -45,6 +48,7 @@ Q_IMPORT_PLUGIN(BwmWindowSystemPlugin)
 #include <Plasma/Containment>
 #include <Plasma/Applet>
 #include <Plasma/Theme>
+#include <Plasma/Plasma>
 #include <PlasmaQuick/AppletQuickItem>
 #include <PlasmaQuick/ConfigView>
 #include <PlasmaQuick/AppletPopup>
@@ -182,6 +186,108 @@ private Q_SLOTS:
         QCOMPARE(ids,(QSet<uint>{first,second}));
         a->destroy();QTRY_COMPARE(session.widgetBackends().size(),1);
         QCOMPARE(session.widgetBackends().first().toMap().value("id").toUInt(),second);
+    }
+    void nativeTrayPropertyRoles() {
+        using ItemStatus = Plasma::Types::ItemStatus;
+        // StatusNotifierModel::data returns the enum through QVariant implicitly.
+        const auto modelValue = [](ItemStatus status) -> QVariant { return status; };
+        const QVariant category{QStringLiteral("ApplicationStatus")};
+        for (const auto status : {ItemStatus::ActiveStatus, ItemStatus::PassiveStatus, ItemStatus::NeedsAttentionStatus}) {
+            const QVariant role = modelValue(status);
+            QVERIFY(nativeTrayPropertiesLoaded(role, category));
+            QVERIFY(nativeTrayPropertiesLoaded(QVariant::fromValue(status), category));
+            QVERIFY(!nativeTrayPropertiesLoaded(role, QString()));
+        }
+        QVERIFY(!nativeTrayPropertiesLoaded(modelValue(ItemStatus::UnknownStatus), category));
+        QVERIFY(!nativeTrayPropertiesLoaded(QVariant::fromValue(ItemStatus::UnknownStatus), category));
+        QVERIFY(!nativeTrayPropertiesLoaded(QVariant::fromValue(ItemStatus::HiddenStatus), category));
+        QVERIFY(!nativeTrayPropertiesLoaded(QStringLiteral("Active"), category));
+        QVERIFY(!nativeTrayPropertiesLoaded({}, category));
+    }
+    void nativeTrayInventoryAndProfileCheckpoint() {
+        const QDir config(qEnvironmentVariable("XDG_CONFIG_HOME"));
+        const QString childId = "org.bwm.r4.tray-child";
+        const QByteArray legacy = R"({"bar":{"plasma":{"edge":"bottom","style":"opaque"}}})";
+        const auto hash = QString::fromLatin1(QCryptographicHash::hash(legacy,QCryptographicHash::Sha256).toHex());
+        const QJsonObject widget{{"package","org.kde.plasma.systemtray"},
+            {"nativeSettings",QJsonObject{{"extraItems",QJsonArray{childId}}}}};
+        const QJsonObject plan{{"version",1},{"legacyJson",QString::fromUtf8(legacy)},{"sourceSha256",hash},
+            {"panels",QJsonArray{QJsonObject{{"outputDescription","BWM Test Tray T"},{"containmentPackage","org.kde.panel"},
+                                             {"widgets",QJsonArray{widget}}}}}};
+        const auto planPath = config.filePath("bwm-tray-plan.json");
+        QFile file(planPath);QVERIFY(file.open(QIODevice::WriteOnly));file.write(QJsonDocument(plan).toJson());file.close();
+        const auto staged = BwmMigration::stage(planPath).value("directory").toString();
+        struct RemoveStage { QString path; ~RemoveStage(){ QDir(path).removeRecursively(); } } remove{staged};
+        const auto path = config.filePath("bwm-ui-tray-profile");
+        ProfileStore::importStage(staged,path);
+        ProfileStore profile(path);
+        {
+            TestCorona corona;
+            corona.loadLayout(profile.layoutFile());
+            QCOMPARE(corona.containments().size(),1);
+            auto *panel = corona.containments().constFirst();
+            QCOMPARE(panel->applets().size(),1);
+            auto *tray = qobject_cast<Plasma::Containment *>(panel->applets().constFirst());
+            QVERIFY(tray);
+            QCOMPARE(tray->containmentType(),Plasma::Containment::CustomEmbedded);
+            auto *model = tray->property("systemTrayModel").value<QAbstractItemModel *>();
+            QVERIFY(model);
+            QCOMPARE(model->roleNames().values().contains(QByteArrayLiteral("DataEngineSource")), true);
+            QCOMPARE(model->roleNames().values().contains(QByteArrayLiteral("itemType")), true);
+            PanelSession session(panel,false);
+            const auto getChildRow = [&] {
+                const auto rows = session.widgetBackends();
+                if (rows.size() != 1) return QVariantMap();
+                for (const auto &value : rows.constFirst().toMap().value("embeddedApplets").toList()) {
+                    if (value.toMap().value("package").toString() == childId) return value.toMap();
+                }
+                return QVariantMap();
+            };
+            QTRY_VERIFY(!getChildRow().isEmpty());
+            const auto row = session.widgetBackends().constFirst().toMap();
+            QCOMPARE(row.value("package").toString(),"org.kde.plasma.systemtray");
+            QCOMPARE(row.value("embeddedInventoryScope").toString(),"live-native-tray-applets");
+            Plasma::Applet *child = nullptr;
+            const auto childIdInInventory = getChildRow().value("id").toUInt();
+            for (auto *candidate : tray->applets()) if (candidate->id() == childIdInInventory) child = candidate;
+            QVERIFY(child && !child->failedToLaunch());
+            QVERIFY(!getChildRow().value("runtime").toMap().value("operationalVerified").toBool());
+            QCOMPARE(session.order().size(),1); // No child is registered as a direct panel widget.
+            auto *entry = child->configScheme()->KCoreConfigSkeleton::findItem("caption");
+            QVERIFY(entry);entry->setProperty(QStringLiteral("saved inside native tray"));
+            QVERIFY(child->configScheme()->save());
+            corona.saveLayout(profile.layoutFile());QVERIFY(corona.config()->sync());
+        }
+        const auto checkpoint = profile.checkpoint();
+        QVERIFY(!checkpoint.value("snapshot").toString().isEmpty());
+    }
+    void nativeTrayChildFreshProcessReadback() {
+        const QDir config(qEnvironmentVariable("XDG_CONFIG_HOME"));
+        ProfileStore profile(config.filePath("bwm-ui-tray-profile"));
+        TestCorona corona;
+        corona.loadLayout(profile.layoutFile());
+        QCOMPARE(corona.containments().size(),1);
+        auto *panel = corona.containments().constFirst();
+        QCOMPARE(panel->applets().size(),1);
+        auto *tray = qobject_cast<Plasma::Containment *>(panel->applets().constFirst());
+        QVERIFY(tray);
+        const auto findChild = [tray]() -> Plasma::Applet * {
+            for (auto *child : tray->applets())
+                if (child->pluginMetaData().pluginId() == "org.bwm.r4.tray-child") return child;
+            return nullptr;
+        };
+        QTRY_VERIFY(findChild());
+        auto *entry = findChild()->configScheme()->KCoreConfigSkeleton::findItem("caption");
+        QVERIFY(entry);
+        QCOMPARE(entry->property().toString(),"saved inside native tray");
+        PanelSession session(panel,false);
+        const auto childListed = [&] {
+            for (const auto &value : session.widgetBackends().constFirst().toMap().value("embeddedApplets").toList())
+                if (value.toMap().value("package").toString() == "org.bwm.r4.tray-child") return true;
+            return false;
+        };
+        QVERIFY(childListed());
+        findChild()->destroy();QTRY_VERIFY(!childListed());
     }
     void previewLoadsAndOpensOriginalConfig() {
         TestCorona corona;
@@ -1531,6 +1637,239 @@ private Q_SLOTS:
             }
         }
         QCOMPARE(configured,1);QVERIFY(runtime.setSkin("default"));
+    }
+    void profileRecoveryFromExplicitSnapshot() {
+        const QDir config(qEnvironmentVariable("XDG_CONFIG_HOME"));const auto root=config.filePath("bwm-ui-recovery-profile");
+        QVERIFY(!QFileInfo::exists(root));const auto stagePath=config.filePath("bwm-native-staged");QVERIFY(!QFileInfo::exists(stagePath));
+        struct RemoveStage{QString path;~RemoveStage(){QDir(path).removeRecursively();}} remove{stagePath};
+        const auto readBytes=[](const QString &path){QFile file(path);return file.open(QIODevice::ReadOnly)?file.readAll():QByteArray();};
+        const auto writeBytes=[](const QString &path,const QByteArray &bytes){QSaveFile file(path);return file.open(QIODevice::WriteOnly) && file.write(bytes)==bytes.size() && file.commit();};
+        const auto hash=[](const QByteArray &bytes){return QString::fromLatin1(QCryptographicHash::hash(bytes,QCryptographicHash::Sha256).toHex());};
+        const QByteArray legacy=R"({"bar":{"plasma":{"edge":"bottom","thickness":44,"style":"opaque"}}})";
+        const QJsonObject widget{{"package","org.bwm.r4.shared-config"},{"nativeSettings",QJsonObject{{"enabled",false},{"caption","recovered-native-option"}}}};
+        const QJsonObject plan{{"version",1},{"legacyJson",QString::fromUtf8(legacy)},{"sourceSha256",hash(legacy)},
+            {"panels",QJsonArray{QJsonObject{{"outputDescription","BWM Test Recovery A A"},{"containmentPackage","org.kde.panel"},{"widgets",QJsonArray{widget}}}}}};
+        const auto planPath=config.filePath("bwm-recovery-plan.json");QVERIFY(writeBytes(planPath,QJsonDocument(plan).toJson()));
+        BwmMigration::stage(planPath);
+        {KConfig layout(stagePath+"/layout",KConfig::SimpleConfig);KConfigGroup(&layout,"Vendor").writeEntry("Keep","layout-recovery");QVERIFY(layout.sync());
+         KConfig views(stagePath+"/plasmashellrc",KConfig::SimpleConfig);KConfigGroup(&views,"Vendor").writeEntry("Keep","views-recovery");QVERIFY(views.sync());}
+        const auto imported=ProfileStore::importStage(stagePath,root);const auto headPath=root+"/head.json";
+        auto head=QJsonDocument::fromJson(readBytes(headPath)).object();head["VendorKeep"]="head-recovery";QVERIFY(writeBytes(headPath,QJsonDocument(head).toJson()));
+        QJsonObject checkpoint;
+        {
+            ProfileStore owner(root);checkpoint=owner.checkpoint();
+            QVERIFY_EXCEPTION_THROWN(ProfileStore::recover(root,checkpoint.value("snapshot").toString()),std::runtime_error);
+        }
+        const auto snapshot=checkpoint.value("snapshot").toString(),snapshotDir=checkpoint.value("directory").toString();
+        const auto originalHead=readBytes(headPath),originalLayout=readBytes(imported.value("layoutFile").toString());
+        auto retained=KSharedConfig::openConfig(imported.value("layoutFile").toString(),KConfig::SimpleConfig);
+        // An unreadable current generation prevents ordinary restore, but not
+        // explicit snapshot recovery. Keep the broken generation untouched.
+        QVERIFY(QFile::remove(imported.value("layoutFile").toString()));
+        QVERIFY_EXCEPTION_THROWN((void)ProfileStore(root),std::runtime_error);
+        auto recovered=ProfileStore::recover(root,snapshot);QCOMPARE(recovered.value("status").toString(),"native-profile-recovered");
+        QVERIFY(!recovered.value("activationAllowed").toBool());QVERIFY(recovered.value("previousHeadPresent").toBool());
+        QVERIFY(recovered.value("generation")!=imported.value("generation"));
+        QCOMPARE(readBytes(recovered.value("recoveryDirectory").toString()+"/head.json"),originalHead);
+        const auto record=QJsonDocument::fromJson(readBytes(recovered.value("recoveryDirectory").toString()+"/recovery.json")).object();
+        QCOMPARE(record.value("previousHeadSha256").toString(),hash(originalHead));QCOMPARE(record.value("snapshot").toString(),snapshot);
+        for(const auto &name:{"layout","plasmashellrc","legacy.json","report.json","bindings.json"})
+            QCOMPARE(readBytes(QFileInfo(recovered.value("layoutFile").toString()).absolutePath()+'/'+name),readBytes(snapshotDir+'/'+name));
+        QVERIFY(!QFileInfo::exists(imported.value("layoutFile").toString()));
+        KConfigGroup(retained,"LateOldOwner").writeEntry("Keep","old-only");QVERIFY(retained->sync());
+        QCOMPARE(readBytes(recovered.value("layoutFile").toString()),originalLayout);
+        QCOMPARE(QJsonDocument::fromJson(readBytes(headPath)).object().value("VendorKeep").toString(),"head-recovery");
+        // No usable head is needed, including no file at all. Every recovery gets
+        // a new path and an exact record, rather than overwriting an old archive.
+        for(const auto &broken:{QByteArray("{broken"),QByteArray(),QByteArray("[]"),QByteArray("{\"version\":1,\"generation\":\"../bad\",\"VendorKeep\":42}")}) {
+            QVERIFY(writeBytes(headPath,broken));QVERIFY_EXCEPTION_THROWN((void)ProfileStore(root),std::runtime_error);
+            const auto before=recovered.value("layoutFile");recovered=ProfileStore::recover(root,snapshot);
+            QVERIFY(recovered.value("layoutFile")!=before);QVERIFY(recovered.value("previousHeadPresent").toBool());
+            QCOMPARE(readBytes(recovered.value("recoveryDirectory").toString()+"/head.json"),broken);
+            QCOMPARE(readBytes(recovered.value("layoutFile").toString()),originalLayout);
+        }
+        QCOMPARE(QJsonDocument::fromJson(readBytes(headPath)).object().value("VendorKeep").toInt(),42);
+        QVERIFY(QFile::remove(headPath));recovered=ProfileStore::recover(root,snapshot);QVERIFY(!recovered.value("previousHeadPresent").toBool());
+        QVERIFY(!QFileInfo::exists(recovered.value("recoveryDirectory").toString()+"/head.json"));
+        QVERIFY(QJsonDocument::fromJson(readBytes(recovered.value("recoveryDirectory").toString()+"/recovery.json")).object().value("previousHeadSha256").isNull());
+        const auto goodHead=readBytes(headPath);const auto manifestPath=snapshotDir+"/snapshot.json";const auto manifest=readBytes(manifestPath);
+        const auto generations=QDir(root+"/generations").entryList(QDir::Dirs|QDir::NoDotAndDotDot);
+        const auto recoveries=QDir(root+"/recoveries").entryList(QDir::Dirs|QDir::NoDotAndDotDot);
+        const auto unchanged=[&]{return readBytes(headPath)==goodHead && QDir(root+"/generations").entryList(QDir::Dirs|QDir::NoDotAndDotDot)==generations &&
+            QDir(root+"/recoveries").entryList(QDir::Dirs|QDir::NoDotAndDotDot)==recoveries;};
+        for(const auto &invalid:{QString("../escape"),QString(""),QString(32,'0'),QString(32,'A')}) {
+            QVERIFY_EXCEPTION_THROWN(ProfileStore::recover(root,invalid),std::runtime_error);QVERIFY(unchanged());
+        }
+        QVERIFY(writeBytes(snapshotDir+"/layout",originalLayout+"\n[Changed]\nUnknown=1\n"));
+        QVERIFY_EXCEPTION_THROWN(ProfileStore::recover(root,snapshot),std::runtime_error);QVERIFY(unchanged());
+        QVERIFY(writeBytes(snapshotDir+"/layout",originalLayout));
+        auto invalidManifest=QJsonDocument::fromJson(manifest).object();auto hashes=invalidManifest.value("files").toObject();hashes.remove("layout");invalidManifest["files"]=hashes;
+        QVERIFY(writeBytes(manifestPath,QJsonDocument(invalidManifest).toJson()));
+        QVERIFY_EXCEPTION_THROWN(ProfileStore::recover(root,snapshot),std::runtime_error);QVERIFY(unchanged());
+        // Rehashing invalid native data must not bypass the Corona/binding check.
+        const QByteArray invalidLayout="[Containments][999]\nplugin=org.kde.panel\n";
+        QVERIFY(writeBytes(snapshotDir+"/layout",invalidLayout));invalidManifest=QJsonDocument::fromJson(manifest).object();
+        hashes=invalidManifest.value("files").toObject();hashes["layout"]=hash(invalidLayout);invalidManifest["files"]=hashes;
+        QVERIFY(writeBytes(manifestPath,QJsonDocument(invalidManifest).toJson()));
+        QVERIFY_EXCEPTION_THROWN(ProfileStore::recover(root,snapshot),std::runtime_error);QVERIFY(unchanged());
+        QVERIFY(writeBytes(snapshotDir+"/layout",originalLayout));QVERIFY(writeBytes(manifestPath,manifest));
+        // Refuse a future head schema and aliases, without touching their target.
+        QVERIFY(writeBytes(headPath,"{\"version\":2,\"generation\":\"future\"}"));
+        QVERIFY_EXCEPTION_THROWN(ProfileStore::recover(root,snapshot),std::runtime_error);
+        QCOMPARE(readBytes(headPath),QByteArray("{\"version\":2,\"generation\":\"future\"}"));QVERIFY(QFile::remove(headPath));
+        const auto foreign=config.filePath("recovery-foreign.json");QVERIFY(writeBytes(foreign,"do-not-change"));
+        QVERIFY(QFile::link(foreign,headPath));QVERIFY_EXCEPTION_THROWN(ProfileStore::recover(root,snapshot),std::runtime_error);
+        QCOMPARE(readBytes(foreign),QByteArray("do-not-change"));QVERIFY(QFile::remove(headPath));
+        QVERIFY(QFile::link(foreign+"-missing",headPath));QVERIFY_EXCEPTION_THROWN(ProfileStore::recover(root,snapshot),std::runtime_error);QVERIFY(QFile::remove(headPath));
+        QVERIFY(QDir().mkdir(headPath));QVERIFY_EXCEPTION_THROWN(ProfileStore::recover(root,snapshot),std::runtime_error);QVERIFY(QDir().rmdir(headPath));
+        QVERIFY(writeBytes(headPath,goodHead));
+        QVERIFY(QDir().rename(root+"/recoveries",root+"/recoveries-saved"));QTemporaryDir outside;QVERIFY(outside.isValid());
+        QVERIFY(QFile::link(outside.path(),root+"/recoveries"));QVERIFY_EXCEPTION_THROWN(ProfileStore::recover(root,snapshot),std::runtime_error);
+        QCOMPARE(readBytes(headPath),goodHead);QCOMPARE(QDir(root+"/generations").entryList(QDir::Dirs|QDir::NoDotAndDotDot),generations);
+        QVERIFY(QDir(outside.path()).entryList(QDir::AllEntries|QDir::NoDotAndDotDot|QDir::Hidden).isEmpty());
+        QVERIFY(QFile::remove(root+"/recoveries"));QVERIFY(QDir().rename(root+"/recoveries-saved",root+"/recoveries"));
+        QVERIFY(QDir().rename(snapshotDir,snapshotDir+"-saved"));QVERIFY(QFile::link(snapshotDir+"-saved",snapshotDir));
+        QVERIFY_EXCEPTION_THROWN(ProfileStore::recover(root,snapshot),std::runtime_error);QVERIFY(unchanged());
+        QVERIFY(QFile::remove(snapshotDir));QVERIFY(QDir().rename(snapshotDir+"-saved",snapshotDir));
+        QVERIFY(QFile::link(root,root+"-alias"));QVERIFY_EXCEPTION_THROWN(ProfileStore::recover(root+"-alias",snapshot),std::runtime_error);QVERIFY(unchanged());QVERIFY(QFile::remove(root+"-alias"));
+        // The separate process test and CLI roundtrip consume this profile.
+        QVERIFY(writeBytes(config.filePath("bwm-recovery-snapshot.txt"),snapshot.toUtf8()));
+    }
+    void profileRecoveryFreshProcessReadback() {
+        ProfileStore profile(QDir(qEnvironmentVariable("XDG_CONFIG_HOME")).filePath("bwm-ui-recovery-profile"));
+        QVERIFY(!profile.info().value("activationAllowed").toBool());QCOMPARE(profile.assignments().size(),1);
+        TestCorona corona;corona.loadLayout(profile.layoutFile());QCOMPARE(corona.containments().size(),1);
+        const auto *panel=corona.containments().first();QCOMPARE(panel->applets().size(),1);auto *applet=panel->applets().first();
+        QCOMPARE(applet->pluginMetaData().pluginId(),"org.bwm.r4.shared-config");
+        QVERIFY(!applet->configScheme()->KCoreConfigSkeleton::findItem("enabled")->property().toBool());
+        QCOMPARE(applet->configScheme()->KCoreConfigSkeleton::findItem("caption")->property().toString(),"recovered-native-option");
+        QCOMPARE(KConfigGroup(corona.config(),"Vendor").readEntry("Keep",QString()),"layout-recovery");
+        KConfig views(profile.viewSettingsFile(),KConfig::SimpleConfig);QCOMPARE(KConfigGroup(&views,"Vendor").readEntry("Keep",QString()),"views-recovery");
+    }
+    void profileRecoveryUsesXdgAuthorityAndChildLease() {
+        const auto fixtures=QDir(QStringLiteral(BWM_SHELL_SOURCE_DIR)+"/../../../tests").canonicalPath();QVERIFY(!fixtures.isEmpty());
+        QTemporaryDir state(fixtures+"/bwm-r4-recovery-state-XXXXXX");QVERIFY(state.isValid());QVERIFY(!state.path().startsWith(QDir::tempPath()+"/"));
+        struct StateEnvironment {
+            QByteArray previous=qgetenv("XDG_STATE_HOME");bool existed=qEnvironmentVariableIsSet("XDG_STATE_HOME");
+            ~StateEnvironment(){if(existed)qputenv("XDG_STATE_HOME",previous);else qunsetenv("XDG_STATE_HOME");}
+        } environment;
+        qputenv("XDG_STATE_HOME",state.path().toUtf8());
+        const auto readBytes=[](const QString &path){QFile file(path);return file.open(QIODevice::ReadOnly)?file.readAll():QByteArray();};
+        const auto writeBytes=[](const QString &path,const QByteArray &bytes){QSaveFile file(path);return file.open(QIODevice::WriteOnly) && file.write(bytes)==bytes.size() && file.commit();};
+        ProfileStore source(QDir(qEnvironmentVariable("XDG_CONFIG_HOME")).filePath("bwm-ui-recovery-profile"));
+        const auto exported=source.exportToState("recovery-fixture");const auto root=exported.value("directory").toString();
+        QCOMPARE(exported.value("storage").toString(),"xdg-state");
+        const auto snapshots=QDir(root+"/snapshots").entryList(QDir::Dirs|QDir::NoDotAndDotDot);QCOMPARE(snapshots.size(),1);
+        const auto snapshot=snapshots.first(),oldGeneration=exported.value("generation").toString();
+        const auto recover=[&](QProcess &child){child.start(QCoreApplication::applicationDirPath()+"/bwm-plasma-host",{"--recover-profile",root+"/snapshots/"+snapshot});return child.waitForFinished(15000);};
+        {
+            ProfileStore owner(root);QVERIFY(writeBytes(root+"/head.json","{broken-state-head"));
+            QProcess child;QVERIFY(recover(child));QCOMPARE(child.exitStatus(),QProcess::NormalExit);QCOMPARE(child.exitCode(),7);
+            QVERIFY(child.readAllStandardError().contains("Another process owns"));QCOMPARE(readBytes(root+"/head.json"),QByteArray("{broken-state-head"));
+        }
+        QProcess child;QVERIFY(recover(child));QCOMPARE(child.exitStatus(),QProcess::NormalExit);QCOMPARE(child.exitCode(),0);
+        const auto recovered=QJsonDocument::fromJson(child.readAllStandardOutput()).object();QCOMPARE(recovered.value("storage").toString(),"xdg-state");
+        QVERIFY(recovered.value("generation").toString()!=oldGeneration);QVERIFY(!recovered.value("activationAllowed").toBool());
+        QCOMPARE(readBytes(recovered.value("recoveryDirectory").toString()+"/head.json"),QByteArray("{broken-state-head"));
+        QCOMPARE(readBytes(recovered.value("layoutFile").toString()),readBytes(source.layoutFile()));
+        QVERIFY(QFileInfo::exists(root+"/generations/"+oldGeneration+"/layout"));
+        QProcess fresh;fresh.start(QCoreApplication::applicationDirPath()+"/bwm-plasma-host",{"--profile-info",root});QVERIFY(fresh.waitForFinished(15000));
+        QCOMPARE(fresh.exitCode(),0);QCOMPARE(QJsonDocument::fromJson(fresh.readAllStandardOutput()).object().value("generation"),recovered.value("generation"));
+        QTemporaryDir unrelated(fixtures+"/bwm-r4-recovery-unrelated-XXXXXX");QVERIFY(unrelated.isValid());
+        QVERIFY_EXCEPTION_THROWN(ProfileStore::recover(unrelated.path(),snapshot),std::runtime_error);
+        QVERIFY(QDir(unrelated.path()).entryList(QDir::AllEntries|QDir::NoDotAndDotDot|QDir::Hidden).isEmpty());
+    }
+    void profileSelectionTransactionsAndSelectedServer() {
+        const auto fixtures=QDir(QStringLiteral(BWM_SHELL_SOURCE_DIR)+"/../../../tests").canonicalPath();QVERIFY(!fixtures.isEmpty());
+        QTemporaryDir state(fixtures+"/bwm-r4-selection-state-XXXXXX");QVERIFY(state.isValid());QVERIFY(!state.path().startsWith(QDir::tempPath()+"/"));
+        struct StateEnvironment {
+            QByteArray previous=qgetenv("XDG_STATE_HOME");bool existed=qEnvironmentVariableIsSet("XDG_STATE_HOME");
+            ~StateEnvironment(){if(existed)qputenv("XDG_STATE_HOME",previous);else qunsetenv("XDG_STATE_HOME");}
+        } environment;
+        qputenv("XDG_STATE_HOME",state.path().toUtf8());
+        const auto readBytes=[](const QString &path){QFile file(path);return file.open(QIODevice::ReadOnly)?file.readAll():QByteArray();};
+        const auto writeBytes=[](const QString &path,const QByteArray &bytes){QSaveFile file(path);return file.open(QIODevice::WriteOnly) && file.write(bytes)==bytes.size() && file.commit();};
+        const auto initial=ProfileSelection::info();QCOMPARE(initial.value("revision").toInteger(),0);QVERIFY(initial.value("selectedProfile").isNull());
+        QVERIFY(!QFileInfo::exists(state.path()+"/bwm"));QVERIFY_EXCEPTION_THROWN(ProfileSelection::openSelected(),std::runtime_error);
+        for(const auto &invalid:{"../escape","/tmp/profile","",".selection","with space"})
+            QVERIFY_EXCEPTION_THROWN(ProfileSelection::select(invalid,0),std::runtime_error);
+        QVERIFY(!QFileInfo::exists(state.path()+"/bwm"));
+        ProfileStore source(QDir(qEnvironmentVariable("XDG_CONFIG_HOME")).filePath("bwm-ui-recovery-profile"));
+        const auto first=source.exportToState("selected-a"),second=source.exportToState("selected-b");
+        const auto root=first.value("directory").toString(),other=second.value("directory").toString();
+        auto selected=ProfileSelection::select("selected-a",0);QCOMPARE(selected.value("revision").toInteger(),1);QVERIFY(selected.value("changed").toBool());
+        QVERIFY(!selected.value("activationAllowed").toBool());QVERIFY(!selected.value("replacementReady").toBool());
+        const auto selectionFile=selected.value("selectionFile").toString();const auto bytes=readBytes(selectionFile);
+        QVERIFY_EXCEPTION_THROWN(ProfileSelection::select("selected-b",0),std::runtime_error);QCOMPARE(readBytes(selectionFile),bytes);
+        QVERIFY_EXCEPTION_THROWN(ProfileSelection::select("missing-profile",1),std::runtime_error);QCOMPARE(readBytes(selectionFile),bytes);
+        selected=ProfileSelection::select("selected-a",1);QVERIFY(!selected.value("changed").toBool());QCOMPARE(readBytes(selectionFile),bytes);
+        QProcess fresh;fresh.start(QCoreApplication::applicationDirPath()+"/bwm-plasma-host",{"--profile-selection-info"});QVERIFY(fresh.waitForFinished(15000));QCOMPARE(fresh.exitCode(),0);
+        const auto reopened=QJsonDocument::fromJson(fresh.readAllStandardOutput()).object();QCOMPARE(reopened.value("selectedProfile").toString(),"selected-a");QVERIFY(reopened.value("profileValidated").toBool());
+        QJsonObject snapshot;
+        {
+            auto owner=ProfileSelection::openSelected();QCOMPARE(owner->info().value("directory").toString(),root);
+            QVERIFY_EXCEPTION_THROWN(ProfileSelection::openSelected(),std::runtime_error);
+            QVERIFY_EXCEPTION_THROWN(ProfileSelection::select("selected-a",1),std::runtime_error);
+            QVERIFY_EXCEPTION_THROWN(ProfileSelection::select("selected-b",1),std::runtime_error);
+            QVERIFY_EXCEPTION_THROWN(ProfileSelection::clear(1),std::runtime_error);QCOMPARE(readBytes(selectionFile),bytes);
+            const auto busy=ProfileSelection::info();QVERIFY(!busy.value("profileValidated").toBool());QVERIFY(busy.contains("profileError"));
+            {TestCorona corona;corona.loadLayout(owner->layoutFile());auto *applet=corona.containments().first()->applets().first();
+                auto *caption=applet->configScheme()->KCoreConfigSkeleton::findItem("caption");QVERIFY(caption);caption->setProperty("selected-native-option");
+                applet->configScheme()->save();corona.saveLayout(owner->layoutFile());QVERIFY(corona.config()->sync());}
+            snapshot=owner->checkpoint();
+        }
+        // Selected intent follows recovery generations; native options remain in
+        // the KDE files rather than being duplicated in the selection pointer.
+        const auto recovered=ProfileStore::recover(root,snapshot.value("snapshot").toString());QCOMPARE(readBytes(selectionFile),bytes);
+        {auto owner=ProfileSelection::openSelected();QCOMPARE(owner->info().value("generation"),recovered.value("generation"));
+            TestCorona corona;corona.loadLayout(owner->layoutFile());auto *applet=corona.containments().first()->applets().first();
+            QCOMPARE(applet->configScheme()->KCoreConfigSkeleton::findItem("caption")->property().toString(),"selected-native-option");}
+        auto metadata=QJsonDocument::fromJson(bytes).object();metadata["VendorKeep"]=42;QVERIFY(writeBytes(selectionFile,QJsonDocument(metadata).toJson()));
+        selected=ProfileSelection::select("selected-b",1);QCOMPARE(selected.value("revision").toInteger(),2);
+        QCOMPARE(QJsonDocument::fromJson(readBytes(selectionFile)).object().value("VendorKeep").toInt(),42);
+        QVERIFY(writeBytes(other+"/head.json","{broken"));QVERIFY(!ProfileSelection::info().value("profileValidated").toBool());
+        QVERIFY_EXCEPTION_THROWN(ProfileSelection::openSelected(),std::runtime_error);
+        selected=ProfileSelection::clear(2);QCOMPARE(selected.value("revision").toInteger(),3);QVERIFY(selected.value("selectedProfile").isNull());
+        QVERIFY_EXCEPTION_THROWN(ProfileSelection::openSelected(),std::runtime_error);ProfileSelection::select("selected-a",3);
+        QVERIFY(QDir().rename(root,root+"-saved"));QVERIFY(!ProfileSelection::info().value("profileValidated").toBool());
+        QVERIFY_EXCEPTION_THROWN(ProfileSelection::openSelected(),std::runtime_error);selected=ProfileSelection::clear(4);QCOMPARE(selected.value("revision").toInteger(),5);
+        QVERIFY(QDir().rename(root+"-saved",root));ProfileSelection::select("selected-a",5);
+        metadata=QJsonDocument::fromJson(readBytes(selectionFile)).object();metadata["sourceSha256"]=QString(64,'0');QVERIFY(writeBytes(selectionFile,QJsonDocument(metadata).toJson()));
+        QVERIFY(!ProfileSelection::info().value("profileValidated").toBool());QVERIFY_EXCEPTION_THROWN(ProfileSelection::openSelected(),std::runtime_error);
+        selected=ProfileSelection::select("selected-a",6);QCOMPARE(selected.value("revision").toInteger(),7);
+        const auto good=readBytes(selectionFile);
+        for(const auto &invalid:{QByteArray("{broken"),QByteArray("{\"version\":2}"),QByteArray("{\"version\":1,\"revision\":true,\"profile\":null}"),
+                QByteArray("{\"version\":1,\"revision\":1.5,\"profile\":null}"),QByteArray("{\"version\":1,\"revision\":9007199254740992,\"profile\":null}"),
+                QByteArray("{\"version\":1,\"revision\":1,\"profile\":\"../bad\"}")}) {
+            QVERIFY(writeBytes(selectionFile,invalid));QVERIFY_EXCEPTION_THROWN(ProfileSelection::info(),std::runtime_error);
+            QVERIFY_EXCEPTION_THROWN(ProfileSelection::clear(7),std::runtime_error);QCOMPARE(readBytes(selectionFile),invalid);
+        }
+        QVERIFY(writeBytes(selectionFile,good));
+        metadata=QJsonDocument::fromJson(good).object();metadata["revision"]=qint64(9007199254740991LL);QVERIFY(writeBytes(selectionFile,QJsonDocument(metadata).toJson()));
+        const auto saturated=readBytes(selectionFile);QVERIFY_EXCEPTION_THROWN(ProfileSelection::clear(9007199254740991LL),std::runtime_error);
+        QCOMPARE(readBytes(selectionFile),saturated);QVERIFY(writeBytes(selectionFile,good));
+        {QLockFile lock(QFileInfo(selectionFile).absolutePath()+"/owner.lock");QVERIFY(lock.tryLock(0));
+            QVERIFY_EXCEPTION_THROWN(ProfileSelection::info(),std::runtime_error);QVERIFY_EXCEPTION_THROWN(ProfileSelection::clear(7),std::runtime_error);
+            QVERIFY_EXCEPTION_THROWN(ProfileSelection::openSelected(),std::runtime_error);QCOMPARE(readBytes(selectionFile),good);}
+        const auto outside=state.path()+"/untouched.json";QVERIFY(writeBytes(outside,"do-not-change"));QVERIFY(QFile::remove(selectionFile));QVERIFY(QFile::link(outside,selectionFile));
+        QVERIFY_EXCEPTION_THROWN(ProfileSelection::info(),std::runtime_error);QVERIFY_EXCEPTION_THROWN(ProfileSelection::clear(7),std::runtime_error);
+        QCOMPARE(readBytes(outside),QByteArray("do-not-change"));QVERIFY(QFile::remove(selectionFile));QVERIFY(writeBytes(selectionFile,good));
+        // Exercise the real selected-profile server, with no visible outputs.
+        QTemporaryDir control;QVERIFY(control.isValid());const auto token=QString(64,'a');
+        const auto command=[&](int revision,const QString &action){return writeBytes(control.path()+"/control.json",QJsonDocument(QJsonObject{
+            {"version",1},{"token",token},{"revision",revision},{"command",action},{"skin","default"}}).toJson()) &&
+            QFile::setPermissions(control.path()+"/control.json",QFile::ReadOwner|QFile::WriteOwner);};
+        QVERIFY(command(0,"skin"));QProcess server;auto env=QProcessEnvironment::systemEnvironment();
+        env.insert("BWM_R4_CONTROL_DIR",control.path());env.insert("BWM_R4_SESSION_TOKEN",token);server.setProcessEnvironment(env);
+        server.start(QCoreApplication::applicationDirPath()+"/bwm-plasma-host",{"--serve-selected-profile"});
+        QTRY_VERIFY_WITH_TIMEOUT(QFileInfo::exists(control.path()+"/ack.json") || server.state()==QProcess::NotRunning,5000);
+        QVERIFY2(server.state()!=QProcess::NotRunning,server.readAllStandardError().constData());
+        const auto ack=QJsonDocument::fromJson(readBytes(control.path()+"/ack.json")).object();QVERIFY(ack.value("ok").toBool());
+        QVERIFY_EXCEPTION_THROWN(ProfileSelection::clear(7),std::runtime_error);QCOMPARE(readBytes(selectionFile),good);
+        QVERIFY(command(1,"stop"));QVERIFY(server.waitForFinished(15000));QCOMPARE(server.exitStatus(),QProcess::NormalExit);QCOMPARE(server.exitCode(),0);
+        QCOMPARE(QJsonDocument::fromJson(server.readAllStandardOutput()).object().value("status").toString(),"native-profile-checkpoint");
+        QVERIFY(ProfileSelection::info().value("profileValidated").toBool());selected=ProfileSelection::clear(7);QCOMPARE(selected.value("revision").toInteger(),8);
+        const auto cleared=readBytes(selectionFile);QVERIFY(!ProfileSelection::clear(8).value("changed").toBool());QCOMPARE(readBytes(selectionFile),cleared);
     }
     void profileExportKeepsSnapshotsInXdgStateOutsideTmp() {
         const auto fixtures=QDir(QStringLiteral(BWM_SHELL_SOURCE_DIR)+"/../../../tests").canonicalPath();QVERIFY(!fixtures.isEmpty());

@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 """Opt-in loading of the native Plasma desktop provider at Hyprland start (R4 §255).
 
-  native-desktops.py enable    opt in; takes effect at the next login
-  native-desktops.py disable   opt out; takes effect at the next login
-  native-desktops.py status    opt-in, installation, this session and last startup
-  native-desktops.py startup   only from autostart.sh, once per Hyprland start
+Run with python3 ~/.config/hypr/skins/plasma/scripts/native-desktops.py followed by:
+  enable    opt in; takes effect at the next login
+  disable   opt out; takes effect at the next login
+  status    opt-in, installation, this session and last startup
+  startup   only from autostart.sh, once per Hyprland start
 
 The module is never loaded or unloaded during a running session by anything else
 (hot load/unload is unsafe). Startup protection: a pending marker is kept for the
@@ -111,7 +112,7 @@ def startup(clock=time.monotonic, sleep=time.sleep):
         set_opt_in(False, 'previous-start-did-not-stabilise')
         GUARD.unlink(missing_ok=True)
         notify('El inicio anterior con el proveedor no terminó bien: queda desactivado. '
-               'Reactívalo con native-desktops.py enable si fue un cierre normal.')
+               'Reactívalo con python3 ~/.config/hypr/skins/plasma/scripts/native-desktops.py enable si fue un cierre normal.')
         report['skipped'] = 'disabled-after-unstable-start'
         return report
     if not opted_in():

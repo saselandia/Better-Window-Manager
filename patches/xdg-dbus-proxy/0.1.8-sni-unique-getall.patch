@@ -1,0 +1,137 @@
+--- a/dbus-proxy.c
++++ b/dbus-proxy.c
+@@ -168,7 +168,7 @@
+     }
+   else if (strcmp (arg, "--version") == 0)
+     {
+-      g_print ("%s %s\n", PACKAGE_NAME, PACKAGE_VERSION);
++      g_print ("%s %s+bwm-sni-unique-3\n", PACKAGE_NAME, PACKAGE_VERSION);
+       exit (EXIT_SUCCESS);
+     }
+   else if (g_str_has_prefix (arg, "--fd="))
+@@ -313,6 +313,24 @@
+               wildcard = TRUE;
+             }
+ 
++          if (name[0] == ':')
++            {
++              const gboolean call = g_str_has_prefix (arg, "--call=");
++              const char *path = NULL;
++              if (call && g_str_has_prefix (rule, "org.freedesktop.DBus.Properties.GetAll@"))
++                path = rule + strlen ("org.freedesktop.DBus.Properties.GetAll@");
++              else if (!call && g_str_has_prefix (rule, "org.kde.StatusNotifierItem.NewStatus@"))
++                path = rule + strlen ("org.kde.StatusNotifierItem.NewStatus@");
++              else if (!call && g_str_has_prefix (rule, "org.kde.StatusNotifierItem.NewIcon@"))
++                path = rule + strlen ("org.kde.StatusNotifierItem.NewIcon@");
++
++              if (wildcard || !g_dbus_is_unique_name (name) || !path || !g_variant_is_object_path (path))
++                {
++                  g_printerr ("A unique-name rule requires an allowed SNI member on one exact object path\n");
++                  return FALSE;
++                }
++            }
++
+           if (g_str_has_prefix (arg, "--call="))
+             flatpak_proxy_add_call_rule (proxy, name, wildcard, rule);
+           else
+--- a/flatpak-proxy.c
++++ b/flatpak-proxy.c
+@@ -1754,6 +1754,27 @@
+       if (max_policy > FLATPAK_POLICY_NONE && matched_filters)
+         *matched_filters = g_list_append (*matched_filters, match_all[max_policy]);
+ 
++      /* BWM SNI probes pin specific calls and broadcasts to an exact object
++       * of a unique connection. Keep the member and path on the filter. */
++      filters = g_hash_table_lookup (client->proxy->filters, source);
++      for (l = filters; l != NULL; l = l->next)
++        {
++          Filter *filter = l->data;
++          gboolean sni_call = filter->types == FILTER_TYPE_CALL &&
++            g_strcmp0 (filter->interface, "org.freedesktop.DBus.Properties") == 0 &&
++            g_strcmp0 (filter->member, "GetAll") == 0;
++          gboolean sni_signal = filter->types == FILTER_TYPE_BROADCAST &&
++            g_strcmp0 (filter->interface, "org.kde.StatusNotifierItem") == 0 &&
++            (g_strcmp0 (filter->member, "NewStatus") == 0 || g_strcmp0 (filter->member, "NewIcon") == 0);
++          if (!filter->name_is_subtree && !filter->path_is_subtree && filter->path != NULL &&
++              (sni_call || sni_signal))
++            {
++              max_policy = MAX (max_policy, filter->policy);
++              if (matched_filters)
++                *matched_filters = g_list_append (*matched_filters, filter);
++            }
++        }
++
+       /* Treat this as the merged list of filters for all the names the unique id ever owned */
+       names = g_hash_table_lookup (client->unique_id_owned_names, source);
+       for (l = names; l != NULL; l = l->next)
+@@ -1801,6 +1822,18 @@
+   return flatpak_proxy_client_get_max_policy_and_matched (client, source, NULL);
+ }
+ 
++static gboolean
++broadcast_allowed (FlatpakProxyClient *client, Header *header)
++{
++  g_autoptr(GList) filters = NULL;
++  FlatpakPolicy policy = flatpak_proxy_client_get_max_policy_and_matched (client, header->sender, &filters);
++
++  return policy == FLATPAK_POLICY_OWN ||
++         (policy == FLATPAK_POLICY_TALK &&
++          any_filter_matches (filters, FILTER_TYPE_BROADCAST,
++                              header->path, header->interface, header->member));
++}
++
+ static void
+ flatpak_proxy_client_update_unique_id_policy (FlatpakProxyClient *client,
+                                               const char         *unique_id,
+@@ -1823,6 +1856,10 @@
+ {
+   GList *names;
+   gboolean already_added;
++
++  /* Only well-known names are aliases. A unique name resolves to itself. */
++  if (owned_name[0] == ':')
++    return;
+ 
+   names = NULL;
+   already_added = g_hash_table_lookup_extended (client->unique_id_owned_names,
+@@ -2396,6 +2433,10 @@
+       if (client->proxy->log_messages)
+         g_print ("C%d: -> org.freedesktop.DBus fake %sAddMatch for %s\n", client->last_fake_serial, name_needs_subtree ? "wildcarded " : "", name);
+ 
++      /* Unique names are already the routing key. Do not resolve them as aliases. */
++      if (name[0] == ':')
++        continue;
++
+       if (!name_needs_subtree)
+         {
+           /* Get the current owner of the name (if any) so we can apply policy to it */
+@@ -2651,7 +2692,6 @@
+       g_autoptr(Header) header = NULL;
+       g_autoptr(GError) error = NULL;
+       GDBusMessage *rewritten;
+-      FlatpakPolicy policy;
+       ExpectedReplyType expected_reply;
+ 
+       /* Filter and rewrite incoming messages as needed */
+@@ -2802,20 +2842,7 @@
+       /* All incoming broadcast signals are filtered according to policy */
+       if (header->type == G_DBUS_MESSAGE_TYPE_SIGNAL && header->destination == NULL)
+         {
+-          g_autoptr(GList) filters = NULL;
+-          gboolean filtered = TRUE;
+-
+-          policy = flatpak_proxy_client_get_max_policy_and_matched (client, header->sender, &filters);
+-
+-          if (policy == FLATPAK_POLICY_OWN ||
+-              (policy == FLATPAK_POLICY_TALK &&
+-               any_filter_matches (filters, FILTER_TYPE_BROADCAST,
+-                                   header->path,
+-                                   header->interface,
+-                                   header->member)))
+-            filtered = FALSE;
+-
+-          if (filtered)
++          if (!broadcast_allowed (client, header))
+             {
+               if (client->proxy->log_messages)
+                 g_print ("*FILTERED IN*\n");

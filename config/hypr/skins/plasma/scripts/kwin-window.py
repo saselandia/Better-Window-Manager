@@ -218,7 +218,7 @@ def work_area(client: dict):
     if not mon:
         return None
     from bwm_windows import monitor_box
-    x, y, w, h = monitor_box(mon)
+    x, y, w, h = monitor_box(mon, round_to_nearest=True)
     left, top, right, bottom = (list(mon.get("reserved", [])) + [0, 0, 0, 0])[:4]
     return (int(x + left), int(y + top), max(1, int(w - left - right)), max(1, int(h - top - bottom)))
 

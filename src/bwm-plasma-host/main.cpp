@@ -48,7 +48,9 @@
 #include "taskthumbnail.h"
 #include "outputidentity.h"
 #include "runtimecontrol.h"
+#include "desktopsessioncheck.h"
 #include "profilestore.h"
+#include "trayprobe.h"
 #include <memory>
 #include <QtPlugin>
 Q_IMPORT_PLUGIN(BwmWindowSystemPlugin)
@@ -77,6 +79,21 @@ int main(int argc, char **argv) {
     QQuickWindow::setDefaultAlphaBuffer(true);
     QApplication app(argc,argv);
     qunsetenv("QT_WAYLAND_DISABLE_FIXED_POSITIONS");
+    if(app.arguments().value(1)=="--check-native-desktops-session"){
+        const auto status=nativeDesktopSessionSnapshot(app.arguments().mid(2));
+        puts(QJsonDocument(status).toJson(QJsonDocument::Compact).constData());
+        return status.value("ready").toBool()?0:2;
+    }
+    if(app.arguments().value(1)=="--check-native-desktops-focus-cycle"){
+        const auto status=nativeDesktopFocusCycle(app.arguments().value(2),app.arguments().mid(3));
+        puts(QJsonDocument(status).toJson(QJsonDocument::Compact).constData());
+        return status.value("passed").toBool()?0:2;
+    }
+    if(app.arguments().value(1)=="--check-native-desktops-workspace-cycle"){
+        const auto status=nativeDesktopWorkspaceCycle(app.arguments().value(2),app.arguments().value(3),app.arguments().mid(4));
+        puts(QJsonDocument(status).toJson(QJsonDocument::Compact).constData());
+        return status.value("passed").toBool()?0:2;
+    }
     BwmSurface::registerTypes();
     PanelViewHost::registerTypes();
     app.setApplicationName("bwm-plasma-host");
@@ -114,8 +131,13 @@ int main(int argc, char **argv) {
     const bool followPreview=args.size()==3 && args[1]=="--follow-panel-preview";
     const bool panelPreview=args.size()==3 && (args[1]=="--panel-preview" || args[1]=="--layer-panel-preview" || panelFrameProbe || followPreview);
     const bool runtimePreview=args.size()==3 && (args[1]=="--preview-stage" || args[1]=="--probe-stage-runtime");
+    const bool trayProperties=args.size()==3 && args[1]=="--probe-native-tray-properties";
+    const bool trayProbe=trayProperties || (args.size()==3 && args[1]=="--probe-native-tray-model");
     const bool exportProfile=args.size()==4 && args[1]=="--export-profile";
-    const bool profileTool=exportProfile || (args.size()==3 && QStringList{"--import-profile","--profile-info","--checkpoint-profile","--restore-profile","--serve-profile"}.contains(args[1]));
+    const bool selectionTool=(args.size()==2 && args[1]=="--profile-selection-info") ||
+        (args.size()==4 && args[1]=="--select-profile") || (args.size()==3 && args[1]=="--clear-profile-selection");
+    const bool serveSelected=args.size()==2 && args[1]=="--serve-selected-profile";
+    const bool profileTool=exportProfile || selectionTool || serveSelected || (args.size()==3 && QStringList{"--import-profile","--profile-info","--checkpoint-profile","--restore-profile","--recover-profile","--serve-profile"}.contains(args[1]));
     if(args.size()==2 && args[1]=="--theme-catalog") {
         puts(QJsonDocument(globalThemeInventory()).toJson().constData());return 0;
     }
@@ -134,12 +156,24 @@ int main(int argc, char **argv) {
         Catalog catalog;
         puts(QJsonDocument(QJsonArray::fromVariantList(catalog.entries())).toJson().constData());return 0;
     }
-    if((args.size()!=3 && !exportProfile) || (!profileTool && !runtimePreview && !panelPreview && args[1]!="--probe" && args[1]!="--exercise" && args[1]!="--preview" && args[1]!="--layer-preview" && args[1]!="--stage-migration" && args[1]!="--verify-stage" && args[1]!="--probe-stage" && args[1]!="--probe-stage-frame")) { fprintf(stderr,"Usage: bwm-plasma-host --catalog | --probe PACKAGE_ID | --exercise PACKAGE_ID | --preview PACKAGE_ID | --panel-preview PACKAGE_ID | --stage-migration PLAN | --verify-stage DIR | --probe-stage DIR | --probe-stage-frame DIR | --preview-stage DIR | --probe-stage-runtime DIR | --import-profile STAGE | --profile-info DIR | --checkpoint-profile DIR | --restore-profile SNAPSHOT_DIR | --serve-profile DIR | --export-profile DIR NAME\nTests require temporary XDG roots. Profiles do not replace the active panel.\n");return 2; }
+    if((args.size()!=3 && !exportProfile && !selectionTool && !serveSelected) || (!profileTool && !runtimePreview && !panelPreview && !trayProbe && args[1]!="--probe" && args[1]!="--exercise" && args[1]!="--preview" && args[1]!="--layer-preview" && args[1]!="--stage-migration" && args[1]!="--verify-stage" && args[1]!="--probe-stage" && args[1]!="--probe-stage-frame")) { fprintf(stderr,"Usage: bwm-plasma-host --catalog | --probe PACKAGE_ID | --exercise PACKAGE_ID | --preview PACKAGE_ID | --panel-preview PACKAGE_ID | --stage-migration PLAN | --verify-stage DIR | --probe-stage DIR | --probe-stage-frame DIR | --preview-stage DIR | --probe-stage-runtime DIR | --probe-native-tray-model COUNT | --probe-native-tray-properties COUNT | --import-profile STAGE | --profile-info DIR | --checkpoint-profile DIR | --restore-profile SNAPSHOT_DIR | --recover-profile SNAPSHOT_DIR | --serve-profile DIR | --export-profile DIR NAME | --profile-selection-info | --select-profile NAME REVISION | --clear-profile-selection REVISION | --serve-selected-profile\nTests require temporary XDG roots. Profiles do not replace the active panel.\n");return 2; }
     // A probe may execute arbitrary QML. Force the caller to choose an isolated config store.
     for(const auto *name:{"XDG_CONFIG_HOME","XDG_DATA_HOME","XDG_CACHE_HOME","XDG_RUNTIME_DIR"}) {
         if(!QFileInfo(qEnvironmentVariable(name)).canonicalFilePath().startsWith(QDir::tempPath()+"/")) {
             fprintf(stderr,"Tests require existing temporary XDG_CONFIG_HOME/DATA_HOME/CACHE_HOME/RUNTIME_DIR roots.\n");return 2;
         }
+    }
+    if (trayProbe) {
+        bool validCount = false;
+        const int count = args[2].toInt(&validCount);
+        if (!validCount || count <= 0 || count > 256 || QGuiApplication::platformName() != QStringLiteral("offscreen") ||
+            qEnvironmentVariable("DBUS_SESSION_BUS_ADDRESS") != QStringLiteral("unix:path=") + qEnvironmentVariable("XDG_RUNTIME_DIR") + QStringLiteral("/tray-bus")) {
+            fprintf(stderr, "Native tray model probe requires a positive count, offscreen Qt and the disposable tray bus.\n");
+            return 2;
+        }
+        const auto result = probeNativeTray(count, trayProperties);
+        puts(QJsonDocument(result).toJson(QJsonDocument::Compact).constData());
+        return result.value("modelReady").toBool() ? 0 : 2;
     }
     std::unique_ptr<QLockFile> previewOwner;
     if(followPreview) {
@@ -153,14 +187,24 @@ int main(int argc, char **argv) {
     if(profileTool) {
         try {
             QJsonObject result;
-            if(exportProfile){ProfileStore profile(args[2]);result=profile.exportToState(args[3]);}
+            if(selectionTool) {
+                if(args[1]=="--profile-selection-info")result=ProfileSelection::info();
+                else {
+                    bool ok=false;const auto revision=args.last().toLongLong(&ok);
+                    if(!ok)throw std::runtime_error("An integer expected selection revision is required");
+                    result=args[1]=="--select-profile" ? ProfileSelection::select(args[2],revision) : ProfileSelection::clear(revision);
+                }
+            }
+            else if(exportProfile){ProfileStore profile(args[2]);result=profile.exportToState(args[3]);}
             else if(args[1]=="--import-profile")result=ProfileStore::importStage(args[2],qEnvironmentVariable("XDG_CONFIG_HOME")+"/bwm-native-profile");
-            else if(args[1]=="--restore-profile") {
+            else if(args[1]=="--restore-profile" || args[1]=="--recover-profile") {
                 const QFileInfo snapshot(QDir::cleanPath(args[2]));const auto snapshots=snapshot.absoluteDir();
                 if(snapshots.dirName()!="snapshots")throw std::runtime_error("A profile snapshot directory is required");
-                ProfileStore profile(QFileInfo(snapshots.absolutePath()).absolutePath());result=profile.restore(snapshot.fileName());
+                const auto root=QFileInfo(snapshots.absolutePath()).absolutePath();
+                if(args[1]=="--recover-profile")result=ProfileStore::recover(root,snapshot.fileName());
+                else {ProfileStore profile(root);result=profile.restore(snapshot.fileName());}
             } else {
-                ProfileStore profile(args[2]);
+                auto owner=serveSelected ? ProfileSelection::openSelected() : std::make_unique<ProfileStore>(args[2]);auto &profile=*owner;
                 if(args[1]=="--profile-info")result=profile.info();
                 else if(args[1]=="--checkpoint-profile")result=profile.checkpoint();
                 else {

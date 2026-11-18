@@ -375,6 +375,71 @@ El diagnóstico tiene tiempos límite y genera un informe privado en /tmp. Recog
 monitores, capas del auxiliar y su status, sin abrir/mover ventanas ni reiniciar nada.
 Confirmar acceso no confirma reservas ni completa R4; ver BREEZE_R4_ACCESS_RESULTS.json.
 
+`r4-session-check.py --tray` consulta al dueño actual del servicio de iconos SNI y devuelve
+el número de iconos y si hay un host registrado. Es una lectura puntual de D-Bus, sin
+arrancar el servicio ni registrar otro host. El estado del panel también enumera los
+plasmoides vivos dentro de la bandeja KDE mediante `embeddedApplets`. Son dos inventarios
+distintos. Véase §274 en `docs/BREEZE_R4_RESULTS.md`.
+
+Con Quickshell como dueño y al menos un icono registrado, `check-native-tray.py` comprueba
+que la bandeja original de KDE obtiene las mismas filas de ese watcher. Ejecuta el
+anfitrión offscreen y utiliza `xdg-dbus-proxy` para limitarlo a ese servicio. Registra
+un nombre de host temporal que desaparece al salir. Comprueba el dueño y la lista
+antes y después. La salida sólo contiene contadores y resultados de comparación.
+El ensayo cubre la enumeración SNI. Los datos de cada icono, clics y menús quedan
+pendientes. Véase §276 en `docs/BREEZE_R4_RESULTS.md`.
+
+`check-native-tray.py --properties` mide además si cada fila SNI presenta estado y
+categoría tras la respuesta D-Bus y produce un pixmap de 22 px usando el icono de
+KDE. El estado se lee como valor de `Plasma::Types::ItemStatus` y el informe cuenta
+la disponibilidad del pixmap por separado. El permiso adicional es `Properties.GetAll`
+en cada objeto registrado. Los nombres activables quedan excluidos. Para leer
+servicios anunciados sólo por su nombre único, el proxy del sistema necesita un
+alias del mismo dueño. El resultado indica cuántos elementos se pudieron autorizar,
+cuántos aportaron propiedades y cuántos produjeron un pixmap. El ensayo se ejecuta
+fuera de pantalla y cubre la lectura del modelo.
+
+Si algún elemento queda fuera del filtro, el informe distingue alias ausente, nombre
+activable o dueño no disponible. Una consulta directa al dueño único puede comprobar
+estado y categoría y contar nombres de icono. Estos contadores son independientes
+del modelo KDE y no incluyen imágenes ni convierten en éxito un resultado parcial.
+
+Para nombres únicos sin alias, `build-tray-proxy.py` compila una variante local de
+`xdg-dbus-proxy` 0.1.8 desde un archivo original verificado. En Gentoo busca el archivo
+en `/var/cache/distfiles`; `--archive` admite otra ruta. `--properties` selecciona
+esa copia si existe y añade un permiso `GetAll` para cada nombre único y objeto
+exactos. El filtro se verifica durante la compilación. El comprobador muestra
+`uniqueNameFilter: exact-object` cuando usa esa versión. El ensayo de enumeración
+mantiene el proxy del sistema. Véase §280 en `docs/BREEZE_R4_RESULTS.md`.
+
+Con `BUILD_TESTING`, el objetivo `test-plasma-tray-events` comprueba el alta, el
+cambio de estado y pixmap, y la retirada de un elemento en el modelo original.
+`check-native-tray-events.py` lo ejecuta fuera de pantalla en un D-Bus privado
+creado por `dbus-run-session`. El ensayo usa un watcher y un elemento de prueba.
+Véase §284 en `docs/BREEZE_R4_RESULTS.md`.
+
+`check-native-tray-events.py --filtered` repite el ciclo con el proxy local
+`0.1.8+bwm-sni-unique-3`. Permite `NewStatus` y `NewIcon` por nombre único y objeto
+exactos y exige el rechazo de una lectura en otra ruta. Véase §286 en
+`docs/BREEZE_R4_RESULTS.md`.
+
+`check-native-tray-events.py --actions` usa las entradas originales del plasmoide
+para comprobar la entrega de activación principal/secundaria, rueda y
+`ContextMenu` al icono de prueba del bus privado. Véase §288 en
+`docs/BREEZE_R4_RESULTS.md`.
+
+`check-native-tray-events.py --menu` usa `KF6StatusNotifierItem`, dependencia
+del objetivo de pruebas, para exportar un menú D-Bus real. Comprueba que el
+plasmoide respete el estado de sus opciones y que una acción ejecutada en el
+menú importado llegue al productor. Véase §290 en `docs/BREEZE_R4_RESULTS.md`.
+
+`check-native-tray-events.py --menu-wayland` crea una capa de prueba sin reserva
+en el monitor enfocado al lanzar el ensayo en Hyprland. `--output` selecciona
+un monitor por descripción. El productor y el watcher usan el bus privado. Pulsa
+«Abrir menú de prueba» y después «Test action». El ensayo verifica el rol y el
+anclaje del popup, su pantalla y la recepción de la acción. La capa se retira
+al salir. Véase §§292–293 en `docs/BREEZE_R4_RESULTS.md`.
+
 Para un ensayo temporal de reserva en Breeze, ejecutado desde esa terminal con acceso:
 
 ```bash
@@ -390,12 +455,29 @@ src/bwm-plasma-host/tests/shared-config; --binary/--package permiten seleccionar
 El informe identifica ambos paths. No necesita conservar una extracción de ejemplos KDE en /tmp.
 Un delta verificado aún no certifica maximizado, posición, skins o cierre completo de R4.
 
-Añadir --maximize realiza además la medición con una ventana propia temporal, usando el
+Para medir el mismo borde en varias salidas, repite `--output` y selecciona `--edge left`,
+`top`, `right` o `bottom`. El comprobador usa un perfil nativo temporal con un panel por
+salida y compara las cuatro reservas de cada monitor. Exige un fotograma por panel, una
+capa por salida solicitada y la restauración de todos los valores originales. El perfil
+contiene un widget de prueba. Con `--maximize`, el informe de varias salidas añade
+`maximizedByOutput` con las medidas de cada ventana.
+
+Repite `--edge` para recorrer varios bordes en orden, por ejemplo `--edge left --edge right`.
+El informe conserva un resultado por borde. Antes de iniciar el siguiente, el comprobador
+exige que las reservas y la geometría coincidan con las iniciales. También exige un recibo
+de salida del anfitrión propio después de sincronizar la configuración y, si usa un perfil,
+crear su checkpoint. Si no hay recibo, limpia sus procesos y da el ensayo por fallido.
+Con `--maximize`, la secuencia también exige el marco esperado antes de avanzar y
+`maximizedEdges` resume el resultado explícito y el automático por borde.
+
+Añadir --maximize realiza además la medición con una ventana propia temporal por salida, usando el
 gestor de maximizado BWM con PID/dirección verificados. Mide el marco completo y exige su
-registro breezebars-csd; si falta, no certifica la decoración. Escala 1/giro 0 únicamente.
-Maximiza su ventana antes de abrir el panel y mide el reajuste al aparecer y al retirarlo,
-sin remaximizar en ambas observaciones automáticas. Conserva además medidas explícitas con
-y sin panel. Ventana/panel se cierran solos; no cambia foco ni mueve directamente ventanas ajenas.
+registro breezebars-csd. La expectativa usa la escala y el giro efectivos de Hyprland
+y aplica las reservas lógicas. Los resultados reales de §299 corresponden a escala 1 y giro 0.
+El maximizador y el observador usan el mismo criterio de redondeo (§301).
+Maximiza su ventana antes de abrir el panel y mide el reajuste al aparecer y al retirarlo.
+Si una observación automática difiere del área útil, vuelve a maximizar para medir esa fase
+y la anota en `remaximizedPhases`. Ventana y panel se cierran solos.
 Los flags de área/maximizado pueden pasar para ese caso sin marcar r4Complete=true.
 
 Tras actualizar kwin_area.py, el proceso antiguo del puente no carga Python de nuevo solo.
@@ -408,7 +490,8 @@ python3 /mnt/HDD1TB/Projects/hyprland-de/config/hypr/skins/plasma/scripts/r4-res
 ```
 
 El flag reinicia sólo kde-config-bridge por su ciclo existente y exige baseline nuevo con
-PID/inicio/fecha privados. No reinicia compositor, shell ni plugins. El puente queda activo
+PID/inicio/fecha privados. Si se piden varios bordes, se ejecuta antes del primero.
+El puente queda activo
 para seguir cambios del área útil de máximos BWM, incluidos los que ya estén abiertos.
 No cambia geometría de ventanas normales/fullscreen/especiales/minimizadas, ni escribe la
 restauración. Respeta Force KDE y los opt-outs documentados. dynamicMaximizedWindowVerified
@@ -440,6 +523,31 @@ y cerrar los propietarios de configuración nativos; no hay GC ni promesa de dur
 frente a un corte de energía. Conservar los directorios temporales es responsabilidad del
 ensayo: /tmp puede borrarse al reiniciar el equipo.
 
+Si `head.json` o su generación están dañados, `--restore-profile` no puede abrir el perfil.
+La recuperación explícita usa el ID de una copia guardada, sin necesitar el estado actual:
+
+```bash
+python3 src/bwm-plasma-host/preview-isolated.py \
+  --binary build/bwm-plasma-host/bwm-plasma-host \
+  --profile /ruta/al/perfil --recover-snapshot ID_DEL_SNAPSHOT
+```
+
+El ID corresponde al nombre de una carpeta `snapshots/<32 caracteres hexadecimales>`.
+No se elige automáticamente una copia. El envoltorio ejecuta `--recover-profile
+RUTA_DEL_SNAPSHOT` offscreen y termina; usa raíces auxiliares/D-Bus desechables y no registra
+un preview. También admite perfiles en la autoridad XDG persistente descrita abajo.
+Rechaza perfiles ocupados, alias, archivos/copias alterados y versiones futuras de head.
+Verifica los cinco archivos completos y el layout con Corona, prepara otra generación y
+archiva los bytes exactos de head (si existía) en `recoveries/<nueva-generación>/head.json`,
+junto a `recovery.json` con el hash y la copia elegida. Conserva claves desconocidas del
+head si sigue siendo un objeto legible. Las generaciones anteriores permanecen intactas.
+Tras publicar ambos directorios completos, sustituye head atómicamente; una interrupción
+anterior puede dejar directorios no seleccionados. El lease y la comprobación de bytes
+detectan conflictos cooperantes; no son un CAS global ni garantía frente a corte de energía.
+Los registros de recuperación quedan en ese perfil; la exportación copia el estado elegido
+y los snapshots, no esos archivos de diagnóstico. Esta operación no activa el panel diario.
+Evidencia: `docs/BREEZE_R4_PROFILE_RECOVERY_RESULTS.json`.
+
 Reabrirlo sin recrear widgets ni sustituir el panel activo:
 
 ```bash
@@ -460,6 +568,58 @@ nuevo, desconocidos, perfil ocupado y restauración mientras un escritor antiguo
 ruta. Esa restauración copia a otra ruta y no puede ser sobrescrita por el escritor viejo.
 Evidencia: docs/BREEZE_R4_PROFILE_RESULTS.json. No es activación/rollback del panel diario;
 su autoridad y aceptación Hyprland/escala siguen pendientes.
+
+## Elegir un perfil persistente (§267)
+
+Un perfil previamente exportado puede elegirse por su nombre en la autoridad XDG de estado.
+La selección se guarda en `panel-profiles/.selection/selection.json`: sólo nombre, hash del
+origen archivado y revisión, separados de los archivos/preferencias nativos KDE. No fija
+una generación vieja: ediciones y recuperaciones del mismo perfil siguen siendo visibles.
+
+```bash
+python3 src/bwm-plasma-host/profile-selection.py --binary build/bwm-plasma-host/bwm-plasma-host status
+python3 src/bwm-plasma-host/profile-selection.py --binary build/bwm-plasma-host/bwm-plasma-host select breeze-test --revision 0
+```
+
+Usar la revisión que devuelve status; 0 sólo corresponde a una selección que aún no se ha
+guardado. Los cambios requieren que siga coincidiendo: otro escritor no se sobrescribe con
+una elección basada en una revisión antigua. Repetir la misma selección es una operación
+sin cambios. `clear --revision N` deja la selección vacía y conserva el contador, sin borrar
+perfiles. También permite retirar la elección de un perfil roto o ausente; no repara una
+selección JSON corrupta ni elige otro perfil automáticamente. Versiones/aliases/rutas/revisiones
+inválidas se rechazan. Los campos desconocidos legibles se conservan.
+
+El envoltorio de selección ejecuta los comandos nativos --profile-selection-info,
+--select-profile NAME REVISION y --clear-profile-selection REVISION offscreen, con raíces
+auxiliares/D-Bus desechables. La elección sólo admite nombres de perfiles persistentes; un
+perfil temporal primero debe exportarse. status no crea el almacenamiento si no existe.
+profileValidated informa una inspección puntual; false con profileError puede significar
+que otro anfitrión lo tiene ocupado. No es un diagnóstico de vida ni aceptación de backends.
+
+Para abrir explícitamente la elección en el preview registrado:
+
+```bash
+python3 src/bwm-plasma-host/preview-isolated.py \
+  --binary build/bwm-plasma-host/bwm-plasma-host --selected-profile --follow-skin
+```
+
+El binario --serve-selected-profile resuelve la selección actual y adquiere el lease del
+perfil bajo el mismo bloqueo de selección. Conserva ese lease durante Corona y el guardado/
+checkpoint de salida. Cambiar o vaciar la elección rechaza perfiles usados por otro host;
+no mata ni sustituye procesos. No pasa al servidor una ruta capturada por status: si ya no
+hay una selección válida, falla. No se reinterpretan índices Qt/conectores como identidad.
+Los ajustes nativos, bindings por descripción y restricciones del preview siguen vigentes.
+
+Esto prepara la elección duradera, sin autostart ni retirada de la barra diaria. Los
+indicadores activationAllowed/replacementReady siguen false. Autoridades de sesión,
+fallback automático, servicios y aceptación del panel diario/logout siguen pendientes.
+Evidencia: `docs/BREEZE_R4_PROFILE_SELECTION_RESULTS.json`.
+
+Al cerrar sesión, apagar o reiniciar desde `bwm-power`, el control de la misma instancia
+Hyprland pide retirar el preview y espera su salida. En un perfil guardado, el anfitrión
+guarda los archivos nativos y crea el checkpoint antes de salir. El envoltorio confirma
+el resultado después de recoger el proceso. Si no se confirma a tiempo o el guardado falla,
+`bwm-power` registra el motivo y sigue con el cierre. Véase §268 en `BWM_CONTEXT.md`.
 
 ## Conservar el perfil fuera de /tmp
 

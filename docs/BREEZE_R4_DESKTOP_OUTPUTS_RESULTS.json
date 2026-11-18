@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "date": "2026-11-17",
+  "section": "BWM_CONTEXT §3.257–258",
+  "scope": "Read-only original KDE desktop consumer compared with Hyprland on every output; no panel replacement or activation test",
+  "userAcceptance": {
+    "section": "BWM_CONTEXT §3.257",
+    "source": "User confirmation: correcto, funciona",
+    "preview": "org.kde.plasma.taskmanager with --native-desktops, without --all-desktops",
+    "output": "MSI",
+    "currentWorkspaceFilterAccepted": true,
+    "perWindowOrOutputMeasurements": false,
+    "providerOriginatedActivationVerified": false
+  },
+  "implementation": {
+    "entryPoint": "src/bwm-plasma-host/check-desktops-session.py",
+    "nativeMode": "bwm-plasma-host --check-native-desktops-session OUTPUT_DESCRIPTION...",
+    "originalConsumer": "TaskManager::VirtualDesktopInfo",
+    "providerVerification": "NativeDesktopControl registry/association/availability; no ensurePaused or resume requests",
+    "outputIdentity": "BwmOutput resolver; unique descriptions, all outputs, common logical monitor_box geometry",
+    "comparison": "IDs from common count plus live/active ordinary workspaces; current global and per screen by name AND geometry; equal snapshots before/after",
+    "rejects": [
+      "provider unavailable or incompatible association",
+      "ambiguous output/duplicate selection",
+      "mirrors with identical rectangles",
+      "inventory/current desktop mismatch",
+      "output geometry mismatch",
+      "workspace/output/count revision changes during measurement",
+      "deadline or IPC failure",
+      "resumed connection/nonzero control serial/created window"
+    ],
+    "isolation": "disposable XDG roots and nonexistent session bus; action environment flags removed; original selected Wayland connection retained",
+    "privacy": "no client/window query, app metadata, PIDs, workspace titles, environment dumps or runtime paths in successful report"
+  },
+  "validation": {
+    "normalHostAndNativeTestBuilt": true,
+    "asanHostAndNativeTestBuilt": true,
+    "pythonR4": {
+      "passed": 184,
+      "newSessionDiagnosticTests": 12
+    },
+    "ctestIsolatedLocalConfiguration": {
+      "passed": true,
+      "tests": 1
+    },
+    "nonWaylandRejection": {
+      "normal": true,
+      "asan": true,
+      "asanOptions": "detect_leaks=0",
+      "exit": 2
+    },
+    "newNativeCase": {
+      "test": "DesktopTest::readOnlyDesktopDiagnosticDoesNotResumeOrCreateWindows",
+      "compiled": true,
+      "executed": false,
+      "attemptedVia": "ctest --test-dir build/bwm-plasma-host -R ^native-desktop-protocol$ --output-on-failure",
+      "blocker": "fixture first wl_client_create: Operation not permitted (before Qt)"
+    },
+    "realSessionDiagnostic": {
+      "executedSuccessfully": true,
+      "executedBy": "user in local terminal",
+      "executorIpcStillBlocked": true,
+      "evidence": "realSessionReadback (§259)"
+    },
+    "scope": "Compilation, Python comparator/wrapper tests and non-Wayland rejection are not a successful Wayland/multi-output session run"
+  },
+  "sessionModified": false,
+  "hyprlandPluginChanged": false,
+  "panelsOpened": false,
+  "capturesStarted": false,
+  "providerOriginatedActivationVerified": false,
+  "multiOutputSessionVerified": true,
+  "replacementReady": false,
+  "r4Complete": false,
+  "files": {
+    "src/bwm-plasma-host/check-desktops-session.py": "96541e88c28f624f207d589c6a78ec571a418ff3f5b58b38c6ced7bdf2610131",
+    "src/bwm-plasma-host/desktopsessioncheck.cpp": "711ad6577300e55e3eeb17441dd435208f2b6c2ed03b413d74957c2f402be382",
+    "src/bwm-plasma-host/desktopsessioncheck.h": "d9648d78b932501544a0770f86c416ffeafac1db1ab965b6f8aa4991ac66837a",
+    "src/bwm-plasma-host/main.cpp": "62eecae28fa10b8fdf572584833e5a305cdcce6a2990d17735468ad03082d8ef",
+    "src/bwm-plasma-host/CMakeLists.txt": "5aa2bd7ddfa881fcf06563ff19d8fb9016f8480aae2190815e369428aa9eeabe",
+    "src/bwm-plasma-host/test-desktops.cpp": "05be62ae42f6728aeceb6437dee4cf86c0ad4abc59258562b60488f3276d66c9",
+    "tests/test_r4_desktops_session.py": "267148ce80799b07808bb2077c13333803d76304c785208806dd997a24056ee2"
+  },
+  "realSessionReadback": {
+    "section": "BWM_CONTEXT §3.259",
+    "date": "2026-11-17",
+    "source": "User-pasted terminal JSON from check-desktops-session.py",
+    "version": 1,
+    "readOnly": true,
+    "passed": true,
+    "sessionModified": false,
+    "panelsOpened": false,
+    "capturesStarted": false,
+    "activationTested": false,
+    "replacementReady": false,
+    "outputs": [
+      {
+        "description": "LG Electronics LG ULTRAFINE 405NTVS2J655",
+        "geometry": [
+          2560,
+          0,
+          3840,
+          2160
+        ],
+        "current": "10",
+        "verified": true
+      },
+      {
+        "description": "Micro-Star Int'l Co. Ltd. MAG 274Q X24 0x01010101",
+        "geometry": [
+          0,
+          720,
+          2560,
+          1440
+        ],
+        "current": "1",
+        "verified": true
+      }
+    ],
+    "desktopIds": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+    ],
+    "current": "1",
+    "configuredCount": 10,
+    "bindingVerified": true,
+    "activationRequestsSent": 0,
+    "windowCount": 0
+  },
+  "multiOutputVerificationScope": "Read-only original KDE/Hyprland inventory, geometry and current desktop per output; not activation/navigation"
+}

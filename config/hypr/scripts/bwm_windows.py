@@ -77,12 +77,17 @@ def focus_window(client: dict):
         end'''])
 
 
-def monitor_box(mon: dict) -> tuple:
+def monitor_box(mon: dict, *, round_to_nearest: bool = False) -> tuple:
     """(x, y, ancho, alto) lógicos del monitor (escala y rotación)."""
     scale = mon.get("scale") or 1
     w, h = mon["width"] / scale, mon["height"] / scale
     if mon.get("transform", 0) % 2:
         w, h = h, w
+    if round_to_nearest:
+        if not math.isfinite(w) or not math.isfinite(h):
+            raise ValueError("Invalid logical monitor size")
+        # Hyprland rounds the positive logical extents with std::round.
+        w, h = math.floor(w + 0.5), math.floor(h + 0.5)
     return mon["x"], mon["y"], int(w), int(h)
 
 

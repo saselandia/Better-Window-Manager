@@ -17,6 +17,7 @@ p.add_argument('--binary',type=Path,required=True)
 source=p.add_mutually_exclusive_group(required=True)
 source.add_argument('--package',type=Path)
 source.add_argument('--profile',type=Path,help='Existing private native test profile; keeps native files when this wrapper closes')
+source.add_argument('--selected-profile',action='store_true',help='Explicit preview of the selected persistent native profile; native host resolves and leases it atomically')
 source.add_argument('--builtin',help='Installed native widget ID, including compiled/resource applets')
 p.add_argument('--desktop-actions',action='store_true',help='Explicitly connect native KWindowSystem desktop requests to the live common BWM manager; may minimize/restore your windows')
 p.add_argument('--task-actions',action='store_true',help='Experimental native window task source and PID-guarded actions; desktop activation requires --native-desktops and a separately loaded provider')
@@ -32,7 +33,9 @@ p.add_argument('--native-policy',action='store_true',help='Explicit surface-poli
 operation=p.add_mutually_exclusive_group()
 operation.add_argument('--follow-skin',action='store_true',help='Explicitly register this isolated preview with the BWM skin-change hook')
 operation.add_argument('--export-as',help='Copy --profile and its snapshot history to a named persistent XDG state profile; do not start a panel')
+operation.add_argument('--recover-snapshot',help='Recover --profile from this explicit snapshot ID, even with a broken head/generation; archive the old head and exit offscreen')
 a=p.parse_args()
+saved_profile=bool(a.profile or a.selected_profile)
 a.binary=a.binary.expanduser().resolve()
 if not a.binary.is_file() or not os.access(a.binary,os.X_OK):
     source_root=Path(__file__).resolve().parent
@@ -43,16 +46,20 @@ if not a.binary.is_file() or not os.access(a.binary,os.X_OK):
 if a.builtin and not re.fullmatch(r'[A-Za-z0-9_.-]+',a.builtin):p.error('Invalid native widget ID')
 if a.desktop_actions and (not a.follow_skin or a.export_as):p.error('--desktop-actions requires --follow-skin preview, not profile export')
 if a.task_actions and (not a.follow_skin or a.export_as):p.error('--task-actions requires --follow-skin preview, not profile export')
-if a.all_desktops and (not a.task_actions or a.profile):p.error('--all-desktops requires --task-actions in a disposable preview, not --profile')
-if a.session_appearance and (not a.follow_skin or a.profile):p.error('--session-appearance requires a disposable --follow-skin preview, not --profile')
-if a.task_thumbnails and (not a.task_actions or a.profile):p.error('--task-thumbnails requires --task-actions in a disposable preview, not --profile')
+if a.all_desktops and (not a.task_actions or saved_profile):p.error('--all-desktops requires --task-actions in a disposable preview, not --profile/--selected-profile')
+if a.session_appearance and (not a.follow_skin or saved_profile):p.error('--session-appearance requires a disposable --follow-skin preview, not --profile/--selected-profile')
+if a.task_thumbnails and (not a.task_actions or saved_profile):p.error('--task-thumbnails requires --task-actions in a disposable preview, not --profile/--selected-profile')
 if a.task_actions and not (a.all_desktops or a.native_desktops):p.error('--task-actions requires --all-desktops for this isolated test, or --native-desktops with its already loaded provider; current-desktop filtering otherwise hides windows')
 if a.native_desktops and (not a.follow_skin or a.export_as):p.error('--native-desktops requires --follow-skin preview, not profile export')
 if a.export_as and not a.profile:p.error('--export-as requires --profile')
-if a.instances is not None and (a.profile or not a.native_panel or not a.follow_skin):p.error('--instances requires a disposable --native-panel --follow-skin preview')
-if a.profile and (not (a.follow_skin or a.export_as) or a.output):
-    p.error('--profile requires --follow-skin or --export-as and uses its persisted output bindings instead of --output')
-if a.follow_skin and not a.profile and not (a.native_panel and a.layer_panel and a.output):
+if a.recover_snapshot and (not a.profile or not re.fullmatch(r'[a-f0-9]{32}',a.recover_snapshot)):
+    p.error('--recover-snapshot requires --profile and its explicit 32-character lowercase snapshot ID')
+if a.recover_snapshot and (a.native_panel or a.layer_panel):p.error('--recover-snapshot does not accept panel display options')
+if a.instances is not None and (saved_profile or not a.native_panel or not a.follow_skin):p.error('--instances requires a disposable --native-panel --follow-skin preview')
+if a.profile and (not (a.follow_skin or a.export_as or a.recover_snapshot) or a.output):
+    p.error('--profile requires --follow-skin, --export-as or --recover-snapshot and uses its persisted output bindings instead of --output')
+if a.selected_profile and (not a.follow_skin or a.output):p.error('--selected-profile requires --follow-skin and uses the saved output bindings')
+if a.follow_skin and not saved_profile and not (a.native_panel and a.layer_panel and a.output):
     p.error('--follow-skin requires --native-panel --layer-panel --output DESCRIPTION')
 if a.native_policy and not a.follow_skin:p.error('--native-policy requires --follow-skin (with a package or persisted profile)')
 initial_skin='default'
@@ -143,6 +150,17 @@ with tempfile.TemporaryDirectory(prefix='bwm-r4-preview-') as tmp:
         original_data=Path(os.environ.get('XDG_DATA_HOME',Path.home()/'.local/share'))
         env['XDG_DATA_DIRS']=str(original_data)+os.pathsep+os.environ.get('XDG_DATA_DIRS','/usr/local/share:/usr/share')
     if a.profile:
+        if a.recover_snapshot:
+            # This operation never connects to the compositor or registers a
+            # preview. Do not preflight --profile-info: the current head may be bad.
+            for key in ('DISPLAY','WAYLAND_DISPLAY','HYPRLAND_INSTANCE_SIGNATURE'):env.pop(key,None)
+            env.update(QT_QPA_PLATFORM='offscreen',QT_QUICK_BACKEND='software')
+            try:
+                recovered=subprocess.run([str(a.binary),'--recover-profile',str(a.profile.expanduser().absolute()/'snapshots'/a.recover_snapshot)],
+                    env=env,capture_output=True,text=True,timeout=25)
+            except (OSError,subprocess.SubprocessError) as error:p.error(f'No se pudo recuperar el perfil: {error}')
+            if recovered.returncode:p.error(recovered.stderr.strip())
+            print(recovered.stdout,end='');raise SystemExit(0)
         checked=subprocess.run([str(a.binary),'--profile-info',str(a.profile.resolve())],env=env,capture_output=True,text=True)
         if checked.returncode:p.error(checked.stderr.strip())
         if a.export_as:
@@ -156,14 +174,16 @@ with tempfile.TemporaryDirectory(prefix='bwm-r4-preview-') as tmp:
         env.update(BWM_R4_CONTROL_DIR=str(control),BWM_R4_SESSION_TOKEN=token)
         mode='--follow-panel-preview'
     if a.profile:mode='--serve-profile'
+    if a.selected_profile:mode='--serve-selected-profile'
     try:
-        child=subprocess.Popen([str(a.binary),mode,str(a.profile.resolve()) if a.profile else plugin],env=env)
+        arguments=[str(a.binary),mode] if a.selected_profile else [str(a.binary),mode,str(a.profile.resolve()) if a.profile else plugin]
+        child=subprocess.Popen(arguments,env=env)
     except OSError as error:
         p.error(f'No se pudo ejecutar el auxiliar {a.binary}: {error}')
     try:
         if a.follow_skin:
             wait_initial_ack(control,child)
-            session.register(control,child.pid,token)
+            session.register(control,child.pid,token,reports_exit=True)
             session.command({'controlDirectory':str(control),'token':token},'skin',initial_skin)
             if a.task_actions:
                 tasks=wait_task_source(session,{'controlDirectory':str(control),'token':token},child,require_thumbnails=a.task_thumbnails)
@@ -172,11 +192,16 @@ with tempfile.TemporaryDirectory(prefix='bwm-r4-preview-') as tmp:
             print('Prueba R4 registrada: sigue Breeze/Retro/default. Ctrl+C detiene sólo el auxiliar.',flush=True)
         status=child.wait()
     except KeyboardInterrupt:
+        stop_timeout=5
         if a.follow_skin:
             try:session.command({'controlDirectory':str(control),'token':token},'stop')
+            except BlockingIOError:
+                # A session exit can already be waiting for the host to save.
+                # Let it finish instead of terminating the host on Ctrl+C.
+                stop_timeout=8
             except (OSError,ValueError,TimeoutError):child.terminate()
         else:child.terminate()
-        try: child.wait(timeout=5)
+        try: child.wait(timeout=stop_timeout)
         except subprocess.TimeoutExpired: child.kill();child.wait()
         status=130
     except (OSError,ValueError,TimeoutError) as error:
@@ -186,6 +211,10 @@ with tempfile.TemporaryDirectory(prefix='bwm-r4-preview-') as tmp:
         status=1
     finally:
         if a.follow_skin:
-            session.unregister(token)
-            session.drain(control)
+            try:
+                if child.returncode is not None and (control/'ack.json').exists():
+                    session.record_exit(control,token,child.returncode)
+            finally:
+                session.unregister(token)
+                session.drain(control)
     raise SystemExit(status)

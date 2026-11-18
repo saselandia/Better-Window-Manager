@@ -20,10 +20,24 @@ class MaximizedTest(unittest.TestCase):
         monitor['reserved'] = [8,20,12,44]
         self.assertEqual(m.useful_area(monitor), [8,740,2540,1376])
 
-    def test_unsupported_geometry_does_not_get_certified(self):
+    def test_scaled_and_rotated_geometry_uses_logical_reservations(self):
+        monitor = {'x': -1920, 'y': 12, 'width': 3840, 'height': 2160, 'scale': 1.5, 'reserved': [10,20,30,40]}
+        for transform in range(8):
+            with self.subTest(transform=transform):
+                expected = [-1910,32,1400,2500] if transform % 2 else [-1910,32,2520,1380]
+                self.assertEqual(m.useful_area(dict(monitor, transform=transform)), expected)
+
+    def test_half_logical_pixels_round_up_as_in_hyprland(self):
+        monitor = {'x': 0, 'y': 0, 'width': 251, 'height': 333, 'scale': 2, 'transform': 1, 'reserved': [2,3,4,5]}
+        self.assertEqual(m.useful_area(monitor), [2,3,161,118])
+
+    def test_invalid_geometry_does_not_get_certified(self):
         monitor = {'x': 0, 'y': 0, 'width': 100, 'height': 100, 'scale': 1, 'transform': 0, 'reserved': [0,0,0,0]}
-        for key, value in [('scale',1.25),('transform',1),('reserved',[0,0,0,101])]:
-            with self.assertRaises(ValueError): m.useful_area(dict(monitor, **{key:value}))
+        for key, value in [('scale', 0), ('scale', True), ('scale', float('nan')), ('scale', 1e-320),
+                           ('transform', -1), ('transform', 8), ('transform', 2.0), ('width', float('inf')),
+                           ('reserved', [0,0,0,101]), ('reserved', [0,-1,0,0]), ('reserved', [0,0,0])]:
+            with self.subTest(key=key, value=value), self.assertRaises(ValueError):
+                m.useful_area(dict(monitor, **{key:value}))
 
     def test_full_frame_must_match_not_just_content_or_mode(self):
         expected = [0,720,2560,1348]

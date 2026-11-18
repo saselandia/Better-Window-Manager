@@ -326,6 +326,9 @@ siendo el nombre del escritorio original que imita Breeze.
   retenido. Mantener el lease durante la vida de Corona y hacer flush/cierre antes del checkpoint.
   --export-as conserva perfil/historial en la autoridad XDG de estado dedicada; no selecciona
   ni activa el panel. No ampliar esa autoridad a cualquier carpeta privada ni sobrescribir nombres.
+  ProfileSelection (§267) guarda sólo la elección por nombre/procedencia bajo .selection
+  en esa autoridad. No activa/autoinicia ni retira barras; revisión obligatoria para cambiarla.
+  Abrir con openSelected y conservar el lease, nunca reutilizar una ruta de status como autorización.
   panel-session.py status exige respuesta nueva, no basta PID/ack viejo. renderReady sólo
   comprueba el marco Qt; replacementReady sigue false y no permite retirar el panel diario.
   widgetBackends informa instancias directas y dependencias/metadatos, no certifica servicios.
@@ -521,6 +524,12 @@ siendo el nombre del escritorio original que imita Breeze.
   ~/.config/bwm/native-desktops.json y guarda contra bucles de fallo; nunca desde un cambio de
   skin ni en caliente. El contador común sólo se envía con la marca de sesión de esta instancia
   y el dispatcher compartido no reintenta entregas aplicadas o inactivas.
+  Activación entre salidas (§262): workspace ya activo → sólo Actions::focusMonitor;
+  inactivo → sólo changeWorkspace por objeto. No encadenar ambos: con destino vacío
+  y no_warps la segunda acción puede devolver el foco al puntero. Ruta v2 validada en
+  sesión (§263, LG/10 → MSI/1): no repetir login/ciclo aceptado sin cambios nuevos.
+  No confundir regresión con cuerpos nativos
+  sobre andamiaje de datos con prueba de compositor/Wayland real.
   Vida de TaskThumbnail (§240): QQuickItem::~QQuickItem emite windowChanged después de
   destruir miembros derivados; QObject auto-disconnect llega tarde. Desconectar nuestras
   conexiones en el destructor derivado antes de liberar State, conservando destroyed/Qt/QML

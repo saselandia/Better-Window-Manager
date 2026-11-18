@@ -98,6 +98,14 @@ class GeometryTest(unittest.TestCase):
         self.assertEqual(frame, lg)
         self.assertEqual(restore, (3000, 200, 900, 600))
 
+    def test_maximization_uses_hyprland_rounding_after_rotation(self):
+        monitor = {"id": 1, "x": -200, "y": 10, "width": 251, "height": 333,
+                   "scale": 2, "transform": 1, "reserved": [2, 3, 4, 5]}
+        with mock.patch.object(kw, "hypr_json", return_value=[monitor]) as query:
+            self.assertEqual(kw.work_area({"monitor": 1}), (-198, 13, 161, 118))
+        query.assert_called_once_with("monitors")
+        self.assertEqual(kw.bwm_windows.monitor_box(monitor), (-200, 10, 166, 125))
+
 
 class FrameTest(unittest.TestCase):
     def test_frame_and_content_round_trip(self):

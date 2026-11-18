@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "date": "2026-11-17",
+  "historySection": 266,
+  "scope": "Explicit native profile snapshot recovery using disposable fixtures; no daily panel activation",
+  "status": "verified-offscreen-normal-and-asan",
+  "sessionModified": false,
+  "personalProfilesModified": false,
+  "dailyPanelSelected": false,
+  "replacementReady": false,
+  "r4Complete": false,
+  "entryPoints": {
+    "native": "--recover-profile SNAPSHOT_DIR",
+    "wrapper": "--profile DIR --recover-snapshot ID"
+  },
+  "storageContract": {
+    "explicitSnapshotRequired": true,
+    "exclusiveProfileLease": true,
+    "nativeFiles": [
+      "layout",
+      "plasmashellrc",
+      "legacy.json",
+      "report.json",
+      "bindings.json"
+    ],
+    "snapshotHashesAndNativeBindingsValidated": true,
+    "newGenerationBeforeHeadPublication": true,
+    "previousHeadBytesArchived": true,
+    "missingHeadRecorded": true,
+    "unknownReadableHeadFieldsPreserved": true,
+    "futureHeadVersionsRejected": true,
+    "oldGenerationsPreserved": true,
+    "recoveryArchive": "recoveries/<new-generation>/{head.json if previously present,recovery.json}",
+    "headPublication": "QSaveFile after complete generation and recovery record publication",
+    "conflictCheck": "Same owner lease and optimistic previous head presence/byte comparison",
+    "recoveryArchivesExported": false
+  },
+  "verification": {
+    "nativeQtMethods": [
+      "profileRecoveryFromExplicitSnapshot",
+      "profileRecoveryFreshProcessReadback",
+      "profileRecoveryUsesXdgAuthorityAndChildLease"
+    ],
+    "normal": {
+      "command": "ctest --test-dir build/bwm-plasma-host -R '^isolated-local-configuration$' --output-on-failure",
+      "passed": true,
+      "recovery": {
+        "explicitSnapshotVerified": true,
+        "cliBrokenHeadRecovered": true,
+        "wrapperMissingHeadRecovered": true,
+        "freshProcessNativeReadback": true,
+        "activationAllowed": false,
+        "dailyPanelSelected": false
+      }
+    },
+    "asan": {
+      "command": "ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build/bwm-plasma-host-asan -R '^isolated-local-configuration$' --output-on-failure",
+      "passed": true,
+      "leakDetectionEnabled": false,
+      "recovery": {
+        "explicitSnapshotVerified": true,
+        "cliBrokenHeadRecovered": true,
+        "wrapperMissingHeadRecovered": true,
+        "freshProcessNativeReadback": true,
+        "activationAllowed": false,
+        "dailyPanelSelected": false
+      }
+    },
+    "python": {
+      "command": "python3 -m unittest discover -s tests -p 'test_r4*.py'",
+      "passed": true,
+      "tests": 215,
+      "newWrapperTests": 3
+    },
+    "cases": [
+      "Incomplete current native generation",
+      "Malformed, empty, non-object or missing head",
+      "Invalid current generation ID",
+      "Exact previous head archive and SHA256",
+      "Unknown native settings and readable head metadata",
+      "Late KSharedConfig writer only changes old generation",
+      "Tampered snapshot data",
+      "Changed snapshot inventory",
+      "Rehashed layout with mismatched native containment IDs",
+      "Future head version rejection",
+      "Invalid or missing snapshot IDs",
+      "Symlink head, dangling head, head directory, alias profile/snapshot/recovery authority",
+      "Separate-process owner lease rejection",
+      "XDG state fixture physically outside /tmp",
+      "Real CLI recovery and fresh process reopening",
+      "Real wrapper recovery bypassing missing-head preflight",
+      "Fresh-process Corona/widget configuration readback",
+      "Wrapper strips compositor and action environment and removes auxiliary roots"
+    ]
+  },
+  "limits": [
+    "No daily selection, autostart, takeover or fallback controller installed",
+    "No recovery of personal profiles performed",
+    "No logout, compositor crash or power-loss acceptance",
+    "No global compare-and-swap guarantee against writers ignoring the lease",
+    "Interrupted publication can leave complete unselected directories",
+    "Recovery diagnostics remain in the original profile; export copies current generation and snapshots",
+    "No plugin deployment or session restart required; previously accepted desktop cycles were not repeated"
+  ],
+  "sourceSha256": {
+    "src/bwm-plasma-host/profilestore.cpp": "c32492886050f577700aa22cd3616eef5fcba92fcdeb77511828f832c7fd1253",
+    "src/bwm-plasma-host/profilestore.h": "0572560ee0ccef0ce87aa240e4eaa1b7104f711013fc109f1d00215d6456c89f",
+    "src/bwm-plasma-host/main.cpp": "7a0ad983d189f217e8ef5a543ffb4711d1e791d9c448dfddda39c7b3cacbf596",
+    "src/bwm-plasma-host/preview-isolated.py": "938d7320ce65282d88d508d995a51db8df71f493e3903e53ea1c52dc35de9956",
+    "src/bwm-plasma-host/test-ui.cpp": "e3bf6f100d381ec5a0c426db9f7bb2d656c71e12e064e388d199f1bc1b4a2376",
+    "src/bwm-plasma-host/check-local.py": "f227f1d3cc5f35d5db8450efa14d3bb280e8afb8dba8e993d1cef1cea4158210",
+    "tests/test_r4_preview.py": "2764bffc1ba3e23be901ae7ada4e5377b91b08167052097542cc6cf80c4b74a1"
+  }
+}

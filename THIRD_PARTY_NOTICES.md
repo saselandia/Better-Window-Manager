@@ -695,3 +695,28 @@ copyright 2012–2016 Eike Hein, GPL-2.0-or-later); el archivo es GPL-2.0-or-lat
 resolución de lanzadores de tasklauncher.cpp sigue runApp de plasma-workspace 6.7.5
 (libtaskmanager/tasktools.cpp, mismos términos LGPL que §248). No se copia ni modifica QML ni
 C++ de KDE; la política KIOSK usa el formato kdeglobals estándar.
+
+## Regresión de foco por salida — Hyprland 0.56.2 (R4 §262)
+
+`src/bwm-plasma-desktops/tests/upstream/Hyprland-0.56.2-WorkspaceActions.cpp` contiene
+extractos sin modificar de `src/config/shared/actions/ConfigActions.cpp` de Hyprland
+v0.56.2 (`efb50993780079460b0cbed1363e2166a2de1d9f`), desde el tarball de Portage
+`hyprland-0.56.2.gh.tar.gz`: `tryMoveFocusToMonitor`, `Actions::focusMonitor` y la
+sobrecarga por objeto de `Actions::changeWorkspace`. Copyright 2022–2026 vaxerski,
+BSD-3-Clause; texto íntegro en `licenses/Hyprland-BSD-3-Clause.txt`. El archivo lleva
+su aviso y una huella fijada por el ensayo. Fuente correspondiente:
+<https://github.com/hyprwm/Hyprland/tree/v0.56.2>.
+
+`check-activation-routing.py` y su andamiaje de datos son código BWM propio GPL-2.0-or-later;
+compilan esos cuerpos junto al `applyExact` actual de BWM para reproducir la interacción
+de foco/puntero, sin iniciar un compositor. No se copian esas implementaciones al plugin
+de producción ni se presenta el andamiaje como una implementación completa de Hyprland.
+### xdg-dbus-proxy 0.1.8 (ensayo R4)
+
+Copyright © 2015 Red Hat, Inc. y autores indicados en el código original. LGPL-2.1-or-later.
+Fuente correspondiente: `xdg-dbus-proxy-0.1.8.tar.xz`, publicado por el proyecto Flatpak.
+El archivo se valida por SHA-256 en `src/bwm-plasma-host/build-tray-proxy.py`.
+`patches/xdg-dbus-proxy/0.1.8-sni-unique-getall.patch` añade reglas de lectura de
+propiedades y de las señales SNI `NewStatus` y `NewIcon` para un objeto exacto de
+un nombre único D-Bus. La compilación es local.
+Texto original: `licenses/xdg-dbus-proxy-LGPL-2.1-or-later.txt`.

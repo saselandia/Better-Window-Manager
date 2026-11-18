@@ -3,6 +3,8 @@
 #include <LayerShellQt/Window>
 #include <QScreen>
 #include <QGuiApplication>
+#include <QtWaylandClient/private/qwaylanddisplay_p.h>
+#include <QtWaylandClient/private/qwaylandscreen_p.h>
 #include <qqml.h>
 #include <algorithm>
 #include <QDynamicPropertyChangeEvent>
@@ -61,6 +63,50 @@ static void panelGeometry(QQuickWindow *window,Qt::Edge edge,int gap) {
     if(window->position()!=pos)window->setPosition(pos);
     window->setProperty("bwmPanelEdge",int(edge));
 }
+using LayerWindow=LayerShellQt::Window;
+
+static LayerWindow::Anchor layerAnchor(Qt::Edge edge) {
+    switch (edge) {
+    case Qt::TopEdge: return LayerWindow::AnchorTop;
+    case Qt::BottomEdge: return LayerWindow::AnchorBottom;
+    case Qt::LeftEdge: return LayerWindow::AnchorLeft;
+    case Qt::RightEdge: return LayerWindow::AnchorRight;
+    }
+    return LayerWindow::AnchorNone;
+}
+
+PanelAnchoring nativePanelAnchoring(Qt::Edge edge, int screenExtent, int panelExtent, bool explicitExclusiveEdge) {
+    const bool vertical = edge == Qt::LeftEdge || edge == Qt::RightEdge;
+    const auto exclusiveEdge = layerAnchor(edge);
+    const auto leading = vertical ? LayerWindow::AnchorTop : LayerWindow::AnchorLeft;
+    PanelAnchoring placement{LayerWindow::Anchors(exclusiveEdge) | leading, exclusiveEdge, {}};
+    if (!explicitExclusiveEdge) {
+        // On older protocol versions a corner alone cannot reserve space.
+        placement.anchors |= vertical ? LayerWindow::AnchorBottom : LayerWindow::AnchorRight;
+        const int unused = std::max(0, screenExtent - panelExtent);
+        if (vertical) placement.margins.setBottom(unused);
+        else placement.margins.setRight(unused);
+    }
+    // With v5 the explicit reservation edge permits a corner and a fixed size.
+    // Opposite anchors would make LayerShellQt send a zero extent. Hyprland would
+    // then subtract the far margin from ALREADY reserved space, shrinking the window.
+    return placement;
+}
+
+static bool supportsExplicitExclusiveEdge(QScreen *screen) {
+    // Use Qt's registry for this connection. Do not open another display, bind
+    // another layer-shell global, or block the GUI on a registry round trip.
+    const auto *waylandScreen = dynamic_cast<const QtWaylandClient::QWaylandScreen *>(screen->handle());
+    if (!waylandScreen) return false;
+    uint version = 0;
+    for (const auto &global : waylandScreen->display()->globals()) {
+        if (global.interface != QStringLiteral("zwlr_layer_shell_v1")) continue;
+        if (version) return false;
+        version = global.version;
+    }
+    return version >= 5;
+}
+
 static void updatePanelPolicy(QQuickWindow *window) {
     if(!window->screen())return;
     using W=LayerShellQt::Window;auto *role=W::get(window);
@@ -69,27 +115,24 @@ static void updatePanelPolicy(QQuickWindow *window) {
     const int gap=window->property("bwmPanelGap").toInt();
     panelGeometry(window,edge,gap);
     QMargins margins(edge==Qt::LeftEdge?gap:0,edge==Qt::TopEdge?gap:0,edge==Qt::RightEdge?gap:0,edge==Qt::BottomEdge?gap:0);
-    W::Anchors anchors=edge==Qt::TopEdge?W::AnchorTop:edge==Qt::BottomEdge?W::AnchorBottom:edge==Qt::LeftEdge?W::AnchorLeft:W::AnchorRight;
+    const auto exclusiveEdge=layerAnchor(edge);
+    W::Anchors anchors=exclusiveEdge;
     int zone=-1;QString error;
     if(window->property("bwmNativePanelPolicy").toBool()) {
-        // Three anchors allow positive reservations even before protocol v5's
-        // exclusive_edge. The trailing margin keeps the original left/top aligned
-        // custom length; LayerShellQt asks for zero size on a constrained axis.
-        anchors|=vertical ? W::Anchors(W::AnchorTop)|W::AnchorBottom : W::Anchors(W::AnchorLeft)|W::AnchorRight;
         const int available=vertical?window->screen()->size().height():window->screen()->size().width();
         const int length=vertical?window->height():window->width();
+        const auto placement=nativePanelAnchoring(edge,available,length,supportsExplicitExclusiveEdge(window->screen()));
+        anchors=placement.anchors;
+        margins=placement.margins;
         const int cross=vertical?window->width():window->height();
         const int crossAvailable=vertical?window->screen()->size().width():window->screen()->size().height();
         if(window->property("bwmPanelOutputUnavailable").toBool())error=QStringLiteral("Native panel output changed; recreate its bound surface.");
         else if(length<=0 || length>available || cross<=0 || cross>crossAvailable)error=QStringLiteral("Native panel surface does not fit its output.");
-        else {
-            if(vertical)margins.setBottom(available-length);else margins.setRight(available-length);
-            if(window->property("bwmPanelVisibility").toInt()==0 && window->isVisible())zone=window->property("bwmReservationThickness").toInt();
-        }
+        else if(window->property("bwmPanelVisibility").toInt()==0 && window->isVisible())zone=window->property("bwmReservationThickness").toInt();
     } else anchors|=vertical?W::Anchors(W::AnchorTop):W::Anchors(W::AnchorLeft);
     role->setExclusiveZone(-1); // Withdraw the old request before changing geometry.
     role->setAnchors(anchors);
-    role->setExclusiveEdge(edge==Qt::TopEdge?W::AnchorTop:edge==Qt::BottomEdge?W::AnchorBottom:edge==Qt::LeftEdge?W::AnchorLeft:W::AnchorRight);
+    role->setExclusiveEdge(exclusiveEdge);
     role->setMargins(margins);role->setDesiredSize(window->size());role->setExclusiveZone(zone);
     window->setProperty("bwmSurfaceError",error);
     window->setProperty("bwmReservationRequested",zone>0);

@@ -1,11 +1,369 @@
 # Traspaso R4 para Claude
 
+## Traspaso actualizado — 2026-11-18 (§301)
+
+El maximizador y el observador de área usan ahora el redondeo de Hyprland
+al convertir a dimensiones lógicas. Las dos regresiones pasan con escala y
+giro que producen medios píxeles. `monitor_box` conserva su comportamiento
+predeterminado para otros llamadores. Pendiente una medida de sesión con
+geometría distinta. Para la prueba del observador nuevo, refrescar el puente.
+
+## Traspaso actualizado — 2026-11-18 (§§299–300)
+
+El inferior simultáneo pasó en los dos monitores con reservas `44 → 92 → 44`
+y sin remaximizar durante ninguna transición. El comprobador admite ahora
+escala y giro efectivos y sigue el redondeo de Hyprland. 247 pruebas Python
+y 32 geometrías comparadas con hyprutils. La sesión comprobada tenía escala 1
+y giro 0. Medir las nuevas combinaciones cuando estén activas en una prueba.
+
+## Traspaso actualizado — 2026-11-18 (§§297–298)
+
+El LG inferior pasó con el puente nuevo. Se confirmó `2116 → 2068 → 2116`
+sin remaximizar, reserva `44 → 92 → 44` y salida limpia. Ya se comprobó cada
+monitor por separado. `--maximize` admite ahora ambos `--output` en una misma
+prueba y conserva marcos por salida en `maximizedByOutput`. Probar el borde
+inferior simultáneo con las descripciones MSI y LG. Cargado ya el puente de
+§296, no hace falta pedirle una recarga. IPC inaccesible en el ejecutor.
+
+## Traspaso actualizado — 2026-11-18 (§296)
+
+LG pasó reservas y marco en los cuatro bordes. Arriba y laterales pasaron con un
+único maximizado. Abajo conservó 2068 px al retirar cuando correspondían 2116 px.
+La regresión reprodujo la confirmación de área anterior reutilizada al volver
+rápido a 44 px. `kwin_area.py` invalida esa confirmación al observar el primer
+cambio. Repetir sólo `--edge bottom --maximize --refresh-area-watcher` en LG.
+La recarga es necesaria para que el puente vivo adopte el cambio Python.
+
+## Traspaso actualizado — 2026-11-18 (§295)
+
+El usuario confirma reserva, maximizado y reajuste en superior, izquierdo y
+derecho del MSI. El informe de sesión conserva los marcos y los tres recibos de
+salida. El comprobador actualizado sólo remaximiza cuando falla la lectura
+automática. `remaximizedPhases` indica esas intervenciones. Queda medir con la
+descripción LG para extender la aceptación de marco a la segunda salida.
+
+## Traspaso actualizado — 2026-11-18 (§294)
+
+`r4-reservation-smoke.py --run --maximize --edge top --edge left --edge right`
+ya admite esa secuencia sobre una sola salida. El informe separa reserva,
+marco maximizado y reajuste automático por borde. Exige recuperación de la
+línea base y salida confirmada entre pruebas. 241 pruebas Python y perfiles
+offscreen aprobados. Pendiente ejecutar en sesión con la descripción MSI y
+escala 1/giro 0. El ejecutor carece de acceso a Hyprland.
+
+## Traspaso actualizado — 2026-11-18 (§293)
+
+`--menu-wayland` pasó con los dos clics del usuario y sin el aviso D-Bus. El
+ensayo eligió físicamente otro monitor. Ahora usa la descripción de la salida
+enfocada en Hyprland al arrancar, con `--output` para indicar una descripción
+distinta. Se resuelve con el código común y se exige la misma pantalla para
+la capa y el popup. Binario recompilado. Falta observar la ubicación actualizada
+en la sesión con ambos monitores.
+
+## Traspaso actualizado — 2026-11-18 (§§291–292)
+
+`--menu` pasó en terminal con cinco pases, incluida la importación y acción.
+El bus privado registró un `UnknownObject` al finalizar. El ensayo actualizado
+cierra el menú y espera una lectura en `/MenuBar` antes de destruir al productor.
+`--menu-wayland` añade una capa temporal sin reserva, apertura mediante clic con
+serial real y comprobación del rol, padre y anclaje del popup. Ejecutar desde
+Wayland, pulsar «Abrir menú de prueba» y elegir «Test action». Compilado. El
+ejecutor bloquea el socket del bus privado. La comprobación real sigue pendiente.
+
+## Traspaso actualizado — 2026-11-18 (§§289–290)
+
+`--actions` pasó en la terminal del usuario con cinco pases. El productor de
+prueba recibió activación principal/secundaria, rueda y `ContextMenu`. Ahora
+`--menu` usa el exportador de `KStatusNotifierItem` con el importador del
+plasmoide original y comprueba el estado de dos opciones y el retorno de una
+acción. El binario está compilado. Falta ejecutar `--menu` en terminal. El
+ejecutor no dispone del socket de D-Bus privado.
+
+## Traspaso actualizado — 2026-11-18 (§§287–288)
+
+El usuario confirma cuatro pases de `--filtered` en 229 ms. `--actions` está
+compilado y comprueba activación principal/secundaria, rueda y `ContextMenu`
+de fallback mediante las entradas del plasmoide original y un productor de
+prueba. Offscreen devuelve token de activación vacío. El filtro de lectura sigue
+vigente y el ensayo filtrado añade una comprobación de `Activate` denegado.
+Ejecutar `--actions` en terminal para verificar las cuatro llamadas. Menús
+importados y colocación en Wayland quedan pendientes.
+
+## Traspaso actualizado — 2026-11-18 (§§285–286)
+
+El usuario obtuvo 4 pases con `check-native-tray-events.py`, incluido el ciclo
+SNI original. `--filtered` ejecuta ahora el mismo ciclo con el proxy local
+`0.1.8+bwm-sni-unique-3`. Las dos señales de actualización y `GetAll` se acotan
+por miembro, objeto y productor. Exige el rechazo de `GetAll` a otra ruta antes
+de cargar la bandeja. Pasan las pruebas C del filtro y 237 Python. Falta ejecutar
+el modo filtrado en terminal por la denegación del socket en el ejecutor.
+
+## Traspaso actualizado — 2026-11-18 (§284)
+
+`check-native-tray-events.py` ejecuta `test-plasma-tray-events` en D-Bus privado
+y Qt offscreen. Comprueba fila añadida, estado pasivo, actualización de píxeles
+y retirada tras desconexión con el modelo de Plasma. Compilación y firma SNI de
+pixmaps comprobadas. El ejecutor no puede abrir el socket del daemon. Ejecutar
+el comprobador en terminal normal. Queda una prueba independiente para los
+eventos bajo el proxy, además de presentación y acciones del panel.
+
+## Traspaso actualizado — 2026-11-18 (§283)
+
+El usuario confirma `--properties`: dos reglas exactas, dos filas SNI, dos filas
+con propiedades y dos pixmaps de 22 px. El watcher de Quickshell y los objetos
+coincidieron al terminar. Quedan por comprobar los cambios en vivo, la presentación
+y las acciones. `replacementReady` sigue false.
+
+## Traspaso actualizado — 2026-11-18 (§282)
+
+El proxy corregido enumeró las dos filas KDE en sesión con dos reglas exactas. La
+sonda rechazaba los estados válidos al buscar cadenas. KDE 6.7.5 devuelve los
+valores de `Plasma::Types::ItemStatus` como enteros en `Status` y `status`.
+Corregida la interpretación y separado el recuento de pixmaps del de propiedades. Repetir
+`check-native-tray.py --properties` con el anfitrión recompilado para comprobar los
+dos contadores en Breeze. El resultado se limita al modelo SNI fuera de pantalla.
+
+## Traspaso actualizado — 2026-11-18 (§281)
+
+En sesión se prepararon dos reglas exactas, seguidas de `native-tray-probe-timeout`.
+El proxy se recompiló como `0.1.8+bwm-sni-unique-2` para evitar que `GetNameOwner`
+convierta un nombre único en su propio alias. La regresión C falla con la variante
+anterior y pasa con la nueva. Pasan 237 pruebas Python. Repetir `check-native-tray.py
+--properties` en Breeze para verificar propiedades y pixmaps de KDE. Si el plazo se
+agota otra vez, `timeoutStage` sitúa la fase de la prueba.
+
+## Traspaso actualizado — 2026-11-18 (§280)
+
+Los dos iconos de la sesión son nombres únicos sin alias. El comprobador obtuvo sus
+dos estados por lectura directa. Ya se compiló una variante local de `xdg-dbus-proxy`
+0.1.8 con reglas sólo de `GetAll` por objeto y nombre único exactos. Se selecciona con
+`check-native-tray.py --properties` y usa la copia en `build/bwm-plasma-host/tray-proxy`.
+Para reconstruirla, `python3 src/bwm-plasma-host/build-tray-proxy.py --archive ARCHIVO`.
+Validar `uniqueNameFilter: exact-object`, dos reglas, propiedades y pixmaps en sesión.
+Pruebas de filtro y 237 Python pasan. No instalar la variante en el sistema.
+
+## Traspaso actualizado — 2026-11-18 (§279)
+
+`--properties` en sesión mantuvo dos filas y mostró `filterableItemCount: 0`.
+La versión nueva resuelve alias con `ListNames`/`GetNameOwner`, desglosa causas
+de exclusión y añade lectura escalar directa al dueño único para casos sin regla.
+Las cuentas directas no acreditan al modelo KDE ni convierten el ensayo en éxito.
+Repetir `--properties` desde la sesión para confirmar la causa y la cobertura.
+
+## Traspaso actualizado — 2026-11-18 (§278)
+
+`check-native-tray.py --properties` prepara reglas exactas de `GetAll` por
+servicio y objeto SNI. Para nombres únicos consulta el alias y confirma su
+propietario. Excluye activables y compara los dueños antes y después. Cuenta
+filas con estado/categoría nativos y con un pixmap que KDE pudo producir.
+Pruebas locales de filtro y guardas. Pendiente ejecutar en la sesión del usuario.
+La enumeración de §277 permanece aceptada. Menús y clics aún pendientes.
+
+## Traspaso actualizado — 2026-11-18 (§277)
+
+El usuario confirma `check-native-tray.py`: dos filas SNI del modelo original de Plasma
+coinciden con los identificadores registrados por Quickshell. El anfitrión posee su nombre
+temporal y el dueño y la lista del watcher siguen iguales al terminar. `panelShown: false`.
+La enumeración está aceptada. Quedan propiedades de los items, altas/bajas en vivo,
+render, clics y menús. Mantener el watcher de Quickshell y el filtro D-Bus.
+
+## Traspaso actualizado — 2026-11-18 (§276)
+
+`src/bwm-plasma-host/check-native-tray.py` compara las filas SNI originales de Plasma
+con el watcher de Quickshell. Usa D-Bus filtrado con permiso exacto para el nombre de
+host del PID, consulta propiedades del watcher y permite las señales SNI de alta/baja.
+Devuelve contadores y coincidencia de identificadores por digest. No pasa el bus de
+sesión directamente al auxiliar. Se prueba offscreen sin panel, sin clics ni menús.
+Ejecutor bloqueado para D-Bus vivo. Siguiente evidencia: salida del comprobador en
+la sesión Breeze donde §275 observó dos iconos.
+
+## Traspaso actualizado — 2026-11-18 (§275)
+
+`--tray` confirmado desde la sesión: Quickshell posee el watcher y expone dos iconos
+registrados. En Quickshell 0.3.2, `IsStatusNotifierHostRegistered` es siempre true, por
+lo que sólo se toma como propiedad reportada. Las fuentes locales confirman que el
+watcher admite varios nombres de host válidos. Plasma 6.7.5 registra `StatusNotifierHost`
+por proceso y consume el watcher existente. Pendiente probar ese consumo desde el
+auxiliar, mensajes de alta/baja y uso de iconos. No cambiar al dueño por este diagnóstico.
+
+## Traspaso actualizado — 2026-11-18 (§274)
+
+El inventario de la bandeja original incluye los plasmoides vivos bajo su `CustomEmbedded`.
+Prueba aislada del hijo y su preferencia en un checkpoint y otro proceso. La consulta
+`r4-session-check.py --tray` observa el dueño y los contadores de StatusNotifierWatcher
+sin activar servicios. D-Bus real y privado bloqueados en el ejecutor. La sesión del
+usuario puede confirmar el dueño. Siguen pendientes el uso del watcher desde el anfitrión
+nativo, menús/clics y servicios de cada hijo.
+
+## Traspaso actualizado — 2026-11-18 (§273)
+
+El ensayo lateral con el anfitrión corregido confirma izquierda y derecha simultáneas
+en MSI y LG, escala 1 y giro 0. Las cuatro capas observadas midieron 48 × 640 px.
+Cada prueba añadió 48 px al borde elegido, conservó los 44 px inferiores y restauró
+todas las reservas. Código 0 y recibo confirmado en los dos cierres, sin capas ni
+registro después. El maximizado quedó fuera de este ensayo. No repetir los laterales
+para esta disposición sin un cambio que los afecte.
+
+## Traspaso actualizado — 2026-11-18 (§272)
+
+El usuario ejecutó el ensayo lateral y la izquierda se redujo a 48 × 24 en ambas salidas.
+Hyprland mantuvo `[0, 0, 0, 44]` pese a la solicitud de 48 px a la izquierda. La salida
+limpia quedó confirmada. El borde derecho no llegó a ejecutarse. En layer-shell v5, el
+anfitrión corregido usa dos anclajes, tamaño explícito y `exclusive_edge`. La versión se
+lee en el registro de Qt. Se recompiló el anfitrión local. Repetir izquierda/derecha
+para verificar el efecto real. La evidencia del ensayo superior queda en §270.
+
+## Traspaso actualizado — 2026-11-18 (§271)
+
+`r4-reservation-smoke.py` admite `--edge left --edge right` para medir los dos laterales
+en una ejecución. Para continuar exige línea base original y confirmación de salida y
+guardado del anfitrión propio, con registro y capas retirados. El ensayo offscreen cubre
+el recibo y el checkpoint. La ejecución Wayland de los dos bordes queda pendiente por
+falta de acceso al IPC de Hyprland desde el ejecutor.
+
+## Traspaso actualizado — 2026-11-18 (§270)
+
+Aceptado `--edge top` en MSI y LG simultáneamente con escala 1 y giro 0. El informe
+local confirma 48 px de reserva superior por salida, 44 px inferiores conservados
+y vuelta a los valores iniciales sin capas ni registro de prueba. El ensayo se ejecutó
+sin `--maximize`. Pendientes reservas laterales/otras escalas y panel diario.
+
+## Traspaso actualizado — 2026-11-18 (§269)
+
+El ensayo de reservas acepta `--edge left|top|right|bottom` y `--output` repetido.
+Prepara perfiles temporales mediante migración nativa y exige una capa por salida,
+petición y borde del containment, delta exacto y restauración de todas las reservas.
+El ensayo anterior de un solo panel inferior y `--maximize` conserva su entrada.
+
+Regresión normal/ASan probada con perfiles reales Qt de dos salidas y cuatro bordes.
+224 pruebas Python R4 pasan. El ejecutor falla en la consulta IPC antes de iniciar
+el ensayo de sesión. Medir primero `--edge top` en MSI y LG desde la sesión Breeze.
+El resultado anterior del borde inferior MSI y los ciclos §263/§265 ya están aceptados.
+
+## Traspaso actualizado — 2026-11-18 (§268)
+
+`bwm-power` ya pide la parada del preview registrado en su instancia Hyprland antes de
+cerrar aplicaciones. `panel-session.py session-exit` espera la retirada y el recibo del
+envoltorio tras la salida del anfitrión. Para un perfil guardado esto incluye el checkpoint
+y la liberación del lease. Una salida fallida o un timeout dejan un diagnóstico y permiten
+que el cierre continúe. El ensayo local fuerza la caída del anfitrión seleccionado, reabre
+el perfil, comprueba una parada limpia y examina el checkpoint resultante.
+
+El arranque y retiro de la barra diaria siguen condicionados a servicios de widgets,
+reservas y aceptación de sesión. El cierre físico de Hyprland sigue pendiente. Los
+ciclos de escritorios de §263 y §265 ya se aceptaron en sesión.
+
+## Traspaso actualizado — 2026-11-17 (§267)
+
+ProfileSelection ya guarda intención duradera por nombre/procedencia/revisión, bajo
+panel-profiles/.selection en la autoridad XDG existente. CLI/envoltorio profile-selection.py
+status | select NAME --revision N | clear --revision N. No confundir selección con activar
+el panel diario. Cambiar/vaciar exige revisión vigente y que el perfil anterior/candidato
+no estén ocupados. Clear admite head roto/perfil ausente; JSON de selección corrupto se
+rechaza sin reset automático. status/profileValidated no diagnostica salud de proceso.
+
+openSelected adquiere el lease del perfil bajo el bloqueo de selección y conserva la
+procedencia; no fijar la generación ni pasar al host una ruta obtenida por status. Nuevo
+--serve-selected-profile y preview-isolated.py --selected-profile --follow-skin reutilizan
+el ciclo nativo de guardado/checkpoint y el registro de preview. Recuperar el perfil elegido
+no exige volver a elegirlo. No hay autostart/takeover ni consumidores diarios de la elección.
+
+Regresión local normal/ASan y 220 pruebas Python R4 pasan; incluye proceso real seleccionado,
+lease retenido hasta cierre/checkpoint, XDG fuera de /tmp, conflictos, metadata corrupta y
+CLI/envoltorios sobre fixtures. Evidencia BREEZE_R4_PROFILE_SELECTION_RESULTS.json. Estado
+real intacto; autoridades/activación/fallback diarios y logout pendientes. No repetir las
+aceptaciones de §263/§265, no nuevo login/plugin ni commit/push sin petición.
+
+## Traspaso actualizado — 2026-11-17 (§266)
+
+Recuperación del perfil nativo implementada sin exigir un head/generación actual sanos:
+ProfileStore::recover(root,id), CLI --recover-profile SNAPSHOT_DIR y envoltorio
+preview-isolated.py --profile DIR --recover-snapshot ID. ID explícito de copia; no elegir
+«la última» automáticamente. Lease exclusivo, hashes/inventario/Corona sobre copia,
+generación nueva y archivo exacto del head anterior bajo recoveries antes de seleccionar
+el head nuevo atómicamente. Conserva desconocidos legibles y rechaza versiones futuras.
+
+Regresión local normal/ASan y 215 pruebas Python R4 pasan. Cubiertos head/generación rotos,
+ausencia de head, copias alteradas, aliases, propietario activo desde proceso separado,
+autoridad XDG fuera de /tmp y lectura nativa en proceso nuevo. Todo con fixtures; no se
+tocó el perfil real ni la barra diaria. Evidencia BREEZE_R4_PROFILE_RECOVERY_RESULTS.json.
+No certifica fallback/logout ni corte de energía/CAS global; archivos recoveries no se
+copian al exportar snapshots. R4 y autoridades/selección/fallback diarios siguen pendientes.
+No repetir los ciclos de sesión aceptados en §263/§265 ni pedir otro login sin cambio nuevo.
+
+## Traspaso actualizado — 2026-11-17 (§265)
+
+El usuario valida --workspace-cycle: selectedDesktop 3, MSI/1 → MSI/3 → MSI/1, passed true.
+Dos accepted/applied/observed/dispatched, cero failed/rejected/cancelled/noops. LG/10 y
+geometrías conservados, pausa final confirmada, asociación verificada, sin ventanas/paneles/
+capturas/configuración cambiada. No inferir por qué el selector descartó el ID 2. Evidencia
+BREEZE_R4_WORKSPACE_NAVIGATION_RESULTS.json. No repetir estos ensayos aceptados ni pedir
+otro login sin un cambio/problema nuevo.
+
+Siguiente frente R4: autoridad, selección/persistencia, recuperación/fallback del panel
+diario y cierre/logout. No certificar por este caso relocalización entre salidas, escritorios
+ocupados, foco de app/puntero u otras disposiciones/escalas. R4 y sustitución diaria abiertos.
+El ejecutor sigue limitado para IPC/Wayland; preservar cambios ajenos y no commit/push sin petición.
+
+## Traspaso actualizado — 2026-11-17 (§264)
+
+Siguiente ensayo preparado: `python3 /mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/check-desktops-activation.py --workspace-cycle`.
+No requiere otro login/plugin. Elige un ID configurado no materializado, ligado al monitor
+actual por regla literal única sin persistencia/onCreatedEmpty; revalida antes de arrancar.
+KDE requestActivate visita ese ID y vuelve, comprobando que las otras salidas no cambien.
+No reutiliza workspaces personales ni cambia reglas/configuración. Puede rechazar el ensayo
+si no hay un candidato seguro; no forzar uno ni relocalizar el de otro monitor.
+
+Normal/ASan compilados, Python R4 212 y regresión local pasan; Qt/Wayland nuevo no ejecutado
+aquí por wl_client_create EPERM. Aceptación real de este comando pendiente, evidencia en
+BREEZE_R4_WORKSPACE_NAVIGATION_RESULTS.json. El ciclo LG/10 → MSI/1 de §263 ya está aceptado:
+no repetirlo. R4, autoridades/recuperación del panel diario y logout siguen pendientes.
+
+## Traspaso actualizado — 2026-11-17 (§263)
+
+El usuario valida --focus-cycle: passed true, LG/10 → MSI/1; deltas exactos de accepted/
+applied/observed/dispatched = 2, fallos/rechazos/cancelaciones/noops = 0. Asignaciones y
+geometrías conservadas, pausa final confirmada, asociación verificada. Preflight v2 superado:
+la corrección de §262 está adoptada para este ensayo. No pedir otro login ni repetir el ciclo
+aceptado sin una modificación o problema nuevo. Evidencia BREEZE_R4_DESKTOP_ACTIVATION_RESULTS.json.
+
+Siguiente frente: navegación a escritorios no visibles (sin relocalizar los de otra salida)
+y autoridades/fallback del panel diario. No se han certificado foco de app/puntero, otras
+disposiciones/escalas ni logout/teardown. R4 y sustitución diaria siguen abiertos. No hacer
+commit/push salvo petición. El ejecutor sigue sin IPC/fixture Wayland; no eludir el sandbox.
+
+## Traspaso actualizado — 2026-11-17 (§262)
+
+Diagnóstico real: petición aceptada/despachada, fallo activation-readback-mismatch. Se
+reproduce la doble acción focusMonitor + changeWorkspace con cuerpos exactos de Hyprland
+0.56.2 y no_warps=true/destino vacío. Corregido: ya activo → sólo focusMonitor; inactivo →
+sólo changeWorkspace absoluto. 48 casos normal/ASan y Python R4 202 pasan. Plugin compilado
+sin UNIQUE e instalado por make install atómico, anterior inodo comprobado intacto.
+La sesión sigue en el módulo anterior; **próximo login** para adoptar activationRoutingVersion=2.
+Después ejecutar check-desktops-activation.py --focus-cycle. Preflight bloquea versión anterior.
+No anunciar aceptación real corregida, Wayland nuevo ni R4 completa; no hot load/unload.
+
+## Traspaso actualizado — 2026-11-17 (§261)
+
+Proveedor cargado al iniciar sesión y contador 10 confirmados (§256); filtro nativo de tareas
+aceptado (§257) y lectura real LG/10 + MSI/1 validada (§259). El ciclo de activación por salida
+de §260 falla en la sesión: no observó el destino; paused=true y estado final igual al
+inicial, sin probar que llegara a salir de él. Causa aún pendiente: obtener sólo lectura con
+`python3 /mnt/HDD1TB/Projects/hyprland-de/src/bwm-plasma-host/check-desktops-activation.py --diagnose-last`.
+El diagnóstico ahora conserva hijo/observaciones/contadores incluso al fallar. No repetir el
+ciclo ni recompilar/desplegar un plugin sin estudiar primero el motivo del proveedor.
+El ejecutor sigue sin acceso IPC/fixture Wayland (EPERM); no confundirlo con un fallo del PC.
+
+El comando corto no está en PATH. Estado:
+`python3 ~/.config/hypr/skins/plasma/scripts/native-desktops.py status`.
+
 ## Traspaso actualizado — 2026-11-17 (§255)
 
 Proveedor instalado (make install) y opt-in activado; se carga al iniciar Hyprland mediante
 native-desktops.py startup (guarda contra bucles). Tras el próximo inicio de sesión: comprobar
-`native-desktops.py status` y `hyprctl -j bwm-plasma-desktops`, y probar el preview con
---native-desktops (sin --all-desktops). Desactivar: native-desktops.py disable + volver a entrar.
+`python3 ~/.config/hypr/skins/plasma/scripts/native-desktops.py status` y
+`hyprctl -j bwm-plasma-desktops`, y probar el preview con --native-desktops (sin --all-desktops).
+Desactivar: `python3 ~/.config/hypr/skins/plasma/scripts/native-desktops.py disable` + volver a entrar.
 
 ## Traspaso actualizado — 2026-11-17 (§254)
 

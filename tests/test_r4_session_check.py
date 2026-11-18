@@ -23,6 +23,38 @@ def response(value):
 
 
 class SessionCheckTest(unittest.TestCase):
+    def test_tray_watcher_uses_unique_owner_without_exposing_items(self):
+        replies = ['b true', 's ":1.42"', f'u {os.getpid()}', 'as 2 "secret-id" "other item"', 'b true', 's ":1.42"']
+        run = Mock(side_effect=[subprocess.CompletedProcess([],0,x,'') for x in replies])
+        result = m.tray_services(run)
+        self.assertTrue(result['watcherVerified'])
+        self.assertEqual(result['registeredItemCount'],2)
+        self.assertTrue(result['hostRegistered'])
+        self.assertFalse(result['replacementReady'])
+        self.assertNotIn('secret',json.dumps(result))
+        self.assertNotIn(':1.42',json.dumps(result))
+        for call in run.call_args_list:
+            args = call.args[0]
+            self.assertIn('--auto-start=no',args)
+            if args[4] == 'get-property': self.assertEqual(args[5],':1.42')
+
+    def test_absent_watcher_and_changing_owner_are_distinct(self):
+        absent = Mock(return_value=subprocess.CompletedProcess([],0,'b false',''))
+        self.assertEqual(m.tray_services(absent)['status'],'watcher-absent')
+        absent.assert_called_once()
+        replies = ['b true','s ":1.42"','u 1000','as 0','b false','s ":1.43"']
+        changed = Mock(side_effect=[subprocess.CompletedProcess([],0,x,'') for x in replies])
+        result = m.tray_services(changed)
+        self.assertFalse(result['watcherVerified'])
+        self.assertEqual(result['status'],'watcher-owner-changed')
+        self.assertNotIn('registeredItemCount',result)
+
+    def test_tray_watcher_rejects_inconsistent_item_count(self):
+        replies = ['b true','s ":1.42"','u 1000','as 2 "one item"','b false']
+        run = Mock(side_effect=[subprocess.CompletedProcess([],0,x,'') for x in replies])
+        result = m.tray_services(run)
+        self.assertFalse(result['watcherVerified'])
+        self.assertEqual(result['status'],'watcher-unverified')
     def test_denied_ipc_stops_without_other_commands(self):
         run = Mock(return_value=subprocess.CompletedProcess([], 1, '', "Couldn't open a socket (1)"))
         r = m.collect(run, {})

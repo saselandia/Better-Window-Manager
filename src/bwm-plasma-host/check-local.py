@@ -11,9 +11,70 @@ import json
 import os
 from pathlib import Path
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
+import time
+from unittest.mock import patch
+
+
+def verify_preview_session_exit(binary, wrapper, profile, env, reservation):
+    """Exercise the wrapper and native host with an isolated compositor identity."""
+    instance_env = dict(env, HYPRLAND_INSTANCE_SIGNATURE='bwm-r4-exit-fixture')
+    hook = Path(__file__).resolve().parents[2]/'config/hypr/skins/plasma/scripts/panel-session.py'
+    registration_file = Path(env['XDG_RUNTIME_DIR'])/'bwm-plasma-host-preview/active.json'
+    assert not registration_file.exists()
+    snapshots = Path(profile)/'snapshots'
+    before = set(snapshots.iterdir())
+    for stop_mode in ('crash', 'session-exit', 'reservation'):
+        crash = stop_mode == 'crash'
+        with subprocess.Popen([sys.executable, str(wrapper), '--binary', str(binary), '--selected-profile', '--follow-skin'],
+                              env=instance_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as preview:
+            host_pid = None
+            try:
+                deadline = time.monotonic()+7
+                while time.monotonic() < deadline and preview.poll() is None:
+                    if registration_file.is_file():
+                        registration = json.loads(registration_file.read_text())
+                        control = Path(registration['controlDirectory'])
+                        host_pid = registration['pid']
+                        ack = json.loads((control/'ack.json').read_text())
+                        if ack['command']=='skin' and ack['revision']==1:
+                            break
+                    time.sleep(.025)
+                else:
+                    raise AssertionError('Selected preview did not acknowledge startup')
+                if crash:
+                    os.kill(host_pid, signal.SIGKILL)
+                elif stop_mode == 'reservation':
+                    with patch.dict(os.environ, {key: instance_env[key] for key in
+                                                 ('XDG_RUNTIME_DIR', 'HYPRLAND_INSTANCE_SIGNATURE')}):
+                        receipt = reservation.confirm_fixture_exit(preview)
+                    assert receipt == {'status':'stopped','revision':2,'exitConfirmed':True}
+                else:
+                    result = subprocess.run([sys.executable, str(hook), 'session-exit'], env=instance_env,
+                                            capture_output=True, text=True, timeout=8, check=True)
+                    assert json.loads(result.stdout) == {'status':'stopped','revision':2,'exitConfirmed':True}
+                stdout, stderr = preview.communicate(timeout=5)
+                assert (preview.returncode != 0) == crash, (stdout, stderr)
+                assert not registration_file.exists() and not control.exists()
+                after = set(snapshots.iterdir())
+                if crash:
+                    assert after == before
+                else:
+                    assert len(after-before)==1 and before <= after
+                    checkpoint = json.loads((next(iter(after-before))/'snapshot.json').read_text())
+                    assert checkpoint['sourceGeneration']==json.loads((Path(profile)/'head.json').read_text())['generation']
+                    before = after
+            finally:
+                if preview.poll() is None:
+                    preview.send_signal(signal.SIGINT)
+                    try:
+                        preview.communicate(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        preview.kill()
+                        preview.communicate()
 
 
 def main():
@@ -97,13 +158,79 @@ def main():
                     report['defaultSessionFixtureNativePanelVerifiedOffscreen'] = True
                 report['packages'].append({'id': plugin, 'exercise': before['exercise'],
                                            'freshProcessReadback': True})
+            tray_child = root/'data/plasma/plasmoids/org.bwm.r4.tray-child'
+            shutil.copytree(fixtures/'shared-config', tray_child)
+            tray_metadata = json.loads((tray_child/'metadata.json').read_text())
+            tray_metadata['KPlugin']['Id'] = 'org.bwm.r4.tray-child'
+            tray_metadata['X-Plasma-NotificationAreaCategory'] = 'ApplicationStatus'
+            (tray_child/'metadata.json').write_text(json.dumps(tray_metadata))
             for test in ('liveCatalogRefreshAndNativeMetadata', 'backendInventoryUsesLiveInstancesAndNativeMetadata',
+                         'nativeTrayPropertyRoles', 'nativeTrayInventoryAndProfileCheckpoint', 'nativeTrayChildFreshProcessReadback',
                          'previewStatusRequiresRenderedFrameAndFreshAcknowledgement', 'sharedConfigurationTransactions',
                          'sharedConfigurationFreshProcessReadback', 'moduleConfigurationTransactions',
-                         'moduleConfigurationFreshProcessReadback'):
+                         'moduleConfigurationFreshProcessReadback', 'profileRecoveryFromExplicitSnapshot',
+                         'profileRecoveryFreshProcessReadback', 'profileRecoveryUsesXdgAuthorityAndChildLease',
+                         'profileSelectionTransactionsAndSelectedServer'):
                 output = run(args.ui_test, test)
                 assert 'FAIL!' not in output and 'SKIP' not in output, output
                 report['ui'].append({'test': test, 'passed': True})
+            profile=root/'config/bwm-ui-recovery-profile'
+            snapshot=(root/'config/bwm-recovery-snapshot.txt').read_text()
+            head=profile/'head.json'
+            head.write_text('{broken-cli-head')
+            recovered=json.loads(run(args.binary,'--recover-profile',profile/'snapshots'/snapshot))
+            assert recovered['status']=='native-profile-recovered' and recovered['activationAllowed'] is False
+            assert (Path(recovered['recoveryDirectory'])/'head.json').read_text()=='{broken-cli-head'
+            run(args.ui_test,'profileRecoveryFreshProcessReadback')
+            head.unlink()
+            # The wrapper must bypass --profile-info on a missing head and finish
+            # without a preview registration, Wayland connection, or window.
+            wrapper=Path(__file__).with_name('preview-isolated.py')
+            recovered=json.loads(run(sys.executable,wrapper,'--binary',args.binary,
+                                     '--profile',profile,'--recover-snapshot',snapshot))
+            assert recovered['previousHeadPresent'] is False and recovered['activationAllowed'] is False
+            run(args.ui_test,'profileRecoveryFreshProcessReadback')
+            assert not (root/'runtime/bwm-plasma-host-preview/active.json').exists()
+            report['nativeProfileRecovery']={'explicitSnapshotVerified':True,'cliBrokenHeadRecovered':True,
+                'wrapperMissingHeadRecovered':True,'freshProcessNativeReadback':True,
+                'activationAllowed':False,'dailyPanelSelected':False}
+            reservation_script = Path(__file__).resolve().parents[2]/'config/hypr/skins/plasma/scripts/r4-reservation-smoke.py'
+            reservation_spec = importlib.util.spec_from_file_location('r4_reservation_fixture', reservation_script)
+            reservation = importlib.util.module_from_spec(reservation_spec)
+            reservation_spec.loader.exec_module(reservation)
+            previous_state=env.get('XDG_STATE_HOME');env['XDG_STATE_HOME']=str(root/'selection-state')
+            try:
+                exported=json.loads(run(args.binary,'--export-profile',profile,'selected-fixture'))
+                selection=Path(__file__).with_name('profile-selection.py')
+                initial=json.loads(run(sys.executable,selection,'--binary',args.binary,'status'))
+                assert initial['selectedProfile'] is None and initial['revision']==0
+                chosen=json.loads(run(sys.executable,selection,'--binary',args.binary,'select','selected-fixture','--revision','0'))
+                assert chosen['selectedProfile']=='selected-fixture' and chosen['revision']==1 and chosen['activationAllowed'] is False
+                fresh=json.loads(run(sys.executable,selection,'--binary',args.binary,'status'))
+                assert fresh['profileValidated'] is True and fresh['profile']['directory']==exported['directory']
+                verify_preview_session_exit(args.binary, wrapper, exported['directory'], env, reservation)
+                report['nativePreviewSessionExit']={'crashReopenPassed':True,'exitReceiptVerified':True,
+                    'reservationFixtureExitVerified':True,'checkpointVerified':True,'registryCleanupVerified':True,'physicalLogoutTested':False}
+                cleared=json.loads(run(sys.executable,selection,'--binary',args.binary,'clear','--revision','1'))
+                assert cleared['revision']==2 and cleared['selectedProfile'] is None
+                report['nativeProfileSelection']={'wrapperSelectStatusClearPassed':True,'revisionChecksPassed':True,
+                    'selectedServerLeaseAndCleanStopPassed':True,'activationAllowed':False,'dailyPanelActivated':False}
+            finally:
+                if previous_state is None:env.pop('XDG_STATE_HOME',None)
+                else:env['XDG_STATE_HOME']=previous_state
+            descriptions = ('BWM Test Reservation A A', 'BWM Test Reservation B B')
+            for edge in ('left', 'top', 'right', 'bottom'):
+                with tempfile.TemporaryDirectory(prefix='bwm-r4-reservation-layout-') as temporary:
+                    profile, _ = reservation.prepare_profile(Path(temporary), args.binary, fixtures/'shared-config', descriptions, edge)
+                    assert profile['activationAllowed'] is False
+                    assert {p['outputDescription'] for p in profile['panels']} == set(descriptions)
+                    generated = json.loads(Path(profile['layoutFile']).with_name('report.json').read_text())
+                    assert all(p['edge']==edge and p['nativeViewSettings']['thickness']==48 for p in generated['panels'])
+                    # Reopen with the existing local fixture package in a fresh host.
+                    reopened = json.loads(run(args.binary, '--profile-info', profile['directory']))
+                    assert reopened['panels']==profile['panels'] and reopened['generation']==profile['generation']
+            report['nativeReservationProfiles'] = {'edges':['left','top','right','bottom'], 'outputsPerProfile':2,
+                'freshProcessReadback':True, 'compositorReservationsVerified':False}
             if args.desktop_test:
                 desktop_widget=json.loads(run(args.binary,'--probe','org.kde.plasma.showdesktop'))
                 # This original applet paints directly in its root PlasmoidItem;

@@ -223,6 +223,36 @@ Estado al 2026-11-12 tras la primera ejecución:
   Faltan backend, otros tipos/creación tardía de ventanas, resto de aceptación Wayland,
   migración completa/activación del panel, descarga KNS y casos bloqueados de configuración.
   Ver BREEZE_R4_RESULTS.md/BREEZE_R4_ARCH.md; no se sustituye el panel activo.
+- **R4, continuación 2026-11-17 (§256–267):** primer inicio real del proveedor confirmado
+  por el usuario (activo, contador común 10, sin errores) y filtro nativo de tareas aceptado
+  en MSI. Lectura nativa real por las dos salidas validada por usuario: LG/10 y MSI/1,
+  geometrías y asociación correctas (BREEZE_R4_DESKTOP_OUTPUTS_RESULTS.json). Ciclo explícito
+  de activación por escritorios ya visibles falla en sesión (destino no observado, estado
+  final igual al inicial/pausa confirmada). §262 reproduce y corrige la doble acción de foco
+  con cuerpos upstream (48 casos normal/ASan, Python R4 202); plugin instalado atómicamente,
+  activationRoutingVersion=2. §263: usuario valida el ciclo real LG/10 → MSI/1, dos acciones
+  aplicadas/observadas, sin fallos y pausa final confirmada. C++ nativo del ejecutor sigue
+  bloqueado antes de Qt por wl_client_create EPERM; no confundir con la evidencia de sesión.
+  §264 prepara --workspace-cycle (ID no materializado vinculado al monitor actual, sin
+  comandos al crearlo); normal/ASan compilados, Python R4 212 y regresión local pasan.
+  §265: usuario valida MSI/1 → MSI/3 → MSI/1, LG/10 conservado, dos acciones aplicadas/
+  observadas sin fallos y pausa final confirmada. Selección/persistencia del panel diario,
+  logout/recuperación y autoridades diarias pendientes.
+  §266 añade recuperación explícita de perfil con head/generación rotos desde snapshot
+  verificado: lease, generación nueva y archivo exacto del head anterior; CLI/envoltorio
+  offscreen, procesos nuevos y autoridad XDG fuera de /tmp probados normal/ASan, Python R4
+  215. Sólo fixtures; no activa ni selecciona el panel diario ni certifica fallback/logout.
+  BREEZE_R4_PROFILE_RECOVERY_RESULTS.json.
+  §267: elección persistente con revisión/procedencia, bloqueo mientras un host usa el
+  perfil y apertura nativa de la elección bajo lease; edición/recuperación y cierre con
+  checkpoint, CLI/envoltorios probados normal/ASan, Python R4 220. Sólo intención/preview
+  explícito: autostart/activación/fallback diarios y logout pendientes.
+  BREEZE_R4_PROFILE_SELECTION_RESULTS.json.
+- **R4, continuación 2026-11-18 (§268).** `bwm-power` espera la retirada, el guardado y
+  la salida del preview registrado antes de cerrar las aplicaciones. Caída y reapertura
+  del anfitrión seleccionado, checkpoint y limpieza validados offscreen normal/ASan.
+  Pendientes el logout real y los servicios y reservas necesarios para el panel diario.
+  BREEZE_R4_DESKTOP_ACTIVATION_RESULTS.json.
 - **R5 y R7–R9:** pendientes. No se declara ninguna equivalencia visual nueva.
 
 Informes individuales BREEZE_R0/R1/R2/R6_RESULTS.md. El sandbox de esta ejecución no permite

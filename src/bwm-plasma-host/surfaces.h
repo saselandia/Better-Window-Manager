@@ -5,11 +5,18 @@
 #include <QRect>
 #include <QQuickItem>
 #include <QQuickWindow>
+#include <LayerShellQt/Window>
 #include "focusgrab.h"
 namespace BwmSurface {
 // All inputs/outputs are logical pixels in the same screen coordinate system.
 QRect placePopup(const QRect &available, const QRect &anchor, QSize wanted, Qt::Edge panelEdge, int gap=0);
 void configurePanel(QQuickWindow *window, Qt::Edge edge, int gap=64, bool nativePolicy=false);
+struct PanelAnchoring {
+    LayerShellQt::Window::Anchors anchors;
+    LayerShellQt::Window::Anchor exclusiveEdge;
+    QMargins margins;
+};
+PanelAnchoring nativePanelAnchoring(Qt::Edge edge, int screenExtent, int panelExtent, bool explicitExclusiveEdge);
 // Explicit opt-in controller: native NormalPanel (0) or WindowsGoBelow (3).
 // A positive exclusive zone is a request, never confirmation by the compositor.
 bool setPanelVisibility(QQuickWindow *window, int mode, int thickness);

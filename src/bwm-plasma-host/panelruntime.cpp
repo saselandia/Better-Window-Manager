@@ -19,6 +19,15 @@ Qt::Edge edge(Plasma::Types::Location value) {
     switch(value){case Plasma::Types::TopEdge:return Qt::TopEdge;case Plasma::Types::BottomEdge:return Qt::BottomEdge;
     case Plasma::Types::LeftEdge:return Qt::LeftEdge;case Plasma::Types::RightEdge:return Qt::RightEdge;default:return Qt::Edge(0);}
 }
+QString edgeName(Qt::Edge value) {
+    switch (value) {
+    case Qt::LeftEdge: return QStringLiteral("left");
+    case Qt::TopEdge: return QStringLiteral("top");
+    case Qt::RightEdge: return QStringLiteral("right");
+    case Qt::BottomEdge: return QStringLiteral("bottom");
+    }
+    return {};
+}
 }
 PanelRuntime::PanelRuntime(ViewCorona *corona,QString settings,bool layers,QObject *parent,bool nativePanelPolicy)
     :QObject(parent),m_corona(corona),m_settingsFile(std::move(settings)),m_layerSurfaces(layers),m_nativePanelPolicy(nativePanelPolicy) {
@@ -212,6 +221,7 @@ void PanelRuntime::reconcile() {
             state="visible";
         }
         status.append(QVariantMap{{"containmentId",id},{"outputDescription",m_assignments.value(id)},
+            {"edge",edgeName(side)},
             {"status",state},{"error",error},{"visible",frame && frame->isVisible()},
             {"waylandVerified",false},{"reservedArea",false}});
     }

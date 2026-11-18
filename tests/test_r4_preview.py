@@ -84,6 +84,47 @@ class TaskStartupTest(unittest.TestCase):
 
 
 class PreviewStartupTest(unittest.TestCase):
+    def test_profile_recovery_is_offscreen_and_bypasses_broken_head_preflight(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);profile=root/'profile';profile.mkdir();(profile/'head.json').write_text('{broken')
+            # Keep the spelling of an alias so native canonical-path validation
+            # can reject it; the wrapper must not silently resolve it first.
+            alias=root/'alias';alias.symlink_to(profile,target_is_directory=True)
+            binary=root/'probe';observed=root/'observed.json';snapshot='1a'*16
+            binary.write_text('#!'+sys.executable+'\nimport json,os,sys\nfrom pathlib import Path\n'
+                +'assert sys.argv[1:]==["--recover-profile",'+repr(str(alias/'snapshots'/snapshot))+']\n'
+                +'assert os.environ["QT_QPA_PLATFORM"]=="offscreen"\n'
+                +'assert not any(k in os.environ for k in ("DISPLAY","WAYLAND_DISPLAY","HYPRLAND_INSTANCE_SIGNATURE","BWM_R4_NATIVE_DESKTOPS","BWM_R4_TASK_ACTIONS","BWM_R4_DESKTOP_ACTIONS","BWM_R4_NATIVE_PANEL_POLICY"))\n'
+                +'assert not Path(os.environ["DBUS_SESSION_BUS_ADDRESS"].split("unix:path=",1)[1]).exists()\n'
+                +'Path('+repr(str(observed))+').write_text(json.dumps({k:os.environ[k] for k in ("XDG_CONFIG_HOME","XDG_DATA_HOME","XDG_CACHE_HOME","XDG_RUNTIME_DIR")}))\n'
+                +'print(json.dumps({"status":"native-profile-recovered","activationAllowed":False}))\n');binary.chmod(0o700)
+            reply=subprocess.run([sys.executable,str(SCRIPT),'--binary',str(binary),'--profile',str(alias),'--recover-snapshot',snapshot],
+                env=dict(os.environ,DISPLAY=':fake',WAYLAND_DISPLAY='fake',HYPRLAND_INSTANCE_SIGNATURE='fake',
+                         BWM_R4_NATIVE_DESKTOPS='1',BWM_R4_TASK_ACTIONS='1',BWM_R4_DESKTOP_ACTIONS='1',BWM_R4_NATIVE_PANEL_POLICY='1'),
+                capture_output=True,text=True,timeout=5)
+            self.assertEqual(reply.returncode,0,reply.stderr);self.assertFalse(json.loads(reply.stdout)['activationAllowed'])
+            self.assertEqual((profile/'head.json').read_text(),'{broken')
+            self.assertTrue(all(not Path(path).exists() for path in json.loads(observed.read_text()).values()))
+
+    def test_profile_recovery_requires_explicit_id_and_excludes_preview_modes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);marker=root/'executed';binary=root/'probe'
+            binary.write_text('#!'+sys.executable+'\nfrom pathlib import Path\nPath('+repr(str(marker))+').touch()\n');binary.chmod(0o700)
+            for args in (['--recover-snapshot','../escape'],['--recover-snapshot','AB'*16],
+                         ['--recover-snapshot','1a'*16,'--follow-skin'],['--recover-snapshot','1a'*16,'--export-as','test'],
+                         ['--recover-snapshot','1a'*16,'--native-panel'],['--recover-snapshot','1a'*16,'--task-actions'],
+                         ['--recover-snapshot','1a'*16,'--output','Fixture output']):
+                with self.subTest(args=args):
+                    reply=subprocess.run([sys.executable,str(SCRIPT),'--binary',str(binary),'--profile',str(root/'profile'),*args],capture_output=True,text=True,timeout=5)
+                    self.assertEqual(reply.returncode,2);self.assertNotIn('Traceback',reply.stderr);self.assertFalse(marker.exists())
+
+    def test_profile_recovery_reports_native_refusal_without_starting_preview(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            binary=Path(tmp)/'probe';binary.write_text('#!'+sys.executable+'\nimport sys\nsys.stderr.write("Another process owns this native profile\\n")\nraise SystemExit(7)\n');binary.chmod(0o700)
+            reply=subprocess.run([sys.executable,str(SCRIPT),'--binary',str(binary),'--profile',str(Path(tmp)/'profile'),
+                '--recover-snapshot','1a'*16],capture_output=True,text=True,timeout=5)
+            self.assertEqual(reply.returncode,2);self.assertIn('Another process owns',reply.stderr);self.assertNotIn('Traceback',reply.stderr)
+
     def test_compositor_check_only_uses_readonly_mode_and_private_stores(self):
         script=SCRIPT.with_name('check-thumbnail-compositor.py')
         with tempfile.TemporaryDirectory() as tmp:

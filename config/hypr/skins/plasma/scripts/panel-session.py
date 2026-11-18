@@ -88,7 +88,7 @@ def active_registration():
     return registration
 
 
-def register(control_directory, pid, token):
+def register(control_directory, pid, token, *, reports_exit=False):
     control = private_directory(control_directory, temporary=True)
     ack = read_json(control / 'ack.json')
     start = process_start(pid)
@@ -98,7 +98,9 @@ def register(control_directory, pid, token):
     with locked(directory / 'registry.lock'):
         if active_registration() is not None: raise ValueError('Ya hay una prueba de panel registrada')
         atomic_json(directory / 'active.json', {'version': 1, 'controlDirectory': str(control),
-                    'token': token, 'pid': pid, 'processStart': start})
+                    'token': token, 'pid': pid, 'processStart': start,
+                    'compositorInstance': os.environ.get('HYPRLAND_INSTANCE_SIGNATURE', ''),
+                    'reportsExit': reports_exit})
 
 
 def unregister(token):
@@ -122,28 +124,67 @@ def drain(control_directory, *, timeout=2):
             time.sleep(.01)
 
 
-def command(registration, action, skin='default', *, timeout=1.5):
+def record_exit(control_directory, token, returncode):
+    """Publish only after wait() has reaped the host and released its profile lease."""
+    directory = private_directory(control_directory, temporary=True)
+    ack = read_json(directory / 'ack.json')
+    revision = ack.get('revision')
+    if (ack.get('version') == 1 and ack.get('token') == token and type(revision) is int and
+            ack.get('ok') is True and ack.get('command') == 'stop' and ack.get('skin') == 'default'):
+        atomic_json(directory / 'exit.json', {'version': 1, 'token': token,
+                    'revision': revision, 'returncode': returncode})
+
+
+def wait_for_exit(directory, registration, revision, deadline):
+    while time.monotonic() < deadline:
+        try:
+            receipt = read_json(directory / 'exit.json')
+        except FileNotFoundError:
+            time.sleep(0.01)
+            continue
+        if (receipt.get('version') != 1 or receipt.get('token') != registration['token'] or
+                type(receipt.get('revision')) is not int or receipt['revision'] != revision or
+                type(receipt.get('returncode')) is not int):
+            raise ValueError('La confirmación de salida no corresponde a esta retirada')
+        if receipt['returncode'] != 0:
+            raise ValueError(f"El auxiliar de panel terminó con código {receipt['returncode']} después de retirar las vistas")
+        return {'status': 'stopped', 'revision': revision, 'exitConfirmed': True}
+    raise TimeoutError('El auxiliar retiró las vistas pero no confirmó el guardado y la salida')
+
+
+def command(registration, action, skin='default', *, timeout=1.5, exit_timeout=None):
+    if exit_timeout is not None and action != 'stop':
+        raise ValueError('La confirmación de salida requiere una orden de parada')
     directory = private_directory(registration['controlDirectory'], temporary=True)
     with locked(directory / 'transaction.lock'):
+        if exit_timeout is not None and process_start(registration['pid']) != registration['processStart']:
+            raise ValueError('La prueba registrada ya ha terminado')
         current = read_json(directory / 'control.json')
         revision = current.get('revision')
-        if current.get('version') != 1 or current.get('token') != registration['token'] or type(revision) is not int or not 0 <= revision < 2**53 - 1:
+        if current.get('version') != 1 or current.get('token') != registration['token'] or type(revision) is not int or not 0 <= revision <= 2**53 - 1:
             raise ValueError('El control pertenece a otra prueba o su revisión no es válida')
         if action not in ('skin', 'stop', 'status') or skin not in ('plasma', 'retro', 'default'):
             raise ValueError('Orden de prueba no reconocida')
-        revision += 1
-        atomic_json(directory / 'control.json', {'version': 1, 'token': registration['token'],
-                    'revision': revision, 'command': action, 'skin': skin})
+        # A plain stop may already have been sent. Preserve its receipt revision.
+        if exit_timeout is None or current.get('command') != 'stop':
+            if revision == 2**53 - 1:
+                raise ValueError('Se ha agotado la revisión del control del panel')
+            revision += 1
+            atomic_json(directory / 'control.json', {'version': 1, 'token': registration['token'],
+                        'revision': revision, 'command': action, 'skin': skin})
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             try: ack = read_json(directory / 'ack.json')
             except FileNotFoundError: ack = {}
-            if ack.get('token') == registration['token'] and ack.get('revision') == revision and ack.get('ok') is True:
+            if (ack.get('version') == 1 and ack.get('token') == registration['token'] and
+                    type(ack.get('revision')) is int and ack['revision'] == revision and ack.get('ok') is True):
                 expected = ack.get('skin') if action == 'status' else ('default' if action == 'stop' else skin)
                 if expected not in ('plasma', 'retro', 'default'):
                     raise ValueError('La confirmación contiene un estilo desconocido')
                 if ack.get('skin') != expected or ack.get('command') != action:
                     raise ValueError('La confirmación no corresponde a la orden')
+                if exit_timeout is not None:
+                    return wait_for_exit(directory, registration, revision, time.monotonic() + exit_timeout)
                 result = {'status': 'acknowledged', 'revision': revision, 'skin': expected}
                 if action == 'status':
                     runtime = ack.get('runtime')
@@ -171,6 +212,19 @@ def status():
     return {'active': True, **command(registration, 'status')}
 
 
+def session_exit():
+    """Stop this compositor's registered preview before its connection goes away."""
+    instance = os.environ.get('HYPRLAND_INSTANCE_SIGNATURE')
+    if not instance:
+        return {'status': 'no-compositor-instance'}
+    registration = active_registration()
+    if not registration or registration.get('compositorInstance') != instance:
+        return {'status': 'inactive'}
+    if registration.get('reportsExit') is not True:
+        raise ValueError('La prueba registrada no confirma su guardado al salir')
+    return command(registration, 'stop', timeout=2, exit_timeout=5)
+
+
 def main(argv):
     if len(argv) == 4 and argv[0] == 'event': result = event(*argv[1:])
     elif len(argv) == 4 and argv[0] == 'register':
@@ -181,7 +235,8 @@ def main(argv):
         registration = active_registration()
         result = command(registration, 'stop') if registration else {'status': 'inactive'}
     elif argv == ['status']: result = status()
-    else: raise ValueError('Uso: panel-session.py event before|after ANTERIOR ACTUAL | status | stop')
+    elif argv == ['session-exit']: result = session_exit()
+    else: raise ValueError('Uso: panel-session.py event before|after ANTERIOR ACTUAL | status | stop | session-exit')
     print(json.dumps(result, ensure_ascii=False));return 0
 
 

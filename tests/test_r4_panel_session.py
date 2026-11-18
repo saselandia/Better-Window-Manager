@@ -128,6 +128,42 @@ class PanelSessionTest(unittest.TestCase):
         self.assertEqual((self.control/'ack.json').read_bytes(),before)
         m.drain(self.control)
 
+    def test_session_exit_only_targets_its_own_compositor_instance(self):
+        with mock.patch.dict(os.environ,{'HYPRLAND_INSTANCE_SIGNATURE':'first'}):
+            m.register(self.control,os.getpid(),self.token,reports_exit=True)
+        with mock.patch.object(m,'command') as send:
+            with mock.patch.dict(os.environ,{'HYPRLAND_INSTANCE_SIGNATURE':''}):
+                self.assertEqual(m.session_exit(),{'status':'no-compositor-instance'})
+            with mock.patch.dict(os.environ,{'HYPRLAND_INSTANCE_SIGNATURE':'second'}):
+                self.assertEqual(m.session_exit(),{'status':'inactive'})
+            send.assert_not_called()
+            with mock.patch.dict(os.environ,{'HYPRLAND_INSTANCE_SIGNATURE':'first'}):
+                m.session_exit()
+                send.assert_called_once_with(m.active_registration(),'stop',timeout=2,exit_timeout=5)
+
+    def test_exit_requires_a_receipt_for_the_existing_stop_revision(self):
+        registration=self.register()
+        stop={'version':1,'token':self.token,'revision':1,'command':'stop','skin':'default'}
+        self.write('control.json',stop)
+        self.write('ack.json',dict(stop,ok=True))
+        with self.assertRaisesRegex(TimeoutError,'guardado y la salida'):
+            m.command(registration,'stop',timeout=.02,exit_timeout=.02)
+        self.assertEqual(m.read_json(self.control/'control.json'),stop)
+        m.record_exit(self.control,self.token,7)
+        with self.assertRaisesRegex(ValueError,'código 7'):
+            m.command(registration,'stop',timeout=.02,exit_timeout=.02)
+        self.write('exit.json',{'version':1,'token':self.token,'revision':0,'returncode':0})
+        with self.assertRaisesRegex(ValueError,'no corresponde'):
+            m.command(registration,'stop',timeout=.02,exit_timeout=.02)
+        m.record_exit(self.control,self.token,0)
+        self.assertEqual(m.command(registration,'stop',timeout=.02,exit_timeout=.02),
+                         {'status':'stopped','revision':1,'exitConfirmed':True})
+
+    def test_unexpected_exit_never_creates_a_stop_receipt(self):
+        self.register()
+        m.record_exit(self.control,self.token,-9)
+        self.assertFalse((self.control/'exit.json').exists())
+
     def test_non_private_directory_is_rejected_without_permission_changes(self):
         self.control.chmod(0o755)
         with self.assertRaises(ValueError):self.register()

@@ -16,6 +16,22 @@
 #include <limits>
 #include <cmath>
 
+namespace {
+Plasma::Containment *systemTray(Plasma::Applet *applet) {
+    if (applet->pluginMetaData().pluginId() != QStringLiteral("org.kde.plasma.systemtray")) return nullptr;
+    auto *tray = qobject_cast<Plasma::Containment *>(applet);
+    return tray && tray->containmentType() == Plasma::Containment::CustomEmbedded ? tray : nullptr;
+}
+
+QVariantMap backendRow(Plasma::Applet *applet) {
+    auto assessment = Catalog::runtimeAssessment(applet->pluginMetaData());
+    if (applet->failedToLaunch()) assessment["status"] = "launch-failed";
+    return {{"id", applet->id()}, {"package", applet->pluginMetaData().pluginId()},
+            {"failedToLaunch", applet->failedToLaunch()}, {"launchError", applet->launchErrorMessage()},
+            {"runtime", assessment}};
+}
+}
+
 PanelSession::PanelSession(Plasma::Containment *containment,bool connectConfiguration):m_containment(containment),m_packageWindows(new PackageWindows(containment,this)) {
     if(connectConfiguration)connect(containment,&Plasma::Containment::configureRequested,this,&PanelSession::openConfiguration);
     m_notify.setSingleShot(true);m_notify.setInterval(0);
@@ -56,6 +72,14 @@ void PanelSession::watchApplet(Plasma::Applet *applet) {
         m_notify.start();
     });
     connect(applet,&Plasma::Applet::contextualActionsChanged,this,[this,id]{emit actionsChanged(id);});
+    if (auto *tray = systemTray(applet)) {
+        const auto watchChildren = [this, tray] {
+            for (auto *child : tray->applets()) watchApplet(child);
+            m_notify.start();
+        };
+        connect(tray, &Plasma::Containment::appletsChanged, this, watchChildren);
+        watchChildren();
+    }
 }
 void PanelSession::bindPanelItem(PlasmaQuick::AppletQuickItem *item) {
     if(!m_containment || !item || item->applet()!=m_containment){setError(tr("The view does not belong to this containment."));return;}
@@ -106,11 +130,19 @@ QVariantList PanelSession::widgetBackends() const {
     // Use live instances, not a fresh global catalog lookup: two copies of one
     // package remain distinct, and removed widgets disappear on the next query.
     for(const auto &id:order())if(auto *a=findApplet(id.toUInt())) {
-        auto assessment=Catalog::runtimeAssessment(a->pluginMetaData());
-        if(a->failedToLaunch())assessment["status"]="launch-failed";
-        result.append(QVariantMap{{"id",a->id()},{"package",a->pluginMetaData().pluginId()},
-            {"failedToLaunch",a->failedToLaunch()},{"launchError",a->launchErrorMessage()},
-            {"runtime",assessment}});
+        auto row = backendRow(a);
+        if (auto *tray = systemTray(a)) {
+            QVariantList children;
+            for (auto *child : tray->applets()) {
+                if (!child || child->destroyed()) continue;
+                auto embedded = backendRow(child);
+                embedded["declaredActivationService"] = child->pluginMetaData().value(QStringLiteral("X-Plasma-DBusActivationService"));
+                children.append(embedded);
+            }
+            row["embeddedApplets"] = children;
+            row["embeddedInventoryScope"] = "live-native-tray-applets";
+        }
+        result.append(row);
     }
     return result;
 }

@@ -82,7 +82,6 @@ struct Extension {
             PHLMONITOR target;
             for(const auto &m:State::monitorState()->monitors())if(m->m_name==output)target=m;
             if(!target || !workspace || workspace->m_monitor!=target){lastActivationError="cross-output-or-unmaterialized-request-denied";return false;}
-            if(!Config::Actions::focusMonitor(target)){lastActivationError="monitor-focus-failed";return false;}
         }
         if(!workspace){
             const auto focus=Desktop::focusState()->monitor();
@@ -90,6 +89,17 @@ struct Extension {
             workspace=State::workspaceState()->create(number(id),focus->m_id,id);
         }
         if(!workspace){lastActivationError="workspace-resolution-failed";return false;}
+        // Hyprland's focusMonitor already focuses the active workspace. A
+        // second changeWorkspace on that same workspace can simulate pointer
+        // movement and refocus the old output (empty target + cursor:no_warps).
+        // For inactive workspaces let changeWorkspace own its native cross-
+        // output focus path; do not pre-focus and suppress that branch either.
+        const auto owner=workspace->m_monitor.lock();
+        if(owner && owner->m_activeWorkspace==workspace){
+            const auto result=Config::Actions::focusMonitor(owner);
+            if(!result)lastActivationError="monitor-focus-failed";
+            return bool(result);
+        }
         // Object overload is absolute; the string overload consults
         // binds:workspace_back_and_forth and can select a different ID.
         const auto result=Config::Actions::changeWorkspace(workspace);
@@ -146,7 +156,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE pluginHandle){
             {"providerLifecycleVersion",1},
             {"countMirrorVersion",1},{"configuredCount",e->configuredCount},{"countRevision",e->countMirror.revision()},
             {"configuredCountSource","shared-bwm-bridge"},
-            {"activationReadbackVersion",1},{"observedActivations",e->observed},{"dispatchedActivations",e->activator->dispatched()},
+            {"activationReadbackVersion",1},{"activationRoutingVersion",2},{"observedActivations",e->observed},{"dispatchedActivations",e->activator->dispatched()},
             {"activationNoops",e->activator->noops()},{"lastActivationOutcome",e->activator->outcome()},{"lastActivationError",e->lastActivationError},
             {"desktops",e->protocol->snapshot().desktops.size()},{"current",e->protocol->snapshot().current},
             {"queuedActivations",e->protocol->pending()},{"cancelledActivations",e->protocol->cancelled()},{"perClientBarrierSupported",true},{"acceptedRequests",e->protocol->accepted()},{"rejectedRequests",e->protocol->rejected()},

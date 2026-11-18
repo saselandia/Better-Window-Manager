@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "date": "2026-11-17",
+  "historySection": 267,
+  "status": "verified-offscreen-normal-and-asan",
+  "scope": "Persistent native profile intent and explicit selected-profile preview, tested with fixtures",
+  "sessionModified": false,
+  "personalSelectionsModified": false,
+  "personalProfilesModified": false,
+  "dailyPanelActivated": false,
+  "autostartInstalled": false,
+  "activationAllowed": false,
+  "replacementReady": false,
+  "r4Complete": false,
+  "entryPoints": {
+    "nativeMetadata": [
+      "--profile-selection-info",
+      "--select-profile NAME REVISION",
+      "--clear-profile-selection REVISION"
+    ],
+    "metadataWrapper": "profile-selection.py --binary BIN status | select NAME --revision N | clear --revision N",
+    "nativeServer": "--serve-selected-profile",
+    "previewWrapper": "preview-isolated.py --binary BIN --selected-profile --follow-skin"
+  },
+  "contract": {
+    "selectionFile": "GenericStateLocation/bwm/plasma/panel-profiles/.selection/selection.json",
+    "version": 1,
+    "fields": [
+      "version",
+      "revision",
+      "profile (name or null)",
+      "sourceSha256 when selected"
+    ],
+    "absentRevision": 0,
+    "maxRevision": 9007199254740991,
+    "expectedRevisionRequired": true,
+    "generationPinned": false,
+    "unknownFieldsPreserved": true,
+    "nativeSettingsCopiedIntoSelection": false,
+    "sameSelectionWrites": false,
+    "clearDeletesProfiles": false,
+    "corruptSelectionAutoReset": false,
+    "publication": "QSaveFile with optimistic previous-byte check",
+    "lockOrder": [
+      "Selection",
+      "Previous profile when different",
+      "Candidate profile"
+    ],
+    "lockPolicy": "Nonblocking; active profile prevents choice mutation; selected consumer retains ProfileStore through native flush/close/checkpoint",
+    "selectedOpen": "Resolve current name/provenance and acquire ProfileStore under selection lease; no path copied from status",
+    "status": "Point-in-time inspection; profileValidated=false may mean an active owner, not a failed session"
+  },
+  "verification": {
+    "nativeQtMethod": "profileSelectionTransactionsAndSelectedServer",
+    "normal": {
+      "command": "ctest --test-dir build/bwm-plasma-host -R '^isolated-local-configuration$' --output-on-failure",
+      "passed": true,
+      "selection": {
+        "wrapperSelectStatusClearPassed": true,
+        "revisionChecksPassed": true,
+        "selectedServerLeaseAndCleanStopPassed": true,
+        "activationAllowed": false,
+        "dailyPanelActivated": false
+      }
+    },
+    "asan": {
+      "command": "ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build/bwm-plasma-host-asan -R '^isolated-local-configuration$' --output-on-failure",
+      "passed": true,
+      "leakDetectionEnabled": false,
+      "selection": {
+        "wrapperSelectStatusClearPassed": true,
+        "revisionChecksPassed": true,
+        "selectedServerLeaseAndCleanStopPassed": true,
+        "activationAllowed": false,
+        "dailyPanelActivated": false
+      }
+    },
+    "python": {
+      "command": "python3 -m unittest discover -s tests -p 'test_r4*.py'",
+      "passed": true,
+      "tests": 220,
+      "newTests": 5
+    },
+    "cases": [
+      "Absent selection without state creation",
+      "XDG authority outside /tmp",
+      "Fresh-process selection info",
+      "Stale expected revision rejection",
+      "Missing candidate rejection",
+      "Idempotent selection without writing",
+      "Selected profile lease prevents another opener, mutation and clear",
+      "Native option edit/checkpoint",
+      "Recovery changes generation without changing selected intent",
+      "Native option readback after selected open",
+      "Unknown selection metadata preserved",
+      "Clear with broken selected head",
+      "Clear with missing selected directory",
+      "Changed provenance refused until explicit reselection",
+      "Invalid JSON/version/revision/path/type rejection",
+      "Revision overflow rejection",
+      "Selection owner lease conflict",
+      "Selection metadata symlink rejection",
+      "Real selected server confirms control, retains lease, stops and checkpoints with no visible output",
+      "Real metadata wrapper select/status/clear",
+      "Offscreen wrapper isolation and cleanup",
+      "Selected preview delegates resolution to native server and rejects disposable-only options"
+    ]
+  },
+  "limits": [
+    "Persistent intent is not daily activation authority",
+    "No daily autostart, takeover or automatic fallback",
+    "No session logout or power-loss acceptance",
+    "No global CAS against uncooperative writers",
+    "Name/provenance is not a signed installation identity",
+    "Corrupt selection metadata rejected without automatic reset",
+    "No real user profile chosen or recovered",
+    "No new Wayland rendering or backend certification",
+    "Desktop cycles accepted in sections 263/265 were not repeated"
+  ],
+  "sourceSha256": {
+    "src/bwm-plasma-host/profilestore.h": "0538fdff865fbc8c6373cefe9049737bed59ff8683497af9a5df7b898605f8af",
+    "src/bwm-plasma-host/profilestore.cpp": "15dcc7e8c58689575ddc53af1e69ab07f5d9027df1ecb27ae5ba5709105134ff",
+    "src/bwm-plasma-host/main.cpp": "31b72ef36864b49467b9507f4f71c7f35433c264b8477a43c69696409a132827",
+    "src/bwm-plasma-host/profile-selection.py": "4b9d412a952d55cbb39e97a287f5fac24288d86ae775a54ccd401938c65cb822",
+    "src/bwm-plasma-host/preview-isolated.py": "08d14741c924765d4ac578156451261cad01abf28eaf427a326b3909fbaf1b9d",
+    "src/bwm-plasma-host/test-ui.cpp": "7c6ff7d33c28538c1a5c4b7f7f1af502af30e233cf4507c1623c2b17e2252311",
+    "src/bwm-plasma-host/check-local.py": "f877017bfee84828eb7468bf9d1276832234dfdf02e8571442efe77267066773",
+    "tests/test_r4_profile_selection.py": "7688aa7fdadd01ed84a4ab935a323dd873dec2d52243c0d80abde0c9765fd096"
+  }
+}

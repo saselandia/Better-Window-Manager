@@ -73,6 +73,32 @@ private Q_SLOTS:
         QTest::addColumn<int>("edge");
         for(auto edge:{Qt::TopEdge,Qt::BottomEdge,Qt::LeftEdge,Qt::RightEdge})QTest::newRow(qPrintable(QString::number(int(edge))))<<int(edge);
     }
+    void explicitReservationEdgeKeepsThePanelExtent() {
+        using W=LayerShellQt::Window;
+        struct Example { Qt::Edge side; W::Anchor exclusive; W::Anchor leading; W::Anchor trailing; };
+        const Example examples[] = {
+            {Qt::LeftEdge, W::AnchorLeft, W::AnchorTop, W::AnchorBottom},
+            {Qt::RightEdge, W::AnchorRight, W::AnchorTop, W::AnchorBottom},
+            {Qt::TopEdge, W::AnchorTop, W::AnchorLeft, W::AnchorRight},
+            {Qt::BottomEdge, W::AnchorBottom, W::AnchorLeft, W::AnchorRight},
+        };
+        for (const auto &[side, exclusive, leading, trailing] : examples) {
+            const auto modern = BwmSurface::nativePanelAnchoring(side, 1440, 640, true);
+            QCOMPARE(modern.exclusiveEdge, exclusive);
+            QCOMPARE(modern.anchors, W::Anchors(exclusive) | leading);
+            QVERIFY(!modern.anchors.testFlag(trailing)); // LayerShellQt sends the requested size.
+            QCOMPARE(modern.margins, QMargins());
+
+            const auto legacy = BwmSurface::nativePanelAnchoring(side, 1440, 640, false);
+            QCOMPARE(legacy.anchors, modern.anchors | trailing);
+            QCOMPARE(legacy.exclusiveEdge, exclusive);
+            QCOMPARE(legacy.margins, trailing == W::AnchorBottom ? QMargins(0, 0, 0, 800) : QMargins(0, 0, 800, 0));
+            // The compositor places the legacy zero-size (stretched) axis in
+            // already usable space. A 44 px perpendicular reservation reduces
+            // its first configure to 596 px and is subtracted again if Qt resizes.
+            QCOMPARE(1440 - 44 - legacy.margins.bottom() - legacy.margins.right(), 596);
+        }
+    }
     void nativePolicyRequests() {
         QFETCH(int,edge);const auto side=Qt::Edge(edge);const bool vertical=side==Qt::LeftEdge || side==Qt::RightEdge;
         QQuickWindow window;window.resize(vertical?QSize(64,300):QSize(300,64));
