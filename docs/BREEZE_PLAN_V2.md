@@ -144,6 +144,11 @@ Estado al 2026-11-12 tras la primera ejecución:
   tienda KDE, instalados/retirados con el proveedor nativo y una opción propia guardada también en
   la sesión Hyprland (BREEZE_R4_KNS_RESULTS.json). Pendiente fuera de la puerta: panel diario,
   backends, otras escalas/bordes/skins. Historial:
+- **R5 iniciada (2026-11-18, iteración 1).** «Ajustes del panel» originales (`PanelConfiguration.qml`
+  instalado) desde la acción «Enter Edit Mode», con adaptación de `PanelConfigView`, contrato
+  `PanelView` (alineación, desplazamiento, modo de longitud) guardado en `plasmashellrc`.
+  Probado offscreen y visto en Hyprland; faltan WidgetExplorer, escritorio, mover/clonar,
+  autohide, varios paneles y aceptación del usuario. Ver BREEZE_R5_RESULTS.md.
 - **R4 (historial):** auxiliar con popup, diálogo, acciones y catálogo vivo probado
   en QtTest/ASan. Adaptador LayerShellQt y staging de datos nativos con lectura en otro
   proceso añadidos (2026-11-13). plasma-desktop instalado: org.kde.panel/QML original,

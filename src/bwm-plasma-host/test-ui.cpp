@@ -7,6 +7,10 @@
 #include "viewcorona.h"
 #include "panelviewhost.h"
 #include "panelviewsettings.h"
+#include "panelconfigview.h"
+#include <QQmlExpression>
+#include <QQmlContext>
+#include <QTest>
 #include "panelruntime.h"
 #include "outputidentity.h"
 #include "runtimecontrol.h"
@@ -219,6 +223,8 @@ private Q_SLOTS:
         const auto staged = BwmMigration::stage(planPath).value("directory").toString();
         struct RemoveStage { QString path; ~RemoveStage(){ QDir(path).removeRecursively(); } } remove{staged};
         const auto path = config.filePath("bwm-ui-tray-profile");
+        // check-isolated.py runs the whole suite once per package in the same roots.
+        QDir(path).removeRecursively();
         ProfileStore::importStage(staged,path);
         ProfileStore profile(path);
         {
@@ -414,13 +420,13 @@ private Q_SLOTS:
         connect(view.engine().get(),&QQmlEngine::warnings,&view,[&scriptErrors](const QList<QQmlError> &errors){
             for(const auto &e:errors)if(e.description().contains("ReferenceError") || e.description().contains("TypeError") || e.description().contains("Unable to assign [undefined]"))scriptErrors.append(e.toString());
         });
-        QVERIFY2(view.load(c),qPrintable(view.error()));view.show();
+        QVERIFY2(view.load(c),qPrintable(view.error()));view.setLengthMode(PanelViewEnums::Custom);view.show();
         auto *root=view.rootObject();QVERIFY(root);
         QVERIFY(view.source().toString().endsWith("/contents/views/Panel.qml"));
         auto *item=PlasmaQuick::AppletQuickItem::itemForApplet(c);QVERIFY(item);
         QCOMPARE(root->property("containment").value<QQuickItem*>(),item);
         QTRY_VERIFY(item->parentItem() && item->width()>0 && item->height()>0);
-        QCOMPARE(view.width(),640);QCOMPARE(view.height(),48);QCOMPARE(item->height(),48);
+        QTRY_COMPARE(view.width(),640);QCOMPARE(view.height(),48);QCOMPARE(item->height(),48);
         QVERIFY(view.setLengthRange(320,320));QTRY_COMPARE(view.width(),320);
         QVERIFY(!view.setLengthRange(800,200));QCOMPARE(view.width(),320);
         QVERIFY(view.setLengthRange(640,640));QTRY_COMPARE(view.width(),640);
@@ -459,7 +465,7 @@ private Q_SLOTS:
         auto *c=corona.createContainment("org.kde.panel");QVERIFY(c);
         c->setFormFactor(Plasma::Types::Horizontal);c->setLocation(Plasma::Types::BottomEdge);
         QVERIFY(c->createApplet(qEnvironmentVariable("BWM_TEST_APPLET")));
-        PanelViewHost view(&corona);QVERIFY2(view.load(c),qPrintable(view.error()));view.show();
+        PanelViewHost view(&corona);QVERIFY2(view.load(c),qPrintable(view.error()));view.setLengthMode(PanelViewEnums::Custom);view.show();
         auto *root=view.rootObject();QVERIFY(root);
         struct Edge {Plasma::Types::Location location;bool vertical;const char *prefix;const char *color;int disabled;};
         const Edge edges[]={
@@ -1123,6 +1129,64 @@ private Q_SLOTS:
         const auto locked=bytes();QVERIFY(!store.apply({{"thickness",48}}));QVERIFY(store.error().contains("locked"));QCOMPARE(bytes(),locked);
         QVERIFY(!store.apply({{"floating",0},{"thickness",48}}));QCOMPARE(bytes(),locked);
     }
+    void originalPanelSettingsEditMode() {
+        // R5: "Enter Edit Mode" opens the installed PanelConfiguration.qml through the
+        // panel's own configure action; its real controls persist like PanelView 6.7.5.
+        ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        QFile::remove(QDir(qEnvironmentVariable("XDG_CONFIG_HOME")).filePath("bwm-r5-edit-test"));corona.loadLayout("bwm-r5-edit-test");
+        auto *c=corona.createContainment("org.kde.panel");QVERIFY(c);
+        c->setLocation(Plasma::Types::BottomEdge);c->setFormFactor(Plasma::Types::Horizontal);QVERIFY(c->createApplet("org.bwm.r4.shared-config"));
+        const auto path=QDir(qEnvironmentVariable("XDG_CONFIG_HOME")).filePath("bwm-r5-plasmashellrc");QFile::remove(path);
+        const auto group=[&](KConfig &config){return KConfigGroup(&config,"PlasmaViews").group(QString("Panel %1").arg(c->id()));};
+        QStringList scriptErrors;
+        PanelViewHost view(&corona,path);corona.bind(c,&view);
+        QVERIFY2(view.load(c),qPrintable(view.error()));view.show();
+        QCOMPARE(view.lengthMode(),int(PanelViewEnums::FillAvailable));QCOMPARE(view.alignment(),int(Qt::AlignLeft));
+        QTRY_COMPARE(view.width(),view.screen()->size().width());
+        auto *configure=c->internalAction("configure");QVERIFY(configure);
+        configure->trigger();
+        PanelConfigView *dialog=nullptr;
+        QTRY_VERIFY((dialog=[]{for(auto *w:QGuiApplication::allWindows())if(auto *d=qobject_cast<PanelConfigView*>(w))if(d->isVisible())return d;return (PanelConfigView*)nullptr;}()));
+        QVERIFY(corona.isEditMode());QVERIFY(view.userConfiguring());
+        auto *root=dialog->mainItem();QVERIFY(root);
+        QVERIFY(qmlContext(root)->baseUrl().toString().endsWith("/contents/configuration/PanelConfiguration.qml"));
+        connect(qmlEngine(root),&QQmlEngine::warnings,this,[&scriptErrors](const QList<QQmlError> &errors){
+            for(const auto &e:errors)if(e.description().contains("ReferenceError") || e.description().contains("TypeError"))scriptErrors.append(e.toString());
+        });
+        QStringList expressionErrors;const auto run=[&](const char *code){QQmlExpression e(qmlContext(root),root,QString::fromUtf8(code));e.evaluate();if(e.hasError())expressionErrors.append(e.error().toString());};
+        // Alignment combo: index 2 = Right. Length combo: index 2 = Custom shows the ruler.
+        run("alignmentBox.activated(2)");QTRY_COMPARE(view.alignment(),int(Qt::AlignRight));
+        run("widthBox.activated(2)");QTRY_COMPARE(view.lengthMode(),int(PanelViewEnums::Custom));
+        QTRY_VERIFY(dialog->panelRulerView()->isVisible());
+        run("spinBox.value=52;spinBox.valueModified()");QTRY_COMPARE(view.thickness(),52);
+        run("floatingBox.activated(2)");QTRY_VERIFY(view.floating());
+        // Opacity options follow the Plasma style, as PanelView::adaptiveOpacityEnabled.
+        QCOMPARE(view.adaptiveOpacityEnabled(),Plasma::Theme().adaptiveTransparencyEnabled());
+        if(view.adaptiveOpacityEnabled()){run("transparencyBox.activated(1)");QTRY_COMPARE(view.opacityMode(),int(PanelViewEnums::Opaque));}
+        // Auto hide has no controller here: refused, and the combo returns to the stored value.
+        run("autoHideBox.activated(1)");QCOMPARE(view.visibilityMode(),int(PanelViewEnums::WindowsGoBelow));
+        QVERIFY(!view.error().isEmpty());
+        {
+            KConfig config(path,KConfig::SimpleConfig);auto g=group(config);
+            QCOMPARE(g.readEntry("alignment",0),int(Qt::AlignRight));QCOMPARE(g.readEntry("panelLengthMode",-1),2);
+            QCOMPARE(g.group("Defaults").readEntry("thickness",0),52);QCOMPARE(g.readEntry("floating",0),1);
+            QVERIFY(!g.hasKey("panelVisibility"));
+        }
+        // "Add New > Spacer" uses the original containment, not a BWM list.
+        run("configDialog.addPanelSpacer()");
+        bool spacer=false;for(auto *a:c->applets())spacer|=a->pluginMetaData().pluginId()=="org.kde.plasma.panelspacer";QVERIFY(spacer);
+        QVERIFY2(expressionErrors.isEmpty(),qPrintable(expressionErrors.join('\n')));
+        QVERIFY2(scriptErrors.isEmpty(),qPrintable(scriptErrors.join('\n')));
+        dialog->requestActivate();QTRY_VERIFY(dialog->isActive());
+        QTest::keyClick(dialog,Qt::Key_Escape);
+        QTRY_VERIFY(!corona.isEditMode());QTRY_VERIFY(!view.userConfiguring());
+        // Outside the settings the setters stay preview-only.
+        const auto bytes=[&]{QFile f(path);return f.open(QIODevice::ReadOnly)?f.readAll():QByteArray();};
+        const auto stored=bytes();view.setAlignment(Qt::AlignCenter);QCOMPARE(view.alignment(),int(Qt::AlignCenter));QCOMPARE(bytes(),stored);
+        PanelViewHost fresh(&corona,path);QVERIFY2(fresh.load(c),qPrintable(fresh.error()));
+        QCOMPARE(fresh.alignment(),int(Qt::AlignRight));QCOMPARE(fresh.lengthMode(),int(PanelViewEnums::Custom));QCOMPARE(fresh.thickness(),52);
+        corona.unbind(c);corona.saveLayout("bwm-r5-edit-test");QVERIFY(corona.config()->sync());
+    }
     void panelViewPreferencesPersistAndApply() {
         TestCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
         QFile::remove(QDir(qEnvironmentVariable("XDG_CONFIG_HOME")).filePath("bwm-panel-preferences-test"));corona.loadLayout("bwm-panel-preferences-test");
@@ -1138,7 +1202,7 @@ private Q_SLOTS:
             view.show();second.show();const auto initial=bytes();
             view.setFloating(true);view.setThickness(40);QCoreApplication::processEvents();QCOMPARE(bytes(),initial);
             QVERIFY(view.reloadViewSettings());QVERIFY(!view.floating());QTRY_COMPARE(view.thickness(),48);
-            QVERIFY2(view.applyViewSettings({{"floating",true},{"floatingApplets",true},{"panelOpacity",1},{"thickness",40},{"minLength",360},{"maxLength",360}}),qPrintable(view.error()));
+            QVERIFY2(view.applyViewSettings({{"floating",true},{"floatingApplets",true},{"panelOpacity",1},{"thickness",40},{"minLength",360},{"maxLength",360},{"panelLengthMode",2}}),qPrintable(view.error()));
             QTRY_VERIFY(view.floating());QTRY_COMPARE(view.thickness(),40);QTRY_COMPARE(view.width(),360);
             QTRY_COMPARE(view.rootObject()->property("floatingness").toDouble(),1.0);QVERIFY(view.rootObject()->property("isOpaque").toBool());
             QVERIFY(!second.floating());QCOMPARE(second.viewSettings().value("thickness").toInt(),48);
@@ -1165,7 +1229,7 @@ private Q_SLOTS:
         corona.loadLayout("bwm-panel-preferences-test");QCOMPARE(corona.containments().size(),2);
         int edited=0;
         for(auto *c:corona.containments()) {
-            PanelViewHost view(&corona);QVERIFY2(view.load(c),qPrintable(view.error()));view.show();
+            PanelViewHost view(&corona);QVERIFY2(view.load(c),qPrintable(view.error()));view.setLengthMode(PanelViewEnums::Custom);view.show();
             QVERIFY(view.capabilities().value("viewSettingsReady").toBool());
             if(view.viewSettings().value("floating").toInt()==1) {
                 ++edited;QCOMPARE(view.thickness(),40);QTRY_COMPARE(view.width(),360);QVERIFY(view.floatingApplets());
@@ -1301,7 +1365,7 @@ private Q_SLOTS:
                 // A logical resolution change selects the native resolution group
                 // without replacing the stable output binding or touching panel B.
                 {KConfig cfg(preferences,KConfig::SimpleConfig);auto scope=KConfigGroup(&cfg,"PlasmaViews").group(QString("Panel %1").arg(idA)).group("Vertical900");
-                    scope.writeEntry("minLength",400);scope.writeEntry("maxLength",400);QVERIFY(cfg.sync());}
+                    scope.writeEntry("minLength",400);scope.writeEntry("maxLength",400);scope.parent().writeEntry("panelLengthMode",2);QVERIFY(cfg.sync());}
                 reconnected.platform->rect.setHeight(900);
                 QWindowSystemInterface::handleScreenGeometryChange(reconnected.screen(),reconnected.platform->rect,reconnected.platform->rect);
                 QTRY_COMPARE(runtime.view(idA)->capabilities().value("viewSettingsScope").toString(),"Vertical900");
@@ -1375,7 +1439,7 @@ private Q_SLOTS:
         auto *view=runtime.view(a->id());QVERIFY2(view,qPrintable(runtime.error()));auto *role=LayerShellQt::Window::get(view);
         QTRY_COMPARE(role->exclusionZone(),view->thickness());QVERIFY(view->capabilities().value("nativeVisibilityPolicy").toBool());
         QVERIFY(!view->capabilities().value("reservedArea").toBool());QVERIFY(!runtime.readiness().value("replacementReady").toBool());
-        QVERIFY2(view->applyViewSettings({{"panelVisibility",0},{"floating",true},{"thickness",40},{"minLength",360},{"maxLength",360}}),qPrintable(view->error()));
+        QVERIFY2(view->applyViewSettings({{"panelVisibility",0},{"floating",true},{"thickness",40},{"minLength",360},{"maxLength",360},{"panelLengthMode",2}}),qPrintable(view->error()));
         QTRY_COMPARE(view->width(),360);QTRY_COMPARE(role->exclusionZone(),40);
         QTRY_COMPARE(view->rootObject()->property("floatingness").toDouble(),1.0);
         QVERIFY(view->height()>role->exclusionZone()); // SVG floating padding is not reserved twice.

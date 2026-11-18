@@ -208,6 +208,16 @@ class PreviewStartupTest(unittest.TestCase):
             self.assertEqual(reply.returncode,2);self.assertIn('--instances requires a disposable',reply.stderr)
             self.assertEqual(marker.read_text(),'preserve');self.assertEqual(list(profile.iterdir()),[marker])
 
+    def test_edit_mode_is_only_for_a_disposable_following_native_panel(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);profile=root/'profile';profile.mkdir();marker=profile/'unchanged';marker.write_text('preserve')
+            binary=root/'unused';binary.write_text('#!/bin/false\n');binary.chmod(0o700)
+            for extra in (['--profile',str(profile),'--follow-skin','--native-panel'],['--builtin','org.kde.plasma.analogclock','--native-panel'],
+                          ['--builtin','org.kde.plasma.analogclock','--follow-skin']):
+                reply=subprocess.run([sys.executable,str(SCRIPT),'--binary',str(binary),*extra,'--edit-mode'],capture_output=True,text=True,timeout=5)
+                self.assertEqual(reply.returncode,2);self.assertIn('--edit-mode requires a disposable',reply.stderr)
+            self.assertEqual(marker.read_text(),'preserve');self.assertEqual(list(profile.iterdir()),[marker])
+
     def native_provider_preview(self,provider):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);config=root/'config/illogical-impulse';config.mkdir(parents=True)

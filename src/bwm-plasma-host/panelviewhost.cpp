@@ -4,6 +4,8 @@
 #include "packagewindows.h"
 #include "surfaces.h"
 #include "panelviewsettings.h"
+#include "panelconfigview.h"
+#include <Plasma/Corona>
 #include <Plasma/Containment>
 #include <PlasmaQuick/AppletQuickItem>
 #include <KPackage/Package>
@@ -31,6 +33,8 @@ PanelViewHost::PanelViewHost(Plasma::Corona *corona,QString viewSettingsFile):Co
     connect(&m_floatingAnimation,&QPropertyAnimation::valueChanged,this,[this]{updateMask();});
     setTranslationDomain("plasma_shell_org.kde.plasma.desktop");
     rootContext()->setContextProperty("panel",this);
+    connect(this,&QWindow::screenChanged,this,&PanelViewHost::screenToFollowChanged);
+    connect(&m_theme,&Plasma::Theme::themeChanged,this,&PanelViewHost::adaptiveOpacityEnabledChanged);
     connect(this,&QWindow::visibleChanged,this,[this]{invalidateFrame();});
     connect(this,&QWindow::screenChanged,this,[this]{invalidateFrame();});
     connect(this,&QWindow::widthChanged,this,[this]{invalidateFrame();});
@@ -67,6 +71,8 @@ QVariantMap PanelViewHost::presentationState()const {
         {"compositorPresentationVerified",false}};
 }
 PanelViewHost::~PanelViewHost() {
+    // The settings' QML holds "panel": destroy it now, not after a deferred delete.
+    delete m_configView.data();
     disconnect(this,nullptr,this,nullptr);
     m_reflow.stop();m_floatingAnimation.stop();
     if(containment())disconnect(containment(),nullptr,this,nullptr);
@@ -100,7 +106,8 @@ bool PanelViewHost::load(Plasma::Containment *c) {
     }
     registerTypes();
     m_settingsDefaults={{"floating",int(m_floating)},{"floatingApplets",int(m_floatingApplets)},
-        {"panelOpacity",m_opacity},{"thickness",m_requestedThickness},{"minLength",m_minimumLength},{"maxLength",m_maximumLength}};
+        {"panelOpacity",m_opacity},{"thickness",m_requestedThickness},{"minLength",m_minimumLength},{"maxLength",m_maximumLength},
+        {"alignment",m_alignment},{"panelLengthMode",m_lengthMode},{"offset",m_offset}};
     const bool native=property("bwmNativePanelPolicy").toBool();
     if(native)m_settingsDefaults.insert("panelVisibility",PanelViewEnums::NormalPanel);
     if(!screen()){setError(tr("A screen is required to resolve native panel preferences."));return false;}
@@ -152,6 +159,7 @@ bool PanelViewHost::load(Plasma::Containment *c) {
 }
 void PanelViewHost::setThickness(int value) {
     if(value<16 || value>256){setError(tr("Preview panel thickness must be between 16 and 256 logical pixels."));return;}
+    if(m_userConfiguring && m_settings){applyViewSettings({{"thickness",value}});emit geometryPolicyChanged();return;}
     m_requestedThickness=value;setError({});m_reflow.start();
 }
 QVariantMap PanelViewHost::viewSettings()const{return m_settings ? m_settings->values() : QVariantMap();}
@@ -165,7 +173,10 @@ void PanelViewHost::useViewSettings(const QVariantMap &values) {
     m_floating=values.value("floating").toInt()!=0;m_floatingApplets=values.value("floatingApplets").toInt()!=0;
     m_opacity=values.value("panelOpacity").toInt();
     m_visibility=values.value("panelVisibility",PanelViewEnums::WindowsGoBelow).toInt();
-    emit geometryPolicyChanged();emit policyChanged();emit viewSettingsChanged();m_reflow.start();
+    m_alignment=values.value("alignment",m_alignment).toInt();m_lengthMode=values.value("panelLengthMode",m_lengthMode).toInt();
+    // PanelView::restore: a centered panel has no offset, others never a negative one.
+    m_offset=m_alignment==Qt::AlignCenter ? 0 : std::max(0,values.value("offset",m_offset).toInt());
+    emit geometryPolicyChanged();emit policyChanged();emit placementChanged();emit viewSettingsChanged();m_reflow.start();
 }
 bool PanelViewHost::reloadViewSettings() {
     if(!containment() || !screen() || !m_settings){setError(tr("Load the native panel before its preferences."));return false;}
@@ -205,13 +216,19 @@ void PanelViewHost::setOpacityMode(int value) {
     if(value!=PanelViewEnums::Opaque && value!=PanelViewEnums::Translucent) {
         setError(tr("Adaptive panel opacity needs the common window backend, which is not connected."));return;
     }
-    setError({});if(m_opacity==value)return;m_opacity=value;emit policyChanged();
+    setError({});if(m_opacity==value)return;
+    if(m_userConfiguring && m_settings){applyViewSettings({{"panelOpacity",value}});emit policyChanged();return;}
+    m_opacity=value;emit policyChanged();
 }
 void PanelViewHost::setFloating(bool value) {
-    if(m_floating==value)return;m_floating=value;emit policyChanged();m_reflow.start();
+    if(m_floating==value)return;
+    if(m_userConfiguring && m_settings){applyViewSettings({{"floating",int(value)}});emit policyChanged();return;}
+    m_floating=value;emit policyChanged();m_reflow.start();
 }
 void PanelViewHost::setFloatingApplets(bool value) {
-    if(m_floatingApplets==value)return;m_floatingApplets=value;emit policyChanged();
+    if(m_floatingApplets==value)return;
+    if(m_userConfiguring && m_settings){applyViewSettings({{"floatingApplets",int(value)}});emit policyChanged();return;}
+    m_floatingApplets=value;emit policyChanged();
 }
 void PanelViewHost::setBackgroundHints(int value) {
     if(m_backgroundHints==value)return;m_backgroundHints=value;emit backgroundHintsChanged();updateMask();
@@ -240,14 +257,25 @@ void PanelViewHost::reflow() {
     const int actual=std::clamp(std::max(m_requestedThickness,minimum),16,1024);
     if(m_thickness!=actual){m_thickness=actual;emit geometryPolicyChanged();}
     const auto padding=[root](const char *name){return std::clamp(root->property(name).toInt(),0,256);};
-    // Panel.length is the natural size hint. Custom preview constraints are separate:
-    // an empty or initializing containment must not shrink the preview to zero.
-    const int extent=std::clamp(m_length,m_minimumLength,m_maximumLength);
-    const QSize wanted=vertical() ? QSize(m_thickness+padding("fixedLeftFloatingPadding")+padding("fixedRightFloatingPadding"),extent)
-        : QSize(extent,m_thickness+padding("fixedTopFloatingPadding")+padding("fixedBottomFloatingPadding"));
+    const int pads=vertical() ? padding("fixedTopFloatingPadding")+padding("fixedBottomFloatingPadding")
+        : padding("fixedLeftFloatingPadding")+padding("fixedRightFloatingPadding");
+    const int total=m_thickness+(vertical() ? padding("fixedLeftFloatingPadding")+padding("fixedRightFloatingPadding")
+        : padding("fixedTopFloatingPadding")+padding("fixedBottomFloatingPadding"));
+    const int side=screen() ? (vertical() ? screen()->size().height() : screen()->size().width()) : 0;
+    // PanelView::preferredSize 6.7.5. Panel.length is the content hint (m_contentLength).
+    int extent=0;
+    if(m_lengthMode==PanelViewEnums::FillAvailable && side>0)extent=side;
+    else if(m_lengthMode==PanelViewEnums::FitContent && side>0)extent=std::max(total,std::min(side,m_length+pads));
+    else {
+        const int minimum=std::max(10,m_minimumLength);
+        const int maximum=std::max(minimum,side>0 ? std::min(m_maximumLength,side-m_offset) : m_maximumLength);
+        extent=std::clamp(m_length+pads,minimum,maximum);
+    }
+    const QSize wanted=vertical() ? QSize(total,extent) : QSize(extent,total);
     setMinimumSize(wanted);setMaximumSize(wanted);
     if(size()!=wanted)resize(wanted);
     root->setSize(wanted);m_lastVertical=vertical();updateMask();
+    BwmSurface::setPanelPlacement(this,{m_alignment,m_offset,m_lengthMode});
     if(property("bwmLayerPanel").toBool())BwmSurface::setPanelVisibility(this,m_visibility,m_thickness);
 }
 void PanelViewHost::animateFloating() {
@@ -269,5 +297,93 @@ void PanelViewHost::updateMask() {
     setMask(region);
 }
 void PanelViewHost::showConfigurationInterface(Plasma::Applet *applet) {
-    if(m_session && applet)m_session->configure(applet->id());
+    if(!applet)return;
+    // PanelView::showConfigurationInterface 6.7.5: the panel's own "configure"
+    // (Enter Edit Mode) toggles its original Panel Settings and the edit mode.
+    if(applet==containment()) {
+        if(m_configView && m_configView->isVisible()){m_configView->hide();return;}
+        if(m_configView){m_configView->show();m_configView->requestActivate();return;}
+        auto *view=new PanelConfigView(containment(),this);
+        if(!view->init()){setError(view->error());delete view;return;}
+        m_configView=view;
+        if(corona())corona()->setEditMode(true);
+        view->show();view->requestActivate();
+        return;
+    }
+    if(corona() && corona()->isEditMode())corona()->setEditMode(false);
+    if(m_session)m_session->configure(applet->id());
+}
+
+int PanelViewHost::minThickness()const {
+    auto *root=rootObject();return root ? root->property(vertical() ? "minPanelWidth" : "minPanelHeight").toInt() : 0;
+}
+bool PanelViewHost::persist(const QVariantMap &changes) {
+    // Only the original Panel Settings write through, as PanelView does on every set.
+    if(!m_userConfiguring || !m_settings)return false;
+    return applyViewSettings(changes);
+}
+void PanelViewHost::setUserConfiguring(bool value) {
+    if(m_userConfiguring==value)return;m_userConfiguring=value;
+    if(containment())containment()->setUserConfiguring(value);
+    emit userConfiguringChanged();
+}
+void PanelViewHost::setLengthMode(int value) {
+    if(value<PanelViewEnums::FillAvailable || value>PanelViewEnums::Custom || value==m_lengthMode)return;
+    if(persist({{"panelLengthMode",value}}))return;
+    if(m_userConfiguring && m_settings)return; // A refused write keeps the stored value.
+    m_lengthMode=value;emit placementChanged();m_reflow.start();
+}
+void PanelViewHost::setAlignment(int value) {
+    if((value!=Qt::AlignLeft && value!=Qt::AlignRight && value!=Qt::AlignCenter) || value==m_alignment)return;
+    // Like PanelView::restore, a centered panel keeps no offset.
+    QVariantMap changes{{"alignment",value}};if(value==Qt::AlignCenter && m_offset)changes.insert("offset",0);
+    if(persist(changes))return;
+    if(m_userConfiguring && m_settings)return;
+    m_alignment=value;if(value==Qt::AlignCenter)m_offset=0;emit placementChanged();m_reflow.start();
+}
+void PanelViewHost::setOffset(int value) {
+    if(value==m_offset || value<-8192 || value>8192)return;
+    // PanelView::setOffset: shrink the maximum so offset + length stay on the output.
+    QVariantMap changes{{"offset",value}};
+    const int side=screen() ? (vertical() ? screen()->size().height() : screen()->size().width()) : 0;
+    if(side>0 && value+m_maximumLength>side)changes.insert("maxLength",std::max(64,side-value));
+    if(changes.contains("maxLength") && m_minimumLength>changes.value("maxLength").toInt())changes.insert("minLength",changes.value("maxLength"));
+    if(persist(changes))return;
+    if(m_userConfiguring && m_settings)return;
+    m_offset=value;if(changes.contains("maxLength"))m_maximumLength=changes.value("maxLength").toInt();
+    emit placementChanged();emit geometryPolicyChanged();m_reflow.start();
+}
+void PanelViewHost::setMinimumLength(int value) {
+    if(value==m_minimumLength || value<64 || value>8192)return;
+    QVariantMap changes{{"minLength",value}};if(value>m_maximumLength)changes.insert("maxLength",value);
+    if(persist(changes))return;
+    if(m_userConfiguring && m_settings)return;
+    m_minimumLength=value;m_maximumLength=std::max(m_maximumLength,value);emit geometryPolicyChanged();m_reflow.start();
+}
+void PanelViewHost::setMaximumLength(int value) {
+    if(value==m_maximumLength || value<64 || value>8192)return;
+    QVariantMap changes{{"maxLength",value}};if(value<m_minimumLength)changes.insert("minLength",value);
+    if(persist(changes))return;
+    if(m_userConfiguring && m_settings)return;
+    m_maximumLength=value;m_minimumLength=std::min(m_minimumLength,value);emit geometryPolicyChanged();m_reflow.start();
+}
+void PanelViewHost::setVisibilityMode(int value) {
+    if(value==m_visibility)return;
+    // AutoHide/DodgeWindows need a window backend that the host does not have.
+    const bool native=property("bwmNativePanelPolicy").toBool();
+    if(value!=PanelViewEnums::WindowsGoBelow && !(native && value==PanelViewEnums::NormalPanel)) {
+        setError(tr("This panel visibility mode has no controller in the BWM host."));emit policyChanged();return;
+    }
+    if(persist({{"panelVisibility",value}}))return;
+    if(m_userConfiguring && m_settings){emit policyChanged();return;}
+    m_visibility=value;emit policyChanged();m_reflow.start();
+}
+void PanelViewHost::setScreenToFollow(QScreen *target) {
+    // Moving a panel to another output belongs to the runtime, which binds by description.
+    if(!target || target==screen())return;
+    setError(tr("Moving the panel to another output is not available in this host."));emit screenToFollowChanged();
+}
+void PanelViewHost::clonePanelTo(int location,QScreen *target) {
+    if(receivers(SIGNAL(cloneRequested(int,QScreen*)))>0){emit cloneRequested(location,target);return;}
+    setError(tr("Cloning panels is not available in this host."));
 }

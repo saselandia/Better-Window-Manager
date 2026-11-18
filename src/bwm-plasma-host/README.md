@@ -1248,3 +1248,24 @@ Lugares: el wrapper copia de solo lectura `user-places.xbel` al host desechable
 visibles de KFilePlacesModel (título sin mnemónicos/elisión + icono) y envía una coincidencia
 única como `launcher` con el .desktop del gestor y la URL, equivalente al lambda de
 Backend::placesActions. Ambigüedades y Recientes quedan enmascarados.
+
+## Modo edición: Ajustes del panel originales (R5, §303)
+
+`panelconfigview.{h,cpp}` adapta `PanelConfigView`/`PanelRulerView` de plasma-workspace 6.7.5
+(LGPL-2.0-or-later) y carga el `PanelConfiguration.qml` instalado sin modificarlo. La acción
+original del panel `configure` («Enter Edit Mode») lo abre y activa el modo edición de la Corona;
+Escape o «Exit Edit Mode» lo cierran. `PanelViewHost` expone el contrato de `PanelView` que usa
+(alineación, desplazamiento, modo de longitud, mín./máx., `minThickness`, `adaptiveOpacityEnabled`,
+`userConfiguring`). Con el diálogo abierto cada cambio se guarda en `plasmashellrc`; fuera,
+los setters son vista previa. Longitud por defecto `FillAvailable`, como Plasma.
+
+Ensayo en la sesión, sólo con una vista desechable:
+
+```
+python3 preview-isolated.py --binary build/bwm-plasma-host/bwm-plasma-host \
+  --builtin org.kde.plasma.analogclock --native-panel --layer-panel --follow-skin \
+  --edit-mode --output "<descripción del monitor>"
+```
+
+Límites y pendientes en `docs/BREEZE_R5_RESULTS.md` (autoocultar, mover/clonar, WidgetExplorer).
+Al actualizar upstream, revisar `shell/panelconfigview.*` y los `Q_PROPERTY` de `panelview.h`.

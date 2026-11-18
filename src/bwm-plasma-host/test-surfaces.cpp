@@ -99,6 +99,29 @@ private Q_SLOTS:
             QCOMPARE(1440 - 44 - legacy.margins.bottom() - legacy.margins.right(), 596);
         }
     }
+    void nativeAnchoringFollowsPanelViewPlacement() {
+        // PanelView::updateLayerWindow 6.7.5: right alignment anchors the trailing
+        // side with the Custom offset as margin; center anchors neither side; a full
+        // length is the leading corner. The legacy path places the same rectangle.
+        using W=LayerShellQt::Window;
+        const BwmSurface::PanelPlacement right{Qt::AlignRight,100,2},center{Qt::AlignCenter,0,2},fill{Qt::AlignRight,100,0},fit{Qt::AlignRight,100,1};
+        auto a=BwmSurface::nativePanelAnchoring(Qt::BottomEdge,1440,640,true,right);
+        QCOMPARE(a.anchors,W::Anchors(W::AnchorBottom)|W::AnchorRight);QCOMPARE(a.margins,QMargins(0,0,100,0));
+        a=BwmSurface::nativePanelAnchoring(Qt::LeftEdge,1440,640,true,right);
+        QCOMPARE(a.anchors,W::Anchors(W::AnchorLeft)|W::AnchorBottom);QCOMPARE(a.margins,QMargins(0,0,0,100));
+        a=BwmSurface::nativePanelAnchoring(Qt::BottomEdge,1440,640,true,center);
+        QCOMPARE(a.anchors,W::Anchors(W::AnchorBottom));QCOMPARE(a.margins,QMargins());
+        a=BwmSurface::nativePanelAnchoring(Qt::TopEdge,1440,1440,true,fill);
+        QCOMPARE(a.anchors,W::Anchors(W::AnchorTop)|W::AnchorLeft);QCOMPARE(a.margins,QMargins());
+        // FitContent ignores the offset, as PanelView does.
+        a=BwmSurface::nativePanelAnchoring(Qt::BottomEdge,1440,640,true,fit);QCOMPARE(a.margins,QMargins());
+        a=BwmSurface::nativePanelAnchoring(Qt::BottomEdge,1440,640,false,right);
+        QCOMPARE(a.margins,QMargins(700,0,100,0));
+        a=BwmSurface::nativePanelAnchoring(Qt::BottomEdge,1440,640,false,center);
+        QCOMPARE(a.margins,QMargins(400,0,400,0));
+        QCOMPARE(BwmSurface::panelStart(right,1440,640),700);QCOMPARE(BwmSurface::panelStart(center,1440,640),400);
+        QCOMPARE(BwmSurface::panelStart(fit,1440,640),800);
+    }
     void nativePolicyRequests() {
         QFETCH(int,edge);const auto side=Qt::Edge(edge);const bool vertical=side==Qt::LeftEdge || side==Qt::RightEdge;
         QQuickWindow window;window.resize(vertical?QSize(64,300):QSize(300,64));

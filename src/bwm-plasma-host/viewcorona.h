@@ -6,7 +6,11 @@
 class QQuickWindow;
 class QScreen;
 class ViewCorona : public Plasma::Corona {
+    Q_OBJECT
 public:
+    // ShellCorona API used by the original PanelConfiguration.qml. The host has
+    // no desktop containment, so edit mode is always entered from a panel.
+    Q_INVOKABLE bool enteredEditModeViaDesktop()const{return false;}
     ViewCorona();
     ~ViewCorona()override;
     int numScreens()const override;

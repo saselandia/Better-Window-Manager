@@ -27,6 +27,7 @@ p.add_argument('--task-thumbnails',action='store_true',help='Capture hovered tas
 p.add_argument('--native-desktops',action='store_true',help='Require the already loaded/enabled experimental desktop provider and its per-connection activation barrier; never loads a plugin')
 p.add_argument('--layer-panel',action='store_true',help='Explicit layer-shell preview; does not reserve screen space')
 p.add_argument('--native-panel',action='store_true',help='Original org.kde.panel; task-action previews use one instance by default')
+p.add_argument('--edit-mode',action='store_true',help='R5: open the original Panel Settings (Enter Edit Mode) once the disposable panel is shown')
 p.add_argument('--instances',type=int,choices=(1,2),help='Disposable following native panel: one widget, or two for comparison')
 p.add_argument('--output',help='Output description (Hyprland desc:, e.g. "MAG 274Q X24"); connector names are not accepted')
 p.add_argument('--native-policy',action='store_true',help='Explicit surface-policy test: native NormalPanel/WindowsGoBelow; may reserve workspace area on the selected output')
@@ -55,6 +56,7 @@ if a.export_as and not a.profile:p.error('--export-as requires --profile')
 if a.recover_snapshot and (not a.profile or not re.fullmatch(r'[a-f0-9]{32}',a.recover_snapshot)):
     p.error('--recover-snapshot requires --profile and its explicit 32-character lowercase snapshot ID')
 if a.recover_snapshot and (a.native_panel or a.layer_panel):p.error('--recover-snapshot does not accept panel display options')
+if a.edit_mode and (saved_profile or not a.native_panel or not a.follow_skin):p.error('--edit-mode requires a disposable --native-panel --follow-skin preview')
 if a.instances is not None and (saved_profile or not a.native_panel or not a.follow_skin):p.error('--instances requires a disposable --native-panel --follow-skin preview')
 if a.profile and (not (a.follow_skin or a.export_as or a.recover_snapshot) or a.output):
     p.error('--profile requires --follow-skin, --export-as or --recover-snapshot and uses its persisted output bindings instead of --output')
@@ -79,7 +81,8 @@ with tempfile.TemporaryDirectory(prefix='bwm-r4-preview-') as tmp:
              XDG_CACHE_HOME=str(root/'cache'),XDG_RUNTIME_DIR=str(root/'runtime'),
              XDG_CONFIG_DIRS=str(root/'defaults'),XDG_DATA_DIRS='/usr/local/share:/usr/share',
              DBUS_SESSION_BUS_ADDRESS='unix:path='+str(root/'no-bus'))
-    env.pop('BWM_R4_NATIVE_PANEL_POLICY',None)
+    env.pop('BWM_R4_NATIVE_PANEL_POLICY',None);env.pop('BWM_R5_EDIT_MODE',None)
+    if a.edit_mode:env['BWM_R5_EDIT_MODE']='1'
     env.pop('BWM_R4_DESKTOP_ACTIONS',None);env.pop('BWM_R4_DESKTOP_RUNTIME',None);env.pop('BWM_R4_DESKTOP_CONFIG',None)
     for key in ('BWM_R4_TASK_ACTIONS','BWM_R4_TASK_RUNTIME','BWM_R4_TASK_CONFIG','BWM_R4_PREVIEW_INSTANCES','BWM_R4_LAUNCH_CONTEXT','BWM_R4_GUARD_RUNTIME','BWM_R4_NATIVE_DESKTOPS','BWM_R4_TASK_ALL_DESKTOPS','BWM_R4_TASK_THUMBNAILS'):env.pop(key,None)
     if a.instances is not None or (a.task_actions and a.native_panel):

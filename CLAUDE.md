@@ -549,6 +549,9 @@ siendo el nombre del escritorio original que imita Breeze.
   privado sólo confirma baseline/proceso; la aceptación dinámica requiere medir al aparecer
   y retirar el panel sin remaximizar. Validado en sesión por el usuario para MSI inferior,
   escala 1/giro 0 y modo completo (§208); no extender a otras combinaciones ni takeover.
+  R5: PanelViewHost guarda en plasmashellrc sólo con los Ajustes del panel abiertos
+  (userConfiguring, como PanelView); fuera son vista previa. Longitud por defecto FillAvailable:
+  una prueba con min/maxLength fijos debe pedir panelLengthMode=2 (Custom).
   Otras escalas/giros: probar en una salida headless temporal (r4-geometry-check.py, §302),
   nunca reconfigurando los monitores físicos. Un monitor sin descripción (sin EDID) no debe
   invalidar la instantánea de todas las salidas: la firma en memoria usa entonces el conector.

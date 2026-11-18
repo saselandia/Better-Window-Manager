@@ -34,8 +34,8 @@ with tempfile.TemporaryDirectory(prefix='bwm-r4-check-') as tmp:
     env['XDG_CONFIG_DIRS']=str(root/'defaults/kdedefaults')+os.pathsep+str(root/'defaults')
     packageRoot=root/'data/plasma/plasmoids'
     packageRoot.mkdir(parents=True)
-    def run(argv,execution_env=None):
-        r=subprocess.run([str(v) for v in argv],env=env if execution_env is None else execution_env,capture_output=True,text=True,timeout=25)
+    def run(argv,execution_env=None,timeout=25):
+        r=subprocess.run([str(v) for v in argv],env=env if execution_env is None else execution_env,capture_output=True,text=True,timeout=timeout)
         if r.returncode:
             lines=r.stdout.splitlines()
             failures='\n'.join('\n'.join(lines[i:i+6]) for i,line in enumerate(lines) if 'FAIL!' in line)
@@ -60,6 +60,12 @@ with tempfile.TemporaryDirectory(prefix='bwm-r4-check-') as tmp:
     fixture=Path(__file__).with_name('tests')/'shared-config'
     fixtureId=json.loads((fixture/'metadata.json').read_text())['KPlugin']['Id']
     run(['kpackagetool6','--type','Plasma/Applet','--packageroot',packageRoot,'--install',fixture])
+    # The tray UI tests need the same notification-area child as check-local.py.
+    trayChild=packageRoot/'org.bwm.r4.tray-child'
+    shutil.copytree(fixture,trayChild)
+    trayMetadata=json.loads((trayChild/'metadata.json').read_text())
+    trayMetadata['KPlugin']['Id']='org.bwm.r4.tray-child';trayMetadata['X-Plasma-NotificationAreaCategory']='ApplicationStatus'
+    (trayChild/'metadata.json').write_text(json.dumps(trayMetadata))
     tests=Path(__file__).with_name('tests')
     moduleRoot=root/'data/qml'
     shutil.copytree(tests/'config-pages-module',moduleRoot/'org/bwm/r4/configpages')
@@ -142,7 +148,8 @@ with tempfile.TemporaryDirectory(prefix='bwm-r4-check-') as tmp:
         assert result['firstId']!=result['secondId']
         frame=json.loads(run([a.binary,'--probe-panel-frame',plugin]))
         assert frame['nativeViewLoaded'] and frame['nativeContainmentAttached'] and frame['frameReadbackAvailable']
-        assert frame['containmentPackage']=='org.kde.panel' and frame['width']==640 and frame['height']==48
+        # PanelView 6.7.5 default: FillAvailable, the output's full width.
+        assert frame['containmentPackage']=='org.kde.panel' and frame['lengthMode']==0 and frame['width']==frame['screenWidth'] and frame['height']==48
         assert not frame['waylandVerified'] and not frame['adaptiveWindowBackend'] and not frame['compositorBlur']
         result['nativePanelFrameProbe']=frame
         if mode=='--exercise':
@@ -154,7 +161,16 @@ with tempfile.TemporaryDirectory(prefix='bwm-r4-check-') as tmp:
             result['freshProcessReadback']=True
             if a.ui_test:
                 env['BWM_TEST_APPLET']=plugin
-                output=run([a.ui_test])
+                # The whole suite runs once per package. Its profile/tray tests create
+                # fixed destinations, so each pass gets its own copy of the config,
+                # state and runtime roots; readbacks below use that same copy.
+                suiteRoots={}
+                for key in ('XDG_CONFIG_HOME','XDG_STATE_HOME','XDG_RUNTIME_DIR'):
+                    previous=env.get(key);fresh=Path(tempfile.mkdtemp(prefix='ui-'+key.lower()+'-',dir=root))
+                    fresh.chmod(0o700)
+                    if previous and Path(previous).is_dir():shutil.copytree(previous,fresh,dirs_exist_ok=True,symlinks=True)
+                    suiteRoots[key]=previous;env[key]=str(fresh)
+                output=run([a.ui_test],timeout=300) # Whole suite; single commands keep 25 s.
                 result['nativePopupAndConfigButtonsPassed']=True
                 result['originalPanelConfigureActionPassed']=True
                 if plugin=='AndromedaLauncher':
@@ -183,6 +199,9 @@ with tempfile.TemporaryDirectory(prefix='bwm-r4-check-') as tmp:
                 result['moduleConfigurationFreshProcessReadbackOutput']=run([a.ui_test,'moduleConfigurationFreshProcessReadback'])[-1500:]
                 result['uiTestOutput']=output[-4000:]
                 del env['BWM_TEST_APPLET']
+                for key,previous in suiteRoots.items():
+                    if previous is None:env.pop(key,None)
+                    else:env[key]=previous
             # Test the standalone entry point with no visible output, including
             # lifetime without windows, actual publisher IPC files and clean stop.
             publisher=Path(__file__).resolve().parents[2]/'config/hypr/skins/plasma/scripts/panel-session.py'

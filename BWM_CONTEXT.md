@@ -103,6 +103,9 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 
 ### 2.4 Breeze (Kde plasma): port sobre Hyprland
 
+* **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
+  con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
+  Probado offscreen y visto en Hyprland; resto de R5 pendiente (`docs/BREEZE_R5_RESULTS.md`).
 * **Breeze II (2026-11-12):** `docs/BREEZE_PLAN_V2.md`, R0 entregada con referencia y límites documentados;
   R1 corrige origen de especiales al minimizar, activación común y filtro de Alt+Tab (pruebas
   aisladas; fallo visual original pendiente). R2 tiene primer KCM QWidget real, descubierto por
@@ -4881,6 +4884,36 @@ panel diario intacto. Pérdida temporal del ejecutor no demuestra un fallo del o
 * Regresión del observador (falla antes, pasa después) y cinco pruebas del
   comprobador; 254 pruebas R4 y 42 de ventanas/puente/skins pasan. `Fixture`
   admite un selector opcional; por defecto sigue usando `desc:`.
+
+### 303. R5, iteración 1: los «Ajustes del panel» originales de Plasma (2026-11-18)
+
+* **Petición:** continuar lo que quedara de R4 y, si no quedaba, empezar R5. Los criterios del
+  prompt de R4 se cumplieron en §209. El panel diario y la bandeja nativa en la vista se quedan
+  fuera de ese prompt, así que se empieza R5 sobre el anfitrión aislado.
+* **Hecho:** `src/bwm-plasma-host/panelconfigview.{h,cpp}` adapta `PanelConfigView`/`PanelRulerView`
+  de plasma-workspace 6.7.5 (LGPL, autoría conservada). Carga sin cambios el `PanelConfiguration.qml`
+  instalado con sus objetos `plasmoid`/`panel`/`configDialog`. Lo abre la acción original del panel
+  «Enter Edit Mode» (`configure`), que activa el modo edición de la Corona. `PanelViewHost` cumple
+  ahora el contrato de `PanelView` que usa ese QML: alineación, desplazamiento, modo de longitud,
+  mín./máx., `minThickness`, `adaptiveOpacityEnabled` según el estilo de Plasma y `userConfiguring`.
+  Tamaño y anclaje siguen `preferredSize`/`updateLayerWindow`. El modo predeterminado es el de
+  Plasma, rellenar el ancho. `alignment`, `panelLengthMode` y `offset` se guardan en `plasmashellrc`.
+  Antes se rechazaban.
+* Con el diálogo abierto cada cambio se guarda al momento, como en Plasma. Fuera, los setters
+  siguen siendo vista previa. Autoocultar, esquivar ventanas y opacidad adaptativa siguen sin
+  controlador: se rechazan sin ocultar la opción. Mover a otro monitor y clonar fallan de forma
+  visible. `preview-isolated.py --edit-mode` abre el diálogo en la vista desechable.
+* **Comprobado:** QtTest nuevo con los combos reales del QML (alineación, anchura personalizada con
+  regla, altura, flotante, opacidad, añadir espaciador, Escape) y lectura en un anfitrión nuevo.
+  Prueba de anclaje por alineación. CTest local y de superficies, `check-isolated.py` completo
+  (KDE y Andromeda) y 255 pruebas Python R4 pasan. En Hyprland (LG) el diálogo se abrió como
+  capa encima del panel y se cerró sin capas residuales. El foco de teclado se devolvió a la
+  ventana que lo tenía. Arreglado de paso en `check-isolated.py` (anterior a R5): fixture de
+  bandeja ausente, pasadas repetidas en las mismas raíces y límite de 25 s para la suite.
+* **Pendiente:** usarlo con el ratón (usuario), WidgetExplorer original, modo edición del
+  escritorio, mover/clonar paneles, autoocultar, varios paneles, escala fraccionaria y la
+  conversión de alineación/longitud de `bar.plasma`. Sin ASan esta vez. Informe en
+  `docs/BREEZE_R5_RESULTS.md`.
 
 ## 4. 📂 Estructura del repositorio
 

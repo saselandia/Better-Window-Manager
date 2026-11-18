@@ -16,7 +16,16 @@ struct PanelAnchoring {
     LayerShellQt::Window::Anchor exclusiveEdge;
     QMargins margins;
 };
-PanelAnchoring nativePanelAnchoring(Qt::Edge edge, int screenExtent, int panelExtent, bool explicitExclusiveEdge);
+// Placement along the panel's axis, as PanelView 6.7.5: Qt::AlignLeft/AlignCenter/
+// AlignRight and LengthMode FillAvailable(0)/FitContent(1)/Custom(2). The offset
+// only applies to a Custom length on a side alignment, like its layer anchoring.
+struct PanelPlacement {int alignment=Qt::AlignLeft;int offset=0;int lengthMode=2;};
+// Start of the panel along its axis, relative to the output (logical pixels).
+int panelStart(const PanelPlacement &placement,int screenExtent,int panelExtent);
+PanelAnchoring nativePanelAnchoring(Qt::Edge edge, int screenExtent, int panelExtent, bool explicitExclusiveEdge,
+                                    const PanelPlacement &placement=PanelPlacement());
+// Updates the anchoring of a configured panel surface without changing its role.
+void setPanelPlacement(QQuickWindow *window, const PanelPlacement &placement);
 // Explicit opt-in controller: native NormalPanel (0) or WindowsGoBelow (3).
 // A positive exclusive zone is a request, never confirmation by the compositor.
 bool setPanelVisibility(QQuickWindow *window, int mode, int thickness);

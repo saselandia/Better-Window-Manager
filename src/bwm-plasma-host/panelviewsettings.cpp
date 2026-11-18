@@ -20,16 +20,22 @@ PanelViewSettings::PanelViewSettings(QString fileName,uint id,bool vertical,int 
      m_nativeVisibility(nativeVisibility),m_screenExtent(extent) {
     // Keep the relative native filename for KConfig's XDG/kdedefaults cascade.
     // The absolute destination is only the identity of our serialization lock.
+    // PanelView::restore 6.7.5 defaults for the placement keys when the caller has none.
+    for(const auto &[key,value]:{std::pair{QStringLiteral("alignment"),1},{QStringLiteral("panelLengthMode"),0},{QStringLiteral("offset"),0}})
+        if(!m_defaults.contains(key))m_defaults.insert(key,value);
     m_filePath=QDir::isRelativePath(m_fileName) ? QDir(QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)).filePath(m_fileName) : m_fileName;
 }
 QStringList PanelViewSettings::keys()const {
-    QStringList result={"floating","floatingApplets","panelOpacity","thickness","minLength","maxLength"};
+    QStringList result={"floating","floatingApplets","panelOpacity","thickness","minLength","maxLength","alignment","panelLengthMode","offset"};
     if(m_nativeVisibility)result.append("panelVisibility");return result;
 }
 QList<PanelViewSettings::Target> PanelViewSettings::targets(const QString &key,bool readFallback)const {
     const QStringList base={"PlasmaViews",m_panel};
     if(key=="thickness")return {{base+QStringList{"Defaults"},key}};
-    if(key=="minLength" || key=="maxLength")return {{base+QStringList{m_resolution},key},{base+QStringList{"Defaults"},key}};
+    if(key=="minLength" || key=="maxLength" || key=="offset")return {{base+QStringList{m_resolution},key},{base+QStringList{"Defaults"},key}};
+    // PanelView::restore 6.7.5: alignment lives in the panel group, with the
+    // resolution group as the pre-5.9 fallback; panelLengthMode only in the panel group.
+    if(key=="alignment" && readFallback)return {{base,key},{base+QStringList{m_resolution},key}};
     if(key=="panelVisibility" && readFallback)return {{base,key},{base+QStringList{m_resolution},key}};
     return {{base,key}};
 }
@@ -44,12 +50,14 @@ bool PanelViewSettings::validate(QVariantMap &values)const {
         const bool flag=key=="floating" || key=="floatingApplets";
         if(value.metaType().id()==QMetaType::Bool && flag){number=value.toBool()?1:0;ok=true;}
         else if(value.metaType().id()==QMetaType::QString || value.metaType().id()==QMetaType::Bool)ok=false;
-        if(!ok || !std::isfinite(number) || std::floor(number)!=number || number<0 || number>8192) {
+        if(!ok || !std::isfinite(number) || std::floor(number)!=number || number<(key=="offset"?-8192:0) || number>8192) {
             m_error=QStringLiteral("Invalid native panel value: %1").arg(key);return false;
         }
         const int n=int(number);
         if((flag && n>1) || (key=="panelOpacity" && n!=1 && n!=2) || (key=="panelVisibility" && n!=0 && n!=3) ||
-           (key=="thickness" && (n<16 || n>256)) || ((key=="minLength" || key=="maxLength") && n<64)) {
+           (key=="thickness" && (n<16 || n>256)) || ((key=="minLength" || key=="maxLength") && n<64) ||
+           // Qt::AlignLeft, Qt::AlignRight, Qt::AlignCenter; PanelView::LengthMode 0..2.
+           (key=="alignment" && n!=1 && n!=2 && n!=132) || (key=="panelLengthMode" && n>2)) {
             m_error=key=="panelOpacity" ? QStringLiteral("Adaptive or unknown panel opacity is not supported by this host.") : QStringLiteral("Panel setting outside supported range: %1").arg(key);return false;
         }
         values.insert(key,n);
@@ -59,24 +67,10 @@ bool PanelViewSettings::validate(QVariantMap &values)const {
     return true;
 }
 bool PanelViewSettings::read(KConfig &config,QVariantMap &values)const {
-    const auto base=group(config,{"PlasmaViews",m_panel});
-    // These original settings have no controller in the preview host. Preserve
-    // them, but do not open a view that silently ignores an explicitly different policy.
-    QMap<QString,int> fixed={{"panelLengthMode",2},{"alignment",1}};
-    for(auto it=fixed.cbegin();it!=fixed.cend();++it)if(base.hasKey(it.key())) {
-        bool ok=false;const int value=base.readEntry(it.key(),QString()).toInt(&ok);
-        if(!ok || value!=it.value()){m_error=QStringLiteral("Native panel policy needs an unavailable controller: %1").arg(it.key());return false;}
-    }
     if(!m_nativeVisibility)for(const auto &target:targets("panelVisibility",true)) {
         const auto g=group(config,target.groups);if(!g.hasKey(target.key))continue;
         bool ok=false;const int policy=g.readEntry(target.key,QString()).toInt(&ok);
         if(!ok || policy!=3){m_error=QStringLiteral("Native panel policy needs an unavailable controller: panelVisibility");return false;}
-        break;
-    }
-    for(const auto &path:{QStringList{"PlasmaViews",m_panel,m_resolution},QStringList{"PlasmaViews",m_panel,"Defaults"}}) {
-        const auto g=group(config,path);if(!g.hasKey("offset"))continue;
-        bool ok=false;const int value=g.readEntry("offset",QString()).toInt(&ok);
-        if(!ok || value!=0){m_error=QStringLiteral("Native panel offset needs an unavailable positioning controller.");return false;}
         break;
     }
     values=m_defaults;

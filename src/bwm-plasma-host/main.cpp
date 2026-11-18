@@ -298,6 +298,18 @@ int main(int argc, char **argv) {
         RuntimeControl control(&runtime,qEnvironmentVariable("BWM_R4_CONTROL_DIR"),qEnvironmentVariable("BWM_R4_SESSION_TOKEN"));
         QObject::connect(&control,&RuntimeControl::stopRequested,&app,&QCoreApplication::quit,Qt::QueuedConnection);
         if(!control.start()){fprintf(stderr,"%s\n",qPrintable(control.error()));return 9;}
+        // R5 (explicit --edit-mode): the panel's own "Enter Edit Mode" action, once shown.
+        QTimer editMode;int editAttempts=0;
+        if(qEnvironmentVariable("BWM_R5_EDIT_MODE")=="1"){
+            editMode.setInterval(200);
+            QObject::connect(&editMode,&QTimer::timeout,&app,[&]{
+                auto *view=runtime.view(containment->id());
+                if(view && view->isVisible() && view->isExposed()){
+                    editMode.stop();if(auto *configure=containment->internalAction("configure"))configure->trigger();
+                } else if(++editAttempts>50){editMode.stop();fprintf(stderr,"Edit mode: the panel view did not appear.\n");}
+            });
+            editMode.start();
+        }
         const int code=app.exec();runtime.setSkin("default");
         corona.saveLayout(layoutName);return corona.config()->sync() ? code : 7;
     }
@@ -330,6 +342,7 @@ int main(int argc, char **argv) {
             QJsonObject result=QJsonObject::fromVariantMap(view->capabilities());
             result["containmentPackage"]=containment->pluginMetaData().pluginId();
             result["nativeContainmentAttached"]=attached;result["width"]=view->width();result["height"]=view->height();
+            result["lengthMode"]=view->lengthMode();result["screenWidth"]=view->screen() ? view->screen()->size().width() : 0;
             result["frameReadbackAvailable"]=!view->grabWindow().isNull();
             result["error"]=view->error();puts(QJsonDocument(result).toJson().constData());app.exit(attached ? 0 : 4);
         });

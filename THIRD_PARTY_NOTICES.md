@@ -394,6 +394,13 @@ no copia ni evalúa layouts o vistas de temas. Conserva las rutas y procedencia 
 APIs/contextos nativos de libplasma/PlasmaQuick 6.7.5, Qt y LayerShellQt sin copiar Dialog ni
 alterar las bibliotecas/paquetes instalados. Pruebas y límites en BREEZE_R4_RESULTS.md.
 
+R5: `src/bwm-plasma-host/panelconfigview.{h,cpp}` adapta `shell/panelconfigview.{h,cpp}` de
+plasma-workspace 6.7.5 (Marco Martin, LGPL-2.0-or-later), con la cabecera SPDX y la autoría
+originales y una nota de cambios BWM. Cargan sin modificar el `PanelConfiguration.qml` y sus
+`panelconfiguration/*.qml` instalados de plasma-desktop 6.7.5 (no se copian al repositorio).
+La colocación del panel en `panelviewhost.cpp`/`surfaces.cpp` sigue `PanelView::preferredSize`,
+`geometryByDistance` y `updateLayerWindow` de la misma versión, reescrita sin copiar el código.
+
 La API de instancias/acciones de PanelSession y sus pruebas son propias GPL-2.0-or-later.
 Utilizan Containment.createApplet, Applet.destroy, QAction/QMenu y el método reorderApplets
 del panel original cargado desde sus recursos. Se revisan Corona.loadLayout/saveLayout y

@@ -46,15 +46,34 @@ QRect withoutPanelStrip(const QRect &area,const QRect &panel,Qt::Edge edge) {
     }
     return result.isValid() ? result : area;
 }
+static PanelPlacement windowPlacement(QQuickWindow *window) {
+    PanelPlacement placement;
+    if(window->property("bwmPanelAlignment").isValid())placement.alignment=window->property("bwmPanelAlignment").toInt();
+    placement.offset=window->property("bwmPanelOffset").toInt();
+    if(window->property("bwmPanelLengthMode").isValid())placement.lengthMode=window->property("bwmPanelLengthMode").toInt();
+    return placement;
+}
+int panelStart(const PanelPlacement &placement,int screenExtent,int panelExtent) {
+    const int offset=placement.lengthMode==2 ? placement.offset : 0;
+    switch(placement.alignment) {
+    case Qt::AlignRight:return screenExtent-panelExtent-offset;
+    // The layer path of PanelView 6.7.5 sets no margin for a centered panel, so
+    // the compositor centers it: publish that position, not a shifted one.
+    case Qt::AlignCenter:return (screenExtent-panelExtent)/2;
+    default:return offset;
+    }
+}
 static void panelGeometry(QQuickWindow *window,Qt::Edge edge,int gap) {
     if(!window->screen())return;
     const QRect screen=window->screen()->geometry();
+    const bool vertical=edge==Qt::LeftEdge || edge==Qt::RightEdge;
+    const int start=panelStart(windowPlacement(window),vertical?screen.height():screen.width(),vertical?window->height():window->width());
     QPoint pos;
     switch(edge) {
-    case Qt::BottomEdge:pos={screen.left(),screen.bottom()+1-gap-window->height()};break;
-    case Qt::TopEdge:pos={screen.left(),screen.top()+gap};break;
-    case Qt::LeftEdge:pos={screen.left()+gap,screen.top()};break;
-    case Qt::RightEdge:pos={screen.right()+1-gap-window->width(),screen.top()};break;
+    case Qt::BottomEdge:pos={screen.left()+start,screen.bottom()+1-gap-window->height()};break;
+    case Qt::TopEdge:pos={screen.left()+start,screen.top()+gap};break;
+    case Qt::LeftEdge:pos={screen.left()+gap,screen.top()+start};break;
+    case Qt::RightEdge:pos={screen.right()+1-gap-window->width(),screen.top()+start};break;
     default:return;
     }
     window->setProperty("bwmPanelRect",QRect(pos,window->size()));
@@ -75,17 +94,30 @@ static LayerWindow::Anchor layerAnchor(Qt::Edge edge) {
     return LayerWindow::AnchorNone;
 }
 
-PanelAnchoring nativePanelAnchoring(Qt::Edge edge, int screenExtent, int panelExtent, bool explicitExclusiveEdge) {
+PanelAnchoring nativePanelAnchoring(Qt::Edge edge, int screenExtent, int panelExtent, bool explicitExclusiveEdge,
+                                    const PanelPlacement &along) {
     const bool vertical = edge == Qt::LeftEdge || edge == Qt::RightEdge;
     const auto exclusiveEdge = layerAnchor(edge);
     const auto leading = vertical ? LayerWindow::AnchorTop : LayerWindow::AnchorLeft;
-    PanelAnchoring placement{LayerWindow::Anchors(exclusiveEdge) | leading, exclusiveEdge, {}};
+    const auto trailing = vertical ? LayerWindow::AnchorBottom : LayerWindow::AnchorRight;
+    PanelAnchoring placement{LayerWindow::Anchors(exclusiveEdge), exclusiveEdge, {}};
+    const int offset = along.lengthMode == 2 ? along.offset : 0;
+    // PanelView::updateLayerWindow 6.7.5: one side anchor (plus offset margin) for
+    // left/right alignment, none for center. A full length is the same rectangle
+    // as the leading corner with the output's extent.
+    if (along.lengthMode == 0 || along.alignment == Qt::AlignLeft || (along.alignment != Qt::AlignRight && along.alignment != Qt::AlignCenter)) {
+        placement.anchors |= leading;
+        if (along.lengthMode != 0) (vertical ? placement.margins.setTop(offset) : placement.margins.setLeft(offset));
+    } else if (along.alignment == Qt::AlignRight) {
+        placement.anchors |= trailing;
+        vertical ? placement.margins.setBottom(offset) : placement.margins.setRight(offset);
+    }
     if (!explicitExclusiveEdge) {
         // On older protocol versions a corner alone cannot reserve space.
-        placement.anchors |= vertical ? LayerWindow::AnchorBottom : LayerWindow::AnchorRight;
-        const int unused = std::max(0, screenExtent - panelExtent);
-        if (vertical) placement.margins.setBottom(unused);
-        else placement.margins.setRight(unused);
+        const int start = std::clamp(along.lengthMode == 0 ? 0 : panelStart(along, screenExtent, panelExtent), 0, std::max(0, screenExtent - panelExtent));
+        const int unused = std::max(0, screenExtent - panelExtent - start);
+        placement.anchors |= LayerWindow::Anchors(leading) | trailing;
+        placement.margins = vertical ? QMargins(0, start, 0, unused) : QMargins(start, 0, unused, 0);
     }
     // With v5 the explicit reservation edge permits a corner and a fixed size.
     // Opposite anchors would make LayerShellQt send a zero extent. Hyprland would
@@ -121,7 +153,7 @@ static void updatePanelPolicy(QQuickWindow *window) {
     if(window->property("bwmNativePanelPolicy").toBool()) {
         const int available=vertical?window->screen()->size().height():window->screen()->size().width();
         const int length=vertical?window->height():window->width();
-        const auto placement=nativePanelAnchoring(edge,available,length,supportsExplicitExclusiveEdge(window->screen()));
+        const auto placement=nativePanelAnchoring(edge,available,length,supportsExplicitExclusiveEdge(window->screen()),windowPlacement(window));
         anchors=placement.anchors;
         margins=placement.margins;
         const int cross=vertical?window->width():window->height();
@@ -129,7 +161,14 @@ static void updatePanelPolicy(QQuickWindow *window) {
         if(window->property("bwmPanelOutputUnavailable").toBool())error=QStringLiteral("Native panel output changed; recreate its bound surface.");
         else if(length<=0 || length>available || cross<=0 || cross>crossAvailable)error=QStringLiteral("Native panel surface does not fit its output.");
         else if(window->property("bwmPanelVisibility").toInt()==0 && window->isVisible())zone=window->property("bwmReservationThickness").toInt();
-    } else anchors|=vertical?W::Anchors(W::AnchorTop):W::Anchors(W::AnchorLeft);
+    } else {
+        // Preview without reservation: same side anchors as the native path, keeping the gap.
+        const int available=vertical?window->screen()->size().height():window->screen()->size().width();
+        const auto placement=nativePanelAnchoring(edge,available,vertical?window->height():window->width(),true,windowPlacement(window));
+        anchors=placement.anchors;
+        margins=QMargins(margins.left()+placement.margins.left(),margins.top()+placement.margins.top(),
+                         margins.right()+placement.margins.right(),margins.bottom()+placement.margins.bottom());
+    }
     role->setExclusiveZone(-1); // Withdraw the old request before changing geometry.
     role->setAnchors(anchors);
     role->setExclusiveEdge(exclusiveEdge);
@@ -184,6 +223,15 @@ void configurePanel(QQuickWindow *window,Qt::Edge edge,int gap,bool nativePolicy
     };
     QObject::connect(window,&QQuickWindow::screenChanged,window,bindScreen);
     bindScreen(window->screen());
+}
+void setPanelPlacement(QQuickWindow *window,const PanelPlacement &placement) {
+    if(!window)return;
+    const auto current=windowPlacement(window);
+    window->setProperty("bwmPanelAlignment",placement.alignment);
+    window->setProperty("bwmPanelOffset",placement.offset);
+    window->setProperty("bwmPanelLengthMode",placement.lengthMode);
+    if(window->property("bwmLayerPanel").toBool() && (current.alignment!=placement.alignment || current.offset!=placement.offset || current.lengthMode!=placement.lengthMode))
+        updatePanelPolicy(window);
 }
 void setPanelAcceptsInput(QQuickWindow *window,bool accepts) {
     if(!window)return;
