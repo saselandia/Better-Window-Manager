@@ -28,7 +28,13 @@ void PanelViewHost::registerTypes() {
 PanelViewHost::PanelViewHost(Plasma::Corona *corona,QString viewSettingsFile):ContainmentView(corona),m_viewSettingsFile(std::move(viewSettingsFile)) {
     m_reflow.setSingleShot(true);m_reflow.setInterval(0);
     connect(&m_reflow,&QTimer::timeout,this,&PanelViewHost::reflow);
-    connect(this,&PlasmaQuick::ContainmentView::locationChanged,this,[this]{emit policyChanged();m_reflow.start();});
+    connect(this,&PlasmaQuick::ContainmentView::locationChanged,this,[this](Plasma::Types::Location location){
+        // PanelView 6.7.5 follows a new edge with the form factor and restore(). Outside
+        // its Panel Settings the R4 contract stands: the runtime recreates the view and
+        // the caller rereads the preferences of the new scope explicitly.
+        if(m_userConfiguring && containment())adoptLocation(location);
+        emit policyChanged();m_reflow.start();
+    });
     connect(this,&PlasmaQuick::ContainmentView::formFactorChanged,&m_reflow,qOverload<>(&QTimer::start));
     connect(&m_floatingAnimation,&QPropertyAnimation::valueChanged,this,[this]{updateMask();});
     setTranslationDomain("plasma_shell_org.kde.plasma.desktop");
@@ -314,6 +320,24 @@ void PanelViewHost::showConfigurationInterface(Plasma::Applet *applet) {
     if(m_session)m_session->configure(applet->id());
 }
 
+void PanelViewHost::adoptLocation(Plasma::Types::Location location) {
+    Qt::Edge edge;
+    switch(location) {
+    case Plasma::Types::TopEdge:edge=Qt::TopEdge;break;
+    case Plasma::Types::BottomEdge:edge=Qt::BottomEdge;break;
+    case Plasma::Types::LeftEdge:edge=Qt::LeftEdge;break;
+    case Plasma::Types::RightEdge:edge=Qt::RightEdge;break;
+    default:return;
+    }
+    const bool verticalEdge=edge==Qt::LeftEdge || edge==Qt::RightEdge;
+    containment()->setFormFactor(verticalEdge ? Plasma::Types::Vertical : Plasma::Types::Horizontal);
+    // The preferences scope (Horizontal<width>/Vertical<height>) follows the orientation.
+    if(m_settings && settingsScope()!=m_settings->scope() && !reloadViewSettings())return;
+    reflow();
+    // The same layer surface moves to the new edge; the runtime keeps this view.
+    setProperty("bwmRuntimeEdge",int(edge));
+    BwmSurface::setPanelEdge(this,edge);
+}
 int PanelViewHost::minThickness()const {
     auto *root=rootObject();return root ? root->property(vertical() ? "minPanelWidth" : "minPanelHeight").toInt() : 0;
 }
@@ -381,6 +405,7 @@ void PanelViewHost::setVisibilityMode(int value) {
 void PanelViewHost::setScreenToFollow(QScreen *target) {
     // Moving a panel to another output belongs to the runtime, which binds by description.
     if(!target || target==screen())return;
+    if(receivers(SIGNAL(screenToFollowRequested(QScreen*)))>0){emit screenToFollowRequested(target);return;}
     setError(tr("Moving the panel to another output is not available in this host."));emit screenToFollowChanged();
 }
 void PanelViewHost::clonePanelTo(int location,QScreen *target) {

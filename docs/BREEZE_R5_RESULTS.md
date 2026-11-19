@@ -81,7 +81,7 @@ explícitamente, como haría un `plasmashellrc` con longitudes.
   ellas, pero la conversión no se ha implementado.
 - Sin ASan en esta iteración.
 
-### Pendiente de R5
+### Pendiente de R5 (tras la iteración 1)
 
 `WidgetExplorer` original, modo edición del escritorio (`DesktopEditMode.qml`, sin contenedor de
 escritorio en el anfitrión), mover/clonar paneles con el runtime, superposiciones de edición de
@@ -93,3 +93,54 @@ imágenes con Plasma real y aceptación del usuario.
 Retirar `panelconfigview.*`, las propiedades nuevas de `PanelViewHost`, las tres claves de
 `PanelViewSettings` (vuelve a rechazar `alignment`/`panelLengthMode`/`offset`), el anclaje por
 alineación en `surfaces.cpp`, `enteredEditModeViaDesktop`, `--edit-mode` y las pruebas nuevas.
+
+## Iteración 2 (2026-11-19) — Posición, alineación y flotante en Hyprland
+
+### Informe del usuario
+
+Con el ratón, sobre la vista de la iteración 1: «Set Position…», alineación, visibilidad y
+flotante no funcionaban; el resto sí. El `plasmashellrc` de esa vista tenía `alignment=132`
+(centrado) con `panelLengthMode=0` (rellenar), sin clave `floating`, y el panel seguía abajo.
+
+### Causas y cambios
+
+- **Posición.** Dos fallos: (1) las flechas de «Set Position…» son `PlasmaCore.Dialog` del
+  motor del diálogo, colocadas por coordenadas globales en cada pantalla; nada les daba un
+  rol layer y salían como ventanas normales. Ahora `PanelConfigView` les asigna, al crearse la
+  superficie (`SurfaceCreated`, como R4), una capa `overlay` sin teclado (`bwm-r5-edit-indicator`)
+  en la pantalla de esas coordenadas; `screenFromWindow()` devuelve esa pantalla. (2) Cambiar el
+  borde recreaba la vista en el runtime y cerraba el diálogo. Ahora, **mientras el diálogo está
+  abierto**, el anfitrión hace lo de `PanelView` 6.7.5: fija el factor de forma, relee las
+  preferencias del nuevo ámbito y mueve la misma superficie layer al nuevo borde
+  (`BwmSurface::setPanelEdge`). Fuera del diálogo se mantiene el contrato de R4 (recrear y releer).
+- **Otro monitor.** `screenToFollow` hacia otra salida lo atiende el runtime: cambia la
+  asignación por descripción, recrea la vista allí y vuelve a abrir los ajustes. Sólo en la vista
+  desechable con `--output` (`setOutputMovesAllowed`); los perfiles guardados no reescriben sus
+  bindings y siguen rechazándolo con un error visible.
+- **Alineación.** Funcionaba: con «Rellenar anchura» no cambia nada visible, igual que en Plasma.
+  Con «Personalizada» o «Ajustar al contenido» se mueve a izquierda, centro o derecha (medido).
+- **Flotante.** El camino funciona en Hyprland (medido abajo): el marco original flota y la
+  ventana crece 16 px. En la vista de ensayo el panel ya está 64 px por encima del borde (para no
+  tapar la barra diaria), así que el efecto es pequeño. No se reprodujo un fallo de escritura; la
+  ausencia de `floating` en el archivo del usuario es compatible con haber elegido sólo
+  «Applets only»/«Disabled».
+- **Visibilidad.** Sin cambios: «Siempre visible» sólo existe con `--native-policy` (reserva
+  espacio real); sin ella la vista de ensayo no reserva y lo rechaza. «Ocultar automáticamente»
+  y «Esquivar ventanas» siguen sin controlador.
+
+### Pruebas
+
+| Prueba | Resultado |
+| :--- | :--- |
+| `check-edit-mode-session.py` (nuevo, Hyprland real, MSI; raíces XDG temporales, sin dispositivos de entrada): acciona los combos del QML original y lee `hyprctl layers` | 11/11 pasos: rellenar 0,2048 2560×48; personalizado izquierda/derecha/centro 640×48 en x=0/1920/960; flotante 640×64; 7 flechas como capas dentro de su pantalla; arriba/izquierda/derecha/abajo sin cerrar el diálogo ni recrear la vista; paso al LG (4160,2048) con los ajustes reabiertos; `plasmashellrc` con `alignment=132`, `floating=1`, `panelLengthMode=2`; capas retiradas al final |
+| `originalPanelSettingsEditMode` (ampliada): `moveTo(Izquierda)` y vuelta abajo con el diálogo abierto, ámbito `Vertical<alto>` | Pasa (CTest `isolated-local-configuration`) |
+| `surface-geometry`, `check-isolated.py` completo (ejemplo KDE + AndromedaLauncher instalado del usuario, copiado a raíces temporales) | Pasan |
+| Python R4 | 255 OK |
+
+No probado: el clic físico en las flechas y combos (la prueba usa los manejadores del QML, no el
+ratón), escalas fraccionarias y `--native-policy` con el diálogo.
+
+### Límites
+
+Autoocultar/esquivar, persistencia del cambio de monitor en perfiles, el resto de la lista de
+pendientes y la aceptación del usuario.

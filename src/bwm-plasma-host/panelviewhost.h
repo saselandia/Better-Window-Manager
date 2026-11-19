@@ -28,6 +28,7 @@ public:
 // surfaces never reserve work area. The explicit native-policy test can request
 // reservations; neither mode implements autohide or claims a KWin task backend.
 class PanelViewHost : public PlasmaQuick::ContainmentView {
+    friend class PanelRuntime; // Reports output-move errors on the view, like its own setters.
     Q_OBJECT
     Q_PROPERTY(int thickness READ thickness WRITE setThickness NOTIFY geometryPolicyChanged)
     Q_PROPERTY(int length READ length WRITE setLength NOTIFY geometryPolicyChanged)
@@ -116,11 +117,14 @@ Q_SIGNALS:
     void userConfiguringChanged();
     void adaptiveOpacityEnabledChanged();
     void cloneRequested(int location,QScreen *screen);
+    // The runtime moves the panel to that output (bindings are by description).
+    void screenToFollowRequested(QScreen *target);
 protected:
     void showConfigurationInterface(Plasma::Applet *applet)override;
     bool event(QEvent *event)override;
 private Q_SLOTS:
     void reflow();
+    void adoptLocation(Plasma::Types::Location location);
     void animateFloating();
     void updateMask();
 private:

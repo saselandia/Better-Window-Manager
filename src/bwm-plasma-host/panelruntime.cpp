@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "panelruntime.h"
+#include <QAction>
 #include "viewcorona.h"
 #include "panelviewhost.h"
 #include "outputidentity.h"
@@ -156,6 +157,18 @@ bool PanelRuntime::setSkin(const QString &value) {
     const auto before=m_status;const bool notify=m_skin!=value || !m_error.isEmpty();
     m_skin=value;m_error.clear();reconcile();if(notify && before==m_status)emit changed();return true;
 }
+void PanelRuntime::moveToOutput(uint id,QScreen *target) {
+    auto *frame=view(id);if(!frame || !target)return;
+    if(!m_outputMovesAllowed){frame->setError(tr("Moving the panel to another output is not available in this host."));return;}
+    const auto identity=BwmOutput::identity(target);
+    const auto description=(identity.manufacturer+' '+identity.model+' '+identity.serial).simplified();
+    QString state;
+    if(description.isEmpty() || BwmOutput::resolveScreen(description,&state)!=target) {
+        frame->setError(tr("The target output has no unique description."));return;
+    }
+    if(frame->userConfiguring())m_reopenSettings.insert(id);
+    m_assignments[id]=description;reconcile();
+}
 void PanelRuntime::drop(uint id) {
     auto *frame=m_views.take(id).data();if(!frame)return;
     frame->hide();
@@ -211,7 +224,14 @@ void PanelRuntime::reconcile() {
                 connect(frame,&QWindow::screenChanged,this,[this,id,screen](QScreen *now){
                     if(now!=screen){if(auto *v=view(id))v->hide();m_reconcile.start();}
                 });
+                // Queued: the request comes from a handler of the settings that the move destroys.
+                connect(frame,&PanelViewHost::screenToFollowRequested,this,[this,id](QScreen *target){moveToOutput(id,target);},Qt::QueuedConnection);
                 frame->show();
+                if(m_reopenSettings.remove(id))
+                    QTimer::singleShot(0,this,[this,id]{
+                        auto *v=view(id);if(!v || !v->containment())return;
+                        if(auto *configure=v->containment()->internalAction(QStringLiteral("configure")))configure->trigger();
+                    });
             }
         }
         if(frame){

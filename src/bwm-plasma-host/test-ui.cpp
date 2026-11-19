@@ -1172,6 +1172,14 @@ private Q_SLOTS:
             QCOMPARE(g.group("Defaults").readEntry("thickness",0),52);QCOMPARE(g.readEntry("floating",0),1);
             QVERIFY(!g.hasKey("panelVisibility"));
         }
+        // "Set Position…" moves the panel in place, keeping the settings open, as PanelView.
+        run("setPositionButton.checked=true;setPositionButton.moveTo(5)");
+        QTRY_COMPARE(c->location(),Plasma::Types::LeftEdge);QCOMPARE(c->formFactor(),Plasma::Types::Vertical);
+        QVERIFY(dialog->isVisible());QVERIFY(view.userConfiguring());
+        QCOMPARE(view.capabilities().value("viewSettingsScope").toString(),"Vertical"+QString::number(view.screen()->size().height()));
+        QTRY_VERIFY(view.height()>view.width());
+        run("setPositionButton.checked=true;setPositionButton.moveTo(4)");
+        QTRY_COMPARE(c->location(),Plasma::Types::BottomEdge);QCOMPARE(c->formFactor(),Plasma::Types::Horizontal);QVERIFY(dialog->isVisible());
         // "Add New > Spacer" uses the original containment, not a BWM list.
         run("configDialog.addPanelSpacer()");
         bool spacer=false;for(auto *a:c->applets())spacer|=a->pluginMetaData().pluginId()=="org.kde.plasma.panelspacer";QVERIFY(spacer);

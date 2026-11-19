@@ -172,6 +172,10 @@ if(BUILD_TESTING)
     add_executable(test-plasma-ui test-ui.cpp trayprobe.cpp)
     target_link_libraries(test-plasma-ui PRIVATE bwm-plasma-configuration Qt6::DBus Qt6::Test KF6::Package)
     target_compile_definitions(test-plasma-ui PRIVATE BWM_SHELL_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shell")
+    # Session-only (not in CTest): run through check-edit-mode-session.py.
+    add_executable(test-editmode-session test-editmode-session.cpp)
+    target_link_libraries(test-editmode-session PRIVATE bwm-plasma-configuration Qt6::Test KF6::Package)
+    target_compile_definitions(test-editmode-session PRIVATE BWM_SHELL_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shell")
     add_executable(test-plasma-tray-events test-tray-events.cpp)
     target_link_libraries(test-plasma-tray-events PRIVATE bwm-plasma-configuration Qt6::WaylandClientPrivate
         Qt6::DBus Qt6::Test KF6::StatusNotifierItem)

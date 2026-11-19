@@ -294,6 +294,7 @@ int main(int argc, char **argv) {
         if(output.isEmpty()){fprintf(stderr,"A persistent output description is required for the following preview.\n");return 8;}
         app.setQuitOnLastWindowClosed(false);
         PanelRuntime runtime(&corona,"plasmashellrc",true,nullptr,qEnvironmentVariable("BWM_R4_NATIVE_PANEL_POLICY")=="1");
+        runtime.setOutputMovesAllowed(true); // Disposable preview: its binding is --output itself.
         if(!runtime.setAssignments({{containment->id(),output}})){fprintf(stderr,"%s\n",qPrintable(runtime.error()));return 8;}
         RuntimeControl control(&runtime,qEnvironmentVariable("BWM_R4_CONTROL_DIR"),qEnvironmentVariable("BWM_R4_SESSION_TOKEN"));
         QObject::connect(&control,&RuntimeControl::stopRequested,&app,&QCoreApplication::quit,Qt::QueuedConnection);

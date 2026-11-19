@@ -20,6 +20,8 @@
 #include <QAction>
 #include <QGuiApplication>
 #include <QKeyEvent>
+#include <QPlatformSurfaceEvent>
+#include <PlasmaQuick/Dialog>
 #include <QQmlContext>
 #include <QQmlEngine>
 #include <QQuickItem>
@@ -159,6 +161,10 @@ PanelConfigView::PanelConfigView(Plasma::Containment *containment, PanelViewHost
     connect(panelView, &PanelViewHost::placementChanged, m_anchor, [this] {
         if (m_panelRulerView) m_panelRulerView->syncPanelLocation();
     });
+    connect(containment, &Plasma::Containment::locationChanged, m_anchor, [this] {
+        if (m_panelRulerView) m_panelRulerView->syncPanelLocation();
+    });
+    qApp->installEventFilter(this);
     setMargin(4);
 }
 
@@ -247,6 +253,54 @@ void PanelConfigView::addPanelMarginsSeparator()
     addWidget(QStringLiteral("org.kde.plasma.marginsseparator"), false);
 }
 
+bool PanelConfigView::eventFilter(QObject *object, QEvent *event)
+{
+    // SurfaceCreated precedes Qt's shell-role selection (Qt 6.11.2), the boundary at
+    // which LayerShellQt's public API can still assign the layer role (as R4 does).
+    if (event->type() == QEvent::PlatformSurface
+        && static_cast<QPlatformSurfaceEvent *>(event)->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated) {
+        auto *dialog = qobject_cast<PlasmaQuick::Dialog *>(object);
+        if (dialog && object != this && m_sharedQmlEngine && qmlEngine(dialog) == m_sharedQmlEngine->engine().get()) {
+            placeIndicator(dialog);
+        }
+    }
+    return false;
+}
+
+void PanelConfigView::placeIndicator(QWindow *window)
+{
+    // PanelConfiguration.qml positions each indicator in the virtual desktop
+    // (modelData.virtualX/virtualY). Keep that rectangle on that screen.
+    auto update = [window] {
+        const QPoint position = window->position();
+        QScreen *screen = window->screen();
+        if (!screen || !screen->geometry().contains(position)) {
+            if (QScreen *at = QGuiApplication::screenAt(position)) screen = at;
+        }
+        if (!screen) return;
+        auto *role = LayerShellQt::Window::get(window);
+        role->setScope(QStringLiteral("bwm-r5-edit-indicator"));
+        role->setLayer(LayerShellQt::Window::LayerOverlay);
+        role->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
+        role->setActivateOnShow(false);
+        role->setExclusiveZone(-1);
+        role->setScreen(screen);
+        role->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorTop) | LayerShellQt::Window::AnchorLeft);
+        role->setMargins(QMargins(position.x() - screen->geometry().x(), position.y() - screen->geometry().y(), 0, 0));
+        role->setDesiredSize(window->size());
+        window->setProperty("bwmIndicatorScreen", QVariant::fromValue(screen));
+        window->requestUpdate();
+    };
+    if (!window->property("bwmIndicatorPlaced").toBool()) {
+        window->setProperty("bwmIndicatorPlaced", true);
+        connect(window, &QWindow::xChanged, window, update);
+        connect(window, &QWindow::yChanged, window, update);
+        connect(window, &QWindow::widthChanged, window, update);
+        connect(window, &QWindow::heightChanged, window, update);
+    }
+    update();
+}
+
 void PanelConfigView::keyPressEvent(QKeyEvent *ev)
 {
     QQuickWindow::keyPressEvent(ev);
@@ -325,7 +379,9 @@ QScreen *PanelConfigView::screenFromWindow(QWindow *window) const
     if (!window) {
         return nullptr;
     }
-    QScreen *screen = window->screen();
+    // BWM: an indicator's output is the one its layer was placed on.
+    QScreen *screen = window->property("bwmIndicatorScreen").value<QScreen *>();
+    if (!screen) screen = window->screen();
     QQmlEngine::setObjectOwnership(screen, QQmlEngine::CppOwnership);
     return screen;
 }

@@ -1267,5 +1267,16 @@ python3 preview-isolated.py --binary build/bwm-plasma-host/bwm-plasma-host \
   --edit-mode --output "<descripción del monitor>"
 ```
 
-Límites y pendientes en `docs/BREEZE_R5_RESULTS.md` (autoocultar, mover/clonar, WidgetExplorer).
+«Siempre visible» necesita además `--native-policy` (reserva espacio real). «Set Position…»
+mueve el panel de borde sin recrear la vista mientras el diálogo está abierto; en esta vista
+desechable también a otro monitor (el runtime reabre los ajustes allí).
+
+Comprobación en la sesión, sin ratón ni teclado virtuales (acciona el QML original y mide con
+`hyprctl layers`; panel desechable 64 px sobre el borde, retirado al final):
+
+```
+python3 src/bwm-plasma-host/check-edit-mode-session.py --output "<descripción del monitor>"
+```
+
+Límites y pendientes en `docs/BREEZE_R5_RESULTS.md` (autoocultar, clonar, WidgetExplorer).
 Al actualizar upstream, revisar `shell/panelconfigview.*` y los `Q_PROPERTY` de `panelview.h`.

@@ -26,6 +26,9 @@ PanelAnchoring nativePanelAnchoring(Qt::Edge edge, int screenExtent, int panelEx
                                     const PanelPlacement &placement=PanelPlacement());
 // Updates the anchoring of a configured panel surface without changing its role.
 void setPanelPlacement(QQuickWindow *window, const PanelPlacement &placement);
+// Moves a configured panel surface to another screen edge in place, as
+// PanelView::updateLayerWindow re-anchors a mapped panel when its location changes.
+void setPanelEdge(QQuickWindow *window, Qt::Edge edge);
 // Explicit opt-in controller: native NormalPanel (0) or WindowsGoBelow (3).
 // A positive exclusive zone is a request, never confirmation by the compositor.
 bool setPanelVisibility(QQuickWindow *window, int mode, int thickness);

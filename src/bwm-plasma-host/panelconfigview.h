@@ -67,6 +67,7 @@ public Q_SLOTS:
     void addPanelMarginsSeparator();
 
 protected:
+    bool eventFilter(QObject *object, QEvent *event) override;
     void keyPressEvent(QKeyEvent *ev) override;
     void showEvent(QShowEvent *ev) override;
     void hideEvent(QHideEvent *ev) override;
@@ -78,6 +79,9 @@ Q_SIGNALS:
 
 private:
     void addWidget(const QString &plugin, bool atStart);
+    // BWM: the "Set Position…"/clone indicators are PlasmaCore.Dialogs placed by
+    // global coordinates on every screen; give them an overlay layer there.
+    void placeIndicator(QWindow *window);
     Plasma::Containment *m_containment;
     QPointer<PanelViewHost> m_panelView;
     std::unique_ptr<PanelRulerView> m_panelRulerView;

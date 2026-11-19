@@ -233,6 +233,11 @@ void setPanelPlacement(QQuickWindow *window,const PanelPlacement &placement) {
     if(window->property("bwmLayerPanel").toBool() && (current.alignment!=placement.alignment || current.offset!=placement.offset || current.lengthMode!=placement.lengthMode))
         updatePanelPolicy(window);
 }
+void setPanelEdge(QQuickWindow *window,Qt::Edge edge) {
+    if(!window || !window->property("bwmLayerPanel").toBool() || (edge!=Qt::TopEdge && edge!=Qt::BottomEdge && edge!=Qt::LeftEdge && edge!=Qt::RightEdge))return;
+    if(window->property("bwmPanelEdge").toInt()==int(edge))return;
+    window->setProperty("bwmPanelEdge",int(edge));updatePanelPolicy(window);
+}
 void setPanelAcceptsInput(QQuickWindow *window,bool accepts) {
     if(!window)return;
     window->setFlag(Qt::FramelessWindowHint,true);

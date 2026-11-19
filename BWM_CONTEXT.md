@@ -106,6 +106,8 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; resto de R5 pendiente (`docs/BREEZE_R5_RESULTS.md`).
+  Iteración 2 (§304): «Set Position…» (flechas como capas, borde cambiado sin recrear la vista,
+  paso a otro monitor en la vista desechable), medido en Hyprland con `check-edit-mode-session.py`.
 * **Breeze II (2026-11-12):** `docs/BREEZE_PLAN_V2.md`, R0 entregada con referencia y límites documentados;
   R1 corrige origen de especiales al minimizar, activación común y filtro de Alt+Tab (pruebas
   aisladas; fallo visual original pendiente). R2 tiene primer KCM QWidget real, descubierto por
@@ -5116,3 +5118,27 @@ git status; git log --oneline -5; git push origin main
 * **«EMFILE: too many open files, watch» al abrir una bóveda:** no eran descriptores sino instancias de inotify: 127 de 128 por usuario, 86 de ellas de Quickshell. Cada `FileView` con `watchChanges` es un `QFileSystemWatcher` y una instancia. El panel de agentes de Omarchy creaba una por registro de uso (23 proveedores). Ahora `Agent.qml` no vigila y `Main.qml` vigila un único marcador `agents/usage/.updated`, que `omarchy-agent-usage-update` reescribe al final de cada ejecución (también lanzada desde fuera del panel); se siguen recargando todos los registros tras cada actualización del propio panel. Fuera también los dos vigilantes de `agent-local` (BWM no tiene modelos locales). Parches marcados «BWM».
 * **Comprobado:** tras reinicio de mantenimiento, Quickshell 86 → 42 instancias y el usuario 127 → 85; destinos IPC `shell`/`omarchy.agents` presentes, sin errores nuevos en el log; el script escribe el marcador. No se cambió `fs.inotify.max_user_instances` (sigue 128), así que vale para cualquier instalación.
 * **No probado:** abrir la bóveda en Obsidian tras el arreglo y que el panel de agentes muestre datos nuevos en vivo tras una actualización lanzada desde terminal. Quedan 11 instancias de Quickshell sin ningún archivo vigilado (FileView sobre archivos inexistentes) sin identificar.
+
+### 304. R5, iteración 2: posición, alineación y flotante medidos en Hyprland (2026-11-19)
+
+* **Petición:** el usuario probó el diálogo con el ratón: posición, alineación, visibilidad y
+  flotante no funcionaban; los clics y el resto sí.
+* **Causas:** las flechas de «Set Position…» (`PlasmaCore.Dialog` del QML original, por
+  coordenadas globales) no tenían rol layer; cambiar el borde recreaba la vista desde el runtime
+  y cerraba el diálogo. La alineación no se ve con «Rellenar anchura» (igual que en Plasma). El
+  flotante funciona; en la vista de ensayo el panel ya está 64 px sobre el borde y el cambio es
+  pequeño. Visibilidad: «Siempre visible» necesita `--native-policy`; autoocultar/esquivar sin
+  controlador.
+* **Hecho:** `PanelConfigView` coloca las flechas como capas `overlay` en su pantalla
+  (`bwm-r5-edit-indicator`). Con el diálogo abierto, `PanelViewHost::adoptLocation` sigue a
+  `PanelView` 6.7.5 (factor de forma, relectura del ámbito, `BwmSurface::setPanelEdge` sobre la
+  misma superficie); fuera del diálogo sigue el contrato de R4. `screenToFollow` hacia otra
+  salida: el runtime cambia la asignación por descripción y reabre los ajustes (sólo la vista
+  desechable con `--output`; los perfiles no reescriben bindings).
+* **Comprobado:** nuevo `check-edit-mode-session.py` + `test-editmode-session` (fuera de CTest):
+  panel desechable en el MSI, combos del QML original y geometría leída con `hyprctl layers`; 11/11
+  pasos (alineaciones, flotante, flechas en ambos monitores, cuatro bordes, paso al LG). CTest
+  local/superficies, `check-isolated.py` completo y 255 pruebas Python OK. No se tocó la barra
+  diaria; la vista de prueba del usuario se detuvo para medir.
+* **Pendiente:** clic físico del usuario, autoocultar/esquivar, persistencia del cambio de monitor
+  en perfiles y el resto de R5 (`docs/BREEZE_R5_RESULTS.md`).

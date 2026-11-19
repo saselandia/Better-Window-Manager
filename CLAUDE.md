@@ -552,6 +552,9 @@ siendo el nombre del escritorio original que imita Breeze.
   R5: PanelViewHost guarda en plasmashellrc sólo con los Ajustes del panel abiertos
   (userConfiguring, como PanelView); fuera son vista previa. Longitud por defecto FillAvailable:
   una prueba con min/maxLength fijos debe pedir panelLengthMode=2 (Custom).
+  Cambio de borde con el diálogo abierto: adoptLocation mueve la misma superficie (§304);
+  sin diálogo el runtime recrea la vista (R4). Medir el diálogo en Hyprland con
+  check-edit-mode-session.py (sin dispositivos de entrada), no con clics virtuales.
   Otras escalas/giros: probar en una salida headless temporal (r4-geometry-check.py, §302),
   nunca reconfigurando los monitores físicos. Un monitor sin descripción (sin EDID) no debe
   invalidar la instantánea de todas las salidas: la firma en memoria usa entonces el conector.
