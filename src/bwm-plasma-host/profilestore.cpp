@@ -19,6 +19,7 @@
 #include <QUuid>
 #include <cmath>
 #include <limits>
+#include <algorithm>
 #include <stdexcept>
 #include <unistd.h>
 
@@ -173,9 +174,34 @@ ProfileStore::ProfileStore(QString root):m_root(privateDirectory(root)) {
 }
 ProfileStore::~ProfileStore()=default;
 QString ProfileStore::generationDirectory()const{return m_root+"/generations/"+m_head.value("generation").toString();}
-QString ProfileStore::layoutFile()const{return generationDirectory()+"/layout";}
-QString ProfileStore::viewSettingsFile()const{return generationDirectory()+"/plasmashellrc";}
+QString ProfileStore::layoutFile()const{return (m_edit?m_edit->path():generationDirectory())+"/layout";}
+QString ProfileStore::viewSettingsFile()const{return (m_edit?m_edit->path():generationDirectory())+"/plasmashellrc";}
 QHash<uint,QString> ProfileStore::assignments()const{return outputs(m_bindings);}
+void ProfileStore::beginEditing() {
+    require(!m_edit,"A native profile edit session is already open");unchangedHead();
+    auto work=std::make_unique<QTemporaryDir>(m_root+"/generations/.edit-XXXXXX");
+    require(work->isValid(),"Cannot prepare native profile edit session");
+    const auto data=readData(generationDirectory());validate(data);writeData(work->path(),data);m_edit=std::move(work);
+}
+void ProfileStore::commitEditing(const QHash<uint,QString> &assignments) {
+    require(bool(m_edit),"No native profile edit session is open");unchangedHead();
+    auto data=readData(m_edit->path());
+    // Preserve metadata/provenance fields. Only the panel/output inventory changes.
+    auto bindings=json(data.value("bindings.json"));QJsonArray panels;
+    auto ids=assignments.keys();std::sort(ids.begin(),ids.end());
+    for(auto id:ids) {
+        QJsonObject panel;
+        for(const auto &previous:bindings.value("panels").toArray())if(previous.toObject().value("containmentId").toDouble()==id) {panel=previous.toObject();break;}
+        panel["containmentId"]=double(id);panel["outputDescription"]=assignments.value(id);panels.append(panel);
+    }
+    bindings["panels"]=panels;data["bindings.json"]=QJsonDocument(bindings).toJson();validate(data);
+    const auto generation=id();QTemporaryDir work(m_root+"/generations/.commit-XXXXXX");
+    require(work.isValid(),"Cannot prepare edited native generation");writeData(work.path(),data);
+    unchangedHead();require(QDir().rename(work.path(),m_root+"/generations/"+generation),"Cannot publish edited native generation");
+    work.setAutoRemove(false);auto next=m_head;next["generation"]=generation;
+    unchangedHead();write(m_root+"/head.json",QJsonDocument(next).toJson());m_head=next;m_bindings=bindings;
+    m_edit.reset();
+}
 void ProfileStore::unchangedHead()const{require(json(read(m_root+"/head.json"))==m_head,"Profile head changed elsewhere; reopen before writing");}
 QJsonObject ProfileStore::info()const {
     return profileInfo(m_root,m_head,m_bindings);
@@ -201,6 +227,7 @@ QJsonObject ProfileStore::importStage(const QString &stage,const QString &destin
     work.setAutoRemove(false);ProfileStore profile(destination);return profile.info();
 }
 QJsonObject ProfileStore::checkpoint() {
+    require(!m_edit,"Close the native edit session before taking a checkpoint");
     unchangedHead();const auto data=readData(generationDirectory());validate(data);
     const auto snapshot=id();QTemporaryDir work(m_root+"/snapshots/.prepare-XXXXXX");require(work.isValid(),"Cannot prepare profile checkpoint");
     writeData(work.path(),data);QJsonObject hashes;for(const auto &name:files)hashes.insert(name,sha(data.value(name)));
@@ -210,6 +237,7 @@ QJsonObject ProfileStore::checkpoint() {
     return {{"status","native-profile-checkpoint"},{"snapshot",snapshot},{"directory",m_root+"/snapshots/"+snapshot},{"activationAllowed",false}};
 }
 QJsonObject ProfileStore::restore(const QString &snapshot) {
+    require(!m_edit,"Close the native edit session before restoring a snapshot");
     require(validId(snapshot),"Invalid profile snapshot ID");unchangedHead();
     const auto data=readSnapshot(m_root+"/snapshots/"+snapshot,snapshot).data;
     const auto metadata=validate(data);const auto generation=id();
@@ -256,6 +284,7 @@ QJsonObject ProfileStore::recover(const QString &root,const QString &snapshot) {
     result["recoveredSnapshot"]=snapshot;result["recoveryDirectory"]=archivePath;result["previousHeadPresent"]=hadHead;return result;
 }
 QJsonObject ProfileStore::exportToState(const QString &name) {
+    require(!m_edit,"Close the native edit session before exporting a profile");
     require(validName(name),"Invalid persistent profile name");
     unchangedHead();const auto data=readData(generationDirectory());validate(data);
     const auto base=ensureStateBase(),destination=base+'/'+name;

@@ -113,7 +113,10 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   Iteración 4 (§306): caja de herramientas del panel y menú del botón derecho originales
   (archivo `defaults` del paquete de shell), probados offscreen.
   Iteración 5 (§310): autoocultar y esquivar ventanas con una franja de borde en lugar del
-  protocolo de KWin (sólo `--native-policy`); autoocultar medido en Hyprland, esquivar pendiente.
+  protocolo de KWin (sólo `--native-policy`); autoocultar medido en Hyprland, esquivar aceptado
+  por el usuario en ambos sentidos tras volver a entrar (§313). Iteración 6 (§314): mover/clonar
+  paneles y edición transaccional de perfiles; varios sin reserva en la misma salida, uno por
+  salida con política nativa. Escritorio y resto de R5 pendientes.
 * **Breeze II (2026-11-12):** `docs/BREEZE_PLAN_V2.md`, R0 entregada con referencia y límites documentados;
   R1 corrige origen de especiales al minimizar, activación común y filtro de Alt+Tab (pruebas
   aisladas; fallo visual original pendiente). R2 tiene primer KCM QWidget real, descubierto por
@@ -5321,3 +5324,42 @@ git status; git log --oneline -5; git push origin main
   del controlador o nueva aceptación visual. La retirada del proveedor es un bloqueo
   confirmado, no una demostración de que sea la única causa. Resto de R5 pendiente hasta
   resolver la prueba real, como pide el orden del traspaso. Informe: BREEZE_R5_RESULTS.md.
+
+
+### 313. R5: esquivar ventanas aceptado tras volver a iniciar sesión (2026-11-19)
+
+* **Comprobado:** instancia nueva de Hyprland; proveedor `enabled=true`, `providerAvailable=true`,
+  arbitraje `active`. Preview del reloj en MSI, con `--native-policy --edit-mode --task-actions
+  --native-desktops`, lanzado como hijo de Hyprland. Control enlazado/reanudado, modelo con
+  ventanas y filtro por escritorio activo. No se carga/descarga ningún plugin en caliente.
+* **Aceptación del usuario:** elige «Esquivar ventanas», sale del modo edición y prueba
+  solapamiento/retirada de ventana: «Sí, funciona en ambos sentidos». Sólo aceptación funcional
+  en MSI, sin medición de tiempos ni todos los bordes/escalas. Preview detenido con acuse;
+  `panel-session.py status` queda inactivo. No repetir ese ensayo sin cambios relevantes.
+
+### 314. R5, iteración 6: mover/clonar paneles y transacción completa de perfiles (2026-11-19)
+
+* **Hecho:** `PanelRuntime` atiende el `cloneRequested` del diálogo original y admite movimientos
+  de salida también en perfiles. `panelclone.cpp` adapta `ShellCorona::clonePanelTo` 6.7.5
+  (LGPL, avisos originales): opciones nativas, widgets de la misma clase independientes,
+  orden con IDs nuevos, hijos de bandeja y preferencias completas de la vista. Las opciones de
+  los hijos con esquema ya inicializado exigen `KConfigLoader::load()` además de configChanged.
+* **Perfiles:** `beginEditing` crea copia privada; `--serve-profile/--serve-selected-profile`
+  guardan/sincronizan/cierran propietarios nativos antes de `commitEditing`. Layout completo,
+  preferencias, bindings y procedencia se validan y publican en generación nueva, con head
+  atómico y checkpoint posterior. Caída/edición abandonada conserva la generación previa.
+  Checkpoint/restore/export rechazan una edición abierta. No es activación del panel diario.
+* **Sesión:** clonación desde el manejador QML original, LG, dos capas 640×48 en 4160,2048 y
+  4160,64, sin ventanas normales ni cambios de reservas; retirada y foco/puntero restituidos,
+  2/2 pasos (`check-edit-mode-session.py --case originalClonePanelInHyprland`). Sin clic físico.
+* **Pruebas:** compilaciones normal/ASan; CTest normal sin `native-` 8/8, configuración local
+  con ASan (`detect_leaks=0`) 1/1; Python R4 257/257. Nuevos casos de edición/transacción, lectura en otro proceso
+  con pantallas reordenadas y copia de hijos de bandeja con opciones propias; todos pasan.
+* **Límites:** varios paneles sin reserva admitidos en una salida; con política nativa se
+  conserva uno por salida y se rechaza un destino ocupado antes de mutar. Aún sin anfitrión
+  de escritorio, escala fraccionaria del editor, migración de alineación/longitud, comparación
+  con Plasma y arrastre/desinstalar/alternativas. Informe
+  completo en `docs/BREEZE_R5_RESULTS.md`. `status` incluye capacidades vivas por panel.
+* **Aceptación del usuario:** con el ratón en MSI, «Sí, clona y mueve bien» en el preview sin
+  política de reservas. No acredita el perfil persistente, todos los bordes/destinos o bandeja.
+  Ensayo detenido con acuse y registro inactivo; proveedor sigue activo y configerrors vacío.

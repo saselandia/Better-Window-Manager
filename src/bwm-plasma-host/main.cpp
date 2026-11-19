@@ -209,17 +209,19 @@ int main(int argc, char **argv) {
                 else if(args[1]=="--checkpoint-profile")result=profile.checkpoint();
                 else {
                     std::signal(SIGINT,SIG_IGN);app.setQuitOnLastWindowClosed(false);int code=0;
+                    profile.beginEditing();QHash<uint,QString> finalAssignments;
                     {
                         ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
                         corona.loadLayout(profile.layoutFile());PanelRuntime runtime(&corona,profile.viewSettingsFile(),true,nullptr,qEnvironmentVariable("BWM_R4_NATIVE_PANEL_POLICY")=="1");
+                        runtime.setOutputMovesAllowed(true);runtime.setPanelCloningAllowed(true);
                         if(!runtime.setAssignments(profile.assignments()))throw std::runtime_error(runtime.error().toStdString());
                         RuntimeControl control(&runtime,qEnvironmentVariable("BWM_R4_CONTROL_DIR"),qEnvironmentVariable("BWM_R4_SESSION_TOKEN"));
                         QObject::connect(&control,&RuntimeControl::stopRequested,&app,&QCoreApplication::quit,Qt::QueuedConnection);
                         if(!control.start())throw std::runtime_error(control.error().toStdString());
-                        code=app.exec();runtime.setSkin("default");corona.saveLayout(profile.layoutFile());
+                        code=app.exec();runtime.setSkin("default");finalAssignments=runtime.assignments();corona.saveLayout(profile.layoutFile());
                         if(!corona.config()->sync())code=7;
                     } // Release every native config owner before taking the checkpoint.
-                    if(code)return code;result=profile.checkpoint();
+                    if(code)return code;profile.commitEditing(finalAssignments);result=profile.checkpoint();
                 }
             }
             puts(QJsonDocument(result).toJson().constData());return 0;
@@ -295,6 +297,7 @@ int main(int argc, char **argv) {
         app.setQuitOnLastWindowClosed(false);
         PanelRuntime runtime(&corona,"plasmashellrc",true,nullptr,qEnvironmentVariable("BWM_R4_NATIVE_PANEL_POLICY")=="1");
         runtime.setOutputMovesAllowed(true); // Disposable preview: its binding is --output itself.
+        runtime.setPanelCloningAllowed(true);
         if(!runtime.setAssignments({{containment->id(),output}})){fprintf(stderr,"%s\n",qPrintable(runtime.error()));return 8;}
         RuntimeControl control(&runtime,qEnvironmentVariable("BWM_R4_CONTROL_DIR"),qEnvironmentVariable("BWM_R4_SESSION_TOKEN"));
         QObject::connect(&control,&RuntimeControl::stopRequested,&app,&QCoreApplication::quit,Qt::QueuedConnection);

@@ -29,9 +29,11 @@ public:
     PanelViewHost *view(uint containmentId)const;
     QVariantMap readiness()const;
     bool quiescing()const{return m_quiescing;}
-    // Explicit opt-in for previews bound by --output: the Panel Settings may move a
-    // panel to another output for this session. Profile bindings are not rewritten.
+    // Enabled by disposable previews and by transactional profile edit sessions.
+    // Native Panel Settings keep runtime bindings by output description.
     void setOutputMovesAllowed(bool allowed){m_outputMovesAllowed=allowed;}
+    void setPanelCloningAllowed(bool allowed){m_panelCloningAllowed=allowed;}
+    QHash<uint,QString> assignments()const;
 Q_SIGNALS:
     void changed();
 private:
@@ -39,12 +41,14 @@ private:
     void drop(uint containmentId);
     void dropAll();
     void moveToOutput(uint containmentId,QScreen *target);
+    void cloneToOutput(uint containmentId,int location,QScreen *target);
     QPointer<ViewCorona> m_corona;
     QString m_settingsFile,m_skin="default",m_error;
     bool m_layerSurfaces,m_reconciling=false;
     bool m_nativePanelPolicy=false;
     bool m_quiescing=false;
     bool m_outputMovesAllowed=false;
+    bool m_panelCloningAllowed=false;
     QSet<uint> m_reopenSettings;
     QHash<uint,QString> m_assignments;
     QHash<uint,QPointer<PanelViewHost>> m_views;

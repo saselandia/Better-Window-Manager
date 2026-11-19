@@ -558,8 +558,10 @@ python3 src/bwm-plasma-host/preview-isolated.py \
 
 Las salidas vienen del perfil; --output no las sobreescribe. El envoltorio busca paquetes
 instalados en los paths XDG del llamador y conserva config auxiliar/caché/runtime/D-Bus
-desechables. El binario --serve-profile mantiene el lease, carga/guarda el mismo layout con
-Corona y toma un checkpoint tras salir limpiamente. Detener con Ctrl+C o panel-session.py
+desechables. El binario --serve-profile mantiene el lease y trabaja sobre una copia privada de
+los archivos completos. Al salir, tras guardar/sincronizar y destruir Corona, publica juntos
+el layout, las preferencias y los bindings como generación nueva; después toma el checkpoint.
+Una caída descarta esa edición y conserva la generación anterior. Detener con Ctrl+C o panel-session.py
 stop. El envoltorio limpia su registro/control, y conserva el perfil seleccionado.
 
 Al actualizar upstream revisar Corona.loadLayout/saveLayout/sync, jerarquía de preferencias,
@@ -1269,7 +1271,8 @@ python3 preview-isolated.py --binary build/bwm-plasma-host/bwm-plasma-host \
 
 «Siempre visible» necesita además `--native-policy` (reserva espacio real). «Set Position…»
 mueve el panel de borde sin recrear la vista mientras el diálogo está abierto; en esta vista
-desechable también a otro monitor (el runtime reabre los ajustes allí).
+desechable también a otro monitor (el runtime reabre los ajustes allí). Los perfiles también
+admiten mover entre salidas y conservan la asignación por descripción al cerrar limpiamente.
 
 Comprobación en la sesión, sin ratón ni teclado virtuales (acciona el QML original y mide con
 `hyprctl layers`; panel desechable 64 px sobre el borde, retirado al final):
@@ -1294,7 +1297,23 @@ desliza fuera y la máscara de entrada deja una franja de 2 px en el borde. Esqu
 `touchingWindow` del `Panel.qml` original, que necesita el puente de tareas y el proveedor de
 escritorios.
 
-Límites y pendientes en `docs/BREEZE_R5_RESULTS.md` (clonar, escritorio, varios paneles).
+«Clonar panel» usa las flechas del diálogo original y `panelclone.cpp`, adaptado de
+`ShellCorona::clonePanelTo` 6.7.5. Copia opciones nativas de containment/widgets, orden con
+IDs nuevos, hijos de la bandeja y todos los ámbitos de preferencias de la vista. Funciona
+en la vista desechable y en perfiles, con paneles independientes. Sin `--native-policy` se
+admiten varios en la misma salida; con esa política aún se rechaza mover/clonar hacia una
+salida que ya tenga un panel del ensayo, hasta coordinar las reservas. El panel diario no
+forma parte de ese inventario. `panel-session.py status` expone las capacidades vivas de
+cada marco, incluidos `touchingWindow` y `autoHidden`.
+
+Ensayo acotado de clonación, sobre el monitor que no esté usando el usuario:
+
+```
+python3 src/bwm-plasma-host/check-edit-mode-session.py --output "<descripción>" --case originalClonePanelInHyprland
+```
+
+Límites y pendientes en `docs/BREEZE_R5_RESULTS.md` (escritorio, coordinación de reservas,
+escala fraccionaria y comparación visual).
 Al actualizar upstream, revisar `shell/panelconfigview.*`, los `Q_PROPERTY` de `panelview.h`,
 `views/Desktop.qml` (contrato de la barra lateral), `explorer/WidgetExplorer.qml` y el grupo
 `[Panel]` de `desktoppackage/contents/defaults`.

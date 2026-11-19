@@ -304,10 +304,11 @@ siendo el nombre del escritorio original que imita Breeze.
   PanelViewHost carga Panel.qml instalado: length es preferencia, distinta de los límites de
   superficie. Sus setters son vista previa; applyViewSettings guarda explícitamente las seis
   claves admitidas en plasmashellrc nativo, respetando claves ajenas, kdedefaults e inmutabilidad.
-  --native-policy añade panelVisibility 0/3 con petición de reserva LayerShellQt; no confirma
+  --native-policy añade panelVisibility 0–3 (1/2 sin reserva) con LayerShellQt; no confirma
   área útil real. Un panel por salida en ese ensayo; varios se bloquean hasta coordinar layout.
-  Cambiar salida/orientación exige releer antes de guardar. Adaptive/efectos/autoocultado siguen
-  sin backend; no anunciarlos operativos. Vida QML y máscaras se validan al actualizar.
+  Cambiar salida/orientación exige releer antes de guardar. Adaptive/efectos siguen
+  sin backend; autoocultar/esquivar sólo con --native-policy y los puentes de R5.
+  Vida QML y máscaras se validan al actualizar.
   Migración: conservar bar.plasma.edge o fallback bar.bottom (false→top), sin fijar BottomEdge/
   Horizontal; Corona serializa Location/FormFactor y el probe comprueba el orden por su eje.
   El plasmashellrc de staging sólo contiene paneles preparados: no sustituir con él el archivo
@@ -324,6 +325,9 @@ siendo el nombre del escritorio original que imita Breeze.
   comas sólo en el prefijo completo del fabricante, sin alterar modelo/serie ni unicidad.
   Al cerrar la prueba, retirar registro y esperar a su transacción antes de borrar el ack.
   ProfileStore conserva archivos KDE completos y bindings separados en perfiles de ensayo;
+  --serve-profile/--serve-selected-profile editan una copia privada y publican layout,
+  preferencias y bindings juntos en otra generación tras cerrar todos los propietarios nativos.
+  Una caída conserva la generación anterior; no checkpoint/restore/export con edición abierta.
   restaurar siempre a otra generación/ruta, sin sobrescribir el archivo de un KSharedConfig
   retenido. Mantener el lease durante la vida de Corona y hacer flush/cierre antes del checkpoint.
   --export-as conserva perfil/historial en la autoridad XDG de estado dedicada; no selecciona

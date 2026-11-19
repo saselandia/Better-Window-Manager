@@ -3,6 +3,11 @@
 #include <QAction>
 #include "viewcorona.h"
 #include "panelviewhost.h"
+#include "panelclone.h"
+#include <KConfig>
+#include <KConfigGroup>
+#include <QLockFile>
+#include "panelviewsettings.h"
 #include "outputidentity.h"
 #include "panelsession.h"
 #include "packagewindows.h"
@@ -61,6 +66,11 @@ PanelRuntime::PanelRuntime(ViewCorona *corona,QString settings,bool layers,QObje
 }
 PanelRuntime::~PanelRuntime(){m_reconcile.stop();dropAll();}
 PanelViewHost *PanelRuntime::view(uint id)const{return m_views.value(id).data();}
+QHash<uint,QString> PanelRuntime::assignments()const {
+    QHash<uint,QString> result;
+    if(m_corona)for(auto *c:m_corona->containments())if(!c->destroyed() && m_assignments.contains(c->id()))result.insert(c->id(),m_assignments.value(c->id()));
+    return result;
+}
 QVariantMap PanelRuntime::readiness()const {
     QVariantList outputs;
     for(auto *screen:QGuiApplication::screens()) {
@@ -106,6 +116,7 @@ QVariantMap PanelRuntime::readiness()const {
         if(!presentation.value("renderError").toString().isEmpty())reasons.append("scene-graph-error");
         if(!presentation.value("surfaceError").toString().isEmpty())reasons.append("surface-policy-error");
         const auto capabilities=frame ? frame->capabilities() : QVariantMap();
+        row["capabilities"]=capabilities;
         const bool requested=capabilities.value("reservationRequested").toBool();
         if(!capabilities.value("reservedArea").toBool())reasons.append(requested?"reserved-area-unverified":"reserved-area-unavailable");
         row["reservationRequested"]=requested;row["exclusiveZoneRequested"]=capabilities.value("exclusiveZoneRequested",-1);
@@ -158,7 +169,7 @@ bool PanelRuntime::setSkin(const QString &value) {
     m_skin=value;m_error.clear();reconcile();if(notify && before==m_status)emit changed();return true;
 }
 void PanelRuntime::moveToOutput(uint id,QScreen *target) {
-    auto *frame=view(id);if(!frame || !target)return;
+    auto *frame=view(id);if(!frame || !target || !QGuiApplication::screens().contains(target))return;
     if(!m_outputMovesAllowed){frame->setError(tr("Moving the panel to another output is not available in this host."));return;}
     const auto identity=BwmOutput::identity(target);
     const auto description=(identity.manufacturer+' '+identity.model+' '+identity.serial).simplified();
@@ -166,8 +177,55 @@ void PanelRuntime::moveToOutput(uint id,QScreen *target) {
     if(description.isEmpty() || BwmOutput::resolveScreen(description,&state)!=target) {
         frame->setError(tr("The target output has no unique description."));return;
     }
+    if(m_nativePanelPolicy)for(auto it=m_assignments.cbegin();it!=m_assignments.cend();++it)
+        if(it.key()!=id && BwmOutput::resolveScreen(it.value())==target) {
+            frame->setError(tr("Multiple native panels on the same output need a coordinated layout."));return;
+        }
+    frame->setError({});
     if(frame->userConfiguring())m_reopenSettings.insert(id);
     m_assignments[id]=description;reconcile();
+}
+void PanelRuntime::cloneToOutput(uint id,int location,QScreen *target) {
+    auto *frame=view(id);if(!frame || !m_corona)return;
+    if(!m_panelCloningAllowed){frame->setError(tr("Cloning panels is not available in this host."));return;}
+    if(!target || !QGuiApplication::screens().contains(target) || edge(Plasma::Types::Location(location))==Qt::Edge(0)) {
+        frame->setError(tr("Cloning requires a live output and a panel edge."));return;
+    }
+    const auto identity=BwmOutput::identity(target);
+    const auto description=(identity.manufacturer+' '+identity.model+' '+identity.serial).simplified();
+    if(description.isEmpty() || BwmOutput::resolveScreen(description)!=target) {
+        frame->setError(tr("The target output has no unique description."));return;
+    }
+    if(m_nativePanelPolicy)for(auto it=m_assignments.cbegin();it!=m_assignments.cend();++it)
+        if(BwmOutput::resolveScreen(it.value())==target) {
+            frame->setError(tr("Multiple native panels on the same output need a coordinated layout."));return;
+        }
+    auto *source=frame->containment();
+    if(!source || source->immutability()!=Plasma::Types::Mutable || m_corona->immutability()!=Plasma::Types::Mutable) {
+        frame->setError(tr("Cloning is locked by KDE policy."));return;
+    }
+    // Same native preferences transaction lock as PanelViewSettings. Keep every
+    // unknown subgroup/key and resolution scope, as ShellCorona::clonePanelTo.
+    PanelViewSettings settings(m_settingsFile,id,false,1,{});QLockFile lock(settings.lockPath());
+    if(!lock.tryLock(0)){frame->setError(tr("Another BWM panel preference transaction is running."));return;}
+    auto *copy=m_corona->createContainment(source->pluginName());
+    if(!copy || copy->failedToLaunch()) {if(copy)delete copy;frame->setError(tr("Cannot create the cloned panel."));return;}
+    const auto discard=[this,copy] {
+        QList<Plasma::Applet*> pending{copy};QList<uint> ids;
+        while(!pending.isEmpty()) {auto *a=pending.takeLast();ids.append(a->id());
+            if(auto *c=qobject_cast<Plasma::Containment*>(a))for(auto *child:c->applets())pending.append(child);}
+        auto config=copy->config();delete copy;config.deleteGroup();
+        for(uint id:ids)m_corona->config()->group("Applets").group(QString::number(id)).deleteGroup();
+    };
+    if(!copyPanelConfiguration(source,copy)) {discard();frame->setError(tr("Cannot copy native widget configuration."));return;}
+    KConfig preferences(m_settingsFile,KConfig::FullConfig);
+    auto from=KConfigGroup(&preferences,"PlasmaViews").group(QString("Panel %1").arg(id));
+    auto to=KConfigGroup(&preferences,"PlasmaViews").group(QString("Panel %1").arg(copy->id()));
+    from.copyTo(&to);
+    if(!preferences.sync()){preferences.markAsClean();discard();frame->setError(tr("Cannot sync cloned panel preferences."));return;}
+    copy->setLocation(Plasma::Types::Location(location));
+    copy->setFormFactor(location==Plasma::Types::LeftEdge || location==Plasma::Types::RightEdge ? Plasma::Types::Vertical : Plasma::Types::Horizontal);
+    frame->setError({});m_assignments.insert(copy->id(),description);reconcile();
 }
 void PanelRuntime::drop(uint id) {
     auto *frame=m_views.take(id).data();if(!frame)return;
@@ -226,6 +284,7 @@ void PanelRuntime::reconcile() {
                 });
                 // Queued: the request comes from a handler of the settings that the move destroys.
                 connect(frame,&PanelViewHost::screenToFollowRequested,this,[this,id](QScreen *target){moveToOutput(id,target);},Qt::QueuedConnection);
+                connect(frame,&PanelViewHost::cloneRequested,this,[this,id](int location,QScreen *target){cloneToOutput(id,location,target);},Qt::QueuedConnection);
                 frame->show();
                 if(m_reopenSettings.remove(id))
                     QTimer::singleShot(0,this,[this,id]{

@@ -13,6 +13,7 @@
 #include <QQmlContext>
 #include <QTest>
 #include "panelruntime.h"
+#include "panelclone.h"
 #include "outputidentity.h"
 #include "runtimecontrol.h"
 #include "profilestore.h"
@@ -1865,6 +1866,144 @@ private Q_SLOTS:
             }
         }
         QCOMPARE(configured,1);QVERIFY(runtime.setSkin("default"));
+    }
+    void profileEditingMovesAndClonesNativePanels() {
+        TestOutput first("DP-171","Edit A","A",{0,0,1280,800}),second("DP-172","Edit B","B",{1280,0,1600,900});
+        const QString A="BWM Test Edit A A",B="BWM Test Edit B B";
+        const QDir config(qEnvironmentVariable("XDG_CONFIG_HOME"));const auto destination=config.filePath("bwm-ui-edit-profile");
+        const auto stagePath=config.filePath("bwm-native-staged");QVERIFY(!QFileInfo::exists(stagePath));
+        struct RemoveStage{QString path;~RemoveStage(){QDir(path).removeRecursively();}} remove{stagePath};
+        const QByteArray source=R"({"bar":{"plasma":{"edge":"bottom","widgets":["clock","clock"],"thickness":44,"style":"opaque"}}})";
+        QJsonArray widgets;
+        for(const auto &caption:{"first clone option","second clone option"})widgets.append(QJsonObject{{"package","org.bwm.r4.shared-config"},
+            {"nativeSettings",QJsonObject{{"enabled",false},{"caption",caption}}}});
+        const QJsonObject plan{{"version",1},{"legacyJson",QString::fromUtf8(source)},
+            {"sourceSha256",QString::fromLatin1(QCryptographicHash::hash(source,QCryptographicHash::Sha256).toHex())},
+            {"panels",QJsonArray{QJsonObject{{"outputDescription",A},{"containmentPackage","org.kde.panel"},{"widgets",widgets}}}}};
+        const auto planPath=config.filePath("bwm-edit-plan.json");
+        {QFile file(planPath);QVERIFY(file.open(QIODevice::WriteOnly));file.write(QJsonDocument(plan).toJson());}
+        BwmMigration::stage(planPath);ProfileStore::importStage(stagePath,destination);
+        const auto bytes=[](const QString &path){QFile f(path);return f.open(QIODevice::ReadOnly)?f.readAll():QByteArray();};
+        QString oldLayout;QByteArray originalLayout;uint original=0,clone=0;
+        {
+            ProfileStore profile(destination);oldLayout=profile.layoutFile();originalLayout=bytes(oldLayout);
+            const auto head=bytes(destination+"/head.json");
+            profile.beginEditing();QVERIFY(profile.layoutFile()!=oldLayout);
+            QVERIFY_EXCEPTION_THROWN(profile.beginEditing(),std::runtime_error);
+            QVERIFY_EXCEPTION_THROWN(profile.checkpoint(),std::runtime_error);
+            QHash<uint,QString> assignments;
+            {
+                ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+                corona.loadLayout(profile.layoutFile());auto *c=corona.containments().first();original=c->id();
+                PanelRuntime runtime(&corona,profile.viewSettingsFile(),true);runtime.setOutputMovesAllowed(true);runtime.setPanelCloningAllowed(true);
+                QVERIFY(runtime.setAssignments(profile.assignments()));QVERIFY(runtime.setSkin("plasma"));QTRY_VERIFY(runtime.view(original));
+                auto *view=runtime.view(original);
+                QVERIFY(view->applyViewSettings({{"thickness",52},{"panelLengthMode",2},{"minLength",400},{"maxLength",400},{"alignment",2},{"offset",13}}));
+                auto own=c->config();own.group("Vendor").writeEntry("Keep","native-containment-unknown");
+                {KConfig file(profile.viewSettingsFile(),KConfig::SimpleConfig);auto g=KConfigGroup(&file,"PlasmaViews").group(QString("Panel %1").arg(original));
+                    g.group("Vendor").writeEntry("Keep","native-view-unknown");QVERIFY(file.sync());}
+                const auto sourceIds=c->applets();QCOMPARE(sourceIds.size(),2);
+                const QStringList expectedOrder{QString::number(sourceIds.last()->id()),QString::number(sourceIds.first()->id())};
+                QVERIFY(view->panelSession()->requestOrder({sourceIds.last()->id(),sourceIds.first()->id()}));
+                QTRY_COMPARE(c->config().group("General").readEntry("AppletOrder",QString()),expectedOrder.join(';'));
+                view->clonePanelTo(Plasma::Types::TopEdge,second.screen());
+                QTRY_COMPARE(corona.containments().size(),2);
+                auto *copy=corona.containments().last();QVERIFY(copy!=c);clone=copy->id();
+                QTRY_VERIFY(runtime.view(clone));QCOMPARE(runtime.view(clone)->screen(),second.screen());
+                QCOMPARE(copy->location(),Plasma::Types::TopEdge);QCOMPARE(copy->formFactor(),Plasma::Types::Horizontal);
+                QCOMPARE(runtime.view(clone)->thickness(),52);QCOMPARE(runtime.view(clone)->alignment(),int(Qt::AlignRight));
+                QCOMPARE(runtime.view(clone)->offset(),13);QCOMPARE(runtime.view(clone)->minimumLength(),400);
+                QCOMPARE(copy->config().group("Vendor").readEntry("Keep",QString()),"native-containment-unknown");
+                QCOMPARE(copy->applets().size(),2);
+                for(auto *a:copy->applets()) {
+                    QVERIFY(a->id()!=sourceIds.first()->id() && a->id()!=sourceIds.last()->id());
+                    QVERIFY(!a->configScheme()->KCoreConfigSkeleton::findItem("enabled")->property().toBool());
+                }
+                const QStringList copiedOrder{QString::number(copy->applets().last()->id()),QString::number(copy->applets().first()->id())};
+                QTRY_COMPARE(copy->config().group("General").readEntry("AppletOrder",QString()),copiedOrder.join(';'));
+                QCOMPARE(copy->applets().first()->configScheme()->KCoreConfigSkeleton::findItem("caption")->property().toString(),"first clone option");
+                QCOMPARE(copy->applets().last()->configScheme()->KCoreConfigSkeleton::findItem("caption")->property().toString(),"second clone option");
+                {KConfig file(profile.viewSettingsFile(),KConfig::SimpleConfig);QCOMPARE(KConfigGroup(&file,"PlasmaViews").group(QString("Panel %1").arg(clone)).group("Vendor").readEntry("Keep",QString()),"native-view-unknown");}
+                // Same output, independent containments at opposite edges (non-reserving preview).
+                view->setScreenToFollow(second.screen());QTRY_COMPARE(runtime.view(original)->screen(),second.screen());
+                QCOMPARE(runtime.assignments().value(original),B);QCOMPARE(runtime.assignments().value(clone),B);
+                QVERIFY(runtime.setSkin("retro"));QVERIFY(runtime.setSkin("plasma"));QTRY_VERIFY(runtime.view(clone));
+                QCOMPARE(runtime.view(original)->screen(),second.screen());
+                // Invalid targets and disabled cloning must not add a containment.
+                runtime.view(original)->clonePanelTo(Plasma::Types::Desktop,first.screen());
+                QTRY_VERIFY(!runtime.view(original)->error().isEmpty());QCOMPARE(corona.containments().size(),2);
+                runtime.setPanelCloningAllowed(false);runtime.view(original)->clonePanelTo(Plasma::Types::LeftEdge,first.screen());
+                QTRY_VERIFY(runtime.view(original)->error().contains("not available"));QCOMPARE(corona.containments().size(),2);
+                assignments=runtime.assignments();QVERIFY(runtime.setSkin("default"));corona.saveLayout(profile.layoutFile());QVERIFY(corona.config()->sync());
+            }
+            QCOMPARE(bytes(destination+"/head.json"),head);QCOMPARE(bytes(oldLayout),originalLayout);
+            auto bad=assignments;bad.remove(clone);
+            QVERIFY_EXCEPTION_THROWN(profile.commitEditing(bad),std::runtime_error);QCOMPARE(bytes(destination+"/head.json"),head);
+            profile.commitEditing(assignments);QVERIFY(profile.layoutFile()!=oldLayout);QCOMPARE(profile.assignments(),assignments);
+            QCOMPARE(bytes(oldLayout),originalLayout);QVERIFY(!profile.checkpoint().isEmpty());
+        }
+        // Abandoning a later edit leaves the committed profile and old native owners safe.
+        {ProfileStore profile(destination);const auto head=bytes(destination+"/head.json");profile.beginEditing();
+            {QFile f(profile.layoutFile());QVERIFY(f.open(QIODevice::WriteOnly));f.write("broken uncommitted edit");}
+            QCOMPARE(bytes(destination+"/head.json"),head);}
+        ProfileStore reopened(destination);QCOMPARE(reopened.assignments().size(),2);QCOMPARE(reopened.assignments().value(original),B);
+        ViewCorona corona;corona.loadLayout(reopened.layoutFile());QCOMPARE(corona.containments().size(),2);
+        QCOMPARE(bytes(oldLayout),originalLayout);
+    }
+    void clonedNativeTrayKeepsEmbeddedOptionsAndNewIds() {
+        const QDir config(qEnvironmentVariable("XDG_CONFIG_HOME"));const auto path=config.filePath("bwm-cloned-tray-layout");
+        ProfileStore profile(config.filePath("bwm-ui-tray-profile"));QFile::remove(path);QVERIFY(QFile::copy(profile.layoutFile(),path));
+        uint clone=0,originalChild=0,clonedChild=0;
+        {
+            TestCorona corona;corona.loadLayout(path);QCOMPARE(corona.containments().size(),1);
+            auto *source=corona.containments().first();auto *target=corona.createContainment("org.kde.panel");QVERIFY(target);clone=target->id();
+            auto *tray=qobject_cast<Plasma::Containment*>(source->applets().first());QVERIFY(tray);
+            QTRY_VERIFY(!tray->applets().isEmpty());
+            for(auto *a:tray->applets())if(a->pluginName()=="org.bwm.r4.tray-child") {
+                // The earlier lifecycle readback deliberately removes its child.
+                // Give this copied fixture its own option before testing cloning.
+                a->configScheme()->KCoreConfigSkeleton::findItem("caption")->setProperty(QStringLiteral("saved inside native tray"));
+                QVERIFY(a->configScheme()->save());
+            }
+            QVERIFY(copyPanelConfiguration(source,target));QCOMPARE(target->applets().size(),1);
+            auto *copy=qobject_cast<Plasma::Containment*>(target->applets().first());QVERIFY(copy);QVERIFY(copy->id()!=tray->id());
+            QTRY_COMPARE(copy->applets().size(),tray->applets().size());
+            for(auto *a:tray->applets())if(a->pluginName()=="org.bwm.r4.tray-child")originalChild=a->id();
+            for(auto *a:copy->applets())if(a->pluginName()=="org.bwm.r4.tray-child") {
+                clonedChild=a->id();QCOMPARE(a->configScheme()->KCoreConfigSkeleton::findItem("caption")->property().toString(),"saved inside native tray");
+            }
+            QVERIFY(originalChild && clonedChild && originalChild!=clonedChild);
+            corona.saveLayout(path);QVERIFY(corona.config()->sync());
+        }
+        TestCorona reopened;reopened.loadLayout(path);QCOMPARE(reopened.containments().size(),2);
+        Plasma::Containment *target=nullptr;for(auto *c:reopened.containments())if(c->id()==clone)target=c;QVERIFY(target);
+        auto *tray=qobject_cast<Plasma::Containment*>(target->applets().first());QVERIFY(tray);
+        QTRY_VERIFY(!tray->applets().isEmpty());bool found=false;
+        for(auto *a:tray->applets())if(a->id()==clonedChild) {found=true;QCOMPARE(a->configScheme()->KCoreConfigSkeleton::findItem("caption")->property().toString(),"saved inside native tray");}
+        QVERIFY(found);
+    }
+    void profileEditingFreshProcessReadback() {
+        TestOutput first("DP-174","Edit A","A",{1600,0,1280,800}),second("DP-173","Edit B","B",{0,0,1600,900});
+        ProfileStore profile(QDir(qEnvironmentVariable("XDG_CONFIG_HOME")).filePath("bwm-ui-edit-profile"));
+        QCOMPARE(profile.assignments().size(),2);
+        ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout(profile.layoutFile());QCOMPARE(corona.containments().size(),2);
+        PanelRuntime runtime(&corona,profile.viewSettingsFile(),true);QVERIFY(runtime.setAssignments(profile.assignments()));QVERIFY(runtime.setSkin("plasma"));
+        QSet<uint> ids;QSet<int> edges;
+        for(auto *c:corona.containments()) {
+            QTRY_VERIFY(runtime.view(c->id()));QCOMPARE(runtime.view(c->id())->screen(),second.screen());
+            QCOMPARE(runtime.view(c->id())->thickness(),52);edges.insert(int(c->location()));
+            QCOMPARE(c->applets().size(),2);QStringList captions;
+            for(auto *a:c->applets()) {
+                QVERIFY(!ids.contains(a->id()));ids.insert(a->id());
+                QVERIFY(!a->configScheme()->KCoreConfigSkeleton::findItem("enabled")->property().toBool());
+                captions.append(a->configScheme()->KCoreConfigSkeleton::findItem("caption")->property().toString());
+            }
+            QVERIFY(captions.contains("first clone option") && captions.contains("second clone option"));
+            const auto order=c->config().group("General").readEntry("AppletOrder",QString()).split(';');QCOMPARE(order.size(),2);
+            for(const auto &id:order)QVERIFY(ids.contains(id.toUInt()));
+        }
+        QCOMPARE(edges,(QSet<int>{Plasma::Types::TopEdge,Plasma::Types::BottomEdge}));QVERIFY(runtime.setSkin("default"));
     }
     void profileRecoveryFromExplicitSnapshot() {
         const QDir config(qEnvironmentVariable("XDG_CONFIG_HOME"));const auto root=config.filePath("bwm-ui-recovery-profile");

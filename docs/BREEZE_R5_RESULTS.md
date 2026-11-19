@@ -375,3 +375,86 @@ Comprobado: compilación de `test-paneltasks`; CTest `isolated-local-configurati
 1/1 (42,50 s), con QtTest de tareas del panel 5/5, sin fallos ni omisiones.
 No se ha cambiado código del controlador, reiniciado la sesión ni hecho una nueva prueba
 visual. Sigue pendiente la prueba real de «Esquivar ventanas»; el resto de R5 permanece abierto.
+
+
+### Aceptación de esquivar tras volver a iniciar sesión (2026-11-19, §313)
+
+El usuario comunica que ha vuelto a iniciar sesión. `native-desktops.py status` confirma
+una instancia nueva de Hyprland, `enabled=true`, `providerAvailable=true` y arbitraje
+`active`. Se abre en segundo plano, como hijo de Hyprland, el preview desechable del reloj
+analógico en el MSI con `--native-policy --edit-mode --task-actions --native-desktops`.
+El control nativo confirma enlace y reanudación; el modelo recibe ventanas con el filtro
+por escritorio activo.
+
+El usuario elige «Esquivar ventanas», sale del modo edición y prueba solapar y retirar una
+ventana. Confirma **«Sí, funciona en ambos sentidos»**. Aceptación funcional con el ratón
+en el MSI; no es una medición de tiempos, escalas o todos los bordes. El preview se detiene
+por `panel-session.py stop`, con acuse, y el registro queda inactivo. No se repite el ensayo
+aprobado ni se reinicia Quickshell o el compositor.
+
+## Iteración 6 (2026-11-19) — Mover y clonar paneles, con edición transaccional de perfiles
+
+### Cambio
+
+- Los perfiles de ensayo permiten «Set Position…» hacia otra salida y «Clonar panel» desde
+  el `PanelConfiguration.qml` instalado. El runtime conserva IDs de containments independientes
+  y asignaciones por descripción; reabre los Ajustes tras mover como en la vista desechable.
+- `panelclone.cpp` adapta `ShellCorona::clonePanelTo` 6.7.5: copia configuración nativa del
+  containment, applets y applets embebidos de bandeja, remapea `General/AppletOrder` a IDs
+  nuevos y conserva subgrupos desconocidos. También copia todo el grupo `PlasmaViews/Panel N`
+  de `plasmashellrc`, incluidos ámbitos por resolución. No hay un formato nuevo de tema.
+- Los applets internos de la bandeja pueden haber inicializado ya su `KConfigLoader`. La
+  copia se sincroniza antes de recargar su esquema nativo y notificar a QML. `Applet::config()`
+  apunta al subgrupo Configuration de un applet, pero al grupo raíz de un containment:
+  se copia el grupo completo correcto, incluidos atajos y claves desconocidas. El ensayo
+  de bandeja prepara su propia opción: la prueba de ciclo anterior elimina su widget hijo.
+- `ProfileStore::beginEditing/commitEditing`: los procesos `--serve-profile` y
+  `--serve-selected-profile` retienen su lease y editan una copia privada. Al salir, guardan,
+  sincronizan y destruyen Corona; después validan layout completo, preferencias, bindings y
+  procedencia, publican una generación nueva y cambian `head.json` atómicamente. Sólo entonces
+  toman el checkpoint. Una caída pierde la edición en curso y conserva la generación previa.
+  No se permite checkpoint/restauración/exportación mientras esa edición está abierta.
+- Sin `--native-policy`, varios paneles independientes pueden estar en la misma salida. Con
+  la política nativa se mantiene el límite de uno por salida: mover o clonar hacia una salida
+  ya ocupada se rechaza **antes** de cambiar bindings o crear containments. Falta coordinar
+  las reservas. Las opciones originales siguen visibles.
+- `panel-session.py status` incluye `runtime.panels[].capabilities` actualizado al consultar,
+  con `autoHidden` y `touchingWindow`; antes esas propiedades existían sólo en el marco C++.
+
+### Pruebas
+
+- `profileEditingMovesAndClonesNativePanels`: dos widgets de la misma clase con opciones
+  distintas y orden invertido, claves desconocidas de containment/vista, IDs nuevos,
+  movimiento de salida y cambio de skin; rechazo de destino inválido y clonación desactivada;
+  guardado incompleto rechazado sin cambiar el head, nueva generación completa, abandono de
+  una edición posterior y fuente original intacta.
+- `profileEditingFreshProcessReadback`: otro proceso, enumeración de pantallas invertida,
+  dos paneles en la misma salida por descripción, opciones/IDs/orden y grosor conservados.
+- `clonedNativeTrayKeepsEmbeddedOptionsAndNewIds`: opciones del widget hijo de bandeja e ID
+  propio, también tras guardar y volver a cargar el layout.
+- Hyprland real, LG: `check-edit-mode-session.py --case originalClonePanelInHyprland` pulsa
+  mediante señal el manejador del indicador original «Clonar panel». Dos capas 640×48 en
+  `(4160,2048)` y `(4160,64)`, widgets distintos; sin ventanas normales, reservas conservadas,
+  capas retiradas y foco/puntero devueltos. **2/2 pasos**. No es un clic físico.
+
+Verificación final: compilaciones normal y ASan completas; CTest normal sin pruebas
+`native-` **8/8** (configuración local 45,00 s), `isolated-local-configuration` con
+ASan (`detect_leaks=0`) **1/1** (50,35 s), incluidos los tres casos nuevos. Python R4: **257/257**. El ensayo de
+clonación en Hyprland se repite tras los cambios del copiador y vuelve a pasar 2/2.
+
+### Límites
+
+R5 sigue abierta: `DesktopEditMode.qml` necesita todavía un anfitrión de escritorio;
+coordinación de varios paneles con reservas en una salida, escala fraccionaria del editor,
+migración de alineación/longitud de `bar.plasma`, comparación con Plasma real, arrastre al
+panel y desinstalar/alternativas. No se sustituye
+el panel diario ni se instala un perfil de producción. Los cambios del perfil se publican
+al salir limpiamente; no se promete conservar una edición interrumpida o durabilidad ante
+un corte de energía.
+
+
+**Aceptación del usuario (2026-11-19):** con el ratón en el MSI, en la vista desechable sin
+política de reservas, «Sí, clona y mueve bien». Confirma clonación y movimiento en general;
+no se deduce una prueba del perfil persistente, de todos los destinos/bordes o de bandeja.
+Preview detenido con acuse y registro inactivo; proveedor de escritorios sigue activo,
+sin errores de configuración de Hyprland.

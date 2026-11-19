@@ -153,6 +153,56 @@ class EditModeSessionTest : public QObject
     }
 
 private Q_SLOTS:
+    void originalClonePanelInHyprland()
+    {
+        m_steps={};
+        const auto output=qEnvironmentVariable("BWM_R5_OUTPUT");auto *screen=BwmOutput::resolveScreen(output);QVERIFY(screen);
+        const auto before=reserved(screen->name());const auto S=screen->geometry();const auto cursor=cursorPos();
+        const auto focused=hyprJson({"-j","activewindow"}).object();
+        const auto restore=[&] {
+            if(cursorPos()!=cursor)warpCursor(cursor);
+            for(const auto &row:hyprJson({"-j","clients"}).array()) {
+                const auto c=row.toObject();
+                if(c.value("address")==focused.value("address") && c.value("pid")==focused.value("pid") && !focused.value("address").toString().isEmpty()) {
+                    hyprJson({"dispatch",QString("hl.dsp.focus({window=\"address:%1\"})").arg(c.value("address").toString())});break;
+                }
+            }
+        };
+        struct Restore{std::function<void()> action;~Restore(){action();}} restoreOnReturn{restore};
+        ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout("bwm-r5-clone-layout");auto *c=corona.createContainment("org.kde.panel");QVERIFY(c);
+        c->setLocation(Plasma::Types::BottomEdge);c->setFormFactor(Plasma::Types::Horizontal);
+        QVERIFY(c->createApplet("org.kde.plasma.analogclock"));const auto id=c->id();
+        PanelRuntime runtime(&corona,"bwm-r5-clone-plasmashellrc",true);runtime.setPanelCloningAllowed(true);
+        QVERIFY(runtime.setAssignments({{id,output}}));QVERIFY(runtime.setSkin("plasma"));QTRY_VERIFY(runtime.view(id) && runtime.view(id)->isExposed());
+        auto *view=runtime.view(id);QVERIFY(view->applyViewSettings({{"panelLengthMode",2},{"minLength",640},{"maxLength",640},{"alignment",132}}));
+        c->internalAction("configure")->trigger();QPointer<PanelConfigView> dialog;QTRY_VERIFY(dialog=openDialog());
+        QQmlExpression choose(qmlContext(dialog->mainItem()),dialog->mainItem(),"clonePanelButton.checked=true");choose.evaluate();QVERIFY(!choose.hasError());
+        PlasmaQuick::Dialog *indicator=nullptr;
+        QTRY_VERIFY_WITH_TIMEOUT([&] {
+            for(auto *w:QGuiApplication::allWindows())if(auto *d=qobject_cast<PlasmaQuick::Dialog*>(w);d && d->isVisible() &&
+                d->property("bwmIndicatorScreen").value<QScreen*>()==screen && d->property("onClickedLocation").toInt()==Plasma::Types::TopEdge) {indicator=d;return true;}
+            return false;
+        }(),5000);
+        // The original indicator's clicked signal invokes its own QML handler.
+        QVERIFY(indicator->mainItem());QVERIFY(QMetaObject::invokeMethod(indicator->mainItem(),"clicked"));
+        QTRY_COMPARE(corona.containments().size(),2);auto *copy=corona.containments().last();QVERIFY(copy!=c);
+        QTRY_VERIFY(runtime.view(copy->id()) && runtime.view(copy->id())->isExposed());
+        QTRY_COMPARE(layers("bwm-r4-preview",screen->name()).size(),2);
+        const auto panels=layers("bwm-r4-preview",screen->name());
+        const QRect original(S.x()+(S.width()-view->width())/2,S.bottom()+1-64-view->height(),view->width(),view->height());
+        auto *cloned=runtime.view(copy->id());
+        const QRect expectedCopy(S.x()+(S.width()-cloned->width())/2,S.top()+64,cloned->width(),cloned->height());
+        QVERIFY(panels.contains(original));QVERIFY(panels.contains(expectedCopy));QCOMPARE(copy->applets().size(),1);
+        QVERIFY(copy->applets().first()->id()!=c->applets().first()->id());QCOMPARE(reserved(screen->name()),before);QCOMPARE(ownClients(),0);
+        m_steps.append(QJsonObject{{"step","original-clone-two-layers"},{"source",rect(original)},{"clone",rect(expectedCopy)},{"passed",true}});
+        corona.setEditMode(false);QVERIFY(runtime.setSkin("default"));QTRY_VERIFY(layers("bwm-r4-preview").isEmpty());
+        QTRY_VERIFY(layers("bwm-r5-edit-indicator").isEmpty());QTRY_VERIFY(layers("bwm-r4-popup").isEmpty());QCOMPARE(reserved(screen->name()),before);
+        restore();QTRY_COMPARE(cursorPos(),cursor);
+        if(!focused.value("address").toString().isEmpty())QTRY_COMPARE(activeWindow(),focused.value("address").toString());
+        m_steps.append(QJsonObject{{"step","clone-cleanup-reservations-pointer-focus"},{"passed",true}});
+        puts(QJsonDocument(QJsonObject{{"steps",m_steps}}).toJson(QJsonDocument::Compact).constData());
+    }
     void autoHideEdgeStripInHyprland()
     {
         // AutoHide with the edge strip that stands in for KWin's screen edge: no reservation,

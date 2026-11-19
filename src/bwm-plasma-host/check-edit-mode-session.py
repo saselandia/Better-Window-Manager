@@ -31,6 +31,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', help='Descripción del monitor (por defecto, el enfocado)')
     parser.add_argument('--binary', default=str(BINARY))
+    parser.add_argument('--case', help='Run one QtTest case instead of the full session suite')
     args = parser.parse_args()
     if not os.environ.get('WAYLAND_DISPLAY') or not os.environ.get('HYPRLAND_INSTANCE_SIGNATURE'):
         parser.error('Ejecútalo desde la sesión de Hyprland.')
@@ -51,7 +52,7 @@ def main():
                    BWM_R5_OUTPUT=output, BWM_R5_HYPR_RUNTIME=runtime,
                    DBUS_SESSION_BUS_ADDRESS=f'unix:path={root}/no-session-bus',
                    DBUS_SYSTEM_BUS_ADDRESS=f'unix:path={root}/no-system-bus')
-        reply = subprocess.run([args.binary], env=env, capture_output=True, text=True, timeout=120)
+        reply = subprocess.run([args.binary] + ([args.case] if args.case else []), env=env, capture_output=True, text=True, timeout=120)
     steps = None
     for line in reply.stdout.splitlines():
         if line.startswith('{"steps"'):

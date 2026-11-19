@@ -741,3 +741,15 @@ El archivo se valida por SHA-256 en `src/bwm-plasma-host/build-tray-proxy.py`.
 propiedades y de las señales SNI `NewStatus` y `NewIcon` para un objeto exacto de
 un nombre único D-Bus. La compilación es local.
 Texto original: `licenses/xdg-dbus-proxy-LGPL-2.1-or-later.txt`.
+
+### Clonación de paneles de Plasma 6.7.5 (R5)
+
+`src/bwm-plasma-host/panelclone.cpp` adapta `ShellCorona::clonePanelTo` de
+`plasma-workspace-6.7.5/shell/shellcorona.cpp` (tarball de Portage). Conserva los avisos
+originales de Aaron Seigo (2008), Sebastian Kügler, Ivan Cukic y Marco Martin (2013),
+LGPL-2.0-or-later. Fuente correspondiente:
+<https://invent.kde.org/plasma/plasma-workspace/-/blob/v6.7.5/shell/shellcorona.cpp>.
+Cambios BWM: copia recursiva de containments embebidos, remapeo de IDs desde la configuración
+fuente sin dejar grupos de los IDs antiguos, y ciclo de vistas/salidas separado en
+`PanelRuntime`. El QML de edición instalado se sigue cargando sin cambios. La API auxiliar,
+las transacciones de perfiles y los ensayos nuevos son código BWM GPL-2.0-or-later.
