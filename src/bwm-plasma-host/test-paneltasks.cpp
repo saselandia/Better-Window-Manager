@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Real PanelSession registration and original KDE launcher/window merging.
 #include "panelsession.h"
+#include "panelviewhost.h"
 #include "taskbridge.h"
 #include "taskpreview.h"
 #include "tasklauncher.h"
@@ -137,6 +138,66 @@ private Q_SLOTS:
         for(auto *tasks:models)QTRY_VERIFY(!tasks->index(0,0).data(TaskManager::AbstractTasksModel::IsMinimized).toBool());
         QTRY_VERIFY(!bridge->state().value("actionInFlight").toBool() && bridge->state().value("pendingActions").toInt()==0);
         QVERIFY2(bridge->error().isEmpty(),qPrintable(bridge->error()));
+        QTRY_VERIFY(BwmTaskBridge::suspendAll(true));
+    }
+    void originalPanelDetectsWindowOverlapFromTaskSnapshots(){
+        // Exercise Panel.qml's real region/activity filters and debounce, rather
+        // than writing touchingWindow as the controller-only UI test does.
+        // Offscreen has no VirtualDesktopInfo provider: disable only that filter
+        // here. Native desktop filtering still needs the separate Wayland test.
+        QCOMPARE(QGuiApplication::platformName(),"offscreen");
+        QVERIFY(qEnvironmentVariableIsEmpty("HYPRLAND_INSTANCE_SIGNATURE"));
+        const auto root=qEnvironmentVariable("BWM_R4_LOCAL_TEST_ROOT");
+        const auto clients=qEnvironmentVariable("BWM_R4_FAKE_CLIENTS");
+        QVERIFY(!root.isEmpty() && clients.startsWith(root+'/'));
+        QFile input(clients);QVERIFY(input.open(QIODevice::ReadOnly));
+        auto client=QJsonDocument::fromJson(input.readAll()).object();input.close();
+        const auto screen=qGuiApp->primaryScreen()->geometry();
+        const QRect panelRect(screen.left(),screen.bottom()-47,screen.width(),48);
+        client["mapped"]=true;client["hidden"]=false;client["tags"]=QJsonArray{};
+        client["workspace"]=QJsonObject{{"id",1},{"name","1"}};
+        client["fixtureScreen"]=QJsonArray{screen.x(),screen.y(),screen.width(),screen.height()};
+        client["at"]=QJsonArray{screen.left()+10,screen.top()+10};client["size"]=QJsonArray{100,100};
+        const auto save=[&]{QSaveFile file(clients);return file.open(QIODevice::WriteOnly) &&
+            file.write(QJsonDocument(client).toJson())>0 && file.commit();};
+        QVERIFY(save());
+        qputenv("BWM_R4_TASK_ACTIONS","1");qputenv("BWM_R4_TASK_RUNTIME",qgetenv("XDG_RUNTIME_DIR"));
+        qputenv("BWM_R4_TASK_CONFIG",qgetenv("XDG_CONFIG_HOME"));BwmTaskBridge::suspendAll(false);
+        PanelTaskCorona corona;
+        corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        auto *c=corona.createContainment("org.kde.panel");QVERIFY(c && !c->failedToLaunch());
+        c->setFormFactor(Plasma::Types::Horizontal);c->setLocation(Plasma::Types::BottomEdge);
+        QVERIFY(c->createApplet("org.bwm.r4.shared-config"));
+        PanelViewHost view(&corona,root+"/config/overlap-plasmashellrc");
+        view.setScreen(qGuiApp->primaryScreen());view.setProperty("bwmNativePanelPolicy",true);view.setProperty("bwmLayerPanel",true);
+        view.setProperty("bwmPanelRect",panelRect);view.setPosition(panelRect.topLeft());
+        QVERIFY2(view.load(c),qPrintable(view.error()));view.show();
+        auto models=view.rootObject()->findChildren<TaskManager::TasksModel*>();QCOMPARE(models.size(),1);
+        auto *tasks=models.first();QVERIFY(tasks->filterByCurrentVirtualDesktop());
+        tasks->setFilterByCurrentVirtualDesktop(false);
+        QVERIFY(tasks->filterByActivity());QVERIFY(tasks->filterMinimized());QVERIFY(tasks->filterHidden());
+        QStandardItemModel startup(0,1);
+        for(auto *concat:tasks->findChildren<QConcatenateTablesProxyModel*>())for(auto *source:concat->sourceModels())
+            if(auto *s=qobject_cast<TaskManager::StartupTasksModel*>(source);s && s->columnCount()==0)s->setSourceModel(&startup);
+        QVERIFY2(view.applyViewSettings({{"panelVisibility",2}}),qPrintable(view.error()));
+        QTRY_VERIFY_WITH_TIMEOUT(BwmTaskBridge::diagnostics().value("snapshotAvailable").toBool(),3000);
+        QTRY_COMPARE(BwmTaskBridge::diagnostics().value("windowCount").toInt(),1);
+        QTRY_COMPARE(tasks->regionGeometry(),view.dogdeGeometryByDistance(-1));
+        QCOMPARE(tasks->rowCount(),0);QVERIFY(!view.touchingWindow());QVERIFY(!view.autoHidden());
+        // A real snapshot geometry change flows through the source, KDE region
+        // proxy and original Panel.qml timer to the hiding controller.
+        client["at"]=QJsonArray{panelRect.left()+10,panelRect.top()-20};QVERIFY(save());
+        QTRY_COMPARE_WITH_TIMEOUT(tasks->rowCount(),1,3000);
+        QTRY_VERIFY(view.touchingWindow());QTRY_VERIFY(view.autoHidden());
+        QCOMPARE(tasks->index(0,0).data(TaskManager::AbstractTasksModel::Geometry).toRect(),
+            QRect(panelRect.left()+10,panelRect.top()-20,100,100));
+        client["workspace"]=QJsonObject{{"id",-98},{"name","special:minimized"}};
+        client["tags"]=QJsonArray{"omarchy-minimized-from-1"};QVERIFY(save());
+        QTRY_COMPARE_WITH_TIMEOUT(tasks->rowCount(),0,3000);QTRY_VERIFY(!view.touchingWindow());QTRY_VERIFY(!view.autoHidden());
+        client["workspace"]=QJsonObject{{"id",1},{"name","1"}};client["tags"]=QJsonArray{};QVERIFY(save());
+        QTRY_COMPARE_WITH_TIMEOUT(tasks->rowCount(),1,3000);QTRY_VERIFY(view.autoHidden());
+        client["at"]=QJsonArray{screen.left()+10,screen.top()+10};QVERIFY(save());
+        QTRY_COMPARE_WITH_TIMEOUT(tasks->rowCount(),0,3000);QTRY_VERIFY(!view.touchingWindow());QTRY_VERIFY(!view.autoHidden());
         QTRY_VERIFY(BwmTaskBridge::suspendAll(true));
     }
     void pinnedLauncherAndDesktopActionsLeaveTheHost(){

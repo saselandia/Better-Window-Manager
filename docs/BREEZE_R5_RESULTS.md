@@ -349,3 +349,29 @@ llegara al compositor y no apareció. El ensayo espera ahora 250 ms antes de mov
 El usuario lo prueba con el ratón en el MSI: «todo funciona menos el esquivar ventanas». Esquivar
 no se ocultaba porque en esa sesión el proveedor de escritorios estaba retirado; no se ha
 confirmado después de volver a iniciar sesión.
+
+### Diagnóstico posterior y regresión de geometría (2026-11-19, §312)
+
+Al retomar, `native-desktops.py status` sigue dando `enabled=true`,
+`providerAvailable=false`, `arbitrationState=retired` en la misma instancia de Hyprland.
+No se lanza el preview con `--native-desktops` mientras falte ese requisito. La retirada
+explica la ausencia de escritorios del filtro, pero aún no demuestra que sea la única
+causa del fallo observado con el ratón.
+
+Nueva prueba `originalPanelDetectsWindowOverlapFromTaskSnapshots` en `test-paneltasks`:
+carga el `Panel.qml` instalado con `PanelViewHost` y un widget sin modelo de tareas propio.
+Sólo el registro del marco puede conectar entonces su `TasksModel` al puente BWM.
+Un IPC ficticio entrega una ventana inicialmente alejada, después solapada, minimizada,
+restaurada y alejada de nuevo. Se comprueban la región y el rol `Geometry`, las filas del
+modelo original, `touchingWindow` y el ocultado/reaparición del panel, sin escribir esa
+propiedad desde la prueba.
+
+El filtro de actividad permanece activo, sin bus de sesión ni `kactivitymanagerd`:
+no elimina la ventana. En **offscreen se desactiva sólo el filtro por escritorio actual**,
+porque ese backend no dispone del proveedor Wayland. No valida ese filtro ni sustituye
+la prueba en la sesión real tras volver a entrar.
+
+Comprobado: compilación de `test-paneltasks`; CTest `isolated-local-configuration`
+1/1 (42,50 s), con QtTest de tareas del panel 5/5, sin fallos ni omisiones.
+No se ha cambiado código del controlador, reiniciado la sesión ni hecho una nueva prueba
+visual. Sigue pendiente la prueba real de «Esquivar ventanas»; el resto de R5 permanece abierto.

@@ -5298,3 +5298,26 @@ git status; git log --oneline -5; git push origin main
   escritorio actual): volver a iniciar sesión. Falta también la prueba con el ratón del usuario.
 * **Después:** el usuario confirma con el ratón que todo funciona salvo esquivar ventanas. Era lo
   esperado sin el proveedor; queda probarlo tras volver a iniciar sesión.
+
+
+### 312. R5: regresión de esquivar desde el modelo original y proveedor aún retirado (2026-11-19)
+
+* **Estado al retomar:** los cambios del traspaso ya estaban commiteados en `f6243bb`;
+  la carga `require("modules.native_desktops")` ya estaba en `4c22038`. No se duplican.
+  `native-desktops.py status` confirma en la misma instancia `enabled=true`,
+  `providerAvailable=false` y arbitraje `retired`. Para la prueba real falta volver a entrar
+  en la sesión; no se carga/descarga el módulo en caliente ni se arranca un preview condenado
+  a fallar su preflight. No se ha hecho push desde esta continuación.
+* **Regresión añadida:** `originalPanelDetectsWindowOverlapFromTaskSnapshots`, en
+  `test-paneltasks.cpp`, usa `PanelViewHost` y el `Panel.qml` instalado, con un widget sin
+  modelo de tareas. El puente tiene que descubrir el modelo del propio marco. IPC ficticio
+  mueve una ventana sobre el panel, la minimiza/restaura y la aleja: se observan región,
+  rol `Geometry`, filas, `touchingWindow` y ocultado/reaparición, sin forzar touchingWindow.
+* **Comprobado:** compilación del objetivo; CTest `isolated-local-configuration` 1/1
+  (42,50 s), QtTest de tareas del panel 5/5. El filtro de actividad permanece activo sin
+  kactivitymanagerd y no descarta esa ventana. AGENTS.md y CLAUDE.md siguen idénticos.
+* **Límites:** en offscreen sólo se desactiva el filtro de escritorio actual por ausencia
+  del proveedor Wayland; no se valida ese filtro ni esquivar en la sesión real. Sin cambio
+  del controlador o nueva aceptación visual. La retirada del proveedor es un bloqueo
+  confirmado, no una demostración de que sea la única causa. Resto de R5 pendiente hasta
+  resolver la prueba real, como pide el orden del traspaso. Informe: BREEZE_R5_RESULTS.md.
