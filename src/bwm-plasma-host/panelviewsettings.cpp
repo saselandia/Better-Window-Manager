@@ -54,7 +54,7 @@ bool PanelViewSettings::validate(QVariantMap &values)const {
             m_error=QStringLiteral("Invalid native panel value: %1").arg(key);return false;
         }
         const int n=int(number);
-        if((flag && n>1) || (key=="panelOpacity" && n!=1 && n!=2) || (key=="panelVisibility" && n!=0 && n!=3) ||
+        if((flag && n>1) || (key=="panelOpacity" && n!=1 && n!=2) || (key=="panelVisibility" && n>3) ||
            (key=="thickness" && (n<16 || n>256)) || ((key=="minLength" || key=="maxLength") && n<64) ||
            // Qt::AlignLeft, Qt::AlignRight, Qt::AlignCenter; PanelView::LengthMode 0..2.
            (key=="alignment" && n!=1 && n!=2 && n!=132) || (key=="panelLengthMode" && n>2)) {

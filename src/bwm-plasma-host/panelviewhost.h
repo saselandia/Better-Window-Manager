@@ -5,6 +5,7 @@
 #include <QPointer>
 #include <QScreen>
 #include <QPropertyAnimation>
+#include <QVariantAnimation>
 #include <QTimer>
 #include <QVariantMap>
 #include <memory>
@@ -27,7 +28,8 @@ public:
 
 // Adapter for the installed, unmodified plasma.desktop views/Panel.qml. Preview
 // surfaces never reserve work area. The explicit native-policy test can request
-// reservations; neither mode implements autohide or claims a KWin task backend.
+// reservations and hides/dodges with its own edge strip (no KWin screen-edge protocol);
+// neither mode claims a KWin task backend.
 class PanelViewHost : public PlasmaQuick::ContainmentView {
     friend class PanelRuntime; // Reports output-move errors on the view, like its own setters.
     Q_OBJECT
@@ -100,6 +102,9 @@ public:
     void setUserConfiguring(bool value);
     int visibilityMode()const{return m_visibility;}
     void setVisibilityMode(int value);
+    // Diagnostics/tests: whether the content is currently slid off for autohide/dodge.
+    bool autoHidden()const{return m_autoHidden;}
+    bool touchingWindow()const{return m_touchingWindow;}
     int opacityMode()const{return m_opacity;}
     void setOpacityMode(int value);
     bool floating()const{return m_floating;}
@@ -131,7 +136,15 @@ private Q_SLOTS:
     void adoptLocation(Plasma::Types::Location location);
     void animateFloating();
     void updateMask();
+    // PanelView 6.7.5 autohide policy (restoreAutoHide/showTemporarily/updateTouchingWindow).
+    void restoreAutoHide();
+    void showTemporarily();
+    void updateTouchingWindow();
 private:
+    bool edgeActivated()const;
+    void setAutoHideEnabled(bool enabled);
+    void applyAutoHide(bool animate);
+    QPointF hiddenOffset()const;
     void setError(const QString &message);
     void invalidateFrame();
     bool vertical()const;
@@ -161,6 +174,12 @@ private:
     std::shared_ptr<Frames> m_frames=std::make_shared<Frames>();
     QString m_renderError;
     QUrl m_nativeSource;
+    // Stand-in for KWin's kde_auto_hide_screen_edge_v1: hidden content slides off the
+    // output and the input mask keeps a strip on the screen edge that reveals the panel.
+    QTimer m_unhideTimer;
+    QVariantAnimation m_hideAnimation;
+    QMetaObject::Connection m_transientWindowVisibleWatcher;
+    bool m_containsMouse=false,m_containsDrag=false,m_touchingWindow=false,m_autoHidden=false;
     std::unique_ptr<PanelViewSettings> m_settings;
     QVariantMap m_settingsDefaults;
 };

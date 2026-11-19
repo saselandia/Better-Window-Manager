@@ -11,6 +11,10 @@ public:
     // ShellCorona API used by the original PanelConfiguration.qml. The host has
     // no desktop containment, so edit mode is always entered from a panel.
     Q_INVOKABLE bool enteredEditModeViaDesktop()const{return false;}
+    // ShellCorona::isScreenUiReady, read by the original Folder View (org.kde.desktopcontainment)
+    // also when it is added to a panel. There is no desktop view here: a screen is ready when
+    // every panel view bound on it is visible and its containment reports uiReady.
+    Q_INVOKABLE bool isScreenUiReady(int screen)const;
     ViewCorona();
     ~ViewCorona()override;
     int numScreens()const override;

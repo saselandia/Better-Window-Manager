@@ -135,5 +135,34 @@ class StartupTest(unittest.TestCase):
         self.assertFalse(self.m.SESSION.exists())
 
 
+@unittest.skipUnless(__import__('shutil').which('lua'), 'Lua not installed')
+class ConfigReloadKeepsProviderTest(unittest.TestCase):
+    """A config reload resets plugin options: the Lua module re-enables a loaded, opted-in provider."""
+    def run_module(self, loaded, opt_in):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory)
+            if opt_in is not None:
+                (config/'bwm').mkdir()
+                (config/'bwm/native-desktops.json').write_text(json.dumps(opt_in))
+            prelude = (
+                'local applied = {}\n'
+                'hl = { get_config = function(name) if name == "plugin.bwm_plasma_desktops.enabled" then '
+                + ('return false' if loaded else 'return nil') + ' end return nil end,\n'
+                '       config = function(t) applied[#applied+1] = t end }\n')
+            source = (ROOT/'config/hypr/modules/native_desktops.lua').read_text()
+            probe = ('\nlocal t = applied[1]\n'
+                     'print(t and t.plugin and t.plugin.bwm_plasma_desktops and tostring(t.plugin.bwm_plasma_desktops.enabled) or "none")\n')
+            result = subprocess.run(['lua', '-'], input=prelude + source + probe, text=True, capture_output=True,
+                                    timeout=5, env=dict(os.environ, XDG_CONFIG_HOME=str(config)))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return result.stdout.strip()
+
+    def test_enables_only_when_loaded_and_opted_in(self):
+        self.assertEqual(self.run_module(True, {'version': 1, 'enabled': True}), 'true')
+        self.assertEqual(self.run_module(False, {'version': 1, 'enabled': True}), 'none')
+        self.assertEqual(self.run_module(True, {'version': 1, 'enabled': False, 'reason': 'unstable'}), 'none')
+        self.assertEqual(self.run_module(True, None), 'none')
+
+
 if __name__ == '__main__':
     unittest.main()

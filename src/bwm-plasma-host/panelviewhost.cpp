@@ -6,6 +6,7 @@
 #include "panelviewsettings.h"
 #include "panelconfigview.h"
 #include "widgetexplorerview.h"
+#include "taskbridge.h"
 #include <Plasma/Corona>
 #include <Plasma/Containment>
 #include <PlasmaQuick/AppletQuickItem>
@@ -17,6 +18,7 @@
 #include <QScreen>
 #include <QCoreApplication>
 #include <QElapsedTimer>
+#include <QGuiApplication>
 #include <QPlatformSurfaceEvent>
 #include <algorithm>
 #include <cmath>
@@ -38,6 +40,14 @@ PanelViewHost::PanelViewHost(Plasma::Corona *corona,QString viewSettingsFile):Co
     });
     connect(this,&PlasmaQuick::ContainmentView::formFactorChanged,&m_reflow,qOverload<>(&QTimer::start));
     connect(&m_floatingAnimation,&QPropertyAnimation::valueChanged,this,[this]{updateMask();});
+    // PanelView 6.7.5: leaving the panel rehides it after 500 ms; edit mode re-evaluates.
+    m_unhideTimer.setSingleShot(true);m_unhideTimer.setInterval(500);
+    connect(&m_unhideTimer,&QTimer::timeout,this,&PanelViewHost::restoreAutoHide);
+    if(corona)connect(corona,&Plasma::Corona::editModeChanged,this,&PanelViewHost::restoreAutoHide);
+    m_hideAnimation.setDuration(200);
+    connect(&m_hideAnimation,&QVariantAnimation::valueChanged,this,[this](const QVariant &value){
+        contentItem()->setPosition(value.toPointF());
+    });
     setTranslationDomain("plasma_shell_org.kde.plasma.desktop");
     rootContext()->setContextProperty("panel",this);
     connect(this,&QWindow::screenChanged,this,&PanelViewHost::screenToFollowChanged);
@@ -64,6 +74,25 @@ PanelViewHost::PanelViewHost(Plasma::Corona *corona,QString viewSettingsFile):Co
 }
 void PanelViewHost::invalidateFrame(){++m_frames->surface;}
 bool PanelViewHost::event(QEvent *event) {
+    // PanelView::event 6.7.5 for the edge-activated modes. Entering the hidden strip is
+    // what KWin's screen edge does for the original: it reveals the panel.
+    switch(event->type()) {
+    case QEvent::Enter:
+        m_containsMouse=true;
+        if(edgeActivated()){m_unhideTimer.stop();if(m_autoHidden)setAutoHideEnabled(false);}
+        break;
+    case QEvent::Leave:
+        m_containsMouse=false;if(edgeActivated())m_unhideTimer.start();break;
+    case QEvent::DragEnter:
+        m_containsDrag=true;
+        if(edgeActivated()){m_unhideTimer.stop();if(m_autoHidden)setAutoHideEnabled(false);}
+        break;
+    case QEvent::DragLeave:
+        m_containsDrag=false;m_containsMouse=false;if(edgeActivated())m_unhideTimer.start();break;
+    case QEvent::Drop:m_containsDrag=false;break;
+    case QEvent::Hide:m_containsMouse=false;break;
+    default:break;
+    }
     const bool result=ContainmentView::event(event);
     if((event->type()==QEvent::Expose && !isExposed()) ||
        (event->type()==QEvent::PlatformSurface && static_cast<QPlatformSurfaceEvent*>(event)->surfaceEventType()==QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed))invalidateFrame();
@@ -100,7 +129,8 @@ QVariantMap PanelViewHost::capabilities()const {
     const bool native=property("bwmNativePanelPolicy").toBool();if(native)keys.append("panelVisibility");
     return {{"nativePanelSource",m_nativeSource},{"nativeViewLoaded",bool(m_item) && rootObject() && status()==QQmlComponent::Ready},
         {"fixedOpacityModes",true},{"floatingSvg",true},
-        {"nativeInputMask",true},{"adaptiveWindowBackend",false},{"autohide",false},
+        {"nativeInputMask",true},{"adaptiveWindowBackend",false},{"autohide",native},
+        {"autoHideBackend",native?QStringLiteral("bwm-edge-strip"):QString()},{"autoHidden",m_autoHidden},{"touchingWindow",m_touchingWindow},
         {"minimumLength",m_minimumLength},{"maximumLength",m_maximumLength},
         {"viewSettingsReady",m_settings && m_settings->ready()},{"viewSettingsScope",m_settings ? m_settings->scope() : QString()},
         {"persistentViewKeys",keys},{"nativeVisibilityPolicy",native},
@@ -150,6 +180,11 @@ bool PanelViewHost::load(Plasma::Containment *c) {
         connect(root,signal,&m_reflow,SLOT(start()));
     connect(root,SIGNAL(floatingnessTargetChanged()),this,SLOT(animateFloating()));
     connect(root,SIGNAL(panelMaskChanged()),this,SLOT(updateMask()));
+    // Panel.qml decides DodgeWindows from its own TasksModel (touchingWindow), as for
+    // PanelView. Its window model gets the BWM source when task actions are enabled.
+    if(root->metaObject()->indexOfSignal("touchingWindowChanged()")>=0)
+        connect(root,SIGNAL(touchingWindowChanged()),this,SLOT(updateTouchingWindow()));
+    BwmTaskBridge::attachEnabled(root);
     m_floatingAnimation.setTargetObject(root);m_floatingAnimation.setPropertyName("floatingness");
     // The base view supplies native containment parenting and configureRequested. Route
     // configuration through one PanelSession, rather than opening a second ConfigView.
@@ -166,7 +201,15 @@ bool PanelViewHost::load(Plasma::Containment *c) {
     connect(c,&Plasma::Containment::showAddWidgetsInterface,this,[this]{toggleWidgetExplorer();});
     connect(c,&Plasma::Containment::statusChanged,this,[this](Plasma::Types::ItemStatus state){
         if(property("bwmLayerPanel").toBool())BwmSurface::setPanelAcceptsInput(this,state==Plasma::Types::AcceptingInputStatus);
+        // PanelView::refreshStatus: attention or input shows the panel for a while.
+        if(state==Plasma::Types::NeedsAttentionStatus || state==Plasma::Types::AcceptingInputStatus)showTemporarily();
+        else restoreAutoHide();
     });
+    connect(c,&Plasma::Applet::activated,this,[this]{if(edgeActivated())showTemporarily();});
+    connect(c,&Plasma::Containment::userConfiguringChanged,this,[this](bool configuring){
+        if(configuring)showTemporarily();else m_unhideTimer.start();
+    });
+    updateTouchingWindow();
     reflow();animateFloating();updateMask();setError({});return true;
 }
 void PanelViewHost::setThickness(int value) {
@@ -189,6 +232,7 @@ void PanelViewHost::useViewSettings(const QVariantMap &values) {
     // PanelView::restore: a centered panel has no offset, others never a negative one.
     m_offset=m_alignment==Qt::AlignCenter ? 0 : std::max(0,values.value("offset",m_offset).toInt());
     emit geometryPolicyChanged();emit policyChanged();emit placementChanged();emit viewSettingsChanged();m_reflow.start();
+    restoreAutoHide();
 }
 bool PanelViewHost::reloadViewSettings() {
     if(!containment() || !screen() || !m_settings){setError(tr("Load the native panel before its preferences."));return false;}
@@ -286,7 +330,9 @@ void PanelViewHost::reflow() {
     const QSize wanted=vertical() ? QSize(total,extent) : QSize(extent,total);
     setMinimumSize(wanted);setMaximumSize(wanted);
     if(size()!=wanted)resize(wanted);
-    root->setSize(wanted);m_lastVertical=vertical();updateMask();
+    root->setSize(wanted);m_lastVertical=vertical();
+    if(m_hideAnimation.state()!=QAbstractAnimation::Running)contentItem()->setPosition(m_autoHidden?hiddenOffset():QPointF());
+    updateMask();
     BwmSurface::setPanelPlacement(this,{m_alignment,m_offset,m_lengthMode});
     if(property("bwmLayerPanel").toBool())BwmSurface::setPanelVisibility(this,m_visibility,m_thickness);
 }
@@ -302,6 +348,17 @@ void PanelViewHost::animateFloating() {
 }
 void PanelViewHost::updateMask() {
     auto *root=rootObject();if(!root)return;
+    if(m_autoHidden) {
+        // Only a strip on the output edge takes input while hidden, like KWin's edge.
+        constexpr int strip=2;QRect rect(QPoint(),size());
+        switch(containment()?containment()->location():Plasma::Types::BottomEdge){
+        case Plasma::Types::TopEdge:rect.setHeight(strip);break;
+        case Plasma::Types::LeftEdge:rect.setWidth(strip);break;
+        case Plasma::Types::RightEdge:rect.setLeft(rect.right()+1-strip);break;
+        default:rect.setTop(rect.bottom()+1-strip);break;
+        }
+        setMask(QRegion(rect));return;
+    }
     const auto value=root->property("panelMask");
     if(value.metaType().id()!=QMetaType::QRegion)return;
     auto region=value.value<QRegion>();
@@ -410,14 +467,75 @@ void PanelViewHost::setMaximumLength(int value) {
 }
 void PanelViewHost::setVisibilityMode(int value) {
     if(value==m_visibility)return;
-    // AutoHide/DodgeWindows need a window backend that the host does not have.
-    const bool native=property("bwmNativePanelPolicy").toBool();
-    if(value!=PanelViewEnums::WindowsGoBelow && !(native && value==PanelViewEnums::NormalPanel)) {
+    // AutoHide/DodgeWindows use the edge strip, which needs the native policy's surface
+    // flush with the output edge; the preview surface keeps a gap.
+    const bool native=property("bwmNativePanelPolicy").toBool() && property("bwmLayerPanel").toBool();
+    if(value!=PanelViewEnums::WindowsGoBelow && !(native && value>=PanelViewEnums::NormalPanel && value<=PanelViewEnums::DodgeWindows)) {
         setError(tr("This panel visibility mode has no controller in the BWM host."));emit policyChanged();return;
     }
     if(persist({{"panelVisibility",value}}))return;
     if(m_userConfiguring && m_settings){emit policyChanged();return;}
-    m_visibility=value;emit policyChanged();m_reflow.start();
+    m_visibility=value;emit policyChanged();m_reflow.start();restoreAutoHide();
+}
+bool PanelViewHost::edgeActivated()const {
+    return (m_visibility==PanelViewEnums::AutoHide || m_visibility==PanelViewEnums::DodgeWindows) &&
+        property("bwmLayerPanel").toBool() && property("bwmNativePanelPolicy").toBool();
+}
+// restoreAutoHide/setAutoHideEnabled/showTemporarily/updateTouchingWindow follow
+// plasma-workspace 6.7.5 shell/panelview.cpp (GPL-2.0-or-later, Marco Martin and KDE
+// contributors). The hide/reveal itself is BWM's edge strip, not the KWin protocol.
+void PanelViewHost::restoreAutoHide() {
+    bool autoHide=true;
+    disconnect(m_transientWindowVisibleWatcher);
+    if(!edgeActivated())autoHide=false;
+    else if(m_containsMouse || m_containsDrag)autoHide=false;
+    else if(corona() && corona()->isEditMode())autoHide=false;
+    else if(containment() && containment()->status()>=Plasma::Types::NeedsAttentionStatus &&
+            containment()->status()!=Plasma::Types::HiddenStatus)autoHide=false;
+    else {
+        for(QWindow *window:QGuiApplication::topLevelWindows()) {
+            if(window->transientParent()==this && window->isVisible()) {
+                m_transientWindowVisibleWatcher=connect(window,&QWindow::visibleChanged,this,&PanelViewHost::restoreAutoHide);
+                autoHide=false;break;
+            }
+        }
+    }
+    setAutoHideEnabled(autoHide);
+}
+void PanelViewHost::setAutoHideEnabled(bool enabled) {
+    const bool hide=enabled && edgeActivated() &&
+        (m_visibility==PanelViewEnums::AutoHide || (m_visibility==PanelViewEnums::DodgeWindows && m_touchingWindow));
+    if(hide==m_autoHidden)return;
+    m_autoHidden=hide;applyAutoHide(true);emit policyChanged();
+}
+void PanelViewHost::showTemporarily() {
+    setAutoHideEnabled(false);
+    auto *timer=new QTimer(this);timer->setSingleShot(true);timer->setInterval(3000);
+    connect(timer,&QTimer::timeout,this,&PanelViewHost::restoreAutoHide);
+    connect(timer,&QTimer::timeout,timer,&QObject::deleteLater);
+    timer->start();
+}
+void PanelViewHost::updateTouchingWindow() {
+    if(!rootObject())return;
+    m_touchingWindow=rootObject()->property("touchingWindow").toBool();
+    restoreAutoHide();
+}
+QPointF PanelViewHost::hiddenOffset()const {
+    switch(containment()?containment()->location():Plasma::Types::BottomEdge){
+    case Plasma::Types::TopEdge:return QPointF(0,-height());
+    case Plasma::Types::LeftEdge:return QPointF(-width(),0);
+    case Plasma::Types::RightEdge:return QPointF(width(),0);
+    default:return QPointF(0,height());
+    }
+}
+void PanelViewHost::applyAutoHide(bool animate) {
+    const QPointF target=m_autoHidden?hiddenOffset():QPointF();
+    m_hideAnimation.stop();
+    updateMask();
+    if(!animate || !isVisible() || contentItem()->position()==target){contentItem()->setPosition(target);return;}
+    m_hideAnimation.setEasingCurve(m_autoHidden?QEasingCurve::InCubic:QEasingCurve::OutCubic);
+    m_hideAnimation.setStartValue(contentItem()->position());m_hideAnimation.setEndValue(target);
+    m_hideAnimation.start();
 }
 void PanelViewHost::setScreenToFollow(QScreen *target) {
     // Moving a panel to another output belongs to the runtime, which binds by description.

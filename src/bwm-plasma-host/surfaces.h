@@ -29,7 +29,8 @@ void setPanelPlacement(QQuickWindow *window, const PanelPlacement &placement);
 // Moves a configured panel surface to another screen edge in place, as
 // PanelView::updateLayerWindow re-anchors a mapped panel when its location changes.
 void setPanelEdge(QQuickWindow *window, Qt::Edge edge);
-// Explicit opt-in controller: native NormalPanel (0) or WindowsGoBelow (3).
+// Explicit opt-in controller: native NormalPanel (0, reserves), AutoHide (1) and
+// DodgeWindows (2) (no reservation); WindowsGoBelow (3) everywhere.
 // A positive exclusive zone is a request, never confirmation by the compositor.
 bool setPanelVisibility(QQuickWindow *window, int mode, int thickness);
 // Available area minus the strip on the panel's side (logical pixels).

@@ -179,8 +179,10 @@ static void updatePanelPolicy(QQuickWindow *window) {
     window->requestUpdate();
 }
 bool setPanelVisibility(QQuickWindow *window,int mode,int thickness) {
-    if(!window || !window->property("bwmLayerPanel").toBool() || (mode!=0 && mode!=3) || thickness<16 || thickness>1024 ||
-       (mode==0 && !window->property("bwmNativePanelPolicy").toBool()))return false;
+    // 0 NormalPanel reserves; 1 AutoHide, 2 DodgeWindows and 3 WindowsGoBelow do not
+    // (PanelView::updateExclusiveZone). 0..2 only with the explicit native policy.
+    if(!window || !window->property("bwmLayerPanel").toBool() || mode<0 || mode>3 || thickness<16 || thickness>1024 ||
+       (mode!=3 && !window->property("bwmNativePanelPolicy").toBool()))return false;
     window->setProperty("bwmPanelVisibility",mode);window->setProperty("bwmReservationThickness",thickness);
     updatePanelPolicy(window);return window->property("bwmSurfaceError").toString().isEmpty();
 }

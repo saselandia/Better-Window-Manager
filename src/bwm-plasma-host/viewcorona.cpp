@@ -34,6 +34,15 @@ int ViewCorona::screenForContainment(const Plasma::Containment *containment)cons
     auto *window=m_views.value(containment).window.data();
     return window ? QGuiApplication::screens().indexOf(window->screen()) : -1;
 }
+bool ViewCorona::isScreenUiReady(int screen)const {
+    if(screen<0 || screen>=numScreens())return false;
+    for(auto it=m_views.constBegin();it!=m_views.constEnd();++it) {
+        auto *window=it.value().window.data();
+        if(!window || QGuiApplication::screens().indexOf(window->screen())!=screen)continue;
+        if(!window->isVisible() || !it.key()->isUiReady())return false;
+    }
+    return true;
+}
 void ViewCorona::bind(Plasma::Containment *containment,QQuickWindow *window) {
     if(!containment || containment->corona()!=this || !window)return;
     if(m_views.contains(containment) && m_views.value(containment).window==window)return;

@@ -50,15 +50,29 @@ def atomic_json(path, value):
         Path(name).unlink(missing_ok=True)
 
 
+# A transaction holder may still be in its last 10 ms poll after the host acknowledged
+# (the wrapper's startup skin, a status check). Callers wait this long, never more, and
+# still get BlockingIOError if the holder is a real long transaction (a session exit
+# waiting for the host to save): callers' own budgets (hook 3 s, bwm-power 8 s) hold.
+LOCK_WAIT = 0.5
+
+
 @contextmanager
-def locked(path):
+def locked(path, *, wait=0.0):
     flags = os.O_RDWR | os.O_CREAT | os.O_CLOEXEC | os.O_NOFOLLOW
     fd = os.open(path, flags, 0o600)
     try:
         info = os.fstat(fd)
         if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
             raise ValueError('El bloqueo de la prueba no es privado')
-        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        deadline = time.monotonic() + wait
+        while True:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.monotonic() >= deadline: raise
+                time.sleep(0.01)
         yield
     finally:
         os.close(fd)
@@ -156,7 +170,7 @@ def command(registration, action, skin='default', *, timeout=1.5, exit_timeout=N
     if exit_timeout is not None and action != 'stop':
         raise ValueError('La confirmación de salida requiere una orden de parada')
     directory = private_directory(registration['controlDirectory'], temporary=True)
-    with locked(directory / 'transaction.lock'):
+    with locked(directory / 'transaction.lock', wait=LOCK_WAIT):
         if exit_timeout is not None and process_start(registration['pid']) != registration['processStart']:
             raise ValueError('La prueba registrada ya ha terminado')
         current = read_json(directory / 'control.json')

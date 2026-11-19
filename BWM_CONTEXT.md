@@ -110,6 +110,10 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   paso a otro monitor en la vista desechable), medido en Hyprland con `check-edit-mode-session.py`.
   Iteración 3 (§305): «Añadir widgets…» con el `WidgetExplorer.qml` original en una capa lateral;
   añade al panel y vuelve a los Ajustes, probado offscreen y medido en Hyprland.
+  Iteración 4 (§306): caja de herramientas del panel y menú del botón derecho originales
+  (archivo `defaults` del paquete de shell), probados offscreen.
+  Iteración 5 (§310): autoocultar y esquivar ventanas con una franja de borde en lugar del
+  protocolo de KWin (sólo `--native-policy`); autoocultar medido en Hyprland, esquivar pendiente.
 * **Breeze II (2026-11-12):** `docs/BREEZE_PLAN_V2.md`, R0 entregada con referencia y límites documentados;
   R1 corrige origen de especiales al minimizar, activación común y filtro de Alt+Tab (pruebas
   aisladas; fallo visual original pendiente). R2 tiene primer KCM QWidget real, descubierto por
@@ -5164,6 +5168,52 @@ git status; git log --oneline -5; git push origin main
 * **Pendiente:** clic físico, arrastrar un widget al panel, desinstalar, alternativas de widgets. Con
   ASan falla después el ensayo de salida de §268 (`transaction.lock` con `LOCK_NB` mientras el anfitrión
   lento aún lo tiene), ajeno a este cambio.
+* **Después (2026-11-19):** con el ratón la barra se cerraba al poco de abrirse. Hyprland da el foco a
+  una capa *on demand* cuando el puntero solo pasa por encima, y el panel en edición lo es.
+  `Dialog::focusOutEvent` lo tomaba como un clic en la vista y ocultaba la barra. Ahora esa pérdida de
+  foco hacia el panel editado no la oculta; un clic fuera sigue cerrándola mediante la captura de foco.
+  Registro `bwm.r5.explorer`, prueba offscreen que falla sin la corrección; CTest normal 8/8.
+  `ViewCorona::isScreenUiReady` (de `ShellCorona`), que pide la Vista de carpeta añadida al panel desde el
+  explorador: lista si los paneles visibles de esa pantalla tienen `uiReady`.
+  El usuario confirma con el ratón en el MSI que la barra se queda abierta y añade widgets (sin
+  desglose por caso); `isScreenUiReady` no se ha vuelto a ver en sesión.
+
+### 306. R5, iteración 4: caja de herramientas del panel y menú del botón derecho (2026-11-19)
+
+* **Encontrado:** cada entrada en modo edición registraba «Toolbox not loading» y un `TypeError`
+  en `org/kde/panel/main.qml:135`. libplasma lee el `defaults` del paquete de shell de la Corona para
+  la caja de herramientas del panel y sus acciones de ratón; el paquete mínimo del anfitrión no lo
+  tenía. Sin él, `ConfigOverlay.qml` (asas de mover/quitar widgets) se creaba con `toolBox` nulo y
+  el clic derecho sobre el panel no abría ningún menú.
+* **Hecho:** `src/bwm-plasma-host/shell/contents/defaults` con el `[Panel]` de plasma-desktop 6.7.5
+  (`ToolBox=org.kde.paneltoolbox`, `RightButton;NoModifier=org.kde.contextmenu`). Sin código nuevo.
+* **Comprobado:** prueba offscreen nueva (caja de herramientas, `ConfigOverlay`, Escape, menú del
+  botón derecho con «Enter Edit Mode» y «Añadir widgets…», que abre el explorador); falla sin el
+  archivo. CTest normal 8/8 y 255 pruebas Python R4.
+* **No probado:** el menú del botón derecho y las asas del `ConfigOverlay` con el ratón en Hyprland.
+
+* **Después (2026-11-19):** el fallo con ASan del ensayo de salida de §268 era del envoltorio.
+  Su `command()` aún retenía `transaction.lock` en el último sondeo tras el acuse inicial, y
+  `session-exit` lo pedía con `LOCK_NB`. `panel-session.py` espera hasta 0,5 s por el bloqueo
+  antes de dar `BlockingIOError`. Regresión nueva (falla sin la espera); ASan
+  `isolated-local-configuration` pasa 3/3; Python R4 256.
+
+### 307. BWMenu en el lanzador de aplicaciones de las tres skins (2026-11-19)
+
+* **Hecho:** entrada común en `config/hypr/applications/org.bwm.menu.desktop`. Abre
+  `bwmenu --open` desde su ruta de instalación, también si el lanzador carece de
+  `~/.local/bin` en el PATH. `install-bwmenu-launcher.sh` la registra desde el instalador
+  y al iniciar sesión, antes de Quickshell, y respeta una entrada existente.
+* **Comprobado:** `desktop-file-validate`, detección en `DesktopEntries` de Quickshell y
+  `KService` de KDE, y entrega de `--open` a un ejecutable de prueba desde Quickshell, KDE y
+  GIO. Se probaron XDG explícito y por defecto, repetición y una entrada personalizada.
+  Pasaron las 27 pruebas de BWMenu. Queda pendiente comprobar los lanzadores en sesión:
+  el entorno de trabajo tiene el directorio de aplicaciones del usuario en sólo lectura.
+* **Después (2026-11-19):** el usuario lo da por bueno con el ratón salvo emergentes en el centro de la
+  pantalla. El recuadro de cada widget en modo edición (`ConfigOverlay.qml`) y el tooltip del botón ⚙
+  pertenecen al containment del panel y `PackageWindows` sólo adaptaba los de los widgets: salían
+  como ventanas normales y Breeze los centraba. Ahora reciben capa si su ancla visual está en el
+  panel. Ensayo de sesión nuevo `panelOwnPopupsInHyprland` (falla sin la corrección); 20/20 en el LG.
 
 ### 308. Gestor de archivos por skin (Dolphin / Nautilus en Retro), plugins de Omarchy y sincronización de favoritos (2026-11-19)
 
@@ -5203,3 +5253,48 @@ git status; git log --oneline -5; git push origin main
 * **Pendiente (requiere sudo del usuario):** instalar `dev-python/nautilus-python` (y opcionalmente
   LocalSend) para que Nautilus cargue las extensiones Python ya enlazadas, y prueba visual interactiva
   abriendo `Alt+E` en Breeze/default (Dolphin) y Retro (Nautilus).
+
+### 309. BWMenu: registro en la instalación actual y apertura comprobada (2026-11-19)
+
+* **Petición:** continuar §307 y asegurar que instalar BWM registre BWMenu como aplicación
+  para el lanzador de cualquier skin.
+* **Comprobado:** `install.sh` llama al registro común tras enlazar `~/.local/bin/bwmenu`;
+  `autostart.sh` cubre instalaciones existentes antes de iniciar Quickshell. Ejecutado
+  `install-bwmenu-launcher.sh` en esta sesión: creada
+  `~/.local/share/applications/org.bwm.menu.desktop`, validada con `desktop-file-validate`.
+  Quickshell enumera BWMenu en `DesktopEntries.applications` y KDE lo encuentra visible
+  mediante `KService::serviceByDesktopName`, tras actualizar su caché con `kbuildsycoca6`.
+  `gio launch` de esa entrada abre una ventana mapeada `org.bwm.menu`, título BWMenu.
+  Pasan las 27 pruebas existentes de BWMenu y la sintaxis Bash de los scripts implicados.
+* **Alcance:** sin cambio de skin ni reinicio del shell; no se ha recorrido visualmente
+  la búsqueda en los tres lanzadores. Queda resuelta la instalación local pendiente de §307.
+  El usuario lo vuelve a probar con el ratón: «ya va bien parece».
+
+### 310. R5, iteración 5: autoocultar y esquivar ventanas; proveedor de escritorios tras recargar (2026-11-19)
+
+* **Hecho:** `PanelViewHost` admite «Ocultar automáticamente» (1) y «Esquivar ventanas» (2) con
+  `--native-policy`, donde el panel toca el borde. La lógica de cuándo ocultarse se porta de
+  `PanelView` 6.7.5: `restoreAutoHide`, `showTemporarily` (3 s), temporizador de 500 ms al salir,
+  modo edición, estado de atención y ventanas transitorias visibles. El ocultado sustituye al protocolo
+  `kde_auto_hide_screen_edge_v1` de KWin. El contenido se desliza fuera de la pantalla en 200 ms y la
+  máscara de entrada deja una franja de 2 px en el borde. Al entrar el puntero, el panel vuelve.
+  Esquivar sigue la propiedad `touchingWindow` del `Panel.qml` original. Su `TasksModel` recibe ahora
+  el puente de tareas BWM (`attachEnabled` también en la raíz del marco). No hay reserva en ninguno
+  de los dos modos, como en Plasma. `plasmashellrc` admite `panelVisibility` 0–3.
+* **Proveedor de escritorios:** `native-desktops.py startup` lo activaba con `hl.config` en caliente.
+  Cualquier `hyprctl reload` (cambio de skin, atajos) devolvía la opción a `false` y el proveedor quedaba
+  retirado hasta otro inicio de sesión: en esta sesión estaba `disabled-after-claim`. Nuevo
+  `modules/native_desktops.lua` (común): mantiene `enabled = true` si el módulo está cargado
+  (`hl.get_config` no nulo) y el opt-in sigue activo. Nunca carga el módulo.
+* **Comprobado:** QtTest `nativePanelAutoHideAndDodge` (sin reserva, desplazamiento y franja, entrada y
+  salida, modo edición, ventana transitoria, atención, `touchingWindow`, vuelta a normal, vista sin
+  política rechaza los modos); `surface-geometry`; CTest normal 8/8; matriz `check-isolated.py` con KDE y
+  Andromeda; Python R4 257 (Lua del proveedor: cargado/no cargado/opt-in apagado/ausente). En Hyprland
+  (LG, borde superior) `check-edit-mode-session.py` 23/23. Se movió el puntero al borde: el panel
+  apareció; al alejarlo se ocultó. No se reservó espacio, y el puntero y el foco se devolvieron.
+  Ensayo repetido 3/3. Tras `hyprctl reload` la opción del proveedor sigue en `true` y no hay errores
+  de configuración.
+* **Pendiente:** esquivar con ventanas reales necesita el proveedor activo (`Panel.qml` filtra por
+  escritorio actual): volver a iniciar sesión. Falta también la prueba con el ratón del usuario.
+* **Después:** el usuario confirma con el ratón que todo funciona salvo esquivar ventanas. Era lo
+  esperado sin el proveedor; queda probarlo tras volver a iniciar sesión.

@@ -14,6 +14,10 @@
 #include <QScreen>
 #include <QTimer>
 #include <QDynamicPropertyChangeEvent>
+#include <QGuiApplication>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(lcBwmExplorer, "bwm.r5.explorer", QtWarningMsg)
 
 using namespace Qt::StringLiterals;
 
@@ -23,6 +27,7 @@ WidgetExplorerView::WidgetExplorerView(PanelViewHost *panel)
     // A click outside the whitelisted surfaces is the window deactivation that hides the
     // side bar in KWin (hideOnWindowDeactivate), unless a drag or menu is in progress.
     connect(&m_grab, &FocusGrab::cleared, this, [this] {
+        qCDebug(lcBwmExplorer) << "focus grab cleared; visible" << isVisible();
         m_grab.stop();
         if (m_sidePanel && m_sidePanel->isVisible() && m_sidePanel->property("hideOnWindowDeactivate").toBool())
             m_sidePanel->setVisible(false);
@@ -90,6 +95,7 @@ bool WidgetExplorerView::ensureLoaded()
     });
     connect(m_sidePanel, &QWindow::widthChanged, this, &WidgetExplorerView::place);
     connect(m_sidePanel, &QWindow::visibleChanged, this, [this](bool visible) {
+        qCDebug(lcBwmExplorer) << "side panel visible" << visible << "focus window" << QGuiApplication::focusWindow();
         m_grab.stop();
         if (visible) {
             QTimer::singleShot(50, this, &WidgetExplorerView::updateGrab);
@@ -109,6 +115,7 @@ bool WidgetExplorerView::ensureLoaded()
     connect(m_containment, &Plasma::Containment::locationChanged, this, &WidgetExplorerView::place);
     // The panel's own layer geometry is published as properties (surfaces.cpp).
     m_panel->installEventFilter(this);
+    m_sidePanel->installEventFilter(this);
     connect(m_sidePanel, &QObject::destroyed, this, [this] {m_engine.release(); m_sidePanel = nullptr;});
     return true;
 }
@@ -165,11 +172,25 @@ void WidgetExplorerView::updateGrab()
     if (!isVisible() || m_grab.active() || !FocusGrab::available() || !m_panel)
         return;
     // The edited panel stays usable: dropping a widget on it must not close the side bar.
-    m_grab.start({m_sidePanel.data(), m_panel.data()});
+    const bool started = m_grab.start({m_sidePanel.data(), m_panel.data()});
+    qCDebug(lcBwmExplorer) << "focus grab started" << started;
 }
 
 bool WidgetExplorerView::eventFilter(QObject *watched, QEvent *event)
 {
+    if (watched == m_sidePanel && (event->type() == QEvent::FocusIn || event->type() == QEvent::FocusOut)) {
+        qCDebug(lcBwmExplorer) << (event->type() == QEvent::FocusIn ? "side panel focus in" : "side panel focus out")
+                               << "focus window" << QGuiApplication::focusWindow();
+        // Hyprland gives keyboard focus to an on-demand layer the pointer merely moves over
+        // (InputManager::mouseMoveUnified), and the panel accepts input in edit mode. The
+        // original Dialog::focusOutEvent takes the panel view getting focus for a click on it
+        // and hides the side bar, which KWin never does on hover. Focus moving to the edited
+        // panel is not a deactivation here: a click outside both still clears the focus grab.
+        if (event->type() == QEvent::FocusOut && m_panel && QGuiApplication::focusWindow() == m_panel.data()) {
+            qCDebug(lcBwmExplorer) << "focus moved to the edited panel; side panel kept";
+            return true;
+        }
+    }
     if (watched == m_panel && event->type() == QEvent::DynamicPropertyChange) {
         const auto name = static_cast<QDynamicPropertyChangeEvent *>(event)->propertyName();
         if (name == "bwmPanelRect" || name == "bwmPanelEdge" || name == "bwmReservationRequested")

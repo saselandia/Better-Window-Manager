@@ -104,7 +104,12 @@ void PackageWindows::prepare(QQuickWindow *quick,bool creatingSurface) {
     // across applets/containments. Never infer ownership from process/window title.
     auto *context=qmlContext(quick);
     auto *owner=popup?visualOwner(anchor):context?context->contextProperty("plasmoid").value<Plasma::Applet*>():nullptr;
-    if(!owner || !m_containment->applets().contains(owner)){
+    // R5: the panel containment's own popups (ConfigOverlay's handle popup, the paneltoolbox
+    // tooltip) are anchored to items of the panel window: they need the same layer role,
+    // or they map as ordinary toplevels away from the panel. Only by visual anchor: windows
+    // whose QML context merely names the containment (Panel Settings) keep their own owner.
+    const bool containmentPopup=popup && anchor && owner==m_containment;
+    if(!owner || !(containmentPopup || m_containment->applets().contains(owner))){
         if(m_records.remove(quick))Q_EMIT changed();return;
     }
     auto *item=PlasmaQuick::AppletQuickItem::itemForApplet(owner);

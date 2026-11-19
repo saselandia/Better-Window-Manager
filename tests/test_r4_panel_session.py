@@ -77,6 +77,22 @@ class PanelSessionTest(unittest.TestCase):
             with self.assertRaises(BlockingIOError):m.command(registration,'skin','plasma',timeout=.01)
         self.assertEqual((self.control/'control.json').read_bytes(),before)
 
+    def test_short_lived_transaction_holder_is_waited_for_not_reported_busy(self):
+        # §268 under ASan: the wrapper was still in its last poll of the startup skin ack.
+        import threading,time
+        registration=self.register();held=threading.Event()
+        def holder():
+            with m.locked(self.control/'transaction.lock'):
+                held.set();time.sleep(.1)
+            deadline=time.monotonic()+2
+            while time.monotonic()<deadline:
+                if json.loads((self.control/'control.json').read_text()).get('revision')==1:
+                    self.write('ack.json',{'version':1,'token':self.token,'revision':1,'ok':True,'command':'skin','skin':'plasma'});return
+                time.sleep(.005)
+        thread=threading.Thread(target=holder);thread.start();held.wait(1)
+        try:self.assertEqual(m.command(registration,'skin','plasma',timeout=1)['revision'],1)
+        finally:thread.join()
+
     def test_missing_ack_is_reported_not_assumed_applied(self):
         registration=self.register()
         with self.assertRaises(TimeoutError):m.command(registration,'skin','plasma',timeout=.02)

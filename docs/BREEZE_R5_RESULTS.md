@@ -69,6 +69,7 @@ explícitamente, como haría un `plasmashellrc` con longitudes.
   los combos reales del QML en Qt offscreen. Falta que el usuario lo use con el ratón.
 - **Autoocultar / Esquivar ventanas** y **Adaptativa** siguen sin controlador: el combo vuelve al
   valor guardado y el anfitrión registra el error (no se ocultan las opciones del original).
+  Autoocultar y esquivar tienen controlador desde la iteración 5 (con `--native-policy`).
 - **Mover a otro monitor** (`screenToFollow`, indicadores «Set Position…» en otras pantallas) y
   **Clonar panel** no tienen backend todavía: fallan de forma visible (`error`), sin efecto.
 - Los indicadores de posición son `PlasmaCore.Dialog` del motor del diálogo, sin adaptación a capa.
@@ -126,7 +127,7 @@ flotante no funcionaban; el resto sí. El `plasmashellrc` de esa vista tenía `a
   «Applets only»/«Disabled».
 - **Visibilidad.** Sin cambios: «Siempre visible» sólo existe con `--native-policy` (reserva
   espacio real); sin ella la vista de ensayo no reserva y lo rechaza. «Ocultar automáticamente»
-  y «Esquivar ventanas» siguen sin controlador.
+  y «Esquivar ventanas» siguen sin controlador (los tienen desde la iteración 5).
 
 ### Pruebas
 
@@ -184,10 +185,167 @@ después de que éste se borrara al ocultarse (como upstream): ahora usa un `QPo
 Con ASan, `isolated-local-configuration` falla después de todas las pruebas de interfaz, en el
 ensayo de salida de sesión de §268: `panel-session.py stop` pide `transaction.lock` sin esperar
 (`LOCK_NB`) mientras el anfitrión, más lento con ASan, aún lo tiene. No está relacionado con el
-explorador; queda pendiente.
+explorador. Corregido después (ver «Bloqueo de transacción del ensayo de salida»).
+
+### Corrección tras la prueba del usuario
+
+Con el ratón, la barra lateral se cerraba al poco de abrirse. El registro `bwm.r5.explorer`
+(desactivado por defecto: `QT_LOGGING_RULES="bwm.r5.explorer.debug=true"`) mostró que el foco pasaba
+de la barra al panel editado y que, a continuación, la barra se ocultaba. Hyprland 0.56.2 da el foco
+de teclado a una capa con interactividad *on demand* cuando el puntero solo pasa por encima
+(`InputManager::mouseMoveUnified`), y en modo edición el panel acepta entrada.
+`Dialog::focusOutEvent` toma ese foco como un clic en la vista («viewClicked») y oculta la barra. En
+KWin pasar el ratón no mueve el foco. `WidgetExplorerView` ya no deja que esa pérdida de foco oculte
+la barra cuando el foco pasa al panel editado; un clic fuera de ambos sigue liberando la captura de
+foco y la cierra. La prueba offscreen activa la barra y después el panel: falla sin la corrección y
+pasa con ella.
+
+En la siguiente prueba, la Vista de carpeta (`org.kde.desktopcontainment`, que el explorador
+ofrece como widget) añadida al panel avisaba de que `isScreenUiReady` no existía. Es un método de
+`ShellCorona`. `ViewCorona` lo implementa sin vista de escritorio: una pantalla está lista cuando
+todos los paneles enlazados en ella son visibles y su containment informa `uiReady`. La prueba
+offscreen comprueba la función.
+
+**Aceptado por el usuario (2026-11-19):** con el ratón en el MSI, la barra «Añadir widgets…» se
+queda abierta y añade widgets al panel («Sí, funciona»). Es una respuesta general, sin
+desglose por caso (arrastre, doble clic, clic fuera). La corrección de `isScreenUiReady` es
+posterior a esa prueba y no se ha vuelto a ver en sesión.
 
 ### Límites
 
 Sin clic físico (la prueba llama a los manejadores del QML), ni arrastre de un widget al panel
 en Hyprland, ni «Obtener widgets nuevos» desde aquí (KNS ya probado en R4). Desinstalar widgets
 del usuario no se ha ejecutado. Alternativas de widgets (`AppletAlternatives.qml`) sin probar.
+
+## Iteración 4 (2026-11-19) — Caja de herramientas del panel y menú del botón derecho
+
+### Causa
+
+Cada entrada en modo edición dejaba en el registro `kf.plasma.quick: Toolbox not loading…` y
+`org/kde/panel/main.qml:135: TypeError: Cannot read property 'height' of null`. libplasma 6.7.5
+(`ContainmentItem`, `Containment::restore`) lee el archivo `defaults` del paquete de shell de la
+Corona: con él carga la caja de herramientas del panel (`[Panel] ToolBox`) y las acciones del ratón
+de un panel sin acciones propias (`[Panel][ContainmentActions]`). El paquete de shell mínimo del
+anfitrión no tenía ese archivo. Sin caja de herramientas, el `ConfigOverlay.qml` original (asas de
+mover y quitar widgets en modo edición) se creaba con `toolBox` nulo; sin acción del botón derecho,
+el clic derecho sobre el panel no abría ningún menú.
+
+### Cambio
+
+`src/bwm-plasma-host/shell/contents/defaults` con el grupo `[Panel]` de
+`desktoppackage/contents/defaults` de plasma-desktop 6.7.5: `ToolBox=org.kde.paneltoolbox` y
+`RightButton;NoModifier=org.kde.contextmenu`. Sin `[Desktop]`: el anfitrión no tiene escritorio.
+No se toca código; los paquetes nombrados (`org.kde.paneltoolbox`, `org.kde.contextmenu`) se
+cargan instalados y sin cambios.
+
+### Pruebas
+
+| Prueba | Resultado |
+| :--- | :--- |
+| `originalPanelToolBoxOverlayAndContextMenu` (offscreen): acción `RightButton;NoModifier` en el containment, caja de herramientas del paquete original, oculta fuera de edición; con «Enter Edit Mode» se crea el `ConfigOverlay` y aparece la caja; Escape los retira; clic derecho en el panel abre el `QMenu` de `org.kde.contextmenu` con «Enter Edit Mode» y «Añadir widgets…»; esta última abre el explorador | Pasa; sin el archivo `defaults` falla |
+| CTest normal (8 pruebas sin las `native-`) y 255 pruebas Python de R4 | Pasan |
+
+### Límites
+
+Sin probar en Hyprland: el menú del botón derecho es un `QMenu` que se abre como `xdg_popup` del
+panel (capa) y necesita el clic real del usuario. Tampoco se han probado con el ratón las asas del
+`ConfigOverlay` (mover, cambiar de sitio y quitar widgets en el panel).
+
+### Emergentes del panel en el centro de la pantalla
+
+El usuario lo encuentra perfecto con el ratón, salvo que «algunos desplegables se abren en el centro
+de la pantalla». `PackageWindows` sólo daba rol de capa anclada al panel a las ventanas emergentes
+cuyo dueño era un widget del panel. El recuadro de cada widget en modo edición (`PopupPlasmaWindow`
+de `ConfigOverlay.qml`: Configurar, Alternativas, Quitar) y el tooltip del botón de la caja de
+herramientas pertenecen al propio containment del panel: quedaban como ventanas normales y la
+colocación de Breeze las centraba. Ahora también reciben la capa las `PopupPlasmaWindow` cuyo ancla
+visual está en el panel y cuyo dueño es el containment. Las ventanas que sólo nombran el containment
+en su contexto QML (los Ajustes del panel, con sus flechas de «Set Position…») conservan su
+tratamiento propio.
+
+`check-edit-mode-session.py` añade `panelOwnPopupsInHyprland`: con los Ajustes abiertos muestra el
+recuadro de un reloj analógico y el tooltip del botón ⚙, y comprueba en `hyprctl` que son capas y que
+el proceso no crea ninguna ventana normal. El recuadro queda justo encima del widget (150×134 en
+2560,1918; el widget empieza en y=2052, dentro del margen del panel, como en Plasma). Sin la
+corrección el recuadro aparece como ventana normal (`ownClients: 1`). Ensayo completo en el LG 20/20;
+CTest normal 8/8. El menú del botón derecho (`QMenu`) no se ha medido aquí: necesita un clic real.
+
+El usuario lo vuelve a probar con el ratón tras la corrección: «ya va bien parece» (sin desglose por
+desplegable).
+
+## Bloqueo de transacción del ensayo de salida (2026-11-19)
+
+El fallo con ASan de §268 venía del envoltorio, no del anfitrión. Tras el acuse de la skin
+inicial, `command()` del envoltorio sigue en su último sondeo de 10 ms con `transaction.lock`
+tomado. La prueba ya ve el acuse y lanza `session-exit`, que pedía el bloqueo con `LOCK_NB` y
+fallaba con `BlockingIOError`. Con ASan el reparto de tiempos lo hacía frecuente.
+
+`panel-session.py` espera ahora hasta 0,5 s (`LOCK_WAIT`) por el bloqueo en `command()`. Si
+pasa ese tiempo sigue dando `BlockingIOError`. Así una salida de sesión que espera al guardado
+sigue detectándose. Los límites de tiempo de los llamadores se mantienen: hook de cambio de
+skin 3 s, `bwm-power` 8 s (2 + 5 + 0,5).
+
+| Prueba | Resultado |
+| :--- | :--- |
+| Regresión nueva `test_short_lived_transaction_holder_is_waited_for_not_reported_busy` (otro hilo retiene el bloqueo 0,1 s) | Pasa; falla con `LOCK_WAIT = 0` |
+| CTest `isolated-local-configuration` con ASan (`detect_leaks=0`) | Pasa tres veces seguidas |
+| CTest normal sin `native-` | 8/8 |
+| Python R4 | 256 |
+
+## Iteración 5 (2026-11-19) — Autoocultar y esquivar ventanas
+
+### Cómo lo hace Plasma 6.7.5
+
+`PanelView` decide cuándo ocultarse (`restoreAutoHide`): no si el puntero o un arrastre están
+sobre el panel, en modo edición, con el contenedor en estado de atención, o con una ventana
+transitoria suya visible. Al salir el puntero espera 500 ms. `showTemporarily` lo enseña 3 s
+(activación del contenedor, entrada de teclado, entrar en los ajustes). Ocultar lo hace KWin con
+`kde_auto_hide_screen_edge_v1`: retira la superficie y la vuelve a mostrar al tocar el borde.
+«Esquivar ventanas» sólo oculta mientras `touchingWindow` del `Panel.qml` es cierto. Ese valor
+sale de un `TasksModel` con filtro por región, escritorio actual y actividad. Ninguno de los dos
+modos reserva espacio.
+
+### Cambio
+
+- `panelviewhost.cpp` porta esa lógica (procedencia en un comentario). El ocultado es propio:
+  el contenido se desliza fuera de la pantalla en 200 ms y la máscara de entrada se reduce a una
+  franja de 2 px en el borde. Al entrar el puntero o un arrastre en ella, el panel vuelve, como
+  con el borde de KWin.
+- Sólo con `--native-policy`, donde la superficie toca el borde. La vista de ensayo sin política
+  conserva su hueco y sigue rechazando estos modos.
+- `surfaces.cpp`: los modos 1 y 2 no piden reserva. `panelviewsettings.cpp` admite
+  `panelVisibility` 0–3 con la política nativa.
+- El puente de tareas BWM se engancha también a la raíz de `Panel.qml`, cuyo `TasksModel` decide
+  `touchingWindow`.
+- El proveedor nativo de escritorios se retiraba con cualquier `hyprctl reload`. La opción se
+  ponía en caliente y la recarga la devolvía a `false`. Lo corrige `modules/native_desktops.lua`.
+  Sin el proveedor, el filtro por escritorio de `Panel.qml` no deja ventanas, y esquivar no
+  ocultaría nunca.
+
+### Pruebas
+
+| Prueba | Resultado |
+| :--- | :--- |
+| `nativePanelAutoHideAndDodge` (QtTest offscreen): sin reserva; contenido desplazado y franja de 2 px; entrada que lo muestra y salida que lo oculta tras 500 ms; modo edición; ventana transitoria; estado de atención; `touchingWindow` en «Esquivar»; vuelta a «Siempre visible»; vista sin política rechaza los modos; `panelVisibility=1` en `plasmashellrc` | Pasa (normal y ASan) |
+| `surface-geometry`: modos 1 y 2 sin reserva; 4 rechazado; vista de ensayo rechaza 1 y 2 | Pasa |
+| CTest normal sin `native-` | 8/8 |
+| `check-isolated.py` (ejemplos de libplasma y Andromeda, incluye toda la suite de interfaz) | Pasa |
+| `autoHideEdgeStripInHyprland` (sesión real, LG, borde superior, `check-edit-mode-session.py`): capa de 640×48 pegada al borde sin cambiar `reserved`; puntero llevado al borde → aparece (eventos de entrada recibidos); alejado → se oculta; puntero y foco devueltos | Pasa (23/23 con el resto del ensayo, más 3/3 sólo este caso) |
+| Python R4, con la prueba Lua de `native_desktops.lua` | 257 |
+| Sesión: `hyprctl reload` con el módulo cargado y el opt-in activo | La opción sigue en `true`; sin errores de configuración |
+
+En la primera ejecución en sesión el puntero llegó antes de que la nueva región de entrada
+llegara al compositor y no apareció. El ensayo espera ahora 250 ms antes de moverlo.
+
+### Límites
+
+- Esquivar con ventanas reales no está medido. En esta sesión el proveedor ya estaba retirado
+  por una recarga anterior, y sólo vuelve al iniciar sesión.
+- La franja usa el borde de la superficie. Un panel en un borde compartido con otro monitor
+  recibe la entrada al cruzar el puntero hacia el otro monitor (KWin tiene el mismo caso).
+- Sin la animación propia de KWin: el desplazamiento es del contenido dentro de la superficie.
+- Falta la prueba del usuario con el ratón.
+
+El usuario lo prueba con el ratón en el MSI: «todo funciona menos el esquivar ventanas». Esquivar
+no se ocultaba porque en esa sesión el proveedor de escritorios estaba retirado; no se ha
+confirmado después de volver a iniciar sesión.

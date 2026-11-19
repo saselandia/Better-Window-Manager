@@ -1196,6 +1196,50 @@ private Q_SLOTS:
         QCOMPARE(fresh.alignment(),int(Qt::AlignRight));QCOMPARE(fresh.lengthMode(),int(PanelViewEnums::Custom));QCOMPARE(fresh.thickness(),52);
         corona.unbind(c);corona.saveLayout("bwm-r5-edit-test");QVERIFY(corona.config()->sync());
     }
+    void originalPanelToolBoxOverlayAndContextMenu() {
+        // R5: the shell package [Panel] defaults of plasma-desktop 6.7.5 give the panel its
+        // ToolBox (the configure button ConfigOverlay.qml sizes itself against) and the
+        // org.kde.contextmenu right-click action; without them ConfigOverlay hit a null toolBox
+        // and right-clicking the panel did nothing.
+        ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        QFile::remove(QDir(qEnvironmentVariable("XDG_CONFIG_HOME")).filePath("bwm-r5-toolbox-test"));corona.loadLayout("bwm-r5-toolbox-test");
+        auto *c=corona.createContainment("org.kde.panel");QVERIFY(c);
+        c->setLocation(Plasma::Types::BottomEdge);c->setFormFactor(Plasma::Types::Horizontal);QVERIFY(c->createApplet("org.bwm.r4.shared-config"));
+        QVERIFY(c->containmentActions().contains(QStringLiteral("RightButton;NoModifier")));
+        const auto path=QDir(qEnvironmentVariable("XDG_CONFIG_HOME")).filePath("bwm-r5-toolbox-plasmashellrc");QFile::remove(path);
+        PanelViewHost view(&corona,path);corona.bind(c,&view);
+        QVERIFY2(view.load(c),qPrintable(view.error()));view.show();
+        auto *root=PlasmaQuick::AppletQuickItem::itemForApplet(c);QVERIFY(root);
+        QStringList scriptErrors;
+        connect(qmlEngine(root),&QQmlEngine::warnings,this,[&scriptErrors](const QList<QQmlError> &errors){
+            for(const auto &e:errors)if((e.url().toString().contains("org/kde/panel") || e.url().toString().contains("paneltoolbox")) &&
+                (e.description().contains("ReferenceError") || e.description().contains("TypeError")))scriptErrors.append(e.toString());});
+        QTRY_VERIFY(root->property("toolBox").value<QQuickItem*>());
+        auto *toolBox=root->property("toolBox").value<QQuickItem*>();
+        QVERIFY(qmlContext(toolBox)->baseUrl().toString().contains("org.kde.paneltoolbox"));
+        QVERIFY(!toolBox->isVisible());
+        // Edit mode: the original ConfigOverlay is created and the toolbox button shows.
+        c->internalAction("configure")->trigger();
+        QTRY_VERIFY(view.userConfiguring());QVERIFY(corona.isEditMode());
+        QTRY_VERIFY(root->property("configOverlay").value<QObject*>());QTRY_VERIFY(toolBox->isVisible());
+        QPointer<PanelConfigView> dialog;
+        QTRY_VERIFY((dialog=[]{for(auto *w:QGuiApplication::allWindows())if(auto *d=qobject_cast<PanelConfigView*>(w))if(d->isVisible())return d;return (PanelConfigView*)nullptr;}()));
+        dialog->requestActivate();QTRY_VERIFY(dialog->isActive());QTest::keyClick(dialog,Qt::Key_Escape);
+        QTRY_VERIFY(!corona.isEditMode());QTRY_VERIFY(!root->property("configOverlay").value<QObject*>());QTRY_VERIFY(!toolBox->isVisible());
+        // Right click on the panel opens the containment menu of org.kde.contextmenu.
+        const auto visibleMenu=[]{for(auto *w:QApplication::topLevelWidgets())if(auto *m=qobject_cast<QMenu*>(w))if(m->isVisible())return m;return (QMenu*)nullptr;};
+        QTRY_VERIFY(view.width()>200);
+        QTest::mouseClick(&view,Qt::RightButton,{},QPoint(view.width()-4,view.height()/2));
+        QMenu *menu=nullptr;QTRY_VERIFY((menu=visibleMenu()));
+        QVERIFY(menu->actions().contains(c->internalAction("configure")));
+        QVERIFY(menu->actions().contains(c->internalAction("add widgets")));
+        // Its "Add Widgets…" reaches the original explorer through showAddWidgetsInterface.
+        c->internalAction("add widgets")->trigger();menu->close();
+        QTRY_VERIFY(view.widgetExplorer() && view.widgetExplorer()->isVisible());QVERIFY(corona.isEditMode());
+        view.widgetExplorer()->sidePanel()->setVisible(false);QTRY_VERIFY(!corona.isEditMode());
+        QVERIFY2(scriptErrors.isEmpty(),qPrintable(scriptErrors.join('\n')));
+        corona.unbind(c);corona.saveLayout("bwm-r5-toolbox-test");QVERIFY(corona.config()->sync());
+    }
     void originalWidgetExplorerAddsToPanel() {
         // R5: "Add Widgets…" of the original Panel Settings opens the installed, unmodified
         // explorer/WidgetExplorer.qml; addApplet() uses the panel containment, and closing it
@@ -1236,6 +1280,15 @@ private Q_SLOTS:
         QVERIFY(!has("org.kde.plasma.analogclock"));
         eval("root.widgetExplorer.addApplet('org.kde.plasma.analogclock')");
         QTRY_VERIFY(has("org.kde.plasma.analogclock"));
+        // ShellCorona::isScreenUiReady, called by the original Folder View added to a panel.
+        QCOMPARE(eval("typeof root.containment.corona.isScreenUiReady").toString(),"function");
+        QTRY_VERIFY(eval("root.containment.corona.isScreenUiReady(root.containment.screen)").toBool());
+        QVERIFY(!eval("root.containment.corona.isScreenUiReady(-1)").toBool());
+        // BWM: Hyprland focuses an on-demand layer on hover; the edited panel taking focus is
+        // not the deactivation that hides the side bar (Dialog::focusOutEvent "viewClicked").
+        explorer->sidePanel()->requestActivate();QTRY_VERIFY(explorer->sidePanel()->isActive());
+        view.requestActivate();QTRY_VERIFY(view.isActive());
+        QTest::qWait(100);QVERIFY(explorer->isVisible());QCOMPARE(root->property("explorerState").toString(),"widgetExplorer");
         // Closing the explorer from a panel reopens its settings (WidgetExplorer.qml onClosed).
         eval("sidePanelStack.item.closed()");
         QTRY_VERIFY(!explorer->isVisible());QTRY_VERIFY((dialog=settings()));
@@ -1510,7 +1563,7 @@ private Q_SLOTS:
         QVERIFY(view->height()>role->exclusionZone()); // SVG floating padding is not reserved twice.
         QCOMPARE(role->margins().right(),1280-360);QCOMPARE(role->margins().bottom(),0);
         const auto original=bytes();
-        for(int unsupported:{1,2,4}){QVERIFY(!view->applyViewSettings({{"panelVisibility",unsupported}}));QCOMPARE(bytes(),original);QCOMPARE(role->exclusionZone(),40);}
+        for(int unsupported:{4,-1}){QVERIFY(!view->applyViewSettings({{"panelVisibility",unsupported}}));QCOMPARE(bytes(),original);QCOMPARE(role->exclusionZone(),40);}
         QVERIFY(!view->applyViewSettings({{"maxLength",1400}}));QCOMPARE(bytes(),original);
         QVERIFY(view->applyViewSettings({{"panelVisibility",3}}));QTRY_COMPARE(role->exclusionZone(),-1);QCOMPARE(view->visibilityMode(),3);
         QVERIFY(view->applyViewSettings({{"panelVisibility",0},{"thickness",42}}));QTRY_COMPARE(role->exclusionZone(),42);
@@ -1542,6 +1595,52 @@ private Q_SLOTS:
         {KConfig file(prefs,KConfig::SimpleConfig);const auto base=KConfigGroup(&file,"PlasmaViews").group(QString("Panel %1").arg(a->id()));
             QCOMPARE(base.readEntry("VendorKeep",0),42);QCOMPARE(base.readEntry("panelVisibility",-1),0);
             QVERIFY(!base.group("Horizontal1280").hasKey("panelVisibility"));}
+    }
+    // R5: AutoHide/DodgeWindows with the edge strip that stands in for KWin's screen edge.
+    void nativePanelAutoHideAndDodge() {
+        QCOMPARE(QGuiApplication::platformName(),"offscreen");
+        TestOutput output("DP-60","Hide A","A",{0,0,1280,800});
+        const QDir config(qEnvironmentVariable("XDG_CONFIG_HOME"));const auto prefs=config.filePath("bwm-autohide-plasmashellrc");
+        const auto layout=config.filePath("bwm-autohide-layout");QFile::remove(prefs);QFile::remove(layout);
+        ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));corona.loadLayout(layout);
+        auto *a=corona.createContainment("org.kde.panel");QVERIFY(a);a->setLocation(Plasma::Types::BottomEdge);a->setFormFactor(Plasma::Types::Horizontal);QVERIFY(a->createApplet("org.bwm.r4.shared-config"));
+        PanelRuntime runtime(&corona,prefs,true,nullptr,true);QVERIFY(runtime.setAssignments({{a->id(),"BWM Test Hide A A"}}));QVERIFY(runtime.setSkin("plasma"));
+        auto *view=runtime.view(a->id());QVERIFY2(view,qPrintable(runtime.error()));auto *role=LayerShellQt::Window::get(view);
+        QTRY_VERIFY(view->isExposed());QVERIFY(view->capabilities().value("autohide").toBool());
+        QVERIFY2(view->applyViewSettings({{"panelVisibility",0},{"thickness",40},{"minLength",360},{"maxLength",360},{"panelLengthMode",2}}),qPrintable(view->error()));
+        QTRY_COMPARE(role->exclusionZone(),40);QVERIFY(!view->autoHidden());
+        const auto strip=[view]{return QRegion(0,view->height()-2,view->width(),2);};
+        // AutoHide: no reservation, content slides below the output, only the edge strip takes input.
+        QVERIFY2(view->applyViewSettings({{"panelVisibility",1}}),qPrintable(view->error()));QCOMPARE(view->visibilityMode(),1);
+        QTRY_COMPARE(role->exclusionZone(),-1);QTRY_VERIFY(view->autoHidden());
+        QTRY_COMPARE(view->contentItem()->position(),QPointF(0,view->height()));QCOMPARE(view->mask(),strip());
+        {KConfig file(prefs,KConfig::SimpleConfig);QCOMPARE(KConfigGroup(&file,"PlasmaViews").group(QString("Panel %1").arg(a->id())).readEntry("panelVisibility",-1),1);}
+        // Pointer reaching the strip reveals it; leaving rehides after PanelView's 500 ms.
+        QEnterEvent enter(QPointF(10,view->height()-1),QPointF(10,view->height()-1),QPointF(10,799));QCoreApplication::sendEvent(view,&enter);
+        QVERIFY(!view->autoHidden());QTRY_COMPARE(view->contentItem()->position(),QPointF());QVERIFY(view->mask()!=strip());
+        QEvent leave(QEvent::Leave);QCoreApplication::sendEvent(view,&leave);
+        QTest::qWait(250);QVERIFY(!view->autoHidden());QTRY_VERIFY(view->autoHidden());
+        // Edit mode and a visible transient window keep it shown (restoreAutoHide).
+        corona.setEditMode(true);QVERIFY(!view->autoHidden());corona.setEditMode(false);QTRY_VERIFY(view->autoHidden());
+        QQuickWindow transient;transient.setTransientParent(view);transient.resize(100,100);transient.show();
+        QCoreApplication::sendEvent(view,&enter);QCoreApplication::sendEvent(view,&leave);
+        QTest::qWait(800);QVERIFY(!view->autoHidden());transient.hide();QTRY_VERIFY(view->autoHidden());
+        // Attention shows it; going passive hides it again.
+        a->setStatus(Plasma::Types::NeedsAttentionStatus);QVERIFY(!view->autoHidden());
+        a->setStatus(Plasma::Types::PassiveStatus);QTRY_VERIFY(view->autoHidden());
+        // DodgeWindows follows Panel.qml's touchingWindow.
+        QVERIFY2(view->applyViewSettings({{"panelVisibility",2}}),qPrintable(view->error()));
+        view->rootObject()->setProperty("touchingWindow",false);QTRY_VERIFY(!view->autoHidden());QCOMPARE(role->exclusionZone(),-1);
+        view->rootObject()->setProperty("touchingWindow",true);QTRY_VERIFY(view->autoHidden());QVERIFY(view->touchingWindow());
+        view->rootObject()->setProperty("touchingWindow",false);QTRY_VERIFY(!view->autoHidden());QTRY_COMPARE(view->contentItem()->position(),QPointF());
+        // Back to a normal panel: reserved again and in place.
+        QVERIFY(view->applyViewSettings({{"panelVisibility",0}}));QTRY_COMPARE(role->exclusionZone(),40);QVERIFY(!view->autoHidden());
+        // The preview surface keeps a gap from the edge: no strip, modes rejected.
+        PanelRuntime preview(&corona,config.filePath("bwm-autohide-preview-plasmashellrc"),true,nullptr,false);
+        QVERIFY(runtime.setSkin("default"));QVERIFY(preview.setAssignments({{a->id(),"BWM Test Hide A A"}}));QVERIFY(preview.setSkin("plasma"));
+        auto *gap=preview.view(a->id());QVERIFY(gap);QVERIFY(!gap->capabilities().value("autohide").toBool());
+        gap->setVisibilityMode(1);QCOMPARE(gap->visibilityMode(),3);QVERIFY(!gap->error().isEmpty());
+        QVERIFY(preview.setSkin("default"));
     }
     void nativePanelPolicyFreshProcessReadback() {
         QCOMPARE(QGuiApplication::platformName(),"offscreen");

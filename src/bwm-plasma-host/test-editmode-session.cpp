@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // R5 session check: drives the original PanelConfiguration.qml of a disposable
 // layer-shell panel in the running Hyprland and measures where the compositor
-// placed each surface (hyprctl layers). No pointer input, no daily panel changes.
+// placed each surface (hyprctl layers). No pointer input except the autohide case, which warps
+// the cursor to the panel's own edge strip and restores it; no daily panel changes.
 // Run through check-edit-mode-session.py, which isolates every XDG root.
 #include "outputidentity.h"
 #include "panelconfigview.h"
@@ -13,7 +14,10 @@
 #include <KConfigGroup>
 #include <KPackage/PackageLoader>
 #include <Plasma/Containment>
+#include <Plasma/Applet>
+#include <PlasmaQuick/AppletQuickItem>
 #include <PlasmaQuick/Dialog>
+#include <QCoreApplication>
 #include <QAction>
 #include <QDir>
 #include <QGuiApplication>
@@ -31,7 +35,7 @@
 Q_IMPORT_PLUGIN(BwmWindowSystemPlugin)
 
 namespace {
-QList<QRect> layers(const QString &ns)
+QList<QRect> layers(const QString &ns, const QString &connector = {})
 {
     QProcess process;
     auto environment = QProcessEnvironment::systemEnvironment();
@@ -41,7 +45,9 @@ QList<QRect> layers(const QString &ns)
     if (!process.waitForFinished(3000)) return {};
     QList<QRect> result;
     const auto monitors = QJsonDocument::fromJson(process.readAllStandardOutput()).object();
-    for (const auto &monitor : monitors) {
+    for (auto it = monitors.begin(); it != monitors.end(); ++it) {
+        if (!connector.isEmpty() && it.key() != connector) continue;
+        const auto monitor = it.value();
         const auto levels = monitor.toObject().value(QStringLiteral("levels")).toObject();
         for (const auto &level : levels)
             for (const auto &layer : level.toArray()) {
@@ -71,6 +77,48 @@ QMargins reserved(const QString &connector)
     }
     return {};
 }
+// Ordinary toplevels (xdg_toplevel) mapped by this process: a popup that lost its layer role
+// shows up here and Breeze would place it in the middle of the screen.
+int ownClients()
+{
+    QProcess process;
+    auto environment = QProcessEnvironment::systemEnvironment();
+    environment.insert(QStringLiteral("XDG_RUNTIME_DIR"), qEnvironmentVariable("BWM_R5_HYPR_RUNTIME"));
+    process.setProcessEnvironment(environment);
+    process.start(QStringLiteral("hyprctl"), {QStringLiteral("-j"), QStringLiteral("clients")});
+    if (!process.waitForFinished(3000)) return -1;
+    int count = 0;
+    for (const auto &c : QJsonDocument::fromJson(process.readAllStandardOutput()).array())
+        if (c.toObject().value(QStringLiteral("pid")).toInteger() == QCoreApplication::applicationPid()) ++count;
+    return count;
+}
+QJsonDocument hyprJson(const QStringList &arguments)
+{
+    QProcess process;
+    auto environment = QProcessEnvironment::systemEnvironment();
+    environment.insert(QStringLiteral("XDG_RUNTIME_DIR"), qEnvironmentVariable("BWM_R5_HYPR_RUNTIME"));
+    process.setProcessEnvironment(environment);
+    process.start(QStringLiteral("hyprctl"), arguments);
+    if (!process.waitForFinished(3000)) return {};
+    return QJsonDocument::fromJson(process.readAllStandardOutput());
+}
+QPoint cursorPos()
+{
+    const auto o = hyprJson({QStringLiteral("-j"), QStringLiteral("cursorpos")}).object();
+    return QPoint(o.value(QStringLiteral("x")).toInt(), o.value(QStringLiteral("y")).toInt());
+}
+void warpCursor(const QPoint &p)
+{
+    hyprJson({QStringLiteral("dispatch"), QStringLiteral("hl.dsp.cursor.move({x=%1,y=%2})").arg(p.x()).arg(p.y())});
+}
+QString activeWindow()
+{
+    return hyprJson({QStringLiteral("-j"), QStringLiteral("activewindow")}).object().value(QStringLiteral("address")).toString();
+}
+struct EnterCounter : QObject {
+    int enters = 0;
+    bool eventFilter(QObject *, QEvent *event) override {if (event->type() == QEvent::Enter) ++enters;return false;}
+};
 QJsonObject rect(const QRect &r) { return {{"x", r.x()}, {"y", r.y()}, {"w", r.width()}, {"h", r.height()}}; }
 PanelConfigView *openDialog()
 {
@@ -105,6 +153,162 @@ class EditModeSessionTest : public QObject
     }
 
 private Q_SLOTS:
+    void autoHideEdgeStripInHyprland()
+    {
+        // AutoHide with the edge strip that stands in for KWin's screen edge: no reservation,
+        // the layer stays mapped, the pointer reaching the output edge reveals the panel and
+        // leaving it hides it again. Top edge: the daily Breeze panel is at the bottom.
+        m_steps = {};
+        const auto output = qEnvironmentVariable("BWM_R5_OUTPUT");
+        auto *screen = BwmOutput::resolveScreen(output);
+        QVERIFY(screen);
+        const QString ns = QStringLiteral("bwm-r4-native-policy");
+        const QMargins before = reserved(screen->name());
+        const QPoint cursor = cursorPos();
+        const QString focused = activeWindow();
+        ViewCorona corona;
+        corona.setKPackage(KPackage::PackageLoader::self()->loadPackage(QStringLiteral("Plasma/Shell"), QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout(QStringLiteral("bwm-r5-autohide-appletsrc"));
+        auto *c = corona.createContainment(QStringLiteral("org.kde.panel"));
+        QVERIFY(c);
+        c->setLocation(Plasma::Types::TopEdge);
+        c->setFormFactor(Plasma::Types::Horizontal);
+        QVERIFY(c->createApplet(QStringLiteral("org.kde.plasma.analogclock")));
+        const uint id = c->id();
+        PanelRuntime runtime(&corona, QStringLiteral("plasmashellrc-autohide"), true, nullptr, true);
+        QVERIFY2(runtime.setAssignments({{id, output}}), qPrintable(runtime.error()));
+        QVERIFY2(runtime.setSkin(QStringLiteral("plasma")), qPrintable(runtime.error()));
+        QTRY_VERIFY(runtime.view(id) && runtime.view(id)->isExposed());
+        QPointer<PanelViewHost> view = runtime.view(id);
+        QVERIFY2(view->applyViewSettings({{"panelVisibility", 1}, {"panelLengthMode", 2}, {"minLength", 640}, {"maxLength", 640}}), qPrintable(view->error()));
+        QTRY_VERIFY(view->autoHidden());
+        QRect layer;
+        QTRY_VERIFY((layer = layers(ns, screen->name()).value(0)).isValid() && layer.width() == 640);
+        const QRect area = screen->geometry();
+        const bool flush = layer.top() == area.top();
+        const QMargins hiddenReserve = reserved(screen->name());
+        m_steps.append(QJsonObject{{"step", "autohide-hidden-no-reservation"}, {"layer", rect(layer)}, {"reservedTopBefore", before.top()},
+            {"reservedTopHidden", hiddenReserve.top()}, {"passed", flush && hiddenReserve == before}});
+        bool revealed = false, rehidden = false;
+        if (flush && hiddenReserve == before) {
+            // Let the strip's input region reach the compositor before moving the pointer.
+            QTest::qWait(250);
+            EnterCounter counter;view->installEventFilter(&counter);
+            warpCursor(QPoint(layer.center().x(), layer.top()));
+            revealed = QTest::qWaitFor([&] {return view && !view->autoHidden() && view->contentItem()->position() == QPointF();}, 3000);
+            const QPoint warped = cursorPos();
+            m_steps.append(QJsonObject{{"step", "autohide-edge-reveals"}, {"cursor", QJsonObject{{"x", warped.x()}, {"y", warped.y()}}},
+                {"enterEvents", counter.enters}, {"mask", rect(view->mask().boundingRect())}, {"passed", revealed}});
+            view->removeEventFilter(&counter);
+            warpCursor(QPoint(layer.center().x(), layer.top() + area.height() / 2));
+            rehidden = QTest::qWaitFor([&] {return view && view->autoHidden();}, 3000);
+            m_steps.append(QJsonObject{{"step", "autohide-leave-rehides"}, {"passed", rehidden}});
+        }
+        warpCursor(cursor);
+        if (!focused.isEmpty() && activeWindow() != focused)
+            hyprJson({QStringLiteral("dispatch"), QStringLiteral("hl.dsp.focus({window=\"address:%1\"})").arg(focused)});
+        runtime.setSkin(QStringLiteral("default"));
+        QTRY_VERIFY(layers(ns, screen->name()).isEmpty());
+        m_steps.append(QJsonObject{{"step", "autohide-cleanup"}, {"cursorRestored", cursorPos() == cursor},
+            {"focusRestored", focused.isEmpty() || activeWindow() == focused}, {"passed", layers(ns, screen->name()).isEmpty()}});
+        puts(QJsonDocument(QJsonObject{{"steps", m_steps}}).toJson(QJsonDocument::Compact).constData());
+        QVERIFY2(flush && hiddenReserve == before, "hidden panel is not flush with the edge or reserved space");
+        QVERIFY2(revealed, "pointer on the edge strip did not reveal the panel");
+        QVERIFY2(rehidden, "leaving the panel did not hide it again");
+    }
+    void panelOwnPopupsInHyprland()
+    {
+        // Popups of the panel containment itself (ConfigOverlay handle popup, paneltoolbox
+        // tooltip) are layers next to the panel, never ordinary toplevels.
+        m_steps = {};
+        const auto output = qEnvironmentVariable("BWM_R5_OUTPUT");
+        auto *screen = BwmOutput::resolveScreen(output);
+        QVERIFY(screen);
+        ViewCorona corona;
+        corona.setKPackage(KPackage::PackageLoader::self()->loadPackage(QStringLiteral("Plasma/Shell"), QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout(QStringLiteral("bwm-r5-popups-appletsrc"));
+        auto *c = corona.createContainment(QStringLiteral("org.kde.panel"));
+        QVERIFY(c);
+        c->setLocation(Plasma::Types::BottomEdge);
+        c->setFormFactor(Plasma::Types::Horizontal);
+        auto *applet = c->createApplet(QStringLiteral("org.kde.plasma.analogclock"));
+        QVERIFY(applet);
+        const uint id = c->id();
+        PanelRuntime runtime(&corona, QStringLiteral("plasmashellrc-popups"), true);
+        QVERIFY2(runtime.setAssignments({{id, output}}), qPrintable(runtime.error()));
+        QVERIFY2(runtime.setSkin(QStringLiteral("plasma")), qPrintable(runtime.error()));
+        QTRY_VERIFY(runtime.view(id) && runtime.view(id)->isExposed());
+        QPointer<PanelViewHost> view = runtime.view(id);
+        QRect panel;
+        QTRY_VERIFY((panel = layers(QStringLiteral("bwm-r4-preview")).value(0)).isValid());
+        const int baselineClients = ownClients();
+        c->internalAction(QStringLiteral("configure"))->trigger();
+        QTRY_VERIFY(openDialog());
+        // The Panel Settings dialog is itself a bwm-r4-popup layer: wait for it first.
+        QTRY_COMPARE(layers(QStringLiteral("bwm-r4-popup")).size(), 1);
+        const QRect settingsLayer = layers(QStringLiteral("bwm-r4-popup")).value(0);
+        const int baselinePopups = 1;
+        auto *root = PlasmaQuick::AppletQuickItem::itemForApplet(c);
+        QVERIFY(root);
+        QObject *overlay = nullptr;
+        QTRY_VERIFY((overlay = root->property("configOverlay").value<QObject *>()));
+        auto *appletItem = PlasmaQuick::AppletQuickItem::itemForApplet(applet);
+        QVERIFY(appletItem && appletItem->parentItem());
+        overlay->setProperty("currentApplet", QVariant::fromValue<QQuickItem *>(appletItem->parentItem()));
+        // Without a pointer over the panel showTimer would clear currentApplet (containsMouse):
+        // stop it, as when the pointer stays over the applet for the tooltip delay.
+        QQmlExpression(qmlContext(overlay), overlay, QStringLiteral("showTimer.stop()")).evaluate();
+        QList<QRect> popups;
+        const bool shown = QTest::qWaitFor([&] {popups = layers(QStringLiteral("bwm-r4-popup"));return popups.size() == baselinePopups + 1;}, 4000);
+        QRect handle;
+        for (const auto &r : popups) if (r != settingsLayer) handle = r;
+        const int clientsWithHandle = ownClients();
+        // Anchored to the applet item (inside the panel's frame margins), as PopupPlasmaWindow
+        // with its visual parent upstream: it ends on the applet, over the panel, never centered.
+        const QRect appletRect(appletItem->mapToGlobal(QPointF(0, 0)).toPoint() - view->position() + panel.topLeft(),
+                               appletItem->size().toSize());
+        const bool handleOk = shown && handle.isValid() && handle.bottom() + 1 == appletRect.top()
+            && handle.left() < appletRect.right() && handle.right() > appletRect.left() && clientsWithHandle == baselineClients;
+        m_steps.append(QJsonObject{{"step", "configoverlay-handle-popup"}, {"panel", rect(panel)}, {"applet", rect(appletRect)}, {"observed", rect(handle)},
+            {"ownClients", clientsWithHandle}, {"baselineClients", baselineClients}, {"passed", handleOk}});
+        if (!handleOk) {
+            QJsonArray seen;for (const auto &r : popups) seen.append(rect(r));
+            QJsonArray windows;
+            for (auto *w : QGuiApplication::allWindows()) if (w->isVisible())
+                windows.append(QJsonObject{{"class", w->metaObject()->className()}, {"geometry", rect(w->geometry())}});
+            puts(QJsonDocument(QJsonObject{{"debugPopups", seen}, {"steps", m_steps}, {"visibleWindows", windows}}).toJson(QJsonDocument::Compact).constData());
+        }
+        QVERIFY2(handleOk, "ConfigOverlay handle popup is not a layer above the panel");
+        QQmlExpression(qmlContext(overlay), overlay, QStringLiteral("configurationArea.currentApplet = null")).evaluate();
+        QList<QRect> remaining;
+        const bool hidden = QTest::qWaitFor([&] {remaining = layers(QStringLiteral("bwm-r4-popup"));return remaining.size() == baselinePopups;}, 4000);
+        if (!hidden) {
+            QJsonArray seen;for (const auto &r : remaining) seen.append(rect(r));
+            QJsonArray windows;
+            for (auto *w : QGuiApplication::allWindows()) if (w->isVisible())
+                windows.append(QJsonObject{{"class", w->metaObject()->className()}, {"name", w->objectName()}, {"geometry", rect(w->geometry())}});
+            puts(QJsonDocument(QJsonObject{{"debugRemaining", seen}, {"baseline", baselinePopups}, {"visibleWindows", windows}}).toJson(QJsonDocument::Compact).constData());
+        }
+        QVERIFY2(hidden, "ConfigOverlay handle popup stayed mapped after clearing the applet");
+        auto *toolBox = root->property("toolBox").value<QQuickItem *>();
+        QVERIFY(toolBox);
+        QTRY_VERIFY(toolBox->isVisible());
+        QQmlExpression(qmlContext(toolBox), toolBox, QStringLiteral("toolTipArea.showToolTip()")).evaluate();
+        const bool tipShown = QTest::qWaitFor([&] {return layers(QStringLiteral("bwm-r4-popup")).size() == baselinePopups + 1;}, 4000);
+        const int clientsWithTip = ownClients();
+        m_steps.append(QJsonObject{{"step", "toolbox-tooltip"}, {"layers", int(layers(QStringLiteral("bwm-r4-popup")).size())},
+            {"ownClients", clientsWithTip}, {"passed", tipShown && clientsWithTip == baselineClients}});
+        QVERIFY2(tipShown && clientsWithTip == baselineClients, "paneltoolbox tooltip is not a layer");
+        QQmlExpression(qmlContext(toolBox), toolBox, QStringLiteral("toolTipArea.hideImmediately()")).evaluate();
+        // Leaving edit mode is covered by the other cases (Escape); close it directly here.
+        if (auto *dialog = openDialog()) dialog->hide();
+        corona.setEditMode(false);
+        QTRY_VERIFY(!corona.isEditMode());
+        QTRY_COMPARE(layers(QStringLiteral("bwm-r4-popup")).size(), 0);
+        runtime.setSkin(QStringLiteral("default"));
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r4-preview")).isEmpty());
+        puts(QJsonDocument(QJsonObject{{"steps", m_steps}}).toJson(QJsonDocument::Compact).constData());
+    }
     void originalPanelSettingsInHyprland()
     {
         const auto output = qEnvironmentVariable("BWM_R5_OUTPUT");

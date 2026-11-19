@@ -405,8 +405,15 @@ originales y una nota de cambios BWM. Cargan sin modificar el `PanelConfiguratio
 `src/bwm-plasma-host/qml/WidgetExplorerHost.qml` adapta parte de `desktoppackage/contents/views/Desktop.qml`
 de plasma-desktop 6.7.5 (Marco Martin, David Edmundson; GPL-2.0-or-later), con su cabecera SPDX
 y una nota de cambios BWM; carga sin modificar el `explorer/WidgetExplorer.qml` instalado.
+`src/bwm-plasma-host/shell/contents/defaults` copia el grupo `[Panel]` de `desktoppackage/contents/defaults`
+de plasma-desktop 6.7.5 (caja de herramientas `org.kde.paneltoolbox` y acción `org.kde.contextmenu`), con
+un comentario de procedencia; los paquetes que nombra se cargan instalados, sin copiarlos.
 La colocación del panel en `panelviewhost.cpp`/`surfaces.cpp` sigue `PanelView::preferredSize`,
 `geometryByDistance` y `updateLayerWindow` de la misma versión, reescrita sin copiar el código.
+`restoreAutoHide`, `setAutoHideEnabled`, `showTemporarily`, `updateTouchingWindow` y el manejo de
+Enter/Leave/arrastre de `PanelView` 6.7.5 (`shell/panelview.cpp`, GPL-2.0-or-later) se portan a
+`panelviewhost.cpp` con su procedencia en un comentario; el ocultado con franja de borde que sustituye
+a `kde_auto_hide_screen_edge_v1` de KWin es propio de BWM.
 
 La API de instancias/acciones de PanelSession y sus pruebas son propias GPL-2.0-or-later.
 Utilizan Containment.createApplet, Applet.destroy, QAction/QMenu y el método reorderApplets

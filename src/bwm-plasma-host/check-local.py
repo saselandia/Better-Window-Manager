@@ -171,7 +171,8 @@ def main():
                          'moduleConfigurationFreshProcessReadback', 'profileRecoveryFromExplicitSnapshot',
                          'profileRecoveryFreshProcessReadback', 'profileRecoveryUsesXdgAuthorityAndChildLease',
                          'profileSelectionTransactionsAndSelectedServer', 'originalPanelSettingsEditMode',
-                         'originalWidgetExplorerAddsToPanel'):
+                         'originalPanelToolBoxOverlayAndContextMenu','originalWidgetExplorerAddsToPanel',
+                         'nativePanelAutoHideAndDodge'):
                 output = run(args.ui_test, test)
                 assert 'FAIL!' not in output and 'SKIP' not in output, output
                 report['ui'].append({'test': test, 'passed': True})

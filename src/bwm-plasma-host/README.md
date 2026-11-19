@@ -1283,6 +1283,18 @@ instalado en una capa lateral (`bwm-r5-widget-explorer`) mediante `widgetexplore
 `qml/WidgetExplorerHost.qml`, que adapta la parte de `views/Desktop.qml` que el explorador
 necesita. Al cerrarse vuelve a los Ajustes del panel, como upstream.
 
-Límites y pendientes en `docs/BREEZE_R5_RESULTS.md` (autoocultar, clonar, escritorio).
+`shell/contents/defaults` lleva el grupo `[Panel]` del paquete de shell de Plasma: libplasma
+carga con él la caja de herramientas `org.kde.paneltoolbox` (botón «Configurar» al final del panel
+en modo edición, contra el que se mide el `ConfigOverlay.qml` original) y la acción del botón
+derecho `org.kde.contextmenu` (menú del panel y de cada widget).
+
+Con `--native-policy`, «Ocultar automáticamente» y «Esquivar ventanas» siguen la lógica de
+`PanelView` 6.7.5. En vez del borde de KWin (`kde_auto_hide_screen_edge_v1`), el contenido se
+desliza fuera y la máscara de entrada deja una franja de 2 px en el borde. Esquivar usa
+`touchingWindow` del `Panel.qml` original, que necesita el puente de tareas y el proveedor de
+escritorios.
+
+Límites y pendientes en `docs/BREEZE_R5_RESULTS.md` (clonar, escritorio, varios paneles).
 Al actualizar upstream, revisar `shell/panelconfigview.*`, los `Q_PROPERTY` de `panelview.h`,
-`views/Desktop.qml` (contrato de la barra lateral) y `explorer/WidgetExplorer.qml`.
+`views/Desktop.qml` (contrato de la barra lateral), `explorer/WidgetExplorer.qml` y el grupo
+`[Panel]` de `desktoppackage/contents/defaults`.

@@ -134,8 +134,11 @@ private Q_SLOTS:
         QCOMPARE(role->anchors(),perpendicular|anchor);QCOMPARE(role->exclusiveEdge(),anchor);
         QCOMPARE(vertical?role->margins().bottom():role->margins().right(),(vertical?window.screen()->size().height():window.screen()->size().width())-300);
         QVERIFY(window.property("bwmReservationRequested").toBool());
-        QVERIFY(!BwmSurface::setPanelVisibility(&window,1,40));QCOMPARE(role->exclusionZone(),40);
+        QVERIFY(!BwmSurface::setPanelVisibility(&window,4,40));QCOMPARE(role->exclusionZone(),40);
         QVERIFY(!BwmSurface::setPanelVisibility(&window,0,0));QCOMPARE(role->exclusionZone(),40);
+        // AutoHide/DodgeWindows never reserve (PanelView::updateExclusiveZone).
+        for(int mode:{1,2}){QVERIFY(BwmSurface::setPanelVisibility(&window,mode,40));QCOMPARE(role->exclusionZone(),-1);}
+        QVERIFY(BwmSurface::setPanelVisibility(&window,0,40));QCOMPARE(role->exclusionZone(),40);
         window.hide();QCOMPARE(role->exclusionZone(),-1);QVERIFY(!window.property("bwmReservationRequested").toBool());
         window.show();QTRY_COMPARE(role->exclusionZone(),40);
         QVERIFY(BwmSurface::setPanelVisibility(&window,3,40));QCOMPARE(role->exclusionZone(),-1);
@@ -146,6 +149,7 @@ private Q_SLOTS:
         QVERIFY(window.property("bwmSurfaceError").toString().isEmpty());
         QQuickWindow preview;preview.resize(300,48);BwmSurface::configurePanel(&preview,Qt::BottomEdge);
         QVERIFY(!BwmSurface::setPanelVisibility(&preview,0,40));QCOMPARE(W::get(&preview)->exclusionZone(),-1);
+        for(int mode:{1,2})QVERIFY(!BwmSurface::setPanelVisibility(&preview,mode,40));
     }
 };
 QTEST_MAIN(SurfaceTest)

@@ -526,6 +526,9 @@ siendo el nombre del escritorio original que imita Breeze.
   ~/.config/bwm/native-desktops.json y guarda contra bucles de fallo; nunca desde un cambio de
   skin ni en caliente. El contador común sólo se envía con la marca de sesión de esta instancia
   y el dispatcher compartido no reintenta entregas aplicadas o inactivas.
+  Un `hyprctl reload` devuelve las opciones de plugin a su valor por defecto: `enabled` se
+  mantiene en `modules/native_desktops.lua` (módulo cargado + opt-in), o la primera recarga
+  (cambio de skin, atajos) retira el proveedor hasta otro inicio de sesión (§310).
   Activación entre salidas (§262): workspace ya activo → sólo Actions::focusMonitor;
   inactivo → sólo changeWorkspace por objeto. No encadenar ambos: con destino vacío
   y no_warps la segunda acción puede devolver el foco al puntero. Ruta v2 validada en
@@ -578,6 +581,10 @@ siendo el nombre del escritorio original que imita Breeze.
   `PlasmaQuick::ToolTipDialog` (`org_kde_plasma_shell`), que aparece centrado y rompe el primer clic del
   panel/bandeja; usar `PlasmaTheme.ToolTipArea` (`PopupWindow` pasivo). En `TrayPopup.qml`, activar
   `HyprlandFocusGrab` ~50 ms después de abrir para no congelar el puntero antes del mapeo del popup.
+- **Capas *on demand* en Hyprland:** el puntero que solo pasa por encima de una capa con
+  `KeyboardInteractivityOnDemand` le da el foco de teclado (`InputManager::mouseMoveUnified`), aunque
+  `follow_mouse = 2`. Un `PlasmaCore.Dialog` con `hideOnWindowDeactivate` se oculta entonces sin clic
+  (R5: barra «Añadir widgets…» frente al panel en edición): el cierre por clic fuera va por la captura de foco.
 
 ## 6. Cómo probar
 
