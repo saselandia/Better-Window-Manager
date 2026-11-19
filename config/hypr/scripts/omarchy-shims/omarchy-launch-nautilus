@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# BWM stand-in for Omarchy's omarchy-launch-nautilus (kept for personal bindings).
+exec "$HOME/.config/hypr/scripts/bwm-file-manager" "$@"

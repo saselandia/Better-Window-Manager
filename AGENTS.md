@@ -101,7 +101,9 @@ siendo el nombre del escritorio original que imita Breeze.
     (tabla en `docs/SKINS.md`, «Estructura modular»). Código nuevo de una skin nace en su carpeta; no metas
     condiciones de una skin dentro de un módulo de otra si puede ser un módulo aparte.
 14. **Se conserva entre skins** (no lo hagas propio de una skin): red/Bluetooth, cursor, Kelvin de la luz
-    nocturna, apps predeterminadas (quizá salvo el gestor de archivos en el futuro), workspaces (los mismos
+    nocturna, apps predeterminadas (el gestor de archivos admite modo «Según la skin» —Dolphin en
+    default/Breeze, Nautilus con extensiones de Omarchy en Retro— o fijar uno único; sus favoritos
+    `gtk-3.0/bookmarks` ↔ `user-places.xbel` se sincronizan en común con `bwm-bookmarks-sync.py`), workspaces (los mismos
     1–N y `bar.workspaces.shown`), pantallas y escala, inicio automático, servicios (`bar.weather`…),
     interfaz (logo, vista general, OSD, bloqueo) y General. **Propio de cada skin**: aspecto y fuentes (de la
     skin y su tema), fondo, barra y dock. Mecanismo: `THEME_SPECIFIC_SECTIONS` y

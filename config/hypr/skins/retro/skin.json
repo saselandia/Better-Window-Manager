@@ -7,6 +7,7 @@
   "preview": "config/hypr/omarchy/themes/tokyo-night/preview.png",
   "windows": "tiling",
   "palette": "omarchy",
+  "fileManager": "org.gnome.Nautilus.desktop",
   "defaultTheme": {
     "mode": "dynamic",
     "name": "Paleta dinámica (formato Omarchy)",
@@ -73,6 +74,7 @@
     ],
     "scripts": [
       "config/hypr/skins/retro/scripts",
+      "config/hypr/skins/retro/nautilus-python",
       "config/hypr/scripts/bwm_omarchy.py",
       "config/hypr/scripts/bwm_omarchy_apps.py",
       "config/hypr/scripts/omarchy-shims",
@@ -84,6 +86,10 @@
     "font-jetbrains-nerd"
   ],
   "recommends": [
+    "nautilus",
+    "nautilus-python",
+    "sushi",
+    "ffmpegthumbnailer",
     "font-omarchy",
     "inotify-tools",
     "omacalc",

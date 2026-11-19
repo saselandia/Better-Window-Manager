@@ -51,6 +51,7 @@ y el hueco); al volver a una de mosaico, se rehace el mosaico. Hyprland recibe l
 | `id`, `name`, `imitates`, `upstream`, `description`, `preview` | Identidad: qué escritorio reproduce, enlace al original y captura (`assets/skin-previews/`) |
 | `windows` (+ `traditional`) | Mosaico o WM tradicional (arriba) |
 | `palette` | Motor de colores: `matugen` (dinámico desde el fondo), `omarchy` (`colors.toml` de Omarchy) o `breeze` (paleta fija de KDE) |
+| `fileManager` | `.desktop` del gestor de archivos de la skin cuando Ajustes → Aplicaciones predeterminadas está en modo «Según la skin» (por defecto `org.kde.dolphin.desktop`; en Retro `org.gnome.Nautilus.desktop`) |
 | `defaultTheme`, `themes` | Tema por defecto (dinámico/estático), temas incluidos y qué temas del original acepta |
 | `look` | Fondo por defecto (de `~/Pictures/Wallpapers`), redondeo, borde, huecos del mosaico, btop |
 | `bar` | Alto, posición (`bottom`), esquinas y workspaces de la barra |

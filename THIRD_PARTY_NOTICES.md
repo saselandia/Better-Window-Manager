@@ -102,6 +102,10 @@ botón del menú se declara sólo como widget de barra. También de `18ac93c`, s
 `omarchy-hyprland-monitor-persist` (guarda con `monitor-manager.py`) y `omarchy-sudo-passwordless`
 (nunca activo). `Commons/omarchy/default/hypr/toggles/bar-glassy.lua` procede de
 `default/hypr/toggles/bar-glassy.lua` sin la llamada a su modo vidrio.
+Extensiones de Nautilus para Retro (2026-11-19): `config/hypr/skins/retro/nautilus-python/extensions/{localsend,transcode}.py`
+proceden de `default/nautilus-python/extensions/` de Omarchy quattro (`05344eb6` y `ec4a3d02`, MIT),
+adaptadas mínimamente para buscar también en `~/.local/bin` y `~/.config/hypr/scripts/omarchy-shims`
+cuando Nautilus se activa por D-Bus sin `~/.local/bin` en `PATH`.
 
 Fuente de iconos de Omarchy (2026-11-09): `assets/fonts/omarchy.ttf`, de
 `default/fonts/omarchy/omarchy.ttf` de Omarchy quattro `18ac93c` (repositorio MIT), con su descripción en

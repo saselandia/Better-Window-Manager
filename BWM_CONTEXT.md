@@ -5164,3 +5164,42 @@ git status; git log --oneline -5; git push origin main
 * **Pendiente:** clic físico, arrastrar un widget al panel, desinstalar, alternativas de widgets. Con
   ASan falla después el ensayo de salida de §268 (`transaction.lock` con `LOCK_NB` mientras el anfitrión
   lento aún lo tiene), ajeno a este cambio.
+
+### 308. Gestor de archivos por skin (Dolphin / Nautilus en Retro), plugins de Omarchy y sincronización de favoritos (2026-11-19)
+
+* **Hecho:**
+  * Cada skin declara `"fileManager"` en `config/hypr/skins/<id>/skin.json` (`org.kde.dolphin.desktop`
+    en `default` y `plasma`; `org.gnome.Nautilus.desktop` en `retro`), expuesto por `bwm_skins.file_manager()`.
+  * `default-apps.py` incorpora modo `"per-skin"` (por defecto: «Según la skin (Dolphin / Nautilus en Retro)»)
+    o `"fixed"` (un único gestor elegido para todas las skins), compatible con `DefaultAppsConfig.qml`,
+    `skins/retro/scripts/settings.py` y `skins/plasma/scripts/native-settings.py`. `apply-skin` actualiza
+    `inode/directory` al cambiar de skin sólo en modo `"per-skin"` y respeta la elección fija.
+  * Lanzador común `config/hypr/scripts/bwm-file-manager` (enlazado en `~/.local/bin` y desde los shims
+    `omarchy-launch-files` / `omarchy-launch-nautilus`); `Alt+E` y `Super+E` en `keybinds.json` y
+    `keybinds-manager.py` apuntan a él (recargado con `keybinds-manager.py reload`).
+  * Extensiones `nautilus-python` de Omarchy (`localsend.py` y `transcode.py`, MIT, `quattro` `05344eb6`
+    y `ec4a3d02`) en `config/hypr/skins/retro/nautilus-python/extensions/` con instalador idempotente
+    `skins/retro/scripts/setup-nautilus-plugins.sh` (enlaza en `~/.local/share/nautilus-python/extensions/`
+    sin pisar extensiones propias del usuario). Requisitos `dolphin`, `ffmpegthumbs`, `nautilus-python`,
+    `sushi` y `ffmpegthumbnailer` añadidos a `requirements.json` y `docs/REQUIREMENTS.md`.
+  * Sincronizador común `config/hypr/scripts/bwm-bookmarks-sync.py` (arrancado en `autostart.sh` vía
+    `bwm_session.spawn`): unión aditiva sin borrados en `startup`, conciliación bidireccional de 3 vías
+    con estado previo (`~/.local/state/bwm/bookmarks-sync.json`) para distinguir eliminaciones de altas
+    nuevas, vigilancia de carpetas padre con una sola instancia `inotify` + debouncing (y fallback a
+    polling), preservación de entradas especiales y metadatos KDE (`isSystemItem`, `remote:/`, `trash:/`,
+    `timeline:/`, `UDI`, `isHidden`, `onlyInApp`, `<info>`, iconos e `ID`), y conservación + reintento
+    ante XML incompleto o cambios simultáneos en conflicto.
+  * Miniaturas de vídeo en Dolphin: instalado `kde-apps/ffmpegthumbs` y limpiada la lista `Plugins=` de
+    `~/.config/dolphinrc` (quitando `ffmpegthumbnailer` y `ffmpeg` que bloqueaban `KIO::PreviewJob`) más
+    caché `~/.cache/thumbnails/fail/*`.
+* **Comprobado:** 65/65 pruebas unitarias (`test_bookmarks_sync.py`, `test_file_manager.py`,
+  `test_skins.py`, `test_retro_settings.py`, `test_r3_native_settings.py`, `test_kde_config_bridge.py`,
+  incluido inotify real con sustituciones atómicas y debounce), `py_compile`, `bash -n`,
+  `hyprctl configerrors` vacío, `bwm-requirements.py check`, `default-apps.py apply-skin` (Breeze pasó
+  a `org.kde.dolphin.desktop`), `bwm-file-manager --print` por skin, unión real inicial (5 favoritos de
+  Nautilus incorporados a `user-places.xbel` preservando los 5 `isSystemItem` de KDE), vigilante
+  activo como hijo de Hyprland con 1 descriptor inotify y generación de miniaturas de vídeo en Dolphin
+  verificada con la configuración real del usuario (6/6 en muestra `.mkv`/`.mp4`/`.webm`/`.mov`).
+* **Pendiente (requiere sudo del usuario):** instalar `dev-python/nautilus-python` (y opcionalmente
+  LocalSend) para que Nautilus cargue las extensiones Python ya enlazadas, y prueba visual interactiva
+  abriendo `Alt+E` en Breeze/default (Dolphin) y Retro (Nautilus).

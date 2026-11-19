@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+bwm-file-manager [--skin <id>] [--print] [--] [path...]
+
+Opens the active file manager according to Settings → Default applications
+(~/.config/bwm/default-apps.json):
+  - per-skin (default): Dolphin in default (end-4) and Breeze (Kde plasma),
+    Nautilus in Retro (Omarchy), following each skin's skin.json fileManager.
+  - fixed: always opens the single file manager chosen by the user.
+
+Used by Alt+E / Super+E and Omarchy file-launch shims.
+"""
+
+import json
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+if str(HERE) not in sys.path:
+    sys.path.insert(0, str(HERE))
+
+import importlib.util  # noqa: E402
+
+
+def _load_default_apps():
+    spec = importlib.util.spec_from_file_location("bwm_default_apps", HERE / "default-apps.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def main(argv=None) -> int:
+    args = list(sys.argv[1:] if argv is None else argv)
+    skin = None
+    print_only = False
+    targets = []
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--skin" and i + 1 < len(args):
+            skin = args[i + 1]
+            i += 2
+        elif arg == "--print":
+            print_only = True
+            i += 1
+        elif arg == "--":
+            targets.extend(args[i + 1:])
+            break
+        else:
+            targets.append(arg)
+            i += 1
+
+    da = _load_default_apps()
+    resolved = da.resolve_files(skin)
+    cmd = list(resolved.get("argv") or [])
+    if not cmd:
+        for fallback in ("dolphin", "nautilus"):
+            if shutil.which(fallback):
+                cmd = [fallback, "--new-window"]
+                break
+    if not cmd:
+        print("bwm-file-manager: no se encontró ningún gestor de archivos instalado", file=sys.stderr)
+        return 1
+
+    full_cmd = cmd + targets
+    if print_only:
+        print(json.dumps({**resolved, "command": full_cmd}, ensure_ascii=False))
+        return 0
+
+    os.execvp(full_cmd[0], full_cmd)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

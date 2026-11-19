@@ -72,7 +72,7 @@ Al cambiar de skin, todo esto sigue igual (es del usuario, no de la skin):
 | Red, Bluetooth, dispositivos de audio | El sistema (NetworkManager, BlueZ, PipeWire) |
 | Cursor (tema y tamaño) | `hypr/modules/cursor.lua`, GTK `settings.ini` (`cursor-manager.py`) |
 | Luz nocturna: temperatura en Kelvin | `~/.local/state/bwm/nightlight.json` y `light.night.colorTemperature`, sincronizados por `nightlight.py` |
-| Aplicaciones predeterminadas | `~/.config/bwm/default-apps.json`, sección `apps`, `xdg-mime`. El gestor de archivos podría pasar a ser de cada skin (Dolphin en Plasma): pendiente de decidir |
+| Aplicaciones predeterminadas | `~/.config/bwm/default-apps.json`, sección `apps`, `xdg-mime`. El gestor de archivos (`bwm-file-manager`, `Alt+E`) admite modo «Según la skin» (Dolphin en default/Breeze, Nautilus con extensiones de Omarchy en Retro) o fijar uno único para todas; los favoritos (`gtk-3.0/bookmarks` ↔ `user-places.xbel`) se sincronizan en común (`bwm-bookmarks-sync.py`) |
 | Workspaces: los mismos 1–N y sus monitores | Hyprland + `monitor-manager.py`; cuántos se muestran (`bar.workspaces.shown`) es común |
 | Pantallas: resolución, Hz, posición, escala | `monitor-manager.py` (`monitors_layout.json`, `monitors.lua`); un cambio en una skin vale para todas |
 | Inicio automático | `autostart-manager.py` (fuera de `config.json`) |

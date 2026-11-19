@@ -928,6 +928,22 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
             except Exception as e:
                 print(f"[Warning] No se pudo aplicar el tema de iconos: {e}", file=sys.stderr)
 
+        # Gestor de archivos por skin (Dolphin en default/Breeze, Nautilus en Retro) salvo
+        # que el usuario haya fijado uno único en Ajustes → Aplicaciones predeterminadas.
+        try:
+            subprocess.run(
+                [sys.executable, str(Path(__file__).resolve().parent / "default-apps.py"), "apply-skin", theme_name],
+                check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10,
+            )
+        except Exception as e:
+            print(f"[Warning] No se pudo actualizar el gestor de archivos de la skin: {e}", file=sys.stderr)
+
+        # Extensiones de Nautilus de Omarchy (LocalSend, Transcode) al activar Retro.
+        if cfg.get("is_retro"):
+            nautilus_setup = CONFIG_DIR / "hypr" / "skins" / "retro" / "scripts" / "setup-nautilus-plugins.sh"
+            if nautilus_setup.is_file():
+                subprocess.run(["bash", str(nautilus_setup)], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
+
         # Boot splash / login screen in the new colours (installed by the root service, if set up)
         subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_boot.py"), "render"],
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)

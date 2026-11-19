@@ -55,13 +55,13 @@
   {
     "id": "file_manager",
     "category": "Lanzadores",
-    "description": "Explorador de archivos (Nautilus)",
+    "description": "Explorador de archivos",
     "mods": [
       "SUPER"
     ],
     "key": "E",
     "action_type": "exec",
-    "exec": "nautilus --new-window",
+    "exec": "/home/sasel/.config/hypr/scripts/bwm-file-manager",
     "dispatcher": null,
     "dispatcher_arg": null,
     "options": {},
@@ -72,13 +72,13 @@
   {
     "id": "file_manager_alt",
     "category": "Lanzadores",
-    "description": "Explorador de archivos alternativo (Alt+E)",
+    "description": "Explorador de archivos (Alt+E)",
     "mods": [
       "ALT"
     ],
     "key": "E",
     "action_type": "exec",
-    "exec": "nautilus --new-window",
+    "exec": "/home/sasel/.config/hypr/scripts/bwm-file-manager",
     "dispatcher": null,
     "dispatcher_arg": null,
     "options": {},

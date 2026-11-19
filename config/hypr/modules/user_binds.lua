@@ -4,7 +4,7 @@
 -- =============================================================================
 
 local terminal    = "kitty"
-local fileManager = "nautilus --new-window"
+local fileManager = "/home/sasel/.config/hypr/scripts/bwm-file-manager"
 local menu        = "quickshell -c ii ipc call search toggle || rofi -show drun"
 
 local ok_theme, active_theme = pcall(require, "modules.theme")
@@ -39,7 +39,7 @@ hl.bind("ALT + A", hl.dsp.exec_cmd("quickshell -c ii ipc call cheatsheet toggle"
 -- [Lanzadores]
 hl.bind("CTRL + RETURN", hl.dsp.exec_cmd("kitty"), { description = "Lanzadores: Abrir terminal (Kitty)" })
 hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/app-launcher.sh"), { description = "Lanzadores: Menú de aplicaciones / Búsqueda", release = true })
-hl.bind("ALT + E", hl.dsp.exec_cmd("nautilus --new-window"), { description = "Lanzadores: Explorador de archivos alternativo (Alt+E)" })
+hl.bind("ALT + E", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm-file-manager"), { description = "Lanzadores: Explorador de archivos (Alt+E)" })
 hl.bind("ALT + W", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/wallpaper-picker.sh"), { description = "Lanzadores: Selector de fondos de pantalla" })
 -- [Ventanas]
 hl.bind("ALT + X", (is_plasma and close_window_target or hl.dsp.window.close)(), { description = "Ventanas: Cerrar ventana activa" })

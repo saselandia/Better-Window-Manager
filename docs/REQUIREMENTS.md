@@ -59,7 +59,7 @@ compilarlos o usar sus repositorios de terceros.
 | socat | Salvapantallas de terminal (eventos de Hyprland) | `net-misc/socat` | `socat` | `socat` | `socat` | `socat` |
 | procps-ng (pidwait) | bwm-power espera a que las apps terminen de guardar antes de apagar (sin él, sondea) | `sys-process/procps` | `procps-ng` | `procps-ng` | `procps` | `procps` |
 | git | Instalar temas y plugins de la comunidad y actualizar BWM | `dev-vcs/git` | `git` | `git` | `git` | `git` |
-| Nautilus | Gestor de archivos tematizado (Super+E) | `gnome-base/nautilus` | `nautilus` | `nautilus` | `nautilus` | `nautilus` |
+| Dolphin | Gestor de archivos predeterminado en default (end-4) y Breeze (Kde plasma) (Alt+E), con favoritos sincronizados con Nautilus | `kde-apps/dolphin` | `dolphin` | `dolphin` | `dolphin` | `dolphin` |
 | Firefox | Navegador tematizado (userChrome + Pywalfox) | `www-client/firefox-bin` | `firefox` | `firefox` | `MozillaFirefox` | `firefox-esr` |
 | Flatpak | Vesktop, Spotify, Stremio… tematizados con overrides | `sys-apps/flatpak` | `flatpak` | `flatpak` | `flatpak` | `flatpak` |
 | FFmpeg | Primer fotograma y miniaturas de los fondos de vídeo; miniaturas del selector de fondos rofi | `media-video/ffmpeg` | `ffmpeg` | `ffmpeg-free` | `ffmpeg` | `ffmpeg` |
@@ -123,7 +123,9 @@ Son las versiones registradas en el entorno local de BWM, no las últimas public
 | qt6ct | 0.11 | — |
 | socat | 1.8.1.3 | — |
 | git | 2.55.0 | — |
+| Dolphin | 26.04.3 | — |
 | Nautilus | 49.6 | — |
+| Sushi (vista previa de Nautilus) | 46.0 | — |
 | Firefox | 158.0.1 | — |
 | Flatpak | 1.18.1 | — |
 | KSvg (SVG de temas de Plasma) | 6.29.0 | — |
@@ -174,6 +176,8 @@ Imita **end-4 / illogical-impulse (Material You)**. Material Design 3: barra, pa
 
 | Requisito | Para qué | Gentoo | Arch / CachyOS | Fedora | openSUSE | Debian / Ubuntu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Dolphin | Gestor de archivos predeterminado en default (end-4) y Breeze (Kde plasma) (Alt+E), con favoritos sincronizados con Nautilus | `kde-apps/dolphin` | `dolphin` | `dolphin` | `dolphin` | `dolphin` |
+| FFmpegThumbs (miniaturas de vídeo en Dolphin) | Genera miniaturas de vídeo en Dolphin (sin él sólo se ven las que ya estaban en caché) | `kde-apps/ffmpegthumbs` | `ffmpegthumbs` | `ffmpegthumbs` | `ffmpegthumbs` | `ffmpegthumbs` |
 | Omacalc (calculadora de Omarchy) | Calculadora con los colores de cada skin, recarga en vivo y fuente iA Writer Mono incluida | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
 | Compilar Omacalc (Qt 6) | Sólo durante la instalación: BWM compila la calculadora original con soporte para sus paletas | `dev-qt/qtbase` `dev-qt/qtdeclarative` `dev-vcs/git` `sys-devel/patch` | `base-devel` `qt6-base` `qt6-declarative` `git` | `gcc-c++` `make` `qt6-qtbase-devel` `qt6-qtdeclarative-devel` `git` `patch` | `gcc-c++` `make` `qt6-base-devel` `qt6-declarative-devel` `git` `patch` | `build-essential` `qt6-base-dev` `qt6-declarative-dev` `qmake6` `git` `patch` |
 | SwayNotificationCenter | Centro de notificaciones fuera de Retro | `guru:gui-apps/swaync` | `swaync` | `SwayNotificationCenter` | `SwayNotificationCenter` | `sway-notification-center` |
@@ -202,6 +206,10 @@ Imita **Omarchy 4 (basecamp/omarchy, rama quattro)**. El shell de Omarchy: su ba
 
 | Requisito | Para qué | Gentoo | Arch / CachyOS | Fedora | openSUSE | Debian / Ubuntu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Nautilus | Gestor de archivos de la skin Retro (Omarchy) (Alt+E), con favoritos sincronizados con Dolphin | `gnome-base/nautilus` | `nautilus` | `nautilus` | `nautilus` | `nautilus` |
+| nautilus-python | Carga las extensiones de Omarchy en Nautilus (LocalSend y Transcode en el menú contextual) | `dev-python/nautilus-python` | `nautilus-python` | `nautilus-python` | `python3-nautilus` | `python3-nautilus` |
+| Sushi (vista previa de Nautilus) | Vista previa rápida de archivos pulsando Espacio en Nautilus, como en Omarchy | `gnome-extra/sushi` | `sushi` | `sushi` | `sushi` | `gnome-sushi` |
+| ffmpegthumbnailer | Miniaturas de vídeo en Nautilus (como en Omarchy) | `media-video/ffmpegthumbnailer` | `ffmpegthumbnailer` | `ffmpegthumbnailer` | `ffmpegthumbnailer` | `ffmpegthumbnailer` |
 | Fuente de iconos de Omarchy (omarchy.ttf) | Logo del menú y marcas de los agentes en la barra de Omarchy (Retro) | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
 | inotify-tools | La barra de Omarchy recarga sola un plugin de ~/.config/omarchy/plugins al editarlo (inotifywait) | `sys-fs/inotify-tools` | `inotify-tools` | `inotify-tools` | `inotify-tools` | `inotify-tools` |
 | Omacalc (calculadora de Omarchy) | Calculadora con los colores de cada skin, recarga en vivo y fuente iA Writer Mono incluida | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
@@ -256,6 +264,8 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 
 | Requisito | Para qué | Gentoo | Arch / CachyOS | Fedora | openSUSE | Debian / Ubuntu |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Dolphin | Gestor de archivos predeterminado en default (end-4) y Breeze (Kde plasma) (Alt+E), con favoritos sincronizados con Nautilus | `kde-apps/dolphin` | `dolphin` | `dolphin` | `dolphin` | `dolphin` |
+| FFmpegThumbs (miniaturas de vídeo en Dolphin) | Genera miniaturas de vídeo en Dolphin (sin él sólo se ven las que ya estaban en caché) | `kde-apps/ffmpegthumbs` | `ffmpegthumbs` | `ffmpegthumbs` | `ffmpegthumbs` | `ffmpegthumbs` |
 | gio (GLib) | Abrir un archivo reciente con su aplicación desde el menú del gestor de tareas de Breeze | `dev-libs/glib` | `glib2` | `glib2` | `glib2-tools` | `libglib2.0-bin` |
 | xdg-open (xdg-utils) | Abrir la imagen de fondo desde el menú del escritorio de Breeze | `x11-misc/xdg-utils` | `xdg-utils` | `xdg-utils` | `xdg-utils` | `xdg-utils` |
 | Omacalc (calculadora de Omarchy) | Calculadora con los colores de cada skin, recarga en vivo y fuente iA Writer Mono incluida | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |

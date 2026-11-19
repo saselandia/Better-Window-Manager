@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# BWM stand-in for Omarchy's omarchy-launch-files: opens the active file manager
+# according to Settings → Default applications (per-skin or fixed).
+exec "$HOME/.config/hypr/scripts/bwm-file-manager" "$@"

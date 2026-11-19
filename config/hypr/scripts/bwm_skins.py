@@ -63,6 +63,15 @@ def traditional(skin_id: str) -> dict:
     return skin(skin_id).get("traditional", {}) if is_traditional(skin_id) else {}
 
 
+DEFAULT_FILE_MANAGER = "org.kde.dolphin.desktop"
+
+
+def file_manager(skin_id: str) -> str:
+    """Archivo .desktop del gestor de archivos nativo de la skin."""
+    value = skin(skin_id).get("fileManager", DEFAULT_FILE_MANAGER)
+    return value if isinstance(value, str) and value.strip() else DEFAULT_FILE_MANAGER
+
+
 def theme_table(wallpapers_dir: Path) -> dict:
     """Las skins con las claves que usa bwm-theme-manager.py (THEMES)."""
     table = {}
@@ -87,6 +96,7 @@ def theme_table(wallpapers_dir: Path) -> dict:
             "fonts": s.get("fonts", {}),
             "palette": palette,
             "windows": windows(s["id"]),
+            "file_manager": file_manager(s["id"]),
             # Motores de color de cada skin: Omarchy (Retro) y Breeze estático (Plasma)
             "is_retro": palette == "omarchy",
             "is_plasma": palette == "breeze",

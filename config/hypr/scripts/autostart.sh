@@ -209,6 +209,11 @@ fi
 # 9c. Luz nocturna: vuelve a aplicar el estado guardado (hyprsunset o shader, nightlight.py)
 python3 "$HOME/.config/hypr/scripts/nightlight.py" --apply >/dev/null 2>&1 &
 
+# 9d. Gestor de archivos de la skin (Dolphin / Nautilus en Retro, si el modo es por skin)
+#     y sincronización común de favoritos entre ambos (unión inicial sin borrados + vigilante)
+python3 "$HOME/.config/hypr/scripts/default-apps.py" apply-skin >/dev/null 2>&1 || true
+python3 "$HOME/.config/hypr/scripts/bwm-bookmarks-sync.py" start >/dev/null 2>&1 || true
+
 # 10. Asegurar que las pantallas abran en Workspace 1 (Principal 1080p) y Workspace 10 (Secundario 4K)
 (
     sleep 3.5

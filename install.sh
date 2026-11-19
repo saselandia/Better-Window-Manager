@@ -130,7 +130,8 @@ print_success "Requisitos completos (lo marcado como opcional se puede instalar 
 # ==============================================================================
 print_step "2. Permisos de ejecución de los scripts..."
 find "$SCRIPTS_SOURCE" "$CONFIG_SOURCE/quickshell" -type f \( -name "*.sh" -o -name "*.py" \) -exec chmod +x {} + 2>/dev/null || true
-chmod +x "$SCRIPTS_SOURCE/bwm" "$SCRIPTS_SOURCE/bwmenu" "$SCRIPTS_SOURCE/bwm-terminal" "$SCRIPTS_SOURCE"/omarchy-shims/* 2>/dev/null || true
+chmod +x "$SCRIPTS_SOURCE/bwm" "$SCRIPTS_SOURCE/bwmenu" "$SCRIPTS_SOURCE/bwm-terminal" "$SCRIPTS_SOURCE/bwm-file-manager" "$SCRIPTS_SOURCE/bwm-bookmarks-sync.py" "$SCRIPTS_SOURCE"/omarchy-shims/* 2>/dev/null || true
+chmod +x "$TARGET_CONFIG/hypr/skins/retro/scripts/setup-nautilus-plugins.sh" 2>/dev/null || true
 print_success "Listo."
 
 # ==============================================================================
@@ -224,6 +225,7 @@ print_step "5. Comando bwm y bienvenida..."
 # El comando apunta al repositorio: así funciona también con --copy y con la instalación a medias
 ln -sfn "$SCRIPTS_SOURCE/bwm" "$HOME/.local/bin/bwm"
 ln -sfn "$SCRIPTS_SOURCE/bwmenu" "$HOME/.local/bin/bwmenu"
+ln -sfn "$SCRIPTS_SOURCE/bwm-file-manager" "$HOME/.local/bin/bwm-file-manager"
 print_success "Comando bwm en ~/.local/bin (abre la bienvenida; bwm help para más)."
 case ":$PATH:" in
     *":$HOME/.local/bin:"*) ;;
@@ -234,6 +236,19 @@ esac
 "$SCRIPTS_SOURCE/bwm-plugin.sh" catalog >/dev/null 2>&1 \
     && print_success "Comandos omarchy-* de la skin Retro enlazados." \
     || print_warn "No se pudieron enlazar los comandos omarchy-* (repítelo con: bwm-plugin.sh catalog)."
+
+# Extensiones de Nautilus de Omarchy (LocalSend y Transcode) para Retro
+if [[ ${#SKINS[@]} -eq 0 || " ${SKINS[*]} " == *" retro "* ]]; then
+    if [ -x "$TARGET_CONFIG/hypr/skins/retro/scripts/setup-nautilus-plugins.sh" ]; then
+        bash "$TARGET_CONFIG/hypr/skins/retro/scripts/setup-nautilus-plugins.sh" >/dev/null 2>&1 \
+            && print_success "Extensiones nautilus-python de Omarchy enlazadas." \
+            || print_warn "No se pudieron enlazar las extensiones nautilus-python de Omarchy."
+    fi
+fi
+
+# Gestor de archivos por skin (Dolphin / Nautilus en Retro) y unión inicial de favoritos
+python3 "$SCRIPTS_SOURCE/default-apps.py" apply-skin >/dev/null 2>&1 || true
+python3 "$SCRIPTS_SOURCE/bwm-bookmarks-sync.py" startup >/dev/null 2>&1 || true
 
 # La bienvenida sale en cada inicio de sesión hasta que se desactive desde ella (o bwm startup off)
 if [ ! -f "$HOME/.config/bwm/welcome.json" ]; then

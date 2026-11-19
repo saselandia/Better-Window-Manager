@@ -20,7 +20,7 @@
     ],
     "recommends": [
       "xdg-desktop-portal-hyprland", "xdg-desktop-portal-gtk", "playerctl", "networkmanager",
-      "bluez", "qt6ct", "socat", "procps", "git", "nautilus", "firefox", "flatpak",
+      "bluez", "qt6ct", "socat", "procps", "git", "dolphin", "firefox", "flatpak",
       "ffmpeg"
     ]
   },
@@ -493,12 +493,48 @@
       "check": {"type": "cmd", "any": ["git"]},
       "packages": {"gentoo": "dev-vcs/git", "arch": "git", "fedora": "git", "opensuse": "git", "debian": "git"}
     },
+    "dolphin": {
+      "label": "Dolphin",
+      "referenceVersion": "26.04.3",
+      "why": "Gestor de archivos predeterminado en default (end-4) y Breeze (Kde plasma) (Alt+E), con favoritos sincronizados con Nautilus",
+      "check": {"type": "cmd", "any": ["dolphin"]},
+      "packages": {"gentoo": "kde-apps/dolphin", "arch": "dolphin", "fedora": "dolphin", "opensuse": "dolphin", "debian": "dolphin"}
+    },
+    "ffmpegthumbs": {
+      "label": "FFmpegThumbs (miniaturas de vídeo en Dolphin)",
+      "why": "Genera miniaturas de vídeo en Dolphin (sin él sólo se ven las que ya estaban en caché)",
+      "check": {"type": "qtplugin", "path": "kf6/thumbcreator/ffmpegthumbs.so"},
+      "packages": {"gentoo": "kde-apps/ffmpegthumbs", "arch": "ffmpegthumbs", "fedora": "ffmpegthumbs", "opensuse": "ffmpegthumbs", "debian": "ffmpegthumbs"}
+    },
     "nautilus": {
       "label": "Nautilus",
       "referenceVersion": "49.6",
-      "why": "Gestor de archivos tematizado (Super+E)",
+      "why": "Gestor de archivos de la skin Retro (Omarchy) (Alt+E), con favoritos sincronizados con Dolphin",
       "check": {"type": "cmd", "any": ["nautilus"]},
       "packages": {"gentoo": "gnome-base/nautilus", "arch": "nautilus", "fedora": "nautilus", "opensuse": "nautilus", "debian": "nautilus"}
+    },
+    "nautilus-python": {
+      "label": "nautilus-python",
+      "why": "Carga las extensiones de Omarchy en Nautilus (LocalSend y Transcode en el menú contextual)",
+      "check": {"type": "path", "any": [
+        "/usr/lib64/nautilus/extensions-4/libnautilus-python.so",
+        "/usr/lib/nautilus/extensions-4/libnautilus-python.so",
+        "/usr/lib/x86_64-linux-gnu/nautilus/extensions-4/libnautilus-python.so"
+      ]},
+      "packages": {"gentoo": "dev-python/nautilus-python", "arch": "nautilus-python", "fedora": "nautilus-python", "opensuse": "python3-nautilus", "debian": "python3-nautilus"}
+    },
+    "sushi": {
+      "label": "Sushi (vista previa de Nautilus)",
+      "referenceVersion": "46.0",
+      "why": "Vista previa rápida de archivos pulsando Espacio en Nautilus, como en Omarchy",
+      "check": {"type": "cmd", "any": ["sushi"]},
+      "packages": {"gentoo": "gnome-extra/sushi", "arch": "sushi", "fedora": "sushi", "opensuse": "sushi", "debian": "gnome-sushi"}
+    },
+    "ffmpegthumbnailer": {
+      "label": "ffmpegthumbnailer",
+      "why": "Miniaturas de vídeo en Nautilus (como en Omarchy)",
+      "check": {"type": "cmd", "any": ["ffmpegthumbnailer"]},
+      "packages": {"gentoo": "media-video/ffmpegthumbnailer", "arch": "ffmpegthumbnailer", "fedora": "ffmpegthumbnailer", "opensuse": "ffmpegthumbnailer", "debian": "ffmpegthumbnailer"}
     },
     "firefox": {
       "label": "Firefox",

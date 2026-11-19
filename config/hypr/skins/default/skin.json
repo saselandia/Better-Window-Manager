@@ -7,6 +7,7 @@
   "preview": "assets/skin-previews/end4-illogical-impulse.png",
   "windows": "tiling",
   "palette": "matugen",
+  "fileManager": "org.kde.dolphin.desktop",
   "defaultTheme": {
     "mode": "dynamic",
     "name": "Material You desde el fondo",
@@ -73,6 +74,8 @@
     "hyprpolkitagent"
   ],
   "recommends": [
+    "dolphin",
+    "ffmpegthumbs",
     "omacalc",
     "omacalc-build",
     "swaync",

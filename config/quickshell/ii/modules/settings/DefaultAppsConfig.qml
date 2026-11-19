@@ -19,7 +19,8 @@ ContentPage {
         { kind: "terminal", icon: "terminal", title: Translation.tr("Terminal"),
           hint: Translation.tr("Used by the task manager, Omarchy plugins and shell actions") },
         { kind: "browser", icon: "language", title: Translation.tr("Web browser"), hint: "" },
-        { kind: "files", icon: "folder", title: Translation.tr("File manager"), hint: "" },
+        { kind: "files", icon: "folder", title: Translation.tr("File manager"),
+          hint: Translation.tr("Choose per-skin (Dolphin in default/Breeze, Nautilus in Retro) or fix a single file manager for every skin. Bookmarks stay synced between Dolphin and Nautilus.") },
         { kind: "editor", icon: "edit_note", title: Translation.tr("Text editor"), hint: "" },
         { kind: "taskmanager", icon: "monitoring", title: Translation.tr("Task manager"),
           hint: Translation.tr("Terminal programs (btop, htop) open in the default terminal") }
@@ -55,15 +56,20 @@ ContentPage {
                     opts.unshift({ id: info.current, name: info.current });
                 return opts;
             }
+            readonly property string hintText: {
+                if (modelData.kind === "files" && info.mode === "per-skin" && info.effectiveName)
+                    return modelData.hint + " (" + Translation.tr("Active now:") + " " + info.effectiveName + ")";
+                return modelData.hint;
+            }
             icon: modelData.icon
             title: modelData.title
 
             StyledText {
-                visible: section.modelData.hint !== ""
+                visible: section.hintText !== ""
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
                 color: Appearance.colors.colSubtext
-                text: section.modelData.hint
+                text: section.hintText
             }
 
             StyledComboBox {

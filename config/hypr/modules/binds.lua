@@ -4,7 +4,7 @@
 
 -- Set programs that you use
 local terminal    = "kitty"
-local fileManager = "nautilus"
+local fileManager = os.getenv("HOME") .. "/.config/hypr/scripts/bwm-file-manager"
 local menu        = "/home/sasel/.config/hypr/scripts/app-launcher.sh"
 
 ---------------
