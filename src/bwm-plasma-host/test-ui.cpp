@@ -8,6 +8,7 @@
 #include "panelviewhost.h"
 #include "panelviewsettings.h"
 #include "panelconfigview.h"
+#include "widgetexplorerview.h"
 #include <QQmlExpression>
 #include <QQmlContext>
 #include <QTest>
@@ -1194,6 +1195,62 @@ private Q_SLOTS:
         PanelViewHost fresh(&corona,path);QVERIFY2(fresh.load(c),qPrintable(fresh.error()));
         QCOMPARE(fresh.alignment(),int(Qt::AlignRight));QCOMPARE(fresh.lengthMode(),int(PanelViewEnums::Custom));QCOMPARE(fresh.thickness(),52);
         corona.unbind(c);corona.saveLayout("bwm-r5-edit-test");QVERIFY(corona.config()->sync());
+    }
+    void originalWidgetExplorerAddsToPanel() {
+        // R5: "Add Widgets…" of the original Panel Settings opens the installed, unmodified
+        // explorer/WidgetExplorer.qml; addApplet() uses the panel containment, and closing it
+        // returns to the Panel Settings like ShellCorona/WidgetExplorer.qml 6.7.5.
+        ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        QFile::remove(QDir(qEnvironmentVariable("XDG_CONFIG_HOME")).filePath("bwm-r5-explorer-test"));corona.loadLayout("bwm-r5-explorer-test");
+        auto *c=corona.createContainment("org.kde.panel");QVERIFY(c);
+        c->setLocation(Plasma::Types::BottomEdge);c->setFormFactor(Plasma::Types::Horizontal);QVERIFY(c->createApplet("org.bwm.r4.shared-config"));
+        const auto path=QDir(qEnvironmentVariable("XDG_CONFIG_HOME")).filePath("bwm-r5-explorer-plasmashellrc");QFile::remove(path);
+        PanelViewHost view(&corona,path);corona.bind(c,&view);
+        QVERIFY2(view.load(c),qPrintable(view.error()));view.show();
+        c->internalAction("configure")->trigger();
+        const auto settings=[]{for(auto *w:QGuiApplication::allWindows())if(auto *d=qobject_cast<PanelConfigView*>(w))if(d->isVisible())return d;return (PanelConfigView*)nullptr;};
+        QPointer<PanelConfigView> dialog;QTRY_VERIFY((dialog=settings()));
+        QStringList scriptErrors;
+        const auto watch=[&](QQmlEngine *engine){connect(engine,&QQmlEngine::warnings,this,[&scriptErrors](const QList<QQmlError> &errors){
+            // SharedQmlEngine shares one engine with the panel: keep the explorer's own files.
+            for(const auto &e:errors)if((e.url().toString().contains("/explorer/") || e.url().toString().contains("WidgetExplorerHost")) &&
+                (e.description().contains("ReferenceError") || e.description().contains("TypeError") || e.description().contains("is not defined")))scriptErrors.append(e.toString());});};
+        QQmlExpression(qmlContext(dialog->mainItem()),dialog->mainItem(),"configDialog.showAddWidgetDialog()").evaluate();
+        QTRY_VERIFY(view.widgetExplorer());
+        auto *explorer=view.widgetExplorer();QVERIFY2(explorer->error().isEmpty(),qPrintable(explorer->error()));
+        auto *root=explorer->rootItem();QVERIFY(root);watch(qmlEngine(root));
+        // PanelConfigView deletes itself once hidden, like upstream.
+        QTRY_VERIFY(explorer->isVisible());QTRY_VERIFY(!dialog || !dialog->isVisible());QVERIFY(corona.isEditMode());
+        QCOMPARE(root->property("explorerState").toString(),"widgetExplorer");
+        const auto eval=[&](const QString &code){QQmlExpression e(qmlContext(root),root,code);const auto v=e.evaluate();if(e.hasError())scriptErrors.append(e.error().toString());return v;};
+        QTRY_VERIFY(eval("sidePanelStack.item !== null && root.widgetExplorer !== null").toBool());
+        QVERIFY(eval("sidePanelStack.item.containment === root.containment").toBool());
+        QVERIFY(qmlContext(eval("sidePanelStack.item").value<QObject*>())->baseUrl().toString().endsWith("/contents/explorer/WidgetExplorer.qml"));
+        // The original model lists the installed widgets; its search narrows it.
+        QTRY_VERIFY(eval("root.widgetExplorer.widgetsModel.count").toInt()>1);
+        const int all=eval("root.widgetExplorer.widgetsModel.count").toInt();
+        eval("root.widgetExplorer.widgetsModel.searchTerm='analog clock'");
+        QTRY_VERIFY(eval("root.widgetExplorer.widgetsModel.count").toInt()<all);
+        eval("root.widgetExplorer.widgetsModel.searchTerm=''");
+        const auto has=[&](const QString &id){for(auto *a:c->applets())if(a->pluginMetaData().pluginId()==id)return true;return false;};
+        QVERIFY(!has("org.kde.plasma.analogclock"));
+        eval("root.widgetExplorer.addApplet('org.kde.plasma.analogclock')");
+        QTRY_VERIFY(has("org.kde.plasma.analogclock"));
+        // Closing the explorer from a panel reopens its settings (WidgetExplorer.qml onClosed).
+        eval("sidePanelStack.item.closed()");
+        QTRY_VERIFY(!explorer->isVisible());QTRY_VERIFY((dialog=settings()));
+        QTRY_VERIFY(view.userConfiguring());QVERIFY(corona.isEditMode());
+        dialog->requestActivate();QTRY_VERIFY(dialog->isActive());QTest::keyClick(dialog,Qt::Key_Escape);
+        QTRY_VERIFY(!corona.isEditMode());
+        // The containment's own "add widgets" action toggles the same side bar; hiding it
+        // (window deactivation) leaves edit mode without reopening the settings.
+        c->internalAction("add widgets")->trigger();
+        QTRY_VERIFY(explorer->isVisible());QVERIFY(corona.isEditMode());
+        explorer->sidePanel()->setVisible(false);
+        QTRY_VERIFY(!corona.isEditMode());QVERIFY(!settings());
+        QTRY_COMPARE(root->property("explorerState").toString(),"closed");
+        QVERIFY2(scriptErrors.isEmpty(),qPrintable(scriptErrors.join('\n')));
+        corona.unbind(c);corona.saveLayout("bwm-r5-explorer-test");QVERIFY(corona.config()->sync());
     }
     void panelViewPreferencesPersistAndApply() {
         TestCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));

@@ -170,7 +170,8 @@ def main():
                          'sharedConfigurationFreshProcessReadback', 'moduleConfigurationTransactions',
                          'moduleConfigurationFreshProcessReadback', 'profileRecoveryFromExplicitSnapshot',
                          'profileRecoveryFreshProcessReadback', 'profileRecoveryUsesXdgAuthorityAndChildLease',
-                         'profileSelectionTransactionsAndSelectedServer', 'originalPanelSettingsEditMode'):
+                         'profileSelectionTransactionsAndSelectedServer', 'originalPanelSettingsEditMode',
+                         'originalWidgetExplorerAddsToPanel'):
                 output = run(args.ui_test, test)
                 assert 'FAIL!' not in output and 'SKIP' not in output, output
                 report['ui'].append({'test': test, 'passed': True})

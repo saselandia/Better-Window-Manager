@@ -55,7 +55,7 @@ def main():
     steps = None
     for line in reply.stdout.splitlines():
         if line.startswith('{"steps"'):
-            steps = json.loads(line)['steps']
+            steps = (steps or []) + json.loads(line)['steps']
     print(json.dumps({'passed': reply.returncode == 0, 'output': output, 'steps': steps}, ensure_ascii=False, indent=2))
     if reply.returncode != 0:
         sys.stderr.write(reply.stdout[-6000:] + reply.stderr[-6000:])

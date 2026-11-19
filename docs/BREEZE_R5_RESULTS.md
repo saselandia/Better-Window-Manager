@@ -144,3 +144,50 @@ ratón), escalas fraccionarias y `--native-policy` con el diálogo.
 
 Autoocultar/esquivar, persistencia del cambio de monitor en perfiles, el resto de la lista de
 pendientes y la aceptación del usuario.
+
+## Iteración 3 (2026-11-19) — «Añadir widgets…» con el WidgetExplorer original
+
+### Qué hay
+
+- `widgetexplorerview.{h,cpp}` (propio) y `qml/WidgetExplorerHost.qml` (adapta la parte de
+  `views/Desktop.qml` de plasma-desktop 6.7.5 que el explorador espera de su vista: el `id: root`
+  con `widgetExplorer`, el `pendingUninstallTimer` y el `PlasmaCore.Dialog` lateral con su
+  `Loader`). Carga sin modificar el `explorer/WidgetExplorer.qml` instalado y el tipo C++
+  `WidgetExplorer` de `org.kde.plasma.private.shell`: lista, búsqueda, categorías, «Obtener
+  widgets nuevos», arrastrar y `addApplet()` son los originales.
+- La acción interna de libplasma «add widgets» emite `showAddWidgetsInterface`; `PanelViewHost`
+  la atiende como `ShellCorona::toggleWidgetExplorer`: entra en modo edición y abre/cierra la
+  barra lateral de ese panel. «Añadir widgets…» de los Ajustes del panel pasa por la misma acción.
+  Los Ajustes se ocultan al abrirla y `WidgetExplorer.qml` los vuelve a abrir al cerrarla
+  (`onClosed`), como upstream.
+- La barra lateral es una capa `top` (`bwm-r5-widget-explorer`) anclada al borde izquierdo
+  (derecho si el panel está a la derecha o el idioma es RTL), de arriba abajo, con teclado
+  «a demanda». Zona exclusiva 0: Hyprland le deja fuera las reservas de los paneles; si el panel
+  editado no reserva (vista de ensayo), se separa de él con un margen. Un `hyprland_focus_grab_v1`
+  sobre la barra y el panel hace de la desactivación de ventana de KWin (`hideOnWindowDeactivate`);
+  no cierra mientras el explorador lo impide (`preventWindowHide`, p. ej. al arrastrar).
+- Sin modo edición del escritorio: al cerrarse la barra sin reabrir los Ajustes, se sale del
+  modo edición.
+
+### Pruebas
+
+| Prueba | Resultado |
+| :--- | :--- |
+| `originalWidgetExplorerAddsToPanel` (offscreen, CTest `isolated-local-configuration`): «Añadir widgets…» desde el QML original, QML del explorador instalado, modelo y búsqueda, `addApplet('org.kde.plasma.analogclock')` en el panel, cierre que reabre los Ajustes, Escape sale del modo edición; la acción «add widgets» directa y su cierre por desactivación | Pasa (normal, tres repeticiones; también con ASan) |
+| `check-edit-mode-session.py` en Hyprland (LG, panel desechable): paso nuevo con la capa medida en `hyprctl layers` frente a `monitors.reserved` | 16/16 pasos; capa 498×2004 en 2560,0 (alto de pantalla − 44 px de la barra diaria − panel de prueba con su hueco); Ajustes ocultos con la barra abierta; reloj digital añadido; al cerrar, Ajustes reabiertos; capas retiradas y foco devuelto |
+| CTest normal (8 pruebas sin las `native-`) | Pasa |
+
+Encontrado durante las pruebas: `fileUrl("explorer")` del paquete de shell es una carpeta; se
+usa `explorer/WidgetExplorer.qml` como hace `Desktop.qml`. La prueba leía el `PanelConfigView`
+después de que éste se borrara al ocultarse (como upstream): ahora usa un `QPointer`.
+
+Con ASan, `isolated-local-configuration` falla después de todas las pruebas de interfaz, en el
+ensayo de salida de sesión de §268: `panel-session.py stop` pide `transaction.lock` sin esperar
+(`LOCK_NB`) mientras el anfitrión, más lento con ASan, aún lo tiene. No está relacionado con el
+explorador; queda pendiente.
+
+### Límites
+
+Sin clic físico (la prueba llama a los manejadores del QML), ni arrastre de un widget al panel
+en Hyprland, ni «Obtener widgets nuevos» desde aquí (KNS ya probado en R4). Desinstalar widgets
+del usuario no se ha ejecutado. Alternativas de widgets (`AppletAlternatives.qml`) sin probar.

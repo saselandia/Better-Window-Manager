@@ -398,6 +398,9 @@ R5: `src/bwm-plasma-host/panelconfigview.{h,cpp}` adapta `shell/panelconfigview.
 plasma-workspace 6.7.5 (Marco Martin, LGPL-2.0-or-later), con la cabecera SPDX y la autoría
 originales y una nota de cambios BWM. Cargan sin modificar el `PanelConfiguration.qml` y sus
 `panelconfiguration/*.qml` instalados de plasma-desktop 6.7.5 (no se copian al repositorio).
+`src/bwm-plasma-host/qml/WidgetExplorerHost.qml` adapta parte de `desktoppackage/contents/views/Desktop.qml`
+de plasma-desktop 6.7.5 (Marco Martin, David Edmundson; GPL-2.0-or-later), con su cabecera SPDX
+y una nota de cambios BWM; carga sin modificar el `explorer/WidgetExplorer.qml` instalado.
 La colocación del panel en `panelviewhost.cpp`/`surfaces.cpp` sigue `PanelView::preferredSize`,
 `geometryByDistance` y `updateLayerWindow` de la misma versión, reescrita sin copiar el código.
 

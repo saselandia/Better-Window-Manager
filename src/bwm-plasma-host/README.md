@@ -1278,5 +1278,11 @@ Comprobación en la sesión, sin ratón ni teclado virtuales (acciona el QML ori
 python3 src/bwm-plasma-host/check-edit-mode-session.py --output "<descripción del monitor>"
 ```
 
-Límites y pendientes en `docs/BREEZE_R5_RESULTS.md` (autoocultar, clonar, WidgetExplorer).
-Al actualizar upstream, revisar `shell/panelconfigview.*` y los `Q_PROPERTY` de `panelview.h`.
+«Añadir widgets…» (o la acción interna «add widgets» del panel) abre el `WidgetExplorer.qml`
+instalado en una capa lateral (`bwm-r5-widget-explorer`) mediante `widgetexplorerview.*` y
+`qml/WidgetExplorerHost.qml`, que adapta la parte de `views/Desktop.qml` que el explorador
+necesita. Al cerrarse vuelve a los Ajustes del panel, como upstream.
+
+Límites y pendientes en `docs/BREEZE_R5_RESULTS.md` (autoocultar, clonar, escritorio).
+Al actualizar upstream, revisar `shell/panelconfigview.*`, los `Q_PROPERTY` de `panelview.h`,
+`views/Desktop.qml` (contrato de la barra lateral) y `explorer/WidgetExplorer.qml`.

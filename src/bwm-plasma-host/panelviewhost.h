@@ -12,6 +12,7 @@
 class PanelSession;
 class PanelViewSettings;
 class PanelConfigView;
+class WidgetExplorerView;
 namespace PlasmaQuick {class AppletQuickItem;}
 
 // The original shell registers PanelView's enum metadata under this URI. Only the
@@ -93,6 +94,9 @@ public:
     // While the original Panel Settings are open, QML edits persist like PanelView;
     // otherwise these setters remain preview-only (R4 contract).
     bool userConfiguring()const{return m_userConfiguring;}
+    // R5: the original "Add Widgets" side bar of this panel, created on first use.
+    WidgetExplorerView *widgetExplorer()const;
+    bool toggleWidgetExplorer();
     void setUserConfiguring(bool value);
     int visibilityMode()const{return m_visibility;}
     void setVisibilityMode(int value);
@@ -138,6 +142,7 @@ private:
     QPointer<PlasmaQuick::AppletQuickItem> m_item;
     QPointer<PanelSession> m_session;
     QPointer<PanelConfigView> m_configView;
+    QPointer<WidgetExplorerView> m_widgetExplorer;
     QPropertyAnimation m_floatingAnimation;
     QTimer m_reflow;
     int m_thickness=48,m_requestedThickness=48,m_length=640;

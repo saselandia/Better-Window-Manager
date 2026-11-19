@@ -8,6 +8,7 @@
 #include "panelruntime.h"
 #include "panelviewhost.h"
 #include "viewcorona.h"
+#include "widgetexplorerview.h"
 #include <KConfig>
 #include <KConfigGroup>
 #include <KPackage/PackageLoader>
@@ -51,6 +52,24 @@ QList<QRect> layers(const QString &ns)
             }
     }
     return result;
+}
+// Reserved zones of a monitor [left, top, right, bottom], matched by the connector Qt reports
+// for this run only (never stored).
+QMargins reserved(const QString &connector)
+{
+    QProcess process;
+    auto environment = QProcessEnvironment::systemEnvironment();
+    environment.insert(QStringLiteral("XDG_RUNTIME_DIR"), qEnvironmentVariable("BWM_R5_HYPR_RUNTIME"));
+    process.setProcessEnvironment(environment);
+    process.start(QStringLiteral("hyprctl"), {QStringLiteral("-j"), QStringLiteral("monitors")});
+    if (!process.waitForFinished(3000)) return {};
+    for (const auto &m : QJsonDocument::fromJson(process.readAllStandardOutput()).array()) {
+        const auto o = m.toObject();
+        if (o.value(QStringLiteral("name")).toString() != connector) continue;
+        const auto r = o.value(QStringLiteral("reserved")).toArray();
+        if (r.size() == 4) return QMargins(r[0].toInt(), r[1].toInt(), r[2].toInt(), r[3].toInt());
+    }
+    return {};
 }
 QJsonObject rect(const QRect &r) { return {{"x", r.x()}, {"y", r.y()}, {"w", r.width()}, {"h", r.height()}}; }
 PanelConfigView *openDialog()
@@ -213,6 +232,77 @@ private Q_SLOTS:
             QCOMPARE(g.readEntry("floating", 0), 1);
             QCOMPARE(g.readEntry("alignment", 0), int(Qt::AlignCenter));
         }
+        runtime.setSkin(QStringLiteral("default"));
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r4-preview")).isEmpty());
+        puts(QJsonDocument(QJsonObject{{"steps", m_steps}}).toJson(QJsonDocument::Compact).constData());
+    }
+    void originalWidgetExplorerInHyprland()
+    {
+        // "Add Widgets…" from the original Panel Settings: the installed WidgetExplorer.qml in
+        // a layer beside the edited panel, inside the area Hyprland leaves free.
+        m_steps = {};
+        const auto output = qEnvironmentVariable("BWM_R5_OUTPUT");
+        auto *screen = BwmOutput::resolveScreen(output);
+        QVERIFY(screen);
+        const QRect S = screen->geometry();
+        const int gap = 64;
+        ViewCorona corona;
+        corona.setKPackage(KPackage::PackageLoader::self()->loadPackage(QStringLiteral("Plasma/Shell"), QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout(QStringLiteral("bwm-r5-explorer-appletsrc"));
+        auto *c = corona.createContainment(QStringLiteral("org.kde.panel"));
+        QVERIFY(c);
+        c->setLocation(Plasma::Types::BottomEdge);
+        c->setFormFactor(Plasma::Types::Horizontal);
+        QVERIFY(c->createApplet(QStringLiteral("org.kde.plasma.analogclock")));
+        const uint id = c->id();
+        PanelRuntime runtime(&corona, QStringLiteral("plasmashellrc-explorer"), true);
+        QVERIFY2(runtime.setAssignments({{id, output}}), qPrintable(runtime.error()));
+        QVERIFY2(runtime.setSkin(QStringLiteral("plasma")), qPrintable(runtime.error()));
+        QTRY_VERIFY(runtime.view(id) && runtime.view(id)->isExposed());
+        QPointer<PanelViewHost> view = runtime.view(id);
+        expectPanel(QStringLiteral("explorer-panel"), [&] { return QRect(S.x(), S.bottom() + 1 - gap - view->height(), S.width(), view->height()); });
+        c->internalAction(QStringLiteral("configure"))->trigger();
+        QPointer<PanelConfigView> dialog;
+        QTRY_VERIFY((dialog = openDialog()));
+        QTRY_COMPARE(layers(QStringLiteral("bwm-r4-popup")).size(), 1);
+        QQmlExpression(qmlContext(dialog->mainItem()), dialog->mainItem(), QStringLiteral("configDialog.showAddWidgetDialog()")).evaluate();
+        QTRY_VERIFY(view->widgetExplorer() && view->widgetExplorer()->isVisible());
+        auto *explorer = view->widgetExplorer();
+        QVERIFY2(explorer->error().isEmpty(), qPrintable(explorer->error()));
+        // PanelConfigView hides once the side bar opens, as upstream.
+        QTRY_COMPARE(layers(QStringLiteral("bwm-r4-popup")).size(), 0);
+        const QMargins R = reserved(screen->name());
+        const auto expected = [&] {
+            const int bottom = S.bottom() + 1 - R.bottom() - (gap + view->height());
+            return QRect(S.x() + R.left(), S.y() + R.top(), explorer->sidePanel()->width(), bottom - S.y() - R.top());
+        };
+        QRect observed;
+        const bool matched = QTest::qWaitFor([&] {
+            const auto all = layers(QStringLiteral("bwm-r5-widget-explorer"));
+            observed = all.size() == 1 ? all.first() : QRect();
+            return observed == expected();
+        }, 5000);
+        record(QStringLiteral("explorer-layer"), expected(), observed);
+        QVERIFY2(matched, qPrintable(QStringLiteral("explorer: expected %1,%2 %3x%4, Hyprland %5,%6 %7x%8")
+            .arg(expected().x()).arg(expected().y()).arg(expected().width()).arg(expected().height())
+            .arg(observed.x()).arg(observed.y()).arg(observed.width()).arg(observed.height())));
+        auto *root = explorer->rootItem();
+        const auto eval = [&](const QString &code) {QQmlExpression e(qmlContext(root), root, code);const auto v = e.evaluate();return v;};
+        QTRY_VERIFY(eval(QStringLiteral("root.widgetExplorer !== null && root.widgetExplorer.widgetsModel.count > 1")).toBool());
+        const int applets = c->applets().size();
+        eval(QStringLiteral("root.widgetExplorer.addApplet('org.kde.plasma.digitalclock')"));
+        QTRY_COMPARE(c->applets().size(), applets + 1);
+        m_steps.append(QJsonObject{{"step", "explorer-add-applet"}, {"applets", int(c->applets().size())}, {"passed", true}});
+        // Closing from a panel reopens its settings (WidgetExplorer.qml onClosed).
+        eval(QStringLiteral("sidePanelStack.item.closed()"));
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r5-widget-explorer")).isEmpty());
+        QTRY_VERIFY((dialog = openDialog()));
+        QTRY_COMPARE(layers(QStringLiteral("bwm-r4-popup")).size(), 1);
+        m_steps.append(QJsonObject{{"step", "explorer-closed-settings-reopened"}, {"passed", true}});
+        dialog->requestActivate();
+        QTRY_VERIFY(dialog->isActive());
+        QTest::keyClick(dialog, Qt::Key_Escape);
+        QTRY_VERIFY(!corona.isEditMode());
         runtime.setSkin(QStringLiteral("default"));
         QTRY_VERIFY(layers(QStringLiteral("bwm-r4-preview")).isEmpty());
         puts(QJsonDocument(QJsonObject{{"steps", m_steps}}).toJson(QJsonDocument::Compact).constData());

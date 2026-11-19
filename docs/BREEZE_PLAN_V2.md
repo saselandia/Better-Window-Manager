@@ -150,7 +150,8 @@ Estado al 2026-11-12 tras la primera ejecución:
   Probado offscreen y visto en Hyprland; faltan WidgetExplorer, escritorio, mover/clonar,
   autohide, varios paneles y aceptación del usuario. Ver BREEZE_R5_RESULTS.md.
   Iteración 2 (2026-11-19): «Set Position…», bordes en el sitio y paso a otro monitor, medidos
-  en Hyprland con `check-edit-mode-session.py`.
+  en Hyprland con `check-edit-mode-session.py`. Iteración 3: «Añadir widgets…» con el
+  `WidgetExplorer.qml` original en una capa lateral, probado offscreen y medido en Hyprland.
 - **R4 (historial):** auxiliar con popup, diálogo, acciones y catálogo vivo probado
   en QtTest/ASan. Adaptador LayerShellQt y staging de datos nativos con lectura en otro
   proceso añadidos (2026-11-13). plasma-desktop instalado: org.kde.panel/QML original,

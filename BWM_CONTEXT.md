@@ -108,6 +108,8 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   Probado offscreen y visto en Hyprland; resto de R5 pendiente (`docs/BREEZE_R5_RESULTS.md`).
   Iteración 2 (§304): «Set Position…» (flechas como capas, borde cambiado sin recrear la vista,
   paso a otro monitor en la vista desechable), medido en Hyprland con `check-edit-mode-session.py`.
+  Iteración 3 (§305): «Añadir widgets…» con el `WidgetExplorer.qml` original en una capa lateral;
+  añade al panel y vuelve a los Ajustes, probado offscreen y medido en Hyprland.
 * **Breeze II (2026-11-12):** `docs/BREEZE_PLAN_V2.md`, R0 entregada con referencia y límites documentados;
   R1 corrige origen de especiales al minimizar, activación común y filtro de Alt+Tab (pruebas
   aisladas; fallo visual original pendiente). R2 tiene primer KCM QWidget real, descubierto por
@@ -5142,3 +5144,23 @@ git status; git log --oneline -5; git push origin main
   diaria; la vista de prueba del usuario se detuvo para medir.
 * **Pendiente:** clic físico del usuario, autoocultar/esquivar, persistencia del cambio de monitor
   en perfiles y el resto de R5 (`docs/BREEZE_R5_RESULTS.md`).
+
+### 305. R5, iteración 3: «Añadir widgets…» con el WidgetExplorer original (2026-11-19)
+
+* **Petición:** seguir con R5 tras confirmar el usuario que los clics del diálogo funcionan.
+* **Hecho:** `widgetexplorerview.{h,cpp}` y `qml/WidgetExplorerHost.qml` (adapta de `views/Desktop.qml`
+  6.7.5 sólo el contrato que espera el explorador: `root.widgetExplorer`, `pendingUninstallTimer`, el
+  Dialog lateral y su Loader). Cargan sin cambios `explorer/WidgetExplorer.qml` y el tipo C++
+  `WidgetExplorer`. `PanelViewHost` atiende `showAddWidgetsInterface` (acción interna «add widgets»)
+  como `ShellCorona::toggleWidgetExplorer`: modo edición, Ajustes ocultos y reabiertos por el
+  `onClosed` original. Barra lateral como capa `top` `bwm-r5-widget-explorer` de arriba abajo, zona
+  exclusiva 0 (margen sólo si el panel editado no reserva), teclado a demanda, focus grab con la barra
+  y el panel. Sin escritorio: al cerrarse sin reabrir los Ajustes se sale del modo edición.
+* **Comprobado:** prueba Qt nueva en `isolated-local-configuration` (normal ×3 y ASan): QML instalado,
+  modelo/búsqueda, `addApplet` en el panel, cierre que reabre los Ajustes, acción directa y cierre por
+  desactivación. En Hyprland (LG) `check-edit-mode-session.py` 16/16: capa 498×2004 dentro del área
+  libre según `monitors.reserved`, widget añadido, Ajustes reabiertos, sin restos y foco devuelto.
+  No se tocó la vista `--native-policy` que el usuario tenía abierta en el MSI.
+* **Pendiente:** clic físico, arrastrar un widget al panel, desinstalar, alternativas de widgets. Con
+  ASan falla después el ensayo de salida de §268 (`transaction.lock` con `LOCK_NB` mientras el anfitrión
+  lento aún lo tiene), ajeno a este cambio.

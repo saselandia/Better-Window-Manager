@@ -5,6 +5,7 @@
 #include "surfaces.h"
 #include "panelviewsettings.h"
 #include "panelconfigview.h"
+#include "widgetexplorerview.h"
 #include <Plasma/Corona>
 #include <Plasma/Containment>
 #include <PlasmaQuick/AppletQuickItem>
@@ -77,7 +78,9 @@ QVariantMap PanelViewHost::presentationState()const {
         {"compositorPresentationVerified",false}};
 }
 PanelViewHost::~PanelViewHost() {
-    // The settings' QML holds "panel": destroy it now, not after a deferred delete.
+    // The explorer and settings QML hold "panel"/the containment: destroy them now,
+    // not after a deferred delete.
+    delete m_widgetExplorer.data();
     delete m_configView.data();
     disconnect(this,nullptr,this,nullptr);
     m_reflow.stop();m_floatingAnimation.stop();
@@ -158,6 +161,9 @@ bool PanelViewHost::load(Plasma::Containment *c) {
         setError(c->launchErrorMessage().isEmpty() ? tr("The native panel containment did not load.") : c->launchErrorMessage());return false;
     }
     m_session->bindPanelItem(m_item);m_session->packageWindows()->refresh();
+    // libplasma's "add widgets" internal action emits showAddWidgetsInterface; plasmashell
+    // answers it with ShellCorona::toggleWidgetExplorer, here the panel's own side bar.
+    connect(c,&Plasma::Containment::showAddWidgetsInterface,this,[this]{toggleWidgetExplorer();});
     connect(c,&Plasma::Containment::statusChanged,this,[this](Plasma::Types::ItemStatus state){
         if(property("bwmLayerPanel").toBool())BwmSurface::setPanelAcceptsInput(this,state==Plasma::Types::AcceptingInputStatus);
     });
@@ -318,6 +324,17 @@ void PanelViewHost::showConfigurationInterface(Plasma::Applet *applet) {
     }
     if(corona() && corona()->isEditMode())corona()->setEditMode(false);
     if(m_session)m_session->configure(applet->id());
+}
+
+WidgetExplorerView *PanelViewHost::widgetExplorer()const{return m_widgetExplorer.data();}
+bool PanelViewHost::toggleWidgetExplorer() {
+    if(!containment())return false;
+    if(!m_widgetExplorer)m_widgetExplorer=new WidgetExplorerView(this);
+    // PanelConfigView 6.7.5 hides once the side bar takes focus; WidgetExplorer.qml
+    // reopens it through "configure" when the explorer closes.
+    if(!m_widgetExplorer->isVisible() && m_configView && m_configView->isVisible())m_configView->hide();
+    if(!m_widgetExplorer->toggle()){setError(m_widgetExplorer->error());return false;}
+    return true;
 }
 
 void PanelViewHost::adoptLocation(Plasma::Types::Location location) {
