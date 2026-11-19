@@ -67,15 +67,48 @@ QJsonObject archivedViewSettings(const QByteArray &legacy) {
         {"floating",int(floating.toBool(false) || style=="floating")},
         {"panelOpacity",style=="opaque" ? 1 : style=="translucent" ? 2 : 0}};
 }
-QJsonArray deferredViewSettings(const QByteArray &legacy,const QJsonObject &view) {
+QJsonObject archivedPlacement(const QByteArray &legacy,const QString &edge,const QJsonValue &size) {
+    require(size.isArray() && size.toArray().size()==2,"Captured logical output size is required");
+    const auto dimensions=size.toArray();
+    for(const auto &value:dimensions)require(value.isDouble() && std::isfinite(value.toDouble()) &&
+        value.toDouble()==std::floor(value.toDouble()) && value.toDouble()>=64 && value.toDouble()<=8192,"Invalid logical output size");
+    const auto plasma=archivedBar(legacy).value("plasma").toObject();
+    const auto alignment=plasma.value("alignment").isUndefined()?QJsonValue("center"):plasma.value("alignment");
+    require(alignment.isString() && QStringList{"start","center","end"}.contains(alignment.toString()),"Unrecognized archived alignment");
+    const auto number=[&](const char *key,double fallback) {
+        const auto value=plasma.value(key);require(value.isUndefined() || (value.isDouble() && std::isfinite(value.toDouble())),"Invalid archived length or floating gap");
+        return value.isUndefined()?fallback:value.toDouble();
+    };
+    const auto fraction=std::clamp(number("length",1),.1,1.0);
+    const bool floating=archivedViewSettings(legacy).value("floating").toInt();
+    const auto gap=std::clamp(number("floatingGap",8),0.0,32.0)*(floating?1:0);
+    const auto extent=dimensions[edge=="left" || edge=="right" ? 1:0].toInt();
+    const int length=int(std::floor(std::max(double(std::min(160,extent)),(extent-2*gap)*fraction)+.5));
+    return {{"alignment",alignment.toString()=="start"?1:alignment.toString()=="end"?2:132},
+        {"panelLengthMode",fraction==1 && !floating?0:2},{"minLength",length},{"maxLength",length},{"offset",0}};
+}
+void placementSettings(KConfig &config,uint id,const QString &edge,const QJsonArray &size,const QJsonObject &placement,bool write) {
+    auto base=KConfigGroup(&config,"PlasmaViews").group(QString("Panel %1").arg(id));
+    const bool vertical=edge=="left" || edge=="right";
+    auto resolution=base.group((vertical?QString("Vertical"):QString("Horizontal"))+QString::number(size[vertical?1:0].toInt()));
+    for(auto it=placement.begin();it!=placement.end();++it) {
+        const bool scoped=it.key()=="minLength" || it.key()=="maxLength" || it.key()=="offset";
+        QList<KConfigGroup> groups=scoped?QList<KConfigGroup>{resolution,base.group("Defaults")}:QList<KConfigGroup>{base};
+        for(auto &g:groups)if(write)g.writeEntry(it.key(),it.value().toInt());
+        else require(g.hasKey(it.key()) && g.readEntry(it.key(),-1)==it.value().toInt(),"Native placement did not persist");
+    }
+}
+QJsonArray deferredViewSettings(const QByteArray &legacy,const QJsonObject &view,bool placement=false) {
     const auto plasma=archivedBar(legacy).value("plasma").toObject();QJsonArray deferred;
     const auto add=[&](const QString &key,const QJsonValue &fallback,const QString &reason) {
         deferred.append(QJsonObject{{"legacyKey",key},{"value",plasma.value(key).isUndefined()?fallback:plasma.value(key)},
             {"reason",reason},{"operationalVerified",false}});
     };
     add("visibility","always","Reservations/autohide/window avoidance require the panel controller; not mapped to a false preview policy.");
-    add("alignment","center","Native positioning controller not connected.");
-    add("length",1,"Legacy length is a screen-relative fraction; output geometry must be resolved before converting to native lengths.");
+    if(!placement) {
+        add("alignment","center","Native positioning controller not connected.");
+        add("length",1,"Legacy length is a screen-relative fraction; output geometry must be resolved before converting to native lengths.");
+    }
     add("floatingGap",8,"The native gap comes from the SVG theme, with no equivalent per-panel key.");
     if(view.value("floating").toInt())add("floating",false,"Native floating flag staged; docking in response to touching windows is not connected.");
     if(view.value("panelOpacity").toInt()==0)add("style","translucent","Native Adaptive enum preserved; frame host rejects it until the window backend is connected.");
@@ -102,13 +135,19 @@ QJsonObject stage(const QString &proposalPath) {
     const QByteArray legacy=plan.value("legacyJson").toString().toUtf8();
     require(sha(legacy)==plan.value("sourceSha256").toString(),"Legacy archive hash mismatch");
     const QString edge=archivedEdge(legacy);
-    const auto view=archivedViewSettings(legacy);const auto deferred=deferredViewSettings(legacy,view);
+    const bool placement=plan.contains("placementContractVersion");
+    require(!placement || plan.value("placementContractVersion").toInt(-1)==1,"Unsupported placement proposal contract");
+    const auto view=archivedViewSettings(legacy);const auto deferred=deferredViewSettings(legacy,view,placement);
     const auto location=locationFor(edge);const auto formFactor=formFactorFor(location);
     require(plan.value("version").toInt()==1 && plan.value("panels").isArray(),"Unsupported migration proposal");
     const auto panels=plan.value("panels").toArray();require(!panels.isEmpty(),"No panels in proposal");
     QSet<QString> packages;
     for(const auto &m:Plasma::PluginLoader::self()->listAppletMetaData(QString()))packages.insert(m.pluginId());
     for(const auto &p:panels) {
+        const auto panel=p.toObject();
+        if(placement)require(panel.value("nativePlacementSettings").isObject() &&
+            panel.value("nativePlacementSettings").toObject()==archivedPlacement(legacy,edge,panel.value("outputSize")),"Proposed placement differs from archived configuration and captured output size");
+        else require(!panel.contains("nativePlacementSettings") && !panel.contains("outputSize"),"Placement fields require their proposal contract");
         require(!p.toObject().contains("nativeViewSettings") || p.toObject().value("nativeViewSettings").toObject()==view,"Proposed view settings differ from archived configuration");
         require(!p.toObject().contains("edge") || p.toObject().value("edge").toString()==edge,"Proposed panel edge differs from archived configuration");
         require(!p.toObject().value("outputDescription").toString().isEmpty(),"Missing output identity");
@@ -152,10 +191,17 @@ QJsonObject stage(const QString &proposalPath) {
         require(orderEntry && !c->configScheme()->isImmutable("AppletOrder"),"Original panel order cannot be saved");
         orderEntry->setProperty(order.join(';'));require(c->configScheme()->save(),"Cannot save original panel order");
         writeViewSettings(viewConfig,c->id(),view);
-        nativePanels.append(QJsonObject{{"outputDescription",panel.value("outputDescription")},{"containmentPackage",c->pluginMetaData().pluginId()},
+        QJsonObject result{{"outputDescription",panel.value("outputDescription")},{"containmentPackage",c->pluginMetaData().pluginId()},
             {"edge",edge},{"location",int(location)},{"formFactor",int(formFactor)},
             {"nativeViewSettings",view},{"deferredViewSettings",deferred},{"viewRuntimeVerified",false},
-            {"containmentId",int(c->id())},{"appletOrder",order.join(';')},{"widgets",widgets}});
+            {"containmentId",int(c->id())},{"appletOrder",order.join(';')},{"widgets",widgets}};
+        if(placement) {
+            const auto settings=archivedPlacement(legacy,edge,panel.value("outputSize"));
+            placementSettings(viewConfig,c->id(),edge,panel.value("outputSize").toArray(),settings,true);
+            result["outputSize"]=panel.value("outputSize");result["nativePlacementSettings"]=settings;
+            result["outputGeometryVerified"]=false;
+        }
+        nativePanels.append(result);
     }
     corona.saveLayout(work.path()+"/layout");
     require(corona.config()->sync(),"Cannot flush native layout to disk");
@@ -166,6 +212,7 @@ QJsonObject stage(const QString &proposalPath) {
     QJsonObject report{{"status","staged-native-layout"},{"sourceSha256",sha(legacy)},{"activationAllowed",false},{"orientationContractVersion",1},
         {"viewSettingsContractVersion",1},{"viewSettingsFile","plasmashellrc"},{"panels",nativePanels},
         {"limitations","Native thickness/floating/opacity values staged, not full behavior equivalence. Deferred view settings, runtime capabilities, activation and rollback still require adapters."}};
+    if(placement)report["placementContractVersion"]=1;
     write(work.path()+"/report.json",QJsonDocument(report).toJson());
     require(QDir().rename(work.path(),destination),"Cannot publish staged migration atomically");work.setAutoRemove(false);
     report["directory"]=destination;return report;
@@ -185,13 +232,16 @@ QJsonObject verify(const QString &directory) {
         }
     }
     const bool viewContract=report.contains("viewSettingsContractVersion");
+    const bool placement=report.contains("placementContractVersion");
+    require(!placement || (viewContract && report.value("placementContractVersion").toInt(-1)==1),"Unsupported placement report contract");
+    if(!placement)for(const auto &p:report.value("panels").toArray())require(!p.toObject().contains("nativePlacementSettings") && !p.toObject().contains("outputSize"),"Placement fields require their report contract");
     if(!viewContract) {
         require(!report.contains("viewSettingsFile") && !QFileInfo::exists(directory+"/plasmashellrc"),"Native view staging artifact has no report contract");
         for(const auto &p:report.value("panels").toArray())require(!p.toObject().contains("nativeViewSettings"),"Native view settings have no report contract");
     }
     if(viewContract) {
         require(report.value("viewSettingsContractVersion").toInt(-1)==1 && report.value("viewSettingsFile").toString()=="plasmashellrc","Unsupported native panel-view report contract");
-        const auto expected=archivedViewSettings(archived);const auto deferred=deferredViewSettings(archived,expected);
+        const auto expected=archivedViewSettings(archived);const auto deferred=deferredViewSettings(archived,expected,placement);
         require(QFileInfo::exists(directory+"/plasmashellrc"),"Native panel-view staging file missing");
         KConfig viewConfig(directory+"/plasmashellrc",KConfig::SimpleConfig);
         for(const auto &p:report.value("panels").toArray()) {
@@ -200,6 +250,11 @@ QJsonObject verify(const QString &directory) {
             require(panel.contains("deferredViewSettings") && panel.value("deferredViewSettings").toArray()==deferred,"Deferred view capabilities differ from archived configuration");
             require(panel.value("viewRuntimeVerified").isBool() && !panel.value("viewRuntimeVerified").toBool(),"Staging cannot certify view runtime behavior");
             verifyViewSettings(viewConfig,uint(panel.value("containmentId").toInt()),expected);
+            if(placement) {
+                const auto settings=archivedPlacement(archived,archivedEdge(archived),panel.value("outputSize"));
+                require(panel.value("nativePlacementSettings").toObject()==settings && panel.value("outputGeometryVerified").isBool() && !panel.value("outputGeometryVerified").toBool(),"Placement report differs from archive or claims unverified geometry");
+                placementSettings(viewConfig,uint(panel.value("containmentId").toInt()),archivedEdge(archived),panel.value("outputSize").toArray(),settings,false);
+            }
         }
     }
     MigrationCorona corona;corona.loadLayout(directory+"/layout");

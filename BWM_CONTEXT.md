@@ -116,7 +116,9 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   protocolo de KWin (sólo `--native-policy`); autoocultar medido en Hyprland, esquivar aceptado
   por el usuario en ambos sentidos tras volver a entrar (§313). Iteración 6 (§314): mover/clonar
   paneles y edición transaccional de perfiles; varios sin reserva en la misma salida, uno por
-  salida con política nativa. Escritorio y resto de R5 pendientes.
+  salida con política nativa. Iteración 7 (§315): alineación/longitud de bar.plasma migradas
+  con tamaño lógico explícito por salida; formatos anteriores conservados. Escritorio y resto
+  de R5 pendientes.
 * **Breeze II (2026-11-12):** `docs/BREEZE_PLAN_V2.md`, R0 entregada con referencia y límites documentados;
   R1 corrige origen de especiales al minimizar, activación común y filtro de Alt+Tab (pruebas
   aisladas; fallo visual original pendiente). R2 tiene primer KCM QWidget real, descubierto por
@@ -5363,3 +5365,32 @@ git status; git log --oneline -5; git push origin main
 * **Aceptación del usuario:** con el ratón en MSI, «Sí, clona y mueve bien» en el preview sin
   política de reservas. No acredita el perfil persistente, todos los bordes/destinos o bandeja.
   Ensayo detenido con acuse y registro inactivo; proveedor sigue activo y configerrors vacío.
+
+
+### 315. R5, iteración 7: migrar alineación/longitud por salida lógica (2026-11-19)
+
+* **Git antes de continuar:** `91afe29` y `74d3850` subidos a GitLab y GitHub por petición
+  explícita; `ls-remote` confirmó `74d3850` en ambos. Cambios ajenos pendientes excluidos.
+* **Hecho:** `migration.proposal(..., output_sizes=...)` exige tamaños lógicos completos por
+  descripción, valida datos y genera placementContractVersion=1 opcional. C++ recalcula desde
+  el JSON archivado: alineaciones 1/132/2, longitud por el eje del borde con clamp/mínimo de
+  PanelLogic y redondeo al entero lógico (medios arriba), FillAvailable para fracción 1 sin
+  flotación y Custom para las demás. Escribe claves/grupos KDE originales; offset inicial 0.
+  Flotación captura la longitud nominal sin tocar, descontando el gap archivado; pintura y
+  márgenes posteriores siguen al SVG nativo. No se inventa una clave de tema para floatingGap.
+* **Compatibilidad:** planes sin captura mantienen el contrato anterior. Se verifica el
+  plasmashellrc separado, el informe y el archivo de origen; claves inconsistentes o tamaños
+  inválidos se rechazan. outputGeometryVerified/activationAllowed false: no prueba EDID ni
+  habilita el panel diario. La captura automática en producción sigue sin activarse.
+* **Ensayos:** QtTest de 4 bordes × 3 alineaciones con dos salidas lógicas, vista Panel.qml
+  original, longitudes/mode/alineación y rechazos; Python de clamps/redondeo/flotación/tipos;
+  siete propuestas Python→C++ y lectura nativa en la matriz con ejemplos KDE y Andromeda.
+  Ajustada una expectativa vieja de check-isolated: al cerrar el perfil ahora debe crear
+  otra generación (iteración 6), manteniendo archivo previo y bindings, no conservar su ID.
+* **Pendiente:** escritorio, varias reservas en una salida, editor a escala fraccionaria,
+  comparación visual y arrastre/desinstalar/alternativas. No se cambiaron monitores físicos
+  ni se repitieron ensayos con ratón ya aceptados. Informe: BREEZE_R5_RESULTS.md.
+* **Verificación final:** configuración local CTest 1/1 normal (49,27 s) y 1/1 ASan
+  (`detect_leaks=0`, 55,02 s); el test comprueba también coordenadas del marco, no sólo
+  propiedades. Python R4 262/262 (23 migración). Matriz completa con dos ejemplos KDE y
+  Andromeda, siete casos nuevos por dos salidas y dos generaciones tras cierres limpios: pasa.

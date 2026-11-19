@@ -379,6 +379,7 @@ with tempfile.TemporaryDirectory(prefix='bwm-r4-check-') as tmp:
     wrapper=Path(__file__).with_name('preview-isolated.py')
     publisher=Path(__file__).resolve().parents[2]/'config/hypr/skins/plasma/scripts/panel-session.py'
     registry=root/'runtime/bwm-plasma-host-preview/active.json'
+    committedGenerations={profile['generation']}
     for restart in range(2):
         logPath=root/'profile-wrapper.log'
         with logPath.open('w') as log:
@@ -396,13 +397,18 @@ with tempfile.TemporaryDirectory(prefix='bwm-r4-check-') as tmp:
                 assert len(ack['panels'])==2 and all(not p['visible'] for p in ack['panels'])
                 run(['python3',publisher,'event','before','plasma','retro']);run(['python3',publisher,'stop'])
                 assert child.wait(timeout=5)==0 and not registry.exists()
+                committed=json.loads(run([a.binary,'--profile-info',profileRoot]))
+                assert committed['generation'] not in committedGenerations and committed['panels']==profile['panels']
+                committedGenerations.add(committed['generation'])
+                assert Path(profile['layoutFile']).read_bytes()==initialLayout
+                assert Path(committed['viewSettingsFile']).read_bytes()==initialViews
             finally:
                 if child.poll() is None:
                     child.send_signal(signal.SIGINT)
                     try:child.wait(timeout=7)
                     except subprocess.TimeoutExpired:child.kill();child.wait()
     reopened=json.loads(run([a.binary,'--profile-info',profileRoot]))
-    assert reopened['generation']==profile['generation'] and reopened['panels']==profile['panels']
+    assert reopened['generation']==committed['generation'] and reopened['panels']==profile['panels']
     assert len(list((profileRoot/'snapshots').iterdir()))==3 # initial + two clean stops
     restored=json.loads(run([a.binary,'--restore-profile',snapshot]))
     assert restored['generation']!=profile['generation'] and Path(restored['layoutFile']).read_bytes()==initialLayout
@@ -422,6 +428,7 @@ with tempfile.TemporaryDirectory(prefix='bwm-r4-check-') as tmp:
     run([a.binary,'--profile-info',profileRoot])
     report['persistentProfile']={'initial':profile,'baseline':baseline,'restored':restored,
         'wrapperRestarts':2,'nativeBytesPreserved':True,'bindingsPreserved':True,'autoCheckpointsOnCleanStop':2,
+        'transactionalGenerationsOnCleanStop':len(committedGenerations)-1,
         'singleOwnerEnforced':True,'existingImportRejected':True,'tamperedSnapshotRejected':True,
         'invalidBindingsRejected':True,'symlinkNativeFileRejected':True,'oldGenerationRetained':True,'activationAllowed':False}
     # Exercise the persistent authority physically OUTSIDE /tmp, inside the
@@ -513,6 +520,26 @@ with tempfile.TemporaryDirectory(prefix='bwm-r4-check-') as tmp:
         shutil.rmtree(directory)
     report['orientationMigration']={'cases':oriented,'inconsistentProposalRejected':True,'invalidSourceRejected':True,
         'missingOrientationReportRejected':True,'oldBottomReportReadable':True,'activationAllowed':False}
+    placementCases=[]
+    sizes={'MSI fixture':[1281,800],'LG fixture':[1728,960]}
+    for edge,alignment,fraction,floating in (('top','start',.5,False),('bottom','center',.65,False),
+            ('left','end',.5,False),('right','center',.5,False),('top','end',1,False),
+            ('bottom','start',.65,True),('left','start',.1,False)):
+        source={'edge':edge,'alignment':alignment,'length':fraction,'floating':floating,'style':'opaque','widgets':['clock']}
+        archived=json.dumps({'bar':{'plasma':source},'foreign':{'keep':42}})+'\n'
+        plan=migration.proposal(archived,list(sizes),output_sizes=sizes)
+        proposalPath.write_text(json.dumps(plan))
+        stage=json.loads(run([a.binary,'--stage-migration',proposalPath]));directory=Path(stage['directory'])
+        verified=json.loads(run([a.binary,'--verify-stage',directory]))
+        assert verified['placementContractVersion']==1 and not verified['activationAllowed']
+        for panel in verified['panels']:
+            assert panel['nativePlacementSettings']==migration.native_placement_settings(source,edge,sizes[panel['outputDescription']])
+            assert panel['outputSize']==sizes[panel['outputDescription']] and panel['outputGeometryVerified'] is False
+            assert not {'alignment','length'} & {v['legacyKey'] for v in panel['deferredViewSettings']}
+        assert (directory/'legacy.json').read_text()==archived
+        placementCases.append({'edge':edge,'alignment':alignment,'fraction':fraction,'floating':floating,'nativeReadback':verified})
+        shutil.rmtree(directory)
+    report['placementMigration']={'cases':placementCases,'pythonCppReadbackPassed':True,'hardwareGeometryVerified':False,'activationAllowed':False}
     # Three native preferences in a separate plasmashellrc staging artifact. Never
     # use/replace the active file; exercise the original frame reading that artifact.
     livePath=root/'config/plasmashellrc'

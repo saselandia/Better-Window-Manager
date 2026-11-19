@@ -311,6 +311,9 @@ siendo el nombre del escritorio original que imita Breeze.
   Vida QML y máscaras se validan al actualizar.
   Migración: conservar bar.plasma.edge o fallback bar.bottom (false→top), sin fijar BottomEdge/
   Horizontal; Corona serializa Location/FormFactor y el probe comprueba el orden por su eje.
+  Alineación/longitud: placementContractVersion=1 sólo con outputSize lógico explícito por
+  descripción; recalcular desde el archivo de origen y conservar formatos de staging anteriores.
+  Es una captura para convertir preferencias, no certifica geometría física ni EDID (§315).
   El plasmashellrc de staging sólo contiene paneles preparados: no sustituir con él el archivo
   completo de sesión. Flags nativos migrados no certifican reservas/docking/Adaptive sin backend.
   PanelRuntime coordina vistas por descripción/skin; el hook común sólo controla una prueba

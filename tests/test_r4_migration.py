@@ -124,3 +124,46 @@ class MigrationTest(unittest.TestCase):
         self.assertEqual(set(plan['panels'][0]['nativeViewSettings']),{'thickness','floating','panelOpacity'})
         self.assertEqual(plan['legacyJson'],text)
         self.assertFalse(plan['commitAllowed'])
+
+    def test_placement_uses_each_logical_output_size_and_keeps_source(self):
+        text=json.dumps({'bar':{'plasma':{'widgets':['clock'],'length':.65,'alignment':'center'}}})+'\n'
+        plan=m.proposal(text,['A','B'],{'A':[2560,1440],'B':[3840,2160]})
+        self.assertEqual(plan['placementContractVersion'],1)
+        for panel,length in zip(plan['panels'],(1664,2496)):
+            self.assertEqual(panel['nativePlacementSettings'],{'alignment':132,'panelLengthMode':2,'minLength':length,'maxLength':length,'offset':0})
+        self.assertEqual(plan['legacyJson'],text)
+        self.assertFalse(plan['commitAllowed'])
+
+    def test_placement_all_edges_alignments_and_vertical_extent(self):
+        for edge in ('left','right','top','bottom'):
+            for alignment,qt in (('start',1),('center',132),('end',2)):
+                p=m.native_placement_settings({'length':.5,'alignment':alignment},edge,[1728,960])
+                length=480 if edge in ('left','right') else 864
+                self.assertEqual(p,{'alignment':qt,'panelLengthMode':2,'minLength':length,'maxLength':length,'offset':0})
+
+    def test_placement_clamps_like_legacy_and_rounds_positive_halves_up(self):
+        for length,expected,mode in ((0,256,2),(-2,256,2),(3,2560,0),(.25,640,2)):
+            p=m.native_placement_settings({'length':length},'top',[2560,1440])
+            self.assertEqual((p['minLength'],p['maxLength'],p['panelLengthMode']),(expected,expected,mode))
+        self.assertEqual(m.native_placement_settings({'length':.1},'top',[800,600])['minLength'],160)
+        self.assertEqual(m.native_placement_settings({'length':.5},'top',[1281,800])['minLength'],641)
+        self.assertEqual(m.native_placement_settings({},'top',[100,80])['minLength'],100)
+
+    def test_floating_length_accounts_for_archived_gap_without_native_gap_key(self):
+        p=m.native_placement_settings({'length':.65,'floating':True},'bottom',[2560,1440])
+        self.assertEqual(p['minLength'],1654)
+        self.assertEqual(p['panelLengthMode'],2)
+        self.assertNotIn('floatingGap',p)
+        self.assertEqual(m.native_placement_settings({'floating':True,'floatingGap':100},'left',[800,600])['minLength'],536)
+
+    def test_invalid_placement_is_rejected_without_guessing_geometry(self):
+        with self.assertRaises(ValueError): m.native_placement_settings({},'diagonal',[800,600])
+        for size in (None,[],[800],[800,600,1],[True,600],[800.5,600],[32,600],[9000,600]):
+            with self.subTest(size=size),self.assertRaises(ValueError):
+                m.proposal('{}',['A'],{'A':size})
+        for key,values in (('alignment',('',None,True,42,[])),('length',(True,None,'0.5',float('nan'),10**400)),('floatingGap',('8',None,float('inf')))):
+            for value in values:
+                with self.subTest(key=key,value=value),self.assertRaises(ValueError):
+                    m.proposal(json.dumps({'bar':{'plasma':{key:value}}}),['A'],{'A':[800,600]})
+        for sizes in ({},{'B':[800,600]},{'A':[800,600],'B':[800,600]}):
+            with self.subTest(sizes=sizes),self.assertRaises(ValueError): m.proposal('{}',['A'],sizes)

@@ -1317,3 +1317,35 @@ escala fraccionaria y comparación visual).
 Al actualizar upstream, revisar `shell/panelconfigview.*`, los `Q_PROPERTY` de `panelview.h`,
 `views/Desktop.qml` (contrato de la barra lateral), `explorer/WidgetExplorer.qml` y el grupo
 `[Panel]` de `desktoppackage/contents/defaults`.
+
+
+## R5: migrar alineación y longitud con tamaños lógicos capturados
+
+`migration.proposal(legacy_json, descriptions, output_sizes=...)` admite un mapa explícito
+por descripción, con `[ancho, alto]` en unidades lógicas de cada salida. No convierte píxeles
+físicos ni presupone escala 1. Ejemplo con datos de ensayo:
+
+```python
+plan = proposal(legacy_json, ["Monitor A", "Monitor B"], output_sizes={
+    "Monitor A": [1281, 800], "Monitor B": [1728, 960],
+})
+```
+
+La propuesta sigue sin activar ni escribir el panel diario. Añade `placementContractVersion=1`,
+`outputSize` y `nativePlacementSettings` al artefacto de staging; C++ recalcula desde el JSON
+archivado y ese tamaño, y rechaza cambios incompatibles. Los valores terminan en las claves
+KDE existentes de `plasmashellrc`: `alignment`, `panelLengthMode`, `minLength`, `maxLength` y
+`offset`, con grupos `Defaults` y `HorizontalN`/`VerticalN` para las longitudes.
+
+`start/center/end` se traduce a `AlignLeft/AlignCenter/AlignRight`. La longitud usa el eje del
+borde, el clamp de fracción 0,1–1 y el mínimo de 160 del panel heredado, redondeando al entero
+lógico más próximo (medios hacia arriba). Fracción 1 sin flotación conserva FillAvailable;
+las demás usan Custom. Con flotación se captura el rectángulo mostrado sin ventana tocando,
+incluido su `floatingGap` original; los márgenes y la pintura posteriores los decide el SVG
+nativo. No se introduce una clave KDE inventada para ese hueco ni se promete equivalencia de
+sus animaciones/adaptación. El desplazamiento nativo inicial es 0.
+
+Si no se aporta el mapa, los planes/archivos anteriores mantienen su contrato y dejan
+alineación/longitud diferidas. Un tamaño explícito permite convertir la preferencia, pero no
+certifica el EDID ni la geometría de una sesión: `outputGeometryVerified` permanece false.
+El llamador debe capturar y asociar las salidas, y volver a preparar la propuesta si cambian.

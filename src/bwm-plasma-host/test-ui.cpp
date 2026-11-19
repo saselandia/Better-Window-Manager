@@ -65,6 +65,7 @@ Q_IMPORT_PLUGIN(BwmWindowSystemPlugin)
 #include <KConfigGroup>
 #include <QtTest>
 #include <functional>
+#include <cmath>
 class TestCorona:public Plasma::Corona {
 public: QRect screenGeometry(int)const override { return QRect(0,0,1024,768); }
 };
@@ -1866,6 +1867,62 @@ private Q_SLOTS:
             }
         }
         QCOMPARE(configured,1);QVERIFY(runtime.setSkin("default"));
+    }
+    void migratedPlacementReadsOriginalPanelFrames() {
+        TestOutput first("DP-181","Placement A","A",{0,0,1281,800}),second("DP-182","Placement B","B",{1281,0,1728,960});
+        const QStringList descriptions{"BWM Test Placement A A","BWM Test Placement B B"};
+        const QList<QSize> sizes{{1281,800},{1728,960}};
+        const QDir config(qEnvironmentVariable("XDG_CONFIG_HOME"));const auto stage=config.filePath("bwm-native-staged");
+        const auto planPath=config.filePath("bwm-placement-plan.json");int caseNumber=0;
+        const auto save=[&](const QJsonObject &plan){QSaveFile file(planPath);return file.open(QIODevice::WriteOnly) && file.write(QJsonDocument(plan).toJson())>0 && file.commit();};
+        for(const QString edge:{"top","bottom","left","right"})for(const QString alignment:{"start","center","end"}) {
+            const bool vertical=edge=="left" || edge=="right";const int align=alignment=="start"?1:alignment=="end"?2:132;
+            const auto legacy=QJsonDocument(QJsonObject{{"bar",QJsonObject{{"plasma",QJsonObject{{"edge",edge},{"alignment",alignment},{"length",.5},{"style","opaque"},{"widgets",QJsonArray{"clock"}}}}}},{"VendorKeep",42}}).toJson();
+            QJsonArray panels;
+            for(int i=0;i<2;++i) {
+                const int extent=vertical?sizes[i].height():sizes[i].width();const int length=int(std::floor(extent*.5+.5));
+                panels.append(QJsonObject{{"outputDescription",descriptions[i]},{"containmentPackage","org.kde.panel"},
+                    {"widgets",QJsonArray{QJsonObject{{"package","org.bwm.r4.shared-config"},{"nativeSettings",QJsonObject()}}}},
+                    {"outputSize",QJsonArray{sizes[i].width(),sizes[i].height()}},
+                    {"nativePlacementSettings",QJsonObject{{"alignment",align},{"panelLengthMode",2},{"minLength",length},{"maxLength",length},{"offset",0}}}});
+            }
+            QJsonObject plan{{"version",1},{"placementContractVersion",1},{"legacyJson",QString::fromUtf8(legacy)},
+                {"sourceSha256",QString::fromLatin1(QCryptographicHash::hash(legacy,QCryptographicHash::Sha256).toHex())},{"panels",panels}};
+            if(caseNumber==0) {
+                auto forged=plan;auto wrong=panels;auto p=wrong[0].toObject();auto placement=p["nativePlacementSettings"].toObject();placement["minLength"]=777;p["nativePlacementSettings"]=placement;wrong[0]=p;forged["panels"]=wrong;
+                QVERIFY(save(forged));QVERIFY_EXCEPTION_THROWN(BwmMigration::stage(planPath),std::runtime_error);QVERIFY(!QFileInfo::exists(stage));
+                forged=plan;wrong=panels;p=wrong[0].toObject();p["outputSize"]=QJsonArray{true,800};wrong[0]=p;forged["panels"]=wrong;
+                QVERIFY(save(forged));QVERIFY_EXCEPTION_THROWN(BwmMigration::stage(planPath),std::runtime_error);
+            }
+            QVERIFY(save(plan));BwmMigration::stage(planPath);const auto report=BwmMigration::verify(stage);
+            QCOMPARE(report["placementContractVersion"].toInt(),1);
+            for(const auto &row:report["panels"].toArray()) {
+                const auto p=row.toObject();QVERIFY(!p["outputGeometryVerified"].toBool());
+                for(const auto &entry:p["deferredViewSettings"].toArray()) {
+                    QVERIFY(entry.toObject()["legacyKey"]!="alignment");QVERIFY(entry.toObject()["legacyKey"]!="length");
+                }
+            }
+            if(caseNumber==0) {
+                KConfig prefs(stage+"/plasmashellrc",KConfig::SimpleConfig);const auto id=report["panels"].toArray()[0].toObject()["containmentId"].toInt();
+                auto g=KConfigGroup(&prefs,"PlasmaViews").group(QString("Panel %1").arg(id)).group("Defaults");g.writeEntry("minLength",777);QVERIFY(prefs.sync());
+                QVERIFY_EXCEPTION_THROWN(BwmMigration::verify(stage),std::runtime_error);g.writeEntry("minLength",641);QVERIFY(prefs.sync());
+            }
+            const auto destination=config.filePath(QString("bwm-ui-placement-profile-%1").arg(caseNumber++));ProfileStore::importStage(stage,destination);
+            {
+                ProfileStore profile(destination);ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+                corona.loadLayout(profile.layoutFile());PanelRuntime runtime(&corona,profile.viewSettingsFile(),true);QVERIFY(runtime.setAssignments(profile.assignments()));QVERIFY(runtime.setSkin("plasma"));
+                for(auto *c:corona.containments()) {
+                    QTRY_VERIFY(runtime.view(c->id()));auto *view=runtime.view(c->id());const auto size=view->screen()->size();const int extent=vertical?size.height():size.width();
+                    const int length=int(std::floor(extent*.5+.5));QCOMPARE(view->alignment(),align);QCOMPARE(view->lengthMode(),2);
+                    QTRY_COMPARE(vertical?view->height():view->width(),length);QCOMPARE(view->minimumLength(),length);QCOMPARE(view->maximumLength(),length);
+                    const int start=alignment=="start"?0:alignment=="end"?extent-length:(extent-length)/2;
+                    const int origin=vertical?view->screen()->geometry().top():view->screen()->geometry().left();
+                    QTRY_COMPARE(vertical?view->property("bwmPanelRect").toRect().top():view->property("bwmPanelRect").toRect().left(),origin+start);
+                }
+                QVERIFY(runtime.setSkin("default"));
+            }
+            QFile archive(stage+"/legacy.json");QVERIFY(archive.open(QIODevice::ReadOnly));QCOMPARE(archive.readAll(),legacy);archive.close();QVERIFY(QDir(stage).removeRecursively());
+        }
     }
     void profileEditingMovesAndClonesNativePanels() {
         TestOutput first("DP-171","Edit A","A",{0,0,1280,800}),second("DP-172","Edit B","B",{1280,0,1600,900});

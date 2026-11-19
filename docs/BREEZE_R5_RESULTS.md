@@ -458,3 +458,54 @@ política de reservas, «Sí, clona y mueve bien». Confirma clonación y movimi
 no se deduce una prueba del perfil persistente, de todos los destinos/bordes o de bandeja.
 Preview detenido con acuse y registro inactivo; proveedor de escritorios sigue activo,
 sin errores de configuración de Hyprland.
+
+
+## Iteración 7 (2026-11-19) — Migración de alineación y longitud
+
+### Cambio
+
+`migration.proposal` acepta `output_sizes`, un mapa completo por descripción con tamaños
+**lógicos** explícitos. Genera un contrato opcional `placementContractVersion=1`; C++
+recalcula la conversión desde el origen archivado, sin confiar en las claves nativas
+propuestas. No se toca la configuración del usuario ni se activa un perfil.
+
+- `start/center/end` → alineaciones Qt 1/132/2 de `PanelView`.
+- Longitud según el eje del borde, fracción limitada a 0,1–1 y mínimo de 160 (o el eje si es
+  menor), como `PanelLogic.geometry`; redondeo lógico al entero más próximo, medios arriba.
+- Fracción 1 sin flotación → FillAvailable; el resto → Custom con mínimo/máximo iguales.
+- La flotación toma la longitud nominal sin ventana tocando, descontando el hueco archivado.
+  La pintura/márgenes posteriores siguen al SVG de Plasma. El hueco sigue como dato diferido;
+  no se inventa una opción nativa `floatingGap`. Desplazamiento inicial 0.
+- Escritura en `PlasmaViews/Panel N` y sus grupos nativos `Defaults` y
+  `Horizontal<ancho>`/`Vertical<alto>`. La verificación relee los dos destinos de longitud y
+  detecta valores alterados, tamaños inválidos y propuestas inconsistentes.
+- Los planes sin tamaños y todos los formatos de staging anteriores conservan su contrato;
+  no se reinterpretan sus archivos. Un tamaño capturado no certifica la salida física:
+  `outputGeometryVerified=false`, `activationAllowed=false`.
+
+### Pruebas y límites
+
+`migratedPlacementReadsOriginalPanelFrames`: cuatro bordes × tres alineaciones, dos salidas
+lógicas de 1281×800 y 1728×960, lectura del `Panel.qml` instalado por `PanelRuntime`; longitudes,
+alineación y modo reales de la vista, archivo de origen intacto y rechazo de longitud/tamaño
+forjados. Pruebas Python de clamps, flotación, redondeo y tipos inválidos. La matriz de
+`check-isolated.py` añade siete propuestas Python→C++→lectura nativa (dos salidas cada una).
+
+Al ejecutar la matriz completa se encontró una expectativa anterior a la iteración 6:
+exigía que `--serve-profile` conservara la generación. El ensayo ahora comprueba dos
+generaciones nuevas tras dos cierres limpios, conserva intacto el layout original y exige
+los mismos bindings/preferencias. No se cambia el nuevo contrato transaccional para acomodar
+la prueba antigua.
+
+Sin nueva prueba visual ni cambio de pantallas físicas. No se certifica comportamiento del
+editor a escala fraccionaria por usar tamaños lógicos impares en un fixture. Siguen pendientes
+el anfitrión de escritorio, reservas coordinadas de varios paneles, escala del editor,
+comparación con Plasma real y arrastre/desinstalar/alternativas. La captura automática de
+tamaños en una migración de producción tampoco está activada.
+
+
+Verificación final de la iteración 7: CTest `isolated-local-configuration` **1/1 normal**
+(49,27 s) y **1/1 ASan** con `detect_leaks=0` (55,02 s), incluida la posición lógica real del
+marco para las 12 combinaciones. Python R4 **262/262** (23 de migración). Matriz
+`check-isolated.py` completa con tres paquetes (dos ejemplos KDE y Andromeda), siete casos
+nuevos de dos salidas y dos generaciones transaccionales tras cierres limpios: pasa.
