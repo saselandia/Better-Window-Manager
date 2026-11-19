@@ -304,8 +304,12 @@ siendo el nombre del escritorio original que imita Breeze.
   PanelViewHost carga Panel.qml instalado: length es preferencia, distinta de los límites de
   superficie. Sus setters son vista previa; applyViewSettings guarda explícitamente las seis
   claves admitidas en plasmashellrc nativo, respetando claves ajenas, kdedefaults e inmutabilidad.
-  --native-policy añade panelVisibility 0–3 (1/2 sin reserva) con LayerShellQt; no confirma
-  área útil real. Un panel por salida en ese ensayo; varios se bloquean hasta coordinar layout.
+  --native-policy añade panelVisibility 0–3 con LayerShellQt; 1/2 no reservan fuera de edición.
+  Varios paneles por salida: sólo el NormalPanel más grueso de cada borde reserva, como Plasma;
+  empate por ID menor, no sumar ni apilar automáticamente. En edición se conservan zonas
+  positivas y se da una zona del marco completo a los que no reservaban; se congela hasta salir.
+  Pedir QQuickWindow::update() al cambiar sólo la zona: requestUpdate puede no hacer commit
+  de layer-shell con escena estática. Petición de reserva no certifica área útil universal (§316).
   Cambiar salida/orientación exige releer antes de guardar. Adaptive/efectos siguen
   sin backend; autoocultar/esquivar sólo con --native-policy y los puentes de R5.
   Vida QML y máscaras se validan al actualizar.

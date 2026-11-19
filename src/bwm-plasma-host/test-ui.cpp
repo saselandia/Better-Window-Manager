@@ -1584,11 +1584,11 @@ private Q_SLOTS:
         QCOMPARE(view->screen(),first.screen());QTRY_COMPARE(role->exclusionZone(),42);
         QTRY_VERIFY(view->presentationState().value("renderReady").toBool());
         QVERIFY(runtime.readiness().value("blockers").toStringList().contains("reserved-area-unverified"));
-        // A second native-policy panel on the same output is explicitly blocked
-        // until a multi-panel placement/stacking controller is available.
+        // Opposite edges on the same output keep independent native reservations.
         auto *b=corona.createContainment("org.kde.panel");QVERIFY(b);b->setLocation(Plasma::Types::TopEdge);b->setFormFactor(Plasma::Types::Horizontal);QVERIFY(b->createApplet("org.bwm.r4.shared-config"));
-        QVERIFY(runtime.setAssignments({{a->id(),descriptionA},{b->id(),descriptionA}}));QVERIFY(!runtime.view(a->id()) && !runtime.view(b->id()));
-        for(const auto &row:runtime.panels())QCOMPARE(row.toMap().value("status").toString(),"native-policy-output-conflict");
+        QVERIFY(runtime.setAssignments({{a->id(),descriptionA},{b->id(),descriptionA}}));QVERIFY(runtime.view(a->id()) && runtime.view(b->id()));
+        QTRY_COMPARE(LayerShellQt::Window::get(runtime.view(a->id()))->exclusionZone(),42);
+        QTRY_COMPARE(LayerShellQt::Window::get(runtime.view(b->id()))->exclusionZone(),runtime.view(b->id())->thickness());
         QVERIFY(runtime.setAssignments({{a->id(),descriptionA},{b->id(),descriptionB}}));QVERIFY(runtime.view(a->id()) && runtime.view(b->id()));
         QVERIFY(runtime.view(b->id())->applyViewSettings({{"panelVisibility",3}}));QTRY_COMPARE(LayerShellQt::Window::get(runtime.view(b->id()))->exclusionZone(),-1);
         QTRY_COMPARE(LayerShellQt::Window::get(runtime.view(a->id()))->exclusionZone(),42);
@@ -1597,6 +1597,52 @@ private Q_SLOTS:
         {KConfig file(prefs,KConfig::SimpleConfig);const auto base=KConfigGroup(&file,"PlasmaViews").group(QString("Panel %1").arg(a->id()));
             QCOMPARE(base.readEntry("VendorKeep",0),42);QCOMPARE(base.readEntry("panelVisibility",-1),0);
             QVERIFY(!base.group("Horizontal1280").hasKey("panelVisibility"));}
+    }
+    void nativePanelsShareReservationsPerScreenAndEdge() {
+        TestOutput first("DP-191","Shared A","A",{0,0,1280,800}),second("DP-192","Shared B","B",{1280,0,1280,900});
+        const QString A="BWM Test Shared A A",B="BWM Test Shared B B";
+        const QDir config(qEnvironmentVariable("XDG_CONFIG_HOME"));const auto prefs=config.filePath("bwm-shared-reservations-plasmashellrc");QFile::remove(prefs);
+        ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout(config.filePath("bwm-shared-reservations-layout"));
+        const auto panel=[&](Plasma::Types::Location edge) {
+            auto *c=corona.createContainment("org.kde.panel");if(c){c->setLocation(edge);c->setFormFactor(Plasma::Types::Horizontal);c->createApplet("org.bwm.r4.shared-config");}return c;
+        };
+        auto *a=panel(Plasma::Types::BottomEdge),*b=panel(Plasma::Types::BottomEdge),*c=panel(Plasma::Types::TopEdge),*d=panel(Plasma::Types::BottomEdge);QVERIFY(a && b && c && d);
+        const auto aId=a->id(),bId=b->id(),cId=c->id(),dId=d->id();
+        PanelRuntime runtime(&corona,prefs,true,nullptr,true);runtime.setOutputMovesAllowed(true);runtime.setPanelCloningAllowed(true);
+        QVERIFY(runtime.setAssignments({{aId,A},{bId,A},{cId,A},{dId,A}}));QVERIFY(runtime.setSkin("plasma"));
+        const auto zone=[&](uint id){auto *v=runtime.view(id);return v?LayerShellQt::Window::get(v)->exclusionZone():-999;};
+        for(auto id:{aId,bId,cId,dId})QTRY_VERIFY(runtime.view(id));
+        for(const auto &[id,thickness]:{std::pair{aId,40},std::pair{bId,56},std::pair{cId,40},std::pair{dId,56}})
+            QVERIFY(runtime.view(id)->applyViewSettings({{"thickness",thickness},{"panelLengthMode",2},{"minLength",360},{"maxLength",360}}));
+        QTRY_COMPARE(zone(aId),-1);QTRY_COMPARE(zone(bId),56);QTRY_COMPARE(zone(cId),40);QTRY_COMPARE(zone(dId),-1);
+        QVERIFY(runtime.view(bId)->capabilities().value("reservationOwner").toBool());QVERIFY(!runtime.view(dId)->capabilities().value("reservationOwner").toBool());
+        // A thicker candidate takes ownership; ties always use the lower ID.
+        QVERIFY(runtime.view(bId)->applyViewSettings({{"thickness",44}}));QTRY_COMPARE(zone(bId),-1);QTRY_COMPARE(zone(dId),56);
+        QVERIFY(runtime.view(dId)->applyViewSettings({{"panelVisibility",1}}));QTRY_COMPARE(zone(dId),-1);QTRY_COMPARE(zone(bId),44);
+        QVERIFY(runtime.view(bId)->applyViewSettings({{"panelVisibility",3}}));QTRY_COMPARE(zone(bId),-1);QTRY_COMPARE(zone(aId),40);
+        runtime.view(aId)->hide();QTRY_COMPARE(zone(aId),-1);QTRY_VERIFY(!runtime.view(aId)->capabilities().value("reservationOwner").toBool());
+        runtime.view(aId)->show();QTRY_COMPARE(zone(aId),40);
+        a->destroy();QTRY_VERIFY(!runtime.view(aId));QTRY_COMPARE(zone(cId),40);
+        QVERIFY(runtime.view(bId)->applyViewSettings({{"panelVisibility",0}}));QTRY_COMPARE(zone(bId),44);
+        c->setLocation(Plasma::Types::BottomEdge);QTRY_VERIFY(runtime.view(cId) && runtime.view(cId)->containment()->location()==Plasma::Types::BottomEdge);
+        QTRY_COMPARE(zone(cId),-1);QTRY_COMPARE(zone(bId),44);
+        runtime.view(dId)->setScreenToFollow(second.screen());QTRY_VERIFY(runtime.view(dId) && runtime.view(dId)->screen()==second.screen());
+        QVERIFY(runtime.view(dId)->applyViewSettings({{"panelVisibility",0}}));QTRY_COMPARE(zone(dId),56);QTRY_COMPARE(zone(bId),44);
+        const auto before=runtime.assignments();runtime.view(bId)->clonePanelTo(Plasma::Types::BottomEdge,first.screen());
+        QTRY_COMPARE(runtime.assignments().size(),before.size()+1);uint cloned=0;
+        for(auto id:runtime.assignments().keys())if(!before.contains(id))cloned=id;
+        QVERIFY(cloned);QTRY_VERIFY(runtime.view(cloned));QTRY_COMPARE(zone(cloned),-1);QTRY_COMPARE(zone(bId),44);
+        // Upstream edit mode makes every panel reachable, even one with AutoHide.
+        QVERIFY(runtime.view(dId)->applyViewSettings({{"panelVisibility",1}}));QTRY_COMPARE(zone(dId),-1);
+        QVERIFY(runtime.view(bId)->applyViewSettings({{"floating",true}}));QTRY_VERIFY(runtime.view(bId)->height()>44);QTRY_COMPARE(zone(bId),44);
+        corona.setEditMode(true);
+        for(auto id:{bId,cId,dId,cloned}) {QTRY_VERIFY(runtime.view(id)->capabilities().value("editModeReservation").toBool());QTRY_COMPARE(zone(id),id==bId?44:runtime.view(id)->height());}
+        QCOMPARE(runtime.view(dId)->visibilityMode(),1);corona.setEditMode(false);
+        QTRY_COMPARE(zone(bId),44);QTRY_COMPARE(zone(cId),-1);QTRY_COMPARE(zone(cloned),-1);QTRY_COMPARE(zone(dId),-1);
+        QCOMPARE(runtime.view(dId)->visibilityMode(),1);QVERIFY(runtime.setSkin("retro"));QVERIFY(!runtime.view(bId));
+        QVERIFY(runtime.setSkin("plasma"));QTRY_COMPARE(zone(bId),44);QTRY_COMPARE(zone(cloned),-1);QTRY_COMPARE(zone(dId),-1);
+        QVERIFY(runtime.setSkin("default"));
     }
     // R5: AutoHide/DodgeWindows with the edge strip that stands in for KWin's screen edge.
     void nativePanelAutoHideAndDodge() {

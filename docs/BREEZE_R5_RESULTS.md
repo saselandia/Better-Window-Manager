@@ -509,3 +509,71 @@ Verificación final de la iteración 7: CTest `isolated-local-configuration` **1
 marco para las 12 combinaciones. Python R4 **262/262** (23 de migración). Matriz
 `check-isolated.py` completa con tres paquetes (dos ejemplos KDE y Andromeda), siete casos
 nuevos de dos salidas y dos generaciones transaccionales tras cierres limpios: pasa.
+
+
+## Iteración 8 (2026-11-19) — Varios paneles con reservas nativas
+
+### Regla de Plasma y cambio
+
+Se revisaron `ShellCorona::shouldPanelReserveSpace` y `PanelView::updateExclusiveZone` de
+plasma-workspace 6.7.5. En cada salida y borde, sólo reserva el panel **normal más grueso**;
+los demás no suman otra reserva ni se apilan artificialmente. Pueden solaparse. BWM desempata
+por el menor ID de containment para que el propietario no dependa del orden de un hash.
+
+`PanelRuntime::updateReservations` aplica esa selección a las vistas visibles/no retiradas.
+Se reevalúa al cambiar grosor, visibilidad, borde, salida, vida de una vista o modo edición.
+Ya no se rechaza un perfil, movimiento o clonación por tener otra vista en la misma salida.
+Los modos y tamaños guardados no se cambian para seleccionar al propietario.
+
+En edición se mantiene una zona positiva anterior; los paneles que no reservaban piden
+el tamaño completo del marco. Ese valor se congela mientras se configura, como upstream;
+al salir vuelven las reglas por borde y los modos AutoHide/Dodge/WindowsGoBelow sin reserva.
+Las capacidades añaden `reservationOwner` y `editModeReservation`; son decisiones/peticiones,
+no una certificación de área útil. Los commits de distintas superficies Wayland no son atómicos.
+
+### Fallo real encontrado
+
+La primera prueba con Hyprland dejó una reserva vieja o no activó la del nuevo propietario,
+aunque `exclusiveZoneRequested` y el propietario calculado eran correctos. El cambio podía
+no producir ninguna diferencia visual: `QWindow::requestUpdate()` dejaba el estado layer-shell
+pendiente. `updatePanelPolicy` usa ahora `QQuickWindow::update()` para forzar el repintado/commit.
+El mismo ensayo que fallaba pasa después, sin cargar/descargar plugins ni reiniciar el shell.
+
+El ejecutable del ensayo también registra los tipos `org.bwm.plasma.host` antes de cargar
+la representación compacta del reloj. Antes, al ejecutar sólo ese caso, el import faltaba;
+no se ocultaron esos errores para aprobar la prueba.
+
+### Pruebas
+
+- `nativePanelsShareReservationsPerScreenAndEdge`: cuatro paneles, empate y cambio de grosor,
+  cambio de modos, ocultar/mostrar, retirar propietario, cambiar borde/salida, clonar hacia
+  una salida ocupada, cambio de skin y reservas temporales de edición. Incluye un propietario
+  flotante que conserva su zona de grosor en vez de sumar otra vez sus márgenes.
+- `nativePanelPolicyPersistsAndWithdrawsReservations` pasa ahora con dos paneles en bordes
+  opuestos de la misma salida, en vez de exigir el antiguo rechazo.
+- Hyprland real: `nativeMultiplePanelReservationsInHyprland`, MSI (el usuario tenía la vista
+  activa en el LG). **10/10 pasos**: máximo 56, traspaso a 64, vuelta a 56 al autoocultar,
+  retirada de la última reserva (0), restauración (64), edición (120), salida de edición
+  (64), retirada del propietario (56), traslado al borde opuesto y limpieza. Se comprobaron
+  capas, ausencia de ventanas normales del ensayo, reservas iniciales restauradas y devolución
+  del puntero/foco, validando dirección y PID antes de restaurar el foco.
+
+**Aceptación del usuario:** preview con `--native-policy` en el LG, clonación arriba y ventana
+maximizada; confirma «Sí, se ajusta bien» al respetar ambas reservas y reajustar al quitar o
+cambiar un panel. Aceptación funcional general; no se deducen todos los bordes, esquinas,
+escalas o popups de esa respuesta. Preview detenido con acuse y registro inactivo;
+`hyprctl configerrors` vacío.
+
+### Límites
+
+Sin sustitución del panel diario. Los paneles externos al anfitrión conservan sus reservas;
+no participan en la elección interna de propietario. Falta certificar combinaciones de bordes
+adyacentes/esquinas, anclaje de sus popups y editor a escala fraccionaria. R5 sigue abierta:
+anfitrión de escritorio (`DesktopEditMode.qml`), comparación con Plasma real y flujos de
+arrastre/desinstalar/alternativas. No se anuncia compatibilidad universal por estos ensayos.
+
+
+Verificación final de la iteración 8: compilación normal completa, CTest normal sin
+`native-` **8/8** (58,48 s), pruebas `surface-geometry` y `isolated-local-configuration`
+con ASan (`detect_leaks=0`) **2/2** (52,37 s). La prueba real fue normal, no ASan nativo.
+No quedan capas `bwm-r4-*` después de cerrar el preview.

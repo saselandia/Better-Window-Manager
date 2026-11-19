@@ -1300,10 +1300,12 @@ escritorios.
 «Clonar panel» usa las flechas del diálogo original y `panelclone.cpp`, adaptado de
 `ShellCorona::clonePanelTo` 6.7.5. Copia opciones nativas de containment/widgets, orden con
 IDs nuevos, hijos de la bandeja y todos los ámbitos de preferencias de la vista. Funciona
-en la vista desechable y en perfiles, con paneles independientes. Sin `--native-policy` se
-admiten varios en la misma salida; con esa política aún se rechaza mover/clonar hacia una
-salida que ya tenga un panel del ensayo, hasta coordinar las reservas. El panel diario no
-forma parte de ese inventario. `panel-session.py status` expone las capacidades vivas de
+en la vista desechable y en perfiles, con paneles independientes, también con `--native-policy`
+en la misma salida. Como en Plasma, sólo el panel normal más grueso de cada borde reserva
+espacio (empate por ID menor). Los otros comparten la reserva y pueden solaparse: no se apilan
+artificialmente. En edición se conservan las zonas positivas y los que no reservaban piden
+su marco completo; al salir se restaura la selección por borde. El panel diario no forma
+parte de ese inventario. `panel-session.py status` expone las capacidades vivas de
 cada marco, incluidos `touchingWindow` y `autoHidden`.
 
 Ensayo acotado de clonación, sobre el monitor que no esté usando el usuario:
@@ -1312,7 +1314,7 @@ Ensayo acotado de clonación, sobre el monitor que no esté usando el usuario:
 python3 src/bwm-plasma-host/check-edit-mode-session.py --output "<descripción>" --case originalClonePanelInHyprland
 ```
 
-Límites y pendientes en `docs/BREEZE_R5_RESULTS.md` (escritorio, coordinación de reservas,
+Límites y pendientes en `docs/BREEZE_R5_RESULTS.md` (escritorio, esquinas/bordes adyacentes,
 escala fraccionaria y comparación visual).
 Al actualizar upstream, revisar `shell/panelconfigview.*`, los `Q_PROPERTY` de `panelview.h`,
 `views/Desktop.qml` (contrato de la barra lateral), `explorer/WidgetExplorer.qml` y el grupo
@@ -1349,3 +1351,30 @@ Si no se aporta el mapa, los planes/archivos anteriores mantienen su contrato y 
 alineación/longitud diferidas. Un tamaño explícito permite convertir la preferencia, pero no
 certifica el EDID ni la geometría de una sesión: `outputGeometryVerified` permanece false.
 El llamador debe capturar y asociar las salidas, y volver a preparar la propuesta si cambian.
+
+
+## R5: reservas compartidas de varios paneles (iteración 8)
+
+`PanelRuntime::updateReservations` sigue `ShellCorona::shouldPanelReserveSpace` 6.7.5.
+Los candidatos son sólo vistas visibles, normales y de containments no retirados, agrupadas
+por QScreen resuelto desde su descripción y borde. El tamaño y los modos de visibilidad
+siguen en `plasmashellrc`; elegir propietario no modifica la preferencia del usuario.
+La selección se actualiza al cambiar grosor, visibilidad, salida, borde, edición o vida del
+panel. Retira la petición del propietario anterior antes de habilitar la siguiente;
+los commits de superficies Wayland independientes no constituyen una transacción atómica.
+
+`reservationOwner` y `editModeReservation` en las capacidades del marco describen esa
+selección/petición, no certifican que el compositor haya aplicado una reserva. Un cambio
+sólo de zona exclusiva necesita `QQuickWindow::update()` para entregar el commit aunque
+la escena sea estática: se encontró y reprodujo un fallo con `QWindow::requestUpdate()`.
+
+Comprobación de reservas en el monitor que no tenga la vista del usuario:
+
+```
+python3 src/bwm-plasma-host/check-edit-mode-session.py --output "<descripción>" --case nativeMultiplePanelReservationsInHyprland
+```
+
+Mide máximo frente a suma en el mismo borde, traspasos, retirada de la última reserva,
+reserva temporal en edición, eliminación del propietario, cambio a borde opuesto y limpieza.
+No se infiere con ello equivalencia de esquinas/bordes adyacentes, anclaje de todos los
+popups o escalas fraccionarias. R5 sigue abierta; no se reemplaza el panel diario.

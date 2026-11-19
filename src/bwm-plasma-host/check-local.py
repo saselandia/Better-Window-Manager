@@ -174,7 +174,8 @@ def main():
                          'originalPanelToolBoxOverlayAndContextMenu','originalWidgetExplorerAddsToPanel',
                          'nativePanelAutoHideAndDodge', 'profileEditingMovesAndClonesNativePanels',
                          'clonedNativeTrayKeepsEmbeddedOptionsAndNewIds', 'profileEditingFreshProcessReadback',
-                         'migratedPlacementReadsOriginalPanelFrames'):
+                         'migratedPlacementReadsOriginalPanelFrames', 'nativePanelPolicyPersistsAndWithdrawsReservations',
+                         'nativePanelsShareReservationsPerScreenAndEdge'):
                 output = run(args.ui_test, test)
                 assert 'FAIL!' not in output and 'SKIP' not in output, output
                 report['ui'].append({'test': test, 'passed': True})

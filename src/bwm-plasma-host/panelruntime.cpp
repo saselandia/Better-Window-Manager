@@ -19,6 +19,7 @@
 #include <QGuiApplication>
 #include <QScreen>
 #include <QScopedValueRollback>
+#include <algorithm>
 
 namespace {
 Qt::Edge edge(Plasma::Types::Location value) {
@@ -39,6 +40,7 @@ PanelRuntime::PanelRuntime(ViewCorona *corona,QString settings,bool layers,QObje
     :QObject(parent),m_corona(corona),m_settingsFile(std::move(settings)),m_layerSurfaces(layers),m_nativePanelPolicy(nativePanelPolicy) {
     m_reconcile.setSingleShot(true);m_reconcile.setInterval(0);
     connect(&m_reconcile,&QTimer::timeout,this,&PanelRuntime::reconcile);
+    if(corona)connect(corona,&Plasma::Corona::editModeChanged,&m_reconcile,qOverload<>(&QTimer::start));
     if(auto *control=NativeDesktopControl::requiredControl(this))connect(control,&NativeDesktopControl::changed,this,[this,control]{
         if(m_skin=="plasma"){
             if(!control->resumed()){
@@ -177,10 +179,6 @@ void PanelRuntime::moveToOutput(uint id,QScreen *target) {
     if(description.isEmpty() || BwmOutput::resolveScreen(description,&state)!=target) {
         frame->setError(tr("The target output has no unique description."));return;
     }
-    if(m_nativePanelPolicy)for(auto it=m_assignments.cbegin();it!=m_assignments.cend();++it)
-        if(it.key()!=id && BwmOutput::resolveScreen(it.value())==target) {
-            frame->setError(tr("Multiple native panels on the same output need a coordinated layout."));return;
-        }
     frame->setError({});
     if(frame->userConfiguring())m_reopenSettings.insert(id);
     m_assignments[id]=description;reconcile();
@@ -196,10 +194,6 @@ void PanelRuntime::cloneToOutput(uint id,int location,QScreen *target) {
     if(description.isEmpty() || BwmOutput::resolveScreen(description)!=target) {
         frame->setError(tr("The target output has no unique description."));return;
     }
-    if(m_nativePanelPolicy)for(auto it=m_assignments.cbegin();it!=m_assignments.cend();++it)
-        if(BwmOutput::resolveScreen(it.value())==target) {
-            frame->setError(tr("Multiple native panels on the same output need a coordinated layout."));return;
-        }
     auto *source=frame->containment();
     if(!source || source->immutability()!=Plasma::Types::Mutable || m_corona->immutability()!=Plasma::Types::Mutable) {
         frame->setError(tr("Cloning is locked by KDE policy."));return;
@@ -235,13 +229,34 @@ void PanelRuntime::drop(uint id) {
     delete frame; // closes ConfigurationSession; its pending controls are not applied
 }
 void PanelRuntime::dropAll(){for(uint id:m_views.keys())drop(id);}
+void PanelRuntime::updateReservations() {
+    if(!m_nativePanelPolicy)return;
+    // ShellCorona::shouldPanelReserveSpace (plasma-workspace 6.7.5): only the
+    // thickest NormalPanel on the same screen AND edge reserves. BWM uses the
+    // lowest containment ID for ties, so a reload cannot arbitrarily swap owner.
+    QHash<QPair<QScreen*,int>,uint> owners;
+    auto ids=m_views.keys();std::sort(ids.begin(),ids.end());
+    for(uint id:ids) {
+        auto *frame=view(id);
+        if(!frame || !frame->isVisible() || !frame->containment() || frame->containment()->destroyed() ||
+           frame->visibilityMode()!=PanelViewEnums::NormalPanel || m_skin!="plasma")continue;
+        const auto key=qMakePair(frame->screen(),int(frame->containment()->location()));
+        const auto previous=owners.value(key);auto *old=view(previous);
+        if(!old || frame->thickness()>old->thickness())owners[key]=id;
+    }
+    const bool editing=m_corona && m_corona->isEditMode();
+    auto selected=owners.values();
+    if(editing)for(uint id:ids)if(auto *frame=view(id);frame && frame->isVisible() && frame->containment() &&
+        !frame->containment()->destroyed() && m_skin=="plasma" && !selected.contains(id))selected.append(id);
+    // Withdraw previous owners first. Wayland commits are independent; this is
+    // not a compositor-wide atomic transaction, but never deliberately adds zones.
+    for(uint id:ids)if(!selected.contains(id))BwmSurface::setPanelReservationPolicy(view(id),false,editing);
+    for(uint id:selected)BwmSurface::setPanelReservationPolicy(view(id),true,editing);
+}
 void PanelRuntime::reconcile() {
     if(m_reconciling)return;
     QScopedValueRollback<bool> guard(m_reconciling,true);
     if(!m_corona){dropAll();m_status.clear();emit changed();return;}
-    QHash<QScreen*,int> nativeOutputs;
-    if(m_nativePanelPolicy)for(auto *c:m_corona->containments())if(!c->destroyed() && m_assignments.contains(c->id()))
-        if(auto *screen=BwmOutput::resolveScreen(m_assignments.value(c->id())))++nativeOutputs[screen];
     QSet<uint> live;QVariantList status;
     for(auto *c:m_corona->containments()) {
         if(c->destroyed() || !m_assignments.contains(c->id()))continue;
@@ -257,7 +272,6 @@ void PanelRuntime::reconcile() {
         const auto side=edge(c->location());
         if(m_skin!="plasma")state="skin-inactive";
         else if(auto *control=NativeDesktopControl::requiredControl();control && !control->resumed())state="native-desktop-not-ready";
-        else if(m_nativePanelPolicy && nativeOutputs.value(screen)>1)state="native-policy-output-conflict";
         else if(side==Qt::Edge(0))state="unsupported-panel-edge";
         else if((side==Qt::LeftEdge || side==Qt::RightEdge)!=(c->formFactor()==Plasma::Types::Vertical))state="inconsistent-panel-orientation";
         auto *frame=view(id);
@@ -274,11 +288,17 @@ void PanelRuntime::reconcile() {
         if(state=="matched" && !frame) {
             frame=new PanelViewHost(m_corona,m_settingsFile);frame->setScreen(screen);
             frame->setProperty("bwmRuntimeScreen",QVariant::fromValue(screen));frame->setProperty("bwmRuntimeEdge",int(side));
+            // Keep it non-reserving until every view is present and the owner of
+            // each edge has been selected. Mode 0 in its native config is intact.
+            if(m_nativePanelPolicy)frame->setProperty("bwmPanelReservationAllowed",false);
             if(m_layerSurfaces)BwmSurface::configurePanel(frame,side,m_nativePanelPolicy?0:64,m_nativePanelPolicy);
             m_corona->bind(c,frame);
             if(!frame->load(c)) {error=frame->error();m_corona->unbind(c);delete frame;frame=nullptr;state="view-unavailable";}
             else {
                 m_views.insert(id,frame);
+                connect(frame,&PanelViewHost::policyChanged,&m_reconcile,qOverload<>(&QTimer::start));
+                connect(frame,&PanelViewHost::geometryPolicyChanged,&m_reconcile,qOverload<>(&QTimer::start));
+                connect(frame,&QWindow::visibleChanged,&m_reconcile,qOverload<>(&QTimer::start));
                 connect(frame,&QWindow::screenChanged,this,[this,id,screen](QScreen *now){
                     if(now!=screen){if(auto *v=view(id))v->hide();m_reconcile.start();}
                 });
@@ -305,5 +325,6 @@ void PanelRuntime::reconcile() {
             {"waylandVerified",false},{"reservedArea",false}});
     }
     for(uint id:m_views.keys())if(!live.contains(id))drop(id);
+    updateReservations();
     if(status!=m_status){m_status=status;emit changed();}
 }

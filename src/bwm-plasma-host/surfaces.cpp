@@ -160,7 +160,9 @@ static void updatePanelPolicy(QQuickWindow *window) {
         const int crossAvailable=vertical?window->screen()->size().width():window->screen()->size().height();
         if(window->property("bwmPanelOutputUnavailable").toBool())error=QStringLiteral("Native panel output changed; recreate its bound surface.");
         else if(length<=0 || length>available || cross<=0 || cross>crossAvailable)error=QStringLiteral("Native panel surface does not fit its output.");
-        else if(window->property("bwmPanelVisibility").toInt()==0 && window->isVisible())zone=window->property("bwmReservationThickness").toInt();
+        else if((window->property("bwmPanelVisibility").toInt()==0 || window->property("bwmPanelEditing").toBool()) && window->isVisible() &&
+                (!window->property("bwmPanelReservationAllowed").isValid() || window->property("bwmPanelReservationAllowed").toBool()))
+            zone=window->property("bwmPanelEditing").toBool()?window->property("bwmEditReservationZone").toInt():window->property("bwmReservationThickness").toInt();
     } else {
         // Preview without reservation: same side anchors as the native path, keeping the gap.
         const int available=vertical?window->screen()->size().height():window->screen()->size().width();
@@ -176,7 +178,10 @@ static void updatePanelPolicy(QQuickWindow *window) {
     window->setProperty("bwmSurfaceError",error);
     window->setProperty("bwmReservationRequested",zone>0);
     window->setProperty("bwmExclusiveZoneRequested",zone);
-    window->requestUpdate();
+    // A reservation handoff can change only layer-shell state, with an entirely
+    // unchanged scene. QQuickWindow::update forces a render/commit; QWindow's
+    // requestUpdate alone can leave the new exclusive zone pending indefinitely.
+    window->update();
 }
 bool setPanelVisibility(QQuickWindow *window,int mode,int thickness) {
     // 0 NormalPanel reserves; 1 AutoHide, 2 DodgeWindows and 3 WindowsGoBelow do not
@@ -185,6 +190,21 @@ bool setPanelVisibility(QQuickWindow *window,int mode,int thickness) {
        (mode!=3 && !window->property("bwmNativePanelPolicy").toBool()))return false;
     window->setProperty("bwmPanelVisibility",mode);window->setProperty("bwmReservationThickness",thickness);
     updatePanelPolicy(window);return window->property("bwmSurfaceError").toString().isEmpty();
+}
+void setPanelReservationPolicy(QQuickWindow *window,bool allowed,bool editing) {
+    if(!window || !window->property("bwmNativePanelPolicy").toBool())return;
+    if(window->property("bwmPanelReservationAllowed").isValid() && window->property("bwmPanelReservationAllowed").toBool()==allowed &&
+        window->property("bwmPanelEditing").toBool()==editing)return;
+    // PanelView::updateExclusiveZone 6.7.5: entering edit mode only gives a
+    // complete-frame zone to a panel which had none. Freeze the value while
+    // configuring, preserving an existing owner's thickness-only reservation.
+    if(editing && !window->property("bwmPanelEditing").toBool()) {
+        const auto edge=Qt::Edge(window->property("bwmPanelEdge").toInt());
+        const bool vertical=edge==Qt::LeftEdge || edge==Qt::RightEdge;
+        const int previous=LayerShellQt::Window::get(window)->exclusionZone();
+        window->setProperty("bwmEditReservationZone",previous>0?previous:(vertical?window->width():window->height()));
+    }
+    window->setProperty("bwmPanelReservationAllowed",allowed);window->setProperty("bwmPanelEditing",editing);updatePanelPolicy(window);
 }
 void configurePanel(QQuickWindow *window,Qt::Edge edge,int gap,bool nativePolicy) {
     if(!window || gap<0 || (edge!=Qt::TopEdge && edge!=Qt::BottomEdge && edge!=Qt::LeftEdge && edge!=Qt::RightEdge))return;

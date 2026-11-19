@@ -135,6 +135,8 @@ QVariantMap PanelViewHost::capabilities()const {
         {"viewSettingsReady",m_settings && m_settings->ready()},{"viewSettingsScope",m_settings ? m_settings->scope() : QString()},
         {"persistentViewKeys",keys},{"nativeVisibilityPolicy",native},
         {"reservationRequested",property("bwmReservationRequested").toBool()},
+        {"reservationOwner",property("bwmPanelReservationAllowed").isValid()?property("bwmPanelReservationAllowed").toBool():native},
+        {"editModeReservation",property("bwmPanelEditing").toBool()},
         {"exclusiveZoneRequested",property("bwmExclusiveZoneRequested").isValid()?property("bwmExclusiveZoneRequested").toInt():-1},
         {"reservedArea",false},{"compositorBlur",false},{"externalPanelShadows",false},{"waylandVerified",false}};
 }

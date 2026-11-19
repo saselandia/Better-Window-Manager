@@ -115,10 +115,11 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   Iteración 5 (§310): autoocultar y esquivar ventanas con una franja de borde en lugar del
   protocolo de KWin (sólo `--native-policy`); autoocultar medido en Hyprland, esquivar aceptado
   por el usuario en ambos sentidos tras volver a entrar (§313). Iteración 6 (§314): mover/clonar
-  paneles y edición transaccional de perfiles; varios sin reserva en la misma salida, uno por
-  salida con política nativa. Iteración 7 (§315): alineación/longitud de bar.plasma migradas
-  con tamaño lógico explícito por salida; formatos anteriores conservados. Escritorio y resto
-  de R5 pendientes.
+  paneles y edición transaccional de perfiles. Iteración 7 (§315): alineación/longitud de
+  bar.plasma migradas con tamaño lógico explícito por salida; formatos anteriores conservados.
+  Iteración 8 (§316): varios paneles con política nativa; reserva el normal más grueso por borde,
+  con reservas temporales en edición. Medido en Hyprland y aceptado con el ratón. Escritorio,
+  bordes adyacentes/esquinas y resto de R5 pendientes.
 * **Breeze II (2026-11-12):** `docs/BREEZE_PLAN_V2.md`, R0 entregada con referencia y límites documentados;
   R1 corrige origen de especiales al minimizar, activación común y filtro de Alt+Tab (pruebas
   aisladas; fallo visual original pendiente). R2 tiene primer KCM QWidget real, descubierto por
@@ -5394,3 +5395,32 @@ git status; git log --oneline -5; git push origin main
   (`detect_leaks=0`, 55,02 s); el test comprueba también coordenadas del marco, no sólo
   propiedades. Python R4 262/262 (23 migración). Matriz completa con dos ejemplos KDE y
   Andromeda, siete casos nuevos por dos salidas y dos generaciones tras cierres limpios: pasa.
+
+
+### 316. R5, iteración 8: reservas de varios paneles por salida y borde (2026-11-19)
+
+* **Hecho:** `PanelRuntime::updateReservations` sigue `ShellCorona::shouldPanelReserveSpace`
+  6.7.5: sólo el NormalPanel visible más grueso de cada salida/borde reserva (empate por ID
+  menor). Los otros comparten reserva y pueden solaparse; no se suman/apilan artificialmente.
+  Retirados/ocultos no son candidatos. Ya no se bloquean perfiles, clonaciones o movimientos
+  hacia una salida ocupada. Se recalcula con tamaño, modo, borde/salida, vida y edición.
+* **Edición:** como `PanelView::updateExclusiveZone`, conserva zonas positivas anteriores
+  y da el marco completo a los que no reservaban; las congela hasta salir. Restaura después
+  la selección normal y los modos sin reserva. No escribe otra preferencia para ello.
+  Capacidades: reservationOwner y editModeReservation; replacementReady sigue false.
+* **Fallo real corregido:** sólo cambiaba el estado layer-shell, sin escena visual nueva;
+  QWindow::requestUpdate no entregaba siempre el commit. updatePanelPolicy usa ahora
+  QQuickWindow::update. El ensayo que fallaba al retirar/traspasar la reserva pasa tras ello.
+  El ejecutable del ensayo registra además PopupAnchor antes de cargar CompactApplet.
+* **Comprobado en Hyprland:** MSI, sin la vista activa del usuario (estaba en LG), 10/10 pasos:
+  top delta 56→64→56→0→64→120 (edición)→64→56, paso al borde opuesto y retirada. Capas,
+  ausencia de toplevels propios, reservas restauradas y puntero/foco devueltos (dirección+PID).
+* **Aceptación del usuario:** preview nativo en LG, clona arriba, sale de edición y maximiza;
+  «Sí, se ajusta bien» con ambas reservas y al quitar/cambiar panel. No se infieren todas las
+  esquinas/escalas/popups. Ensayo detenido con acuse, registro inactivo y configerrors vacío.
+* **Límites:** elección sólo dentro del anfitrión, sin retirar el panel diario o reservas
+  externas. Faltan bordes adyacentes/esquinas y sus popups, escala fraccionaria del editor,
+  escritorio, comparación con Plasma y arrastre/desinstalar/alternativas. Informe R5 actualizado.
+* **Verificación final:** compilación normal completa; CTest sin `native-` 8/8 (58,48 s),
+  superficies/configuración local con ASan (`detect_leaks=0`) 2/2 (52,37 s). Sólo normal
+  en sesión, no ASan nativo. Cero capas de ensayo tras el cierre; AGENTS/CLAUDE idénticos.

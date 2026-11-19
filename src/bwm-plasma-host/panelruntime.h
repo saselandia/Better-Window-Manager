@@ -42,6 +42,7 @@ private:
     void dropAll();
     void moveToOutput(uint containmentId,QScreen *target);
     void cloneToOutput(uint containmentId,int location,QScreen *target);
+    void updateReservations();
     QPointer<ViewCorona> m_corona;
     QString m_settingsFile,m_skin="default",m_error;
     bool m_layerSurfaces,m_reconciling=false;

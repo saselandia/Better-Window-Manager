@@ -753,3 +753,17 @@ Cambios BWM: copia recursiva de containments embebidos, remapeo de IDs desde la 
 fuente sin dejar grupos de los IDs antiguos, y ciclo de vistas/salidas separado en
 `PanelRuntime`. El QML de edición instalado se sigue cargando sin cambios. La API auxiliar,
 las transacciones de perfiles y los ensayos nuevos son código BWM GPL-2.0-or-later.
+
+
+### Reservas de varios paneles — Plasma 6.7.5 (R5)
+
+`PanelRuntime::updateReservations` adapta la selección de
+`ShellCorona::shouldPanelReserveSpace`, de `shell/shellcorona.cpp`, LGPL-2.0-or-later
+(Aaron Seigo, Sebastian Kügler, Ivan Cukic y Marco Martin, avisos indicados arriba).
+`BwmSurface::setPanelReservationPolicy` sigue `PanelView::updateExclusiveZone`, de
+`shell/panelview.cpp`, copyright 2013 Marco Martin, GPL-2.0-or-later. Fuente correspondiente:
+<https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5/shell> (tarball de Portage).
+Adaptaciones BWM: desempate estable por ID, coordinador de vistas ligado a las salidas por
+su descripción, conservación de zonas al entrar en edición y entrega por LayerShellQt/QtQuick
+al compositor Hyprland. No se copia ni modifica el QML de Plasma; las reservas se entregan
+mediante layer-shell en Hyprland.

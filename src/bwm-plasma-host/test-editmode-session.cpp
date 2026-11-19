@@ -9,6 +9,7 @@
 #include "panelruntime.h"
 #include "panelviewhost.h"
 #include "viewcorona.h"
+#include "surfaces.h"
 #include "widgetexplorerview.h"
 #include <KConfig>
 #include <KConfigGroup>
@@ -153,6 +154,62 @@ class EditModeSessionTest : public QObject
     }
 
 private Q_SLOTS:
+    void initTestCase() { BwmSurface::registerTypes();PanelViewHost::registerTypes(); }
+    void nativeMultiplePanelReservationsInHyprland()
+    {
+        m_steps={};const auto output=qEnvironmentVariable("BWM_R5_OUTPUT");auto *screen=BwmOutput::resolveScreen(output);QVERIFY(screen);
+        const auto before=reserved(screen->name());const auto cursor=cursorPos();const auto focused=hyprJson({"-j","activewindow"}).object();
+        const auto restore=[&] {
+            if(cursorPos()!=cursor)warpCursor(cursor);
+            for(const auto &row:hyprJson({"-j","clients"}).array()) {const auto c=row.toObject();
+                if(!focused.value("address").toString().isEmpty() && c.value("address")==focused.value("address") && c.value("pid")==focused.value("pid")) {
+                    hyprJson({"dispatch",QString("hl.dsp.focus({window=\"address:%1\"})").arg(c.value("address").toString())});break;}}
+        };
+        struct Restore{std::function<void()> fn;~Restore(){fn();}} restoreOnReturn{restore};
+        ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout("bwm-r5-native-multiple-layout");
+        const auto panel=[&] {auto *c=corona.createContainment("org.kde.panel");if(c){c->setLocation(Plasma::Types::TopEdge);c->setFormFactor(Plasma::Types::Horizontal);c->createApplet("org.kde.plasma.analogclock");}return c;};
+        auto *a=panel(),*b=panel();QVERIFY(a && b);const auto aId=a->id(),bId=b->id();
+        PanelRuntime runtime(&corona,"bwm-r5-native-multiple-plasmashellrc",true,nullptr,true);
+        QVERIFY(runtime.setAssignments({{aId,output},{bId,output}}));QVERIFY(runtime.setSkin("plasma"));
+        for(auto id:{aId,bId}) {QTRY_VERIFY(runtime.view(id) && runtime.view(id)->isExposed());
+            QVERIFY(runtime.view(id)->applyViewSettings({{"panelVisibility",0},{"floating",false},{"panelLengthMode",2},{"alignment",132},{"minLength",640},{"maxLength",640},{"thickness",id==aId?40:56}}));}
+        const QString ns="bwm-r4-native-policy";
+        const auto expectReserve=[&](const QString &step,int top) {
+            QMargins wanted=before;wanted.setTop(before.top()+top);
+            const bool matched=QTest::qWaitFor([&]{return reserved(screen->name())==wanted;},5000);
+            if(!matched) {
+                const auto current=reserved(screen->name());
+                puts(QJsonDocument(QJsonObject{{"reservationDebug",step},{"expectedTop",wanted.top()},{"observedTop",current.top()},
+                    {"expectedBottom",wanted.bottom()},{"observedBottom",current.bottom()},{"editMode",corona.isEditMode()},
+                    {"runtime",QJsonObject::fromVariantMap(runtime.readiness())}}).toJson(QJsonDocument::Compact).constData());
+            }
+            m_steps.append(QJsonObject{{"step",step},{"topDelta",top},{"passed",matched}});return matched;
+        };
+        QVERIFY(expectReserve("same-edge-max-not-sum",56));QTRY_COMPARE(layers(ns,screen->name()).size(),2);QCOMPARE(ownClients(),0);
+        QVERIFY(!runtime.view(aId)->capabilities().value("reservationOwner").toBool());QVERIFY(runtime.view(bId)->capabilities().value("reservationOwner").toBool());
+        auto all=layers(ns,screen->name());const auto S=screen->geometry();const int x=S.x()+(S.width()-640)/2;
+        // Non-owner stays at the edge and can overlap, as in Plasma. It is not stacked.
+        QVERIFY(all.contains(QRect(x,S.top()+before.top(),640,56)));QVERIFY(all.contains(QRect(x,S.top(),640,40)));
+        QVERIFY(runtime.view(aId)->applyViewSettings({{"thickness",64}}));QVERIFY(expectReserve("thickness-handoff",64));
+        QVERIFY(runtime.view(aId)->applyViewSettings({{"panelVisibility",1}}));QVERIFY(expectReserve("autohide-hands-reservation-back",56));
+        QVERIFY(runtime.view(bId)->applyViewSettings({{"panelVisibility",3}}));QVERIFY(expectReserve("no-normal-panels-no-reservation",0));
+        QVERIFY(runtime.view(aId)->applyViewSettings({{"panelVisibility",0}}));QVERIFY(runtime.view(bId)->applyViewSettings({{"panelVisibility",0}}));
+        QVERIFY(expectReserve("normal-modes-restored",64));
+        // In edit mode Plasma temporarily reserves all frames so both are reachable.
+        corona.setEditMode(true);QVERIFY(expectReserve("edit-mode-temporary-sum",120));
+        corona.setEditMode(false);QVERIFY(expectReserve("exit-edit-mode-restores-max",64));
+        a->destroy();QTRY_VERIFY(!runtime.view(aId));QVERIFY(expectReserve("remove-owner-promotes-next",56));QTRY_COMPARE(layers(ns,screen->name()).size(),1);
+        // Opposite edge also reserves, independently of the old edge and the daily panel.
+        b->setLocation(Plasma::Types::BottomEdge);QTRY_VERIFY(runtime.view(bId) && runtime.view(bId)->containment()->location()==Plasma::Types::BottomEdge);
+        QMargins opposite=before;opposite.setBottom(before.bottom()+56);
+        QTRY_COMPARE(reserved(screen->name()),opposite);
+        m_steps.append(QJsonObject{{"step","move-between-opposite-edges"},{"passed",true}});
+        QVERIFY(runtime.setSkin("default"));QTRY_VERIFY(layers(ns,screen->name()).isEmpty());QTRY_COMPARE(reserved(screen->name()),before);
+        restore();QTRY_COMPARE(cursorPos(),cursor);if(!focused.value("address").toString().isEmpty())QTRY_COMPARE(activeWindow(),focused.value("address").toString());
+        m_steps.append(QJsonObject{{"step","multiple-panel-cleanup"},{"passed",true}});
+        puts(QJsonDocument(QJsonObject{{"steps",m_steps}}).toJson(QJsonDocument::Compact).constData());
+    }
     void originalClonePanelInHyprland()
     {
         m_steps={};

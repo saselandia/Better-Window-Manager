@@ -33,6 +33,11 @@ void setPanelEdge(QQuickWindow *window, Qt::Edge edge);
 // DodgeWindows (2) (no reservation); WindowsGoBelow (3) everywhere.
 // A positive exclusive zone is a request, never confirmation by the compositor.
 bool setPanelVisibility(QQuickWindow *window, int mode, int thickness);
+// PanelRuntime selects the thickest NormalPanel per output/edge, like ShellCorona.
+// Other panels keep their own visibility mode and share that edge's reservation.
+// Edit mode keeps existing positive zones and temporarily reserves the complete
+// frame of each previously non-reserving panel, like PanelView.
+void setPanelReservationPolicy(QQuickWindow *window,bool allowed,bool editing=false);
 // Available area minus the strip on the panel's side (logical pixels).
 QRect withoutPanelStrip(const QRect &area, const QRect &panel, Qt::Edge edge);
 // PanelView::refreshStatus (plasma-workspace 6.7.5): a panel never takes keyboard focus
