@@ -1378,3 +1378,31 @@ Mide máximo frente a suma en el mismo borde, traspasos, retirada de la última 
 reserva temporal en edición, eliminación del propietario, cambio a borde opuesto y limpieza.
 No se infiere con ello equivalencia de esquinas/bordes adyacentes, anclaje de todos los
 popups o escalas fraccionarias. R5 sigue abierta; no se reemplaza el panel diario.
+
+
+## R5: alternativas de widgets, arrastre al panel, reordenado y desinstalación (iteración 9)
+
+`alternativeshelper.{h,cpp}` y `PanelViewHost::showAlternativesForApplet` adaptan
+`AlternativesHelper` y `ShellCorona::showAlternativesForApplet` de plasma-workspace 6.7.5
+(LGPL-2.0-or-later). Registran `AlternativesHelper` en `org.kde.plasma.shell` (2.0 y 1.0),
+conectan `Containment::appletAlternativesRequested` (acción interna `alternatives`) y cargan
+sin modificar el `explorer/AppletAlternatives.qml` instalado. `loadAlternative` traslada el
+atajo global, copia la configuración al nuevo widget, destruye el anterior y conserva su
+posición en `AppletOrder`.
+
+En una vista layer-shell, el `PlasmaCore.Dialog` de alternativas recibe un `PopupAnchor`
+(`bwm-r4-popup`, `LayerOverlay`, teclado `OnDemand`) al crearse su superficie. `PopupAnchor`
+calcula un tamaño inicial no nulo desde `mainItem` (+ `margins`) antes de `Dialog::showEvent`
+y, como todas las instancias de `SharedQmlEngine` comparten el mismo `QQmlEngine`, tanto
+`PanelConfigView` como el filtro de alternativas comprueban la jerarquía `rootContext()` de
+su propio motor antes de adoptar un `Dialog` en `SurfaceCreated`.
+
+El ensayo offscreen `originalAppletAlternativesDragAndUninstall` (`test-ui.cpp` /
+`check-local.py`) prueba el diálogo de alternativas, el arrastre `text/x-plasmoidservicename`
+sobre el `DropArea` de `org.kde.panel`, el reordenado con `ConfigOverlay.qml` y la retirada +
+desinstalación de un widget local desde `WidgetExplorer.qml` (`removeAllInstances` y
+`pendingUninstallTimer.uninstall()`). En sesión Hyprland, `panelOwnPopupsInHyprland`
+(`check-edit-mode-session.py`) comprueba además que `AppletAlternatives.qml` se mapea como
+capa `bwm-r4-popup` encima del widget (sin crear un `xdg_toplevel`) y sustituye el reloj en
+el panel vivo.
+

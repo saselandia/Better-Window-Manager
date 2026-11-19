@@ -31,7 +31,7 @@ endif()
 add_library(bwm-plasma-configuration STATIC configurationsession.cpp catalog.cpp surfaces.cpp migration.cpp panelprobe.cpp panelsession.cpp themeinventory.cpp packagewindows.cpp viewcorona.cpp focusgrab.cpp panelviewhost.cpp panelconfigview.cpp widgetexplorerview.cpp panelviewsettings.cpp outputidentity.cpp panelruntime.cpp runtimecontrol.cpp profilestore.cpp kns.cpp)
 target_sources(bwm-plasma-configuration PRIVATE tasksource.cpp taskbridge.cpp taskpreview.cpp previewappearance.cpp nativedesktopcontrol.cpp desktopregistry.cpp taskmenupolicy.cpp)
 target_sources(bwm-plasma-configuration PRIVATE taskthumbnail.cpp tasklauncher.cpp launchrouter.cpp desktopsessioncheck.cpp)
-target_sources(bwm-plasma-configuration PRIVATE panelclone.cpp)
+target_sources(bwm-plasma-configuration PRIVATE panelclone.cpp alternativeshelper.cpp)
 target_compile_definitions(bwm-plasma-configuration PRIVATE BWM_TASK_THUMBNAIL_QML="${CMAKE_CURRENT_SOURCE_DIR}/qml/TaskThumbnail.qml"
     BWM_WIDGET_EXPLORER_HOST_QML="${CMAKE_CURRENT_SOURCE_DIR}/qml/WidgetExplorerHost.qml")
 target_include_directories(bwm-plasma-configuration PRIVATE ${CMAKE_CURRENT_BINARY_DIR})

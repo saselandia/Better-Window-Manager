@@ -172,6 +172,7 @@ def main():
                          'profileRecoveryFreshProcessReadback', 'profileRecoveryUsesXdgAuthorityAndChildLease',
                          'profileSelectionTransactionsAndSelectedServer', 'originalPanelSettingsEditMode',
                          'originalPanelToolBoxOverlayAndContextMenu','originalWidgetExplorerAddsToPanel',
+                         'originalAppletAlternativesDragAndUninstall',
                          'nativePanelAutoHideAndDodge', 'profileEditingMovesAndClonesNativePanels',
                          'clonedNativeTrayKeepsEmbeddedOptionsAndNewIds', 'profileEditingFreshProcessReadback',
                          'migratedPlacementReadsOriginalPanelFrames', 'nativePanelPolicyPersistsAndWithdrawsReservations',

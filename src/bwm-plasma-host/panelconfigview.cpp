@@ -257,11 +257,18 @@ bool PanelConfigView::eventFilter(QObject *object, QEvent *event)
 {
     // SurfaceCreated precedes Qt's shell-role selection (Qt 6.11.2), the boundary at
     // which LayerShellQt's public API can still assign the layer role (as R4 does).
+    // SharedQmlEngine instances share a process-wide QQmlEngine, so filter by this
+    // PanelConfigView's own rootContext hierarchy (Set Position… indicators).
     if (event->type() == QEvent::PlatformSurface
         && static_cast<QPlatformSurfaceEvent *>(event)->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated) {
         auto *dialog = qobject_cast<PlasmaQuick::Dialog *>(object);
-        if (dialog && object != this && m_sharedQmlEngine && qmlEngine(dialog) == m_sharedQmlEngine->engine().get()) {
-            placeIndicator(dialog);
+        if (dialog && object != this && m_sharedQmlEngine) {
+            for (QQmlContext *ctx = qmlContext(dialog); ctx; ctx = ctx->parentContext()) {
+                if (ctx == m_sharedQmlEngine->rootContext()) {
+                    placeIndicator(dialog);
+                    break;
+                }
+            }
         }
     }
     return false;

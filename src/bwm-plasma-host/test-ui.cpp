@@ -63,6 +63,11 @@ Q_IMPORT_PLUGIN(BwmWindowSystemPlugin)
 #include <KConfigLoader>
 #include <KSharedConfig>
 #include <KConfigGroup>
+#include <QDragEnterEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
+#include <QMimeData>
+#include <QStyleHints>
 #include <QtTest>
 #include <functional>
 #include <cmath>
@@ -1306,6 +1311,193 @@ private Q_SLOTS:
         QTRY_COMPARE(root->property("explorerState").toString(),"closed");
         QVERIFY2(scriptErrors.isEmpty(),qPrintable(scriptErrors.join('\n')));
         corona.unbind(c);corona.saveLayout("bwm-r5-explorer-test");QVERIFY(corona.config()->sync());
+    }
+    void originalAppletAlternativesDragAndUninstall() {
+        // R5: installed AppletAlternatives.qml (AlternativesHelper), DnD from WidgetExplorer
+        // onto org.kde.panel's DropArea, ConfigOverlay drag-to-reorder on the panel, and
+        // WidgetExplorer removeAllInstances/pendingUninstallTimer.uninstall() for a local widget.
+        const QDir dataDir(qEnvironmentVariable("XDG_DATA_HOME"));
+        QVERIFY(QFileInfo(dataDir.absolutePath()).canonicalFilePath().startsWith(QDir::tempPath()+"/"));
+        const QString localId=QStringLiteral("org.bwm.r5.disposable-local");
+        const QString localRoot=dataDir.filePath(QStringLiteral("plasma/plasmoids/")+localId);
+        QDir(localRoot).removeRecursively();
+        QVERIFY(QDir().mkpath(localRoot+QStringLiteral("/contents/ui")));
+        {
+            QFile meta(localRoot+QStringLiteral("/metadata.json"));
+            QVERIFY(meta.open(QIODevice::WriteOnly));
+            meta.write(R"({"KPackageStructure":"Plasma/Applet","KPlugin":{"Id":"org.bwm.r5.disposable-local","Name":"BWM Disposable Local","Description":"Disposable local R5 test widget","Category":"Utilities","Icon":"preferences-system"},"X-Plasma-API-Minimum-Version":"6.0"})");
+        }
+        {
+            QFile qml(localRoot+QStringLiteral("/contents/ui/main.qml"));
+            QVERIFY(qml.open(QIODevice::WriteOnly));
+            qml.write("import QtQuick\nimport org.kde.plasma.plasmoid\nPlasmoidItem { implicitWidth: 36; implicitHeight: 36 }\n");
+        }
+        struct RemoveLocal{QString path;~RemoveLocal(){QDir(path).removeRecursively();}} removeLocal{localRoot};
+
+        ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        QFile::remove(QDir(qEnvironmentVariable("XDG_CONFIG_HOME")).filePath("bwm-r5-alt-dnd-test"));
+        corona.loadLayout("bwm-r5-alt-dnd-test");
+        auto *c=corona.createContainment("org.kde.panel");QVERIFY(c);
+        c->setLocation(Plasma::Types::BottomEdge);c->setFormFactor(Plasma::Types::Horizontal);
+        auto *first=c->createApplet("org.bwm.r4.shared-config");
+        auto *clock=c->createApplet("org.kde.plasma.analogclock");
+        auto *third=c->createApplet("org.bwm.r4.shared-config");
+        QVERIFY(first && clock && third);
+        const uint firstId=first->id(),oldClockId=clock->id(),thirdId=third->id();
+
+        const auto path=QDir(qEnvironmentVariable("XDG_CONFIG_HOME")).filePath("bwm-r5-alt-dnd-plasmashellrc");
+        QFile::remove(path);
+        PanelViewHost view(&corona,path);
+        BwmSurface::configurePanel(&view,Qt::BottomEdge);
+        corona.bind(c,&view);
+        QVERIFY2(view.load(c),qPrintable(view.error()));view.show();
+        auto *session=view.panelSession();QVERIFY(session);
+        QTRY_COMPARE(session->order(),(QVariantList{firstId,oldClockId,thirdId}));
+
+        QStringList scriptErrors;
+        const auto watchEngine=[&](QQmlEngine *engine){
+            if(!engine)return;
+            connect(engine,&QQmlEngine::warnings,this,[&scriptErrors](const QList<QQmlError> &errors){
+                for(const auto &e:errors)
+                    if((e.url().toString().contains("/explorer/") || e.url().toString().contains("org/kde/panel")) &&
+                       (e.description().contains("ReferenceError") || e.description().contains("TypeError") || e.description().contains("is not defined")))
+                        scriptErrors.append(e.toString());
+            });
+        };
+
+        // 1. AppletAlternatives.qml: contextualActionsAboutToShow enables "alternatives" for the clock.
+        Q_EMIT clock->contextualActionsAboutToShow();
+        auto *altAction=clock->internalAction("alternatives");
+        QVERIFY(altAction && altAction->isVisible());
+        clock->config().group("General").writeEntry("ShowSeconds",true);
+        QVERIFY(clock->config().sync());
+        altAction->trigger();
+        QPointer<QQuickWindow> altDialog;
+        QTRY_VERIFY((altDialog=view.alternativesDialog()) && altDialog->isVisible());
+        watchEngine(qmlEngine(altDialog));
+        QCOMPARE(c->status(),Plasma::Types::RequiresAttentionStatus);
+        QVERIFY(altDialog->findChild<PopupAnchor*>(QStringLiteral("bwmAlternativesPopupAnchor"),Qt::FindDirectChildrenOnly));
+        auto *altHelper=altDialog->property("alternativesHelper").value<QObject*>();
+        QVERIFY(altHelper);
+        QCOMPARE(altHelper->property("currentPlugin").toString(),QStringLiteral("org.kde.plasma.analogclock"));
+        QVERIFY(altHelper->property("appletProvides").toStringList().contains(QStringLiteral("org.kde.plasma.time")));
+        // Hovering the edited panel in Hyprland transfers focus to the panel; the dialog must stay open.
+        view.requestActivate();QTRY_VERIFY(view.isActive());
+        QTest::qWait(50);QVERIFY(altDialog && altDialog->isVisible());
+        // Escape closes without replacing the widget.
+        altDialog->requestActivate();QTRY_VERIFY(altDialog->isActive());
+        QTest::keyClick(altDialog,Qt::Key_Escape);
+        QTRY_VERIFY(!view.alternativesDialog());
+        QCOMPARE(c->status(),Plasma::Types::ActiveStatus);
+        QCOMPARE(session->order(),(QVariantList{firstId,oldClockId,thirdId}));
+
+        // Reopen and switch to org.kde.plasma.digitalclock: preserves slot and copied config.
+        altAction->trigger();
+        QTRY_VERIFY((altDialog=view.alternativesDialog()) && altDialog->isVisible());
+        altHelper=altDialog->property("alternativesHelper").value<QObject*>();
+        QVERIFY(altHelper);
+        QMetaObject::invokeMethod(altHelper,"loadAlternative",Q_ARG(QString,QStringLiteral("org.kde.plasma.digitalclock")));
+        altDialog->close();
+        QTRY_VERIFY(!view.alternativesDialog());
+        QCOMPARE(c->status(),Plasma::Types::ActiveStatus);
+        QTRY_COMPARE(c->applets().size(),3);
+        const auto afterAltOrder=session->order();
+        QCOMPARE(afterAltOrder.size(),3);
+        QCOMPARE(afterAltOrder[0].toUInt(),firstId);
+        QCOMPARE(afterAltOrder[2].toUInt(),thirdId);
+        const uint newClockId=afterAltOrder[1].toUInt();
+        QVERIFY(newClockId!=oldClockId);
+        Plasma::Applet *newClock=nullptr;
+        for(auto *a:c->applets())if(a->id()==newClockId)newClock=a;
+        QVERIFY(newClock);
+        QCOMPARE(newClock->pluginMetaData().pluginId(),QStringLiteral("org.kde.plasma.digitalclock"));
+        QVERIFY(newClock->config().group("General").readEntry("ShowSeconds",false));
+
+        // 2. Drag-and-drop from WidgetExplorer ("text/x-plasmoidservicename") onto org.kde.panel's DropArea.
+        auto *panelRoot=PlasmaQuick::AppletQuickItem::itemForApplet(c);QVERIFY(panelRoot);
+        watchEngine(qmlEngine(panelRoot));
+        auto *firstItem=PlasmaQuick::AppletQuickItem::itemForApplet(first);QVERIFY(firstItem && firstItem->parentItem());
+        QTRY_VERIFY(firstItem->parentItem()->width()>0);
+        const QPoint dropPos=firstItem->parentItem()->mapToScene(QPointF(2,firstItem->parentItem()->height()/2)).toPoint();
+        QMimeData mime;
+        mime.setData(QStringLiteral("text/x-plasmoidservicename"),localId.toUtf8());
+        QDragEnterEvent dragEnter(dropPos,Qt::CopyAction|Qt::MoveAction,&mime,Qt::LeftButton,Qt::NoModifier);
+        QCoreApplication::sendEvent(&view,&dragEnter);
+        QVERIFY(dragEnter.isAccepted());
+        QDragMoveEvent dragMove(dropPos,Qt::CopyAction|Qt::MoveAction,&mime,Qt::LeftButton,Qt::NoModifier);
+        QCoreApplication::sendEvent(&view,&dragMove);
+        QDropEvent drop(dropPos,Qt::CopyAction|Qt::MoveAction,&mime,Qt::LeftButton,Qt::NoModifier);
+        QCoreApplication::sendEvent(&view,&drop);
+        QTRY_COMPARE(c->applets().size(),4);
+        uint droppedId=0;
+        for(auto *a:c->applets())if(a->pluginMetaData().pluginId()==localId)droppedId=a->id();
+        QVERIFY(droppedId!=0);
+        QTRY_COMPARE(session->order().first().toUInt(),droppedId);
+
+        // 3. ConfigOverlay drag-to-reorder on the panel in edit mode.
+        c->internalAction("configure")->trigger();
+        QTRY_VERIFY(view.userConfiguring());
+        auto *overlay=panelRoot->property("configOverlay").value<QQuickItem*>();
+        QVERIFY(overlay);
+        QTRY_VERIFY(overlay->width()>0 && overlay->height()>0);
+        Plasma::Applet *droppedApplet=nullptr;
+        for(auto *a:c->applets())if(a->id()==droppedId)droppedApplet=a;
+        QVERIFY(droppedApplet);
+        auto *droppedItem=PlasmaQuick::AppletQuickItem::itemForApplet(droppedApplet);
+        QVERIFY(droppedItem && droppedItem->parentItem());
+        QTRY_VERIFY(droppedItem->parentItem()->width()>0 && firstItem->parentItem()->width()>0);
+        const QPoint startDrag=droppedItem->parentItem()->mapToItem(overlay,QPointF(droppedItem->parentItem()->width()/2,droppedItem->parentItem()->height()/2)).toPoint();
+        const QPoint endDrag=firstItem->parentItem()->mapToItem(overlay,QPointF(firstItem->parentItem()->width()-2,firstItem->parentItem()->height()/2)).toPoint();
+        const QPoint startScene=overlay->mapToScene(startDrag).toPoint();
+        const QPoint midScene=overlay->mapToScene(startDrag+QPoint(QGuiApplication::styleHints()->startDragDistance()+6,0)).toPoint();
+        const QPoint endScene=overlay->mapToScene(endDrag).toPoint();
+        QTest::mousePress(&view,Qt::LeftButton,Qt::NoModifier,startScene);
+        QTest::mouseMove(&view,midScene);
+        QTRY_VERIFY(overlay->property("dragAndDropping").toBool());
+        QTest::mouseMove(&view,endScene);
+        QTest::mouseRelease(&view,Qt::LeftButton,Qt::NoModifier,endScene);
+        QTRY_VERIFY(!overlay->property("dragAndDropping").toBool());
+        QTRY_COMPARE(session->order().value(0).toUInt(),firstId);
+        QTRY_COMPARE(session->order().value(1).toUInt(),droppedId);
+
+        // 4. WidgetExplorer removeAllInstances and pendingUninstallTimer.uninstall() for the local widget.
+        QVERIFY(view.toggleWidgetExplorer());
+        auto *explorer=view.widgetExplorer();QVERIFY(explorer);QTRY_VERIFY(explorer->isVisible());
+        auto *expRoot=explorer->rootItem();QVERIFY(expRoot);
+        watchEngine(qmlEngine(expRoot));
+        const auto eval=[&](const QString &code){
+            QQmlExpression e(qmlContext(expRoot),expRoot,code);
+            const auto v=e.evaluate();
+            if(e.hasError())scriptErrors.append(e.error().toString());
+            return v;
+        };
+        QTRY_VERIFY(eval("sidePanelStack.item !== null && root.widgetExplorer !== null").toBool());
+        eval("root.widgetExplorer.widgetsModel.searchTerm='BWM Disposable Local'");
+        QTRY_COMPARE(eval("root.widgetExplorer.widgetsModel.count").toInt(),1);
+        eval("root.widgetExplorer.addApplet('org.bwm.r5.disposable-local')");
+        QTRY_COMPARE(c->applets().size(),5);
+        eval("root.widgetExplorer.removeAllInstances('org.bwm.r5.disposable-local')");
+        QTRY_COMPARE(c->applets().size(),3);
+        for(auto *a:c->applets())QVERIFY(a->pluginMetaData().pluginId()!=localId);
+        QVERIFY(QDir(localRoot).exists());
+
+        // Add one instance again, mark for uninstallation, verify footer, cancel, then uninstall.
+        eval("root.widgetExplorer.addApplet('org.bwm.r5.disposable-local')");
+        QTRY_COMPARE(c->applets().size(),4);
+        eval("pendingUninstallTimer.applets = ['org.bwm.r5.disposable-local']");
+        QTRY_VERIFY(eval("sidePanelStack.item.footer.visible").toBool());
+        eval("pendingUninstallTimer.applets = []");
+        QTRY_VERIFY(!eval("sidePanelStack.item.footer.visible").toBool());
+        eval("pendingUninstallTimer.applets = ['org.bwm.r5.disposable-local']; pendingUninstallTimer.uninstall()");
+        QTRY_COMPARE(c->applets().size(),3);
+        for(auto *a:c->applets())QVERIFY(a->pluginMetaData().pluginId()!=localId);
+        QTRY_COMPARE(eval("root.widgetExplorer.widgetsModel.count").toInt(),0);
+        QTRY_VERIFY(!QDir(localRoot).exists());
+
+        explorer->sidePanel()->setVisible(false);
+        QTRY_VERIFY(!corona.isEditMode());
+        QVERIFY2(scriptErrors.isEmpty(),qPrintable(scriptErrors.join('\n')));
+        corona.unbind(c);corona.saveLayout("bwm-r5-alt-dnd-test");QVERIFY(corona.config()->sync());
     }
     void panelViewPreferencesPersistAndApply() {
         TestCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));

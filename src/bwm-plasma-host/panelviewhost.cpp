@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "panelviewhost.h"
+#include "alternativeshelper.h"
 #include "panelsession.h"
 #include "packagewindows.h"
 #include "surfaces.h"
@@ -10,6 +11,9 @@
 #include <Plasma/Corona>
 #include <Plasma/Containment>
 #include <PlasmaQuick/AppletQuickItem>
+#include <PlasmaQuick/Dialog>
+#include <PlasmaQuick/PopupPlasmaWindow>
+#include <PlasmaQuick/SharedQmlEngine>
 #include <KPackage/Package>
 #include <KPackage/PackageLoader>
 #include <KSvg/FrameSvg>
@@ -27,6 +31,7 @@ void PanelViewHost::registerTypes() {
     static const int registered=qmlRegisterUncreatableMetaObject(PanelViewEnums::staticMetaObject,
         "org.kde.plasma.shell.panel",0,1,"Global",QStringLiteral("Enum metadata only"));
     Q_UNUSED(registered);
+    AlternativesHelper::registerTypes();
 }
 PanelViewHost::PanelViewHost(Plasma::Corona *corona,QString viewSettingsFile):ContainmentView(corona),m_viewSettingsFile(std::move(viewSettingsFile)) {
     m_reflow.setSingleShot(true);m_reflow.setInterval(0);
@@ -107,8 +112,9 @@ QVariantMap PanelViewHost::presentationState()const {
         {"compositorPresentationVerified",false}};
 }
 PanelViewHost::~PanelViewHost() {
-    // The explorer and settings QML hold "panel"/the containment: destroy them now,
-    // not after a deferred delete.
+    // The explorer, alternatives and settings QML hold "panel"/the containment:
+    // destroy them now, not after a deferred delete.
+    delete m_alternativesEngine.data();
     delete m_widgetExplorer.data();
     delete m_configView.data();
     disconnect(this,nullptr,this,nullptr);
@@ -201,6 +207,7 @@ bool PanelViewHost::load(Plasma::Containment *c) {
     // libplasma's "add widgets" internal action emits showAddWidgetsInterface; plasmashell
     // answers it with ShellCorona::toggleWidgetExplorer, here the panel's own side bar.
     connect(c,&Plasma::Containment::showAddWidgetsInterface,this,[this]{toggleWidgetExplorer();});
+    connect(c,&Plasma::Containment::appletAlternativesRequested,this,&PanelViewHost::showAlternativesForApplet);
     connect(c,&Plasma::Containment::statusChanged,this,[this](Plasma::Types::ItemStatus state){
         if(property("bwmLayerPanel").toBool())BwmSurface::setPanelAcceptsInput(this,state==Plasma::Types::AcceptingInputStatus);
         // PanelView::refreshStatus: attention or input shows the panel for a while.
@@ -394,6 +401,95 @@ bool PanelViewHost::toggleWidgetExplorer() {
     if(!m_widgetExplorer->isVisible() && m_configView && m_configView->isVisible())m_configView->hide();
     if(!m_widgetExplorer->toggle()){setError(m_widgetExplorer->error());return false;}
     return true;
+}
+
+void PanelViewHost::showAlternativesForApplet(Plasma::Applet *applet) {
+    // Adapted from plasma-workspace 6.7.5 ShellCorona::showAlternativesForApplet
+    // (LGPL-2.0-or-later): loads the installed explorer/AppletAlternatives.qml.
+    if(!applet || applet->destroyed() || !containment() || applet->containment()!=containment())return;
+    if(m_showingAlternatives==applet && m_alternativesDialog && m_alternativesDialog->isVisible())return;
+    delete m_alternativesEngine.data();
+    const auto shell=KPackage::PackageLoader::self()->loadPackage(QStringLiteral("Plasma/Shell"),QStringLiteral("org.kde.plasma.desktop"));
+    QUrl alternativesQML=shell.fileUrl("appletalternativesui");
+    if(alternativesQML.isEmpty())alternativesQML=shell.fileUrl("explorer",QStringLiteral("AppletAlternatives.qml"));
+    if(!shell.isValid() || alternativesQML.isEmpty()) {
+        setError(tr("The installed KDE Plasma shell AppletAlternatives.qml is missing."));return;
+    }
+    containment()->setStatus(Plasma::Types::RequiresAttentionStatus);
+    auto *qmlObj=new PlasmaQuick::SharedQmlEngine(this);
+    m_alternativesEngine=qmlObj;
+    m_showingAlternatives=applet;
+    qmlObj->setTranslationDomain(QStringLiteral("plasma_shell_org.kde.plasma.desktop"));
+    qmlObj->setInitializationDelayed(true);
+    qmlObj->setSource(alternativesQML);
+    auto *helper=new AlternativesHelper(applet,qmlObj);
+
+    struct AlternativesSurfaceFilter : QObject {
+        QPointer<PanelViewHost> panel;
+        QPointer<PlasmaQuick::SharedQmlEngine> engine;
+        QPointer<AlternativesHelper> helper;
+        AlternativesSurfaceFilter(PanelViewHost *p,PlasmaQuick::SharedQmlEngine *e,AlternativesHelper *h):QObject(e),panel(p),engine(e),helper(h) {
+            qApp->installEventFilter(this);
+        }
+        void attach(PlasmaQuick::Dialog *dialog) {
+            if(!dialog || !panel || !helper)return;
+            dialog->installEventFilter(this);
+            if(!panel->property("bwmLayerPanel").toBool())return;
+            if(dialog->findChild<PopupAnchor*>(QStringLiteral("bwmAlternativesPopupAnchor"),Qt::FindDirectChildrenOnly))return;
+            auto *anchor=new PopupAnchor(dialog);
+            anchor->setObjectName(QStringLiteral("bwmAlternativesPopupAnchor"));
+            anchor->setIndependentWindow(true);
+            anchor->setVisualParent(helper->applet());
+            anchor->setPopup(dialog);
+        }
+        bool eventFilter(QObject *watched,QEvent *event) override {
+            if(event->type()==QEvent::PlatformSurface &&
+               static_cast<QPlatformSurfaceEvent*>(event)->surfaceEventType()==QPlatformSurfaceEvent::SurfaceCreated) {
+                if(auto *dialog=qobject_cast<PlasmaQuick::Dialog*>(watched); dialog && engine) {
+                    for(QQmlContext *ctx=qmlContext(dialog);ctx;ctx=ctx->parentContext()) {
+                        if(ctx==engine->rootContext()){attach(dialog);break;}
+                    }
+                }
+            }
+            if(event->type()==QEvent::FocusOut && qobject_cast<PlasmaQuick::Dialog*>(watched) && panel) {
+                // Hyprland gives keyboard focus to an on-demand layer on hover;
+                // moving the pointer over the panel, its handle popup or Panel Settings
+                // is not an outside click (FocusGrab handles outside clicks).
+                QWindow *focused=QGuiApplication::focusWindow();
+                if(focused==panel.data() || (panel->m_configView && focused==panel->m_configView.data()))
+                    return true;
+                if(auto *popup=qobject_cast<PlasmaQuick::PopupPlasmaWindow*>(focused))
+                    if(popup->visualParent() && popup->visualParent()->window()==panel.data())
+                        return true;
+            }
+            return QObject::eventFilter(watched,event);
+        }
+    };
+    auto *filter=new AlternativesSurfaceFilter(this,qmlObj,helper);
+    if(auto *preDialog=qobject_cast<PlasmaQuick::Dialog*>(qmlObj->rootObject()))
+        filter->attach(preDialog);
+    qmlObj->completeInitialization({{QStringLiteral("alternativesHelper"),QVariant::fromValue(helper)}});
+    qApp->removeEventFilter(filter);
+    auto *dialog=qobject_cast<PlasmaQuick::Dialog*>(qmlObj->rootObject());
+    if(!dialog) {
+        containment()->setStatus(Plasma::Types::ActiveStatus);
+        m_showingAlternatives=nullptr;m_alternativesEngine=nullptr;
+        delete qmlObj;setError(tr("Alternatives UI does not inherit from Dialog."));return;
+    }
+    filter->attach(dialog);
+    m_alternativesDialog=dialog;
+    dialog->requestActivate();
+    const auto cleanup=[this,qmlObj,dialog,applet,cont=QPointer<Plasma::Containment>(containment())] {
+        if(m_showingAlternatives==applet) {
+            if(cont)cont->setStatus(Plasma::Types::ActiveStatus);
+            m_showingAlternatives=nullptr;
+        }
+        if(m_alternativesDialog==dialog)m_alternativesDialog=nullptr;
+        if(m_alternativesEngine==qmlObj)m_alternativesEngine=nullptr;
+        qmlObj->deleteLater();
+    };
+    connect(applet,&Plasma::Applet::destroyedChanged,qmlObj,[cleanup](bool destroyed){if(destroyed)cleanup();});
+    connect(dialog,&QQuickWindow::visibleChanged,qmlObj,[cleanup](bool visible){if(!visible)cleanup();});
 }
 
 void PanelViewHost::adoptLocation(Plasma::Types::Location location) {

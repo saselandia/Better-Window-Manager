@@ -62,7 +62,7 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 * Temas de comunidad en `~/.local/share/bwm/omarchy-themes` (`XDG_DATA_HOME`); también se reconoce `~/.config/omarchy/themes`, que aquí enlaza al repo y no se usa como destino de instalación. `theme_directory()` y `list_omarchy_themes()` comparten precedencia, igual que la CLI y el carrusel.
 * **Animaciones por skin (§3.94):** `config/hypr/skins/<id>/hypr/animations.lua` (default (end-4) = dots-hyprland, Retro = Omarchy, Breeze = las MD3 anteriores). El fondo lo pinta el shell como en el original: `Background.qml` de end-4 en default (cambio directo, sin la transición «grow» de swww) y el plugin background de Omarchy en Retro (`modules/ii/omarchyBackground`, revelación diagonal de 840 ms); swww queda debajo sin animación. Breeze sigue con swww.
 * **Intros de fondo (Retro, §3.116):** un fondo fijo con `backgrounds/intros/<nombre>.<ext>` la reproduce con OWE al elegirlo (también al cambiar de tema) y al entrar, una vez por sesión tras desbloquear; se apaga en el menú → Estilo → Intros de fondo (`omarchy-theme-bg-intro`) o con las animaciones apagadas.
-* **Selectores de fondos:** default (end-4) (§3.93): el de end-4 (`modules/ii/wallpaperSelector`, idéntico a dots-hyprland) con Alt+W, Ctrl+Super+T y Ctrl+Super+Alt+T (aleatorio de la carpeta); aplica con `switchwall.sh`. Retro (§3.111): carrusel original de Omarchy con Alt+W, fondos del tema activo + `~/.config/omarchy/backgrounds/<tema>` + `~/Pictures/Wallpapers`; backend `skins/retro/scripts/wallpaper-picker.py`. Breeze conserva el rofi de `wallpaper-picker.sh`.
+* **Selectores de fondos:** todas las skins sólo toman `~/Pictures/Wallpapers` (§311). default (end-4) (§3.93): el de end-4 (`modules/ii/wallpaperSelector`, confinado a esa carpeta) con Alt+W, Ctrl+Super+T y Ctrl+Super+Alt+T (aleatorio de la carpeta); aplica con `switchwall.sh`. Retro (§3.111): carrusel original de Omarchy con Alt+W; backend `skins/retro/scripts/wallpaper-picker.py`. Breeze conserva el rofi de `wallpaper-picker.sh`.
 * **default (end-4): selección de colores de end-4 (§3.69)**: `set-wallpaper.sh` llama a `switchwall.sh --colors-only`; respeta `appearance.palette.type`, preferencia claro/oscuro de GSettings y `enableAppsAndShell`. El clasificador automático y el generador de terminal son los originales; dependencias aisladas en `~/.local/share/bwm/default-colors-venv`, preparadas por el instalador.
 * **Tema por defecto de cada skin:** default (end-4) = Material You **dinámico** (matugen desde el fondo); Retro = paleta **dinámica** en formato Omarchy (23 temas **estáticos** con Alt+R); Plasma = el tema de Plasma activo, **estático** (Breeze Oscuro de entrada; §3.139). Cada skin en su carpeta `config/hypr/skins/<id>/skin.json` (§2.9, §3.59).
 * Retro estático/dinámico: `~/.local/state/bwm/omarchy/{theme.mode,theme.name,colors.toml,shell.toml}`; en estático cambiar el fondo no toca la paleta. Temas claros (White, Catppuccin Latte…) ponen las apps en claro.
@@ -118,8 +118,11 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   paneles y edición transaccional de perfiles. Iteración 7 (§315): alineación/longitud de
   bar.plasma migradas con tamaño lógico explícito por salida; formatos anteriores conservados.
   Iteración 8 (§316): varios paneles con política nativa; reserva el normal más grueso por borde,
-  con reservas temporales en edición. Medido en Hyprland y aceptado con el ratón. Escritorio,
-  bordes adyacentes/esquinas y resto de R5 pendientes.
+  con reservas temporales en edición. Medido en Hyprland y aceptado con el ratón. Iteración 9
+  (§317): alternativas de widgets (`AppletAlternatives.qml` + `AlternativesHelper`), arrastre
+  `text/x-plasmoidservicename` al panel, reordenado con `ConfigOverlay` y desinstalación de widgets
+  locales desde `WidgetExplorer`; probado offscreen normal/ASan y popup/cambio medido en Hyprland.
+  Escritorio, bordes adyacentes/esquinas, escala fraccionaria y resto de R5 pendientes.
 * **Breeze II (2026-11-12):** `docs/BREEZE_PLAN_V2.md`, R0 entregada con referencia y límites documentados;
   R1 corrige origen de especiales al minimizar, activación común y filtro de Alt+Tab (pruebas
   aisladas; fallo visual original pendiente). R2 tiene primer KCM QWidget real, descubierto por
@@ -558,6 +561,7 @@ flatpak update
   fuentes correspondientes a algunos binarios y licencia de código independiente siguen pendientes.
 
 ### 2.9 Instalador, requisitos y bienvenida
+* **BWMenu en el lanzador (§3.307, §3.309):** la entrada común `org.bwm.menu.desktop` permite buscar **BWMenu** en las tres skins. El instalador y el inicio de sesión la registran en `${XDG_DATA_HOME:-$HOME/.local/share}/applications`. Instalada también en esta sesión; apertura desde la entrada de aplicación comprobada.
 * **Añadir skins en BWMenu (§3.126–127):** catálogo independiente `saselandia/bwm-skins` creado y publicado en GitHub/GitLab, checkout `/mnt/HDD1TB/Projects/bwm-skins`. Sólo las tres actuales se incluyen en BWM; las adicionales tendrán releases propias. Índice v2 `catalog/skins.json` con id `bwm-extra-skins`, inicialmente vacío; generador `scripts/bwm-skin-catalog.py build --catalog-root /ruta/bwm-skins`. BWMenu lo consulta online con respaldo GitLab, caché separada de una hora y fallback vacío. El instalador automático y la carga completa de módulos externos siguen pendientes; «Ver instalación» abre las instrucciones publicadas.
 * **Semáforos de BWMenu (§3.123–125):** `bwm_versions.version_state()` compara con `referenceVersion` (registro local versionado en `skins/requirements.json`; fecha/base BWM en `referenceEnvironment`), con fallback a `check.tested`/`check.min`. Verde / Correcta si coincide o pasa una comprobación sin referencia; rojo / Falta si falta/es inferior a la referencia/incompatible; naranja / Desactualizado si la referencia queda por debajo de la instalada. Los mínimos `check.min` siguen controlando la instalación y activación de skins; el semáforo no los eleva. No consulta versiones remotas. La luz de cada skin agrega núcleo + obligatorios + opcionales (rojo > naranja > verde). Tabla compacta `DependencyTable.qml` con las superficies del tema, letras negras en fondos claros y blancas en oscuros; detalles al pulsar una fila. Registro actualizado el 2026-11-10: 54 referencias, incluidas Hyprland 0.56.2, Quickshell 0.3.2, Qt 6.11.2 y Python 3.14.7.
 * **Skins = carpetas** en `config/hypr/skins/`: `requirements.json` (núcleo `requires`/`recommends` + catálogo: etiqueta, para qué, comprobación y paquete por familia de distro, con `guru:`/`hyproverlay:` en Gentoo, `aur:` en Arch, `copr:` en Fedora) y una carpeta por skin con su `skin.json` (`default/`, `retro/`, `plasma/`: identidad, variable de ventanas `windows` = `tiling`/`traditional` + bloque `traditional`, `palette` matugen/omarchy/breeze, `defaultTheme`, temas, `look`, `bar`, `fonts`, mapa de archivos `parts`, requisitos). Plantilla `_template/skin.json` y guía `skins/README.md`. `scripts/bwm_skins.py` los carga para el gestor (que ya no tiene datos de skin en Python), `bwm_windows.py`, el comprobador y la bienvenida. Tabla generada en `docs/REQUIREMENTS.md`; qué es una skin y cómo se añade en `docs/SKINS.md` (la «wiki»).
@@ -5305,6 +5309,22 @@ git status; git log --oneline -5; git push origin main
 * **Después:** el usuario confirma con el ratón que todo funciona salvo esquivar ventanas. Era lo
   esperado sin el proveedor; queda probarlo tras volver a iniciar sesión.
 
+### 311. Selectores de fondo: sólo `~/Pictures/Wallpapers` en todas las skins (2026-11-19)
+
+* **Petición:** que el selector de fondos de todas las skins tome en cuenta únicamente `~/Pictures/Wallpapers/`.
+* **Hecho:** default: `services/Wallpapers.qml` fija `rootPath` y confina la navegación (normaliza `..`, redirige a la raíz toda
+  ruta de fuera —pegada, barra de direcciones—, `navigateUp` no sale de ella); el panel lateral de `WallpaperSelectorContent.qml` queda con
+  el único acceso «Wallpapers» (sin Home/Documentos/Descargas/Imágenes/Vídeos/homework). Se permiten subcarpetas de dentro.
+  Se corrigió de paso la validación de `validateDirProc` (asignaba el directorio antes de comprobarlo y una ruta inexistente se ignoraba).
+  Respaldo `switchwall.sh` (kdialog): arranca en Wallpapers y descarta lo elegido fuera. Breeze y respaldo rofi: `wallpaper-picker.sh`
+  sólo busca en `~/Pictures/Wallpapers` (antes también `~/Pictures`, `~/Downloads`, `/usr/share/backgrounds`). Retro:
+  `skins/retro/scripts/wallpaper-picker.py` ya no mezcla los fondos del tema de Omarchy ni `~/.config/omarchy/backgrounds/<tema>`.
+* **No cambia:** `set-wallpaper.sh`/`switchwall.sh --image` y la IPC `wallpapers apply` siguen aceptando cualquier ruta (los usan
+  scripts, el fondo aleatorio —que ya descarga a Wallpapers— y los temas de Omarchy); sólo los selectores están restringidos.
+* **Comprobado:** `test_retro_wallpapers.py` (10, con las colecciones reescritas), `bash -n` de ambos scripts, `--print-dirs` de Retro
+  = `~/Pictures/Wallpapers`, recarga de Quickshell sin errores en el log. **No probado:** abrir el selector de end-4 y navegar fuera de
+  la raíz a mano, ni el kdialog de respaldo.
+
 
 ### 312. R5: regresión de esquivar desde el modelo original y proveedor aún retirado (2026-11-19)
 
@@ -5424,3 +5444,43 @@ git status; git log --oneline -5; git push origin main
 * **Verificación final:** compilación normal completa; CTest sin `native-` 8/8 (58,48 s),
   superficies/configuración local con ASan (`detect_leaks=0`) 2/2 (52,37 s). Sólo normal
   en sesión, no ASan nativo. Cero capas de ensayo tras el cierre; AGENTS/CLAUDE idénticos.
+
+
+### 317. R5, iteración 9: alternativas de widgets, arrastre al panel, reordenado y desinstalación (2026-11-19)
+
+* **Hecho:** `alternativeshelper.{h,cpp}` y `PanelViewHost::showAlternativesForApplet` adaptan
+  `AlternativesHelper` y `ShellCorona::showAlternativesForApplet` de plasma-workspace 6.7.5
+  (LGPL-2.0-or-later, Marco Martin). Registran `AlternativesHelper` en `org.kde.plasma.shell`
+  (2.0 y 1.0), conectan `Containment::appletAlternativesRequested` (acción interna `alternatives`)
+  y cargan sin modificar el `explorer/AppletAlternatives.qml` instalado. `loadAlternative`
+  traslada el atajo global, sincroniza y copia el `config()` del widget saliente al nuevo,
+  recarga su `configScheme()`, destruye el anterior y reconcilia `AppletOrder` en la ranura
+  original.
+* **Anclaje layer-shell y `SharedQmlEngine`:** `PopupAnchor` instala filtro de eventos sobre
+  `m_popup` para `SurfaceCreated` y deriva un tamaño inicial no nulo desde `mainItem` (+ `margins`)
+  antes de `Dialog::showEvent`. Como todas las instancias de `SharedQmlEngine` comparten el mismo
+  `QQmlEngine` del proceso, tanto `PanelConfigView::eventFilter` como `AlternativesSurfaceFilter`
+  filtran los `PlasmaQuick::Dialog` por la jerarquía `rootContext()` de su propio motor (antes
+  `PanelConfigView` interceptaba `AppletAlternatives.qml` como un indicador `bwm-r5-edit-indicator`).
+  El diálogo ignora además la pérdida de foco por hover hacia el panel, su popup de asa o los
+  Ajustes del panel.
+* **Ensayos offscreen y en Hyprland:** `originalAppletAlternativesDragAndUninstall` (`test-ui.cpp`,
+  registrada en `check-local.py`) verifica el diálogo `AppletAlternatives.qml` (Escape + cambio de
+  reloj analógico a digital conservando `AppletOrder`), el arrastre `text/x-plasmoidservicename`
+  sobre el `DropArea` de `org.kde.panel`, el reordenado con `ConfigOverlay.qml` y la retirada +
+  desinstalación de un widget local desde `WidgetExplorer.qml` (`removeAllInstances` +
+  `pendingUninstallTimer.uninstall()`). En sesión Hyprland real (LG), `panelOwnPopupsInHyprland`
+  (`check-edit-mode-session.py`) comprueba que `AppletAlternatives.qml` se mapea como capa
+  `bwm-r4-popup` (`368×251` en `2560,1801`, justo encima del widget en `2568,2052 40×40`, `0`
+  toplevels propios), sustituye el reloj en el panel vivo y se retira limpiamente restituyendo
+  puntero y foco (verificando dirección y PID).
+* **Verificación:** compilación normal y ASan completas; CTest normal sin `native-` **8/8**
+  (59,67 s); CTest ASan (`detect_leaks=0`, `surface-geometry` + `isolated-local-configuration`)
+  **2/2** (54,56 s); suite completa `check-edit-mode-session.py` en LG **38/38 pasos** OK sin
+  capas residuales; Python R4 **262/262** OK.
+* **Límites:** sin arrastre físico con ratón en la sesión del usuario. Siguen pendientes en R5
+  bordes adyacentes/esquinas y sus popups, escala fraccionaria del editor, anfitrión de escritorio
+  (`DesktopEditMode.qml`), comparación visual con Plasma real y aceptación final del usuario. No
+  se sustituye el panel diario. Documentación actualizada en `docs/BREEZE_R5_RESULTS.md`,
+  `src/bwm-plasma-host/README.md` y `THIRD_PARTY_NOTICES.md`.
+

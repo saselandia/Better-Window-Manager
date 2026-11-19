@@ -577,3 +577,52 @@ Verificación final de la iteración 8: compilación normal completa, CTest norm
 `native-` **8/8** (58,48 s), pruebas `surface-geometry` y `isolated-local-configuration`
 con ASan (`detect_leaks=0`) **2/2** (52,37 s). La prueba real fue normal, no ASan nativo.
 No quedan capas `bwm-r4-*` después de cerrar el preview.
+
+## Iteración 9 (2026-11-19) — Alternativas de widgets, arrastre al panel, reordenado y desinstalación
+
+### Qué hay
+
+- **`AlternativesHelper` y `AppletAlternatives.qml`** (`alternativeshelper.{h,cpp}`,
+  `PanelViewHost::showAlternativesForApplet`): adapta `shell/alternativeshelper.{h,cpp}` y
+  `ShellCorona::showAlternativesForApplet` de plasma-workspace 6.7.5 (LGPL-2.0-or-later, Marco
+  Martin). Registra `AlternativesHelper` en `org.kde.plasma.shell` (2.0 y 1.0) y conecta la señal
+  `Plasma::Containment::appletAlternativesRequested` de la acción interna `alternatives` («Show
+  Alternatives…»). Carga sin modificar el `explorer/AppletAlternatives.qml` instalado del paquete
+  de shell. `loadAlternative` traslada el atajo global, sincroniza y copia el `config()` del
+  widget saliente al nuevo, recarga su `configScheme()`, destruye el anterior y reconcilia
+  `AppletOrder` si un layout offscreen sin pulir no colocó el nuevo en la ranura original.
+- **Anclaje layer-shell del diálogo de alternativas**: `PopupAnchor` instala el filtro de eventos
+  sobre `m_popup` para `QEvent::PlatformSurface` (`SurfaceCreated`) y deriva un tamaño inicial no
+  nulo desde `mainItem` (+ `margins`) antes de `Dialog::showEvent`, porque una superficie
+  `Top|Left` de LayerShellQt no admite `desiredSize` `0×0` al crearse. Además, tanto
+  `PanelConfigView::eventFilter` como `AlternativesSurfaceFilter` filtran los `PlasmaQuick::Dialog`
+  por la jerarquía `rootContext()` de su propio `SharedQmlEngine`, ya que todas las instancias de
+  `SharedQmlEngine` comparten el mismo `QQmlEngine` del proceso (antes `PanelConfigView` tomaba el
+  diálogo de alternativas como un indicador `bwm-r5-edit-indicator`). Tampoco se cierra cuando el
+  puntero pasa por encima del panel editado, su `PopupPlasmaWindow` o los Ajustes del panel
+  (foco *on demand* de Hyprland en hover).
+- **Arrastre (`text/x-plasmoidservicename`), reordenado (`ConfigOverlay`) y desinstalación
+  (`pendingUninstallTimer`)**: el `DropArea` original de `org.kde.panel`, el arrastre de
+  `ConfigOverlay.qml` (`currentApplet` + `item.x` + `LayoutManager.insertAtCoordinates`) y el
+  botón de desinstalar de `WidgetExplorer.qml` (`removeAllInstances` +
+  `pendingUninstallTimer.uninstall()`) funcionan sin parches sobre los QML instalados.
+
+### Pruebas
+
+| Prueba | Resultado |
+| :--- | :--- |
+| `originalAppletAlternativesDragAndUninstall` (`test-ui.cpp`, registrada en `check-local.py`): (1) acción `alternatives` del reloj analógico → `AppletAlternatives.qml` con modelo poblado, Escape cierra sin cambiar, reapertura + `loadAlternative('org.kde.plasma.digitalclock')` conserva el slot en `AppletOrder`; (2) `QDragEnterEvent`/`QDropEvent` con `text/x-plasmoidservicename` sobre el `DropArea` de `org.kde.panel` inserta el widget en las coordenadas soltadas; (3) `ConfigOverlay` mueve un widget de la primera a la última posición y actualiza `AppletOrder`; (4) paquete local desechable instalado en `XDG_DATA_HOME`, añadido al panel, marcado `pendingUninstall` en el explorador (`removeAllInstances` lo retira del panel) y desinstalado de disco al disparar `pendingUninstallTimer` | Pasa (CTest `isolated-local-configuration`, normal y ASan) |
+| `panelOwnPopupsInHyprland` (`check-edit-mode-session.py`, LG, sesión Hyprland real): paso `applet-alternatives-popup-and-switch` añadido: dispara `alternatives`, verifica la capa `bwm-r4-popup` (`368×251` en `2560,1801`, justo encima del widget en `2568,2052 40×40`, `0` toplevels propios), cambia el reloj analógico por `org.kde.plasma.digitalclock`, cierra la capa y restituye puntero y foco verificando dirección + PID | Pasa (suite completa `check-edit-mode-session.py` en LG, 38 pasos, todos `passed: true`, sin capas residuales) |
+| Compilación y CTest normal (`-E "^native-"`) | **8/8** (59,67 s) |
+| Compilación y CTest ASan (`detect_leaks=0`, `surface-geometry` + `isolated-local-configuration`) | **2/2** (54,56 s) |
+| Suite Python R4 (`test_r4_*.py`) | Pasa |
+
+### Límites y pendiente de R5
+
+- Los flujos de alternativas, arrastre, reordenado y desinstalación están verificados con los
+  manejadores/eventos reales sobre el QML instalado (y el popup/cambio de alternativas medido en
+  Hyprland con `hyprctl layers`); no se ha hecho arrastre físico con ratón en la sesión del usuario.
+- Siguen pendientes en R5: combinaciones de bordes adyacentes/esquinas y anclaje de sus popups,
+  comprobación del editor a escala fraccionaria, anfitrión de escritorio (`DesktopEditMode.qml`),
+  comparación visual con Plasma real y aceptación final del usuario. No se sustituye el panel diario.
+

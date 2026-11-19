@@ -14,7 +14,7 @@ class PanelSession;
 class PanelViewSettings;
 class PanelConfigView;
 class WidgetExplorerView;
-namespace PlasmaQuick {class AppletQuickItem;}
+namespace PlasmaQuick {class AppletQuickItem; class SharedQmlEngine;}
 
 // The original shell registers PanelView's enum metadata under this URI. Only the
 // enum contract is provided here; this does not register a replacement PanelView.
@@ -99,6 +99,9 @@ public:
     // R5: the original "Add Widgets" side bar of this panel, created on first use.
     WidgetExplorerView *widgetExplorer()const;
     bool toggleWidgetExplorer();
+    // R5: the original "Show Alternatives…" popup (explorer/AppletAlternatives.qml).
+    QQuickWindow *alternativesDialog()const{return m_alternativesDialog.data();}
+    void showAlternativesForApplet(Plasma::Applet *applet);
     void setUserConfiguring(bool value);
     int visibilityMode()const{return m_visibility;}
     void setVisibilityMode(int value);
@@ -156,6 +159,9 @@ private:
     QPointer<PanelSession> m_session;
     QPointer<PanelConfigView> m_configView;
     QPointer<WidgetExplorerView> m_widgetExplorer;
+    QPointer<Plasma::Applet> m_showingAlternatives;
+    QPointer<PlasmaQuick::SharedQmlEngine> m_alternativesEngine;
+    QPointer<QQuickWindow> m_alternativesDialog;
     QPropertyAnimation m_floatingAnimation;
     QTimer m_reflow;
     int m_thickness=48,m_requestedThickness=48,m_length=640;

@@ -767,3 +767,17 @@ Adaptaciones BWM: desempate estable por ID, coordinador de vistas ligado a las s
 su descripción, conservación de zonas al entrar en edición y entrega por LayerShellQt/QtQuick
 al compositor Hyprland. No se copia ni modifica el QML de Plasma; las reservas se entregan
 mediante layer-shell en Hyprland.
+
+
+### Alternativas de widgets (`AlternativesHelper`) — Plasma 6.7.5 (R5)
+
+`src/bwm-plasma-host/alternativeshelper.{h,cpp}` y `PanelViewHost::showAlternativesForApplet`
+(`panelviewhost.cpp`) adaptan `shell/alternativeshelper.{h,cpp}` y
+`ShellCorona::showAlternativesForApplet` (`shell/shellcorona.cpp`) de
+`plasma-workspace-6.7.5.tar.xz` (tarball de Portage). Conservan el aviso original de
+Marco Martin (2014), LGPL-2.0-or-later. Fuente correspondiente:
+<https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5/shell>.
+Cambios BWM: sin `ShellCorona`; el diálogo `explorer/AppletAlternatives.qml` instalado se
+carga sin modificar y se ancla como superficie layer-shell (`bwm-r4-popup`) sobre el widget
+del panel mediante `PopupAnchor`, preservando el orden `AppletOrder` del containment.
+

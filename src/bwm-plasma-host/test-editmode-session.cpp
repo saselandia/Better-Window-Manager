@@ -331,6 +331,19 @@ private Q_SLOTS:
         const auto output = qEnvironmentVariable("BWM_R5_OUTPUT");
         auto *screen = BwmOutput::resolveScreen(output);
         QVERIFY(screen);
+        const auto cursor = cursorPos();
+        const auto focused = hyprJson({"-j", "activewindow"}).object();
+        const auto restore = [&] {
+            if (cursorPos() != cursor) warpCursor(cursor);
+            for (const auto &row : hyprJson({"-j", "clients"}).array()) {
+                const auto c = row.toObject();
+                if (!focused.value("address").toString().isEmpty() && c.value("address") == focused.value("address") && c.value("pid") == focused.value("pid")) {
+                    hyprJson({"dispatch", QString("hl.dsp.focus({window=\"address:%1\"})").arg(c.value("address").toString())});
+                    break;
+                }
+            }
+        };
+        struct Restore { std::function<void()> fn; ~Restore() { fn(); } } restoreOnReturn{restore};
         ViewCorona corona;
         corona.setKPackage(KPackage::PackageLoader::self()->loadPackage(QStringLiteral("Plasma/Shell"), QStringLiteral(BWM_SHELL_SOURCE_DIR)));
         corona.loadLayout(QStringLiteral("bwm-r5-popups-appletsrc"));
@@ -407,6 +420,43 @@ private Q_SLOTS:
             {"ownClients", clientsWithTip}, {"passed", tipShown && clientsWithTip == baselineClients}});
         QVERIFY2(tipShown && clientsWithTip == baselineClients, "paneltoolbox tooltip is not a layer");
         QQmlExpression(qmlContext(toolBox), toolBox, QStringLiteral("toolTipArea.hideImmediately()")).evaluate();
+        QTRY_COMPARE(layers(QStringLiteral("bwm-r4-popup")).size(), baselinePopups);
+        // AppletAlternatives.qml: opens as a layer above the widget (never an xdg_toplevel) and replaces it.
+        Q_EMIT applet->contextualActionsAboutToShow();
+        auto *altAction = applet->internalAction(QStringLiteral("alternatives"));
+        QVERIFY(altAction);
+        altAction->trigger();
+        QPointer<QQuickWindow> altDialog;
+        QTRY_VERIFY((altDialog = view->alternativesDialog()) && altDialog->isVisible());
+        QList<QRect> altPopups;
+        QRect altLayer;
+        const bool altShown = QTest::qWaitFor([&] {
+            altPopups = layers(QStringLiteral("bwm-r4-popup"));
+            if (altPopups.size() != baselinePopups + 1) return false;
+            altLayer = {};
+            for (const auto &r : altPopups) if (r != settingsLayer) altLayer = r;
+            return altLayer.isValid() && altLayer.width() > 10 && altLayer.bottom() + 1 == appletRect.top();
+        }, 4000);
+        const int clientsWithAlt = ownClients();
+        const bool altOk = altShown && altLayer.isValid() && altLayer.bottom() + 1 == appletRect.top()
+            && altLayer.left() <= appletRect.right() && altLayer.right() >= appletRect.left() && clientsWithAlt == baselineClients;
+        auto *altHelper = altDialog->property("alternativesHelper").value<QObject *>();
+        QVERIFY(altHelper);
+        QMetaObject::invokeMethod(altHelper, "loadAlternative", Q_ARG(QString, QStringLiteral("org.kde.plasma.digitalclock")));
+        altDialog->close();
+        QTRY_VERIFY(!view->alternativesDialog());
+        QTRY_COMPARE(layers(QStringLiteral("bwm-r4-popup")).size(), baselinePopups);
+        const bool switched = QTest::qWaitFor([&] {
+            return c->applets().size() == 1 && c->applets().first()->pluginMetaData().pluginId() == QStringLiteral("org.kde.plasma.digitalclock");
+        }, 4000);
+        m_steps.append(QJsonObject{{"step", "applet-alternatives-popup-and-switch"}, {"observed", rect(altLayer)}, {"applet", rect(appletRect)},
+            {"ownClients", clientsWithAlt}, {"switchedToDigitalClock", switched}, {"passed", altOk && switched}});
+        if (!altOk || !switched) {
+            QJsonArray seen; for (const auto &r : altPopups) seen.append(rect(r));
+            puts(QJsonDocument(QJsonObject{{"debugAltPopups", seen}, {"altLayer", rect(altLayer)}, {"appletRect", rect(appletRect)},
+                {"clientsWithAlt", clientsWithAlt}, {"switched", switched}}).toJson(QJsonDocument::Compact).constData());
+        }
+        QVERIFY2(altOk && switched, "AppletAlternatives.qml is not a layer above the widget or did not replace the clock");
         // Leaving edit mode is covered by the other cases (Escape); close it directly here.
         if (auto *dialog = openDialog()) dialog->hide();
         corona.setEditMode(false);
@@ -414,6 +464,10 @@ private Q_SLOTS:
         QTRY_COMPARE(layers(QStringLiteral("bwm-r4-popup")).size(), 0);
         runtime.setSkin(QStringLiteral("default"));
         QTRY_VERIFY(layers(QStringLiteral("bwm-r4-preview")).isEmpty());
+        restore();
+        QTRY_COMPARE(cursorPos(), cursor);
+        if (!focused.value("address").toString().isEmpty())
+            QTRY_COMPARE(activeWindow(), focused.value("address").toString());
         puts(QJsonDocument(QJsonObject{{"steps", m_steps}}).toJson(QJsonDocument::Compact).constData());
     }
     void originalPanelSettingsInHyprland()

@@ -8,6 +8,8 @@
 #include <qqml.h>
 #include <algorithm>
 #include <QDynamicPropertyChangeEvent>
+#include <QPlatformSurfaceEvent>
+#include <cmath>
 #include <memory>
 #include <QTimer>
 #include <QLoggingCategory>
@@ -271,11 +273,13 @@ void registerTypes(){qmlRegisterType<PopupAnchor>("org.bwm.plasma.host",1,0,"Pop
 }
 void PopupAnchor::setPopup(QQuickWindow *popup) {
     if(m_popup==popup)return;
-    if(m_popup)disconnect(m_popup,nullptr,this,nullptr);
+    if(m_popup){m_popup->removeEventFilter(this);disconnect(m_popup,nullptr,this,nullptr);}
     if(m_boundScreen)disconnect(m_boundScreen,nullptr,this,nullptr);
     m_popup=popup;
     m_roleConfigured=false;m_boundScreen=nullptr;
     if(popup) {
+        if(m_panel && m_panel->property("bwmLayerPanel").toBool())LayerShellQt::Window::get(popup);
+        popup->installEventFilter(this);
         connect(popup,&QQuickWindow::widthChanged,this,&PopupAnchor::update);
         connect(popup,&QQuickWindow::heightChanged,this,&PopupAnchor::update);
         connect(popup,&QQuickWindow::visibleChanged,this,&PopupAnchor::update);
@@ -342,6 +346,10 @@ bool PopupAnchor::eventFilter(QObject *object,QEvent *event) {
         const auto name=static_cast<QDynamicPropertyChangeEvent*>(event)->propertyName();
         if(name=="bwmPanelRect" || name=="bwmPanelEdge" || name=="bwmAvailableRect")update();
     }
+    if(object==m_popup && event->type()==QEvent::PlatformSurface &&
+       static_cast<QPlatformSurfaceEvent*>(event)->surfaceEventType()==QPlatformSurfaceEvent::SurfaceCreated) {
+        update();
+    }
     return false;
 }
 void PopupAnchor::update() {
@@ -370,7 +378,23 @@ void PopupAnchor::update() {
     role->setKeyboardInteractivity(m_nonInteractive ? LayerShellQt::Window::KeyboardInteractivityNone : LayerShellQt::Window::KeyboardInteractivityOnDemand);
     role->setCloseOnDismissed(true);role->setScreen(screen);role->setActivateOnShow(!m_nonInteractive);
     const auto edge=Qt::Edge(m_panel->property("bwmPanelEdge").toInt());
-    QRect placed=BwmSurface::placePopup(area,anchor,m_popup->size(),edge);
+    QSize wanted=m_popup->size();
+    if(wanted.width()<=0 || wanted.height()<=0) {
+        // PlasmaQuick::Dialog syncs its window size from mainItem in showEvent, which runs
+        // after QWindow::create() (SurfaceCreated). A Top|Left layer surface cannot be created
+        // with a zero desiredSize: derive an initial non-zero size before showEvent resizes it.
+        if(auto *mainItem=m_popup->property("mainItem").value<QQuickItem*>()) {
+            int w=int(std::ceil(std::max(mainItem->width(),mainItem->implicitWidth())));
+            int h=int(std::ceil(std::max(mainItem->height(),mainItem->implicitHeight())));
+            if(auto *margins=m_popup->property("margins").value<QObject*>()) {
+                w+=margins->property("left").toInt()+margins->property("right").toInt();
+                h+=margins->property("top").toInt()+margins->property("bottom").toInt();
+            }
+            wanted=QSize(std::max(wanted.width(),w),std::max(wanted.height(),h));
+        }
+        wanted=QSize(std::max(1,wanted.width()),std::max(1,wanted.height()));
+    }
+    QRect placed=BwmSurface::placePopup(area,anchor,wanted,edge);
     if(m_requestedPosition && !placed.isEmpty()) {
         // A package position is honoured inside the available area, like
         // Dialog::repositionIfOffScreen, without covering the panel strip it was opened from
@@ -390,6 +414,7 @@ void PopupAnchor::update() {
         // place companion Dialogs from root.x/y, such as Andromeda's avatar, follow it.
         // The resulting move signal is ignored while m_updating is set.
         if(m_requestedPosition && m_popup->position()!=placed.topLeft())m_popup->setPosition(placed.topLeft());
+        if(m_popup->isVisible()){m_popup->update();m_popup->requestUpdate();}
     }
     m_updating=false;
     if(expanded)QTimer::singleShot(0,this,[this]{if(m_parent && m_popup)m_parent->setProperty("expanded",true);});
