@@ -145,9 +145,8 @@ bool PanelRuntime::setAssignments(const QHash<uint,QString> &outputs) {
     if(m_settingsFile.trimmed().isEmpty()){m_error=tr("A native view preferences file is required.");emit changed();return false;}
     QSet<uint> expected;
     for(auto *c:m_corona->containments())if(!c->destroyed()) {
-        if(c->containmentType()!=Plasma::Containment::Panel && c->containmentType()!=Plasma::Containment::CustomPanel) {
-            m_error=tr("This runtime only hosts native panel containments.");emit changed();return false;
-        }
+        if(c->containmentType()!=Plasma::Containment::Panel && c->containmentType()!=Plasma::Containment::CustomPanel)
+            continue;
         expected.insert(c->id());
     }
     if(expected.isEmpty() || QSet<uint>(outputs.keyBegin(),outputs.keyEnd())!=expected){m_error=tr("Bindings must cover exactly the live native panels.");emit changed();return false;}
@@ -228,7 +227,10 @@ void PanelRuntime::drop(uint id) {
     if(m_corona)m_corona->unbind(frame->containment());
     delete frame; // closes ConfigurationSession; its pending controls are not applied
 }
-void PanelRuntime::dropAll(){for(uint id:m_views.keys())drop(id);}
+void PanelRuntime::dropAll() {
+    for(uint id:m_views.keys())drop(id);
+    if(m_corona)for(auto *screen:QGuiApplication::screens())m_corona->setScreenAvailableRect(screen,{});
+}
 void PanelRuntime::updateReservations() {
     if(!m_nativePanelPolicy)return;
     // ShellCorona::shouldPanelReserveSpace (plasma-workspace 6.7.5): only the
@@ -252,6 +254,46 @@ void PanelRuntime::updateReservations() {
     // not a compositor-wide atomic transaction, but never deliberately adds zones.
     for(uint id:ids)if(!selected.contains(id))BwmSurface::setPanelReservationPolicy(view(id),false,editing);
     for(uint id:selected)BwmSurface::setPanelReservationPolicy(view(id),true,editing);
+    // Compute each reserving panel's usableArea bounds (in compositor surface order,
+    // matching IHyprRenderer::arrangeLayerArray) and the screen's final available rect
+    // (matching ShellCorona::_availableScreenRect) so adjacent-edge panels and corner
+    // popups never collide or drift out of sync.
+    for(auto *screen:QGuiApplication::screens()) {
+        QList<QPair<uint,PanelViewHost*>> onScreen,reserving;
+        for(uint id:ids) {
+            auto *frame=view(id);
+            if(!frame || frame->screen()!=screen)continue;
+            onScreen.append({id,frame});
+            if(frame->isVisible() && frame->property("bwmExclusiveZoneRequested").toInt()>0)reserving.append({id,frame});
+        }
+        std::sort(reserving.begin(),reserving.end(),[](const auto &a,const auto &b){
+            if(a.second->surfaceOrder()!=b.second->surfaceOrder())return a.second->surfaceOrder()<b.second->surfaceOrder();
+            return a.first<b.first;
+        });
+        const QRect full=screen->geometry();
+        QRect usable=full;
+        QHash<PanelViewHost*,QRect> boundsByView;
+        for(const auto &[id,frame]:reserving) {
+            Q_UNUSED(id);
+            boundsByView.insert(frame,usable);
+            const int zone=frame->property("bwmExclusiveZoneRequested").toInt();
+            QRect next=usable;
+            switch(Qt::Edge(frame->property("bwmPanelEdge").toInt())) {
+            case Qt::TopEdge:next.setTop(next.top()+zone);break;
+            case Qt::BottomEdge:next.setBottom(next.bottom()-zone);break;
+            case Qt::LeftEdge:next.setLeft(next.left()+zone);break;
+            case Qt::RightEdge:next.setRight(next.right()-zone);break;
+            default:break;
+            }
+            if(next.isValid() && !next.isEmpty())usable=next;
+        }
+        const QRect publishedAvailable=reserving.isEmpty() ? QRect() : usable;
+        if(m_corona)m_corona->setScreenAvailableRect(screen,publishedAvailable);
+        for(const auto &[id,frame]:onScreen) {
+            Q_UNUSED(id);
+            BwmSurface::setPanelLayoutContext(frame,boundsByView.value(frame,full),publishedAvailable);
+        }
+    }
 }
 void PanelRuntime::reconcile() {
     if(m_reconciling)return;

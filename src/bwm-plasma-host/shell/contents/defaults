@@ -1,8 +1,16 @@
-# [Panel] of plasma-desktop 6.7.5 desktoppackage/contents/defaults (org.kde.plasma.desktop).
+# [Desktop] and [Panel] of plasma-desktop 6.7.5 desktoppackage/contents/defaults (org.kde.plasma.desktop).
 # libplasma reads it from the Corona shell package: ContainmentItem loads the panel ToolBox
 # (configure button the original ConfigOverlay.qml sizes itself against) and Containment
-# applies these mouse actions while a panel has no ContainmentActions of its own.
-# BWM: no [Desktop] group, this host has no desktop containment.
+# applies these mouse actions while a containment has no ContainmentActions of its own.
+[Desktop]
+Containment=org.kde.plasma.folder
+ToolBox=
+RuntimePlatform=Desktop
+
+[Desktop][ContainmentActions]
+RightButton;NoModifier=org.kde.contextmenu
+MiddleButton;NoModifier=org.kde.paste
+
 [Panel]
 Containment=org.kde.panel
 ToolBox=org.kde.paneltoolbox

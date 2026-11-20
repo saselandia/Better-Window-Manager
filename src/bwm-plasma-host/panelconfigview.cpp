@@ -10,6 +10,7 @@
 #include "panelsession.h"
 #include "panelviewhost.h"
 #include "surfaces.h"
+#include "viewcorona.h"
 
 #include <KPackage/Package>
 #include <KPackage/PackageLoader>
@@ -26,6 +27,8 @@
 #include <QQmlEngine>
 #include <QQuickItem>
 #include <QScreen>
+#include <algorithm>
+#include <cmath>
 
 using namespace Qt::StringLiterals;
 
@@ -37,7 +40,10 @@ PanelRulerView::PanelRulerView(Plasma::Containment *containment, PanelViewHost *
 {
     m_layerWindow = LayerShellQt::Window::get(this);
     m_layerWindow->setLayer(LayerShellQt::Window::LayerTop);
-    m_layerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityOnDemand);
+    // Ruler.qml is pointer-only; keeping KeyboardInteractivityNone + activateOnShow(false)
+    // prevents the ruler from stealing keyboard focus (e.g. Escape) from PanelConfigView.
+    m_layerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
+    m_layerWindow->setActivateOnShow(false);
     m_layerWindow->setScope(QStringLiteral("dock"));
     m_layerWindow->setCloseOnDismissed(false);
     m_layerWindow->setScreen(m_panelView->screen());
@@ -85,7 +91,8 @@ void PanelRulerView::syncPanelLocation()
         break;
     }
 
-    m_layerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityOnDemand);
+    m_layerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
+    m_layerWindow->setActivateOnShow(false);
     LayerShellQt::Window::Anchors anchors;
     switch (m_containment->location()) {
     case Plasma::Types::TopEdge:
@@ -294,8 +301,23 @@ void PanelConfigView::placeIndicator(QWindow *window)
         role->setScreen(screen);
         role->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorTop) | LayerShellQt::Window::AnchorLeft);
         role->setMargins(QMargins(position.x() - screen->geometry().x(), position.y() - screen->geometry().y(), 0, 0));
-        role->setDesiredSize(window->size());
+        QSize wanted = window->size();
+        if (wanted.width() <= 0 || wanted.height() <= 0) {
+            if (auto *mainItem = window->property("mainItem").value<QQuickItem *>()) {
+                int w = int(std::ceil(std::max(mainItem->width(), mainItem->implicitWidth())));
+                int h = int(std::ceil(std::max(mainItem->height(), mainItem->implicitHeight())));
+                if (auto *m = window->property("margins").value<QObject *>()) {
+                    w += m->property("left").toInt() + m->property("right").toInt();
+                    h += m->property("top").toInt() + m->property("bottom").toInt();
+                }
+                wanted = QSize(std::max(wanted.width(), w), std::max(wanted.height(), h));
+            }
+            wanted = QSize(std::max(1, wanted.width()), std::max(1, wanted.height()));
+        }
+        role->setDesiredSize(wanted);
         window->setProperty("bwmIndicatorScreen", QVariant::fromValue(screen));
+        if (auto *quick = qobject_cast<QQuickWindow *>(window); quick && quick->isVisible())
+            quick->update();
         window->requestUpdate();
     };
     if (!window->property("bwmIndicatorPlaced").toBool()) {
@@ -337,9 +359,13 @@ void PanelConfigView::hideEvent(QHideEvent *ev)
     if (m_panelRulerView) {
         m_panelRulerView->hide();
     }
-    // Like PanelView: closing the panel settings leaves edit mode.
+    // Like PanelView 6.7.5: closing panel settings leaves edit mode unless edit mode
+    // was entered from the desktop (DesktopEditMode stays open until exited there).
     if (m_containment->corona() && m_containment->corona()->isEditMode()) {
-        m_containment->corona()->setEditMode(false);
+        auto *vc = qobject_cast<ViewCorona *>(m_containment->corona());
+        if (!vc || !vc->enteredEditModeViaDesktop()) {
+            m_containment->corona()->setEditMode(false);
+        }
     }
     deleteLater();
 }

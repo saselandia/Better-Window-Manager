@@ -9,6 +9,7 @@
 #include "panelviewsettings.h"
 #include "panelconfigview.h"
 #include "widgetexplorerview.h"
+#include "desktopviewhost.h"
 #include <QQmlExpression>
 #include <QQmlContext>
 #include <QTest>
@@ -1241,7 +1242,9 @@ private Q_SLOTS:
         QVERIFY(menu->actions().contains(c->internalAction("configure")));
         QVERIFY(menu->actions().contains(c->internalAction("add widgets")));
         // Its "Add Widgets…" reaches the original explorer through showAddWidgetsInterface.
-        c->internalAction("add widgets")->trigger();menu->close();
+        menu->close();QTRY_VERIFY(!menu->isVisible());
+        {QEvent leave(QEvent::Leave);QCoreApplication::sendEvent(&view,&leave);}
+        c->internalAction("add widgets")->trigger();
         QTRY_VERIFY(view.widgetExplorer() && view.widgetExplorer()->isVisible());QVERIFY(corona.isEditMode());
         view.widgetExplorer()->sidePanel()->setVisible(false);QTRY_VERIFY(!corona.isEditMode());
         QVERIFY2(scriptErrors.isEmpty(),qPrintable(scriptErrors.join('\n')));
@@ -1459,6 +1462,7 @@ private Q_SLOTS:
         QTRY_VERIFY(!overlay->property("dragAndDropping").toBool());
         QTRY_COMPARE(session->order().value(0).toUInt(),firstId);
         QTRY_COMPARE(session->order().value(1).toUInt(),droppedId);
+        {QEvent leave(QEvent::Leave);QCoreApplication::sendEvent(&view,&leave);}
 
         // 4. WidgetExplorer removeAllInstances and pendingUninstallTimer.uninstall() for the local widget.
         QVERIFY(view.toggleWidgetExplorer());
@@ -1834,6 +1838,197 @@ private Q_SLOTS:
         QTRY_COMPARE(zone(bId),44);QTRY_COMPARE(zone(cId),-1);QTRY_COMPARE(zone(cloned),-1);QTRY_COMPARE(zone(dId),-1);
         QCOMPARE(runtime.view(dId)->visibilityMode(),1);QVERIFY(runtime.setSkin("retro"));QVERIFY(!runtime.view(bId));
         QVERIFY(runtime.setSkin("plasma"));QTRY_COMPARE(zone(bId),44);QTRY_COMPARE(zone(cloned),-1);QTRY_COMPARE(zone(dId),-1);
+        QVERIFY(runtime.setSkin("default"));
+    }
+    void adjacentEdgesCornersAndAvailableRect() {
+        TestOutput out("DP-195","Corners A","C1",{0,0,1536,864});
+        const QString desc="BWM Test Corners A C1";
+        const QDir config(qEnvironmentVariable("XDG_CONFIG_HOME"));const auto prefs=config.filePath("bwm-corners-plasmashellrc");QFile::remove(prefs);
+        ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout(config.filePath("bwm-corners-layout"));
+        const auto makePanel=[&](Plasma::Types::Location edge,Plasma::Types::FormFactor ff,const QString &appletId) {
+            auto *c=corona.createContainment("org.kde.panel");
+            if(c){c->setLocation(edge);c->setFormFactor(ff);c->createApplet(appletId);}
+            return c;
+        };
+        auto *top=makePanel(Plasma::Types::TopEdge,Plasma::Types::Horizontal,"org.kde.plasma.analogclock");
+        auto *left=makePanel(Plasma::Types::LeftEdge,Plasma::Types::Vertical,"org.kde.plasma.analogclock");
+        auto *right=makePanel(Plasma::Types::RightEdge,Plasma::Types::Vertical,"org.kde.plasma.analogclock");
+        QVERIFY(top && left && right);
+        const auto topId=top->id(),leftId=left->id(),rightId=right->id();
+        PanelRuntime runtime(&corona,prefs,true,nullptr,true);
+        QVERIFY(runtime.setAssignments({{topId,desc},{leftId,desc},{rightId,desc}}));
+        QVERIFY(runtime.setSkin("plasma"));
+        for(auto id:{topId,leftId,rightId})QTRY_VERIFY(runtime.view(id));
+        QVERIFY(runtime.view(topId)->applyViewSettings({{"thickness",48},{"panelVisibility",0},{"panelLengthMode",0}}));
+        QVERIFY(runtime.view(leftId)->applyViewSettings({{"thickness",56},{"panelVisibility",0},{"panelLengthMode",0}}));
+        QVERIFY(runtime.view(rightId)->applyViewSettings({{"thickness",44},{"panelVisibility",0},{"panelLengthMode",2},{"alignment",int(Qt::AlignRight)},{"minLength",300},{"maxLength",300}}));
+        const int screenId=QGuiApplication::screens().indexOf(out.screen());QVERIFY(screenId>=0);
+        const QRect expectedAvail(56,48,1536-56-44,864-48);
+        QTRY_COMPARE(corona.availableScreenRect(screenId),expectedAvail);
+        for(auto id:{topId,leftId,rightId})QCOMPARE(runtime.view(id)->property("bwmAvailableRect").toRect(),expectedAvail);
+        // Surface order: Top created first -> full screen; Left created second -> below Top;
+        // Right created third -> below Top and right of Left.
+        QCOMPARE(runtime.view(topId)->property("bwmPanelBounds").toRect(),QRect(0,0,1536,864));
+        QCOMPARE(runtime.view(leftId)->property("bwmPanelBounds").toRect(),QRect(0,48,1536,816));
+        QCOMPARE(runtime.view(rightId)->property("bwmPanelBounds").toRect(),QRect(56,48,1480,816));
+        // Opening Panel Settings and AppletAlternatives on the Left panel must clamp strictly
+        // inside expectedAvail, never overlapping the Top, Left, or Right panels.
+        auto *leftView=runtime.view(leftId);
+        left->internalAction("configure")->trigger();
+        PanelConfigView *cfg=nullptr;
+        QTRY_VERIFY((cfg=[]{for(auto *w:QGuiApplication::allWindows())if(auto *d=qobject_cast<PanelConfigView*>(w))if(d->isVisible())return d;return (PanelConfigView*)nullptr;}()));
+        const QRect cfgRect=cfg->property("bwmPopupRect").toRect();
+        QVERIFY(cfgRect.isValid() && expectedAvail.contains(cfgRect));
+        auto *leftClock=left->applets().first();Q_EMIT leftClock->contextualActionsAboutToShow();
+        auto *altAction=leftClock->internalAction("alternatives");QVERIFY(altAction);
+        altAction->trigger();
+        QTRY_VERIFY(leftView->alternativesDialog() && leftView->alternativesDialog()->isVisible());
+        const QRect altRect=leftView->alternativesDialog()->property("bwmPopupRect").toRect();
+        QVERIFY(altRect.isValid() && expectedAvail.contains(altRect));
+        QCOMPARE(altRect.left(),expectedAvail.left());
+        QVERIFY(altRect.top()>=expectedAvail.top());
+        QVERIFY(!altRect.intersects(QRect(0,0,1536,48)));
+        QVERIFY(!altRect.intersects(QRect(0,48,56,816)));
+        QVERIFY(!altRect.intersects(QRect(1536-44,48,44,816)));
+        leftView->alternativesDialog()->close();
+        QTRY_VERIFY(!leftView->alternativesDialog());
+        cfg->hide();corona.setEditMode(false);QTRY_VERIFY(!corona.isEditMode());
+        // Switching Left to AutoHide removes its left reservation from availableScreenRect.
+        QVERIFY(leftView->applyViewSettings({{"panelVisibility",1}}));
+        QTRY_COMPARE(corona.availableScreenRect(screenId),QRect(0,48,1536-44,864-48));
+        QVERIFY(runtime.setSkin("default"));
+        QTRY_COMPARE(corona.availableScreenRect(screenId),out.screen()->availableGeometry());
+    }
+    // R5 iteración 11: DesktopViewHost hosting the installed, unmodified views/Desktop.qml
+    // and views/DesktopEditMode.qml with org.kde.plasma.folder, panel edit handoff,
+    // sidePanel WidgetExplorer, AppletAlternatives, Add Panel menu and Escape exit.
+    void originalDesktopEditModeHost() {
+        QCOMPARE(QGuiApplication::platformName(),"offscreen");
+        TestOutput out("DP-65","DesktopEdit","D1",{2000,0,1536,864});
+        const QString desc=QStringLiteral("BWM Test DesktopEdit D1");
+        const QDir config(qEnvironmentVariable("XDG_CONFIG_HOME"));
+        const auto prefs=config.filePath("bwm-r5-desktop-plasmashellrc");
+        const auto layout=config.filePath("bwm-r5-desktop-layout");
+        QFile::remove(prefs);QFile::remove(layout);
+        ViewCorona corona;
+        corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout(layout);
+        auto *desk=corona.createContainment("org.kde.plasma.folder");
+        QVERIFY(desk);
+        auto *panel=corona.createContainment("org.kde.panel");
+        QVERIFY(panel);
+        panel->setLocation(Plasma::Types::BottomEdge);
+        panel->setFormFactor(Plasma::Types::Horizontal);
+        QVERIFY(panel->createApplet("org.kde.plasma.analogclock"));
+        const uint panelId=panel->id();
+
+        PanelRuntime runtime(&corona,prefs,true,nullptr,true);
+        QVERIFY(runtime.setAssignments({{panelId,desc}}));
+        QVERIFY(runtime.setSkin("plasma"));
+        QTRY_VERIFY(runtime.view(panelId));
+        QVERIFY(runtime.view(panelId)->applyViewSettings({{"thickness",48},{"panelVisibility",0},{"panelLengthMode",0}}));
+
+        DesktopViewHost desktopView(&corona,false,out.screen());
+        corona.bind(desk,&desktopView);
+        QVERIFY2(desktopView.load(desk),qPrintable(desktopView.error()));
+        desktopView.show();
+        QTRY_VERIFY(desktopView.isVisible());
+        QTRY_COMPARE(desktopView.strictAvailableScreenRect(),QRect(0,0,1536,864-48));
+
+        auto *root=desktopView.rootObject();QVERIFY(root);
+        QStringList scriptErrors;
+        const auto eval=[&](const QString &code){
+            QQmlExpression e(qmlContext(root),root,code);
+            const auto v=e.evaluate();
+            if(e.hasError())scriptErrors.append(e.error().toString());
+            return v;
+        };
+        QVERIFY(!corona.isEditMode());
+        QVERIFY(!corona.enteredEditModeViaDesktop());
+        QCOMPARE(eval("editModeLoader.active").toBool(),false);
+        QCOMPARE(eval("containmentParent.scale").toDouble(),1.0);
+
+        // 1. Enter edit mode from the desktop (original DesktopEditMode.qml activates).
+        auto *editAction=corona.action("edit mode");QVERIFY(editAction);
+        editAction->trigger();
+        QTRY_VERIFY(corona.isEditMode());
+        QVERIFY(corona.enteredEditModeViaDesktop());
+        QTRY_VERIFY(eval("editModeLoader.item !== null && editModeLoader.item.open === true").toBool());
+        QTRY_VERIFY(eval("containmentParent.scale < 1.0").toBool());
+        QVERIFY(corona.action("add panel")!=nullptr);
+
+        // 2. Open Panel Settings while in desktop edit mode: desktop tracks panelBeingConfigured,
+        //    and closing Panel Settings keeps desktop edit mode open (PanelView 6.7.5 behavior).
+        panel->internalAction("configure")->trigger();
+        PanelConfigView *cfg=nullptr;
+        QTRY_VERIFY((cfg=[]{for(auto *w:QGuiApplication::allWindows())if(auto *d=qobject_cast<PanelConfigView*>(w))if(d->isVisible())return d;return (PanelConfigView*)nullptr;}()));
+        QTRY_COMPARE(corona.panelBeingConfigured(),static_cast<QObject*>(runtime.view(panelId)));
+        QTRY_COMPARE(desktopView.configuredPanel(),static_cast<QObject*>(runtime.view(panelId)));
+        QTRY_VERIFY(runtime.view(panelId)->relativeConfigRect().isValid() && !runtime.view(panelId)->relativeConfigRect().isEmpty());
+        cfg->hide();
+        QTRY_VERIFY(!corona.panelBeingConfigured());
+        QTRY_VERIFY(!desktopView.configuredPanel());
+        QVERIFY2(corona.isEditMode(),"Closing panel settings must keep desktop edit mode open");
+        QVERIFY(corona.enteredEditModeViaDesktop());
+
+        // 3. "Add Widgets…" from DesktopEditMode opens Desktop.qml's original sidePanel with WidgetExplorer.qml.
+        desk->internalAction("add widgets")->trigger();
+        QTRY_VERIFY(desktopView.sidePanel() && desktopView.sidePanel()->isVisible());
+        QTRY_VERIFY(eval("sidePanelStack.state === 'widgetExplorer' && sidePanelStack.item !== null && root.widgetExplorer !== null").toBool());
+        eval("root.widgetExplorer.addApplet('org.kde.plasma.analogclock')");
+        QTRY_COMPARE(desk->applets().size(),1);
+        auto *clockApplet=desk->applets().first();
+        QCOMPARE(clockApplet->pluginMetaData().pluginId(),QStringLiteral("org.kde.plasma.analogclock"));
+        desktopView.sidePanel()->setVisible(false);
+        QTRY_VERIFY(!desktopView.sidePanel()->isVisible());
+        QVERIFY(corona.isEditMode());
+
+        // 4. AppletAlternatives on a desktop widget switches analogclock -> digitalclock.
+        Q_EMIT clockApplet->contextualActionsAboutToShow();
+        auto *altAction=clockApplet->internalAction("alternatives");QVERIFY(altAction);
+        altAction->trigger();
+        QTRY_VERIFY(desktopView.alternativesDialog() && desktopView.alternativesDialog()->isVisible());
+        auto *altObj=desktopView.alternativesDialog();
+        QQmlExpression altSwitch(qmlContext(altObj),altObj,QStringLiteral("alternativesHelper.loadAlternative('org.kde.plasma.digitalclock')"));
+        altSwitch.evaluate();
+        QVERIFY2(!altSwitch.hasError(),qPrintable(altSwitch.error().toString()));
+        altObj->close();
+        QTRY_VERIFY(!desktopView.alternativesDialog());
+        QTRY_VERIFY(desk->applets().size()==1 && desk->applets().first()->pluginMetaData().pluginId()==QStringLiteral("org.kde.plasma.digitalclock"));
+
+        // 5. "Add Panel" button invokes ViewCorona::showAddPanelContextMenu with Default/Empty Panel.
+        QString addedTemplate;QScreen *addedScreen=nullptr;
+        connect(&corona,&ViewCorona::addPanelRequested,&corona,[&](const QString &tpl,QScreen *scr){addedTemplate=tpl;addedScreen=scr;});
+        corona.showAddPanelContextMenu(QPoint(2100,100));
+        QTRY_VERIFY(corona.addPanelMenu() && corona.addPanelMenu()->isVisible());
+        QAction *emptyAct=nullptr;
+        for(auto *a:corona.addPanelMenu()->actions())
+            if(a->objectName()==QStringLiteral("org.kde.plasma.desktop.emptyPanel"))emptyAct=a;
+        QVERIFY(emptyAct);
+        corona.addPanelMenu()->close();
+        emptyAct->trigger();
+        QCOMPARE(addedTemplate,QStringLiteral("org.kde.plasma.desktop.emptyPanel"));
+        QCOMPARE(addedScreen,out.screen());
+
+        // 6. Escape on the desktop view exits edit mode and resets scale & flag; layout persists.
+        desktopView.requestActivate();
+        QTRY_VERIFY(desktopView.isActive());
+        QTest::keyClick(&desktopView,Qt::Key_Escape);
+        QTRY_VERIFY(!corona.isEditMode());
+        QVERIFY(!corona.enteredEditModeViaDesktop());
+        QTRY_COMPARE(eval("containmentParent.scale").toDouble(),1.0);
+        QVERIFY2(scriptErrors.isEmpty(),qPrintable(scriptErrors.join('\n')));
+
+        corona.saveLayout(layout);QVERIFY(corona.config()->sync());
+        KConfig saved(layout,KConfig::SimpleConfig);
+        const QString deskPlugin=KConfigGroup(&saved,"Containments").group(QString::number(desk->id())).readEntry("plugin",QString());
+        QCOMPARE(deskPlugin,QStringLiteral("org.kde.plasma.folder"));
+        const QString appletPlugin=KConfigGroup(&saved,"Containments").group(QString::number(desk->id()))
+            .group("Applets").group(QString::number(desk->applets().first()->id())).readEntry("plugin",QString());
+        QCOMPARE(appletPlugin,QStringLiteral("org.kde.plasma.digitalclock"));
+
+        corona.unbind(desk);
         QVERIFY(runtime.setSkin("default"));
     }
     // R5: AutoHide/DodgeWindows with the edge strip that stands in for KWin's screen edge.

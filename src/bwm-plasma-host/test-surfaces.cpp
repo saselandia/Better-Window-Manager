@@ -112,7 +112,11 @@ private Q_SLOTS:
         a=BwmSurface::nativePanelAnchoring(Qt::BottomEdge,1440,640,true,center);
         QCOMPARE(a.anchors,W::Anchors(W::AnchorBottom));QCOMPARE(a.margins,QMargins());
         a=BwmSurface::nativePanelAnchoring(Qt::TopEdge,1440,1440,true,fill);
-        QCOMPARE(a.anchors,W::Anchors(W::AnchorTop)|W::AnchorLeft);QCOMPARE(a.margins,QMargins());
+        // PanelView::updateLayerWindow 6.7.5: FillAvailable anchors both perpendicular sides
+        // so adjacent-edge reservations constrain its stretched length without overflow.
+        QCOMPARE(a.anchors,W::Anchors(W::AnchorTop)|W::AnchorLeft|W::AnchorRight);QCOMPARE(a.margins,QMargins());
+        a=BwmSurface::nativePanelAnchoring(Qt::LeftEdge,900,900,true,fill);
+        QCOMPARE(a.anchors,W::Anchors(W::AnchorLeft)|W::AnchorTop|W::AnchorBottom);QCOMPARE(a.margins,QMargins());
         // FitContent ignores the offset, as PanelView does.
         a=BwmSurface::nativePanelAnchoring(Qt::BottomEdge,1440,640,true,fit);QCOMPARE(a.margins,QMargins());
         a=BwmSurface::nativePanelAnchoring(Qt::BottomEdge,1440,640,false,right);
@@ -121,6 +125,38 @@ private Q_SLOTS:
         QCOMPARE(a.margins,QMargins(400,0,400,0));
         QCOMPARE(BwmSurface::panelStart(right,1440,640),700);QCOMPARE(BwmSurface::panelStart(center,1440,640),400);
         QCOMPARE(BwmSurface::panelStart(fit,1440,640),800);
+    }
+    void adjacentEdgeLayoutAndCornerPopups() {
+        QQuickWindow leftPanel;
+        const QRect screen=leftPanel.screen()->geometry();
+        const int topReserve=48,leftReserve=56,bottomReserve=40;
+        leftPanel.resize(leftReserve,screen.height()-topReserve-bottomReserve);
+        BwmSurface::configurePanel(&leftPanel,Qt::LeftEdge,0,true);
+        BwmSurface::setPanelPlacement(&leftPanel,{Qt::AlignLeft,0,0});
+        leftPanel.show();
+        QVERIFY(BwmSurface::setPanelVisibility(&leftPanel,0,leftReserve));
+        const QRect bounds(screen.x(),screen.y()+topReserve,screen.width(),screen.height()-topReserve-bottomReserve);
+        const QRect avail(screen.x()+leftReserve,screen.y()+topReserve,screen.width()-leftReserve,screen.height()-topReserve-bottomReserve);
+        BwmSurface::setPanelLayoutContext(&leftPanel,bounds,avail);
+        QCOMPARE(leftPanel.property("bwmPanelRect").toRect(),QRect(screen.x(),screen.y()+topReserve,leftReserve,bounds.height()));
+        // Widget near the top-left corner of the Left panel: popup must stay inside avail
+        // (below topReserve and right of leftReserve), never overlapping either panel.
+        QQuickItem topWidget(leftPanel.contentItem());
+        topWidget.setPosition({4,4});topWidget.setSize({48,40});
+        QQuickWindow popup;popup.resize(300,200);
+        PopupAnchor anchor;anchor.setPopup(&popup);anchor.setVisualParent(&topWidget);
+        const QRect topPlaced=popup.property("bwmPopupRect").toRect();
+        QVERIFY2(avail.contains(topPlaced),qPrintable(QString("top corner popup %1,%2 %3x%4 escaped avail %5,%6 %7x%8")
+            .arg(topPlaced.x()).arg(topPlaced.y()).arg(topPlaced.width()).arg(topPlaced.height())
+            .arg(avail.x()).arg(avail.y()).arg(avail.width()).arg(avail.height())));
+        QCOMPARE(topPlaced.left(),screen.x()+leftReserve);
+        QCOMPARE(topPlaced.top(),screen.y()+topReserve);
+        // Move widget near the bottom-left corner: popup must stay above bottomReserve.
+        topWidget.setPosition({4,qreal(bounds.height()-44)});
+        const QRect bottomPlaced=popup.property("bwmPopupRect").toRect();
+        QVERIFY(avail.contains(bottomPlaced));
+        QCOMPARE(bottomPlaced.left(),screen.x()+leftReserve);
+        QCOMPARE(bottomPlaced.bottom(),avail.bottom());
     }
     void nativePolicyRequests() {
         QFETCH(int,edge);const auto side=Qt::Edge(edge);const bool vertical=side==Qt::LeftEdge || side==Qt::RightEdge;

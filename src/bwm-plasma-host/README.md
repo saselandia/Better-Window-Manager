@@ -1406,3 +1406,52 @@ desinstalación de un widget local desde `WidgetExplorer.qml` (`removeAllInstanc
 capa `bwm-r4-popup` encima del widget (sin crear un `xdg_toplevel`) y sustituye el reloj en
 el panel vivo.
 
+
+## R5: bordes adyacentes, esquinas, popups y escalas fraccionarias (iteración 10)
+
+Con `FillAvailable` (`lengthMode == 0`), `surfaces.cpp` ancla ambos bordes perpendiculares
+(`AnchorLeft|AnchorRight` o `AnchorTop|AnchorBottom`, como `PanelView::updateLayerWindow` 6.7.5)
+para que Hyprland ajuste la longitud al `usableArea` sin solapar paneles en bordes adyacentes.
+`PanelRuntime::updateReservations()` calcula por orden de creación de superficie (`surfaceOrder()`)
+el `bwmPanelBounds` de cada panel y el rectángulo disponible resultante, publicándolo en
+`ViewCorona::setScreenAvailableRect` y `BwmSurface::setPanelLayoutContext`.
+
+Los popups anclados a paneles que reservan espacio (`PopupAnchor`, cuando `!m_requestedPosition`)
+usan `exclusiveZone = 0` y anclas alineadas al borde del panel con sólo el saliente flotante
+(`max(0, panelCross - zone)`), respetando automáticamente tanto paneles adyacentes del anfitrión
+como barras externas del compositor. `PanelRulerView` usa `KeyboardInteractivityNone` y
+`activateOnShow = false` para no robar el foco de teclado (Escape) a `PanelConfigView`.
+
+Verificación en Hyprland con bordes adyacentes/esquinas y con escalas fraccionarias (`1.25`, `1.5`,
+`1.6`) sobre una salida headless temporal (`BWMR5-*`) sin modificar salidas físicas:
+
+```
+python3 src/bwm-plasma-host/check-edit-mode-session.py --output "<descripción>" --case nativeAdjacentEdgesAndCornerPopupsInHyprland
+python3 src/bwm-plasma-host/check-edit-mode-session.py --fractional-scale
+```
+
+
+## R5: anfitrión de escritorio y `DesktopEditMode.qml` (iteración 11)
+
+`desktopviewhost.{h,cpp}` adapta `DesktopView` de plasma-workspace 6.7.5 (GPL-2.0-or-later)
+sobre `PlasmaQuick::ContainmentView` y carga sin modificar el `views/Desktop.qml` instalado
+(junto con `views/DesktopEditMode.qml`) para un containment `org.kde.plasma.folder`.
+`shell/contents/defaults` incluye ahora también `[Desktop]` y `[Desktop][ContainmentActions]`
+de plasma-desktop 6.7.5.
+
+`ViewCorona` expone `panelBeingConfigured`, `enteredEditModeViaDesktop()`, `showAddPanelContextMenu`
+(Default/Empty Panel) y las acciones `"add panel"` / `"edit mode"`. `PanelViewHost` publica
+`relativeConfigRect` y `PanelConfigView` conserva el modo edición abierto al cerrarse si se
+entró desde el escritorio. En Hyprland, `DesktopViewHost` usa `LayerBackground` (`bwm-r5-desktop`,
+`wantsToBeOnActiveScreen = false`), el `sidePanel` de `Desktop.qml` se ancla como `LayerTop`
+(`bwm-r5-desktop-explorer`, `exclusiveZone = 0`, `FocusGrab`) y `AppletAlternatives.qml` como
+`LayerOverlay` (`bwm-r5-desktop-popup`).
+
+Comprobación en sesión Hyprland sobre una salida concreta:
+
+```
+python3 src/bwm-plasma-host/check-edit-mode-session.py --output "<descripción>" --case originalDesktopEditModeInHyprland
+```
+
+
+

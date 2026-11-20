@@ -617,12 +617,141 @@ No quedan capas `bwm-r4-*` después de cerrar el preview.
 | Compilación y CTest ASan (`detect_leaks=0`, `surface-geometry` + `isolated-local-configuration`) | **2/2** (54,56 s) |
 | Suite Python R4 (`test_r4_*.py`) | Pasa |
 
+### Verificación interactiva con ratón en sesión real (2026-11-20)
+
+Con autorización explícita del usuario y sin alterar su skin activa (`retro`), se lanzó
+`bwm-plasma-host --follow-panel-preview` en raíces XDG temporales sobre el monitor LG (`DP-1`,
+`2560,0 3840×2160`) y se ejecutaron los 6 escenarios con eventos reales de ratón y teclado
+(`/dev/uinput`), verificando capas con `hyprctl layers`, estado en disco y recortes visuales
+(borrados al terminar):
+
+1. **Alternativas de widgets**: hover sobre el reloj analógico → popup de asa de `ConfigOverlay`
+   (`bwm-r4-popup`, `0` clientes propios) → clic real en «Show Alternatives…» → `AppletAlternatives.qml`
+   (`368×254` en `2560,1798`, `0` clientes propios); sobrevive al pasar el puntero por el panel, se
+   cierra con Escape, se cierra al pulsar fuera en el escritorio vacío del LG (`FocusGrab`), y al hacer
+   clic en `Calendar` se cierra y sustituye el 1.er reloj en su posición.
+2. **Arrastre desde el explorador**: clics reales en `Add New` → `Widgets…` abren `bwm-r5-widget-explorer`
+   (`2560,26 498×2022`) ocultando Ajustes del panel; arrastre Wayland `wl_data_device` (`BTN_LEFT` +
+   movimiento continuo) del widget local desechable `org.bwm.r5.disposable` hasta el panel (el explorador
+   permanece abierto durante el arrastre y el widget queda soltado y guardado en `appletsrc`).
+3. **Reordenado en modo edición**: arrastre físico del 1.er widget por delante de los otros dos en el panel;
+   `AppletOrder` pasó de `2;3;4` a `3;4;2` y se guardó.
+4. **Retirar todas las instancias y desinstalar**: clics reales en `Remove all instances`, `Mark for
+   Uninstallation` y el pie `Uninstall (1 Widget)`; retirado del panel y borrado del `XDG_DATA_HOME` temporal.
+5. **Set Position… y Clone Panel**: clics reales en `Set Position…` → 3 flechas `bwm-r5-edit-indicator` en el
+   LG → clic en la flecha superior movió el panel a `2560,64 3840×48`; clic real en `Clone Panel` → 3 flechas
+   → clic en la flecha lateral creó un 2.º `bwm-r4-preview` (`6288,0 48×2160`, `AppletOrder=7;8;6`, `0`
+   clientes propios).
+6. **Limpieza**: 0 capas `bwm-r4-*`/`bwm-r5-*` residuales; cursor y ventana activa restaurados.
+
+## Iteración 10 (2026-11-20) — Bordes adyacentes, esquinas, popups y escalas fraccionarias
+
+### Qué hay
+
+- **Anclaje bilateral para `FillAvailable` en layer-shell** (`surfaces.{h,cpp}`): igual que
+  `PanelView::updateLayerWindow` (plasma-workspace 6.7.5), un panel con longitud «Rellenar anchura/altura»
+  (`lengthMode == 0`) ancla ambos bordes perpendiculares (`AnchorLeft|AnchorRight` en horizontal,
+  `AnchorTop|AnchorBottom` en vertical) para que Hyprland (`IHyprRenderer::arrangeLayerArray`) lo ajuste
+  dentro del `usableArea` cuando otro panel reserva un borde adyacente, sin desbordar ni solapar la esquina.
+  `Custom` y `FitContent` conservan un único ancla lateral y tamaño explícito, acotados a `bwmPanelBounds`.
+  `updatePanelPolicy` evita rebotes redundantes de `setExclusiveZone(-1)` cuando sólo cambia el eje estirado
+  por un `configure` del compositor; `PanelViewHost::resizeEvent` sincroniza el tamaño del `rootObject()`
+  y la máscara en los redimensionados del compositor.
+- **Rectángulo disponible y contexto de bordes por salida** (`panelruntime.cpp`, `panelviewhost.{h,cpp}`,
+  `viewcorona.{h,cpp}`): `PanelViewHost` mantiene un orden monótono de creación de superficie (`surfaceOrder()`)
+  en `QEvent::Show` que refleja el orden de `CLayerSurface` en Hyprland. `PanelRuntime::updateReservations()`
+  calcula por pantalla el `usableArea` de cada panel y el rectángulo disponible final tras todas las reservas
+  activas, publicándolos en `ViewCorona::setScreenAvailableRect` (adaptando `ShellCorona::_availableScreenRect`)
+  y en `BwmSurface::setPanelLayoutContext` (`bwmPanelBounds`, `bwmAvailableRect`). `dropAll()` limpia los
+  rectángulos publicados al desactivar la skin.
+- **Popups de paneles con reserva en esquinas** (`surfaces.cpp`): cuando `PopupAnchor` ancla un popup
+  (`PanelConfigView`, `AppletAlternatives`, popups de widgets) a un panel que reserva espacio
+  (`bwmExclusiveZoneRequested > 0 && !m_requestedPosition`), usa `exclusiveZone = 0` y anclas alineadas al
+  borde del panel (`Bottom|Left`, `Top|Left`, `Left|Top`, `Right|Top`), añadiendo sólo el saliente flotante
+  `max(0, panelCross - zone)` en el eje del panel y la alineación respecto a `area` en el eje perpendicular.
+  Así respeta automáticamente tanto otros paneles adyacentes del anfitrión como barras externas del compositor
+  (p. ej. `omarchy-bar` o la barra diaria).
+- **Corrección de foco de `PanelRulerView` y refresco de indicadores/explorador** (`panelconfigview.cpp`,
+  `widgetexplorerview.cpp`): `PanelRulerView` pasa a `KeyboardInteractivityNone` + `setActivateOnShow(false)`
+  (`Ruler.qml` sólo usa puntero), evitando que al activar «Personalizada» le robe el foco de teclado (Escape)
+  a `PanelConfigView` en sesiones de un solo monitor. `placeIndicator` deriva tamaño inicial no nulo desde
+  `mainItem` + `margins` y llama a `quick->update()` si ya es visible; `WidgetExplorerView::place()` llama a
+  `m_sidePanel->update()` cuando es visible.
+- **Verificación de escala fraccionaria en salida headless temporal** (`check-edit-mode-session.py
+  --fractional-scale`, `test-editmode-session.cpp`): crea una salida `BWMR5-*` temporal con Hyprland
+  (`1920×1080@60`) a escalas `1.25` (`1536×864`), `1.5` (`1280×720`) y `1.6` (`1200×675`), verifica el
+  `devicePixelRatio()` de ventana vía `wp_fractional_scale_v1`, panel inferior, Ajustes del panel, 3 flechas
+  de `Set Position…`, cambio a borde izquierdo respetando la reserva superior, `AppletAlternatives`,
+  `WidgetExplorer` y retirada completa sin alterar ningún monitor físico (`physicalOutputsUnchanged: true`).
+
+### Pruebas
+
+| Prueba | Resultado |
+| :--- | :--- |
+| `surface-geometry` (`test-surfaces.cpp`): anclaje bilateral `FillAvailable` y caso nuevo `adjacentEdgeLayoutAndCornerPopups` | Pasa (normal y ASan) |
+| `adjacentEdgesCornersAndAvailableRect` (`test-ui.cpp`, registrada en `check-local.py`): 3 paneles simultáneos (arriba 48 + izquierda 56 + derecha 44 personalizado) en salida lógica `1536×864`, `availableScreenRect` (`56,48 1436×816`), `bwmPanelBounds` por orden de superficie, `PanelConfigView` y `AppletAlternatives` contenidos en `expectedAvail` sin solapar ningún panel, retirada al pasar izquierda a AutoHide y restauración al salir de `plasma` | Pasa (CTest `isolated-local-configuration`, normal y ASan) |
+| `check-edit-mode-session.py --output "LG Electronics LG ULTRAFINE 405NTVS2J655"` (Hyprland real, suite completa): incluye `nativeAdjacentEdgesAndCornerPopupsInHyprland` (arriba `2560,26 3840×48` + izquierda `2560,74 56×2086`, Ajustes `2616,846 420×542`, Alternativas `2616,74 368×251`, Explorador `2616,74 498×2086`, 3 bordes simultáneos arriba+izquierda+abajo disjuntos, limpieza completa) y todos los casos anteriores | Pasa (exit 0, todos los pasos `passed: true`, 0 capas residuales) |
+| `check-edit-mode-session.py --fractional-scale` (Hyprland real en salida headless temporal `BWMR5-*`): escalas `1.25` (`1536×864`), `1.5` (`1280×720`) y `1.6` (`1200×675`), `windowDpr` exacto en las tres, todos los pasos (panel, Ajustes, 3 flechas, borde izquierdo, Alternativas, Explorador, limpieza) | Pasa (21/21 pasos `passed: true`, `physicalOutputsUnchanged: true`, salida `BWMR5-*` eliminada) |
+| Compilación y CTest normal (`-E "^native-"`) | **8/8** (61,92 s) |
+| Compilación y CTest ASan (`detect_leaks=0`, `surface-geometry` + `isolated-local-configuration`) | **2/2** (56,42 s) |
+| Suite Python R4 (`test_r4_*.py`) | **262/262 OK** |
+| Estado de Hyprland al terminar (`hyprctl layers`, `hyprctl configerrors`) | 0 capas `bwm-r4-*`/`bwm-r5-*`, 0 errores |
+
 ### Límites y pendiente de R5
 
-- Los flujos de alternativas, arrastre, reordenado y desinstalación están verificados con los
-  manejadores/eventos reales sobre el QML instalado (y el popup/cambio de alternativas medido en
-  Hyprland con `hyprctl layers`); no se ha hecho arrastre físico con ratón en la sesión del usuario.
-- Siguen pendientes en R5: combinaciones de bordes adyacentes/esquinas y anclaje de sus popups,
-  comprobación del editor a escala fraccionaria, anfitrión de escritorio (`DesktopEditMode.qml`),
-  comparación visual con Plasma real y aceptación final del usuario. No se sustituye el panel diario.
+- La prueba de escalas fraccionarias se ha ejecutado en una salida headless temporal (`BWMR5-*`) con los
+  manejadores del QML original (no con ratón físico sobre un monitor físico escalado, ni comprobación visual
+  subpíxel de texto/bordes a `1.25`/`1.5`/`1.6`).
+
+## Iteración 11 (2026-11-20) — Anfitrión de escritorio y `DesktopEditMode.qml`
+
+### Qué hay
+
+- **`DesktopViewHost`** (`desktopviewhost.{h,cpp}`): adapta `shell/desktopview.{h,cpp}` de
+  plasma-workspace 6.7.5 (GPL-2.0-or-later) sobre `PlasmaQuick::ContainmentView` y `LayerShellQt`.
+  Carga sin modificar el `views/Desktop.qml` instalado (que instancia `views/DesktopEditMode.qml` sin
+  modificar cuando `corona.editMode == true`) con el containment real `org.kde.plasma.folder`.
+- **Contrato de escritorio y acoplamiento con paneles** (`viewcorona.{h,cpp}`, `panelviewhost.{h,cpp}`,
+  `panelconfigview.cpp`, `panelruntime.cpp`, `shell/contents/defaults`):
+  - `shell/contents/defaults` añade los grupos `[Desktop]` y `[Desktop][ContainmentActions]` de
+    plasma-desktop 6.7.5 (`org.kde.plasma.folder`, `org.kde.contextmenu`, `org.kde.paste`).
+  - `ViewCorona` expone `panelBeingConfigured`, `enteredEditModeViaDesktop()`, `showAddPanelContextMenu`
+    (con «Default Panel» y «Empty Panel» emitiendo `addPanelRequested`) y las acciones de Corona
+    `"add panel"` y `"edit mode"` (texto dinámico Enter/Exit Edit Mode).
+  - `PanelViewHost` expone `relativeConfigRect` y sincroniza `ViewCorona::setPanelBeingConfigured`;
+    `PanelConfigView::hideEvent` respeta `enteredEditModeViaDesktop()` de modo que cerrar Ajustes del
+    panel mantiene abierto `DesktopEditMode.qml` cuando la edición se inició desde el escritorio (y
+    sigue saliendo de edición cuando se inició desde un panel).
+  - `PanelRuntime::setAssignments` permite coexistir containments de escritorio en la misma `ViewCorona`
+    junto a los paneles gestionados por el runtime.
+- **Superficies layer-shell en Hyprland**:
+  - `bwm-r5-desktop` en `LayerBackground` (`AnchorTop|AnchorBottom|AnchorLeft|AnchorRight`,
+    `exclusiveZone = -1`, `wantsToBeOnActiveScreen = false`, ligado explícitamente a `m_targetScreen`
+    para no saltar al monitor enfocado al crear/redimensionar).
+  - El `sidePanel` original de `Desktop.qml` (`explorer/WidgetExplorer.qml`) se intercepta en
+    `SurfaceCreated` filtrando por `rootContext()` y recibe capa `bwm-r5-desktop-explorer` (`LayerTop`,
+    `exclusiveZone = 0`, `FocusGrab`, tolerando hover sobre el escritorio/paneles); `AppletAlternatives.qml`
+    sobre widgets del escritorio se mapea como `bwm-r5-desktop-popup` (`LayerOverlay`, `exclusiveZone = 0`).
+
+### Pruebas
+
+| Prueba | Resultado |
+| :--- | :--- |
+| `originalDesktopEditModeHost` (`test-ui.cpp`, registrada en `check-local.py`): `Desktop.qml` + `DesktopEditMode.qml` con `org.kde.plasma.folder` + panel inferior 48 px en salida `(2000,0 1536×864)`; `strictAvailableScreenRect` local `(0,0 1536×816)`; entrada por acción `"edit mode"`, `open === true`, `scale < 1.0`; apertura/cierre de `PanelConfigView` preservando `DesktopEditMode`; «Add Widgets…» abre el `sidePanel` original de `Desktop.qml` y añade `org.kde.plasma.analogclock`; `AppletAlternatives` cambia a `org.kde.plasma.digitalclock`; menú «Add Panel» («Default Panel» / «Empty Panel»); salida con Escape y persistencia en `appletsrc` | Pasa (CTest `isolated-local-configuration`, normal y ASan) |
+| `originalDesktopEditModeInHyprland` (`check-edit-mode-session.py`, LG, sesión Hyprland real): `bwm-r5-desktop` `2560,0 3840×2160` (`0` toplevels), `DesktopEditMode.qml` activo (`scale: 0.88`, `strictAvail: 0,0 3840×2112`), traspaso de `PanelConfigView` (`4270,1570 420×542`, mantiene edición al cerrarse), `bwm-r5-desktop-explorer` (`2560,26 498×2086` despejando barra superior 26 px + panel inferior 48 px, `0` toplevels, añade reloj), `bwm-r5-desktop-popup` (`4361,1224 368×251`, `0` toplevels, cambia a `digitalclock`), limpieza completa | Pasa (6/6 pasos `passed: true`, 0 capas residuales) |
+| Compilación y CTest normal (`-E "^native-"`) | **8/8** |
+| Compilación y CTest ASan (`detect_leaks=0`, `surface-geometry` + `isolated-local-configuration`) | **2/2** (58,91 s) |
+| Suite Python R4 (`test_r4_*.py`) | **262/262 OK** |
+| Escalas fraccionarias (`check-edit-mode-session.py --fractional-scale`, `1.25`/`1.5`/`1.6`) | **21/21 pasos `passed: true`**, `physicalOutputsUnchanged: true` |
+| Estado de Hyprland al terminar (`hyprctl layers`, `hyprctl configerrors`) | 0 capas `bwm-r4-*`/`bwm-r5-*`, 0 errores |
+
+### Límites y pendiente de R5
+
+- `DesktopViewHost` está implementado y verificado en pruebas aisladas (offscreen normal/ASan y Hyprland
+  real en capa `background`), sin sustituir el fondo ni el panel diario de Breeze y sin verificación
+  visual directa ni interacción física con ratón sobre `DesktopEditMode.qml` todavía.
+- Pendiente para cerrar R5: comparación visual con Plasma real (incl. `DesktopEditMode.qml`, paneles y
+  escalas fraccionarias) y aceptación final del usuario. No se sustituye el panel diario.
+
+
 

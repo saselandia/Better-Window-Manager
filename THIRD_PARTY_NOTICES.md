@@ -781,3 +781,22 @@ Cambios BWM: sin `ShellCorona`; el diálogo `explorer/AppletAlternatives.qml` in
 carga sin modificar y se ancla como superficie layer-shell (`bwm-r4-popup`) sobre el widget
 del panel mediante `PopupAnchor`, preservando el orden `AppletOrder` del containment.
 
+### Bordes adyacentes y rectángulo disponible — Plasma 6.7.5 (R5, iteración 10)
+
+El anclaje bilateral `FillAvailable` en `src/bwm-plasma-host/surfaces.cpp` y la publicación del
+rectángulo disponible por salida (`ViewCorona::setScreenAvailableRect` + `PanelRuntime::updateReservations`)
+siguen la semántica de `PanelView::updateLayerWindow` (`shell/panelview.cpp`, GPL-2.0-or-later) y
+`ShellCorona::_availableScreenRect` (`shell/shellcorona.cpp`, LGPL-2.0-or-later) de plasma-workspace 6.7.5,
+implementados de forma propia sobre `LayerShellQt` e Hyprland sin copiar código adicional de KDE ni añadir
+nuevas dependencias.
+
+### Anfitrión de escritorio (`DesktopViewHost`) — Plasma 6.7.5 (R5, iteración 11)
+
+`src/bwm-plasma-host/desktopviewhost.{h,cpp}` adapta `shell/desktopview.{h,cpp}` de
+`plasma-workspace-6.7.5.tar.xz` (Marco Martin 2013, David Edmundson 2014; GPL-2.0-or-later) para
+Hyprland layer-shell (`LayerBackground` + `FocusGrab`), cargando sin modificar los archivos
+`views/Desktop.qml` y `views/DesktopEditMode.qml` instalados del paquete `org.kde.plasma.desktop`.
+`src/bwm-plasma-host/shell/contents/defaults` incluye ahora también los grupos `[Desktop]` y
+`[Desktop][ContainmentActions]` de `desktoppackage/contents/defaults` de plasma-desktop 6.7.5.
+Fuente correspondiente: <https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5/shell> y
+<https://invent.kde.org/plasma/plasma-desktop/-/tree/v6.7.5/desktoppackage>.

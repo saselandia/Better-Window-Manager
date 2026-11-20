@@ -164,6 +164,8 @@ void WidgetExplorerView::place()
         m_sidePanel->setScreen(screen);
     if (root && root->property("contentHeight").toInt() <= 1)
         root->setProperty("contentHeight", area.height() - margins.top() - margins.bottom());
+    if (m_sidePanel->isVisible())
+        m_sidePanel->update();
     m_sidePanel->requestUpdate();
 }
 

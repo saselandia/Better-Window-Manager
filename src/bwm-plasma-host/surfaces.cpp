@@ -68,14 +68,20 @@ int panelStart(const PanelPlacement &placement,int screenExtent,int panelExtent)
 static void panelGeometry(QQuickWindow *window,Qt::Edge edge,int gap) {
     if(!window->screen())return;
     const QRect screen=window->screen()->geometry();
+    QRect bounds=screen;
+    const bool reserves=window->property("bwmExclusiveZoneRequested").toInt()>0;
+    if(reserves && window->property("bwmPanelBounds").isValid()) {
+        const QRect candidate=window->property("bwmPanelBounds").toRect();
+        if(!candidate.isEmpty() && screen.contains(candidate))bounds=candidate;
+    }
     const bool vertical=edge==Qt::LeftEdge || edge==Qt::RightEdge;
-    const int start=panelStart(windowPlacement(window),vertical?screen.height():screen.width(),vertical?window->height():window->width());
+    const int start=panelStart(windowPlacement(window),vertical?bounds.height():bounds.width(),vertical?window->height():window->width());
     QPoint pos;
     switch(edge) {
-    case Qt::BottomEdge:pos={screen.left()+start,screen.bottom()+1-gap-window->height()};break;
-    case Qt::TopEdge:pos={screen.left()+start,screen.top()+gap};break;
-    case Qt::LeftEdge:pos={screen.left()+gap,screen.top()+start};break;
-    case Qt::RightEdge:pos={screen.right()+1-gap-window->width(),screen.top()+start};break;
+    case Qt::BottomEdge:pos={bounds.left()+start,bounds.bottom()+1-gap-window->height()};break;
+    case Qt::TopEdge:pos={bounds.left()+start,bounds.top()+gap};break;
+    case Qt::LeftEdge:pos={bounds.left()+gap,bounds.top()+start};break;
+    case Qt::RightEdge:pos={bounds.right()+1-gap-window->width(),bounds.top()+start};break;
     default:return;
     }
     window->setProperty("bwmPanelRect",QRect(pos,window->size()));
@@ -104,26 +110,28 @@ PanelAnchoring nativePanelAnchoring(Qt::Edge edge, int screenExtent, int panelEx
     const auto trailing = vertical ? LayerWindow::AnchorBottom : LayerWindow::AnchorRight;
     PanelAnchoring placement{LayerWindow::Anchors(exclusiveEdge), exclusiveEdge, {}};
     const int offset = along.lengthMode == 2 ? along.offset : 0;
-    // PanelView::updateLayerWindow 6.7.5: one side anchor (plus offset margin) for
-    // left/right alignment, none for center. A full length is the same rectangle
-    // as the leading corner with the output's extent.
-    if (along.lengthMode == 0 || along.alignment == Qt::AlignLeft || (along.alignment != Qt::AlignRight && along.alignment != Qt::AlignCenter)) {
+    // PanelView::updateLayerWindow 6.7.5: FillAvailable stretches between both
+    // perpendicular anchors (zero desired extent along that axis) so the compositor
+    // fits the panel inside usableArea when adjacent edges reserve space without
+    // overflowing or overlapping corners. Custom/FitContent keep a single side anchor
+    // (or none for center) with explicit size so perpendicular reservations do not
+    // shrink a fixed-length panel.
+    if (along.lengthMode == 0) {
+        placement.anchors |= LayerWindow::Anchors(leading) | trailing;
+    } else if (along.alignment == Qt::AlignLeft || (along.alignment != Qt::AlignRight && along.alignment != Qt::AlignCenter)) {
         placement.anchors |= leading;
-        if (along.lengthMode != 0) (vertical ? placement.margins.setTop(offset) : placement.margins.setLeft(offset));
+        vertical ? placement.margins.setTop(offset) : placement.margins.setLeft(offset);
     } else if (along.alignment == Qt::AlignRight) {
         placement.anchors |= trailing;
         vertical ? placement.margins.setBottom(offset) : placement.margins.setRight(offset);
     }
-    if (!explicitExclusiveEdge) {
+    if (!explicitExclusiveEdge && along.lengthMode != 0) {
         // On older protocol versions a corner alone cannot reserve space.
-        const int start = std::clamp(along.lengthMode == 0 ? 0 : panelStart(along, screenExtent, panelExtent), 0, std::max(0, screenExtent - panelExtent));
+        const int start = std::clamp(panelStart(along, screenExtent, panelExtent), 0, std::max(0, screenExtent - panelExtent));
         const int unused = std::max(0, screenExtent - panelExtent - start);
         placement.anchors |= LayerWindow::Anchors(leading) | trailing;
         placement.margins = vertical ? QMargins(0, start, 0, unused) : QMargins(start, 0, unused, 0);
     }
-    // With v5 the explicit reservation edge permits a corner and a fixed size.
-    // Opposite anchors would make LayerShellQt send a zero extent. Hyprland would
-    // then subtract the far margin from ALREADY reserved space, shrinking the window.
     return placement;
 }
 
@@ -147,7 +155,6 @@ static void updatePanelPolicy(QQuickWindow *window) {
     const auto edge=Qt::Edge(window->property("bwmPanelEdge").toInt());
     const bool vertical=edge==Qt::LeftEdge || edge==Qt::RightEdge;
     const int gap=window->property("bwmPanelGap").toInt();
-    panelGeometry(window,edge,gap);
     QMargins margins(edge==Qt::LeftEdge?gap:0,edge==Qt::TopEdge?gap:0,edge==Qt::RightEdge?gap:0,edge==Qt::BottomEdge?gap:0);
     const auto exclusiveEdge=layerAnchor(edge);
     W::Anchors anchors=exclusiveEdge;
@@ -173,17 +180,37 @@ static void updatePanelPolicy(QQuickWindow *window) {
         margins=QMargins(margins.left()+placement.margins.left(),margins.top()+placement.margins.top(),
                          margins.right()+placement.margins.right(),margins.bottom()+placement.margins.bottom());
     }
-    role->setExclusiveZone(-1); // Withdraw the old request before changing geometry.
-    role->setAnchors(anchors);
-    role->setExclusiveEdge(exclusiveEdge);
-    role->setMargins(margins);role->setDesiredSize(window->size());role->setExclusiveZone(zone);
+    const bool stretchedH=anchors.testFlags(W::Anchors(W::AnchorLeft)|W::AnchorRight);
+    const bool stretchedV=anchors.testFlags(W::Anchors(W::AnchorTop)|W::AnchorBottom);
+    const bool sizeMatches=(stretchedH || role->desiredSize().width()==window->width())
+        && (stretchedV || role->desiredSize().height()==window->height());
+    const bool roleChanged=role->anchors()!=anchors || role->exclusiveEdge()!=exclusiveEdge
+        || role->margins()!=margins || role->exclusionZone()!=zone || !sizeMatches;
     window->setProperty("bwmSurfaceError",error);
     window->setProperty("bwmReservationRequested",zone>0);
     window->setProperty("bwmExclusiveZoneRequested",zone);
-    // A reservation handoff can change only layer-shell state, with an entirely
-    // unchanged scene. QQuickWindow::update forces a render/commit; QWindow's
-    // requestUpdate alone can leave the new exclusive zone pending indefinitely.
-    window->update();
+    panelGeometry(window,edge,gap);
+    if(roleChanged) {
+        role->setExclusiveZone(-1); // Withdraw the old request before changing geometry.
+        role->setAnchors(anchors);
+        role->setExclusiveEdge(exclusiveEdge);
+        role->setMargins(margins);role->setDesiredSize(window->size());role->setExclusiveZone(zone);
+        // A reservation handoff can change only layer-shell state, with an entirely
+        // unchanged scene. QQuickWindow::update forces a render/commit; QWindow's
+        // requestUpdate alone can leave the new exclusive zone pending indefinitely.
+        window->update();
+    }
+}
+void setPanelLayoutContext(QQuickWindow *window,const QRect &panelBounds,const QRect &availableRect) {
+    if(!window)return;
+    const bool boundsChanged=window->property("bwmPanelBounds").toRect()!=panelBounds ||
+        window->property("bwmPanelBounds").isValid()!=panelBounds.isValid();
+    const bool availChanged=window->property("bwmAvailableRect").toRect()!=availableRect ||
+        window->property("bwmAvailableRect").isValid()!=availableRect.isValid();
+    if(boundsChanged)window->setProperty("bwmPanelBounds",panelBounds.isValid()?QVariant(panelBounds):QVariant());
+    if(availChanged)window->setProperty("bwmAvailableRect",availableRect.isValid()?QVariant(availableRect):QVariant());
+    if(boundsChanged && window->property("bwmLayerPanel").toBool())
+        panelGeometry(window,Qt::Edge(window->property("bwmPanelEdge").toInt()),window->property("bwmPanelGap").toInt());
 }
 bool setPanelVisibility(QQuickWindow *window,int mode,int thickness) {
     // 0 NormalPanel reserves; 1 AutoHide, 2 DodgeWindows and 3 WindowsGoBelow do not
@@ -371,13 +398,13 @@ void PopupAnchor::update() {
     const QRect panel=m_panel->property("bwmPanelRect").toRect();
     const QRect anchor=m_parent->mapRectToScene(QRectF(0,0,m_parent->width(),m_parent->height())).toAlignedRect().translated(panel.topLeft());
     const QRect area=m_panel->property("bwmAvailableRect").isValid() ? m_panel->property("bwmAvailableRect").toRect() : screen->availableGeometry();
+    const auto edge=Qt::Edge(m_panel->property("bwmPanelEdge").toInt());
+    const bool useUsableZone=m_panel->property("bwmExclusiveZoneRequested").toInt()>0 && !m_requestedPosition;
     auto *role=LayerShellQt::Window::get(m_popup);
     role->setScope("bwm-r4-popup");role->setLayer(LayerShellQt::Window::LayerOverlay);
-    role->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorTop)|LayerShellQt::Window::AnchorLeft);
-    role->setExclusiveZone(-1);
+    role->setExclusiveZone(useUsableZone ? 0 : -1);
     role->setKeyboardInteractivity(m_nonInteractive ? LayerShellQt::Window::KeyboardInteractivityNone : LayerShellQt::Window::KeyboardInteractivityOnDemand);
     role->setCloseOnDismissed(true);role->setScreen(screen);role->setActivateOnShow(!m_nonInteractive);
-    const auto edge=Qt::Edge(m_panel->property("bwmPanelEdge").toInt());
     QSize wanted=m_popup->size();
     if(wanted.width()<=0 || wanted.height()<=0) {
         // PlasmaQuick::Dialog syncs its window size from mainItem in showEvent, which runs
@@ -404,11 +431,43 @@ void PopupAnchor::update() {
         placed.moveTo(std::clamp(m_popup->x(),bounds.left(),bounds.right()+1-placed.width()),
                       std::clamp(m_popup->y(),bounds.top(),bounds.bottom()+1-placed.height()));
     }
-    qCDebug(lcBwmAnchor)<<"popup"<<m_popup->objectName()<<"requested"<<m_requestedPosition<<"pos"<<m_popup->position()<<"size"<<m_popup->size()
+    qCDebug(lcBwmAnchor)<<"popup"<<m_popup->objectName()<<"requested"<<m_requestedPosition<<"usableZone"<<useUsableZone<<"pos"<<m_popup->position()<<"size"<<m_popup->size()
         <<"panel"<<panel<<"anchor"<<anchor<<"area"<<area<<"screen"<<screen->name()<<screen->geometry()<<"placed"<<placed<<"plasmoidScreen"<<m_parent->property("screenGeometry")<<"avail"<<m_parent->property("availableScreenRect")<<"global"<<m_parent->mapToGlobal(QPointF(0,0))<<"panelWinPos"<<m_panel->position();
     if(!placed.isEmpty()) {
+        using W=LayerShellQt::Window;
+        W::Anchors popupAnchors=W::Anchors(W::AnchorTop)|W::AnchorLeft;
+        QMargins popupMargins(placed.x()-screen->geometry().x(),placed.y()-screen->geometry().y(),0,0);
+        if(useUsableZone) {
+            // exclusiveZone=0 places the popup inside Hyprland's usableArea (excluding both
+            // our own reserving panels and any external bars). Along the panel's own edge,
+            // Hyprland already offset by `zone`, so only a floating overhang (size - zone)
+            // needs margin; along the perpendicular axis, align relative to `area`.
+            const int zone=m_panel->property("bwmExclusiveZoneRequested").toInt();
+            const int overhangH=std::max(0,panel.width()-zone);
+            const int overhangV=std::max(0,panel.height()-zone);
+            switch(edge) {
+            case Qt::BottomEdge:
+                popupAnchors=W::Anchors(W::AnchorBottom)|W::AnchorLeft;
+                popupMargins=QMargins(std::max(0,placed.left()-area.left()),0,0,overhangV);
+                break;
+            case Qt::TopEdge:
+                popupAnchors=W::Anchors(W::AnchorTop)|W::AnchorLeft;
+                popupMargins=QMargins(std::max(0,placed.left()-area.left()),overhangV,0,0);
+                break;
+            case Qt::LeftEdge:
+                popupAnchors=W::Anchors(W::AnchorLeft)|W::AnchorTop;
+                popupMargins=QMargins(overhangH,std::max(0,placed.top()-area.top()),0,0);
+                break;
+            case Qt::RightEdge:
+                popupAnchors=W::Anchors(W::AnchorRight)|W::AnchorTop;
+                popupMargins=QMargins(0,std::max(0,placed.top()-area.top()),overhangH,0);
+                break;
+            default:break;
+            }
+        }
+        role->setAnchors(popupAnchors);
         role->setDesiredSize(placed.size());
-        role->setMargins(QMargins(placed.x()-screen->geometry().x(),placed.y()-screen->geometry().y(),0,0));
+        role->setMargins(popupMargins);
         m_popup->setProperty("bwmPopupRect",placed);
         // Publish the final position (fixed positions are disabled in main): packages that
         // place companion Dialogs from root.x/y, such as Andromeda's avatar, follow it.

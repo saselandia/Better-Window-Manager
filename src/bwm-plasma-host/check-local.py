@@ -176,7 +176,8 @@ def main():
                          'nativePanelAutoHideAndDodge', 'profileEditingMovesAndClonesNativePanels',
                          'clonedNativeTrayKeepsEmbeddedOptionsAndNewIds', 'profileEditingFreshProcessReadback',
                          'migratedPlacementReadsOriginalPanelFrames', 'nativePanelPolicyPersistsAndWithdrawsReservations',
-                         'nativePanelsShareReservationsPerScreenAndEdge'):
+                         'nativePanelsShareReservationsPerScreenAndEdge', 'adjacentEdgesCornersAndAvailableRect',
+                         'originalDesktopEditModeHost'):
                 output = run(args.ui_test, test)
                 assert 'FAIL!' not in output and 'SKIP' not in output, output
                 report['ui'].append({'test': test, 'passed': True})

@@ -121,8 +121,17 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   con reservas temporales en edición. Medido en Hyprland y aceptado con el ratón. Iteración 9
   (§317): alternativas de widgets (`AppletAlternatives.qml` + `AlternativesHelper`), arrastre
   `text/x-plasmoidservicename` al panel, reordenado con `ConfigOverlay` y desinstalación de widgets
-  locales desde `WidgetExplorer`; probado offscreen normal/ASan y popup/cambio medido en Hyprland.
-  Escritorio, bordes adyacentes/esquinas, escala fraccionaria y resto de R5 pendientes.
+  locales desde `WidgetExplorer`; probado offscreen normal/ASan, medido en Hyprland y verificados
+  los 6 flujos con ratón real (`/dev/uinput`) en el LG (§321). Iteración 10 (§321): bordes
+  adyacentes/esquinas con anclaje bilateral `FillAvailable`, `availableScreenRect` y `bwmPanelBounds`
+  por orden de superficie, popups en esquinas con `exclusiveZone=0` respetando paneles y barras
+  externas, corrección de foco de `PanelRulerView` y verificación del editor a escalas fraccionarias
+  (`1.25`, `1.5`, `1.6`) en salida headless temporal (`BWMR5-*`). Iteración 11 (§322): anfitrión de
+  escritorio `DesktopViewHost` cargando `Desktop.qml` y `DesktopEditMode.qml` instalados sobre
+  `LayerBackground` (`org.kde.plasma.folder`, `[Desktop]` en `shell/contents/defaults`, traspaso de
+  `PanelConfigView`, `sidePanel` WidgetExplorer en `LayerTop`, `AppletAlternatives` y menú «Add Panel»);
+  probado offscreen normal/ASan y medido en Hyprland real. Pendientes en R5: comparación visual con
+  Plasma real y aceptación final del usuario.
 * **Breeze II (2026-11-12):** `docs/BREEZE_PLAN_V2.md`, R0 entregada con referencia y límites documentados;
   R1 corrige origen de especiales al minimizar, activación común y filtro de Alt+Tab (pruebas
   aisladas; fallo visual original pendiente). R2 tiene primer KCM QWidget real, descubierto por
@@ -5484,3 +5493,92 @@ git status; git log --oneline -5; git push origin main
   se sustituye el panel diario. Documentación actualizada en `docs/BREEZE_R5_RESULTS.md`,
   `src/bwm-plasma-host/README.md` y `THIRD_PARTY_NOTICES.md`.
 
+### 321. Breeze R5: ratón real de iteración 9 e iteración 10 (bordes adyacentes, esquinas, popups y escalas fraccionarias) (2026-11-20)
+
+* **Verificación real con ratón de la iteración 9 (LG, `/dev/uinput`, autorizado por el usuario):**
+  sin tocar la skin activa (`retro`), se lanzó `bwm-plasma-host --follow-panel-preview` en raíces
+  XDG temporales sobre el LG (`DP-1`) y se comprobaron los 6 escenarios con eventos reales de
+  ratón/teclado: (1) hover reloj → asa `ConfigOverlay` → clic «Show Alternatives…» →
+  `AppletAlternatives.qml` (`368×254`, `0` clientes propios), sobrevive al hover del panel, cierra
+  con Escape y clic fuera (`FocusGrab`), clic en `Calendar` sustituye en sitio; (2) `Add New` →
+  `Widgets…` + arrastre Wayland `wl_data_device` de un widget local desechable al panel (explorador
+  abierto durante el arrastre, guardado en `appletsrc`); (3) arrastre de reordenado en el panel
+  (`AppletOrder` `2;3;4` → `3;4;2`); (4) `Remove all instances`, `Mark for Uninstallation` y
+  `Uninstall (1 Widget)` (borrado de panel y del `XDG_DATA_HOME` temporal); (5) `Set Position…`
+  (3 flechas → arriba `2560,64 3840×48`) y `Clone Panel` (2.º panel `6288,0 48×2160`, `0` clientes);
+  (6) 0 capas residuales, cursor y foco restaurados, recortes temporales eliminados.
+* **Iteración 10 — bordes adyacentes, esquinas y popups (`src/bwm-plasma-host/`):**
+  - `surfaces.{h,cpp}`: `nativePanelAnchoring` ancla ambos bordes perpendiculares en `FillAvailable`
+    (como `PanelView::updateLayerWindow` 6.7.5) para que Hyprland ajuste la longitud al `usableArea`
+    sin solapar paneles en bordes adyacentes; `updatePanelPolicy` evita rebotes redundantes de
+    `setExclusiveZone(-1)` en `configure`; `BwmSurface::setPanelLayoutContext` publica `bwmPanelBounds`
+    y `bwmAvailableRect`. `PopupAnchor::update()` usa `exclusiveZone=0` y anclas alineadas al borde
+    con sólo el saliente flotante `max(0, panelCross - zone)` para paneles que reservan, respetando
+    tanto otros paneles del anfitrión como barras externas del compositor.
+  - `viewcorona.{h,cpp}`, `panelviewhost.{h,cpp}`, `panelruntime.cpp`: `ViewCorona::setScreenAvailableRect`
+    (semántica `ShellCorona::_availableScreenRect`), `surfaceOrder()` monótono en `QEvent::Show` y
+    cálculo por salida en `PanelRuntime::updateReservations()`; `PanelViewHost::resizeEvent` sincroniza
+    `rootObject()` y máscara; `reflow()` respeta longitudes estiradas configuradas por Wayland y acota
+    `Custom`/`FitContent` a `bwmPanelBounds`.
+  - `panelconfigview.cpp`, `widgetexplorerview.cpp`: `PanelRulerView` cambia a
+    `KeyboardInteractivityNone` + `activateOnShow=false` (`Ruler.qml` es sólo puntero), corrigiendo el
+    robo de foco a `PanelConfigView` (Escape) en sesiones de un solo monitor; `placeIndicator` deriva
+    tamaño inicial no nulo y llama a `update()`, igual que `WidgetExplorerView::place()`.
+* **Verificado:**
+  - Compilación y CTest normal (`-E "^native-"`): **8/8** (incluidos `surface-geometry` con
+    `adjacentEdgeLayoutAndCornerPopups` e `isolated-local-configuration` con
+    `adjacentEdgesCornersAndAvailableRect`).
+  - Compilación y CTest ASan (`detect_leaks=0`, `surface-geometry` + `isolated-local-configuration`):
+    **2/2** (tras limpiar el hover `QEvent::Leave` antes de abrir el explorador en `offscreen`).
+  - Suite Python R4 (`test_r4_*.py`): **262/262 OK**.
+  - Hyprland real (`check-edit-mode-session.py --output "LG Electronics LG ULTRAFINE 405NTVS2J655"`):
+    exit 0 (todos los pasos `passed: true`, incluido `nativeAdjacentEdgesAndCornerPopupsInHyprland`
+    con arriba+izquierda, Ajustes/Alternativas/Explorador en esquina y 3 bordes simultáneos disjuntos).
+  - Escalas fraccionarias (`check-edit-mode-session.py --fractional-scale`, salida headless temporal
+    `BWMR5-*`): **21/21 pasos** en `1.25` (`1536×864`), `1.5` (`1280×720`) y `1.6` (`1200×675`),
+    `windowDpr` exacto vía `wp_fractional_scale_v1`, `physicalOutputsUnchanged: true`, salida temporal
+    eliminada. 0 capas `bwm-r4-*`/`bwm-r5-*` residuales y `hyprctl configerrors` vacío.
+* **Pendiente en R5:** anfitrión de escritorio (`DesktopEditMode.qml`), comparación visual con Plasma
+  real (incl. comprobación visual subpíxel en escalas fraccionarias) y aceptación final del usuario.
+  No se sustituye el panel diario. Documentación actualizada en `docs/BREEZE_R5_RESULTS.md`,
+  `src/bwm-plasma-host/README.md` y `THIRD_PARTY_NOTICES.md`. Sin commit ni push todavía.
+
+### 322. Breeze R5: iteración 11 — anfitrión de escritorio (`DesktopViewHost`) y `DesktopEditMode.qml` (2026-11-20)
+
+* **Anfitrión de escritorio (`src/bwm-plasma-host/desktopviewhost.{h,cpp}`, `CMakeLists.txt`):**
+  adapta `shell/desktopview.{h,cpp}` de plasma-workspace 6.7.5 (GPL-2.0-or-later) sobre
+  `PlasmaQuick::ContainmentView` y `LayerShellQt`. Carga sin modificar el `views/Desktop.qml`
+  instalado (y `views/DesktopEditMode.qml`) con el containment real `org.kde.plasma.folder`.
+  `shell/contents/defaults` añade `[Desktop]` y `[Desktop][ContainmentActions]` de plasma-desktop
+  6.7.5 (`org.kde.plasma.folder`, `org.kde.contextmenu`, `org.kde.paste`).
+* **Contrato compartido Corona/panel/escritorio (`viewcorona.{h,cpp}`, `panelviewhost.{h,cpp}`,
+  `panelconfigview.cpp`, `panelruntime.cpp`):**
+  - `ViewCorona` añade `panelBeingConfigured`, `enteredEditModeViaDesktop()`,
+    `showAddPanelContextMenu` («Default Panel» / «Empty Panel» → `addPanelRequested`) y las
+    acciones `"add panel"` y `"edit mode"` (texto dinámico Enter/Exit Edit Mode).
+  - `PanelViewHost` expone `relativeConfigRect` y sincroniza `panelBeingConfigured`;
+    `PanelConfigView::hideEvent` respeta `enteredEditModeViaDesktop()` de modo que cerrar
+    Ajustes de un panel mantiene `DesktopEditMode.qml` abierto cuando se entró desde el escritorio.
+  - `PanelRuntime::setAssignments` ignora containments no-panel para que escritorios y paneles
+    coexistan en la misma `ViewCorona`.
+* **Layer-shell en Hyprland:** `bwm-r5-desktop` en `LayerBackground` (`wantsToBeOnActiveScreen=false`,
+  ligado explícitamente a `m_targetScreen` y `setGeometry(target->geometry())` para no saltar al
+  monitor enfocado), `sidePanel` original de `Desktop.qml` interceptado en `SurfaceCreated` como
+  `bwm-r5-desktop-explorer` (`LayerTop`, `exclusiveZone=0`, `FocusGrab`, tolerando hover en el
+  escritorio/paneles) y `AppletAlternatives.qml` del escritorio como `bwm-r5-desktop-popup`
+  (`LayerOverlay`, `exclusiveZone=0`).
+* **Verificado:**
+  - `originalDesktopEditModeHost` (`test-ui.cpp` / `check-local.py`): offscreen normal (**8/8**
+    CTest `-E "^native-"`) y ASan (**2/2**, 58,91 s, 0 errores ASan).
+  - Suite Python R4 (`test_r4_*.py`): **262/262 OK**.
+  - Hyprland real (`originalDesktopEditModeInHyprland` en LG): **6/6 pasos** (`bwm-r5-desktop`
+    `2560,0 3840×2160`, `scale: 0.88`, `strictAvail: 0,0 3840×2112`, traspaso `PanelConfigView`
+    `4270,1570 420×542`, `bwm-r5-desktop-explorer` `2560,26 498×2086`, `bwm-r5-desktop-popup`
+    `4361,1224 368×251`, todos con `0` clientes toplevel y limpieza total).
+  - Escalas fraccionarias (`--fractional-scale`): **21/21 pasos** (`1.25`/`1.5`/`1.6`,
+    `physicalOutputsUnchanged: true`). 0 capas residuales `bwm-r4-*`/`bwm-r5-*` y
+    `hyprctl configerrors` vacío.
+* **Pendiente para cerrar R5:** verificación interactiva/visual de `DesktopEditMode.qml`,
+  comparación visual con Plasma real (incl. escalas fraccionarias) y aceptación final del usuario.
+  Sin sustituir el fondo ni el panel diario. Documentación actualizada en `docs/BREEZE_R5_RESULTS.md`,
+  `src/bwm-plasma-host/README.md` y `THIRD_PARTY_NOTICES.md`. Sin commit ni push.

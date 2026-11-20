@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "viewcorona.h"
 #include <Plasma/Containment>
+#include <QAction>
 #include <QGuiApplication>
+#include <QIcon>
+#include <QMenu>
 #include <QQuickWindow>
 #include <QScreen>
 ViewCorona::ViewCorona() {
@@ -9,12 +12,61 @@ ViewCorona::ViewCorona() {
     for(int i=0;i<numScreens();++i)m_screenIds.insert(QGuiApplication::screens()[i],i);
     connect(qApp,&QGuiApplication::screenAdded,this,[this](QScreen *screen){observe(screen);Q_EMIT screenAdded(QGuiApplication::screens().indexOf(screen));notifyScreens();});
     connect(qApp,&QGuiApplication::screenRemoved,this,[this](QScreen *screen){
+        m_availableRects.remove(screen);
         const int previous=m_screenIds.value(screen,-1);if(previous>=0)Q_EMIT screenRemoved(previous);notifyScreens();
     });
+    // ShellCorona 6.7.5 registers "add panel" and "edit mode" on the Corona action collection;
+    // DesktopEditMode.qml reads "add panel" and org.kde.contextmenu reads "edit mode".
+    auto *addPanel=new QAction(QIcon::fromTheme(QStringLiteral("list-add")),tr("Add Panel"),this);
+    setAction(QStringLiteral("add panel"),addPanel);
+    auto *editAction=new QAction(QIcon::fromTheme(QStringLiteral("document-edit")),tr("Enter Edit Mode"),this);
+    editAction->setCheckable(true);
+    connect(editAction,&QAction::triggered,this,[this](bool checked){
+        if(checked)setEnteredEditModeViaDesktop(true);
+        setEditMode(checked);
+    });
+    connect(this,&Plasma::Corona::editModeChanged,this,[this,editAction](bool edit){
+        editAction->setChecked(edit);
+        editAction->setText(edit ? tr("Exit Edit Mode") : tr("Enter Edit Mode"));
+        if(!edit)setEnteredEditModeViaDesktop(false);
+    });
+    setAction(QStringLiteral("edit mode"),editAction);
 }
 ViewCorona::~ViewCorona() {
+    delete m_addPanelMenu.data();
     // Corona destroys its containments in the base destructor, after our map dies.
     for(auto *containment:m_views.keys())forget(containment);
+}
+void ViewCorona::setEnteredEditModeViaDesktop(bool viaDesktop) {
+    if(m_enteredEditModeViaDesktop==viaDesktop)return;
+    m_enteredEditModeViaDesktop=viaDesktop;
+    Q_EMIT enteredEditModeViaDesktopChanged();
+}
+void ViewCorona::setPanelBeingConfigured(QObject *panel) {
+    if(m_panelBeingConfigured==panel)return;
+    m_panelBeingConfigured=panel;
+    Q_EMIT panelBeingConfiguredChanged();
+}
+QMenu *ViewCorona::addPanelMenu()const{return m_addPanelMenu.data();}
+void ViewCorona::showAddPanelContextMenu(const QPoint &pos) {
+    if(immutability()!=Plasma::Types::Mutable)return;
+    delete m_addPanelMenu.data();
+    QScreen *target=QGuiApplication::screenAt(pos);
+    if(!target)target=QGuiApplication::primaryScreen();
+    auto *menu=new QMenu();
+    menu->setAttribute(Qt::WA_DeleteOnClose);
+    auto *defaultPanel=menu->addAction(QIcon::fromTheme(QStringLiteral("list-add")),tr("Default Panel"));
+    defaultPanel->setObjectName(QStringLiteral("org.kde.plasma.desktop.defaultPanel"));
+    connect(defaultPanel,&QAction::triggered,this,[this,target]{
+        Q_EMIT addPanelRequested(QStringLiteral("org.kde.plasma.desktop.defaultPanel"),target);
+    });
+    auto *emptyPanel=menu->addAction(QIcon::fromTheme(QStringLiteral("list-add")),tr("Empty Panel"));
+    emptyPanel->setObjectName(QStringLiteral("org.kde.plasma.desktop.emptyPanel"));
+    connect(emptyPanel,&QAction::triggered,this,[this,target]{
+        Q_EMIT addPanelRequested(QStringLiteral("org.kde.plasma.desktop.emptyPanel"),target);
+    });
+    m_addPanelMenu=menu;
+    menu->popup(pos);
 }
 int ViewCorona::numScreens()const{return QGuiApplication::screens().size();}
 QRect ViewCorona::screenGeometry(int id)const {
@@ -25,11 +77,22 @@ QRect ViewCorona::screenGeometry(int id)const {
 QRect ViewCorona::availableScreenRect(int id)const {
     const auto screens=QGuiApplication::screens();
     if(id<0 || id>=screens.size())return {};
-    // Qt is the current provider. Do not invent a fixed panel reservation. A later
-    // compositor adapter must supply reservations when Qt cannot expose them.
-    return screens[id]->availableGeometry();
+    auto *screen=screens[id];
+    const QRect published=m_availableRects.value(screen);
+    if(published.isValid() && !published.isEmpty() && screen->geometry().contains(published))return published;
+    return screen->availableGeometry();
 }
 QRegion ViewCorona::availableScreenRegion(int id)const{return availableScreenRect(id);}
+void ViewCorona::setScreenAvailableRect(QScreen *screen,const QRect &rect) {
+    if(!screen)return;
+    const QRect previous=m_availableRects.value(screen);
+    const QRect next=(rect.isValid() && !rect.isEmpty() && screen->geometry().contains(rect)) ? rect : QRect();
+    if(previous==next)return;
+    if(next.isValid())m_availableRects.insert(screen,next);
+    else m_availableRects.remove(screen);
+    const int id=QGuiApplication::screens().indexOf(screen);
+    if(id>=0){Q_EMIT availableScreenRectChanged(id);Q_EMIT availableScreenRegionChanged(id);}
+}
 int ViewCorona::screenForContainment(const Plasma::Containment *containment)const {
     auto *window=m_views.value(containment).window.data();
     return window ? QGuiApplication::screens().indexOf(window->screen()) : -1;

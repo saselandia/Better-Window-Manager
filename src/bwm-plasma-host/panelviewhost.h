@@ -42,6 +42,7 @@ class PanelViewHost : public PlasmaQuick::ContainmentView {
     Q_PROPERTY(int maximumLength READ maximumLength WRITE setMaximumLength NOTIFY geometryPolicyChanged)
     Q_PROPERTY(int minThickness READ minThickness NOTIFY geometryPolicyChanged)
     Q_PROPERTY(QScreen *screenToFollow READ screenToFollow WRITE setScreenToFollow NOTIFY screenToFollowChanged)
+    Q_PROPERTY(QRect relativeConfigRect READ relativeConfigRect NOTIFY relativeConfigRectChanged)
     Q_PROPERTY(bool adaptiveOpacityEnabled READ adaptiveOpacityEnabled NOTIFY adaptiveOpacityEnabledChanged)
     Q_PROPERTY(bool unsupportedConfiguration READ unsupportedConfiguration CONSTANT)
     Q_PROPERTY(QString unsupportedConfigurationDescription READ unsupportedConfigurationDescription CONSTANT)
@@ -85,6 +86,7 @@ public:
     int minThickness()const;
     QScreen *screenToFollow()const{return screen();}
     void setScreenToFollow(QScreen *screen);
+    QRect relativeConfigRect()const;
     // PanelView 6.7.5: whether the Plasma style offers opacity options (its
     // solid/translucent variants). Choosing Adaptive is still refused below.
     bool adaptiveOpacityEnabled()const{return m_theme.adaptiveTransparencyEnabled();}
@@ -108,6 +110,7 @@ public:
     // Diagnostics/tests: whether the content is currently slid off for autohide/dodge.
     bool autoHidden()const{return m_autoHidden;}
     bool touchingWindow()const{return m_touchingWindow;}
+    quint64 surfaceOrder()const{return m_surfaceOrder;}
     int opacityMode()const{return m_opacity;}
     void setOpacityMode(int value);
     bool floating()const{return m_floating;}
@@ -126,6 +129,7 @@ Q_SIGNALS:
     void viewSettingsChanged();
     void placementChanged();
     void screenToFollowChanged();
+    void relativeConfigRectChanged();
     void userConfiguringChanged();
     void adaptiveOpacityEnabledChanged();
     void cloneRequested(int location,QScreen *screen);
@@ -134,6 +138,7 @@ Q_SIGNALS:
 protected:
     void showConfigurationInterface(Plasma::Applet *applet)override;
     bool event(QEvent *event)override;
+    void resizeEvent(QResizeEvent *event)override;
 private Q_SLOTS:
     void reflow();
     void adoptLocation(Plasma::Types::Location location);
@@ -170,6 +175,8 @@ private:
     int m_visibility=PanelViewEnums::WindowsGoBelow;
     // PanelView 6.7.5 defaults: AlignLeft, FillAvailable, no offset.
     int m_alignment=Qt::AlignLeft,m_lengthMode=PanelViewEnums::FillAvailable,m_offset=0;
+    int m_lastLengthMode=-1;
+    quint64 m_surfaceOrder=0;
     bool m_userConfiguring=false;
     Plasma::Theme m_theme;
     bool m_floating=false,m_floatingApplets=false,m_lastVertical=false;

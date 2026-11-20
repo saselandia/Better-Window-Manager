@@ -11,6 +11,7 @@
 #include "viewcorona.h"
 #include "surfaces.h"
 #include "widgetexplorerview.h"
+#include "desktopviewhost.h"
 #include <KConfig>
 #include <KConfigGroup>
 #include <KPackage/PackageLoader>
@@ -585,8 +586,12 @@ private Q_SLOTS:
         }
 
         QVERIFY2(errors.isEmpty(), qPrintable(errors.join(u'\n')));
+        const bool activeBefore = dialog->isActive();
         dialog->requestActivate();
-        QTRY_VERIFY(dialog->isActive());
+        QTRY_VERIFY2(dialog->isActive(), qPrintable(QStringLiteral("activeBefore=%1 focusWindow=%2 active=%3 visible=%4 exposed=%5")
+            .arg(activeBefore)
+            .arg(QGuiApplication::focusWindow() ? QString::fromLatin1(QGuiApplication::focusWindow()->metaObject()->className()) : QStringLiteral("null"))
+            .arg(dialog->isActive()).arg(dialog->isVisible()).arg(dialog->isExposed())));
         QTest::keyClick(dialog, Qt::Key_Escape);
         QTRY_VERIFY(!corona.isEditMode());
         {
@@ -670,6 +675,497 @@ private Q_SLOTS:
         QTRY_VERIFY(!corona.isEditMode());
         runtime.setSkin(QStringLiteral("default"));
         QTRY_VERIFY(layers(QStringLiteral("bwm-r4-preview")).isEmpty());
+        puts(QJsonDocument(QJsonObject{{"steps", m_steps}}).toJson(QJsonDocument::Compact).constData());
+    }
+    void nativeAdjacentEdgesAndCornerPopupsInHyprland()
+    {
+        // R5 iteration 10: simultaneous FillAvailable panels on adjacent edges (Top + Left,
+        // then + Bottom) never overflow or overlap corners, and popups opened near corners
+        // (Panel Settings, AppletAlternatives, WidgetExplorer) stay inside the free area.
+        m_steps = {};
+        const auto output = qEnvironmentVariable("BWM_R5_OUTPUT");
+        auto *screen = BwmOutput::resolveScreen(output);
+        QVERIFY(screen);
+        const QString ns = QStringLiteral("bwm-r4-native-policy");
+        const QMargins before = reserved(screen->name());
+        const QRect S = screen->geometry();
+        const auto cursor = cursorPos();
+        const auto focused = hyprJson({"-j", "activewindow"}).object();
+        const auto restore = [&] {
+            if (cursorPos() != cursor) warpCursor(cursor);
+            for (const auto &row : hyprJson({"-j", "clients"}).array()) {
+                const auto c = row.toObject();
+                if (!focused.value("address").toString().isEmpty() && c.value("address") == focused.value("address") && c.value("pid") == focused.value("pid")) {
+                    hyprJson({"dispatch", QString("hl.dsp.focus({window=\"address:%1\"})").arg(c.value("address").toString())});
+                    break;
+                }
+            }
+        };
+        struct Restore { std::function<void()> fn; ~Restore() { fn(); } } restoreOnReturn{restore};
+
+        ViewCorona corona;
+        corona.setKPackage(KPackage::PackageLoader::self()->loadPackage(QStringLiteral("Plasma/Shell"), QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout(QStringLiteral("bwm-r5-adjacent-appletsrc"));
+        auto makePanel = [&](Plasma::Types::Location edge, Plasma::Types::FormFactor ff) {
+            auto *c = corona.createContainment(QStringLiteral("org.kde.panel"));
+            if (c) { c->setLocation(edge); c->setFormFactor(ff); c->createApplet(QStringLiteral("org.kde.plasma.analogclock")); }
+            return c;
+        };
+        auto *topC = makePanel(Plasma::Types::TopEdge, Plasma::Types::Horizontal);
+        auto *leftC = makePanel(Plasma::Types::LeftEdge, Plasma::Types::Vertical);
+        QVERIFY(topC && leftC);
+        const uint topId = topC->id(), leftId = leftC->id();
+        PanelRuntime runtime(&corona, QStringLiteral("plasmashellrc-adjacent"), true, nullptr, true);
+        QVERIFY2(runtime.setAssignments({{topId, output}, {leftId, output}}), qPrintable(runtime.error()));
+        QVERIFY2(runtime.setSkin(QStringLiteral("plasma")), qPrintable(runtime.error()));
+        QTRY_VERIFY(runtime.view(topId) && runtime.view(topId)->isExposed());
+        QTRY_VERIFY(runtime.view(leftId) && runtime.view(leftId)->isExposed());
+        const int baselineClients = ownClients();
+
+        QVERIFY2(runtime.view(topId)->applyViewSettings({{"thickness", 48}, {"panelVisibility", 0}, {"panelLengthMode", 0}}), qPrintable(runtime.view(topId)->error()));
+        QVERIFY2(runtime.view(leftId)->applyViewSettings({{"thickness", 56}, {"panelVisibility", 0}, {"panelLengthMode", 0}}), qPrintable(runtime.view(leftId)->error()));
+
+        QTRY_VERIFY_WITH_TIMEOUT(reserved(screen->name()).top() == before.top() + 48
+            && reserved(screen->name()).left() == before.left() + 56, 5000);
+        QRect topLayer, leftLayer;
+        const bool cornerOk = QTest::qWaitFor([&] {
+            const auto all = layers(ns, screen->name());
+            if (all.size() != 2) return false;
+            topLayer = leftLayer = {};
+            for (const auto &r : all) {
+                if (r.width() > r.height()) topLayer = r;
+                else leftLayer = r;
+            }
+            return topLayer.isValid() && leftLayer.isValid()
+                && S.contains(topLayer) && S.contains(leftLayer)
+                && !topLayer.intersects(leftLayer)
+                && topLayer.height() == 48 && leftLayer.width() == 56;
+        }, 5000);
+        m_steps.append(QJsonObject{{"step", "adjacent-top-and-left-no-overlap"},
+            {"top", rect(topLayer)}, {"left", rect(leftLayer)},
+            {"topDelta", reserved(screen->name()).top() - before.top()},
+            {"leftDelta", reserved(screen->name()).left() - before.left()},
+            {"passed", cornerOk}});
+        QVERIFY2(cornerOk, "Top + Left FillAvailable panels overlapped, overflowed, or failed to reserve");
+
+        // Open Panel Settings on the Left panel: must stay strictly clear of both panels.
+        auto *leftView = runtime.view(leftId);
+        leftC->internalAction(QStringLiteral("configure"))->trigger();
+        QPointer<PanelConfigView> cfg;
+        QTRY_VERIFY((cfg = openDialog()));
+        QRect cfgLayer;
+        const bool cfgOk = QTest::qWaitFor([&] {
+            const auto popups = layers(QStringLiteral("bwm-r4-popup"), screen->name());
+            if (popups.size() != 1) return false;
+            cfgLayer = popups.first();
+            return cfgLayer.isValid() && S.contains(cfgLayer)
+                && !cfgLayer.intersects(topLayer) && !cfgLayer.intersects(leftLayer)
+                && cfgLayer.left() >= leftLayer.right() + 1 && cfgLayer.top() >= topLayer.bottom() + 1;
+        }, 4000);
+        m_steps.append(QJsonObject{{"step", "corner-panel-settings-clear"}, {"observed", rect(cfgLayer)},
+            {"ownClients", ownClients()}, {"passed", cfgOk && ownClients() == baselineClients}});
+        QVERIFY2(cfgOk && ownClients() == baselineClients, "PanelConfigView overlapped adjacent Top or Left panel");
+
+        // Open AppletAlternatives.qml on the Left panel's top-corner widget.
+        auto *leftClock = leftC->applets().first();
+        Q_EMIT leftClock->contextualActionsAboutToShow();
+        auto *altAction = leftClock->internalAction(QStringLiteral("alternatives"));
+        QVERIFY(altAction);
+        altAction->trigger();
+        QTRY_VERIFY(leftView->alternativesDialog() && leftView->alternativesDialog()->isVisible());
+        QRect altLayer;
+        const bool altOk = QTest::qWaitFor([&] {
+            const auto popups = layers(QStringLiteral("bwm-r4-popup"), screen->name());
+            if (popups.size() != 2) return false;
+            altLayer = {};
+            for (const auto &r : popups) if (r != cfgLayer) altLayer = r;
+            return altLayer.isValid() && S.contains(altLayer)
+                && !altLayer.intersects(topLayer) && !altLayer.intersects(leftLayer)
+                && altLayer.left() >= leftLayer.right() + 1 && altLayer.top() >= topLayer.bottom() + 1;
+        }, 4000);
+        m_steps.append(QJsonObject{{"step", "corner-alternatives-popup-clear"}, {"observed", rect(altLayer)},
+            {"ownClients", ownClients()}, {"passed", altOk && ownClients() == baselineClients}});
+        QVERIFY2(altOk && ownClients() == baselineClients, "AppletAlternatives.qml overlapped adjacent Top or Left panel");
+        leftView->alternativesDialog()->close();
+        QTRY_VERIFY(!leftView->alternativesDialog());
+        QTRY_COMPARE(layers(QStringLiteral("bwm-r4-popup"), screen->name()).size(), 1);
+
+        // Open WidgetExplorer from the Left panel: must sit right of Left and below Top.
+        QQmlExpression(qmlContext(cfg->mainItem()), cfg->mainItem(), QStringLiteral("configDialog.showAddWidgetDialog()")).evaluate();
+        QTRY_VERIFY(leftView->widgetExplorer() && leftView->widgetExplorer()->isVisible());
+        QRect expLayer;
+        const bool expOk = QTest::qWaitFor([&] {
+            const auto all = layers(QStringLiteral("bwm-r5-widget-explorer"), screen->name());
+            if (all.size() != 1) return false;
+            expLayer = all.first();
+            return expLayer.isValid() && S.contains(expLayer)
+                && !expLayer.intersects(topLayer) && !expLayer.intersects(leftLayer)
+                && expLayer.left() >= leftLayer.right() + 1 && expLayer.top() >= topLayer.bottom() + 1;
+        }, 4000);
+        m_steps.append(QJsonObject{{"step", "corner-widget-explorer-clear"}, {"observed", rect(expLayer)}, {"passed", expOk}});
+        QVERIFY2(expOk, "WidgetExplorer overlapped adjacent Top or Left panel");
+        leftView->widgetExplorer()->toggle();
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r5-widget-explorer"), screen->name()).isEmpty());
+        if (auto *d = openDialog()) d->hide();
+        corona.setEditMode(false);
+        QTRY_VERIFY(!corona.isEditMode());
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r4-popup"), screen->name()).isEmpty());
+
+        // Add a 3rd FillAvailable panel on the Bottom edge (44px): all 3 edges reserve
+        // simultaneously and remain pairwise disjoint inside screen geometry.
+        auto *bottomC = makePanel(Plasma::Types::BottomEdge, Plasma::Types::Horizontal);
+        QVERIFY(bottomC);
+        const uint bottomId = bottomC->id();
+        QVERIFY2(runtime.setAssignments({{topId, output}, {leftId, output}, {bottomId, output}}), qPrintable(runtime.error()));
+        QTRY_VERIFY(runtime.view(bottomId) && runtime.view(bottomId)->isExposed());
+        QVERIFY2(runtime.view(bottomId)->applyViewSettings({{"thickness", 44}, {"panelVisibility", 0}, {"panelLengthMode", 0}}), qPrintable(runtime.view(bottomId)->error()));
+        QTRY_VERIFY_WITH_TIMEOUT(reserved(screen->name()).top() == before.top() + 48
+            && reserved(screen->name()).left() == before.left() + 56
+            && reserved(screen->name()).bottom() == before.bottom() + 44, 5000);
+        QList<QRect> three;
+        const bool threeOk = QTest::qWaitFor([&] {
+            three = layers(ns, screen->name());
+            if (three.size() != 3) return false;
+            for (int i = 0; i < 3; ++i) {
+                if (!S.contains(three[i])) return false;
+                for (int j = i + 1; j < 3; ++j) if (three[i].intersects(three[j])) return false;
+            }
+            return true;
+        }, 5000);
+        m_steps.append(QJsonObject{{"step", "three-adjacent-edges-disjoint"},
+            {"topDelta", reserved(screen->name()).top() - before.top()},
+            {"leftDelta", reserved(screen->name()).left() - before.left()},
+            {"bottomDelta", reserved(screen->name()).bottom() - before.bottom()},
+            {"passed", threeOk}});
+        QVERIFY2(threeOk, "Top + Left + Bottom FillAvailable panels overlapped or overflowed");
+
+        runtime.setSkin(QStringLiteral("default"));
+        QTRY_VERIFY(layers(ns, screen->name()).isEmpty());
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r4-popup"), screen->name()).isEmpty());
+        QTRY_COMPARE(reserved(screen->name()), before);
+        m_steps.append(QJsonObject{{"step", "adjacent-cleanup"}, {"passed", true}});
+        puts(QJsonDocument(QJsonObject{{"steps", m_steps}}).toJson(QJsonDocument::Compact).constData());
+    }
+    void fractionalScaleEditModeInHyprland()
+    {
+        // R5 iteration 10: run Panel Settings, Set Position… arrows, edge move,
+        // AppletAlternatives, WidgetExplorer and adjacent reservation on a temporary
+        // headless output configured with fractional scale (e.g. 1.25 / 1.5).
+        // Physical monitors are never modified; production output resolution is untouched.
+        const auto headlessName = qEnvironmentVariable("BWM_R5_HEADLESS_OUTPUT");
+        if (headlessName.isEmpty()) return;
+        m_steps = {};
+        QScreen *screen = nullptr;
+        QTRY_VERIFY_WITH_TIMEOUT([&] {
+            for (auto *s : QGuiApplication::screens()) if (s->name() == headlessName) { screen = s; return true; }
+            return false;
+        }(), 5000);
+        QVERIFY(screen);
+        const qreal expectedScale = qEnvironmentVariable("BWM_R5_EXPECTED_SCALE").toDouble();
+        const int expectedW = qEnvironmentVariableIntValue("BWM_R5_EXPECTED_W");
+        const int expectedH = qEnvironmentVariableIntValue("BWM_R5_EXPECTED_H");
+        // In Wayland, wl_output.scale (QScreen::devicePixelRatio) is an integer (ceil),
+        // while xdg-output exposes the logical size and wp_fractional_scale_v1 delivers
+        // the exact fractional DPR to each mapped QWindow once exposed.
+        QTRY_VERIFY_WITH_TIMEOUT(screen->size() == QSize(expectedW, expectedH), 5000);
+        const QRect S = screen->geometry();
+        const QMargins before = reserved(headlessName);
+        const QString ns = QStringLiteral("bwm-r4-native-policy");
+        const int baselineClients = ownClients();
+
+        ViewCorona corona;
+        corona.setKPackage(KPackage::PackageLoader::self()->loadPackage(QStringLiteral("Plasma/Shell"), QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout(QStringLiteral("bwm-r5-fractional-appletsrc"));
+        auto *c = corona.createContainment(QStringLiteral("org.kde.panel"));
+        QVERIFY(c);
+        c->setLocation(Plasma::Types::BottomEdge);
+        c->setFormFactor(Plasma::Types::Horizontal);
+        auto *clock = c->createApplet(QStringLiteral("org.kde.plasma.analogclock"));
+        QVERIFY(clock);
+
+        PanelViewHost view(&corona, QStringLiteral("plasmashellrc-fractional"));
+        view.setScreen(screen);
+        BwmSurface::configurePanel(&view, Qt::BottomEdge, 0, true);
+        corona.bind(c, &view);
+        QVERIFY2(view.load(c), qPrintable(view.error()));
+        view.show();
+        QTRY_VERIFY(view.isExposed());
+        QTRY_VERIFY_WITH_TIMEOUT(qAbs(view.devicePixelRatio() - expectedScale) < 0.02, 5000);
+        QVERIFY2(view.applyViewSettings({{"thickness", 48}, {"panelVisibility", 0}, {"panelLengthMode", 0}}), qPrintable(view.error()));
+        QCOMPARE(view.capabilities().value(QStringLiteral("viewSettingsScope")).toString(), QStringLiteral("Horizontal%1").arg(expectedW));
+        QTRY_COMPARE(reserved(headlessName).bottom(), before.bottom() + 48);
+        QRect bottomLayer;
+        const bool bottomOk = QTest::qWaitFor([&] {
+            const auto all = layers(ns, headlessName);
+            if (all.size() != 1) return false;
+            bottomLayer = all.first();
+            return bottomLayer.width() == expectedW && bottomLayer.height() == 48 && S.contains(bottomLayer);
+        }, 5000);
+        m_steps.append(QJsonObject{{"step", "fractional-bottom-panel"}, {"scale", expectedScale}, {"windowDpr", view.devicePixelRatio()},
+            {"logicalScreen", rect(S)}, {"observed", rect(bottomLayer)}, {"passed", bottomOk}});
+        QVERIFY2(bottomOk, "Bottom panel logical geometry did not match fractional-scale output");
+
+        // Open Panel Settings on the fractional-scale output.
+        c->internalAction(QStringLiteral("configure"))->trigger();
+        QPointer<PanelConfigView> dialog;
+        QTRY_VERIFY((dialog = openDialog()));
+        QRect cfgLayer;
+        const bool cfgOk = QTest::qWaitFor([&] {
+            const auto popups = layers(QStringLiteral("bwm-r4-popup"), headlessName);
+            if (popups.size() != 1) return false;
+            cfgLayer = popups.first();
+            return cfgLayer.isValid() && S.contains(cfgLayer) && !cfgLayer.intersects(bottomLayer);
+        }, 5000);
+        m_steps.append(QJsonObject{{"step", "fractional-panel-settings"}, {"observed", rect(cfgLayer)},
+            {"ownClients", ownClients()}, {"passed", cfgOk && ownClients() == baselineClients}});
+        QVERIFY2(cfgOk && ownClients() == baselineClients, "PanelConfigView out of bounds at fractional scale");
+
+        // Set Position… arrows on the fractional-scale output, then move to Left edge.
+        QQmlExpression(qmlContext(dialog->mainItem()), dialog->mainItem(), QStringLiteral("setPositionButton.checked = true")).evaluate();
+        QList<QRect> arrows;
+        const bool arrowsOk = QTest::qWaitFor([&] {
+            arrows = layers(QStringLiteral("bwm-r5-edit-indicator"), headlessName);
+            if (arrows.size() != 3) return false;
+            for (const auto &r : arrows) if (!S.contains(r)) return false;
+            return true;
+        }, 5000);
+        m_steps.append(QJsonObject{{"step", "fractional-set-position-arrows"}, {"count", int(arrows.size())}, {"passed", arrowsOk}});
+        QVERIFY2(arrowsOk, "Set Position… arrows missing or out of bounds at fractional scale");
+
+        QQmlExpression(qmlContext(dialog->mainItem()), dialog->mainItem(),
+            QStringLiteral("setPositionButton.moveTo(%1)").arg(int(Plasma::Types::LeftEdge))).evaluate();
+        QTRY_COMPARE(c->location(), Plasma::Types::LeftEdge);
+        QCOMPARE(view.capabilities().value(QStringLiteral("viewSettingsScope")).toString(), QStringLiteral("Vertical%1").arg(expectedH));
+        QTRY_VERIFY_WITH_TIMEOUT(reserved(headlessName).left() == before.left() + 48
+            && reserved(headlessName).bottom() == before.bottom(), 5000);
+        QRect leftLayer;
+        QMargins nowReserved;
+        const bool leftOk = QTest::qWaitFor([&] {
+            const auto all = layers(ns, headlessName);
+            if (all.size() != 1) return false;
+            leftLayer = all.first();
+            nowReserved = reserved(headlessName);
+            return leftLayer.width() == 48 && S.contains(leftLayer)
+                && leftLayer.height() == expectedH - nowReserved.top() - nowReserved.bottom();
+        }, 5000);
+        m_steps.append(QJsonObject{{"step", "fractional-move-left"}, {"observed", rect(leftLayer)},
+            {"expectedHeight", expectedH - nowReserved.top() - nowReserved.bottom()},
+            {"reservedTop", nowReserved.top()}, {"reservedBottom", nowReserved.bottom()}, {"passed", leftOk}});
+        QVERIFY2(leftOk, qPrintable(QStringLiteral("Left panel %1,%2 %3x%4 vs screen %5,%6 %7x%8 (reserved t=%9 b=%10)")
+            .arg(leftLayer.x()).arg(leftLayer.y()).arg(leftLayer.width()).arg(leftLayer.height())
+            .arg(S.x()).arg(S.y()).arg(S.width()).arg(S.height())
+            .arg(nowReserved.top()).arg(nowReserved.bottom())));
+
+        // Open AppletAlternatives.qml on the fractional-scale Left panel.
+        Q_EMIT clock->contextualActionsAboutToShow();
+        auto *altAction = clock->internalAction(QStringLiteral("alternatives"));
+        QVERIFY(altAction);
+        altAction->trigger();
+        QTRY_VERIFY(view.alternativesDialog() && view.alternativesDialog()->isVisible());
+        QRect altLayer;
+        const bool altOk = QTest::qWaitFor([&] {
+            const auto popups = layers(QStringLiteral("bwm-r4-popup"), headlessName);
+            if (popups.size() != 2) return false;
+            for (const auto &r : popups) if (r.left() == leftLayer.right() + 1 && r.width() >= 250) altLayer = r;
+            return altLayer.isValid() && S.contains(altLayer) && !altLayer.intersects(leftLayer);
+        }, 5000);
+        m_steps.append(QJsonObject{{"step", "fractional-alternatives-popup"}, {"observed", rect(altLayer)},
+            {"ownClients", ownClients()}, {"passed", altOk && ownClients() == baselineClients}});
+        QVERIFY2(altOk && ownClients() == baselineClients, "AppletAlternatives.qml misplaced at fractional scale");
+        view.alternativesDialog()->close();
+        QTRY_VERIFY(!view.alternativesDialog());
+
+        // Open WidgetExplorer on the fractional-scale Left panel.
+        QQmlExpression(qmlContext(dialog->mainItem()), dialog->mainItem(), QStringLiteral("configDialog.showAddWidgetDialog()")).evaluate();
+        QTRY_VERIFY(view.widgetExplorer() && view.widgetExplorer()->isVisible());
+        QRect expLayer;
+        const bool expOk = QTest::qWaitFor([&] {
+            const auto all = layers(QStringLiteral("bwm-r5-widget-explorer"), headlessName);
+            if (all.size() != 1) return false;
+            expLayer = all.first();
+            return expLayer.isValid() && S.contains(expLayer) && !expLayer.intersects(leftLayer)
+                && expLayer.left() >= leftLayer.right() + 1;
+        }, 5000);
+        m_steps.append(QJsonObject{{"step", "fractional-widget-explorer"}, {"observed", rect(expLayer)}, {"passed", expOk}});
+        QVERIFY2(expOk, "WidgetExplorer misplaced at fractional scale");
+        view.widgetExplorer()->toggle();
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r5-widget-explorer"), headlessName).isEmpty());
+
+        if (auto *d = openDialog()) d->hide();
+        corona.setEditMode(false);
+        QTRY_VERIFY(!corona.isEditMode());
+        view.hide();
+        QTRY_VERIFY(layers(ns, headlessName).isEmpty());
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r4-popup"), headlessName).isEmpty());
+        QTRY_VERIFY(reserved(headlessName).left() == before.left()
+            && reserved(headlessName).bottom() == before.bottom()
+            && reserved(headlessName).right() == before.right());
+        m_steps.append(QJsonObject{{"step", "fractional-cleanup"}, {"scale", expectedScale}, {"passed", true}});
+        puts(QJsonDocument(QJsonObject{{"steps", m_steps}}).toJson(QJsonDocument::Compact).constData());
+    }
+    void originalDesktopEditModeInHyprland()
+    {
+        // R5 iteración 11: DesktopViewHost hosting the installed, unmodified Desktop.qml
+        // and DesktopEditMode.qml on LayerBackground in Hyprland alongside a reserving
+        // native bottom panel, verifying layer geometry, panel settings handoff,
+        // sidePanel WidgetExplorer, AppletAlternatives popup and clean teardown.
+        m_steps = {};
+        const auto output = qEnvironmentVariable("BWM_R5_OUTPUT");
+        if (output.isEmpty())
+            return;
+        QCOMPARE(QGuiApplication::platformName(), QStringLiteral("wayland"));
+        auto *screen = BwmOutput::resolveScreen(output);
+        QVERIFY2(screen, "The output description did not resolve to one screen");
+        const QString outName = screen->name();
+        const QRect S = screen->geometry();
+        const QMargins before = reserved(outName);
+        const int baselineClients = ownClients();
+
+        ViewCorona corona;
+        corona.setKPackage(KPackage::PackageLoader::self()->loadPackage(QStringLiteral("Plasma/Shell"), QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout(QStringLiteral("bwm-r5-desktop-session-appletsrc"));
+        auto *desk = corona.createContainment(QStringLiteral("org.kde.plasma.folder"));
+        auto *panel = corona.createContainment(QStringLiteral("org.kde.panel"));
+        QVERIFY(desk && panel);
+        panel->setLocation(Plasma::Types::BottomEdge);
+        panel->setFormFactor(Plasma::Types::Horizontal);
+        QVERIFY(panel->createApplet(QStringLiteral("org.kde.plasma.analogclock")));
+        const uint panelId = panel->id();
+
+        PanelRuntime runtime(&corona, QStringLiteral("plasmashellrc-desktop-session"), true, nullptr, true);
+        QVERIFY2(runtime.setAssignments({{panelId, output}}), qPrintable(runtime.error()));
+        QVERIFY2(runtime.setSkin(QStringLiteral("plasma")), qPrintable(runtime.error()));
+        QTRY_VERIFY(runtime.view(panelId) && runtime.view(panelId)->isExposed());
+        QVERIFY2(runtime.view(panelId)->applyViewSettings({{"thickness", 48}, {"panelVisibility", 0}, {"panelLengthMode", 0}}),
+                 qPrintable(runtime.view(panelId)->error()));
+        QRect panelLayer;
+        QTRY_VERIFY((panelLayer = layers(QStringLiteral("bwm-r4-native-policy"), outName).value(0)).isValid()
+                    && panelLayer.height() == 48 && panelLayer.bottom() == S.bottom());
+
+        DesktopViewHost desktopView(&corona, true, screen);
+        corona.bind(desk, &desktopView);
+        QVERIFY2(desktopView.load(desk), qPrintable(desktopView.error()));
+        desktopView.show();
+        QTRY_VERIFY(desktopView.isExposed());
+
+        QRect deskLayer;
+        const bool deskOk = QTest::qWaitFor([&] {
+            const auto all = layers(QStringLiteral("bwm-r5-desktop"), outName);
+            if (all.size() != 1) return false;
+            deskLayer = all.first();
+            return deskLayer == S;
+        }, 5000);
+        m_steps.append(QJsonObject{{"step", "desktop-background-layer"}, {"observed", rect(deskLayer)},
+            {"ownClients", ownClients()}, {"passed", deskOk && ownClients() == baselineClients}});
+        QVERIFY2(deskOk && ownClients() == baselineClients,
+                 qPrintable(QStringLiteral("bwm-r5-desktop layer=%1,%2 %3x%4 expected=%5,%6 %7x%8 count=%9 ownClients=%10 baseline=%11")
+                     .arg(deskLayer.x()).arg(deskLayer.y()).arg(deskLayer.width()).arg(deskLayer.height())
+                     .arg(S.x()).arg(S.y()).arg(S.width()).arg(S.height())
+                     .arg(layers(QStringLiteral("bwm-r5-desktop"), outName).size())
+                     .arg(ownClients()).arg(baselineClients)));
+
+        auto *root = desktopView.rootObject();
+        QVERIFY(root);
+        QStringList scriptErrors;
+        const auto eval = [&](const QString &code) {
+            QQmlExpression e(qmlContext(root), root, code);
+            const auto v = e.evaluate();
+            if (e.hasError()) scriptErrors.append(e.error().toString());
+            return v;
+        };
+
+        // Enter edit mode from the desktop (DesktopEditMode.qml opens and scales down the view).
+        desktopView.enterEditMode();
+        QTRY_VERIFY(corona.isEditMode() && corona.enteredEditModeViaDesktop());
+        QTRY_VERIFY(eval(QStringLiteral("editModeLoader.item !== null && editModeLoader.item.open === true")).toBool());
+        QTRY_VERIFY(eval(QStringLiteral("containmentParent.scale < 1.0")).toBool());
+        m_steps.append(QJsonObject{{"step", "desktop-edit-mode-active"},
+            {"scale", eval(QStringLiteral("containmentParent.scale")).toDouble()},
+            {"strictAvail", rect(desktopView.strictAvailableScreenRect())}, {"passed", true}});
+
+        // Opening Panel Settings from desktop edit mode keeps desktop edit mode alive on close.
+        panel->internalAction(QStringLiteral("configure"))->trigger();
+        PanelConfigView *cfg = nullptr;
+        QTRY_VERIFY((cfg = openDialog()));
+        QTRY_COMPARE(corona.panelBeingConfigured(), static_cast<QObject *>(runtime.view(panelId)));
+        QTRY_COMPARE(desktopView.configuredPanel(), static_cast<QObject *>(runtime.view(panelId)));
+        QRect cfgLayer;
+        const bool cfgOk = QTest::qWaitFor([&] {
+            const auto all = layers(QStringLiteral("bwm-r4-popup"), outName);
+            if (all.size() != 1) return false;
+            cfgLayer = all.first();
+            return cfgLayer.isValid() && S.contains(cfgLayer) && !cfgLayer.intersects(panelLayer);
+        }, 5000);
+        cfg->hide();
+        QTRY_VERIFY(!corona.panelBeingConfigured());
+        QVERIFY2(corona.isEditMode() && corona.enteredEditModeViaDesktop(),
+                 "Closing Panel Settings must keep DesktopEditMode open");
+        m_steps.append(QJsonObject{{"step", "desktop-panel-settings-handoff"}, {"observed", rect(cfgLayer)},
+            {"ownClients", ownClients()}, {"passed", cfgOk && ownClients() == baselineClients}});
+        QVERIFY2(cfgOk && ownClients() == baselineClients, "PanelConfigView misplaced during desktop edit mode");
+
+        // Open "Add Widgets…" from the desktop -> bwm-r5-desktop-explorer clears panel + top bar.
+        desk->internalAction(QStringLiteral("add widgets"))->trigger();
+        QTRY_VERIFY(desktopView.sidePanel() && desktopView.sidePanel()->isVisible());
+        QTRY_VERIFY(eval(QStringLiteral("sidePanelStack.state === 'widgetExplorer' && sidePanelStack.item !== null && root.widgetExplorer !== null")).toBool());
+        QRect expLayer;
+        const bool expOk = QTest::qWaitFor([&] {
+            const auto all = layers(QStringLiteral("bwm-r5-desktop-explorer"), outName);
+            if (all.size() != 1) return false;
+            expLayer = all.first();
+            return expLayer.isValid() && expLayer.width() > 200 && S.contains(expLayer)
+                && !expLayer.intersects(panelLayer) && expLayer.top() >= S.top() + before.top();
+        }, 5000);
+        eval(QStringLiteral("root.widgetExplorer.addApplet('org.kde.plasma.analogclock')"));
+        QTRY_COMPARE(desk->applets().size(), 1);
+        m_steps.append(QJsonObject{{"step", "desktop-widget-explorer-layer"}, {"observed", rect(expLayer)},
+            {"applets", desk->applets().size()}, {"ownClients", ownClients()},
+            {"passed", expOk && ownClients() == baselineClients}});
+        QVERIFY2(expOk && ownClients() == baselineClients, "Desktop WidgetExplorer layer misplaced or opened toplevel");
+        desktopView.sidePanel()->setVisible(false);
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r5-desktop-explorer"), outName).isEmpty());
+
+        // AppletAlternatives on the desktop widget opens as a layer (bwm-r5-desktop-popup) and switches.
+        auto *clockApplet = desk->applets().first();
+        Q_EMIT clockApplet->contextualActionsAboutToShow();
+        auto *altAction = clockApplet->internalAction(QStringLiteral("alternatives"));
+        QVERIFY(altAction);
+        altAction->trigger();
+        QTRY_VERIFY(desktopView.alternativesDialog() && desktopView.alternativesDialog()->isVisible());
+        QRect altLayer;
+        const bool altOk = QTest::qWaitFor([&] {
+            const auto all = layers(QStringLiteral("bwm-r5-desktop-popup"), outName);
+            if (all.size() != 1) return false;
+            altLayer = all.first();
+            return altLayer.isValid() && S.contains(altLayer) && !altLayer.intersects(panelLayer);
+        }, 5000);
+        auto *altObj = desktopView.alternativesDialog();
+        QQmlExpression altSwitch(qmlContext(altObj), altObj, QStringLiteral("alternativesHelper.loadAlternative('org.kde.plasma.digitalclock')"));
+        altSwitch.evaluate();
+        QVERIFY2(!altSwitch.hasError(), qPrintable(altSwitch.error().toString()));
+        altObj->close();
+        QTRY_VERIFY(!desktopView.alternativesDialog());
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r5-desktop-popup"), outName).isEmpty());
+        QTRY_VERIFY(desk->applets().size() == 1
+                    && desk->applets().first()->pluginMetaData().pluginId() == QStringLiteral("org.kde.plasma.digitalclock"));
+        m_steps.append(QJsonObject{{"step", "desktop-alternatives-layer-and-switch"}, {"observed", rect(altLayer)},
+            {"ownClients", ownClients()}, {"passed", altOk && ownClients() == baselineClients}});
+        QVERIFY2(altOk && ownClients() == baselineClients, "Desktop AppletAlternatives layer misplaced");
+
+        // Exit edit mode and tear down cleanly.
+        corona.setEditMode(false);
+        QTRY_VERIFY(!corona.isEditMode() && !corona.enteredEditModeViaDesktop());
+        QVERIFY2(scriptErrors.isEmpty(), qPrintable(scriptErrors.join(u'\n')));
+        desktopView.hide();
+        corona.unbind(desk);
+        runtime.setSkin(QStringLiteral("default"));
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r5-desktop"), outName).isEmpty());
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r5-desktop-explorer"), outName).isEmpty());
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r5-desktop-popup"), outName).isEmpty());
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r4-native-policy"), outName).isEmpty());
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r4-popup"), outName).isEmpty());
+        QTRY_COMPARE(reserved(outName), before);
+        m_steps.append(QJsonObject{{"step", "desktop-cleanup"}, {"passed", true}});
         puts(QJsonDocument(QJsonObject{{"steps", m_steps}}).toJson(QJsonDocument::Compact).constData());
     }
 };

@@ -7,6 +7,7 @@
 #include "panelviewsettings.h"
 #include "panelconfigview.h"
 #include "widgetexplorerview.h"
+#include "viewcorona.h"
 #include "taskbridge.h"
 #include <Plasma/Corona>
 #include <Plasma/Containment>
@@ -79,9 +80,13 @@ PanelViewHost::PanelViewHost(Plasma::Corona *corona,QString viewSettingsFile):Co
 }
 void PanelViewHost::invalidateFrame(){++m_frames->surface;}
 bool PanelViewHost::event(QEvent *event) {
+    static std::atomic<quint64> nextSurfaceOrder{1};
     // PanelView::event 6.7.5 for the edge-activated modes. Entering the hidden strip is
     // what KWin's screen edge does for the original: it reveals the panel.
     switch(event->type()) {
+    case QEvent::Show:
+        m_surfaceOrder=nextSurfaceOrder.fetch_add(1);
+        break;
     case QEvent::Enter:
         m_containsMouse=true;
         if(edgeActivated()){m_unhideTimer.stop();if(m_autoHidden)setAutoHideEnabled(false);}
@@ -102,6 +107,13 @@ bool PanelViewHost::event(QEvent *event) {
     if((event->type()==QEvent::Expose && !isExposed()) ||
        (event->type()==QEvent::PlatformSurface && static_cast<QPlatformSurfaceEvent*>(event)->surfaceEventType()==QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed))invalidateFrame();
     return result;
+}
+void PanelViewHost::resizeEvent(QResizeEvent *event) {
+    ContainmentView::resizeEvent(event);
+    if(auto *root=rootObject();root && size().isValid() && root->size()!=QSizeF(size())) {
+        root->setSize(size());
+        updateMask();
+    }
 }
 QVariantMap PanelViewHost::presentationState()const {
     const bool loaded=capabilities().value("nativeViewLoaded").toBool();
@@ -326,7 +338,12 @@ void PanelViewHost::reflow() {
         : padding("fixedLeftFloatingPadding")+padding("fixedRightFloatingPadding");
     const int total=m_thickness+(vertical() ? padding("fixedLeftFloatingPadding")+padding("fixedRightFloatingPadding")
         : padding("fixedTopFloatingPadding")+padding("fixedBottomFloatingPadding"));
-    const int side=screen() ? (vertical() ? screen()->size().height() : screen()->size().width()) : 0;
+    int side=screen() ? (vertical() ? screen()->size().height() : screen()->size().width()) : 0;
+    if(side>0 && property("bwmExclusiveZoneRequested").toInt()>0 && property("bwmPanelBounds").isValid()) {
+        const QRect bounds=property("bwmPanelBounds").toRect();
+        if(!bounds.isEmpty() && screen()->geometry().contains(bounds))
+            side=vertical() ? bounds.height() : bounds.width();
+    }
     // PanelView::preferredSize 6.7.5. Panel.length is the content hint (m_contentLength).
     int extent=0;
     if(m_lengthMode==PanelViewEnums::FillAvailable && side>0)extent=side;
@@ -336,10 +353,20 @@ void PanelViewHost::reflow() {
         const int maximum=std::max(minimum,side>0 ? std::min(m_maximumLength,side-m_offset) : m_maximumLength);
         extent=std::clamp(m_length+pads,minimum,maximum);
     }
+    const bool stretchedLayer=m_lengthMode==PanelViewEnums::FillAvailable && property("bwmLayerPanel").toBool();
     const QSize wanted=vertical() ? QSize(total,extent) : QSize(extent,total);
-    setMinimumSize(wanted);setMaximumSize(wanted);
-    if(size()!=wanted)resize(wanted);
-    root->setSize(wanted);m_lastVertical=vertical();
+    const QSize minSize=stretchedLayer
+        ? (vertical() ? QSize(total,std::min(extent,total)) : QSize(std::min(extent,total),total))
+        : wanted;
+    setMinimumSize(minSize);setMaximumSize(wanted);
+    const int currentCross=vertical() ? width() : height();
+    const int currentLength=vertical() ? height() : width();
+    const bool keepConfiguredLength=stretchedLayer && isVisible()
+        && QGuiApplication::platformName().startsWith(QStringLiteral("wayland"))
+        && m_lastLengthMode==m_lengthMode && m_lastVertical==vertical()
+        && currentCross==total && currentLength>0 && currentLength<=extent;
+    if(!keepConfiguredLength && size()!=wanted)resize(wanted);
+    root->setSize(size());m_lastVertical=vertical();m_lastLengthMode=m_lengthMode;
     if(m_hideAnimation.state()!=QAbstractAnimation::Running)contentItem()->setPosition(m_autoHidden?hiddenOffset():QPointF());
     updateMask();
     BwmSurface::setPanelPlacement(this,{m_alignment,m_offset,m_lengthMode});
@@ -384,8 +411,14 @@ void PanelViewHost::showConfigurationInterface(Plasma::Applet *applet) {
         auto *view=new PanelConfigView(containment(),this);
         if(!view->init()){setError(view->error());delete view;return;}
         m_configView=view;
+        connect(view,&QWindow::xChanged,this,&PanelViewHost::relativeConfigRectChanged);
+        connect(view,&QWindow::yChanged,this,&PanelViewHost::relativeConfigRectChanged);
+        connect(view,&QWindow::widthChanged,this,&PanelViewHost::relativeConfigRectChanged);
+        connect(view,&QWindow::heightChanged,this,&PanelViewHost::relativeConfigRectChanged);
+        connect(view,&QWindow::visibleChanged,this,&PanelViewHost::relativeConfigRectChanged);
         if(corona())corona()->setEditMode(true);
         view->show();view->requestActivate();
+        emit relativeConfigRectChanged();
         return;
     }
     if(corona() && corona()->isEditMode())corona()->setEditMode(false);
@@ -518,10 +551,21 @@ bool PanelViewHost::persist(const QVariantMap &changes) {
     if(!m_userConfiguring || !m_settings)return false;
     return applyViewSettings(changes);
 }
+QRect PanelViewHost::relativeConfigRect()const {
+    if(!m_configView || !m_configView->isVisible() || !screen())return {};
+    const QRect popupRect=m_configView->property("bwmPopupRect").toRect();
+    const QRect rect=popupRect.isValid() && !popupRect.isEmpty() ? popupRect : m_configView->geometry();
+    return rect.translated(-screen()->geometry().topLeft());
+}
 void PanelViewHost::setUserConfiguring(bool value) {
     if(m_userConfiguring==value)return;m_userConfiguring=value;
     if(containment())containment()->setUserConfiguring(value);
+    if(auto *vc=qobject_cast<ViewCorona*>(corona())) {
+        if(value)vc->setPanelBeingConfigured(this);
+        else if(vc->panelBeingConfigured()==this)vc->setPanelBeingConfigured(nullptr);
+    }
     emit userConfiguringChanged();
+    emit relativeConfigRectChanged();
 }
 void PanelViewHost::setLengthMode(int value) {
     if(value<PanelViewEnums::FillAvailable || value>PanelViewEnums::Custom || value==m_lengthMode)return;
