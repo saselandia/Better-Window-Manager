@@ -22,15 +22,10 @@ cache signatures, locks and atomic publication. The background conversion pool
 uses the existing utilities without introducing nice/ionice dependencies.
 An empty or unreadable collection returns without opening an invisible overlay.
 
-`hypr/skins/retro/scripts/wallpaper-picker.py` resolves the active theme with
-`bwm_omarchy.theme_directory` (bundled and community themes). It offers, in order:
-
-1. The current static theme's `backgrounds` directory.
-2. `~/.config/omarchy/backgrounds/<theme>` (the original format for personal extras).
-3. `~/Pictures/Wallpapers` (BWM's shared collection).
-
-Dynamic mode offers its personal extras and the shared directory. All collections
-keep Omarchy's one-directory-level scan and supported image/video formats. The
+`hypr/skins/retro/scripts/wallpaper-picker.py` offers only `~/Pictures/Wallpapers`
+(BWM's shared collection, the same one every skin's picker uses); backgrounds of the
+Omarchy theme and `~/.config/omarchy/backgrounds/<theme>` are no longer mixed in. The
+collection keeps Omarchy's one-directory-level scan and supported image/video formats. The
 current original media path is preselected, including videos with a poster.
 `wallpaper-picker.sh` still owns Alt+W and the menu entry; only its Retro branch
 uses this backend. Applying calls `omarchy-theme-bg-set`, which delegates to

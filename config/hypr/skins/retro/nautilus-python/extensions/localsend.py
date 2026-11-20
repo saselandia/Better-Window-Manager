@@ -8,7 +8,7 @@ from gi import require_version
 
 require_version("Nautilus", "4.1")
 
-from gi.repository import GObject, Gio, Nautilus
+from gi.repository import GObject, Gio, GLib, Nautilus
 
 
 def _which(name):
@@ -53,7 +53,11 @@ class SendViaLocalSendAction(GObject.GObject, Nautilus.MenuProvider):
             [flatpak, "info", app_id],
             Gio.SubprocessFlags.STDOUT_SILENCE | Gio.SubprocessFlags.STDERR_SILENCE,
         )
-        return process.wait_check()
+        try:
+            return process.wait_check()
+        except GLib.Error:
+            # Gio raises on a nonzero exit (e.g. Flatpak installed, LocalSend absent).
+            return False
 
     def _selected_paths(self, files):
         paths = []

@@ -75,8 +75,9 @@ bwm menu            # BWMenu visual; --tui para rescate sin Quickshell
 bwm version         # revisión instalada de BWM
 ```
 
-**BWMenu:** mantén `+` y pulsa `-` (o al revés, también en el teclado numérico). Galería
-visual de skins que sigue sus colores, fuentes y temas en vivo, con versiones y
+Busca **BWMenu** en el lanzador de aplicaciones de cualquier skin. También puedes
+mantener `+` y pulsar `-` (o al revés, también en el teclado numérico). La galería
+de skins sigue sus colores, fuentes y temas en vivo, con versiones y
 compatibilidad de dependencias, aplicación de skins y recuperación de barra y paneles.
 Conserva una consola de rescate sin Quickshell. Si cae toda la sesión gráfica, entra con Ctrl+Alt+F3 y ejecuta
 `bwm menu --tui`. [Guía de BWMenu](docs/BWMENU.md).

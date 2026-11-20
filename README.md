@@ -75,8 +75,9 @@ bwm menu            # visual BWMenu; --tui for recovery without Quickshell
 bwm version         # installed BWM revision
 ```
 
-**BWMenu:** hold `+` and press `-` (or the other way round; keypad keys also work). Browse
-skin previews in a gallery that follows the active colors, fonts and themes live. Check
+Find **BWMenu** in the application launcher of any skin. You can also hold either
+`+` or `-` and press the other key, including on the keypad. Browse skin previews
+in a gallery that follows the active colors, fonts and themes live. Check
 dependencies, apply a skin, or recover bars and panels; a console remains available without Quickshell. If the
 entire graphical session crashes, log into a console with Ctrl+Alt+F3 and run
 `bwm menu --tui`. [BWMenu guide (Spanish)](docs/BWMENU.md).

@@ -20,7 +20,7 @@ LDLIBS += $(shell pkg-config --libs Qt6Gui Qt6DBus) -lkdecorations3 -lkdecoratio
           -lKF6CoreAddons -lKF6ConfigCore -lKF6ColorScheme -lKF6Service
 
 SOURCES = main.cpp server.cpp decorator.cpp palette.cpp
-HEADERS = protocol.h wire.h server.h decorator.h palette.h
+HEADERS = protocol.h wire.h server.h decorator.h palette.h shadowstate.h
 MOCS = moc_server.cpp moc_decorator.cpp moc_palette.cpp
 OBJECTS = $(SOURCES:.cpp=.o) $(MOCS:.cpp=.o)
 

@@ -65,7 +65,7 @@ local function window_rule(match, props)
 end
 
 local function set_floating(window, floating)
-    hl.dispatch(hl.dsp.window.float({ action = floating and "on" or "off", window = window }))
+    hl.dispatch(hl.dsp.window.float({ action = floating and "enable" or "disable", window = window }))
 end
 
 local function set_claimed(window, claimed)

@@ -20,7 +20,7 @@ SUPPORTED_EXTENSIONS = {
 }
 
 
-def _which(name):
+def _search_path():
     extras = [
         os.path.expanduser("~/.local/bin"),
         os.path.expanduser("~/.config/hypr/scripts/omarchy-shims"),
@@ -29,7 +29,11 @@ def _which(name):
     for extra in extras:
         if extra not in parts:
             parts.append(extra)
-    return shutil.which(name, path=":".join(parts))
+    return ":".join(parts)
+
+
+def _which(name):
+    return shutil.which(name, path=_search_path())
 
 
 class TranscodeAction(GObject.GObject, Nautilus.MenuProvider):
@@ -48,7 +52,10 @@ class TranscodeAction(GObject.GObject, Nautilus.MenuProvider):
                 for path in paths
             )
 
-        Gio.Subprocess.new([wrapper, cmd], Gio.SubprocessFlags.NONE)
+        # The transcoder also calls Omarchy helpers by name inside the terminal.
+        launcher = Gio.SubprocessLauncher.new(Gio.SubprocessFlags.NONE)
+        launcher.setenv("PATH", _search_path(), True)
+        launcher.spawnv([wrapper, cmd])
 
     def _is_supported(self, file):
         mime = file.get_mime_type() or ""

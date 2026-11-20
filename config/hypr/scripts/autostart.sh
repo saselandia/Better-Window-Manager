@@ -127,6 +127,10 @@ fi
     fi
 ) &
 
+# Registrar BWMenu también en instalaciones existentes, antes de cargar los lanzadores.
+bash "$HOME/.config/hypr/scripts/install-bwmenu-launcher.sh" \
+    || echo "BWM: no se pudo registrar BWMenu en el lanzador de aplicaciones" >&2
+
 # 5. Barra y entorno de escritorio Quickshell (End_4 / Illogical Impulse)
 if command -v quickshell >/dev/null 2>&1; then
     # Same environment and ii-instance guard as recovery/maintenance. A qs settings

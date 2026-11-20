@@ -224,6 +224,12 @@ void Bridge::reconfigure()
     readIconTheme();
     if (m_settingsImpl)
         m_settingsImpl->readSettings(m_recommendedBorderSize);
+    // Breeze 6.7.5 connects its first Decoration::reconfigure before the shared
+    // SettingsProvider::reconfigure. Complete one queued notification after all
+    // plugin-wide settings have been read, so even a single window uses the new
+    // native shadow preferences on the first edit. No private plugin API/rc rewrite.
+    if (m_settings)
+        QMetaObject::invokeMethod(m_settings.get(), "reconfigured", Qt::QueuedConnection);
     if (m_plugin != oldPlugin || m_theme != oldTheme)
         Q_EMIT decorationsInvalidated();
 }
@@ -339,6 +345,7 @@ Window::Window(Connection *connection, uint32_t id, Bridge *bridge, const Window
     m_renderTimer.setSingleShot(true);
     m_renderTimer.setInterval(0);
     connect(&m_renderTimer, &QTimer::timeout, this, &Window::render);
+    m_shadowState.changed = [this] { scheduleRender(); };
     connect(m_bridge, &Bridge::paletteChanged, this, [this] {
         if (m_decoration)
             Q_EMIT m_decoration->window()->paletteChanged(m_bridge->palette()->palette());
@@ -349,6 +356,8 @@ Window::Window(Connection *connection, uint32_t id, Bridge *bridge, const Window
 
 Window::~Window()
 {
+    m_shadowState.changed = {};
+    m_shadowState.follow(nullptr);
     delete m_decoration;
     releaseBuffer(m_buffers[0]);
     releaseBuffer(m_buffers[1]);
@@ -356,16 +365,20 @@ Window::~Window()
 
 void Window::recreateDecoration()
 {
+    m_shadowState.follow(nullptr);
     delete m_decoration;
     m_decoration = m_bridge->createDecoration(this);
-    m_sentShadow = nullptr;
+    m_shadowState.invalidate();
     if (!m_decoration) {
         m_connection->send(Writer(Error, m_id).str(QStringLiteral("no decoration plugin")).finish());
         return;
     }
     connect(m_decoration, &KDecoration3::Decoration::damaged, this, [this](const QRegion &r) { scheduleRender(r); });
     connect(m_decoration, &KDecoration3::Decoration::nextStateChanged, this, [this] { commit(); });
-    connect(m_decoration, &KDecoration3::Decoration::shadowChanged, this, [this] { scheduleRender(); });
+    connect(m_decoration, &KDecoration3::Decoration::shadowChanged, this, [this] {
+        m_shadowState.follow(m_decoration->shadow().get());
+    });
+    m_shadowState.follow(m_decoration->shadow().get());
     connect(m_decoration, &KDecoration3::Decoration::sectionUnderMouseChanged, this, [this](Qt::WindowFrameSection section) {
         m_connection->send(Writer(SectionUnderMouse, m_id).u32(uint32_t(section)).finish());
     });
@@ -635,20 +648,19 @@ void Window::render()
 void Window::sendShadow()
 {
     const auto shadow = m_decoration->shadow();
-    if (!shadow) {
-        if (m_sentShadow) {
-            m_connection->send(Writer(Shadow, m_id).u32(++m_shadowSerial).u32(0).u32(0).u32(0).u32(0).f64(1)
-                                   .f64(0).f64(0).f64(0).f64(0).rect({}).finish());
-            m_sentShadow = nullptr;
-        }
+    m_shadowState.follow(shadow.get());
+    if (!m_shadowState.pending())
+        return;
+    const QImage source = shadow ? shadow->shadow() : QImage{};
+    if (source.isNull()) {
+        if (m_connection->send(Writer(Shadow, m_id).u32(++m_shadowSerial).u32(0).u32(0).u32(0).u32(0).f64(1)
+                                   .f64(0).f64(0).f64(0).f64(0).rect({}).finish()))
+            m_shadowState.sent();
         return;
     }
-    const QImage source = shadow->shadow();
-    if (m_sentShadow == shadow.get() && m_sentShadowKey == source.cacheKey())
-        return;
     const QImage image = source.convertToFormat(QImage::Format_ARGB32_Premultiplied);
     const size_t size = size_t(image.sizeInBytes());
-    const int fd = memfd_create("bwm-decorator-shadow", MFD_CLOEXEC);
+    const int fd = memfd_create("bwm-decorator-shadow", MFD_CLOEXEC | MFD_ALLOW_SEALING);
     if (fd < 0 || ftruncate(fd, off_t(std::max<size_t>(size, 1))) != 0) {
         if (fd >= 0)
             close(fd);
@@ -656,10 +668,16 @@ void Window::sendShadow()
     }
     if (size) {
         void *data = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-        if (data != MAP_FAILED) {
-            memcpy(data, image.constBits(), size);
-            munmap(data, size);
+        if (data == MAP_FAILED) {
+            close(fd);
+            return;
         }
+        memcpy(data, image.constBits(), size);
+        munmap(data, size);
+    }
+    if (fcntl(fd, F_ADD_SEALS, F_SEAL_WRITE | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_SEAL) < 0) {
+        close(fd);
+        return;
     }
     const QMarginsF padding = shadow->padding();
     Writer msg(Shadow, m_id);
@@ -667,10 +685,9 @@ void Window::sendShadow()
     msg.f64(image.devicePixelRatio());
     msg.f64(padding.left()).f64(padding.top()).f64(padding.right()).f64(padding.bottom());
     msg.rect(shadow->innerShadowRect());
-    m_connection->send(msg.finish(), fd);
+    if (m_connection->send(msg.finish(), fd))
+        m_shadowState.sent();
     close(fd);
-    m_sentShadow = shadow.get();
-    m_sentShadowKey = source.cacheKey();
 }
 
 } // namespace BwmDeco

@@ -80,15 +80,17 @@ namespace BwmDeco {
         SRectD src, dst;
     };
 
-    // Sombra de nueve trozos como KWin (src/scene/shadowitem.cpp, generateShadowQuads): las esquinas a
+    // Sombra de nueve trozos como KWin 6.7.5 (src/scene/shadowitem.cpp, buildQuads): las esquinas a
     // su tamaño, los lados estirados con la franja del rectángulo interior, y si la ventana es tan
     // pequeña que las esquinas se solapan, se recortan a medias y el lado entre ellas no se dibuja.
     // `frame` es el marco completo de la decoración; el centro no se dibuja (Breeze lo deja vacío).
     inline std::vector<SShadowQuad> shadowQuads(const SRectD& frame, const SShadow& s) {
         std::vector<SShadowQuad> out;
-        if (s.width == 0 || s.height == 0 || s.dpr <= 0)
+        if (frame.w < 5 || frame.h < 5 || !shadowIsSane(s, static_cast<size_t>(s.stride) * s.height))
             return out;
-        const double W = s.width / s.dpr, H = s.height / s.dpr;
+        // DecorationShadow's geometries use the image dimensions, including for a QImage
+        // tagged with a DPR. KWin does not divide these metrics by devicePixelRatio.
+        const double W = s.width, H = s.height;
         const auto&  in = s.inner;
         // Tamaños de los elementos (Shadow::init de KWin)
         const double topH = in.y, bottomH = H - (in.y + in.h), leftW = in.x, rightW = W - (in.x + in.w);
@@ -99,31 +101,19 @@ namespace BwmDeco {
         double tr[4] = {outer.x + outer.w - rightW, outer.y, outer.x + outer.w, outer.y + topH};
         double br[4] = {outer.x + outer.w - rightW, outer.y + outer.h - bottomH, outer.x + outer.w, outer.y + outer.h};
         double bl[4] = {outer.x, outer.y + outer.h - bottomH, outer.x + leftW, outer.y + outer.h};
-        bool   drawTop = true, drawRight = true, drawBottom = true, drawLeft = true;
-        if (tl[2] >= tr[0]) {
-            drawTop          = false;
-            const double off = std::abs(tl[2] - tr[0]) / 2;
-            tl[2] -= std::floor(off);
-            tr[0] += std::ceil(off);
-        }
-        if (tr[3] >= br[1]) {
-            drawRight        = false;
-            const double off = std::abs(tr[3] - br[1]) / 2;
-            tr[3] -= std::floor(off);
-            br[1] += std::ceil(off);
-        }
-        if (bl[2] >= br[0]) {
-            drawBottom       = false;
-            const double off = std::abs(bl[2] - br[0]) / 2;
-            bl[2] -= std::floor(off);
-            br[0] += std::ceil(off);
-        }
-        if (tl[3] >= bl[1]) {
-            drawLeft         = false;
-            const double off = std::abs(tl[3] - bl[1]) / 2;
-            tl[3] -= std::floor(off);
-            bl[1] += std::ceil(off);
-        }
+        auto split = [](double a[4], double b[4], int axis) {
+            if (a[axis + 2] <= b[axis])
+                return;
+            // Bound the overlap first: asymmetric themes may have one tile containing
+            // the other. Keep the fractional seam shared, with no floor/ceil gap.
+            const double end = std::min(a[axis + 2], b[axis + 2]);
+            const double start = std::max(a[axis], b[axis]);
+            a[axis + 2] = b[axis] = (start + end) / 2;
+        };
+        split(tl, tr, 0);
+        split(bl, br, 0);
+        split(tl, bl, 1);
+        split(tr, br, 1);
         auto rect = [](const double r[4]) { return SRectD{r[0], r[1], std::max(0.0, r[2] - r[0]), std::max(0.0, r[3] - r[1])}; };
         // Esquinas: la parte de la imagen de su esquina, del tamaño que haya quedado
         const SRectD TL = rect(tl), TR = rect(tr), BR = rect(br), BL = rect(bl);
@@ -131,14 +121,17 @@ namespace BwmDeco {
         out.push_back({{W - TR.w, 0, TR.w, TR.h}, TR});
         out.push_back({{W - BR.w, H - BR.h, BR.w, BR.h}, BR});
         out.push_back({{0, H - BL.h, BL.w, BL.h}, BL});
-        if (drawTop)
-            out.push_back({{in.x, 0, in.w, topH}, {tl[2], outer.y, tr[0] - tl[2], topH}});
-        if (drawRight)
-            out.push_back({{W - rightW, in.y, rightW, in.h}, {outer.x + outer.w - rightW, tr[3], rightW, br[1] - tr[3]}});
-        if (drawBottom)
-            out.push_back({{in.x, H - bottomH, in.w, bottomH}, {bl[2], outer.y + outer.h - bottomH, br[0] - bl[2], bottomH}});
-        if (drawLeft)
-            out.push_back({{0, in.y, leftW, in.h}, {outer.x, tl[3], leftW, bl[1] - tl[3]}});
+        double top[4] = {tl[2], outer.y, tr[0], outer.y + topH};
+        double right[4] = {outer.x + outer.w - rightW, tr[3], outer.x + outer.w, br[1]};
+        double bottom[4] = {bl[2], outer.y + outer.h - bottomH, br[0], outer.y + outer.h};
+        double left[4] = {outer.x, tl[3], outer.x + leftW, bl[1]};
+        split(left, right, 0);
+        split(top, bottom, 1);
+        const auto T = rect(top), R = rect(right), B = rect(bottom), L = rect(left);
+        out.push_back({{in.x, 0, in.w, T.h}, T});
+        out.push_back({{W - R.w, in.y, R.w, in.h}, R});
+        out.push_back({{in.x, H - B.h, in.w, B.h}, B});
+        out.push_back({{0, in.y, L.w, in.h}, L});
         std::erase_if(out, [](const SShadowQuad& q) { return q.dst.w <= 0 || q.dst.h <= 0 || q.src.w <= 0 || q.src.h <= 0; });
         return out;
     }

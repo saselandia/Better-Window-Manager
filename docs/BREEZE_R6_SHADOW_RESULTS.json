@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "date": "2026-11-20",
+  "phase": "R6 first iteration, still open",
+  "sources": {
+    "kwin-6.7.5.tar.xz": "6baa910b732d93c48c90f9c1cc685cc93d0b8de0cdf138c24192c045bc3a48e2",
+    "breeze-6.7.5.tar.xz": "aa05c0c31c852ed5b137327e7798fd763a54c643875d5d8070625475e0af6976",
+    "kdecoration-6.7.5.tar.xz": "7ff1fe2854ca08a21a1ba47f1b0c97d12ea24f1db618631319cba4023ca53d86",
+    "kwindowsystem-6.29.0.tar.xz": "d2717dcf501707b14736faecf7a2d3381f09fc3e4b7a1b77fc298e4aa9f8368e"
+  },
+  "comparison": {
+    "maxAlphaError": 0,
+    "maxColorError": 0,
+    "mutableShadowAndShortBuffer": true,
+    "nativeSamples": [
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeDark-active-1.0",
+        "quads": 6,
+        "scale": 1
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeDark-inactive-1.0",
+        "quads": 6,
+        "scale": 1
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeDark-active-1.25",
+        "quads": 6,
+        "scale": 1.25
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeDark-inactive-1.25",
+        "quads": 6,
+        "scale": 1.25
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeDark-active-1.5",
+        "quads": 6,
+        "scale": 1.5
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeDark-inactive-1.5",
+        "quads": 6,
+        "scale": 1.5
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeDark-active-2.0",
+        "quads": 6,
+        "scale": 2
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeDark-inactive-2.0",
+        "quads": 6,
+        "scale": 2
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeLight-active-1.0",
+        "quads": 6,
+        "scale": 1
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeLight-inactive-1.0",
+        "quads": 6,
+        "scale": 1
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeLight-active-1.25",
+        "quads": 6,
+        "scale": 1.25
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeLight-inactive-1.25",
+        "quads": 6,
+        "scale": 1.25
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeLight-active-1.5",
+        "quads": 6,
+        "scale": 1.5
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeLight-inactive-1.5",
+        "quads": 6,
+        "scale": 1.5
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeLight-active-2.0",
+        "quads": 6,
+        "scale": 2
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "BreezeLight-inactive-2.0",
+        "quads": 6,
+        "scale": 2
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "Aurorae-Sweet-Dark-active",
+        "quads": 8,
+        "scale": 1
+      },
+      {
+        "maxAlphaError": 0,
+        "maxColorError": 0,
+        "name": "Aurorae-Sweet-Dark-inactive",
+        "quads": 8,
+        "scale": 1
+      }
+    ],
+    "syntheticCases": 192,
+    "version": 1,
+    "passed": true,
+    "kwinVersion": "6.7.5",
+    "referenceSha256": "4724271f9314b61f16280a096e32bda6008ba551c5e80230b5066aa5452f92cd",
+    "asan": true,
+    "compositorModified": false,
+    "compositorRenderVerified": false,
+    "scope": "KWin method on Qt geometry, KDecoration3 geometry, CPU raster and native helper samples",
+    "asanScope": "Comparison harness, ShadowState and shadow-buffer reader; sampled helper is a normal build"
+  },
+  "nested": {
+    "passed": true,
+    "scope": "nested-Hyprland Wayland OpenGL/output capture, not Plasma visual parity",
+    "xwaylandTested": false,
+    "nativeDecoration": true,
+    "externalShadowChangedPixels": 62586,
+    "externalDifferenceBounds": [
+      181,
+      26,
+      884,
+      529
+    ],
+    "sessionUnchanged": true,
+    "sessionDifferences": [],
+    "cleanupVerified": true,
+    "sessionConfigErrors": "",
+    "nestedConfigErrors": ""
+  },
+  "guard": {
+    "version": 1,
+    "sessionModified": false,
+    "capturesStarted": false,
+    "clientExit": 0,
+    "guard": {
+      "capturesStarted": false,
+      "executableError": "Permission denied",
+      "executableReason": "cannot-read-peer-executable",
+      "ipc": {
+        "reason": "guard-reported-by-wayland-peer",
+        "reportedGuard": {
+          "pid": 3195,
+          "version": 1
+        },
+        "verificationMethod": "compositor-ipc",
+        "verified": true
+      },
+      "peerPid": 3195,
+      "peerProcess": "Hyprland",
+      "peerUid": 1000,
+      "reason": "guard-reported-by-wayland-peer",
+      "uid": 1000,
+      "verificationMethod": "compositor-ipc",
+      "verified": true,
+      "version": 1
+    }
+  },
+  "regression": {
+    "hostBuiltFromCurrentSources": true,
+    "ctestNormal": {
+      "passed": 8,
+      "failed": 0
+    },
+    "pythonR4": {
+      "passed": 262,
+      "failed": 0
+    },
+    "decorator": {
+      "passed": 13,
+      "failed": 0
+    },
+    "breezebars": {
+      "passed": 4,
+      "failed": 0
+    },
+    "dailyShadowPolicy": {
+      "passed": 1,
+      "failed": 0
+    },
+    "candidateUniqueSymbols": 0
+  },
+  "daily": {
+    "skinObserved": "plasma",
+    "pluginReplaced": false,
+    "helperReplaced": false,
+    "shadowVetoRemoved": false,
+    "shellRestarted": false,
+    "sessionRestarted": false
+  },
+  "limits": [
+    "No Plasma-session image/reference comparison",
+    "No fractional-scale GPU matrix",
+    "No XWayland or CSD shadow validation",
+    "No panel/menu/popup shadow backend",
+    "No certification of original window-capture incident recovery",
+    "Native helper samples use normal build; comparison harness has ASan/UBSan",
+    "Early nested attempts failed: on-demand XWayland load block, hidden frames, child-headless GBM allocation; own notices removed"
+  ]
+}

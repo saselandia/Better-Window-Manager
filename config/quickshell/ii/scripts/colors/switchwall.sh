@@ -447,8 +447,20 @@ main() {
 
     # Only prompt for wallpaper if not using --color and not using --noswitch and no imgpath set
     if [[ -z "$imgpath" && -z "$color_flag" && -z "$noswitch_flag" ]]; then
-        cd "$(xdg-user-dir PICTURES)/Wallpapers/showcase" 2>/dev/null || cd "$(xdg-user-dir PICTURES)/Wallpapers" 2>/dev/null || cd "$(xdg-user-dir PICTURES)" || return 1
-        imgpath="$(kdialog --getopenfilename . --title 'Choose wallpaper')"
+        # BWM: sólo cuenta ~/Pictures/Wallpapers (kdialog no se puede bloquear a una carpeta:
+        # arranca ahí y se descarta lo elegido fuera de ella)
+        wallpapers_dir="$(xdg-user-dir PICTURES)/Wallpapers"
+        mkdir -p "$wallpapers_dir"
+        imgpath="$(kdialog --getopenfilename "$wallpapers_dir/" --title 'Choose wallpaper')"
+        if [[ -n "$imgpath" ]]; then
+            case "$(realpath -m -- "$imgpath")" in
+                "$(realpath -m -- "$wallpapers_dir")"/*) ;;
+                *)
+                    notify-send "Wallpaper" "Sólo se admiten fondos de $wallpapers_dir" -a "Shell" 2>/dev/null || true
+                    imgpath=""
+                    ;;
+            esac
+        fi
     fi
 
     if [[ -n "$imgpath" && -z "$noswitch_flag" ]]; then

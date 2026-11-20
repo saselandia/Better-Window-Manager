@@ -54,8 +54,8 @@ Opciones:
   --no-spicetify     No descarga Spicetify
   -h, --help         Muestra esta ayuda
 
-Después de instalar, \`bwm\` abre la bienvenida (skins y sus requisitos) y \`bwm check\`
-vuelve a comprobar los requisitos.
+Después de instalar, busca BWMenu en el lanzador de aplicaciones de cualquier skin.
+\`bwm\` abre la bienvenida y \`bwm check\` vuelve a comprobar los requisitos.
 EOF
     exit 0
 }
@@ -219,13 +219,15 @@ mkdir -p "$TARGET_CONFIG/illogical-impulse/actions"
 ln -sf "$TARGET_CONFIG/hypr/scripts/open-autostart.sh" "$TARGET_CONFIG/illogical-impulse/actions/autostart"
 
 # ==============================================================================
-# 5. Comando bwm, comandos de Omarchy y bienvenida
+# 5. Comando bwm, aplicación BWMenu, comandos de Omarchy y bienvenida
 # ==============================================================================
-print_step "5. Comando bwm y bienvenida..."
+print_step "5. Comando bwm, BWMenu y bienvenida..."
 # El comando apunta al repositorio: así funciona también con --copy y con la instalación a medias
 ln -sfn "$SCRIPTS_SOURCE/bwm" "$HOME/.local/bin/bwm"
 ln -sfn "$SCRIPTS_SOURCE/bwmenu" "$HOME/.local/bin/bwmenu"
 ln -sfn "$SCRIPTS_SOURCE/bwm-file-manager" "$HOME/.local/bin/bwm-file-manager"
+bash "$SCRIPTS_SOURCE/install-bwmenu-launcher.sh"
+print_success "Entrada de BWMenu registrada para el lanzador de aplicaciones."
 print_success "Comando bwm en ~/.local/bin (abre la bienvenida; bwm help para más)."
 case ":$PATH:" in
     *":$HOME/.local/bin:"*) ;;
@@ -240,7 +242,7 @@ esac
 # Extensiones de Nautilus de Omarchy (LocalSend y Transcode) para Retro
 if [[ ${#SKINS[@]} -eq 0 || " ${SKINS[*]} " == *" retro "* ]]; then
     if [ -x "$TARGET_CONFIG/hypr/skins/retro/scripts/setup-nautilus-plugins.sh" ]; then
-        bash "$TARGET_CONFIG/hypr/skins/retro/scripts/setup-nautilus-plugins.sh" >/dev/null 2>&1 \
+        bash "$TARGET_CONFIG/hypr/skins/retro/scripts/setup-nautilus-plugins.sh" --templates >/dev/null 2>&1 \
             && print_success "Extensiones nautilus-python de Omarchy enlazadas." \
             || print_warn "No se pudieron enlazar las extensiones nautilus-python de Omarchy."
     fi

@@ -150,6 +150,11 @@ def generate_lua(rules):
         is_float = item.get("float", True)
 
         lines.append(f"-- {desc}")
+        excluded = [skin for skin in item.get("excludeSkins", [])
+                    if isinstance(skin, str) and re.fullmatch(r"[a-z0-9_-]+", skin)]
+        if excluded:
+            conditions = " and ".join(f'require("modules.theme").name ~= "{skin}"' for skin in excluded)
+            lines.append(f"if {conditions} then")
         lines.append("hl.window_rule({")
         lines.append(f'    name  = "{name}",')
         lines.append("    match = {")
@@ -160,6 +165,8 @@ def generate_lua(rules):
         lines.append("    },")
         lines.append(f"    float = {'true' if is_float else 'false'},")
         lines.append("})")
+        if excluded:
+            lines.append("end")
         lines.append("")
 
     lines.append("return {}")

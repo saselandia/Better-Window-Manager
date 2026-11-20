@@ -8,6 +8,7 @@
 
 #include "palette.h"
 #include "protocol.h"
+#include "shadowstate.h"
 
 #include <KDecoration3/DecoratedWindow>
 #include <KDecoration3/Decoration>
@@ -214,9 +215,8 @@ private:
     QTimer m_renderTimer;
     bool m_hovered = false;
     QPointF m_lastPointer;
-    const void *m_sentShadow = nullptr;
-    qint64 m_sentShadowKey = 0;
     uint32_t m_shadowSerial = 0;
+    ShadowState m_shadowState;
 };
 
 } // namespace BwmDeco

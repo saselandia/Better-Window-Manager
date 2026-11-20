@@ -141,6 +141,16 @@ def check_requirement(spec: dict, catalog: dict) -> tuple[str, str]:
         if check.get("all"):
             missing = [n for n in names if n not in found]
             return (OK, "") if not missing else (MISSING, "falta " + ", ".join(missing))
+        if not found and check.get("flatpak") and which("flatpak"):
+            try:
+                result = subprocess.run(
+                    ["flatpak", "info", "--show-ref", check["flatpak"]],
+                    capture_output=True, timeout=5,
+                )
+                if result.returncode == 0:
+                    return OK, "Flatpak"
+            except (OSError, subprocess.SubprocessError):
+                pass
         return (OK, "") if found else (MISSING, "no está " + " / ".join(names))
     if kind == "version":
         if not which(check["cmd"][0]):

@@ -10,6 +10,7 @@ Con BWM_TEST_PNG_DIR=<carpeta> guarda las imágenes de las decoraciones. El tema
 BWM_TEST_AURORAE_DIR (carpeta de datos con aurorae/themes/<tema>) y en las carpetas de datos.
 """
 import math
+import fcntl
 import os
 import shutil
 import subprocess
@@ -253,6 +254,46 @@ class BwmDecoratorTest(unittest.TestCase):
         self.assertIsNotNone(h.client.wait_frame(2, after=b.frames[-1].serial))
         self.assertEqual(h.client.errors, [])
         self.assertEqual(h.proc.poll(), None, "el auxiliar no debe caer")
+
+    def test_shadow_memfd_is_immutable(self):
+        h = self.helper(kdeglobals=scheme("BreezeDark"))
+        received = []
+        original = h.client._handle
+
+        def inspect(data, fds):
+            if dc.HEADER.unpack_from(data)[2] == dc.SHADOW and fds:
+                received.append(fcntl.fcntl(fds[0], fcntl.F_GET_SEALS))
+            return original(data, fds)
+
+        h.client._handle = inspect
+        h.client.create(1)
+        self.assertIsNotNone(h.client.wait_frame(1))
+        required = fcntl.F_SEAL_WRITE | fcntl.F_SEAL_SHRINK | fcntl.F_SEAL_GROW | fcntl.F_SEAL_SEAL
+        self.assertTrue(received)
+        self.assertTrue(all(value & required == required for value in received))
+
+    def test_native_shadow_preferences_remove_and_restore(self):
+        h = self.helper(kdeglobals=scheme("BreezeDark"))
+        w = h.client.create(1)
+        self.assertIsNotNone(h.client.wait_frame(1))
+        h.client.settle(.2)
+        self.assertTrue(w.shadow and w.shadow["pixels"])
+        previous = w.shadow["serial"]
+        (h.config / "breezerc").write_text("[Common]\nShadowSize=0\n")
+        self.assertTrue(h.client.wait(lambda: w.shadow["serial"] > previous and not w.shadow["pixels"], 5),
+                        "La preferencia original de Breeze debe retirar la sombra")
+        previous = w.shadow["serial"]
+        (h.config / "breezerc").write_text("[Common]\nShadowSize=1\nShadowStrength=100\nShadowColor=80,40,10\n")
+        self.assertTrue(h.client.wait(lambda: w.shadow["serial"] > previous and bool(w.shadow["pixels"]), 5))
+        self.assertLess(w.shadow["size"][0], 273, "Debe usar el tamaño pequeño de Breeze")
+        self.assertGreater(max(w.shadow["pixels"][2::4]), 0, "Debe conservar el color nativo configurado")
+        # Reconnecting gets the complete current shadow, independent of the former client cache.
+        h.client.close()
+        h.client = dc.Client(str(h.socket))
+        new = h.client.create(2)
+        self.assertIsNotNone(h.client.wait_frame(2))
+        self.assertTrue(new.shadow and new.shadow["pixels"])
+        self.assertEqual(h.client.errors, [])
 
     def test_aurorae_third_party(self):
         found = find_aurorae()

@@ -25,8 +25,7 @@ cambiar de nautilus a dolphin, dejar nautilus en omarchy y añadirle los plugins
 - Vigila las carpetas que contienen los archivos, porque las aplicaciones pueden sustituirlos al guardar; agrupa los avisos próximos para no trabajar varias veces por una sola edición.
 - Conserva las entradas especiales de KDE y los datos que no tengan equivalente en GTK. Si detecta cambios simultáneos que no pueda conciliar con seguridad, conserva la información y vuelve a intentar la sincronización.
 
-
-hacer que bwmenu salga como app para buscarla en el lanzador
+--- hacer que bwmenu salga como app para buscarla en el lanzador
 
 
 

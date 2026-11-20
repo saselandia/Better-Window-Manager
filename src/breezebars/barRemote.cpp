@@ -7,6 +7,7 @@
 #include "barRemote.hpp"
 #include "DecoClient.hpp"
 #include "KWinSnap.hpp"
+#include "ShadowBuffer.hpp"
 
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/config/shared/actions/ConfigActions.hpp>
@@ -56,6 +57,14 @@ static void repositionShadow(PHLWINDOW w) {
             g_pDecorationPositioner->repositionDeco(d.get());
 }
 
+static void damageShadow(PHLWINDOW w) {
+    if (!w)
+        return;
+    for (auto& d : w->m_windowDecorations)
+        if (d && d->getDisplayName() == "BreezeShadow")
+            d->damageEntire();
+}
+
 static CBox monitorLocal(const CBox& global, PHLMONITOR pMonitor) {
     CBox box = global;
     box.translate(-pMonitor->m_position).scale(pMonitor->m_scale).round();
@@ -95,6 +104,7 @@ static void resetRemote(SRemoteState& r) {
 }
 
 void CHyprBar::onRemoteLost() {
+    damageShadow(m_pWindow.lock());
     releaseRemoteBuffers();
     resetRemote(m_remote);
     if (m_bResizing && g_layoutManager->dragController()->target())
@@ -113,6 +123,7 @@ void CHyprBar::onRemoteReconfigured() {
 }
 
 void CHyprBar::destroyRemote() {
+    damageShadow(m_pWindow.lock());
     if (m_remote.created && g_pDecoClient)
         g_pDecoClient->send(destroyWindow(m_remote.id));
     releaseRemoteBuffers();
@@ -278,18 +289,15 @@ void CHyprBar::onRemoteMessage(const SMessage& msg, int fd) {
         damageEntire();
     } else if (msg.shadow) {
         const SShadow& s = *msg.shadow;
-        if (s.hasFd && fd >= 0 && s.width && s.height) {
-            const size_t size = static_cast<size_t>(s.stride) * s.height;
-            void*        p    = mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0);
-            if (p != MAP_FAILED) {
-                if (shadowIsSane(s, size)) {
-                    m_remote.shadowPixels.assign(static_cast<uint8_t*>(p), static_cast<uint8_t*>(p) + size);
-                    m_remote.shadow      = s;
-                    m_remote.shadowDirty = true;
-                }
-                munmap(p, size);
+        if (s.hasFd) {
+            if (auto pixels = readShadowPixels(s, fd)) {
+                damageShadow(m_pWindow.lock());
+                m_remote.shadowPixels = std::move(*pixels);
+                m_remote.shadow      = s;
+                m_remote.shadowDirty = true;
             }
-        } else if (!s.hasFd || !s.width || !s.height) {
+        } else if (!s.width && !s.height && !s.stride) {
+            damageShadow(m_pWindow.lock());
             m_remote.shadow.reset();
             m_remote.shadowPixels.clear();
             m_remote.shadowTexture.reset();
@@ -297,6 +305,7 @@ void CHyprBar::onRemoteMessage(const SMessage& msg, int fd) {
         closeFd();
         updateRemotePositioning();
         repositionShadow(m_pWindow.lock());
+        damageShadow(m_pWindow.lock());
         damageEntire();
     } else if (msg.section) {
         m_remote.section = *msg.section;
@@ -400,7 +409,7 @@ void CHyprBar::renderShadow(PHLMONITOR pMonitor, float a) {
     auto frame = frameBoxGlobal(true);
     if (!frame || !m_remote.shadowTexture)
         return;
-    const double W = s.width / s.dpr, H = s.height / s.dpr;
+    const double W = s.width, H = s.height;
     for (const auto& q : shadowQuads(SRectD{frame->x, frame->y, frame->w, frame->h}, s)) {
         CBox box = monitorLocal(CBox{q.dst.x, q.dst.y, q.dst.w, q.dst.h}, pMonitor);
         if (box.w < 1 || box.h < 1)
@@ -716,6 +725,11 @@ void CBreezeShadow::draw(PHLMONITOR, float const& a) {
         return;
     if (!PW->m_ruleApplicator->decorate().valueOrDefault() || PW->m_ruleApplicator->noShadow().valueOrDefault())
         return;
+    // Window::wantsShadowToBeRendered in KWin: one-axis maximization keeps
+    // the theme shadow; full maximization and fullscreen suppress it.
+    constexpr auto max = MaximizedHorizontally | MaximizedVertically;
+    if (Fullscreen::controller()->isFullscreen(PW) || (bar->currentRemoteState().flags & max) == max)
+        return;
     g_pHyprRenderer->m_renderPass.add(makeUnique<CBreezeShadowPassElement>(this, a));
 }
 
@@ -733,8 +747,11 @@ void CBreezeShadow::updateWindow(PHLWINDOW) {
 }
 
 void CBreezeShadow::damageEntire() {
-    if (auto box = outerBox())
-        g_pHyprRenderer->damageBox(*box);
+    if (m_lastDamageBox)
+        g_pHyprRenderer->damageBox(*m_lastDamageBox);
+    m_lastDamageBox = outerBox();
+    if (m_lastDamageBox)
+        g_pHyprRenderer->damageBox(*m_lastDamageBox);
 }
 
 eDecorationLayer CBreezeShadow::getDecorationLayer() {

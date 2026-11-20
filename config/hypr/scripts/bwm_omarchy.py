@@ -11,10 +11,11 @@ Omarchy itself does not cover (Spotify through Spicetify, GTK, Discord...).
 Here the colors.toml is generated from the wallpaper palette instead of being
 hand-written, and every app gets:
   * kitty / btop      -> Omarchy's own templates (config/hypr/omarchy/themed)
-  * GTK 3/4, Vesktop, swaync, Firefox, Pywalfox
+  * GTK 3, Vesktop, swaync, Firefox, Pywalfox
                       -> our matugen templates filled with the Omarchy palette,
                          plus a TUI overlay (monospace, square, flat, thin accent
                          borders) from config/hypr/omarchy/overlays
+  * GTK 4 / Nautilus  -> native libadwaita, like Omarchy; optional theme gtk.css
   * Spotify           -> "BWM-Omarchy" Spicetify theme (terminal-style user.css)
   * VSCodium          -> workbench.colorCustomizations, applied live
 
@@ -77,7 +78,6 @@ VSCODIUM_MARKER = "bwm.retroColorCustomizations"
 # does not run), and these get a TUI overlay appended
 MATUGEN_OVERLAYS = {
     "gtk3": "gtk.css",
-    "gtk4": "gtk.css",
     "swaync": "swaync.css",
     "firefox": "firefox.css",
     "stremio": "stremio.css",
@@ -420,7 +420,7 @@ def apply_btop(colors: dict):
     set_btop_theme("omarchy")
 
 def apply_matugen_apps(colors: dict, wallpaper: str) -> set:
-    """Our matugen templates filled with the Omarchy palette + the TUI overlays. Returns changed names."""
+    """Apply app palettes/overlays and Omarchy's native GTK 4 appearance."""
     try:
         with open(CONFIG_DIR / "matugen" / "config.toml", "rb") as f:
             templates = tomllib.load(f).get("templates", {})
@@ -439,8 +439,15 @@ def apply_matugen_apps(colors: dict, wallpaper: str) -> set:
         dst = Path(os.path.expanduser(tpl.get("output_path", "")))
         if not src.is_file():
             continue
-        content = render_matugen(src.read_text(encoding="utf-8"), roles, wallpaper)
-        if overlay:
+        if name == "gtk4":
+            # Omarchy leaves libadwaita's layout and controls intact (Nautilus).
+            content = (CONFIG_DIR / "hypr/skins/retro/gtk/gtk4.css").read_text(encoding="utf-8")
+            theme_css = STATE_DIR / "theme/gtk.css"
+            if theme_css.is_file():
+                content += "\n" + theme_css.read_text(encoding="utf-8")
+        else:
+            content = render_matugen(src.read_text(encoding="utf-8"), roles, wallpaper)
+        if overlay and name != "gtk4":
             content += _asset("overlays", overlay)
         try:
             if _write_if_changed(dst, content):

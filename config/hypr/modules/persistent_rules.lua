@@ -30,15 +30,6 @@ hl.window_rule({
     float = true,
 })
 
--- dev.vencord.Vesktop
-hl.window_rule({
-    name  = "persist_dev_vencord_vesktop",
-    match = {
-        class = "^dev\\.vencord\\.Vesktop$",
-    },
-    float = true,
-})
-
 -- firefox-bin
 hl.window_rule({
     name  = "persist_firefox_bin",

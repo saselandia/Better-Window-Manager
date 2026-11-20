@@ -34,12 +34,9 @@ SET_WALLPAPER="$HOME/.config/hypr/scripts/set-wallpaper.sh"
 
 mkdir -p "$WALLPAPER_DIR" "$CACHE_DIR"
 
-# Directorios de búsqueda de fondos
+# Directorios de búsqueda de fondos: sólo ~/Pictures/Wallpapers en todas las skins
 SEARCH_DIRS=(
     "$WALLPAPER_DIR"
-    "$HOME/Pictures"
-    "$HOME/Downloads"
-    "/usr/share/backgrounds"
 )
 
 # Recopilar imágenes y vídeos válidos (los vídeos los reproduce bwm-video-wallpaper)
@@ -53,7 +50,7 @@ mapfile -t IMAGES < <(
 )
 
 if [ ${#IMAGES[@]} -eq 0 ]; then
-    notify-send "Wallpaper Picker" "No se encontraron imágenes en ~/Pictures o ~/Downloads"
+    notify-send "Wallpaper Picker" "No se encontraron fondos en ~/Pictures/Wallpapers"
     exit 1
 fi
 

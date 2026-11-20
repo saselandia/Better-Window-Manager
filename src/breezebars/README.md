@@ -32,8 +32,15 @@ decoración de KWin activa (Breeze, Aurorae, de terceros). El plugin es el pegam
   enrollar, ayuda contextual y menú de aplicación no existen en Hyprland: no hacen nada.
 - `DecoWire.hpp` y `DecoLogic.hpp` no dependen de Hyprland: los prueba
   `tests/breezebars_wire_test.cpp` (vía `tests/test_breezebars.py`), también contra el auxiliar real.
-  La sombra sigue el algoritmo de `generateShadowQuads` de KWin v6.7.5 (`src/scene/shadowitem.cpp`),
+  La sombra sigue el algoritmo de `ShadowItem::buildQuads` de KWin v6.7.5 (`src/scene/shadowitem.cpp`),
   reescrito, sin copiar su código.
+
+R6 (2026-11-20): uniones fraccionarias y esquinas asimétricas contrastadas contra el método
+original de KWin, transporte de sombra con lectura acotada `pread`, y daños del área anterior.
+`check-r6-shadows.py` compara geometrías/UV y raster CPU; `check-r6-nested.py` comprueba el
+render en un compositor desechable con anfitrión en una salida virtual temporal. La política
+diaria de sombras sigue deshabilitada: alcance, límites y comandos en
+`docs/BREEZE_R6_RESULTS.md`. El candidato sólo se ha instalado en `build/`, con `make install`.
 
 `hyprctl breezebars-interactive move|resize <dirección>` (F9, «Mover»/«Redimensionar» del menú de la
 ventana): la ventana sigue al puntero hasta el siguiente clic, como KWin. La etiqueta `bwm-no-border`

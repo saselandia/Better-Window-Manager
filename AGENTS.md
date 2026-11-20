@@ -574,6 +574,17 @@ siendo el nombre del escritorio original que imita Breeze.
   Otras escalas/giros: probar en una salida headless temporal (r4-geometry-check.py, §302),
   nunca reconfigurando los monitores físicos. Un monitor sin descripción (sin EDID) no debe
   invalidar la instantánea de todas las salidas: la firma en memoria usa entonces el conector.
+  R5 escritorio (§323): Folder View sólo activa sus iconos si corona.isScreenUiReady(screen) es
+  cierto al cambiar la pantalla del contenedor; ViewCorona asigna la pantalla al escritorio cuando
+  su vista y los paneles están listos y la conserva. strictAvailableScreenRect cruza los paneles
+  propios con reserved de Hyprland (barras externas). Pruebas offscreen sin QT_QPA_PLATFORMTHEME
+  heredado (gtk3 de Retro abre GTK); la plantilla Default Panel no va offscreen (Klipper usa XCB).
+  R6 (§324): `DecorationShadow` usa geometrías de imagen sin dividir por su etiqueta DPR
+  (KWin 6.7.5); escala de salida aparte. Sombras con memfd sellado y lector acotado `pread`.
+  Candidato validado sólo en compositor anidado, instalado en `build/`; no quitar el veto
+  diario todavía. El ensayo gráfico necesita una salida virtual anfitriona: el workspace
+  oculto no recibe fotogramas y el headless del hijo falla GBM NVIDIA. XWayland apagado en
+  ese fixture (con DISPLAY a demanda se bloqueó la carga); no anunciar XWayland probado.
 - Kitty recuerda también el estado maximizado: `remember_window_size no` evita restaurarlo. La regla global
   `suppress-maximize-events` bloquea peticiones de maximizado de apps (también botones CSD); el compositor
   conserva el control manual y las peticiones de fullscreen de juegos/vídeo siguen permitidas.

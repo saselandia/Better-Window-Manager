@@ -71,7 +71,7 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 | App | default (end-4) | Plasma | Retro | ¿En vivo? |
 | :--- | :--- | :--- | :--- | :--- |
 | GTK 3 | matugen → `gtk-3.0/bwm-colors.css` | Breeze | Omarchy + capa TUI | Sí: tema `BWM-1/BWM-2` alternado (`gtk-theme.py`) |
-| GTK 4 / libadwaita | `gtk-4.0/gtk.css` | Breeze | Omarchy + TUI | Al abrir (Nautilus y pavucontrol se reabren) |
+| GTK 4 / libadwaita | `gtk-4.0/gtk.css` | Breeze | Libadwaita nativo como Omarchy; admite `gtk.css` del tema (§3.319) | Al abrir; no se reinició Nautilus en §3.319 |
 | Qt nativo | qt6ct `colors/bwm.conf`; con plasma-integration, kdeglobals de kde-material-you-colors como end-4 (§3.79) | Breeze | con `qtbase[gtk]`, paleta del tema GTK como Omarchy (`gtk3`, §3.80); si no, qt6ct + fuente mono | default con KDE y Retro con gtk3: sí; qt6ct: al abrir |
 | KDE / Qt en flatpak | `~/.config/kdeglobals` (de bwm.conf) + overrides flatpak | igual | igual | Al abrir |
 | kitty | matugen | Breeze | plantilla de Omarchy | Sí (`kitty-recolor.sh`, control remoto) |
@@ -81,11 +81,14 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 | Firefox | userChrome + Pywalfox | igual | + capa TUI | Colores en vivo, sin reiniciar (Pywalfox, variables de Firefox 13x+, §3.82–3.83); la forma de la capa TUI (fuente mono, esquinas) con un reinicio automático al entrar o salir de Retro (§3.85) |
 | Spotify | Spicetify MaterialYou | Breeze | `BWM-Omarchy` | Reinicio automático en su sitio |
 | Steam (cliente/biblioteca, no Tienda/Comunidad web) | Adwaita-for-Steam `bwm` | igual | + esquinas rectas, mono y barra con fondo base (`overlays/steam.css`) | Reinicio automático al acabar el cambio de skin o de tema (no con un juego abierto; vuelve a la bandeja si estaba ahí), §3.82 |
-| btop, swaync, rofi, Pywalfox, iconos (Papirus por acento en Retro) | sí | sí | sí | — |
+| btop, swaync, rofi, Pywalfox, iconos (`icons.theme` o Adwaita en Retro, §3.319) | sí | sí | sí | — |
 | Stremio Linux Flatpak | paleta matugen | Breeze | paleta Omarchy + TUI | Web en vivo mediante `stremio-theme.cjs`; marco GTK al abrir |
 | Omacalc (§3.112) | paleta dinámica matugen/end-4 | Breeze | colores nativos del tema estático o dinámico | Sí, sin reiniciar ni perder el cálculo (`matugen/templates/omacalc-colors.toml`) |
 
 ### 2.3 Retro = Omarchy (Quickshell)
+* **Nautilus (§3.308, §3.318):** extensiones originales de Omarchy LocalSend y Transcode enlazadas por el instalador y al activar Retro. LocalSend admite binario nativo o Flatpak sin excepción si falta la app; Transcode entrega el PATH de los shims a sus hijos incluso con activación D-Bus. En este equipo están instalados nautilus-python, Sushi, ffmpegthumbnailer y LocalSend Flatpak 1.18.2; comprobadas las entradas con las APIs GI reales, pendiente la interacción visual/envío. `bwm check` reconoce también LocalSend Flatpak.
+* **Aspecto/apertura de Nautilus (§3.319):** GTK4 conserva Libadwaita nativo, sin Material You ni la capa TUI de BWM. `icons.theme` se respeta si está instalado, con Adwaita de respaldo como quattro actual; Yaru 25.10.3 instalado sin root para los temas incluidos antiguos (ahora `Yaru-yellow`). Plantillas `.txt`/`.md` de BWM habilitan Nuevo documento usando XDG y se añaden una sola vez sin pisar las propias. La regla flotante guardada de Nautilus tiene `excludeSkins: ["retro"]` por elección del usuario: sigue el modo del workspace sólo en Retro, conserva su regla en las demás skins. Apertura real silenciosa en workspace 9 comprobada en mosaico; no se reinició el Nautilus existente ni se verificó el nuevo aspecto en pantalla.
+* **Nuevo documento confirmado en sesión (§3.320):** el Nautilus antiguo conservaba desactivada la ruta Templates. Reiniciado el proceso desde Hyprland, recuperadas las dos ventanas/carpetas y confirmado su modelo de menú real con «Archivo de texto.txt» y «Documento Markdown.md». La configuración XDG y las plantillas ya eran correctas; no forzar reinicios al cambiar de skin. El menú de creación requiere una carpeta escribible, no una vista virtual como Recientes.
 * **Barra = la de Omarchy (§3.118):** `quickshell/ii/omarchyShell/` es `shell/` de Omarchy quattro `18ac93c` (su anfitrión de plugins como `OmarchyShell.qml`, `plugins/bar`, paneles, agentes, servicios de multimedia y sesión remota), cargado sólo en Retro en lugar de la barra de BWM. Arrastrar widgets para reordenarlos, arrastrar un hueco vacío (o mantener pulsado) para llevar la barra a cualquier borde, doble clic en el centro para el fondo (transparente, vidrio, opaco; el vidrio con `skins/retro/hypr/misc.lua`), módulos propios (`type: command`/`qml`). Configuración en `~/.config/omarchy/shell.json` (formato de Omarchy; se creó una vez desde `~/.config/bwm/omarchy-plugins.json`, que ya no se usa), `omarchy-bar` y `omarchy-plugin-*`. Plugins de terceros en `~/.config/omarchy/plugins` y los preinstalados de BWM (`omarchy-plugins/`).
 * Adaptaciones «BWM»: workspaces con numeración global (Omarchy numera por monitor, §4.3 de `docs/OMARCHY_4_5.md`); indicadores de mantener despierto, luz nocturna y no molestar sobre los servicios de BWM; el menú y las capas de BWM (portapapeles, emojis, selector de imágenes, recordatorios) por `OmarchyPlugins`, que tiene el único destino IPC `shell`; panel de pantallas que guarda con `monitor-manager.py`. `bwm-plugin.sh` mantiene sus órdenes para Ajustes → Barra/Plugins y el menú, pasadas a las de Omarchy. `bar.workspaces.shown` ya no afecta a Retro (Omarchy enseña 1-5 y los que existan).
 * **About del menú Retro:** `omarchy-launch-about` ejecuta Fastfetch con logo ASCII, marcos Hardware/Software/Age, autoajuste y brillo originales de Omarchy (`hypr/omarchy/about/`, MIT, `b8706a3f`). Datos de Gentoo/BWM mediante `bwm-about-data.py`; WM muestra la versión en ejecución de `hyprctl`, no la del binario recién actualizado. About de Settings no cambia.
@@ -103,6 +106,15 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 
 ### 2.4 Breeze (Kde plasma): port sobre Hyprland
 
+* **R6, primera iteración (2026-11-20, §324):** sombra KDecoration contrastada contra
+  `ShadowItem::buildQuads` de KWin 6.7.5: uniones fraccionarias/asimétricas, coordenadas de
+  imagen, observación de cambios internos, memfd sellado/lectura `pread` acotada, daños
+  anteriores y preferencias originales de Breeze. 192 casos + 18 muestras claro/oscuro/
+  Sweet sin diferencias CPU de alpha/color; comparador ASan/UBSan. Plugin candidato
+  renderizado en Hyprland anidado, con salida anfitriona virtual retirada y sesión
+  restituida. Sólo instalado mediante `make install` en `build/`, no en la sesión diaria.
+  **R6 abierta; `no_shadow=true` sigue vigente.** Pendientes paneles/menús/popups,
+  XWayland/CSD y comparación visual completa; `docs/BREEZE_R6_RESULTS.md`.
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; resto de R5 pendiente (`docs/BREEZE_R5_RESULTS.md`).
@@ -130,8 +142,13 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   escritorio `DesktopViewHost` cargando `Desktop.qml` y `DesktopEditMode.qml` instalados sobre
   `LayerBackground` (`org.kde.plasma.folder`, `[Desktop]` en `shell/contents/defaults`, traspaso de
   `PanelConfigView`, `sidePanel` WidgetExplorer en `LayerTop`, `AppletAlternatives` y menú «Add Panel»);
-  probado offscreen normal/ASan y medido en Hyprland real. Pendientes en R5: comparación visual con
-  Plasma real y aceptación final del usuario.
+  probado offscreen normal/ASan y medido en Hyprland real. Iteración 12 (§323, cierre): escritorio
+  probado con ratón real en el LG (`preview-isolated.py --desktop`): Folder View y menú del escritorio
+  originales (corregido el orden de `isScreenUiReady`), «Desktop and Wallpaper…» con
+  `ContainmentConfigView` (fondo y Layout), «Add Panel» ejecutando las plantillas `layout.js` originales
+  y área útil del compositor en `strictAvailableScreenRect`. R5 lista para aceptación del usuario;
+  diferencias restantes (marco de configuración de widgets de R4, sombras/desenfoque R6, gestión de
+  escritorios entre pantallas) en `docs/BREEZE_R5_RESULTS.md`.
 * **Breeze II (2026-11-12):** `docs/BREEZE_PLAN_V2.md`, R0 entregada con referencia y límites documentados;
   R1 corrige origen de especiales al minimizar, activación común y filtro de Alt+Tab (pruebas
   aisladas; fallo visual original pendiente). R2 tiene primer KCM QWidget real, descubierto por
@@ -5269,7 +5286,7 @@ git status; git log --oneline -5; git push origin main
   Nautilus incorporados a `user-places.xbel` preservando los 5 `isSystemItem` de KDE), vigilante
   activo como hijo de Hyprland con 1 descriptor inotify y generación de miniaturas de vídeo en Dolphin
   verificada con la configuración real del usuario (6/6 en muestra `.mkv`/`.mp4`/`.webm`/`.mov`).
-* **Pendiente (requiere sudo del usuario):** instalar `dev-python/nautilus-python` (y opcionalmente
+* **Pendiente entonces (resuelto en parte en §3.318):** instalar `dev-python/nautilus-python` (y opcionalmente
   LocalSend) para que Nautilus cargue las extensiones Python ya enlazadas, y prueba visual interactiva
   abriendo `Alt+E` en Breeze/default (Dolphin) y Retro (Nautilus).
 
@@ -5493,6 +5510,98 @@ git status; git log --oneline -5; git push origin main
   se sustituye el panel diario. Documentación actualizada en `docs/BREEZE_R5_RESULTS.md`,
   `src/bwm-plasma-host/README.md` y `THIRD_PARTY_NOTICES.md`.
 
+### 318. Retro: extensiones de Nautilus operativas y LocalSend instalado (2026-11-20)
+
+* **Origen comprobado:** Omarchy quattro `b20d7876f5ec6a45d18b9e4383dc4b6d9e8492ab`
+  sigue incluyendo sólo `localsend.py` y `transcode.py` en `default/nautilus-python/extensions/`;
+  BWM ya vendía ambas y las enlazaba al instalar/activar Retro (§3.308).
+* **Corregido:** `Gio.Subprocess.wait_check()` lanza `GLib.Error` cuando `flatpak info`
+  no encuentra LocalSend; la extensión ahora oculta esa acción sin excepción. Transcode
+  propaga el PATH ampliado al terminal y al conversor, que llama a otros shims por nombre.
+  Se conservan las acciones, filtros y escape de rutas de Omarchy.
+* **Equipo:** nautilus-python ya estaba instalado y el Nautilus abierto tenía su biblioteca
+  cargada. Se reaplicaron los enlaces sin cerrar ventanas y se instaló LocalSend **1.18.2**
+  mediante `flatpak install --user --assumeyes --noninteractive flathub org.localsend.localsend_app`.
+  Sin sudo. Sushi y ffmpegthumbnailer ya estaban disponibles.
+* **Requisitos:** comprobación opcional de app Flatpak en requisitos de tipo `cmd`, utilizada
+  por LocalSend; salida no cero/timeout/error no se consideran instalado. Catálogo con comando
+  manual para Flathub y tabla `docs/REQUIREMENTS.md` regenerada. El menú Compartir de Retro
+  sigue usando LocalSend nativo; la compatibilidad Flatpak comprobada aquí es la de Nautilus.
+* **Verificado:** 17/17 pruebas (`test_nautilus_plugins`, `test_file_manager`, `test_skins`),
+  compilación Python y `bash -n` del instalador. Proveedores reales GI/Nautilus 4.1 generan
+  `Send via LocalSend` y `Transcode` para una selección local de imagen; `bwm check` da `ok`
+  para Nautilus, nautilus-python, Sushi, ffmpegthumbnailer y LocalSend (Flatpak).
+* **Límites:** no se enviaron archivos, no se lanzó conversión desde el menú ni se realizó
+  prueba visual. No se reinició Nautilus, Quickshell o Hyprland; un Nautilus ya abierto puede
+  necesitar cerrarse y abrirse para adoptar los cambios Python. Sin commit ni push.
+
+### 319. Retro: Nautilus nativo, Nuevo documento, iconos originales y apertura por workspace (2026-11-20)
+
+* **Alcance pedido:** además de las extensiones, crear archivos con clic derecho, distribución,
+  aspecto/apertura de ventana e iconos. El usuario elige expresamente seguir el modo del
+  workspace en Retro, conservando la regla flotante guardada para las demás skins.
+* **Plantillas:** `skins/retro/scripts/setup-nautilus.py`, llamado con `--templates` desde
+  el instalador y el cambio de skin. Usa XDG TEMPLATES (activa sólo esa ruta si estaba
+  deshabilitada), añade `Archivo de texto.txt` y `Documento Markdown.md` de
+  `skins/retro/nautilus-templates/` sin sobrescribir nada. Marca de una sola aplicación
+  `~/.local/state/bwm/retro/nautilus-templates-v1`: respeta cambios/borrados posteriores.
+  En este equipo quedó `~/Templates`. Esto es una adición BWM solicitada: quattro actual
+  desactiva Templates, no distribuye ese menú como extensión propia.
+* **Distribución/aspecto:** Omarchy no fija una vista ni un tamaño especial de Nautilus:
+  usa sus valores nativos y la geometría del workspace. BWM mezclaba el CSS Material You
+  del template compartido con su capa TUI. Retro ahora publica su `gtk/gtk4.css` nativo
+  (sin esas dos capas); admite el `gtk.css` propio del tema original. Cambia el GTK4 de
+  Retro en conjunto; default/Breeze y el GTK3 de Retro conservan sus recorridos previos.
+  Se conserva la preferencia de vista del usuario y los favoritos comunes sincronizados.
+* **Iconos:** el gestor común deja de sustituir el `icons.theme` original por BWM-Papirus.
+  Usa el tema indicado si está instalado y Adwaita si falta/no se especifica (quattro
+  `b20d7876f5ec6a45d18b9e4383dc4b6d9e8492ab` actual usa Adwaita). Se añadió instalador
+  sin root de Yaru **25.10.3** para los temas incluidos antiguos: fuente oficial fijada por
+  commit/SHA256, índices con generador original, variantes oscuras con herencia original,
+  avisos/autores/licencias conservados y temas preexistentes intactos. Instalado en
+  `~/.local/share/icons`; el tema actual declara y selecciona **Yaru-yellow**. Dependencias
+  `xdg-user-dirs`, `adwaita-icons`, `yaru-icons` declaradas y tabla regenerada.
+* **Apertura:** `toggle-float-persistent.py` genera exclusiones opcionales `excludeSkins`.
+  Sólo la entrada guardada de Nautilus añade `retro`, preservando las demás reglas y su
+  comportamiento fuera de Retro. Corregido también `workspace-modes.lua`: Hyprland 0.56
+  exige `enable/disable`, no `on/off` (que alternaban silenciosamente).
+* **Comprobado:** 35/35 pruebas (Nautilus apariencia/extensiones, gestor de archivos,
+  manifiestos y runtime/iconos Qt), compilación Python, sintaxis Bash y CSS aceptado por
+  el proveedor Gtk real. Gtk.IconTheme resuelve `folder`, `user-home`, `text-x-generic`
+  a los archivos originales Yaru; sin enlaces rotos en Yaru/Yaru-yellow/Yaru-yellow-dark.
+  `bwm check` da ok para los requisitos relacionados. Nautilus real abierto temporalmente
+  sobre carpeta de ensayo en workspace 9 silent, sin foco: **floating=false, fullscreen=0**.
+  Se cerró sólo esa ventana por dirección+PID, no quedan ventanas de ensayo y se retiró
+  su regla con `hyprctl reload`; `configerrors` vacío.
+* **Límites:** el proceso Nautilus previo (PID 25818) y sus ventanas se conservaron; requiere
+  salir por completo y abrir otra vez para adoptar el CSS y la ruta XDG de plantillas.
+  Sin comprobación visual del aspecto/menú ni envío/conversión desde ellos. No se probó
+  físicamente la alternancia de modos del workspace; su acción idempotente pasa en fixture
+  Lua. Sin reinicio de shell/compositor, sin commit ni push. Avisos de terceros actualizados.
+
+### 320. Nautilus: Nuevo documento confirmado tras sustituir el proceso antiguo (2026-11-20)
+
+* **Reporte:** sólo aparecía Nueva carpeta. XDG TEMPLATES apuntaba correctamente a
+  `~/Templates`, con las dos plantillas vacías y legibles; GLib en un proceso nuevo lo
+  resolvía bien. Nautilus seguía siendo el PID **25818** de antes de habilitar Templates.
+* **Resuelto en sesión:** comprobado el estado no ocupado y las dos ubicaciones por
+  `org.freedesktop.FileManager1.OpenWindowsWithLocations` (una pestaña por ventana).
+  Se solicitó cierre normal y se verificó que el PID anterior había desaparecido. La CLI
+  devolvió 255 durante el cierre/inicialización de display: no se tomó su retorno como
+  prueba de éxito. Relanzado desde Hyprland mediante `bwm_session.spawn`, con activación
+  silenciada, PID nuevo **210726**; dos ventanas y las mismas ubicaciones comprobadas por
+  D-Bus. Ventanas resultantes en workspaces 1 y 3; no se acredita su geometría anterior.
+* **Verificación real del menú:** sonda Python temporal cargada por nautilus-python,
+  sólo de lectura del árbol GTK y propiedad nativa `templates-menu` de NautilusFilesView.
+  En el segundo sondeo devolvió exactamente `Archivo de texto.txt` y
+  `Documento Markdown.md`. No es una simulación del proveedor de extensiones ni una
+  captura visual. Se retiraron la sonda, su bytecode y el informe; sin temporizadores
+  pendientes de la sonda. Regla temporal de relanzamiento retirada con recarga.
+* **Alcance:** configuración/plantillas ya eran correctas; no se añadió un reinicio a
+  los cambios de skin. `Nuevo documento` sólo corresponde a carpetas escribibles, no
+  a ubicaciones virtuales como Recientes. No se creó ningún archivo desde ese menú ni
+  se verificó el clic físicamente. Sin commit ni push.
+
 ### 321. Breeze R5: ratón real de iteración 9 e iteración 10 (bordes adyacentes, esquinas, popups y escalas fraccionarias) (2026-11-20)
 
 * **Verificación real con ratón de la iteración 9 (LG, `/dev/uinput`, autorizado por el usuario):**
@@ -5582,3 +5691,83 @@ git status; git log --oneline -5; git push origin main
   comparación visual con Plasma real (incl. escalas fraccionarias) y aceptación final del usuario.
   Sin sustituir el fondo ni el panel diario. Documentación actualizada en `docs/BREEZE_R5_RESULTS.md`,
   `src/bwm-plasma-host/README.md` y `THIRD_PARTY_NOTICES.md`. Sin commit ni push.
+
+### 323. Breeze R5: cierre — escritorio interactivo, configuración del escritorio y «Add Panel» (2026-11-20)
+
+* **Petición:** cerrar R5 desde `d24d896`: interacción real y comparación visual del escritorio y del
+  modo edición, corregir desajustes, verificación completa y documentación para la aceptación.
+* **Vista desechable con escritorio:** `preview-isolated.py --desktop` (con `--native-panel --layer-panel
+  --follow-skin`) añade el `Desktop.qml` original en la misma salida mientras la skin seguida sea Breeze;
+  `desktop:/` a una carpeta desechable, plataforma Qt `kde`. Diagnóstico opcional `BWM_R5_DEBUG_MENUS=1`
+  y categoría `bwm.r5.corona`.
+* **Corregido (encontrado con ratón real en el LG):** Folder View nunca se cargaba (el `main.qml`
+  original evalúa `corona.isScreenUiReady(screen)` sólo al cambiar la pantalla; `ViewCorona` ahora la
+  asigna al escritorio cuando su vista y los paneles están listos, y la conserva); faltaba la acción
+  `desktop edit mode` de `DesktopView` y `edit mode` volvía a ser la de libplasma; «Desktop and
+  Wallpaper…» abre `ContainmentConfigView` (adaptado, LGPL) con `ContainmentConfiguration.qml` y cambia
+  el contenedor con `setContainmentType`; «Aplicar» se recalcula una vez con la función original
+  `settingValueChanged()` tras cargar; «Add Panel» ejecuta sin cambios las plantillas `layout.js`
+  (`LayoutTemplateRunner`, subconjunto LGPL de la API de scripts) desde `PanelRuntime::addPanel`;
+  `strictAvailableScreenRect` cruza el área de los paneles propios con `reserved` de Hyprland (barras
+  externas); textos con el catálogo `plasmashell`.
+* **Comprobado con ratón real (LG, skin `retro` intacta, raíces temporales):** menú del escritorio,
+  entrar/salir del modo edición (botón, Escape, clic fuera), «Default/Empty Panel», explorador y arrastre
+  de un widget al escritorio, mover/configurar el widget, Ajustes del panel a la vez (Escape sólo los
+  cierra), fondo aplicado y Layout Folder View → Desktop. LG devuelto al workspace 10 con el mismo foco
+  y puntero; capturas borradas. No se probó el botón central (pegaría el portapapeles real).
+* **Pruebas:** CTest normal 8/8, ASan 2/2, Python R4 262/262, sesión LG completa (51 pasos) y
+  `--fractional-scale` 24/24 con el escritorio a 1,25/1,5/1,6; 0 capas residuales, `configerrors`
+  vacío. Pruebas offscreen sin `QT_QPA_PLATFORMTHEME` heredado (`gtk3` de Retro las rompe). La
+  plantilla «Default Panel» no se prueba offscreen: Klipper cae en XCB sin X11.
+* **Pendiente / diferencias:** marco de configuración de widgets de R4 (no el `AppletConfiguration.qml`
+  de Plasma), sin sombras ni desenfoque de KWin (R6), `manage-containments` sin portar, reserva congelada
+  en edición con el grosor de creación, sin revisión visual subpíxel a escala fraccionaria ni capturas
+  de un Plasma real. Aceptación del usuario pendiente; no sustituye el panel diario ni el fondo de Breeze.
+  Sin commit.
+
+### 324. Breeze R6: primera iteración de sombras KDecoration, comparador KWin y ensayo anidado (2026-11-20)
+
+* **Petición:** continuar desde el cierre técnico de R5 de Claude (§323). Se revisaron los
+  cambios pendientes sin mezclarlos ni commitearlos; R5 conserva su aceptación visual pendiente.
+  La skin real observada al comenzar/terminar era `plasma` (no se cambió de skin).
+* **Sombra de decoración:** `DecoLogic.hpp` corrige los huecos de `floor/ceil`, acota y
+  redistribuye solapes asimétricos y lados opuestos, respeta el umbral mínimo de 5 y usa las
+  dimensiones de imagen de `DecorationShadow` como KWin 6.7.5 (DPR no divide sus geometrías).
+  `barRemote.cpp` invalida áreas anterior/nueva al cambiar/retirar/perder sombras y suprime
+  el dibujo en fullscreen/maximizado completo. No fuerza sombras sobre CSD sin marco remoto.
+* **Vida/transporte:** `shadowstate.h` sigue imagen/padding/innerShadowRect del mismo objeto
+  y desconecta sombras anteriores. Retirada explícita al recrear una decoración sin sombra.
+  Memfd sellado contra escritura/redimensionado; no se da por enviado un fallo de memoria,
+  sellado o socket. `ShadowBuffer.hpp` valida layout/valores finitos y copia con `pread` para
+  rechazar un fd corto sin SIGBUS de un mapeo. Sólo afecta al transporte de sombras, no Frame.
+* **Preferencias nativas:** prueba real del auxiliar con `[Common] ShadowSize/Strength/Color`
+  encontró que la primera decoración de Breeze recibía `reconfigured` antes que su proveedor
+  compartido. Una notificación pública encolada completa la lectura y aplica el primer cambio
+  sin reescribir el formato/diálogo KDE. Probada retirada/restauración y reconexión del cliente.
+* **Comparación reproducible:** `check-r6-shadows.py` exige SHA256 de `shadowitem.cpp` de KWin
+  6.7.5 y ejecuta sus métodos sin modificar con geometría Qt/KDecoration real en un contenedor
+  mínimo. **192 casos + 18 muestras** (BreezeDark/Light activas/inactivas a 1/1,25/1,5/2;
+  Aurorae Sweet-Dark activa/inactiva): geometrías/UV iguales y error CPU máximo de color/alpha
+  **0**. Pasa normal y ASan/UBSan del comparador/lector/observador; las muestras del auxiliar
+  se producen con la compilación normal. No es una captura de una sesión Plasma equivalente.
+* **Render real aislado:** candidato compilado en copia con `-fno-gnu-unique`, 0 símbolos
+  UNIQUE y `make install` atómico **sólo en `build/r6-plugin/installed`**. El ensayo
+  `check-r6-nested.py` carga ese candidato al inicio de un Hyprland nuevo, antes de clientes.
+  Wayland SSD con marco KDE: **62 586 píxeles externos** cambian al suprimir la sombra,
+  PID/geometría iguales, sombra genérica apagada. La ventana del hijo necesita una salida
+  virtual del padre (retirada al cerrar): oculta no recibe frames y el headless del hijo
+  falló con GBM NVIDIA. XWayland a demanda bloqueó los primeros intentos de carga; se apagó
+  sólo en el fixture y se retiró DISPLAY, sin atribuir causa exacta sin pila. XWayland no
+  probado. Dos avisos propios de no respuesta retirados por PID; primera prueba gráfica
+  detectó puntero desplazado, corregida su restitución. Ensayo final: foco/puntero, salidas,
+  workspaces físicos y handles de plugins iguales; limpieza total y configerrors vacío.
+* **Regresión:** compilación del host R5 actual y CTest **8/8**, Python R4 **262/262**;
+  decorador **13/13**, breezebars **4/4**, política diaria de sombras **1/1**. Guarda de captura
+  actual verificada por peer Wayland/IPC, PID 3195; no reproduce el incidente original.
+* **Pendiente:** R6 sigue abierta: paneles/menús/popups (protocolo KDE de sombras y hints X11
+  sin backend en Hyprland), blur/contraste del panel (existe ext-background-effect y KDE sabe
+  usarlo, no falta todo desenfoque por protocolo), matriz GPU de escalas/foco/resize/cierre/
+  pérdida del auxiliar/CSD/XWayland y comparación visual con Plasma real. **Veto diario
+  `no_shadow=true` conservado**, sin instalar candidato/auxiliar diarios ni reiniciar shell/
+  sesión. Detalle y evidencias en `docs/BREEZE_R6_RESULTS.md` y
+  `docs/BREEZE_R6_SHADOW_RESULTS.json`. AGENTS/CLAUDE sincronizados. Sin commit ni push.

@@ -209,6 +209,9 @@ Imita **Omarchy 4 (basecamp/omarchy, rama quattro)**. El shell de Omarchy: su ba
 | Nautilus | Gestor de archivos de la skin Retro (Omarchy) (Alt+E), con favoritos sincronizados con Dolphin | `gnome-base/nautilus` | `nautilus` | `nautilus` | `nautilus` | `nautilus` |
 | nautilus-python | Carga las extensiones de Omarchy en Nautilus (LocalSend y Transcode en el menú contextual) | `dev-python/nautilus-python` | `nautilus-python` | `nautilus-python` | `python3-nautilus` | `python3-nautilus` |
 | Sushi (vista previa de Nautilus) | Vista previa rápida de archivos pulsando Espacio en Nautilus, como en Omarchy | `gnome-extra/sushi` | `sushi` | `sushi` | `sushi` | `gnome-sushi` |
+| xdg-user-dirs | Directorio estándar de plantillas de Nautilus para Nuevo documento, conservando la ruta del usuario | `x11-misc/xdg-user-dirs` | `xdg-user-dirs` | `xdg-user-dirs` | `xdg-user-dirs` | `xdg-user-dirs` |
+| Iconos Adwaita | Iconos originales de GTK/Nautilus en Omarchy quattro (Retro) | `x11-themes/adwaita-icon-theme` | `adwaita-icon-theme` | `adwaita-icon-theme` | `adwaita-icon-theme` | `adwaita-icon-theme` |
+| Iconos Yaru (temas de Omarchy con icons.theme) | Iconos originales indicados por los temas incluidos y de la comunidad de Omarchy, sin sustituirlos por Papirus | — | — | — | — | `yaru-theme-icon` |
 | ffmpegthumbnailer | Miniaturas de vídeo en Nautilus (como en Omarchy) | `media-video/ffmpegthumbnailer` | `ffmpegthumbnailer` | `ffmpegthumbnailer` | `ffmpegthumbnailer` | `ffmpegthumbnailer` |
 | Fuente de iconos de Omarchy (omarchy.ttf) | Logo del menú y marcas de los agentes en la barra de Omarchy (Retro) | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
 | inotify-tools | La barra de Omarchy recarga sola un plugin de ~/.config/omarchy/plugins al editarlo (inotifywait) | `sys-fs/inotify-tools` | `inotify-tools` | `inotify-tools` | `inotify-tools` | `inotify-tools` |
@@ -226,7 +229,7 @@ Imita **Omarchy 4 (basecamp/omarchy, rama quattro)**. El shell de Omarchy: su ba
 | Plugin GTK de Qt (gtk3) | Las apps Qt de Retro toman los colores del tema GTK, como en Omarchy (QT_QPA_PLATFORMTHEME=gtk3) | `dev-qt/qtbase[gtk]` | `qt6-base` | `qt6-qtbase-gui` | `qt6-platformtheme-gtk3` | `qt6-gtk-platformtheme` |
 | Plugin WebP de Qt (qtimageformats) | El fondo de Omarchy en Retro dibuja los fondos WebP de muchos temas con su transición (sin él, BWM los convierte a JPG) | `dev-qt/qtimageformats` | `qt6-imageformats` | `qt6-qtimageformats` | `qt6-imageformats` | `qt6-image-formats-plugins` |
 | OWE (fondos de vídeo de Omarchy) | Fondos de vídeo en Retro, como Omarchy 4.5 (omacom/owe; sin él se queda el primer fotograma); se compila con meson y necesita libmpv | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
-| LocalSend | Compartir portapapeles, archivos y carpetas desde el menú de Retro (Acciones → Compartir) | — | `localsend` | — | — | — |
+| LocalSend | Enviar archivos desde Nautilus con la extensión de Omarchy (nativo o Flatpak); el menú Compartir de Retro usa el comando nativo | — | `localsend` | — | — | — |
 
 ## Skin Breeze (Kde plasma)
 

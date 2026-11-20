@@ -104,6 +104,12 @@ en la decoración; luego `u32 n` y `n` rectángulos dañados `f64 x, y, w, h` (l
 `f64 left, top, right, bottom` (relleno alrededor del marco), `f64 x, y, w, h` (rectángulo interior
 de la imagen, como `KDecoration3::DecorationShadow::innerShadowRect`). Con `hasFd = 0` y tamaño
 cero: la decoración ya no tiene sombra. Misma codificación de píxeles que Frame.
+Las coordenadas del rectángulo interior y las dimensiones de los elementos siguen
+`DecorationShadow`/KWin 6.7.5: se derivan de las dimensiones de la imagen sin dividirlas
+por su etiqueta DPR. El relleno está en unidades lógicas del marco; la escala de salida
+la aplica el compositor al componer. Los memfd de sombra nuevos están sellados contra
+escritura y redimensionado. El receptor copia y valida su contenido, sin exigir sellos
+para seguir aceptando auxiliares anteriores; un descriptor corto se rechaza sin `mmap`.
 
 **Request.kind**: 1 cerrar, 2 alternar maximizado (`arg` = botones), 3 minimizar, 4 menú de la
 ventana (en el rectángulo), 5 mostrar tooltip (`text`), 6 ocultar tooltip, 7 encima, 8 debajo,

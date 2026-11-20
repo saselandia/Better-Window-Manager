@@ -17,21 +17,21 @@ spec.loader.exec_module(picker)
 
 
 class CollectionsTest(unittest.TestCase):
-    def test_static_theme_custom_backgrounds_and_shared_collection(self):
+    def test_only_the_shared_collection_counts_even_with_theme_backgrounds(self):
         with tempfile.TemporaryDirectory() as folder:
             home = Path(folder)
             config = home / "config"
             theme = home / "installed-community-theme"
-            expected = [theme / "backgrounds", config / "omarchy/backgrounds/custom", home / "Pictures/Wallpapers"]
-            for directory in expected:
+            shared = home / "Pictures/Wallpapers"
+            for directory in (theme / "backgrounds", config / "omarchy/backgrounds/custom", shared):
                 directory.mkdir(parents=True)
             with patch.object(picker.omarchy, "HOME", home), patch.object(picker.omarchy, "CONFIG_DIR", config), \
                  patch.object(picker.omarchy, "get_retro_mode", return_value=("static", "custom")), \
                  patch.object(picker.omarchy, "theme_directory", return_value=theme) as resolve:
-                self.assertEqual(picker.background_directories(), expected)
-                resolve.assert_called_once_with("custom")
+                self.assertEqual(picker.background_directories(), [shared])
+                resolve.assert_not_called()
 
-    def test_dynamic_mode_ignores_stale_generated_theme_backgrounds(self):
+    def test_dynamic_mode_uses_the_shared_collection(self):
         with tempfile.TemporaryDirectory() as folder:
             home = Path(folder)
             shared = home / "Pictures/Wallpapers"
@@ -42,15 +42,11 @@ class CollectionsTest(unittest.TestCase):
                 self.assertEqual(picker.background_directories(), [shared])
                 resolve.assert_not_called()
 
-    def test_removed_theme_still_offers_shared_wallpapers(self):
+    def test_missing_shared_collection_offers_nothing(self):
         with tempfile.TemporaryDirectory() as folder:
             home = Path(folder)
-            shared = home / "Pictures/Wallpapers"
-            shared.mkdir(parents=True)
-            with patch.object(picker.omarchy, "HOME", home), patch.object(picker.omarchy, "CONFIG_DIR", home / "config"), \
-                 patch.object(picker.omarchy, "get_retro_mode", return_value=("static", "removed")), \
-                 patch.object(picker.omarchy, "theme_directory", side_effect=ValueError):
-                self.assertEqual(picker.background_directories(), [shared])
+            with patch.object(picker.omarchy, "HOME", home), patch.object(picker.omarchy, "CONFIG_DIR", home / "config"):
+                self.assertEqual(picker.background_directories(), [])
 
 
 class ApplyTest(unittest.TestCase):

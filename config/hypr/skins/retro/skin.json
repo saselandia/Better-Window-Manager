@@ -68,6 +68,7 @@
       "config/hypr/skins/retro/hypr/workspace-modes.lua"
     ],
     "colors": [
+      "config/hypr/skins/retro/gtk",
       "config/hypr/omarchy/themes",
       "config/hypr/omarchy/themed",
       "config/hypr/omarchy/overlays"
@@ -75,6 +76,7 @@
     "scripts": [
       "config/hypr/skins/retro/scripts",
       "config/hypr/skins/retro/nautilus-python",
+      "config/hypr/skins/retro/nautilus-templates",
       "config/hypr/scripts/bwm_omarchy.py",
       "config/hypr/scripts/bwm_omarchy_apps.py",
       "config/hypr/scripts/omarchy-shims",
@@ -89,6 +91,9 @@
     "nautilus",
     "nautilus-python",
     "sushi",
+    "xdg-user-dirs",
+    "adwaita-icons",
+    "yaru-icons",
     "ffmpegthumbnailer",
     "font-omarchy",
     "inotify-tools",

@@ -13,7 +13,10 @@ default (end-4), Retro o Breeze. Lee los roles de Material You, `colors.toml` y
 activa muestra el fondo guardado y una muestra de su paleta; las demás usan las vistas
 previas declaradas en sus manifiestos. Se conserva la selección al cambiar de tema.
 
-Mantén pulsada **+** y pulsa **-**, o al revés, sin Super ni Alt. Sirven las teclas
+Busca **BWMenu** en el lanzador de aplicaciones de default (end-4), Retro o Breeze (Kde plasma).
+El instalador y el inicio de sesión de BWM registran la entrada para el usuario.
+
+También puedes mantener pulsada **+** y pulsar **-**, o al revés, sin Super ni Alt. Sirven las teclas
 normales, las del teclado numérico y sus combinaciones. Los signos por separado siguen
 funcionando en las aplicaciones. El atajo se genera en los helpers de
 `keybinds-manager.py`, por lo que sobrevive a regeneraciones y cambios de skin.

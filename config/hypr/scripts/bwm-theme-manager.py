@@ -942,7 +942,7 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         if cfg.get("is_retro"):
             nautilus_setup = CONFIG_DIR / "hypr" / "skins" / "retro" / "scripts" / "setup-nautilus-plugins.sh"
             if nautilus_setup.is_file():
-                subprocess.run(["bash", str(nautilus_setup)], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
+                subprocess.run(["bash", str(nautilus_setup), "--templates"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
 
         # Boot splash / login screen in the new colours (installed by the root service, if set up)
         subprocess.Popen([sys.executable, str(Path(__file__).resolve().parent / "bwm_boot.py"), "render"],

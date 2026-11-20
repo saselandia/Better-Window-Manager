@@ -1,0 +1,5 @@
+/* Retro follows Omarchy's native GTK 4/libadwaita appearance.
+ * Light/dark is selected through org.gnome.desktop.interface color-scheme.
+ * Keep Nautilus' own headerbar, sidebar, spacing and controls: no Material You
+ * stylesheet or BWM TUI overlay. A theme's own gtk.css may follow this file.
+ */

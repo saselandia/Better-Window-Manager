@@ -106,6 +106,24 @@ Extensiones de Nautilus para Retro (2026-11-19): `config/hypr/skins/retro/nautil
 proceden de `default/nautilus-python/extensions/` de Omarchy quattro (`05344eb6` y `ec4a3d02`, MIT),
 adaptadas mínimamente para buscar también en `~/.local/bin` y `~/.config/hypr/scripts/omarchy-shims`
 cuando Nautilus se activa por D-Bus sin `~/.local/bin` en `PATH`.
+Revisión BWM 2026-11-20: LocalSend tolera la ausencia de la app Flatpak sin lanzar una
+excepción de Gio; Transcode propaga también el PATH ampliado a sus procesos hijos.
+Revisión BWM 2026-11-20 del aspecto: Retro deja los controles GTK4 de Libadwaita intactos;
+los iconos usan `icons.theme` de los temas antiguos/de la comunidad o Adwaita de respaldo
+(quattro `b20d7876f5ec6a45d18b9e4383dc4b6d9e8492ab`, `bin/omarchy-theme-set-gnome`).
+Las plantillas vacías de Nuevo documento son una adición de BWM solicitada por el usuario,
+no un plugin de Omarchy (quattro actual desactiva su directorio Templates).
+
+Iconos Yaru opcionales para esos temas: el instalador
+`config/hypr/skins/retro/scripts/install-yaru-icons.py` descarga los recursos originales de
+[ubuntu/yaru 25.10.3](https://github.com/ubuntu/yaru/tree/25.10.3), commit
+`a35be2896824db2e738d3c88511375d7c7737985`, con SHA256 fijo. No están vendidos en este
+repositorio. Los iconos se atribuyen a **Yaru Icons** y sus autores (`icons/AUTHORS`);
+su `icons/COPYING` ofrece GPL-3.0 o CC-BY-SA-4.0 (ver también [Sam Hewitt](https://snwh.org/)).
+El instalador conserva COPYING, AUTHORS y ambos textos de licencia en cada tema del usuario;
+usa sin modificar el generador `icons/src/generate-index-theme.py` (Marco Trevisan / Canonical,
+LGPL-2.1-or-later) para los índices e imita la herencia de `icons/meson.build` en variantes oscuras.
+No cambia GTK, cursor ni paquetes del sistema, y conserva temas preexistentes del usuario.
 
 Fuente de iconos de Omarchy (2026-11-09): `assets/fonts/omarchy.ttf`, de
 `default/fonts/omarchy/omarchy.ttf` de Omarchy quattro `18ac93c` (repositorio MIT), con su descripción en
@@ -777,6 +795,32 @@ mediante layer-shell en Hyprland.
 `plasma-workspace-6.7.5.tar.xz` (tarball de Portage). Conservan el aviso original de
 Marco Martin (2014), LGPL-2.0-or-later. Fuente correspondiente:
 <https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5/shell>.
+
+### Sombras KDecoration y comparación con KWin — R6 (2026-11-20)
+
+La geometría de `src/breezebars/DecoLogic.hpp` continúa siendo una implementación propia
+(BSD-3-Clause del componente) del comportamiento estudiado en **KWin 6.7.5**,
+`src/scene/shadowitem.cpp`, `src/shadow.cpp` y `src/window.cpp`: uniones fraccionarias,
+solapes asimétricos, coordenadas de textura y supresión en fullscreen/maximizado completo.
+No se copia su C++ al plugin. `ShadowBuffer.hpp` es código propio BSD-3-Clause.
+`src/bwm-decorator/shadowstate.h` y las modificaciones de su anfitrión son propias
+GPL-2.0-or-later; observan los contratos públicos de **KDecoration 6.7.5**
+(`src/decorationshadow.cpp`, Martin Gräßlin, LGPL-2.1-only OR LGPL-3.0-only OR
+LicenseRef-KDE-Accepted-LGPL) y **Breeze 6.7.5** (`kdecoration/breezedecoration.cpp`,
+`breezesettingsprovider.cpp` y configuración nativa). No distribuyen copias de esos plugins.
+
+`src/breezebars/check-r6-shadows.py` y `tests/r6_shadow_reference.cpp` son arneses propios
+GPL-2.0-or-later. Durante la prueba leen, verifican por SHA256 y compilan temporalmente
+los métodos de `shadowitem.cpp` sin modificaciones, conservando su aviso (Vlad Zahorodnii,
+2021, GPL-2.0-or-later). La fuente original se selecciona explícitamente y no se incluye
+en el repositorio. El auxiliar carga los plugins de decoración instalados de Breeze y
+Aurorae/Sweet bajo sus licencias existentes. Huellas, alcance y límites en
+`docs/BREEZE_R6_SHADOW_RESULTS.json` y `docs/BREEZE_R6_RESULTS.md`.
+
+Fuentes correspondientes: [KWin 6.7.5](https://invent.kde.org/plasma/kwin/-/tree/v6.7.5),
+[KDecoration 6.7.5](https://invent.kde.org/plasma/kdecoration/-/tree/v6.7.5),
+[Breeze 6.7.5](https://invent.kde.org/plasma/breeze/-/tree/v6.7.5) y
+[KWindowSystem 6.29.0](https://invent.kde.org/frameworks/kwindowsystem/-/tree/v6.29.0).
 Cambios BWM: sin `ShellCorona`; el diálogo `explorer/AppletAlternatives.qml` instalado se
 carga sin modificar y se ancla como superficie layer-shell (`bwm-r4-popup`) sobre el widget
 del panel mediante `PopupAnchor`, preservando el orden `AppletOrder` del containment.
@@ -800,3 +844,21 @@ Hyprland layer-shell (`LayerBackground` + `FocusGrab`), cargando sin modificar l
 `[Desktop][ContainmentActions]` de `desktoppackage/contents/defaults` de plasma-desktop 6.7.5.
 Fuente correspondiente: <https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5/shell> y
 <https://invent.kde.org/plasma/plasma-desktop/-/tree/v6.7.5/desktoppackage>.
+
+### Configuración del escritorio, «Add Panel» y plantillas de panel — Plasma 6.7.5 (R5, cierre)
+
+`src/bwm-plasma-host/containmentconfigview.{h,cpp}` adapta `shell/containmentconfigview.{h,cpp}`
+(Marco Martin 2013, LGPL-2.0-or-later) y la parte de fondos de `ShellCorona::setWallpaper`
+(`shell/shellcorona.cpp`, LGPL-2.0-or-later) de `plasma-workspace-6.7.5.tar.xz`, sin sesión D-Bus
+ni `ShellCorona`; carga sin modificar `configuration/ContainmentConfiguration.qml` y las páginas
+`ConfigurationContainment*.qml` instaladas. `src/bwm-plasma-host/currentcontainmentactionsmodel.{h,cpp}`
+es copia sin cambios de comportamiento de `shell/currentcontainmentactionsmodel.{h,cpp}` (Marco
+Martin 2013, LGPL-2.0-or-later). `DesktopViewHost::setContainmentType` adapta
+`ShellCorona::setContainmentTypeForScreen` y la acción «desktop edit mode» adapta
+`DesktopView::slotContainmentChanged` (`shell/desktopview.cpp`, GPL-2.0-or-later).
+`src/bwm-plasma-host/layouttemplate.{h,cpp}` adapta el subconjunto de la API de scripts de
+`shell/scripting` (`ScriptEngine::V1`, `Panel`; Aaron Seigo 2009, Harald Sitter 2023; LGPL-2.0-or-later) que
+usan las plantillas de panel instaladas, y `ShellCorona::addPanel`/`populateAddPanelsMenu`; las
+plantillas `Plasma/LayoutTemplate` (`layout.js`) se ejecutan sin modificar. Textos con el catálogo
+`plasmashell` instalado. Fuente correspondiente:
+<https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5/shell>.

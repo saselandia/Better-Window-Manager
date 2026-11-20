@@ -6,6 +6,7 @@
 //
 // Lo compila y ejecuta tests/test_breezebars.py.
 #include "DecoLogic.hpp"
+#include "ShadowBuffer.hpp"
 #include "DecoWire.hpp"
 
 #include <chrono>
@@ -95,6 +96,25 @@ static void testShadow() {
     CHECK(q.size() == 4);
     for (auto& e : q)
         CHECK(e.dst.w > 0 && e.dst.h > 0 && e.src.w <= 137 && e.src.h <= 137);
+    // KWin keeps a shared fractional seam when corner tiles overlap (no 1 px slit).
+    s.width = 37; s.height = 39; s.stride = 148;
+    s.inner = {16.5, 17.5, 1, 1}; s.padding = {3, 4, 5, 6};
+    q = shadowQuads({10.25, 20.5, 17.5, 11.25}, s);
+    CHECK(q.size() == 4);
+    CHECK(near(q[0].dst.x + q[0].dst.w, q[1].dst.x));
+    const auto width = q[0].dst.w;
+    s.dpr = 2; // DecorationShadow geometry uses raw image coordinates, as KWin does.
+    q = shadowQuads({10.25, 20.5, 17.5, 11.25}, s);
+    CHECK(near(q[0].dst.w, width));
+    CHECK(shadowQuads({0, 0, 4, 40}, s).empty());
+    // Reject a short fd before reading it; malformed image geometry never reaches GL.
+    int fd = memfd_create("bwm-shadow-test", MFD_CLOEXEC);
+    CHECK(fd >= 0 && ftruncate(fd, s.stride * s.height) == 0);
+    CHECK(readShadowPixels(s, fd).has_value());
+    CHECK(ftruncate(fd, 1) == 0 && !readShadowPixels(s, fd));
+    close(fd);
+    s.inner.w = 1000;
+    CHECK(!shadowIsSane(s, s.stride * s.height));
     std::puts("ok sombra");
 }
 

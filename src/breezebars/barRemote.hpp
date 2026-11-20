@@ -83,6 +83,7 @@ class CBreezeShadow : public IHyprWindowDecoration {
     PHLWINDOWREF                     m_window;
     WP<CHyprBar>                     m_bar;
     std::optional<BwmDeco::SExtents> m_positioned;
+    std::optional<CBox>               m_lastDamageBox;
 };
 
 class CBreezeShadowPassElement : public IPassElement {

@@ -114,14 +114,6 @@
         },
         "float": true
     },
-    "firefox_bin": {
-        "name": "persist_firefox_bin",
-        "description": "firefox-bin",
-        "match": {
-            "class": "^firefox\\-bin$"
-        },
-        "float": true
-    },
     "signal": {
         "name": "persist_signal",
         "description": "signal",
@@ -138,11 +130,11 @@
         },
         "float": false
     },
-    "dev_vencord_vesktop": {
-        "name": "persist_dev_vencord_vesktop",
-        "description": "dev.vencord.Vesktop",
+    "firefox_bin": {
+        "name": "persist_firefox_bin",
+        "description": "firefox-bin",
         "match": {
-            "class": "^dev\\.vencord\\.Vesktop$"
+            "class": "^firefox\\-bin$"
         },
         "float": true
     }

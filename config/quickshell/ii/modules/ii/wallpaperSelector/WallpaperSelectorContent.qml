@@ -163,49 +163,14 @@ MouseArea {
                         Layout.margins: 4
                         implicitWidth: 140
                         clip: true
+                        // BWM: único origen de fondos en todas las skins
                         model: [
-                            {
-                                icon: "home",
-                                name: "Home",
-                                path: Directories.home
-                            },
-                            {
-                                icon: "docs",
-                                name: "Documents",
-                                path: Directories.documents
-                            },
-                            {
-                                icon: "download",
-                                name: "Downloads",
-                                path: Directories.downloads
-                            },
-                            {
-                                icon: "image",
-                                name: "Pictures",
-                                path: Directories.pictures
-                            },
-                            {
-                                icon: "movie",
-                                name: "Videos",
-                                path: Directories.videos
-                            },
-                            {
-                                icon: "",
-                                name: "---",
-                                path: "INTENTIONALLY_INVALID_DIR"
-                            },
                             {
                                 icon: "wallpaper",
                                 name: "Wallpapers",
-                                path: `${Directories.pictures}/Wallpapers`
-                            },
-                            ...(Config.options.policies.weeb === 1 ? [
-                                    {
-                                        icon: "favorite",
-                                        name: "Homework",
-                                        path: `${Directories.pictures}/homework`
-                                    }
-                                ] : []),]
+                                path: Wallpapers.rootPath
+                            }
+                        ]
                         delegate: RippleButton {
                             id: quickDirButton
                             required property var modelData

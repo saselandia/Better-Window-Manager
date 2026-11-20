@@ -25,3 +25,8 @@ for src in "$SRC_DIR"/*.py; do
         ln -s "$src" "$dst"
     fi
 done
+
+# Native Nautilus templates are separate from the Python menu extensions.
+if [[ "${1:-}" == "--templates" ]]; then
+    python3 "$SCRIPT_DIR/setup-nautilus.py"
+fi

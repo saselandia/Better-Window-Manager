@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=BWMenu
+GenericName=Desktop Diagnostics and Recovery
+GenericName[es]=Diagnóstico y recuperación del escritorio
+Comment=Browse BWM skins and check system requirements
+Comment[es]=Explora las skins de BWM y comprueba los requisitos del sistema
+Keywords=BWM;BW Menu;skins;diagnostics;recovery;
+Keywords[es]=BWM;BW Menu;skins;estilos;diagnóstico;recuperación;
+Icon=preferences-system
+Exec=sh -c "exec \\"\\$HOME/.local/bin/bwmenu\\" --open"
+Terminal=false
+Categories=System;
+StartupWMClass=org.bwm.menu

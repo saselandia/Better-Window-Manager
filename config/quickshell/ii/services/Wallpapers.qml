@@ -19,7 +19,9 @@ Singleton {
     property string generateThumbnailsMagickScriptPath: `${FileUtils.trimFileProtocol(Directories.scriptPath)}/thumbnails/generate-thumbnails-magick.sh`
     property alias directory: folderModel.folder
     readonly property string effectiveDirectory: FileUtils.trimFileProtocol(folderModel.folder.toString())
-    property url defaultFolder: Qt.resolvedUrl(`${Directories.pictures}/Wallpapers`)
+    // BWM: única carpeta que el selector considera (ruta absoluta sin file://)
+    readonly property string rootPath: `${FileUtils.trimFileProtocol(Directories.pictures).replace(/\/+$/, "")}/Wallpapers`
+    property url defaultFolder: Qt.resolvedUrl(root.rootPath)
     property alias folderModel: folderModel // Expose for direct binding when needed
     property string searchQuery: ""
     readonly property list<string> extensions: [
@@ -78,26 +80,38 @@ Singleton {
         root.select(filePath, darkMode);
     }
 
+    // BWM: sólo cuenta ~/Pictures/Wallpapers (y sus subcarpetas) en todas las skins.
+    function insideRoot(path) {
+        return path === root.rootPath || path.startsWith(root.rootPath + "/");
+    }
     Process {
         id: validateDirProc
         property string nicePath: ""
         function setDirectoryIfValid(path) {
-            validateDirProc.nicePath = FileUtils.trimFileProtocol(path).replace(/\/+$/, "")
-            if (/^\/*$/.test(validateDirProc.nicePath)) validateDirProc.nicePath = "/";
+            // «..» no puede escapar de la raíz: se normaliza antes de comprobar
+            const parts = [];
+            for (const p of FileUtils.trimFileProtocol(path).split("/")) {
+                if (p === "" || p === ".") continue;
+                if (p === "..") parts.pop(); else parts.push(p);
+            }
+            validateDirProc.nicePath = "/" + parts.join("/")
+            if (!root.insideRoot(validateDirProc.nicePath)) validateDirProc.nicePath = root.rootPath;
             validateDirProc.exec([
                 "bash", "-c",
-                `if [ -d "${validateDirProc.nicePath}" ]; then echo dir; elif [ -f "${validateDirProc.nicePath}" ]; then echo file; else echo invalid; fi`
+                'if [ -d "$1" ]; then echo dir; elif [ -f "$1" ]; then echo file; else echo invalid; fi',
+                "bash", validateDirProc.nicePath
             ])
         }
         stdout: StdioCollector {
             onStreamFinished: {
-                    root.directory = Qt.resolvedUrl(validateDirProc.nicePath)
                 const result = text.trim()
                 if (result === "dir") {
+                    root.directory = Qt.resolvedUrl(validateDirProc.nicePath)
                 } else if (result === "file") {
                     root.directory = Qt.resolvedUrl(FileUtils.parentDirectory(validateDirProc.nicePath))
-                } else {
-                    // Ignore
+                } else if (validateDirProc.nicePath !== root.rootPath) {
+                    // No existe: se vuelve a la raíz en lugar de ignorarlo
+                    validateDirProc.setDirectoryIfValid(root.rootPath)
                 }
             }
         }
@@ -106,6 +120,7 @@ Singleton {
         validateDirProc.setDirectoryIfValid(path)
     }
     function navigateUp() {
+        if (root.effectiveDirectory.replace(/\/+$/, "") === root.rootPath) return;
         folderModel.navigateUp()
     }
     function navigateBack() {

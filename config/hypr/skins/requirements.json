@@ -218,8 +218,9 @@
     },
     "localsend": {
       "label": "LocalSend",
-      "why": "Compartir portapapeles, archivos y carpetas desde el menú de Retro (Acciones → Compartir)",
-      "check": {"type": "cmd", "any": ["localsend"]},
+      "why": "Enviar archivos desde Nautilus con la extensión de Omarchy (nativo o Flatpak); el menú Compartir de Retro usa el comando nativo",
+      "check": {"type": "cmd", "any": ["localsend"], "flatpak": "org.localsend.localsend_app"},
+      "manual": "flatpak install --user flathub org.localsend.localsend_app",
       "packages": {"gentoo": null, "arch": "localsend", "fedora": null, "opensuse": null, "debian": null}
     },
     "procps": {
@@ -522,6 +523,25 @@
         "/usr/lib/x86_64-linux-gnu/nautilus/extensions-4/libnautilus-python.so"
       ]},
       "packages": {"gentoo": "dev-python/nautilus-python", "arch": "nautilus-python", "fedora": "nautilus-python", "opensuse": "python3-nautilus", "debian": "python3-nautilus"}
+    },
+    "xdg-user-dirs": {
+      "label": "xdg-user-dirs",
+      "why": "Directorio estándar de plantillas de Nautilus para Nuevo documento, conservando la ruta del usuario",
+      "check": {"type": "cmd", "all": ["xdg-user-dir", "xdg-user-dirs-update"]},
+      "packages": {"gentoo": "x11-misc/xdg-user-dirs", "arch": "xdg-user-dirs", "fedora": "xdg-user-dirs", "opensuse": "xdg-user-dirs", "debian": "xdg-user-dirs"}
+    },
+    "yaru-icons": {
+      "label": "Iconos Yaru (temas de Omarchy con icons.theme)",
+      "why": "Iconos originales indicados por los temas incluidos y de la comunidad de Omarchy, sin sustituirlos por Papirus",
+      "check": {"type": "path", "any": ["/usr/share/icons/Yaru-yellow/index.theme", "~/.local/share/icons/Yaru-yellow/index.theme"]},
+      "packages": {"gentoo": null, "arch": null, "fedora": null, "opensuse": null, "debian": "yaru-theme-icon"},
+      "manual": "python3 ~/.config/hypr/skins/retro/scripts/install-yaru-icons.py"
+    },
+    "adwaita-icons": {
+      "label": "Iconos Adwaita",
+      "why": "Iconos originales de GTK/Nautilus en Omarchy quattro (Retro)",
+      "check": {"type": "path", "any": ["/usr/share/icons/Adwaita/index.theme", "/usr/local/share/icons/Adwaita/index.theme"]},
+      "packages": {"gentoo": "x11-themes/adwaita-icon-theme", "arch": "adwaita-icon-theme", "fedora": "adwaita-icon-theme", "opensuse": "adwaita-icon-theme", "debian": "adwaita-icon-theme"}
     },
     "sushi": {
       "label": "Sushi (vista previa de Nautilus)",

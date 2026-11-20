@@ -11,6 +11,7 @@
 #include <array>
 #include <cstdint>
 #include <cstring>
+#include <cmath>
 #include <optional>
 #include <string>
 #include <vector>
@@ -219,7 +220,16 @@ namespace BwmDeco {
     }
 
     inline bool shadowIsSane(const SShadow& s, size_t mapped) {
-        return s.width <= 4096 && s.height <= 4096 && static_cast<uint64_t>(s.width) * 4 <= s.stride && static_cast<uint64_t>(s.stride) * s.height <= mapped;
+        if (!s.width || !s.height || s.width > 4096 || s.height > 4096 || s.stride > 4096 * 4 ||
+            static_cast<uint64_t>(s.width) * 4 > s.stride || static_cast<uint64_t>(s.stride) * s.height > mapped ||
+            !std::isfinite(s.dpr) || s.dpr <= 0 || s.dpr > 8)
+            return false;
+        for (double v : {s.padding.left, s.padding.top, s.padding.right, s.padding.bottom})
+            if (!std::isfinite(v) || std::abs(v) > 4096)
+                return false;
+        const auto& r = s.inner;
+        return std::isfinite(r.x) && std::isfinite(r.y) && std::isfinite(r.w) && std::isfinite(r.h) &&
+            r.x >= 0 && r.y >= 0 && r.w > 0 && r.h > 0 && r.x + r.w <= s.width && r.y + r.h <= s.height;
     }
 
     // Lee un paquete completo. Devuelve nullopt si la cabecera o la carga no son válidas.

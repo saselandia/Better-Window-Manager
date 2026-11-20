@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Icon theme per BWM skin, like Omarchy's icons.theme (each Omarchy theme picks a Yaru
-colour). Yaru is not packaged for Gentoo, so Retro uses Papirus-Dark (Papirus-Light with a
-light Omarchy theme) with the folder colour closest to the wallpaper accent (what papirus-folders does: a small user theme,
-BWM-Papirus, that points the folder icons at one of Papirus' colour variants).
+Icon theme per BWM skin. Retro follows Omarchy's Adwaita default and honors
+icons.theme from older/community Omarchy themes when that theme is installed.
 
   Default -> Adwaita (as before)
   Plasma  -> breeze-dark
-  Retro   -> BWM-Papirus (Papirus-Dark/-Light + accent folders) if x11-themes/papirus-icon-theme
-             is installed, Adwaita otherwise
+  Retro   -> icons.theme when installed, otherwise Adwaita (Omarchy quattro)
 
 It also keeps qt6ct (Qt apps) on the same icon theme and on the palette that the colour
 templates render into ~/.config/qt6ct/colors/bwm.conf.
@@ -144,7 +141,17 @@ def icon_theme_for(theme: str, accent: str = "", light: bool = False) -> str:
     if theme == "plasma":
         return _plasma_icons()
     if theme == "retro":
-        return build_papirus_variant(closest_folder_color(accent or "#7aa2f7"), light) or "Adwaita"
+        try:
+            selected = (HOME / ".local/state/bwm/omarchy/theme/icons.theme").read_text(encoding="utf-8").strip()
+        except OSError:
+            selected = "Adwaita"
+        # icons.theme contains a theme name, never a path or a command.
+        if selected and selected not in (".", "..") and "/" not in selected:
+            roots = [Path(os.environ.get("XDG_DATA_HOME", HOME / ".local/share")) / "icons", HOME / ".icons"]
+            roots += [Path(p) / "icons" for p in os.environ.get("XDG_DATA_DIRS", "/usr/local/share:/usr/share").split(":") if p]
+            if any((root / selected / "index.theme").is_file() for root in roots):
+                return selected
+        return "Adwaita"
     return "Adwaita"
 
 

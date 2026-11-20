@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Omarchy's background collection plus BWM's shared Pictures/Wallpapers.
+"""Omarchy's background picker over BWM's shared Pictures/Wallpapers only.
 
 After Omarchy quattro cbd0029f, bin/omarchy-theme-bg-switcher (MIT,
 Copyright (c) David Heinemeier Hansson). The picker and its protocol are
-Omarchy's; BWM resolves its theme catalog and adds the shared directory.
+Omarchy's; BWM limits the collection to the shared directory.
 """
 import argparse
 from pathlib import Path
@@ -16,17 +16,10 @@ import bwm_omarchy as omarchy
 
 
 def background_directories():
-    mode, name = omarchy.get_retro_mode()
-    directories = []
-    if mode == "static":
-        try:
-            directories.append(omarchy.theme_directory(name) / "backgrounds")
-        except ValueError:
-            pass
-    directories.extend((omarchy.CONFIG_DIR / "omarchy" / "backgrounds" / name,
-                        omarchy.HOME / "Pictures" / "Wallpapers"))
-    # Symlinked copies of the same collection need only one scan.
-    return list(dict.fromkeys(path.resolve() for path in directories if path.is_dir()))
+    # Decisión del usuario: todas las skins sólo toman en cuenta ~/Pictures/Wallpapers
+    # (los fondos de los temas de Omarchy dejan de mezclarse en el selector).
+    shared = omarchy.HOME / "Pictures" / "Wallpapers"
+    return [shared.resolve()] if shared.is_dir() else []
 
 
 def current_background():
