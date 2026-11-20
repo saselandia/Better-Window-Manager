@@ -14,11 +14,26 @@
 #include <QElapsedTimer>
 #include <QScopedValueRollback>
 #include <QDir>
-ConfigurationSession::ConfigurationSession(Plasma::Applet *applet)
-    : m_applet(applet), m_view(new PlasmaQuick::ConfigView(applet)) {
+#include <KPackage/PackageLoader>
+#include <KPackage/Package>
+#include <QTimer>
+ConfigurationSession::ConfigurationSession(Plasma::Applet *applet,bool nativeFrame)
+    : m_applet(applet), m_view(new PlasmaQuick::ConfigView(applet)),m_nativeFrame(nativeFrame) {
     // ConfigView emulates WA_DeleteOnClose using deleteLater() in hideEvent.
     // Observe it rather than owning it with a unique_ptr (which would double-delete).
     connect(m_view.data(),&QObject::destroyed,this,[this]{ m_pages.clear(); emit pagesChanged(); emit changed(); });
+    if(m_nativeFrame) {
+        const auto shell=KPackage::PackageLoader::self()->loadPackage(QStringLiteral("Plasma/Shell"),QStringLiteral("org.kde.plasma.desktop"));
+        const auto source=shell.fileUrl("appletconfigurationui");
+        if(!shell.isValid() || source.isEmpty()) {m_error=tr("The installed Plasma applet configuration interface is missing.");return;}
+        // ConfigView supplies AppletContext, Plasmoid, configDialog and the applet's
+        // real ConfigModel. Let the unmodified native QML create/save its own pages,
+        // including module components, Shortcuts, About and the unsaved-page prompt.
+        m_view->setSource(source);
+        if(!m_view->rootObject()) {m_error=tr("The native applet configuration interface did not load.");return;}
+        connect(m_view->rootObject(),SIGNAL(currentSourceChanged()),this,SLOT(nativePageChanged()));
+        return;
+    }
     auto *model=m_view->configModel();
     if (!model || !applet->configScheme()) {
         m_error=tr("This package has no usable configuration model/schema.");
@@ -90,6 +105,21 @@ ConfigurationSession::ConfigurationSession(Plasma::Applet *applet)
 }
 ConfigurationSession::~ConfigurationSession() { delete m_view.data(); }
 PlasmaQuick::ConfigView *ConfigurationSession::view() const { return m_view.data(); }
+QQuickItem *ConfigurationSession::nativePage()const {
+    auto *root=m_view ? m_view->rootObject() : nullptr;if(!root)return nullptr;
+    QVariant window;
+    if(!QMetaObject::invokeMethod(root,"applicationWindow",Q_RETURN_ARG(QVariant,window)))return nullptr;
+    auto *app=window.value<QObject*>();
+    return app ? qobject_cast<QQuickItem*>(app->property("currentConfigPage").value<QObject*>()) : nullptr;
+}
+QVariantList ConfigurationSession::pages()const {
+    if(!m_nativeFrame)return m_pages;
+    auto *page=nativePage();if(!page)return {};
+    return {QVariantMap{{"name",page->property("title")},{"item",QVariant::fromValue(page)}}};
+}
+void ConfigurationSession::nativePageChanged() {
+    QTimer::singleShot(0,this,[this]{emit pagesChanged();emit changed();});
+}
 QVariantMap ConfigurationSession::stored() const {
     QVariantMap values;
     if(auto *scheme=m_applet->configScheme()) for(auto *entry:scheme->items()) values.insert(entry->name(),entry->property());
@@ -167,6 +197,12 @@ void ConfigurationSession::pageValueChanged() {
     emit changed();
 }
 bool ConfigurationSession::dirty() const {
+    if(m_nativeFrame) {
+        auto *root=m_view ? m_view->rootObject() : nullptr;if(!root)return false;
+        QVariant changed;QMetaObject::invokeMethod(root,"isConfigurationChanged",Q_RETURN_ARG(QVariant,changed));
+        auto *page=nativePage();
+        return changed.toBool() || root->property("wasConfigurationChangedSignalSent").toBool() || (page && page->property("unsavedChanges").toBool());
+    }
     if(m_loading || !m_view) return false;
     const auto values=collect();
     for(auto it=values.cbegin();it!=values.cend();++it) {
@@ -176,6 +212,12 @@ bool ConfigurationSession::dirty() const {
     return false;
 }
 bool ConfigurationSession::apply() {
+    if(m_nativeFrame) {
+        auto *root=m_view ? m_view->rootObject() : nullptr;
+        if(!root || !m_applet || !m_error.isEmpty() || !QMetaObject::invokeMethod(root,"saveConfig"))return false;
+        root->setProperty("wasConfigurationChangedSignalSent",false);
+        QMetaObject::invokeMethod(root,"settingValueChanged");emit changed();return true;
+    }
     if(!m_view || !m_applet || !m_error.isEmpty() || !m_applet->configScheme()) return false;
     auto *scheme=m_applet->configScheme();
     // As AppletConfiguration.qml::saveConfig(): a page's own saveConfig() runs first so it can
@@ -215,7 +257,7 @@ bool ConfigurationSession::apply() {
         if(scheme->KCoreConfigSkeleton::findItem(it.key())->property()!=it.value()) { m_error=tr("Saved value could not be confirmed."); emit changed(); return false; }
     m_baseline=stored(); populate(m_baseline); emit changed(); return true;
 }
-void ConfigurationSession::cancel() { if(!m_view) return; populate(m_baseline); m_view->close(); emit changed(); }
+void ConfigurationSession::cancel() { if(!m_view) return; if(!m_nativeFrame)populate(m_baseline); m_view->close(); emit changed(); }
 void ConfigurationSession::defaults() {
     if(!m_view || !m_applet || !m_applet->configScheme()) return;
     QVariantMap values=m_defaults;

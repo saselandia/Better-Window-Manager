@@ -1,7 +1,8 @@
 # Breeze II — R5: modo edición de Plasma (resultados)
 
 R5 sustituye el editor reducido por las interfaces originales de Plasma 6.7.5. Este informe
-recoge cada iteración; R5 sigue **abierta**.
+recoge cada iteración. Tras la iteración 12 (2026-11-20) R5 queda **lista para la aceptación del
+usuario**; las diferencias que quedan frente a Plasma 6.7.5 están al final de la iteración 12.
 
 ## Punto de partida
 
@@ -753,5 +754,103 @@ Con autorización explícita del usuario y sin alterar su skin activa (`retro`),
 - Pendiente para cerrar R5: comparación visual con Plasma real (incl. `DesktopEditMode.qml`, paneles y
   escalas fraccionarias) y aceptación final del usuario. No se sustituye el panel diario.
 
+## Iteración 12 (2026-11-20) — Cierre: escritorio con ratón real, configuración y «Add Panel»
 
+Desde `d24d896`. Prueba interactiva con ratón y teclado virtuales (`/dev/uinput`) sobre el LG
+(`DP-1`), raíces XDG desechables y la skin del usuario intacta (`retro`); el LG se pasó un momento a
+un workspace vacío para ver el escritorio y se devolvió al 10 con el mismo foco y puntero. Capturas
+recortadas revisadas y borradas.
 
+### Fallos encontrados y corregidos
+
+| Síntoma | Causa | Corrección |
+| :--- | :--- | :--- |
+| Clic derecho en el escritorio: menú casi vacío (sólo «Desktop and Wallpaper») | La capa de iconos de Folder View (`main.qml`) sólo se activa si `corona.isScreenUiReady(screen)` es cierto **cuando cambia la pantalla del contenedor**. El anfitrión asignaba la pantalla antes de mostrar la vista y contaba al propio escritorio, así que la capa no se cargaba nunca (sin «Create New», «Paste», «Icons»). La prueba offscreen de la iteración 11 no lo detectaba | `ViewCorona::screenForContainment/isScreenUiReady` siguen el orden de `ShellCorona`: el escritorio recibe pantalla cuando su vista es visible y los paneles de la salida están listos, y la conserva (añadir un panel ya no recrea Folder View) |
+| Faltaba «Enter Edit Mode» en ese menú | `org.kde.contextmenu` pide la acción `desktop edit mode`, que registra `DesktopView::slotContainmentChanged` | Registrada en `DesktopViewHost`; `edit mode` vuelve a ser la acción de libplasma (alternar) en vez de una propia |
+| «Desktop and Wallpaper…» sólo entraba en modo edición | `DesktopViewHost::showConfigurationInterface` no creaba `ContainmentConfigView` | Adaptado `ContainmentConfigView` + `CurrentContainmentActionsModel` (LGPL) con el `ContainmentConfiguration.qml` instalado; cambio de Layout con `setContainmentType` (de `ShellCorona::setContainmentTypeForScreen`) |
+| Elegir otro fondo no activaba «Aplicar» | La página de fondos marca cambios mientras se crea (`SlidePaths` `preferred://wallpaperlocations` → rutas reales) antes de que `AppletConfiguration.qml` conecte `unsavedChangesChanged` | El anfitrión llama una vez a la función original `settingValueChanged()` tras cargar la página (sin tocar el QML) |
+| «Add Panel» → «Default/Empty Panel» no creaba nada | `ViewCorona` emitía `addPanelRequested` y nadie lo atendía | `PanelRuntime::addPanel` + `LayoutTemplateRunner`: el `layout.js` de la plantilla instalada se ejecuta sin modificar; el menú reproduce `populateAddPanelsMenu` (Application Menu Bar, Default Panel, Empty Panel) |
+| El explorador lateral y el modo edición pasaban 26 px por detrás de paneles/barras | `strictAvailableScreenRect` sólo contaba los paneles del anfitrión (no la barra externa de Retro); `Desktop.qml` fija la altura del explorador con ese rectángulo | En Hyprland se cruza con `reserved` del monitor (`hyprctl -j monitors`, asíncrono), como KWin con todos los struts |
+| Menús con estilo Fusion en la vista desechable | Sin tema de plataforma KDE | `--desktop` usa `QT_QPA_PLATFORMTHEME=kde` (Breeze por defecto de la configuración vacía, como `plasmashell`) |
+| Textos añadidos por el anfitrión sólo en inglés | `tr()` | Catálogo `plasmashell` (`i18nd`): «Entrar en el modo de edición», «Añadir panel», «%1 sin elementos» |
+
+### Comprobado con ratón y teclado reales (LG)
+
+1. Clic derecho en el escritorio → menú original anclado al clic (popup, no ventana) con Create New,
+   Paste, Undo, Icons, Enter Edit Mode y Desktop and Wallpaper; tras cambiar el contenedor a
+   «Desktop», Enter Edit Mode y Desktop and Wallpaper.
+2. «Enter Edit Mode» → `DesktopEditMode.qml` (desenfoque, escritorio reducido, barra «Add or Manage
+   Widgets… / Add Panel / Exit Edit Mode»). Sale con el botón, con Escape y con un clic en el margen.
+3. «Add Panel» → menú bajo el botón; «Default Panel» crea arriba (borde libre) Kickoff, paginador,
+   tareas, bandeja, reloj y Mostrar escritorio con grosor 46 (plantilla) y reserva real; el modo
+   edición se recoloca debajo. «Empty Panel» crea el panel vacío a la izquierda (grosor 36, con su
+   «+» en edición).
+4. «Add or Manage Widgets…» → explorador lateral (`bwm-r5-desktop-explorer`, `2560,74 498×2038`,
+   justo entre el panel superior y el inferior); arrastre `wl_data_device` del reloj analógico al
+   escritorio reducido; el explorador se cierra al pulsar fuera.
+5. Mover el widget en el escritorio (geometría guardada en `ItemGeometries`), `ConfigOverlay` original
+   (asas, girar, configurar, quitar) y «Configurar» → ventana de ajustes del widget.
+6. Ajustes del panel abiertos en modo edición del escritorio: el escritorio reducido se aparta como en
+   Plasma (`configuredPanel`/`relativeConfigRect`); Escape cierra sólo los Ajustes.
+7. «Desktop and Wallpaper…» → Wallpaper/Mouse Actions/Location/Icons/Filter/About; elegir
+   «Sweet-space» + OK lo aplica en vivo y lo guarda; Layout «Folder View» → «Desktop» muestra el aviso
+   original, «Apply Now» cambia el contenedor conservando el widget y relanza el diálogo.
+
+No se probó el botón central (`org.kde.paste`): pegaría en pantalla el portapapeles real del usuario.
+Queda registrado en `[Desktop][ContainmentActions]` y lo lista la página Mouse Actions.
+
+### Pruebas
+
+| Prueba | Resultado |
+| :--- | :--- |
+| `originalDesktopEditModeHost` (offscreen): menú de `org.kde.contextmenu` con Folder View cargado y «Enter Edit Mode» del escritorio; «Add Panel» con la plantilla «Empty Panel» (borde superior libre, grosor `gridUnit×2`), plantilla inexistente rechazada sin crear nada | Pasa (normal y ASan) |
+| `originalDesktopContainmentConfiguration` (offscreen, nueva): `ContainmentConfigView` con `ContainmentConfiguration.qml`, página Wallpaper, `selectWallpaper` original, Aplicar → `Wallpaper/org.kde.image/General/Image` guardado; modelos de Layout y Mouse Actions; en español e inglés | Pasa (normal y ASan) |
+| `originalDesktopEditModeInHyprland` (LG): paso nuevo `desktop-context-menu-and-usable-area` (menú y `strictAvailableScreenRect` = área útil del compositor `0,26 3840×2086`), explorador `2560,26 498×2086` pegado al área útil | Pasa (7/7) |
+| `check-edit-mode-session.py --output LG` (suite completa) | Pasa (51 pasos, sin capas residuales, foco igual) |
+| `check-edit-mode-session.py --fractional-scale`: paso nuevo `fractional-desktop-edit-mode` a 1,25/1,5/1,6 (escritorio a toda la salida, DPR exacto, explorador ajustado al área útil con la barra externa y el panel lateral) | Pasa (24/24, `physicalOutputsUnchanged: true`) |
+| CTest normal (`-E "^native-"`) | **8/8** |
+| CTest ASan (`detect_leaks=0`, `surface-geometry` + `isolated-local-configuration`) | **2/2** |
+| Python R4 (`test_r4_*.py`) | **262/262 OK** |
+| `hyprctl layers` / `hyprctl configerrors` al terminar | 0 capas `bwm-r4-*`/`bwm-r5-*`, sin errores |
+
+Las suites offscreen se ejecutaron sin `QT_QPA_PLATFORMTHEME`: heredado de la sesión Retro (`gtk3`)
+hace que tres pruebas CTest y seis de Python fallen al intentar abrir una pantalla GTK (también antes
+de estos cambios). Con la plantilla «Default Panel» en offscreen, Klipper (bandeja) llama a XCB sin
+conexión X11 y cae dentro de `libklipper`; por eso esa plantilla se prueba en Hyprland y la prueba
+offscreen usa «Empty Panel».
+
+### Diferencias que quedan frente a Plasma 6.7.5
+
+- **Marco de la configuración de widgets:** las páginas son las originales, pero la ventana usa el
+  `AppletConfiguration.qml` reducido de R4 (`shell/contents/configuration/`, sesión con
+  Aplicar/Cancelar/Predeterminados), no el de Plasma con barra lateral (Apariencia, Atajos, Acerca de).
+  La configuración del escritorio sí usa el marco original.
+- **Sombras y desenfoque:** sin `KWindowShadow` ni el desenfoque de KWin, los menús, diálogos y
+  paneles no tienen sombra exterior ni desenfoque detrás (R6). El desenfoque interno de
+  `DesktopEditMode.qml` (`MultiEffect`) sí se ve.
+- **Reserva de paneles creados en modo edición:** se congela con el grosor de creación (48) hasta salir
+  del modo edición (46/36 después); Plasma la recalcula con el grosor de la plantilla.
+- **«Manage Desktops and Panels…»** (`manage-containments`) no está registrada: el botón no aparece.
+  Plasma sólo lo muestra con contenedores en más de una pantalla; la gestión de escritorios entre
+  pantallas (`ShellContainmentConfig`) no está portada.
+- **«Aplicar» de la configuración del escritorio:** con una configuración nueva puede salir activo al
+  abrir (la página normaliza `SlidePaths`); no se ha cotejado con un Plasma real.
+- **Paginador del panel por defecto** sin el proveedor de escritorios (`--native-desktops`) muestra
+  las casillas de la proyección BWM, no los escritorios de KWin (R4).
+- **Pantalla de «Add Panel»:** la de debajo del menú; Plasma pregunta a KWin la salida activa.
+- **Escalas fraccionarias:** medidas de geometría y DPR en salida headless; sin revisión visual
+  subpíxel del texto y los bordes.
+- En Retro la ventana de configuración se coloca en mosaico (reglas de la skin); en Breeze flota.
+- No se ha comparado con capturas de una sesión Plasma real: la referencia son el QML/SVG originales
+  instalados y sus métricas.
+
+### Para la aceptación del usuario
+
+```
+python3 src/bwm-plasma-host/preview-isolated.py --binary build/bwm-plasma-host/bwm-plasma-host \
+  --builtin org.kde.plasma.digitalclock --native-panel --layer-panel --follow-skin --desktop \
+  --native-policy --instances 1 --output "<descripción del monitor>"
+```
+
+Con Breeze activa (o enviando `skin plasma` al registro en otra skin). Ctrl+C la detiene. No sustituye
+el panel diario ni el fondo de Breeze.

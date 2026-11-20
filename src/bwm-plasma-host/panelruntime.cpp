@@ -4,6 +4,7 @@
 #include "viewcorona.h"
 #include "panelviewhost.h"
 #include "panelclone.h"
+#include "layouttemplate.h"
 #include <KConfig>
 #include <KConfigGroup>
 #include <QLockFile>
@@ -41,6 +42,9 @@ PanelRuntime::PanelRuntime(ViewCorona *corona,QString settings,bool layers,QObje
     m_reconcile.setSingleShot(true);m_reconcile.setInterval(0);
     connect(&m_reconcile,&QTimer::timeout,this,&PanelRuntime::reconcile);
     if(corona)connect(corona,&Plasma::Corona::editModeChanged,&m_reconcile,qOverload<>(&QTimer::start));
+    if(corona)connect(corona,&ViewCorona::movePanelRequested,this,[this](Plasma::Containment *c,QScreen *target){
+        if(c && view(c->id()))moveToOutput(c->id(),target);
+    });
     if(auto *control=NativeDesktopControl::requiredControl(this))connect(control,&NativeDesktopControl::changed,this,[this,control]{
         if(m_skin=="plasma"){
             if(!control->resumed()){
@@ -220,6 +224,44 @@ void PanelRuntime::cloneToOutput(uint id,int location,QScreen *target) {
     copy->setFormFactor(location==Plasma::Types::LeftEdge || location==Plasma::Types::RightEdge ? Plasma::Types::Vertical : Plasma::Types::Horizontal);
     frame->setError({});m_assignments.insert(copy->id(),description);reconcile();
 }
+bool PanelRuntime::addPanel(const QString &actionData,QScreen *target) {
+    if(!m_corona)return false;
+    const auto fail=[this](const QString &message){m_error=message;emit changed();return false;};
+    if(!m_panelAddingAllowed)return fail(tr("Adding panels is not available in this host."));
+    if(m_corona->immutability()!=Plasma::Types::Mutable)return fail(tr("Adding panels is locked by KDE policy."));
+    if(!target || !QGuiApplication::screens().contains(target))return fail(tr("Adding a panel requires a live output."));
+    const auto identity=BwmOutput::identity(target);
+    const auto description=(identity.manufacturer+' '+identity.model+' '+identity.serial).simplified();
+    if(description.isEmpty() || BwmOutput::resolveScreen(description)!=target)return fail(tr("The target output has no unique description."));
+    QHash<Plasma::Containment*,QVariantMap> existing;
+    for(auto it=m_views.cbegin();it!=m_views.cend();++it) {
+        auto *frame=it.value().data();if(!frame || !frame->containment())continue;
+        existing.insert(frame->containment(),{{"screen",QGuiApplication::screens().indexOf(frame->screen())},
+            {"thickness",frame->property("thickness")},{"alignment",frame->property("alignment")},
+            {"minLength",frame->property("minimumLength")},{"maxLength",frame->property("maximumLength")},
+            {"offset",frame->property("offset")}});
+    }
+    LayoutTemplateRunner runner(m_corona,target,existing);
+    const bool ok=runner.run(actionData);
+    // Like ShellCorona, panels created before a script error are kept (the template is not transactional).
+    QHash<uint,QVariantMap> pending;
+    for(auto *panel:runner.createdPanels()) {
+        auto *c=panel->containment();if(!c)continue;
+        m_assignments.insert(c->id(),description);pending.insert(c->id(),panel->pendingViewSettings());
+        m_initialPanelSettings.insert(c->id(),panel->pendingViewSettings());
+    }
+    reconcile();
+    QStringList errors;if(!ok)errors.append(runner.error());
+    for(auto it=pending.cbegin();it!=pending.cend();++it) {
+        if(it.value().isEmpty())continue;
+        auto *frame=view(it.key());
+        if(!frame){errors.append(tr("The new panel %1 has no view on this output.").arg(it.key()));continue;}
+        if(!frame->error().isEmpty())errors.append(frame->error());
+    }
+    m_corona->requestConfigSync();
+    if(!errors.isEmpty())return fail(errors.join(u'\n'));
+    m_error.clear();emit changed();return true;
+}
 void PanelRuntime::drop(uint id) {
     auto *frame=m_views.take(id).data();if(!frame)return;
     frame->hide();
@@ -308,7 +350,7 @@ void PanelRuntime::reconcile() {
             connect(c,&Plasma::Containment::locationChanged,&m_reconcile,qOverload<>(&QTimer::start));
             connect(c,&Plasma::Containment::formFactorChanged,&m_reconcile,qOverload<>(&QTimer::start));
             connect(c,&Plasma::Applet::destroyedChanged,&m_reconcile,qOverload<>(&QTimer::start));
-            connect(c,&QObject::destroyed,this,[this,id]{m_observed.remove(id);m_reconcile.start();});
+            connect(c,&QObject::destroyed,this,[this,id]{m_observed.remove(id);m_initialPanelSettings.remove(id);m_reconcile.start();});
         }
         QString state;auto *screen=BwmOutput::resolveScreen(m_assignments.value(id),&state);
         const auto side=edge(c->location());
@@ -337,6 +379,14 @@ void PanelRuntime::reconcile() {
             m_corona->bind(c,frame);
             if(!frame->load(c)) {error=frame->error();m_corona->unbind(c);delete frame;frame=nullptr;state="view-unavailable";}
             else {
+                // Finish the original template's view preferences before the first
+                // edit-mode reservation is frozen. Otherwise the provisional 48 px
+                // constructor size survives until leaving edit mode (template: 46/36).
+                if(m_initialPanelSettings.contains(id)) {
+                    const auto initial=m_initialPanelSettings.take(id);
+                    if(initial.isEmpty() || frame->applyViewSettings(initial))
+                        QMetaObject::invokeMethod(frame,"reflow",Qt::DirectConnection);
+                }
                 m_views.insert(id,frame);
                 connect(frame,&PanelViewHost::policyChanged,&m_reconcile,qOverload<>(&QTimer::start));
                 connect(frame,&PanelViewHost::geometryPolicyChanged,&m_reconcile,qOverload<>(&QTimer::start));

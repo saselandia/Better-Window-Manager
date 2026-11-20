@@ -10,6 +10,9 @@
 #include "panelconfigview.h"
 #include "widgetexplorerview.h"
 #include "desktopviewhost.h"
+#include <KLocalizedString>
+#include "containmentconfigview.h"
+#include "containmentmanagement.h"
 #include <QQmlExpression>
 #include <QQmlContext>
 #include <QTest>
@@ -53,6 +56,7 @@ Q_IMPORT_PLUGIN(BwmWindowSystemPlugin)
 #include <KPackage/Package>
 #include <Plasma/Corona>
 #include <Plasma/Containment>
+#include <Plasma/ContainmentActions>
 #include <Plasma/Applet>
 #include <Plasma/Theme>
 #include <Plasma/Plasma>
@@ -104,6 +108,14 @@ QQuickItem *findVisual(QQuickItem *item,const QString &name) {
     if(item->objectName()==name)return item;
     for(auto *child:item->childItems())if(auto *found=findVisual(child,name))return found;
     return nullptr;
+}
+// The original Folder View lists desktop:/ (XDG_DESKTOP_DIR): keep tests on a disposable folder.
+static void useDisposableDesktopFolder() {
+    const QString config=qEnvironmentVariable("XDG_CONFIG_HOME");
+    QDir(config).mkpath(QStringLiteral("../bwm-test-desktop"));
+    QFile dirs(config+QStringLiteral("/user-dirs.dirs"));
+    if(!dirs.exists() && dirs.open(QIODevice::WriteOnly))
+        dirs.write(QStringLiteral("XDG_DESKTOP_DIR=\"%1\"\n").arg(QDir(config+QStringLiteral("/../bwm-test-desktop")).absolutePath()).toUtf8());
 }
 class UiTest:public QObject {
     Q_OBJECT
@@ -1900,11 +1912,219 @@ private Q_SLOTS:
         QVERIFY(runtime.setSkin("default"));
         QTRY_COMPARE(corona.availableScreenRect(screenId),out.screen()->availableGeometry());
     }
+    // R5 cierre: "Desktop and Wallpaper…" opens the original ContainmentConfiguration.qml through
+    // ContainmentConfigView (plasma-workspace 6.7.5); choosing a wallpaper with the original
+    // org.kde.image page enables Apply and writes the native Wallpaper group.
+    void originalDesktopContainmentConfiguration() {
+        QCOMPARE(QGuiApplication::platformName(),"offscreen");
+        useDisposableDesktopFolder();
+        TestOutput out("DP-66","DesktopConfig","D2",{4000,0,1536,864});
+        const QDir config(qEnvironmentVariable("XDG_CONFIG_HOME"));
+        const auto layout=config.filePath("bwm-r5-desktop-config-layout");
+        QFile::remove(layout);
+        ViewCorona corona;
+        corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout(layout);
+        auto *desk=corona.createContainment("org.kde.plasma.folder");QVERIFY(desk);
+        DesktopViewHost desktopView(&corona,false,out.screen());
+        corona.bind(desk,&desktopView);
+        QVERIFY2(desktopView.load(desk),qPrintable(desktopView.error()));
+        desktopView.show();
+        QTRY_VERIFY(desk->screen()>=0);
+        auto *configure=desk->internalAction("configure");QVERIFY(configure);
+        configure->trigger();
+        ContainmentConfigView *dialog=nullptr;
+        QTRY_VERIFY((dialog=qobject_cast<ContainmentConfigView*>(desktopView.configurationWindow())) && dialog->isVisible());
+        QVERIFY2(dialog->error().isEmpty(),qPrintable(dialog->error()));
+        QCOMPARE(dialog->currentWallpaper(),QStringLiteral("org.kde.image"));
+        QVERIFY(dialog->wallpaperConfiguration() && dialog->wallpaperConfiguration()->keys().contains(QStringLiteral("Image")));
+        auto *root=dialog->rootObject();QVERIFY(root);
+        QVERIFY(root->property("isContainment").toBool());
+        QStringList errors;
+        const auto eval=[&](QObject *scope,const QString &code){
+            QQmlExpression e(qmlContext(scope),scope,code);const auto v=e.evaluate();
+            if(e.hasError())errors.append(e.error().toString());return v;
+        };
+        QObject *page=nullptr;
+        const auto findPage=[&]()->QObject*{
+            for(auto *item:root->findChildren<QQuickItem*>())
+                if(QString::fromLatin1(item->metaObject()->className()).startsWith(QStringLiteral("ConfigurationContainmentAppearance")))return item;
+            return nullptr;
+        };
+        QTRY_VERIFY(page=findPage());
+        QTRY_VERIFY(page->property("unsavedChanges").isValid());
+        QTRY_VERIFY(eval(page,"main.currentItem !== null && typeof main.currentItem.selectWallpaper === 'function'").toBool());
+        QQuickItem *applyButton=nullptr;
+        for(auto *item:root->findChildren<QQuickItem*>())
+            if(item->property("text").toString()==i18ndc("plasma_shell_org.kde.plasma.desktop","@action:button","Apply")
+               && item->metaObject()->indexOfMethod("click()")>=0)applyButton=item;
+        QVERIFY(applyButton);
+        // Native Plasma opens clean; backend normalization must not swallow the
+        // first real user change, nor enable Apply as soon as the dialog opens.
+        QTRY_VERIFY(!page->property("unsavedChanges").toBool());
+        QVERIFY(!applyButton->isEnabled());
+        QTRY_COMPARE(applyButton->isEnabled(),page->property("unsavedChanges").toBool());
+        const QString image=QStringLiteral("/usr/share/wallpapers/Next/");
+        QVERIFY(QFileInfo::exists(image));
+        eval(page,QStringLiteral("main.currentItem.selectWallpaper('%1', [])").arg(image));
+        QTRY_VERIFY2(page->property("unsavedChanges").toBool(),qPrintable(errors.join(u'\n')));
+        QTRY_VERIFY(applyButton->isEnabled());
+        QMetaObject::invokeMethod(applyButton,"click");
+        QTRY_VERIFY(!applyButton->isEnabled());
+        QVERIFY2(errors.isEmpty(),qPrintable(errors.join(u'\n')));
+        corona.requestConfigSync();QVERIFY(corona.config()->sync());
+        KConfig saved(layout,KConfig::SimpleConfig);
+        const auto wallpaperGroup=KConfigGroup(&saved,"Containments").group(QString::number(desk->id())).group("Wallpaper").group("org.kde.image").group("General");
+        QVERIFY2(wallpaperGroup.readEntry("Image",QString()).contains(QStringLiteral("Next")),qPrintable(wallpaperGroup.readEntry("Image",QString())));
+        // The Layout combo lists the installed Desktop containments (Folder View, Desktop).
+        QVERIFY(dialog->containmentPluginsConfigModel()->rowCount()>=1);
+        QVERIFY(dialog->currentContainmentActionsModel()->rowCount()>=1);
+        dialog->hide();
+        desktopView.hide();corona.unbind(desk);
+    }
     // R5 iteración 11: DesktopViewHost hosting the installed, unmodified views/Desktop.qml
     // and views/DesktopEditMode.qml with org.kde.plasma.folder, panel edit handoff,
     // sidePanel WidgetExplorer, AppletAlternatives, Add Panel menu and Escape exit.
+    void originalAppletConfigurationFrame() {
+        ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout("bwm-r5-native-applet-layout");
+        auto *c=corona.createContainment("org.kde.panel");QVERIFY(c);
+        c->setFormFactor(Plasma::Types::Horizontal);c->setLocation(Plasma::Types::BottomEdge);
+        auto *widget=c->createApplet("org.bwm.r4.shared-config");QVERIFY(widget);
+        auto *enabled=widget->configScheme()->KCoreConfigSkeleton::findItem("enabled");QVERIFY(enabled);
+        enabled->setProperty(true);QVERIFY(widget->configScheme()->save());
+        PanelViewHost panel(&corona);QVERIFY2(panel.load(c),qPrintable(panel.error()));panel.show();
+        auto *session=panel.panelSession();QVERIFY(session);QVERIFY(session->configure(widget->id()));
+        auto *configuration=session->configuration(widget->id());QVERIFY(configuration && configuration->error().isEmpty());
+        auto *root=configuration->view()->rootObject();QVERIFY(root);
+        QVERIFY(root->metaObject()->indexOfProperty("globalConfigModel")>=0);
+        const auto eval=[&](const QString &code){
+            QQmlExpression expression(qmlContext(root),root,code);const auto result=expression.evaluate();
+            if(expression.hasError())qWarning()<<expression.error();return result;
+        };
+        QTRY_VERIFY(!configuration->pages().isEmpty());
+        auto *page=configuration->pages().first().toMap().value("item").value<QQuickItem*>();QVERIFY(page);
+        QVERIFY(page->setProperty("cfg_enabled",false));QVERIFY(configuration->dirty());
+        // Save through the ORIGINAL QML action, not through a test-only scheme writer.
+        eval("applyAction.trigger()");QCOMPARE(enabled->property().toBool(),false);QVERIFY(!configuration->dirty());
+        eval("root.open({source: Qt.resolvedUrl('AboutPlugin.qml'), name: 'About'})");
+        QTRY_VERIFY(eval("app.isAboutPage && app.currentConfigPage.metaData !== undefined").toBool());
+        eval("root.open(root.globalConfigModel.get(0))");
+        QTRY_VERIFY(eval("app.currentConfigPage.title.length > 0 && app.currentConfigPage.unsavedChanges === false").toBool());
+        QVERIFY(root->property("currentSource").toUrl().toString().endsWith("ConfigurationShortcuts.qml"));
+        eval("root.open(configDialog.configModel.get(0))");
+        QTRY_VERIFY(!configuration->pages().isEmpty());
+        page=configuration->pages().first().toMap().value("item").value<QQuickItem*>();QVERIFY(page);
+        QVERIFY(page->setProperty("cfg_enabled",true));QVERIFY(configuration->dirty());
+        eval("cancelAction.trigger()");QTRY_VERIFY(eval("messageDialog.visible").toBool());
+        QPointer<PlasmaQuick::ConfigView> nativeView=configuration->view();
+        eval("messageDialog.discarded()");QTRY_VERIFY(!nativeView || !nativeView->isVisible());
+        QCOMPARE(enabled->property().toBool(),false);
+        // A fresh native frame reads the option saved by the original Apply action.
+        QTRY_VERIFY(!configuration->view());QVERIFY(session->configure(widget->id()));
+        configuration=session->configuration(widget->id());QVERIFY(configuration && !configuration->pages().isEmpty());
+        page=configuration->pages().first().toMap().value("item").value<QQuickItem*>();QVERIFY(page);
+        QCOMPARE(page->property("cfg_enabled").toBool(),false);
+    }
+    void captureR5NativeScene() {
+        // Explicit reference-session fixture: a new private KWin/bus, never a user
+        // display. The Python driver captures it and then releases the stop marker.
+        if(qEnvironmentVariable("BWM_R5_REFERENCE_MARKER").isEmpty())QSKIP("Needs the disposable Plasma reference driver");
+        QCOMPARE(QGuiApplication::platformName(),QStringLiteral("wayland"));
+        const auto scene=qEnvironmentVariable("BWM_R5_VISUAL_SCENE");
+        const auto ready=qEnvironmentVariable("BWM_R5_VISUAL_READY");QVERIFY(!ready.isEmpty());
+        useDisposableDesktopFolder();
+        auto *screen=QGuiApplication::primaryScreen();QVERIFY(screen);
+        ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout("bwm-r5-reference-layout");
+        auto *desk=corona.createContainment("org.kde.plasma.folder");QVERIFY(desk);
+        desk->setWallpaperPlugin("org.kde.color");
+        desk->config().group("Wallpaper").group("org.kde.color").group("General").writeEntry("Color",QColor("#202428"));
+        if(scene=="wallpaper-image") {
+            desk->setWallpaperPlugin("org.kde.image");
+            desk->config().group("Wallpaper").group("org.kde.image").group("General").writeEntry("Image",QUrl::fromLocalFile("/usr/share/wallpapers/Next/"));
+        }
+        DesktopViewHost desktop(&corona,true,screen);corona.bind(desk,&desktop);QVERIFY(desktop.load(desk));desktop.show();
+        auto *c=corona.createContainment("org.kde.panel");QVERIFY(c);c->setFormFactor(Plasma::Types::Horizontal);c->setLocation(Plasma::Types::BottomEdge);
+        auto *widget=c->createApplet("org.bwm.r4.shared-config");QVERIFY(widget);
+        // KWin's virtual backend has no EDID identity. Exercise the exact native
+        // view and surface here; physical output assignment is tested separately.
+        PanelViewHost panelHost(&corona,"bwm-r5-reference-plasmashellrc");auto *panel=&panelHost;
+        panel->setScreen(screen);BwmSurface::configurePanel(panel,Qt::BottomEdge,0,true);
+        corona.bind(c,panel);QVERIFY(panel->load(c));
+        QVERIFY(panel->applyViewSettings({{"thickness",36},{"floating",0},{"panelOpacity",2},{"panelVisibility",0}}));
+        QMetaObject::invokeMethod(panel,"reflow",Qt::DirectConnection);panel->show();
+        corona.setScreenAvailableRect(screen,screen->geometry().adjusted(0,0,0,-panel->thickness()));
+        QTRY_VERIFY(desktop.isExposed() && panel->isExposed());
+        if(scene=="applet") {
+            QVERIFY(panel->panelSession()->configure(widget->id()));
+            QTRY_VERIFY(panel->panelSession()->configuration(widget->id())->view()->isExposed());
+        } else if(scene=="edit") {
+            desktop.enterEditMode();
+            QTRY_VERIFY(corona.isEditMode());
+        } else if(scene.startsWith("wallpaper")) {
+            desk->internalAction("configure")->trigger();QTRY_VERIFY(desktop.configurationWindow() && desktop.configurationWindow()->isExposed());
+        } else QCOMPARE(scene,QStringLiteral("paste"));
+        QTest::qWait(800);
+        QFile marker(ready);QVERIFY(marker.open(QIODevice::WriteOnly));marker.write("ready");marker.close();
+        QElapsedTimer deadline;deadline.start();
+        while(!QFile::exists(ready+".stop") && deadline.elapsed()<30000)QTest::qWait(50);
+        QVERIFY(QFile::exists(ready+".stop"));
+        if(scene=="paste") {
+            // org.kde.paste feeds the primary selection to processMimeData: a
+            // local URL creates an Icon widget, just as in native Plasma.
+            QCOMPARE(desk->applets().size(),1);
+            auto *icon=desk->applets().first();QCOMPARE(icon->pluginMetaData().pluginId(),QStringLiteral("org.kde.plasma.icon"));
+            const auto sample=QDir(qEnvironmentVariable("XDG_CONFIG_HOME")+"/..").absoluteFilePath("bwm-paste-fixture.txt");
+            QCOMPARE(icon->config().readEntry("url",QUrl()),QUrl::fromLocalFile(sample));
+        }
+        panel->hide();corona.unbind(c);desktop.hide();corona.unbind(desk);
+    }
+    void originalContainmentManagement() {
+        useDisposableDesktopFolder();
+        TestOutput first("DP-196","Management A","MA",{0,0,1280,800}),second("DP-197","Management B","MB",{1280,0,1024,768});
+        ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout("bwm-r5-management-layout");
+        auto *a=corona.createContainment("org.kde.plasma.folder"),*b=corona.createContainment("org.kde.plasma.folder");QVERIFY(a && b);
+        auto *wa=a->createApplet("org.kde.plasma.analogclock"),*wb=b->createApplet("org.kde.plasma.analogclock");QVERIFY(wa && wb);
+        DesktopViewHost va(&corona,false,first.screen()),vb(&corona,false,second.screen());
+        corona.bind(a,&va);corona.bind(b,&vb);QVERIFY(va.load(a));QVERIFY(vb.load(b));va.show();vb.show();
+        auto *p=corona.createContainment("org.kde.panel");QVERIFY(p);p->setFormFactor(Plasma::Types::Horizontal);p->setLocation(Plasma::Types::BottomEdge);
+        auto *widget=p->createApplet("org.kde.plasma.analogclock");QVERIFY(widget);
+        PanelRuntime runtime(&corona,"bwm-r5-management-plasmashellrc",true,nullptr,true);runtime.setOutputMovesAllowed(true);
+        QVERIFY(runtime.setAssignments({{p->id(),"BWM Test Management A MA"}}));QVERIFY(runtime.setSkin("plasma"));QTRY_VERIFY(runtime.view(p->id()));
+        QTRY_VERIFY(a->screen()>=0 && b->screen()>=0);
+        auto *action=corona.action("manage-containments");QVERIFY(action);QTRY_VERIFY(action->isVisible());action->trigger();
+        QTRY_VERIFY(corona.managementWindow() && corona.managementWindow()->isVisible());
+        auto *management=corona.findChild<ContainmentManagement*>();QVERIFY(management);
+        auto *model=management->model();QVERIFY(model);QCOMPARE(model->rowCount(),2);
+        const auto screenA=QGuiApplication::screens().indexOf(first.screen()),screenB=QGuiApplication::screens().indexOf(second.screen());
+        const auto listFor=[&](int screen)->ContainmentListModel* {
+            for(int row=0;row<model->rowCount();++row)if(model->data(model->index(row),ScreenContainmentModel::ScreenIdRole).toInt()==screen)
+                return qobject_cast<ContainmentListModel*>(model->data(model->index(row),ScreenContainmentModel::ContainmentsRole).value<QObject*>());
+            return nullptr;
+        };
+        auto *source=listFor(screenA);QVERIFY(source);QCOMPARE(source->rowCount(),2);
+        source->moveContainementToScreen(p->id(),screenB);
+        QTRY_VERIFY(runtime.view(p->id()) && runtime.view(p->id())->screen()==second.screen());
+        QCOMPARE(runtime.assignments().value(p->id()),QStringLiteral("BWM Test Management B MB"));QCOMPARE(p->applets().first(),widget);
+        QTest::qWait(250);source=listFor(screenA);QVERIFY(source);
+        source->moveContainementToScreen(a->id(),screenB);
+        QTRY_COMPARE(va.screenToFollow(),second.screen());QTRY_COMPARE(vb.screenToFollow(),first.screen());
+        QTRY_COMPARE(a->screen(),screenB);QTRY_COMPARE(b->screen(),screenA);
+        QCOMPARE(a->applets().first(),wa);QCOMPARE(b->applets().first(),wb);
+        QVERIFY(!corona.moveContainmentToScreen(a,9999));
+        corona.setImmutability(Plasma::Types::UserImmutable);
+        QVERIFY(!corona.moveContainmentToScreen(a,screenA));QVERIFY(!action->isEnabled());
+        corona.setImmutability(Plasma::Types::Mutable);
+        QTest::qWait(250);source=listFor(screenB);QVERIFY(source);
+        source->remove(int(p->id()));QTRY_VERIFY(p->destroyed());QTRY_VERIFY(!runtime.view(p->id()));
+        QPointer<ContainmentManagement> owner=management;corona.managementWindow()->close();QTRY_VERIFY(!owner);
+        va.hide();vb.hide();corona.unbind(a);corona.unbind(b);
+    }
     void originalDesktopEditModeHost() {
         QCOMPARE(QGuiApplication::platformName(),"offscreen");
+        useDisposableDesktopFolder();
         TestOutput out("DP-65","DesktopEdit","D1",{2000,0,1536,864});
         const QString desc=QStringLiteral("BWM Test DesktopEdit D1");
         const QDir config(qEnvironmentVariable("XDG_CONFIG_HOME"));
@@ -1949,8 +2169,22 @@ private Q_SLOTS:
         QCOMPARE(eval("editModeLoader.active").toBool(),false);
         QCOMPARE(eval("containmentParent.scale").toDouble(),1.0);
 
+        // 0. The original Folder View layer loads once the desktop view and its panels are
+        //    ready (ShellCorona::isScreenUiReady order), so org.kde.contextmenu lists the folder
+        //    actions, DesktopView's "Enter Edit Mode" and "Desktop and Wallpaper" like Plasma.
+        QTRY_VERIFY(corona.isScreenUiReady(QGuiApplication::screens().indexOf(out.screen())));
+        QTRY_VERIFY(desk->screen()>=0);
+        QTRY_VERIFY(desk->contextualActions().size()>=4);
+        auto *rmb=desk->containmentActions().value(QStringLiteral("RightButton;NoModifier"));
+        QVERIFY(rmb);
+        QStringList menuTexts;
+        for(auto *a:rmb->contextualActions())if(a && !a->isSeparator())menuTexts.append(a->text().remove(u'&'));
+        QVERIFY2(menuTexts.contains(i18nd("plasmashell","Enter Edit Mode").remove(u'&')),qPrintable(menuTexts.join(u'|')));
+        QVERIFY2(menuTexts.size()>=4,qPrintable(menuTexts.join(u'|')));
+        QVERIFY(desk->internalAction("desktop edit mode"));
+
         // 1. Enter edit mode from the desktop (original DesktopEditMode.qml activates).
-        auto *editAction=corona.action("edit mode");QVERIFY(editAction);
+        auto *editAction=desk->internalAction("desktop edit mode");QVERIFY(editAction);
         editAction->trigger();
         QTRY_VERIFY(corona.isEditMode());
         QVERIFY(corona.enteredEditModeViaDesktop());
@@ -1997,19 +2231,43 @@ private Q_SLOTS:
         QTRY_VERIFY(!desktopView.alternativesDialog());
         QTRY_VERIFY(desk->applets().size()==1 && desk->applets().first()->pluginMetaData().pluginId()==QStringLiteral("org.kde.plasma.digitalclock"));
 
-        // 5. "Add Panel" button invokes ViewCorona::showAddPanelContextMenu with Default/Empty Panel.
+        // 5. "Add Panel" (ShellCorona::populateAddPanelsMenu): panel templates and "Empty Panel";
+        //    the installed layout.js runs unchanged and creates the panel on this output.
         QString addedTemplate;QScreen *addedScreen=nullptr;
         connect(&corona,&ViewCorona::addPanelRequested,&corona,[&](const QString &tpl,QScreen *scr){addedTemplate=tpl;addedScreen=scr;});
         corona.showAddPanelContextMenu(QPoint(2100,100));
         QTRY_VERIFY(corona.addPanelMenu() && corona.addPanelMenu()->isVisible());
-        QAction *emptyAct=nullptr;
-        for(auto *a:corona.addPanelMenu()->actions())
-            if(a->objectName()==QStringLiteral("org.kde.plasma.desktop.emptyPanel"))emptyAct=a;
-        QVERIFY(emptyAct);
+        QAction *defaultAct=nullptr,*emptyAct=nullptr;QStringList addTexts;
+        for(auto *a:corona.addPanelMenu()->actions()){
+            addTexts.append(a->text());
+            if(a->objectName()==QStringLiteral("plasma-desktop-template:org.kde.plasma.desktop.defaultPanel"))defaultAct=a;
+            if(a->objectName()==QStringLiteral("plasma-desktop-template:org.kde.plasma.desktop.emptyPanel"))emptyAct=a;
+        }
+        QVERIFY2(defaultAct && emptyAct && addTexts.size()>=3,qPrintable(addTexts.join(u'|')));
         corona.addPanelMenu()->close();
+        // The default template's system tray loads KDE's Klipper, which talks to XCB under the
+        // offscreen platform and crashes; that template is exercised in Hyprland instead.
         emptyAct->trigger();
-        QCOMPARE(addedTemplate,QStringLiteral("org.kde.plasma.desktop.emptyPanel"));
+        QCOMPARE(addedTemplate,QStringLiteral("plasma-desktop-template:org.kde.plasma.desktop.emptyPanel"));
         QCOMPARE(addedScreen,out.screen());
+        runtime.setPanelAddingAllowed(true);
+        const auto before=runtime.assignments().keys();
+        QVERIFY2(runtime.addPanel(addedTemplate,addedScreen),qPrintable(runtime.error()));
+        uint added=0;for(auto id:runtime.assignments().keys())if(!before.contains(id))added=id;
+        QVERIFY(added);
+        QTRY_VERIFY(runtime.view(added) && runtime.view(added)->isVisible());
+        Plasma::Containment *addedPanel=runtime.view(added)->containment();
+        // emptyPanel/layout.js reads panelIds/panelById: bottom is taken, so it picks top.
+        QCOMPARE(addedPanel->location(),Plasma::Types::TopEdge);
+        QVERIFY(addedPanel->applets().isEmpty());
+        int unit=QFontMetrics(QGuiApplication::font()).boundingRect(QStringLiteral("M")).height();if(unit%2)++unit;
+        QTRY_COMPARE(runtime.view(added)->property("thickness").toInt(),unit*2);
+        QTRY_COMPARE(runtime.view(added)->property("bwmExclusiveZoneRequested").toInt(),unit*2);
+        // A missing template fails visibly and creates nothing.
+        const auto beforeMissing=runtime.assignments().size();
+        QVERIFY(!runtime.addPanel(QStringLiteral("plasma-desktop-template:org.bwm.missing"),addedScreen));
+        QVERIFY(!runtime.error().isEmpty());
+        QCOMPARE(runtime.assignments().size(),beforeMissing);
 
         // 6. Escape on the desktop view exits edit mode and resets scale & flag; layout persists.
         desktopView.requestActivate();

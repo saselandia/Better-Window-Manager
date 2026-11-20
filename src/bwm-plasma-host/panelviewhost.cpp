@@ -208,7 +208,7 @@ bool PanelViewHost::load(Plasma::Containment *c) {
     m_floatingAnimation.setTargetObject(root);m_floatingAnimation.setPropertyName("floatingness");
     // The base view supplies native containment parenting and configureRequested. Route
     // configuration through one PanelSession, rather than opening a second ConfigView.
-    m_session=new PanelSession(c,false);m_session->setParent(this);
+    m_session=new PanelSession(c,false,true);m_session->setParent(this);
     setProperty("bwmPanelSession",QVariant::fromValue(m_session.data()));
     setContainment(c);
     m_item=PlasmaQuick::AppletQuickItem::itemForApplet(c);

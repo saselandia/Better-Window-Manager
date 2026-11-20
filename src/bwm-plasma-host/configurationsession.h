@@ -14,9 +14,11 @@ class ConfigurationSession : public QObject {
     Q_PROPERTY(QString error READ error NOTIFY changed)
     Q_PROPERTY(bool dirty READ dirty NOTIFY changed)
 public:
-    explicit ConfigurationSession(Plasma::Applet *applet);
+    // R4 probes keep their transactional diagnostic harness. Interactive R5 views
+    // use Plasma's installed AppletConfiguration.qml and its native page workflow.
+    explicit ConfigurationSession(Plasma::Applet *applet,bool nativeFrame=false);
     ~ConfigurationSession() override;
-    QVariantList pages() const { return m_pages; }
+    QVariantList pages() const;
     QString error() const { return m_error; }
     bool dirty() const;
     PlasmaQuick::ConfigView *view() const;
@@ -29,12 +31,14 @@ Q_SIGNALS:
     void pagesChanged();
 private Q_SLOTS:
     void pageValueChanged();
+    void nativePageChanged();
 private:
     QVariantMap collect() const;
     void populate(const QVariantMap &values);
     QVariantMap stored() const;
     QVariantMap pageValues(QObject *page,const QVariantMap &values) const;
     void observe();
+    QQuickItem *nativePage() const;
     QPointer<Plasma::Applet> m_applet;
     QPointer<PlasmaQuick::ConfigView> m_view;
     QVariantList m_pages;
@@ -43,4 +47,5 @@ private:
     QVariantMap m_pending;
     QString m_error;
     bool m_loading = false;
+    bool m_nativeFrame = false;
 };

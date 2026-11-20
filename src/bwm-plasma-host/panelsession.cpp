@@ -32,7 +32,7 @@ QVariantMap backendRow(Plasma::Applet *applet) {
 }
 }
 
-PanelSession::PanelSession(Plasma::Containment *containment,bool connectConfiguration):m_containment(containment),m_packageWindows(new PackageWindows(containment,this)) {
+PanelSession::PanelSession(Plasma::Containment *containment,bool connectConfiguration,bool nativeConfiguration):m_containment(containment),m_packageWindows(new PackageWindows(containment,this)),m_nativeConfiguration(nativeConfiguration) {
     if(connectConfiguration)connect(containment,&Plasma::Containment::configureRequested,this,&PanelSession::openConfiguration);
     m_notify.setSingleShot(true);m_notify.setInterval(0);
     connect(&m_notify,&QTimer::timeout,this,&PanelSession::changed);
@@ -260,7 +260,7 @@ void PanelSession::openConfiguration(Plasma::Applet *applet) {
     auto *session=configuration(id);
     if(session && !session->view()){delete session;session=nullptr;}
     if(!session) {
-        session=new ConfigurationSession(applet);session->setParent(this);m_sessions.insert(id,session);
+        session=new ConfigurationSession(applet,m_nativeConfiguration);session->setParent(this);m_sessions.insert(id,session);
         watchApplet(applet);
     }
     session->show();Q_EMIT configurationOpened(id);

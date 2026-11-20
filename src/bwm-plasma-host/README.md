@@ -1453,5 +1453,36 @@ Comprobación en sesión Hyprland sobre una salida concreta:
 python3 src/bwm-plasma-host/check-edit-mode-session.py --output "<descripción>" --case originalDesktopEditModeInHyprland
 ```
 
+## R5: cierre — escritorio interactivo, configuración y «Add Panel» (iteración 12)
 
+- **Vista desechable con escritorio:** `preview-isolated.py ... --native-panel --layer-panel --follow-skin
+  --desktop --output "<descripción>"` añade el `Desktop.qml` original sobre la misma salida mientras la
+  skin seguida sea Breeze. `desktop:/` apunta a una carpeta desechable (`XDG_DESKTOP_DIR` en el
+  `user-dirs.dirs` temporal) y la plataforma Qt es `kde` (Breeze por defecto de la configuración vacía).
+  `BWM_R5_DEBUG_MENUS=1` registra cada `QMenu` (acciones, ocultas, geometría) y
+  `QT_LOGGING_RULES="bwm.r5.corona.info=true"` la asignación de pantalla del escritorio.
+- **Folder View y menú del escritorio:** el `main.qml` original sólo activa la capa de iconos cuando
+  `corona.isScreenUiReady(screen)` es verdadero al cambiar la pantalla del contenedor. `ViewCorona` sigue
+  ahora el orden de `ShellCorona`: el escritorio no recibe pantalla hasta que su vista es visible y los
+  paneles de esa salida están listos, y la conserva después (añadir un panel no la retira).
+  `DesktopViewHost` registra la acción `desktop edit mode` de `DesktopView`; `edit mode` vuelve a ser la
+  acción de libplasma (alternar). El menú de `org.kde.contextmenu` queda como en Plasma: Create New,
+  Paste, Undo, Icons, Enter Edit Mode, Desktop and Wallpaper.
+- **«Desktop and Wallpaper…»:** `ContainmentConfigView` (adaptado de plasma-workspace 6.7.5) carga el
+  `ContainmentConfiguration.qml` instalado (Wallpaper, Mouse Actions, Location, Icons, Filter, About),
+  aplica el fondo al contenedor y cambia el contenedor (Layout) con `DesktopViewHost::setContainmentType`,
+  relanzando el diálogo como `DesktopView`. Tras cargar, el anfitrión llama una vez a la función original
+  `settingValueChanged()`: la página del fondo marca cambios mientras se crea (normaliza `SlidePaths`)
+  antes de que `AppletConfiguration.qml` conecte su aviso.
+- **«Add Panel»:** `ViewCorona::showAddPanelContextMenu` reproduce `populateAddPanelsMenu` (plantillas con
+  categoría `panel` y contenedores `Panel`); `PanelRuntime::addPanel` ejecuta sin modificar el `layout.js`
+  de la plantilla en `LayoutTemplateRunner` (subconjunto de la API de scripts: `Panel`, `panelIds`,
+  `panelById`, `screenGeometry`, `gridUnit`, `languageId`); cualquier otra llamada falla de forma visible.
+- **Área útil real:** en Hyprland `strictAvailableScreenRect` cruza el área de los paneles propios con
+  `reserved` del monitor (`hyprctl -j monitors` asíncrono con `BWM_R5_HYPR_RUNTIME`), como KWin con todos
+  los struts; el explorador lateral y `DesktopEditMode.qml` respetan también barras externas.
 
+Pruebas: `originalDesktopEditModeHost` y `originalDesktopContainmentConfiguration` (offscreen normal/ASan),
+`originalDesktopEditModeInHyprland` (menú y área útil) y el paso `fractional-desktop-edit-mode` de
+`--fractional-scale`. Ejecutar las pruebas offscreen sin `QT_QPA_PLATFORMTHEME` heredado de la sesión
+(`gtk3` en Retro intenta abrir una pantalla GTK).

@@ -11,6 +11,7 @@
 #include "desktopviewhost.h"
 #include "alternativeshelper.h"
 #include "configurationsession.h"
+#include "containmentconfigview.h"
 #include "panelviewhost.h"
 #include "viewcorona.h"
 
@@ -34,6 +35,15 @@
 #include <QQmlEngine>
 #include <QQuickItem>
 #include <QTimer>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QProcess>
+#include <KConfigGroup>
+#include <KSharedConfig>
+#include <QAction>
+#include <QIcon>
+#include <KLocalizedString>
 #include <algorithm>
 #include <cmath>
 
@@ -75,7 +85,7 @@ QSize deriveDialogSize(QWindow *window)
 DesktopViewHost::DesktopViewHost(Plasma::Corona *corona, bool layerShell, QScreen *targetScreen)
     : PlasmaQuick::ContainmentView(corona)
     , m_layerShell(layerShell)
-    , m_targetScreen(targetScreen)
+    , m_targetScreen(targetScreen ? targetScreen : screen())
 {
     setResizeMode(SizeRootObjectToView);
     setColor(Qt::transparent);
@@ -108,9 +118,11 @@ DesktopViewHost::DesktopViewHost(Plasma::Corona *corona, bool layerShell, QScree
         connect(corona, &Plasma::Corona::availableScreenRectChanged, this, [this](int id) {
             if (screen() && QGuiApplication::screens().indexOf(screen()) == id) {
                 Q_EMIT strictAvailableScreenRectChanged();
+                scheduleCompositorAreaRefresh();
             }
         });
         connect(corona, &Plasma::Corona::editModeChanged, this, [this](bool edit) {
+            scheduleCompositorAreaRefresh();
             if (!edit && m_sidePanel && m_sidePanel->isVisible()) {
                 m_sidePanel->setVisible(false);
             }
@@ -139,6 +151,22 @@ DesktopViewHost::DesktopViewHost(Plasma::Corona *corona, bool layerShell, QScree
     });
 
     qApp->installEventFilter(this);
+    connect(qApp,&QGuiApplication::screenRemoved,this,[this](QScreen *removed){
+        if(m_targetScreen!=removed)return;
+        hide();QWindow::destroy();m_targetScreen=nullptr;emit screenToFollowChanged();
+    });
+}
+bool DesktopViewHost::setScreenToFollow(QScreen *target) {
+    if(!target || !QGuiApplication::screens().contains(target))return false;
+    if(m_targetScreen==target)return true;
+    if(m_sidePanel)m_sidePanel->hide();
+    if(m_alternativesDialog)m_alternativesDialog->hide();
+    const bool visible=isVisible();hide();QWindow::destroy();
+    m_targetScreen=target;setScreen(target);configureLayerSurface();setGeometry(target->geometry());
+    if(containment())containment()->reactToScreenChange();
+    m_compositorUsable={};scheduleCompositorAreaRefresh();
+    emit screenToFollowChanged();emit strictAvailableScreenRectChanged();
+    if(visible)show();return true;
 }
 
 DesktopViewHost::~DesktopViewHost()
@@ -193,7 +221,65 @@ QRect DesktopViewHost::strictAvailableScreenRect() const
     if (!avail.isValid() || avail.isEmpty()) {
         avail = geom;
     }
-    return avail.translated(-geom.topLeft());
+    QRect local = avail.translated(-geom.topLeft());
+    // KWin's strictAvailableScreenRect accounts for every strut. Our Corona only knows its own
+    // panels, so intersect with the compositor's usable area when Hyprland reports it.
+    if (m_compositorUsable.isValid() && !m_compositorUsable.isEmpty()) {
+        const QRect both = local.intersected(m_compositorUsable);
+        if (both.isValid() && !both.isEmpty())
+            local = both;
+    }
+    return local;
+}
+
+void DesktopViewHost::scheduleCompositorAreaRefresh()
+{
+    // Exclusive zones are applied by the compositor asynchronously after a commit.
+    QTimer::singleShot(150, this, &DesktopViewHost::refreshCompositorArea);
+    QTimer::singleShot(700, this, &DesktopViewHost::refreshCompositorArea);
+}
+
+void DesktopViewHost::refreshCompositorArea()
+{
+    const QString runtime = qEnvironmentVariable("BWM_R5_HYPR_RUNTIME");
+    QScreen *s = screenToFollow();
+    if (runtime.isEmpty() || !s || qEnvironmentVariable("HYPRLAND_INSTANCE_SIGNATURE").isEmpty())
+        return;
+    if (m_areaQuery && m_areaQuery->state() != QProcess::NotRunning) {
+        scheduleCompositorAreaRefresh();
+        return;
+    }
+    auto *process = new QProcess(this);
+    m_areaQuery = process;
+    auto environment = QProcessEnvironment::systemEnvironment();
+    environment.insert(u"XDG_RUNTIME_DIR"_s, runtime);
+    process->setProcessEnvironment(environment);
+    connect(process, &QProcess::finished, this, [this, process](int code, QProcess::ExitStatus status) {
+        process->deleteLater();
+        QScreen *s = screenToFollow();
+        if (code != 0 || status != QProcess::NormalExit || !s)
+            return;
+        const auto doc = QJsonDocument::fromJson(process->readAllStandardOutput());
+        QRect usable;
+        for (const auto &value : doc.array()) {
+            const auto monitor = value.toObject();
+            // Runtime-only match by connector; never persisted.
+            if (monitor.value(u"name"_s).toString() != s->name())
+                continue;
+            const auto reserved = monitor.value(u"reserved"_s).toArray();
+            if (reserved.size() != 4)
+                break;
+            const QSize size = s->geometry().size();
+            usable = QRect(reserved[0].toInt(), reserved[1].toInt(), size.width() - reserved[0].toInt() - reserved[2].toInt(),
+                           size.height() - reserved[1].toInt() - reserved[3].toInt());
+            break;
+        }
+        if (usable != m_compositorUsable) {
+            m_compositorUsable = usable;
+            Q_EMIT strictAvailableScreenRectChanged();
+        }
+    });
+    process->start(u"hyprctl"_s, {u"-j"_s, u"monitors"_s}, QIODevice::ReadOnly);
 }
 
 QObject *DesktopViewHost::configuredPanel() const
@@ -316,15 +402,142 @@ bool DesktopViewHost::load(Plasma::Containment *c)
         }
     }
 
-    connect(c, &Plasma::Containment::showAddWidgetsInterface, this, [this](const QPointF &) {
-        toggleWidgetExplorer();
+    connectContainment(c);
+    connect(this, &PlasmaQuick::ContainmentView::containmentChanged, this, [this] {
+        connectContainment(containment());
     });
-    connect(c, &Plasma::Containment::appletAlternativesRequested, this, &DesktopViewHost::showAlternativesForApplet);
     connect(screen(), &QScreen::geometryChanged, this, &DesktopViewHost::strictAvailableScreenRectChanged);
     connect(screen(), &QScreen::availableGeometryChanged, this, &DesktopViewHost::strictAvailableScreenRectChanged);
 
     Q_EMIT strictAvailableScreenRectChanged();
+    scheduleCompositorAreaRefresh();
     return true;
+}
+
+void DesktopViewHost::connectContainment(Plasma::Containment *c)
+{
+    if (!c)
+        return;
+    m_item = PlasmaQuick::AppletQuickItem::itemForApplet(c);
+    if (m_connectedContainments.contains(c))
+        return;
+    m_connectedContainments.append(c);
+    connect(c, &Plasma::Containment::showAddWidgetsInterface, this, [this, c](const QPointF &) {
+        if (containment() == c)
+            toggleWidgetExplorer();
+    });
+    connect(c, &Plasma::Containment::appletAlternativesRequested, this, [this, c](Plasma::Applet *applet) {
+        if (containment() == c)
+            showAlternativesForApplet(applet);
+    });
+
+    // DesktopView::slotContainmentChanged (plasma-workspace 6.7.5): the desktop's own
+    // "Enter Edit Mode" entry of org.kde.contextmenu ("desktop edit mode").
+    if (!c->internalAction(QStringLiteral("desktop edit mode")) && c->corona()) {
+        auto *desktopEditMode = new QAction(QIcon::fromTheme(QStringLiteral("document-edit")), i18nd("plasmashell", "Enter Edit Mode"), c);
+        QAction *editMode = c->corona()->action(QStringLiteral("edit mode"));
+        c->setInternalAction(QStringLiteral("desktop edit mode"), desktopEditMode);
+        if (editMode)
+            connect(desktopEditMode, &QAction::triggered, editMode, &QAction::triggered);
+        connect(desktopEditMode, &QAction::triggered, this, [this] {
+            auto *vc = qobject_cast<ViewCorona *>(corona());
+            if (vc && vc->isEditMode())
+                vc->setEnteredEditModeViaDesktop(true);
+        });
+        connect(c->corona(), &Plasma::Corona::editModeChanged, desktopEditMode, [desktopEditMode](bool editMode) {
+            desktopEditMode->setText(editMode ? i18nd("plasmashell", "Exit Edit Mode") : i18nd("plasmashell", "Enter Edit Mode"));
+        });
+        auto updateEditModeAction = [desktopEditMode](Plasma::Types::ImmutabilityType immutability) {
+            switch (immutability) {
+            case Plasma::Types::UserImmutable:
+                desktopEditMode->setEnabled(false);
+                desktopEditMode->setVisible(true);
+                break;
+            case Plasma::Types::SystemImmutable:
+                desktopEditMode->setEnabled(false);
+                desktopEditMode->setVisible(false);
+                break;
+            case Plasma::Types::Mutable:
+            default:
+                desktopEditMode->setEnabled(true);
+                desktopEditMode->setVisible(true);
+                break;
+            }
+        };
+        updateEditModeAction(c->corona()->immutability());
+        connect(c->corona(), &Plasma::Corona::immutabilityChanged, desktopEditMode, updateEditModeAction);
+    }
+}
+
+QWindow *DesktopViewHost::configurationWindow() const
+{
+    if (m_configView)
+        return m_configView.data();
+    if (auto *session = qobject_cast<ConfigurationSession *>(m_appletConfigSession.data()))
+        return session->view();
+    return nullptr;
+}
+
+Plasma::Containment *DesktopViewHost::setContainmentType(const QString &plugin)
+{
+    // Adapted from ShellCorona::setContainmentTypeForScreen (plasma-workspace 6.7.5).
+    Plasma::Containment *oldContainment = containment();
+    auto *vc = qobject_cast<ViewCorona *>(corona());
+    if (!oldContainment || !vc || plugin.isEmpty())
+        return oldContainment;
+    Plasma::Containment *newContainment = vc->createContainmentDelayedForView(plugin);
+    if (!newContainment) {
+        return oldContainment;
+    } else if (!newContainment->pluginMetaData().isValid()) {
+        newContainment->deleteLater();
+        return oldContainment;
+    }
+
+    KConfigGroup oldCg = oldContainment->config();
+    KConfigGroup newCg(KSharedConfig::openConfig(oldCg.config()->name()), u"Containments"_s);
+    newCg = KConfigGroup(&newCg, QString::number(newContainment->id()));
+    KConfigGroup newCg2 = newContainment->config();
+    const auto groups = oldCg.groupList();
+    for (const QString &group : groups) {
+        if (group != QLatin1String("Applets")) {
+            KConfigGroup subGroup(&oldCg, group);
+            KConfigGroup newSubGroup(&newCg, group);
+            subGroup.copyTo(&newSubGroup);
+            KConfigGroup newSubGroup2(&newCg2, group);
+            subGroup.copyTo(&newSubGroup2);
+        }
+    }
+    newContainment->init();
+    const QMap<QString, QString> entryMap = oldCg.entryMap();
+    for (auto it = entryMap.constBegin(); it != entryMap.constEnd(); it++) {
+        if (it.key() == u"activityId" || it.key() == u"wallpaperplugin" || it.key().startsWith(u"ItemGeometries")) {
+            newCg.writeEntry(it.key(), it.value());
+            newCg2.writeEntry(it.key(), it.value());
+        }
+    }
+    newContainment->restore(newCg);
+    newContainment->updateConstraints(Plasma::Applet::StartupCompletedConstraint);
+    newContainment->flushPendingConstraintsEvents();
+    Q_EMIT corona()->containmentAdded(newContainment);
+
+    const auto applets = oldContainment->applets();
+    for (Plasma::Applet *applet : applets) {
+        newContainment->addApplet(applet);
+    }
+    if (QAction *removeAction = newContainment->internalAction(QStringLiteral("remove"))) {
+        removeAction->deleteLater();
+    }
+    vc->unbind(oldContainment);
+    setContainment(newContainment);
+    vc->bind(newContainment, this);
+    newContainment->setActivity(oldContainment->activity());
+    if (rootObject())
+        rootObject()->setFocus(true, Qt::MouseFocusReason);
+    QTimer::singleShot(2500, oldContainment, &Plasma::Applet::destroy);
+    newContainment->save(newCg);
+    corona()->requestConfigSync();
+    Q_EMIT strictAvailableScreenRectChanged();
+    return newContainment;
 }
 
 void DesktopViewHost::enterEditMode()
@@ -498,19 +711,64 @@ void DesktopViewHost::showAlternativesForApplet(Plasma::Applet *applet)
 
 void DesktopViewHost::showConfigurationInterface(Plasma::Applet *applet)
 {
-    if (!applet)
+    // Adapted from DesktopView::showConfigurationInterface (plasma-workspace 6.7.5).
+    if (m_configView) {
+        if (m_configView->applet() != applet) {
+            m_configView->hide();
+            m_configView->deleteLater();
+        } else {
+            m_configView->show();
+            m_configView->requestActivate();
+            return;
+        }
+    }
+    if (!applet || !applet->containment())
         return;
-    if (applet == containment()) {
-        enterEditMode();
+
+    applet->containment()->corona()->setEditMode(false);
+
+    auto *cont = qobject_cast<Plasma::Containment *>(applet);
+    if (cont && cont->isContainment() && cont->containmentType() == Plasma::Containment::Desktop) {
+        auto *view = new ContainmentConfigView(cont, this);
+        m_configView = view;
+        // If the layout changed with the dialog open, relaunch it for the new containment
+        // (the third argument disconnects when the dialog closes).
+        connect(this, &ContainmentView::containmentChanged, view, [this]() {
+            if (!containment())
+                return;
+            if (containment()->property("wallpaperGraphicsObject").value<QObject *>()) {
+                showConfigurationInterface(containment());
+            } else {
+                connect(containment(), &Plasma::Containment::wallpaperGraphicsObjectChanged, this, [this] {
+                    disconnect(static_cast<Plasma::Containment *>(sender()), &Plasma::Containment::wallpaperGraphicsObjectChanged, this, nullptr);
+                    showConfigurationInterface(static_cast<Plasma::Containment *>(sender()));
+                });
+            }
+        });
+        view->init();
+        if (!view->error().isEmpty() || !view->rootObject()) {
+            setError(view->error().isEmpty() ? tr("The native desktop configuration did not load.") : view->error());
+            view->deleteLater();
+            return;
+        }
+        view->setTransientParent(this);
+        view->show();
+        connect(this, &QObject::destroyed, view, [view] {
+            view->hide();
+            view->deleteLater();
+        });
         return;
     }
-    auto *session = new ConfigurationSession(applet);
+    // Widgets use Plasma's original configuration frame, like the desktop dialog.
+    delete m_appletConfigSession.data();
+    auto *session = new ConfigurationSession(applet,true);
     session->setParent(this);
     if (!session->error().isEmpty() || !session->view()) {
         setError(session->error());
         session->deleteLater();
         return;
     }
+    m_appletConfigSession = session;
     connect(session->view(), &QWindow::visibleChanged, session, [session](bool visible) {
         if (!visible)
             session->deleteLater();

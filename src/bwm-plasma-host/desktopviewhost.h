@@ -24,8 +24,10 @@ class Applet;
 class Containment;
 class Corona;
 }
+class QProcess;
 namespace PlasmaQuick {
 class AppletQuickItem;
+class ConfigView;
 class Dialog;
 class SharedQmlEngine;
 }
@@ -50,7 +52,8 @@ public:
     QUrl nativeSource() const { return m_nativeSource; }
 
     QRect strictAvailableScreenRect() const;
-    QScreen *screenToFollow() const { return m_targetScreen ? m_targetScreen.data() : screen(); }
+    QScreen *screenToFollow() const { return m_targetScreen.data(); }
+    bool setScreenToFollow(QScreen *screen);
     QObject *configuredPanel() const;
     bool usedInAccentColor() const { return false; }
     QColor accentColor() const { return m_accentColor; }
@@ -60,6 +63,9 @@ public:
     Q_INVOKABLE void enterEditMode();
     Q_INVOKABLE void toggleWidgetExplorer();
     void showAlternativesForApplet(Plasma::Applet *applet);
+    // ShellCorona::setContainmentTypeForScreen 6.7.5 for this view (Wallpaper page "Layout").
+    Plasma::Containment *setContainmentType(const QString &plugin);
+    QWindow *configurationWindow() const;
 
     QQuickWindow *sidePanel() const;
     QQuickWindow *alternativesDialog() const { return m_alternativesDialog.data(); }
@@ -83,6 +89,9 @@ private:
     void updateSidePanelGrab();
     void placeAlternativesDialog(PlasmaQuick::Dialog *dialog, Plasma::Applet *applet);
     void setError(const QString &message);
+    void connectContainment(Plasma::Containment *containment);
+    void scheduleCompositorAreaRefresh();
+    void refreshCompositorArea();
 
     bool m_layerShell = false;
     QPointer<QScreen> m_targetScreen;
@@ -94,6 +103,13 @@ private:
     QPointer<PlasmaQuick::SharedQmlEngine> m_alternativesEngine;
     QPointer<QQuickWindow> m_alternativesDialog;
     QPointer<Plasma::Applet> m_showingAlternatives;
+    QPointer<PlasmaQuick::ConfigView> m_configView;
+    QList<QPointer<Plasma::Containment>> m_connectedContainments;
+    // Hyprland's usable area of this output (all exclusive zones, also those of external bars),
+    // in output-local coordinates; invalid when unknown (no compositor IPC).
+    QRect m_compositorUsable;
+    QPointer<QProcess> m_areaQuery;
+    QPointer<QObject> m_appletConfigSession;
     FocusGrab m_sidePanelGrab;
     FocusGrab m_alternativesGrab;
 };

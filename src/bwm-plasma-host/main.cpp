@@ -43,6 +43,7 @@
 #include "panelviewhost.h"
 #include "panelruntime.h"
 #include "taskpreview.h"
+#include "desktopviewhost.h"
 #include "tasklauncher.h"
 #include "previewappearance.h"
 #include "taskthumbnail.h"
@@ -53,7 +54,27 @@
 #include "trayprobe.h"
 #include <memory>
 #include <QtPlugin>
+#include <QMenu>
+#include <QAction>
 Q_IMPORT_PLUGIN(BwmWindowSystemPlugin)
+// R5 diagnostics (explicit BWM_R5_DEBUG_MENUS=1): log every QMenu shown by the preview
+// with its actions and geometry, so session checks can compare it with Plasma's menus.
+namespace {
+struct MenuLogger:QObject {
+    bool eventFilter(QObject *watched,QEvent *event)override{
+        if(event->type()==QEvent::Show)if(auto *menu=qobject_cast<QMenu*>(watched)){
+            QStringList items;
+            for(auto *action:menu->actions())
+                items.append(action->isSeparator()?QStringLiteral("---"):QStringLiteral("%1%2%3").arg(action->text(),
+                    action->isVisible()?QString():QStringLiteral(" [hidden]"),action->isEnabled()?QString():QStringLiteral(" [disabled]")));
+            const auto g=menu->geometry();auto *w=menu->windowHandle();
+            fprintf(stderr,"bwm.r5.menu: %d,%d %dx%d transientParent=%s items=%s\n",g.x(),g.y(),g.width(),g.height(),
+                w&&w->transientParent()?w->transientParent()->metaObject()->className():"none",qPrintable(items.join(QStringLiteral(" | "))));
+        }
+        return false;
+    }
+};
+}
 int main(int argc, char **argv) {
     if(argc==3 && QString::fromLocal8Bit(argv[1])=="--stage-preview-appearance") {
         // This operation only reads/writes native configuration data. In
@@ -314,7 +335,49 @@ int main(int argc, char **argv) {
             });
             editMode.start();
         }
-        const int code=app.exec();runtime.setSkin("default");
+        // R5 (explicit --desktop): the original Desktop.qml/DesktopEditMode.qml on the same output,
+        // alongside the disposable panel and only while the followed skin is Breeze.
+        std::unique_ptr<DesktopViewHost> desktopView;QPointer<Plasma::Containment> desk;
+        QString desktopOutput=output;
+        static MenuLogger menuLogger;if(qEnvironmentVariable("BWM_R5_DEBUG_MENUS")=="1")app.installEventFilter(&menuLogger);
+        if(qEnvironmentVariable("BWM_R5_DESKTOP")=="1"){
+            runtime.setPanelAddingAllowed(true);
+            QObject::connect(&corona,&ViewCorona::addPanelRequested,&runtime,[&runtime](const QString &data,QScreen *target){
+                if(!runtime.addPanel(data,target))fprintf(stderr,"Add Panel: %s\n",qPrintable(runtime.error()));
+            },Qt::QueuedConnection);
+            const auto findDesktop=[&corona]()->Plasma::Containment*{
+                for(auto *candidate:corona.containments())
+                    if(candidate->containmentType()==Plasma::Containment::Desktop && !candidate->destroyed())return candidate;
+                return nullptr;
+            };
+            desk=findDesktop();
+            if(!desk)desk=corona.createContainment("org.kde.plasma.folder");
+            if(!desk || desk->failedToLaunch()){fprintf(stderr,"Cannot create the desktop containment.\n");return 8;}
+            const auto syncDesktop=[&,findDesktop]{
+                QScreen *target=BwmOutput::resolveScreen(desktopOutput);
+                if(!desk)desk=findDesktop();
+                const bool wanted=runtime.skin()=="plasma" && target && desk;
+                if(wanted && !desktopView){
+                    desktopView=std::make_unique<DesktopViewHost>(&corona,true,target);
+                    corona.bind(desk,desktopView.get());
+                    if(!desktopView->load(desk)){fprintf(stderr,"Desktop: %s\n",qPrintable(desktopView->error()));corona.unbind(desk);desktopView.reset();return;}
+                    desktopView->show();
+                    QObject::connect(desktopView.get(),&DesktopViewHost::screenToFollowChanged,&app,[&]{
+                        if(!desktopView || !desktopView->screenToFollow())return;
+                        const auto identity=BwmOutput::identity(desktopView->screenToFollow());
+                        desktopOutput=(identity.manufacturer+' '+identity.model+' '+identity.serial).simplified();
+                    });
+                    QObject::connect(desktopView.get(),&PlasmaQuick::ContainmentView::containmentChanged,&app,[&]{if(desktopView)desk=desktopView->containment();});
+                } else if(!wanted && desktopView){
+                    desktopView->hide();corona.unbind(desk);desktopView.reset();
+                }
+            };
+            QObject::connect(&runtime,&PanelRuntime::changed,&app,syncDesktop,Qt::QueuedConnection);
+            QTimer::singleShot(0,&app,syncDesktop);
+        }
+        const int code=app.exec();
+        if(desktopView){desktopView->hide();if(desktopView->containment())corona.unbind(desktopView->containment());desktopView.reset();}
+        runtime.setSkin("default");
         corona.saveLayout(layoutName);return corona.config()->sync() ? code : 7;
     }
     std::unique_ptr<QQuickWindow> ownedWindow;
@@ -358,7 +421,7 @@ int main(int argc, char **argv) {
         if(!item)return 4;
         item->setPreferredRepresentation(item->compactRepresentation());
         Catalog catalog;
-        ConfigurationSession config(a);
+        ConfigurationSession config(a,true);
         QQmlEngine engine;
         QQmlComponent component(&engine,shell.fileUrl("views",QStringLiteral("Preview.qml")));
         QObject *object=component.createWithInitialProperties({{"appletItem",QVariant::fromValue(item)},{"applet",QVariant::fromValue(a)},{"configurationSession",QVariant::fromValue(&config)},{"catalog",QVariant::fromValue(&catalog)}});
@@ -373,7 +436,7 @@ int main(int argc, char **argv) {
         QJsonObject result{{"package",args[2]},{"firstId",int(a->id())},{"secondId",int(b->id())},{"itemLoaded",bool(item)},{"error",a->launchErrorMessage()},{"mainScript",package.fileUrl("mainscript").toString()},{"configModel",package.fileUrl("configmodel").toString()},{"translationDomain",a->translationDomain()}};
         if(item) { result["compact"]=bool(item->property("compactRepresentationItem").value<QQuickItem*>());result["full"]=bool(item->property("fullRepresentationItem").value<QQuickItem*>()); }
         ConfigurationSession config(a);
-        // Probe the same native page factory and transaction used by the actual dialog.
+        // Keep R4 diagnostic transactions separate from the installed R5 dialog workflow.
         auto *model=config.view()->configModel();
         result["configurationError"]=config.error();
         QJsonArray categories;

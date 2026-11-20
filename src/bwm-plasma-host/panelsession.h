@@ -22,7 +22,7 @@ class PanelSession : public QObject {
     Q_PROPERTY(QVariantList order READ order NOTIFY changed)
     Q_PROPERTY(QString error READ error NOTIFY errorChanged)
 public:
-    explicit PanelSession(Plasma::Containment *containment,bool connectConfiguration=true);
+    explicit PanelSession(Plasma::Containment *containment,bool connectConfiguration=true,bool nativeConfiguration=false);
     ConfigurationSession *configuration(uint appletId) const;
     Q_INVOKABLE bool configure(uint appletId);
     QVariantMap panelInfo() const;
@@ -58,4 +58,5 @@ private:
     QTimer m_notify;
     QString m_error;
     PackageWindows *m_packageWindows;
+    bool m_nativeConfiguration=false;
 };

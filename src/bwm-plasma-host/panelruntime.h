@@ -33,6 +33,9 @@ public:
     // Native Panel Settings keep runtime bindings by output description.
     void setOutputMovesAllowed(bool allowed){m_outputMovesAllowed=allowed;}
     void setPanelCloningAllowed(bool allowed){m_panelCloningAllowed=allowed;}
+    // "Add Panel" of the original desktop edit mode (ViewCorona::addPanelRequested).
+    void setPanelAddingAllowed(bool allowed){m_panelAddingAllowed=allowed;}
+    bool addPanel(const QString &actionData,QScreen *target);
     QHash<uint,QString> assignments()const;
 Q_SIGNALS:
     void changed();
@@ -50,8 +53,10 @@ private:
     bool m_quiescing=false;
     bool m_outputMovesAllowed=false;
     bool m_panelCloningAllowed=false;
+    bool m_panelAddingAllowed=false;
     QSet<uint> m_reopenSettings;
     QHash<uint,QString> m_assignments;
+    QHash<uint,QVariantMap> m_initialPanelSettings;
     QHash<uint,QPointer<PanelViewHost>> m_views;
     QSet<uint> m_observed;
     QTimer m_reconcile;

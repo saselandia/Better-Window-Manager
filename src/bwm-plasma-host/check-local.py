@@ -177,7 +177,8 @@ def main():
                          'clonedNativeTrayKeepsEmbeddedOptionsAndNewIds', 'profileEditingFreshProcessReadback',
                          'migratedPlacementReadsOriginalPanelFrames', 'nativePanelPolicyPersistsAndWithdrawsReservations',
                          'nativePanelsShareReservationsPerScreenAndEdge', 'adjacentEdgesCornersAndAvailableRect',
-                         'originalDesktopEditModeHost'):
+                         'originalDesktopEditModeHost', 'originalDesktopContainmentConfiguration',
+                         'originalAppletConfigurationFrame','originalContainmentManagement'):
                 output = run(args.ui_test, test)
                 assert 'FAIL!' not in output and 'SKIP' not in output, output
                 report['ui'].append({'test': test, 'passed': True})

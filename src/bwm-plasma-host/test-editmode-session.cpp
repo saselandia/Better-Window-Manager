@@ -13,9 +13,11 @@
 #include "widgetexplorerview.h"
 #include "desktopviewhost.h"
 #include <KConfig>
+#include <KLocalizedString>
 #include <KConfigGroup>
 #include <KPackage/PackageLoader>
 #include <Plasma/Containment>
+#include <Plasma/ContainmentActions>
 #include <Plasma/Applet>
 #include <PlasmaQuick/AppletQuickItem>
 #include <PlasmaQuick/Dialog>
@@ -26,6 +28,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMenu>
 #include <QProcess>
 #include <QQmlContext>
 #include <QQmlExpression>
@@ -990,8 +993,57 @@ private Q_SLOTS:
         QVERIFY2(expOk, "WidgetExplorer misplaced at fractional scale");
         view.widgetExplorer()->toggle();
         QTRY_VERIFY(layers(QStringLiteral("bwm-r5-widget-explorer"), headlessName).isEmpty());
-
         if (auto *d = openDialog()) d->hide();
+        corona.setEditMode(false);
+        QTRY_VERIFY(!corona.isEditMode());
+
+        // R5 cierre: the original Desktop.qml/DesktopEditMode.qml at this fractional scale;
+        // strictAvailableScreenRect follows Hyprland's usable area (also external bars).
+        {
+            auto *desk = corona.createContainment(QStringLiteral("org.kde.plasma.folder"));
+            QVERIFY(desk);
+            DesktopViewHost desktopView(&corona, true, screen);
+            corona.bind(desk, &desktopView);
+            QVERIFY2(desktopView.load(desk), qPrintable(desktopView.error()));
+            desktopView.show();
+            QRect deskLayer;
+            const bool deskOk = QTest::qWaitFor([&] {
+                const auto all = layers(QStringLiteral("bwm-r5-desktop"), headlessName);
+                return all.size() == 1 && (deskLayer = all.first()) == S;
+            }, 5000);
+            QTRY_VERIFY_WITH_TIMEOUT(qAbs(desktopView.devicePixelRatio() - expectedScale) < 0.02, 5000);
+            QTRY_VERIFY(desk->screen() >= 0);
+            const QMargins r = reserved(headlessName);
+            const QRect usable(r.left(), r.top(), S.width() - r.left() - r.right(), S.height() - r.top() - r.bottom());
+            QTRY_COMPARE(desktopView.strictAvailableScreenRect(), usable);
+            desktopView.enterEditMode();
+            QTRY_VERIFY(corona.isEditMode());
+            desktopView.toggleWidgetExplorer();
+            QRect sideLayer;
+            const bool sideOk = QTest::qWaitFor([&] {
+                const auto all = layers(QStringLiteral("bwm-r5-desktop-explorer"), headlessName);
+                if (all.size() != 1) return false;
+                sideLayer = all.first();
+                return sideLayer.top() == S.top() + usable.top() && sideLayer.bottom() == S.top() + usable.bottom()
+                    && sideLayer.left() == S.left() + usable.left();
+            }, 5000);
+            m_steps.append(QJsonObject{{"step", "fractional-desktop-edit-mode"}, {"desktop", rect(deskLayer)}, {"explorer", rect(sideLayer)},
+                {"usable", rect(usable)}, {"windowDpr", desktopView.devicePixelRatio()}, {"ownClients", ownClients()},
+                {"passed", deskOk && sideOk && ownClients() == baselineClients}});
+            QVERIFY2(deskOk && sideOk && ownClients() == baselineClients,
+                     qPrintable(QStringLiteral("desktop=%1,%2 %3x%4 explorer=%5,%6 %7x%8 usable=%9,%10 %11x%12")
+                         .arg(deskLayer.x()).arg(deskLayer.y()).arg(deskLayer.width()).arg(deskLayer.height())
+                         .arg(sideLayer.x()).arg(sideLayer.y()).arg(sideLayer.width()).arg(sideLayer.height())
+                         .arg(usable.x()).arg(usable.y()).arg(usable.width()).arg(usable.height())));
+            desktopView.sidePanel()->setVisible(false);
+            corona.setEditMode(false);
+            QTRY_VERIFY(!corona.isEditMode());
+            desktopView.hide();
+            corona.unbind(desk);
+            QTRY_VERIFY(layers(QStringLiteral("bwm-r5-desktop"), headlessName).isEmpty());
+            QTRY_VERIFY(layers(QStringLiteral("bwm-r5-desktop-explorer"), headlessName).isEmpty());
+        }
+
         corona.setEditMode(false);
         QTRY_VERIFY(!corona.isEditMode());
         view.hide();
@@ -1040,7 +1092,7 @@ private Q_SLOTS:
                  qPrintable(runtime.view(panelId)->error()));
         QRect panelLayer;
         QTRY_VERIFY((panelLayer = layers(QStringLiteral("bwm-r4-native-policy"), outName).value(0)).isValid()
-                    && panelLayer.height() == 48 && panelLayer.bottom() == S.bottom());
+                    && panelLayer.height() == 48 && panelLayer.bottom() == S.bottom()-before.bottom());
 
         DesktopViewHost desktopView(&corona, true, screen);
         corona.bind(desk, &desktopView);
@@ -1063,6 +1115,22 @@ private Q_SLOTS:
                      .arg(S.x()).arg(S.y()).arg(S.width()).arg(S.height())
                      .arg(layers(QStringLiteral("bwm-r5-desktop"), outName).size())
                      .arg(ownClients()).arg(baselineClients)));
+
+        // The original Folder View loads once the desktop view and panel are ready, so the
+        // right-click menu (org.kde.contextmenu) lists folder actions and "Enter Edit Mode".
+        QTRY_VERIFY(desk->screen() >= 0);
+        QTRY_VERIFY(desk->contextualActions().size() >= 4);
+        QStringList menuTexts;
+        if (auto *rmb = desk->containmentActions().value(QStringLiteral("RightButton;NoModifier")))
+            for (auto *a : rmb->contextualActions())
+                if (a && !a->isSeparator()) menuTexts.append(a->text().remove(u'&'));
+        const QMargins usableMargins = reserved(outName);
+        const QRect usable(usableMargins.left(), usableMargins.top(), S.width() - usableMargins.left() - usableMargins.right(),
+                           S.height() - usableMargins.top() - usableMargins.bottom());
+        QTRY_COMPARE(desktopView.strictAvailableScreenRect(), usable);
+        m_steps.append(QJsonObject{{"step", "desktop-context-menu-and-usable-area"}, {"menu", menuTexts.join(u'|')},
+            {"usable", rect(usable)}, {"passed", menuTexts.contains(i18nd("plasmashell","Enter Edit Mode").remove(u'&')) && menuTexts.size() >= 4}});
+        QVERIFY2(menuTexts.contains(i18nd("plasmashell","Enter Edit Mode").remove(u'&')) && menuTexts.size() >= 4, qPrintable(menuTexts.join(u'|')));
 
         auto *root = desktopView.rootObject();
         QVERIFY(root);
@@ -1114,7 +1182,8 @@ private Q_SLOTS:
             if (all.size() != 1) return false;
             expLayer = all.first();
             return expLayer.isValid() && expLayer.width() > 200 && S.contains(expLayer)
-                && !expLayer.intersects(panelLayer) && expLayer.top() >= S.top() + before.top();
+                && !expLayer.intersects(panelLayer) && expLayer.top() == S.top() + usable.top()
+                && expLayer.bottom() == S.top() + usable.bottom();
         }, 5000);
         eval(QStringLiteral("root.widgetExplorer.addApplet('org.kde.plasma.analogclock')"));
         QTRY_COMPARE(desk->applets().size(), 1);
@@ -1151,6 +1220,29 @@ private Q_SLOTS:
         m_steps.append(QJsonObject{{"step", "desktop-alternatives-layer-and-switch"}, {"observed", rect(altLayer)},
             {"ownClients", ownClients()}, {"passed", altOk && ownClients() == baselineClients}});
         QVERIFY2(altOk && ownClients() == baselineClients, "Desktop AppletAlternatives layer misplaced");
+
+        // The menu position does not choose a new panel's output. Like Plasma's
+        // activeOutputName query, use the compositor's active physical output.
+        QString requestedPanel;QPointer<QScreen> requestedScreen;
+        connect(&corona,&ViewCorona::addPanelRequested,&corona,[&](const QString &plugin,QScreen *target){requestedPanel=plugin;requestedScreen=target;});
+        corona.showAddPanelContextMenu(S.topLeft()+QPoint(200,120));
+        QTRY_VERIFY(corona.addPanelMenu() && corona.addPanelMenu()->isVisible());
+        QAction *empty=nullptr;
+        for(auto *action:corona.addPanelMenu()->actions())
+            if(action->data().toString()==QStringLiteral("plasma-desktop-template:org.kde.plasma.desktop.emptyPanel"))empty=action;
+        QVERIFY(empty);empty->trigger();corona.addPanelMenu()->close();
+        QTRY_VERIFY(!requestedPanel.isEmpty() && requestedScreen);
+        QProcess activeQuery;
+        auto activeEnvironment=QProcessEnvironment::systemEnvironment();
+        activeEnvironment.insert(QStringLiteral("XDG_RUNTIME_DIR"),qEnvironmentVariable("BWM_R5_HYPR_RUNTIME"));
+        activeQuery.setProcessEnvironment(activeEnvironment);activeQuery.start(QStringLiteral("hyprctl"),{QStringLiteral("-j"),QStringLiteral("monitors")});
+        QVERIFY(activeQuery.waitForFinished(3000));QScreen *expected=nullptr;
+        for(const auto &value:QJsonDocument::fromJson(activeQuery.readAllStandardOutput()).array()){
+            const auto monitor=value.toObject();
+            if(monitor.value(QStringLiteral("focused")).toBool())expected=BwmOutput::resolveScreen(monitor.value(QStringLiteral("description")).toString());
+        }
+        QVERIFY(expected);QCOMPARE(requestedScreen.data(),expected);
+        m_steps.append(QJsonObject{{"step","add-panel-active-output"},{"passed",true}});
 
         // Exit edit mode and tear down cleanly.
         corona.setEditMode(false);
