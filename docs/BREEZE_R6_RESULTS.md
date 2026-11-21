@@ -14,6 +14,8 @@ Continúa la iteración 8 en la sesión diaria (sin depender del plugin candidat
   `switcher/Switcher.qml` + `ThemedSwitcher.qml` pasan la ruta resuelta por `BlurPath` y enlazan
   `BackgroundEffect.blurRegion` al marco del tema cargado en el otro motor QML (con reserva al
   propio `themed` en OSD si un tema no usa `Dialog`).
+* **Editor del panel** (`panel/PanelEditor.qml`): usa también `BlurPath` (`dialogs/background`),
+  como el resto de ventanas emergentes del panel.
 * **KRunner** (`skins/plasma/hypr/rules.lua`): `krunner` (`PlasmaQuick::PlasmaWindow` con
   `LayerShellQt::Window::setScope("krunner")`) ya pide `KWindowEffects::enableBlurBehind` y usa
   `translucent/dialogs/background` de `libplasma`; su capa `krunner` entra ahora en
@@ -23,10 +25,14 @@ Continúa la iteración 8 en la sesión diaria (sin depender del plugin candidat
 Comprobado: `hyprctl reload` sin errores de configuración, reinicio de mantenimiento del shell sin
 errores (mismos workspaces y foco), `test_plasma_interfaces.py` 8/8 (incluye `BwmCompat.Dialog` en
 `ThemeHost` recibiendo ruta translúcida y registrando su marco), `test_plasma_menus_ui.py` 5/5
-(comprueba `background.imagePath` en menú y submenú y regiones de desenfoque al abrir y cerrar) y
-`test_plasma_shadow_policy.py` 1/1 (actualizado con `layer_rule` y comprobación de
-`breeze-blur-frames`). Pendiente: comprobación visual en vivo de Alt+Tab real, menús contextuales,
-KRunner y un tema global de terceros.
+(comprueba `background.imagePath` en menú y submenú y regiones de desenfoque al abrir y cerrar),
+`test_plasma_shadow_policy.py` 3/3 (`layer_rule` de `breeze-blur-frames`, `blur_on_request`
+retirando `no_blur` global, y transición Lua `plasma` → `default` → `retro` → `plasma` restaurando
+todos los parámetros de `decoration.blur`), `test_plasma_panel_native.py` 4/4, `test_kde_config_bridge.py`
+21/21, `test_breezebars.py` 4/4 y `test_bwm_decorator.py` 15/15. Pendiente: comprobación visual en
+vivo de Alt+Tab real, menús contextuales, KRunner y un tema global de terceros; y la instalación
+del plugin candidato + `bwm-decorator` (y retirada del veto `no_shadow`) cuando decidas reiniciar
+sesión.
 
 ---
 

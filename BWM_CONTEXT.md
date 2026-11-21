@@ -6030,12 +6030,17 @@ git status; git log --oneline -5; git push origin main
     `switcher/Switcher.qml` y `switcher/ThemedSwitcher.qml`: pasan `bwmDialogImagePath` y
     `bwmBlurTarget` al motor QML de `ThemeHost` para que `BwmCompat.Dialog` use la variante
     translúcida y registre su `FrameSvgItem` en `BackgroundEffect.blurRegion`.
+  * `config/quickshell/ii/modules/plasma/panel/PanelEditor.qml`: pasa también a `BlurPath`
+    (`dialogs/background`).
   * Pruebas actualizadas: `tests/test_plasma_interfaces.py` (contrato `BwmCompat.Dialog` en
     `ThemeHost`), `tests/test_plasma_menus_ui.py` (fondo translúcido en menú/submenú y conteo de
-    regiones al abrir y cerrar) y `tests/test_plasma_shadow_policy.py` (añadido `layer_rule` y
-    verificación de `breeze-blur-frames`).
+    regiones al abrir y cerrar) y `tests/test_plasma_shadow_policy.py` (`layer_rule` de
+    `breeze-blur-frames`, `blur_on_request` y transición Lua `plasma` ↔ `default` ↔ `retro`
+    restaurando todos los parámetros de `decoration.blur`).
 * **Comprobado:** `hyprctl reload` sin errores, reinicio de mantenimiento del shell sin errores
-  (mismos workspaces y foco), `test_plasma_interfaces.py` 8/8, `test_plasma_menus_ui.py` 5/5 y
-  `test_plasma_shadow_policy.py` 1/1.
+  (mismos workspaces y foco), `test_plasma_interfaces.py` 8/8, `test_plasma_menus_ui.py` 5/5,
+  `test_plasma_shadow_policy.py` 3/3, `test_plasma_panel_native.py` 4/4, `test_kde_config_bridge.py`
+  21/21, `test_breezebars.py` 4/4 y `test_bwm_decorator.py` 15/15.
 * **Pendiente:** comprobación visual en vivo de Alt+Tab real, menús contextuales, KRunner y un tema
-  global de terceros; e instalar el plugin candidato de §331 y reiniciar sesión cuando proceda.
+  global de terceros; e instalar el plugin candidato de §331 + `bwm-decorator` y reiniciar sesión
+  cuando proceda.

@@ -3,6 +3,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import qs.modules.common
+import qs.modules.plasma.theme
 import org.kde.ksvg as KSvg
 import org.kde.plasma.components as PC3
 PopupWindow {
@@ -12,7 +13,8 @@ PopupWindow {
     color:"transparent"; implicitWidth:380; implicitHeight:690
     anchor.edges:edge==="bottom"?Edges.Top:edge==="top"?Edges.Bottom:edge==="left"?Edges.Right:Edges.Left
     anchor.gravity:anchor.edges
-    KSvg.FrameSvgItem { anchors.fill:parent; imagePath:"dialogs/background" }
+    BlurPath { id:bgPath; path:"dialogs/background" }
+    KSvg.FrameSvgItem { anchors.fill:parent; imagePath:bgPath.resolved }
     ColumnLayout {
         anchors.fill:parent; anchors.margins:16; spacing:8
         PC3.Label { text:"Configurar panel"; font.bold:true }
