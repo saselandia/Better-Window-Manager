@@ -76,7 +76,10 @@ int main(int argc,char **argv){
     if(decoratedMode)QGuiApplication::setDesktopFileName("bwm-r6-decorated");
     std::unique_ptr<QQuickWindow> holder;
     if(dialogMode)holder=std::make_unique<PlasmaQuick::Dialog>();else holder=std::make_unique<QQuickWindow>();
-    auto &window=*holder;window.setColor(decoratedMode?QColor("#2a6f97"):QColor(Qt::transparent));window.resize(decoratedMode?QSize(360,240):QSize(180,120));
+    auto &window=*holder;window.setColor(decoratedMode?QColor("#2a6f97"):QColor(Qt::transparent));
+    // Decorated + effects: a translucent normal window over the pattern, to check which windows
+    // get blur (KWin: only those that ask for it).
+    if(decoratedMode&&effects){QSurfaceFormat format=window.format();format.setAlphaBufferSize(8);window.setFormat(format);window.setColor(QColor("#80707070"));}window.resize(decoratedMode?QSize(360,240):QSize(180,120));
     if(decoratedMode)window.setTitle("BWM R6");
     else {
     auto *layer=LayerShellQt::Window::get(&window);layer->setLayer(LayerShellQt::Window::LayerTop);

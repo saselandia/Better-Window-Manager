@@ -1,5 +1,33 @@
 # R6 — sombras y efectos nativos de KDE
 
+## Iteración 7: ventanas que piden desenfoque y franja superior doble (2026-11-21)
+
+**Candidato en `build/r6-surface-plugin`, sin instalar**: con el plugin diario actual no cambia
+nada (la regla sigue poniendo `no_blur` a todas las ventanas).
+
+* **Ventanas que piden desenfoque:** KWin sólo desenfoca las que lo piden (`KWindowEffects`,
+  `ext_background_effect_v1`); Hyprland, todas las translúcidas salvo `no_blur`. breezebars fija
+  ahora `no_blur` con la prioridad más baja (`PRIORITY_LAYOUT`) en las ventanas que no lo piden y
+  lo quita a las que lo piden, al confirmar su superficie; las reglas de ventana, también las del
+  usuario, siguen mandando. Expone `hl.plugin.breezebars.blur_on_request`: `breeze-float-all`
+  sólo pone `no_blur` cuando el plugin cargado no la tiene.
+* **Franja superior pintada dos veces (fallo previo, también en la sesión diaria):**
+  `SquareTop.cpp` cuadra las esquinas superiores del contenido dibujando encima una copia sin
+  redondeo de la franja superior. En una ventana translúcida esa franja se mezclaba dos veces y
+  salía más clara (216 en vez de 208 en el ensayo, 8 filas a escala 1). Ahora el original se
+  recorta por debajo de la franja (conserva el redondeo inferior) y la copia la dibuja sola, con el
+  desenfoque de la ventana.
+
+Ensayo nuevo `check-r6-surfaces.py --kind decorated --effects`: ventana normal translúcida sobre
+un tablero, en Hyprland anidado y en KWin 6.7.5. En los dos, sin petición la ventana no se
+desenfoca; pidiendo la mitad izquierda se desenfoca sólo ésa (37 290 píxeles en ambos a escala
+1; 83 819 y 83 824 a 1,5; 0 fuera); al retirarla vuelve exacta. `--user-no-blur` añade una regla
+`no_blur` del usuario y Hyprland no desenfoca aunque la ventana lo pida. La franja superior mide
+208 en los dos. Regresión: decoración en los tres temas a 1 y 1,5 igual que en la iteración 4,
+desenfoque de capas y breezebars 4/4. Hace falta instalar el plugin y volver a iniciar sesión.
+
+---
+
 ## Iteración 6: desenfoque de KWin en Breeze diario (2026-11-21)
 
 Activado a petición del usuario tras el análisis de la iteración 5. **Afecta a la sesión diaria**

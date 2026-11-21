@@ -143,6 +143,10 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   `size` 8 por defecto, sin modulaciones); panel, Kickoff, bandeja y notificaciones lo piden con
   `BackgroundEffect` y usan las variantes `translucent` del tema (`theme/BlurPath.qml`); regla
   `breeze-blur-frames` con `ignore_alpha`. Ventanas que lo piden: pendiente (llevan `no_blur`).
+* **R6, iteración 7 (2026-11-21, §331, candidato sin instalar):** breezebars pone `no_blur` con
+  prioridad mínima sólo a las ventanas que no piden desenfoque (`blur_on_request` para las reglas);
+  `SquareTop` ya no mezcla dos veces la franja superior de ventanas translúcidas (fallo también
+  diario). Mismo resultado que KWin con ventana normal translúcida a 1 y 1,5; regla del usuario manda.
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -5971,3 +5975,20 @@ git status; git log --oneline -5; git push origin main
   estos valores ni comparado con Plasma completo.
 * **Incidencia:** un comando de esta sesión extrajo `quickshell-0.3.2/` en la raíz del repo por no
   cambiar de carpeta; se borró (no estaba en Git).
+
+### 331. Breeze R6, iteración 7: ventanas que piden desenfoque y franja doble (2026-11-21)
+
+* **Petición:** «continúa» tras activar el desenfoque en Breeze diario (§330).
+* **Hecho:** `barDeco.cpp` (`updateRules`, en cada commit de la superficie) fija `noBlur` con
+  `PRIORITY_LAYOUT`: verdadero salvo que la superficie tenga `m_hasBackgroundEffect` con región no
+  vacía; nada fuera de Breeze. `main.cpp` registra `blur_on_request`; `skins/plasma/hypr/rules.lua`
+  sólo pone `no_blur` en `breeze-float-all` si el plugin cargado no la tiene (plugin diario actual:
+  sin cambios). `SquareTop.cpp`: el original se recorta con `clipBox` bajo la franja superior y la
+  copia sin redondeo dibuja sólo la franja (antes se superponía: +8/255 en las 8 primeras filas de
+  una ventana translúcida, fallo también diario) y conserva el desenfoque.
+* **Ensayo:** `check-r6-surfaces.py --kind decorated --effects` (ventana translúcida sobre tablero;
+  `test-r6-native` con formato con alfa), `--user-no-blur`; captura guardada antes de procesarla.
+  KWin y Hyprland: sin petición nada, con petición sólo la mitad pedida (37 290 = 37 290 a 1; 83 819
+  / 83 824 a 1,5), retirada exacta; regla del usuario gana. Decoración 1/1,5 igual que §328, capas y
+  breezebars 4/4. Candidato 0 UNIQUE.
+* **Límites:** sin instalar en la sesión diaria (plugin + volver a iniciar sesión).

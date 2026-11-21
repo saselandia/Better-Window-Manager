@@ -1,7 +1,13 @@
 -- BWM F10: traditional defaults and decoration states belong only to Breeze.
-hl.window_rule({ name = "breeze-float-all", match = { class = ".*" },
+-- KWin blurs only the windows that ask for it. breezebars (blur_on_request) sets no_blur at the
+-- lowest priority on the others; an older plugin keeps every window unblurred.
+local float_all = { name = "breeze-float-all", match = { class = ".*" },
     -- Keep custom shadows disabled until their capture/render path is validated.
-    float = true, no_shadow = true, no_blur = true, border_size = 0 })
+    float = true, no_shadow = true, border_size = 0 }
+if not (hl.plugin and hl.plugin.breezebars and hl.plugin.breezebars.blur_on_request) then
+    float_all.no_blur = true
+end
+hl.window_rule(float_all)
 for _, state in ipairs({ { "fullscreen", { fullscreen = true } },
                          { "maximized", { tag = "bwm-maximized" } },
                          { "snapped", { tag = "snapped" } } }) do

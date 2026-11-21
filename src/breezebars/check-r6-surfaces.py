@@ -56,9 +56,11 @@ def main():
     p.add_argument('--trace',action='store_true',help='Retain only this fixture client protocol log beside its captures')
     p.add_argument('--hypr-blur',default='',help='Extra Lua fields for the nested Hyprland decoration.blur table (e.g. "size=8,passes=4")')
     p.add_argument('--blur-pattern',choices=('checker','edge'),default='checker',help='Background behind the blur fixture; edge quadrants measure the blur radius')
+    p.add_argument('--user-no-blur',action='store_true',help='Add a user no_blur rule for the decorated window: Hyprland must not blur it even when asked')
     p.add_argument('--backends',default='hyprland,kwin',help='Compositors to run; comparisons need both')
     a=p.parse_args();scales=[float(v) for v in a.scales.split(',')];themes=a.themes.split(',')
-    if a.effects and a.kind!='tiles':p.error('The blur fixture uses the tiles client')
+    if a.effects and a.kind=='dialog':p.error('The blur fixture uses the tiles or decorated client')
+    if a.user_no_blur and (not a.effects or a.kind!='decorated' or a.backends!='hyprland'):p.error('--user-no-blur needs --effects --kind decorated --backends hyprland')
     module=a.module.resolve();binary=a.binary.resolve()
     if not module.is_file() or not binary.is_file():p.error('Build and atomically install the candidate in build/ first')
     if module.parent==ROOT/'config/hypr/plugins':p.error('Use a separate candidate in build/, never the daily module')
@@ -140,6 +142,7 @@ def main():
                         wait(lambda:(root/'deco.sock').exists(),'Disposable decorator socket missing')
                     config=root/'hyprland.lua';config.write_text(f'hl.monitor({{output="",mode="{width}x{height}",position="0x0",scale={scale}}})\n'+
                       ('hl.window_rule({name="fixture",match={class="^bwm-r6-decorated$"},float=true,center=true,no_shadow=false})\n' if a.kind=='decorated' else '')+
+                      ('hl.window_rule({name="user-no-blur",match={class="^bwm-r6-decorated$"},no_blur=true})\n' if a.user_no_blur else '')+
                       'hl.config({general={border_size=0},misc={disable_hyprland_logo=true,disable_splash_rendering=true},animations={enabled=false},xwayland={enabled=false},input={follow_mouse=0},decoration={shadow={enabled=false},blur={enabled='+('true' if a.effects else 'false')+(','+a.hypr_blur if a.hypr_blur else '')+'}}})\n')
                     compositor=launch(['Hyprland','--config',config],'compositor')
                     instance=wait(lambda:next((i for i in json.loads(hypr('instances','-j')) if i['pid']==compositor.pid),None),'Nested compositor did not start')
@@ -198,12 +201,30 @@ def main():
                     time.sleep(1.0 if a.kind=='decorated' and sequence==1 else .25);path=root/(name+'.png')
                     if backend=='hyprland':run(['grim','-o',output,path])
                     else:run([capture_client,'capture',path,'workspace'])
+                    if captures:shutil.copy2(path,captures/f'{theme}-{scale}-{backend}-{name}.png')
                     with Image.open(path) as im:
                         # Exclude compositor notifications/cursor, not any shadow:
                         # a 128-logical-pixel margin encloses the complete native tiles.
                         region=tuple(round(v*scale) for v in (192,92,628,468))
                         rgb=im.convert('RGB')
-                        if a.kind=='decorated':
+                        if a.kind=='decorated' and a.effects:
+                            # Translucent #80707070 over the checkerboard. Qt clears with the
+                            # straight colour and compositors read it premultiplied: 0x70 + bg/2,
+                            # 0x90/0xd0 inside the window, 0x40/0xc0 outside. Found once without
+                            # blur; the window does not move.
+                            if name=='plain':
+                                grey=rgb.convert('L')
+                                mask=grey.point(lambda v:1 if abs(v-0x90)<=3 or abs(v-0xd0)<=3 else 0)
+                                # Rows and columns crossing the window (360x240 logical); stray
+                                # pixels with those values elsewhere never add up to that.
+                                data=mask.get_flattened_data();w,h=mask.size;need=round(200*scale)
+                                rows=[y for y in range(h) if sum(data[y*w:(y+1)*w])>=need]
+                                cols=[x for x in range(w) if sum(data[x::w])>=round(150*scale)]
+                                if not rows or not cols:raise AssertionError('Translucent decorated fixture not found')
+                                effect_box=(cols[0]-2,rows[0]-2,cols[-1]+3,rows[-1]+3)
+                            m=round(128*scale);box=effect_box
+                            region=(box[0]-m,box[1]-m,box[2]+m,box[3]+m);state.setdefault('contentBox',list(box))
+                        elif a.kind=='decorated':
                             # Placement may differ between compositors: align on the
                             # fixture content colour, then keep 128 logical px around it.
                             mask=ImageChops.difference(rgb,Image.new('RGB',rgb.size,(0x2a,0x6f,0x97))).convert('L').point(lambda v:255 if v<=3 else 0)
@@ -215,7 +236,6 @@ def main():
                             region=(0,0,rgb.width,rgb.height) if command.get('maximized') else (box[0]-m,box[1]-m,box[2]+m,box[3]+m)
                             state.setdefault('contentBox',list(box))
                         result[name]=rgb.crop(region)
-                    if captures:shutil.copy2(path,captures/f'{theme}-{scale}-{backend}-{name}.png')
                   images[backend]=result;states[backend]=backend_states
                   sequence+=1;(root/'command.json').write_text(json.dumps({'sequence':sequence,'quit':True}));fixture.wait(5)
                   if fixture.returncode:raise AssertionError('Fixture failed on shutdown')
@@ -252,9 +272,10 @@ def main():
                 finally:
                   for child in reversed(processes):stop(child)
                   if a.trace and captures and (root/'client.log').exists():shutil.copy2(root/'client.log',captures/f'{theme}-{scale}-{backend}-client.log')
-            if len(images)<2:continue
-            ref,own=images['kwin'],images['hyprland']
-            for name in (name for name,_ in commands if name!='plain'):
+            # Decorated windows sit at different places in each compositor over a fixed pattern:
+            # their blur semantics are checked per backend below, not pixel by pixel.
+            for name in (name for name,_ in commands if name!='plain' and len(images)==2 and not (a.kind=='decorated' and a.effects)):
+              ref,own=images['kwin'],images['hyprland']
               original,current=ref[name],own[name]
               if original.size!=current.size:raise AssertionError(f'Output sizes differ: {original.size} / {current.size}')
               delta=ImageChops.difference(current,original)
@@ -262,7 +283,7 @@ def main():
                 'meanChannelError':ImageStat.Stat(delta).mean,'differentPixels':sum(any(v) for v in delta.get_flattened_data()),
                 'differenceBounds':delta.getbbox(),'kwin':states['kwin'][name],'hyprland':states['hyprland'][name]}
               report['cases'].append(entry);print(json.dumps({k:v for k,v in entry.items() if k not in ('kwin','hyprland')}),flush=True)
-            if a.kind=='decorated':
+            if a.kind=='decorated' and not a.effects and len(images)==2:
               # Shadow presence must match KWin: some Aurorae themes ship none.
               counts={}
               for backend in images:
@@ -271,7 +292,7 @@ def main():
                 counts[backend]=sum(any(abs(c-0x80)>2 for c in px) for px in ring.get_flattened_data())
               if (counts['hyprland']>=100)!=(counts['kwin']>=100):raise AssertionError(f'Decoration shadow presence differs from KWin: {counts}')
             for backend in images:
-              if a.kind=='decorated':
+              if a.kind=='decorated' and not a.effects:
                 own=images[backend];ring=own['active'].copy();w,h=ring.size;m=round(128*scale)
                 inner=Image.new('RGB',(w-2*m+2*round(40*scale),h-2*m+2*round(40*scale)),(0x80,0x80,0x80))
                 ring.paste(inner,(m-round(40*scale),m-round(40*scale)))
@@ -296,9 +317,15 @@ def main():
                 # its left half requested blur. Exclude the shared boundary.
                 inside=tuple(round(v*scale) for v in (132,132,212,244))
                 outside=tuple(round(v*scale) for v in (222,132,304,244))
+                if a.kind=='decorated':
+                  # Content box in the crop: 128 logical px margin plus the 2 px detection margin
+                  m=round(128*scale);w,h=own['plain'].size;half=m+2+(w-2*m-4)//2;e=round(6*scale)
+                  inside=(m+2+e,m+2+e,half-e,h-m-2-e);outside=(half+e,m+2+e,w-m-2-e,h-m-2-e)
                 affected=sum(any(v) for v in change.crop(inside).get_flattened_data())
                 leaked=sum(any(v) for v in change.crop(outside).get_flattened_data())
-                if affected<100 or leaked:raise AssertionError(f'{backend}: native blur region failed ({affected} inside, {leaked} outside)')
+                if a.user_no_blur:
+                  if affected or leaked:raise AssertionError(f'{backend}: a user no_blur rule must win ({affected} inside, {leaked} outside)')
+                elif affected<100 or leaked:raise AssertionError(f'{backend}: native blur region failed ({affected} inside, {leaked} outside)')
                 if ImageChops.difference(own['blur-removed'],own['plain']).getbbox():raise AssertionError(backend+': blur remnants after disabling')
                 report.setdefault('blurRegions',[]).append({'backend':backend,'theme':theme,'scale':scale,'changedPixelsInside':affected,'changedPixelsOutside':leaked,'removalExact':True})
                 continue

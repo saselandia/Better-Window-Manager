@@ -20,7 +20,11 @@ decoración de KWin activa (Breeze, Aurorae, de terceros). El plugin es el pegam
   (`CBreezeShadow`, sin reservar espacio); redondeo del contenido = radio inferior de la decoración
   convertido con `contentRounding`: el entero que deja el radio de Hyprland (regla × escala − 1)
   más cerca de `round(radio × escala)` de KWin, con potencia 2 (prioridad mínima, las reglas del
-  usuario mandan; arriba lo cuadra `SquareTop.cpp`).
+  usuario mandan; arriba lo cuadra `SquareTop.cpp`: el original se recorta bajo la franja
+  superior y una copia sin redondeo dibuja sólo esa franja, sin mezclar dos veces una ventana
+  translúcida). Desenfoque como KWin: `no_blur` con prioridad mínima en las ventanas que no lo
+  piden por `ext_background_effect_v1`; `hl.plugin.breezebars.blur_on_request` lo anuncia a las
+  reglas de Breeze.
 - Puntero como KWin: movimiento, pulsar, soltar y rueda van a la decoración sin aceptar; lo que
   ningún botón acepta (`PointerResult`) es del compositor: mover desde la barra (con el snapping de
   siempre), redimensionar desde los bordes que diga la decoración, doble clic (`on_double_click`,

@@ -11,6 +11,7 @@
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/desktop/state/FocusState.hpp>
 #include <hyprland/src/desktop/view/Window.hpp>
+#include <hyprland/src/desktop/view/WLSurface.hpp>
 #include <hyprland/src/helpers/MiscFunctions.hpp>
 #include <hyprland/src/managers/SeatManager.hpp>
 #include <hyprland/src/managers/input/InputManager.hpp>
@@ -1128,6 +1129,23 @@ void CHyprBar::updateRules() {
         g_pDecorationPositioner->repositionDeco(this);
     if (prevForcedTitleColor != m_bForcedTitleColor)
         m_bTitleColorChanged = true;
+
+    // KWin blurs a window only when it asks for it (KWindowEffects, ext_background_effect_v1);
+    // Hyprland blurs every translucent window unless no_blur. In Breeze keep no_blur except for
+    // the windows that ask, at the lowest priority so window rules (also the user's) still win.
+    if (PWINDOW->m_ruleApplicator) {
+        const auto SURFACE = PWINDOW->wlSurface();
+        const bool ASKS    = SURFACE && SURFACE->m_hasBackgroundEffect && !SURFACE->m_blurRegion.empty();
+        const int  WANT    = !g_pGlobalState->config.enabled->value() ? -1 : (ASKS ? 0 : 1);
+        if (WANT != m_blurOverride) {
+            if (WANT < 0)
+                PWINDOW->m_ruleApplicator->noBlur().unset(Desktop::Types::PRIORITY_LAYOUT);
+            else
+                PWINDOW->m_ruleApplicator->noBlur().set(WANT == 1, Desktop::Types::PRIORITY_LAYOUT);
+            m_blurOverride = WANT;
+            g_pHyprRenderer->damageWindow(PWINDOW);
+        }
+    }
 
     if (!m_pStateChangedCallback) {
         auto pXDG = PWINDOW->m_xdgSurface.lock();

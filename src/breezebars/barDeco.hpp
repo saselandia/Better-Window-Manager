@@ -56,6 +56,8 @@ class CHyprBar : public IHyprWindowDecoration {
 
     WP<CHyprBar>                       m_self;
     bool                               m_hidden = false;
+    // no_blur this plugin set at layout priority: -1 none, 0 blur allowed, 1 no blur
+    int                                m_blurOverride = -1;
     bool                               inputIsValid();
     bool                               isDragging() const;
 

@@ -182,6 +182,12 @@ static int luaSnapTiles(lua_State* L) {
     }
     return 0;
 }
+// Lets the Breeze rules leave no_blur to this plugin (only windows that do not ask for blur).
+static int luaBlurOnRequest(lua_State* L) {
+    lua_pushboolean(L, true);
+    return 1;
+}
+
 static int luaDecoration(lua_State* L) {
     const std::string address=luaL_checkstring(L,1);
     const pid_t pid=lua_gettop(L)>1?luaL_checkinteger(L,2):0;
@@ -766,6 +772,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g_pGlobalState->breezeCsdCommand = HyprlandAPI::registerHyprCtlCommand(PHANDLE, SHyprCtlCommand{.name="breezebars-csd",.exact=true,.fn=csdReport});
     g_pGlobalState->interactiveCommand = HyprlandAPI::registerHyprCtlCommand(PHANDLE, SHyprCtlCommand{.name = "breezebars-interactive", .exact = false, .fn = interactiveCommand});
     HyprlandAPI::addLuaFunction(PHANDLE,"breezebars","decoration",luaDecoration);
+    HyprlandAPI::addLuaFunction(PHANDLE,"breezebars","blur_on_request",luaBlurOnRequest);
     HyprlandAPI::addLuaFunction(PHANDLE,"breezebars","snap_config",luaSnapConfig);
     HyprlandAPI::addLuaFunction(PHANDLE,"breezebars","snap_tiles",luaSnapTiles);
     g_pGlobalState->pPreReloadListener = Event::bus()->m_events.config.preReload.listen([] { onPreConfigReload(); });

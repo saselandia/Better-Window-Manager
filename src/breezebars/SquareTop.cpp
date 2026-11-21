@@ -1,8 +1,10 @@
 // Esquinas superiores cuadradas en las ventanas con barra: la barra queda
 // redondeada arriba y se une en recto con el contenido, como en KDE Plasma.
 // Hyprland solo redondea las 4 esquinas a la vez, así que tras grabar las
-// ventanas en el pase se añade, encima de cada superficie principal con barra,
-// una copia sin redondeo recortada a la franja superior.
+// ventanas en el pase cada superficie principal con barra se reparte en dos:
+// el original, recortado por debajo de la franja superior (conserva el redondeo
+// de abajo), y una copia sin redondeo que dibuja sólo esa franja. No se solapan:
+// una ventana translúcida no se mezcla dos veces arriba.
 #include <any>
 #include <sstream>
 #include <fstream>
@@ -97,19 +99,25 @@ void squareBarredWindowTops() {
 
         const auto scale = d.pMonitor->m_scale;
         // d.rounding viene en píxeles escalados; la franja va en lógicos (+2 de margen)
-        CBox strip = surf->getTexBox();
-        strip.h    = std::min(strip.h, d.rounding / scale + 2.0);
-        strip.scale(scale).round();
-        if (!d.clipBox.empty())
+        CBox full = surf->getTexBox();
+        full.scale(scale).round();
+        const double stripH = std::min(full.h, std::round((d.rounding / scale + 2.0) * scale));
+        CBox         strip{full.x, full.y, full.w, stripH};
+        CBox         rest{full.x, full.y + stripH, full.w, full.h - stripH};
+        if (!d.clipBox.empty()) {
             strip = strip.intersection(d.clipBox);
+            rest  = rest.intersection(d.clipBox);
+        }
         if (strip.w < 1 || strip.h < 1)
             continue;
 
         auto copy      = d;
         copy.dontRound = true;
         copy.clipBox   = strip;
-        copy.blur      = false;
+        // The strip is drawn only once now, so it keeps the window's blur too
         inserts.emplace_back(i + 1, makeUnique<CBarSquareTopPassElement>(copy));
+        // An empty clipBox means "no clip": a window shorter than the strip draws nothing else
+        surf->m_data.clipBox = rest.w >= 1 && rest.h >= 1 ? rest : CBox{full.x, full.y + full.h, full.w, 1};
     }
 
     for (auto it = inserts.rbegin(); it != inserts.rend(); ++it)
