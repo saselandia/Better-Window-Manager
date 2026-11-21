@@ -44,11 +44,26 @@ def snapshot():
             for m in json.loads(hypr("-j", "monitors"))]}
 
 
+def restore_session(before):
+    """Removing a headless output can hand focus to another monitor's last window.
+    Restore the user's cursor, then the same window (address and PID), never another."""
+    cursor = before["cursor"]
+    if json.loads(hypr("-j", "cursorpos")) != cursor:
+        hypr("dispatch", f'hl.dsp.cursor.move({{x={cursor["x"]},y={cursor["y"]}}})')
+    focus = before["focus"]
+    if focus.get("address") and json.loads(hypr("-j", "activewindow")).get("address") != focus["address"]:
+        alive = any(c["address"] == focus["address"] and c["pid"] == focus["pid"] for c in json.loads(hypr("-j", "clients")))
+        if alive:
+            hypr("dispatch", f'hl.dsp.focus({{window="address:{focus["address"]}"}})')
+            time.sleep(.1)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--module", type=Path, required=True)
     parser.add_argument("--helper", type=Path, required=True)
     parser.add_argument("--report", type=Path, required=True)
+    parser.add_argument("--xwayland",action="store_true",help="Exercise SSD and synthetic GTK/Motif hints in the private X server")
     args = parser.parse_args()
     module, helper = args.module.resolve(), args.helper.resolve()
     if not module.is_file() or not helper.is_file():
@@ -79,6 +94,7 @@ hl.config({misc={disable_hyprland_logo=true,disable_splash_rendering=true},anima
  decoration={shadow={enabled=false},blur={enabled=false}},input={follow_mouse=0}})
 hl.window_rule({name="fixture",match={class="^bwm-r6-window$"},float=true,size="500 300",move="220 180",no_shadow=false})
 ''')
+            if args.xwayland:config.write_text(config.read_text().replace('xwayland={enabled=false}','xwayland={enabled=true}'))
             runtime = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
             env = dict(os.environ, XDG_CONFIG_HOME=str(root / "config"), XDG_DATA_HOME=str(root / "data"),
                 XDG_CACHE_HOME=str(root / "cache"), DBUS_SESSION_BUS_ADDRESS="unix:path="+str(root / "no-bus"),
@@ -112,9 +128,15 @@ hl.window_rule({name="fixture",match={class="^bwm-r6-window$"},float=true,size="
                 raise RuntimeError("Candidate module could not load in the new compositor")
             hypr("eval", "hl.config({plugin={breezebars={enabled=true}}})", instance=signature)
             native_env = dict(env, WAYLAND_DISPLAY=str(runtime / instance["wl_socket"]), HYPRLAND_INSTANCE_SIGNATURE=signature)
+            if args.xwayland:
+                display=json.loads(hypr('-j','breezebars-shadows',instance=signature))['xwaylandDisplay']
+                if not display.startswith(':') or not display[1:].isdigit():raise AssertionError('Private XWayland display missing')
+                native_env.update(DISPLAY=display,BWM_R6_X11_DISPLAY=display)
+                xclient=root/'xclient'
+                subprocess.run(['g++','-std=c++20','-O1',str(ROOT/'tests/r6_x11_client.cpp'),'-lxcb','-o',str(xclient)],check=True,capture_output=True)
             with (root / "client.log").open("w") as log:
-                processes.append(subprocess.Popen(["kitty", "--config", "NONE", "--class", "bwm-r6-window",
-                    "--title", "BWM R6 fixture", "-e", "/usr/bin/sleep", "120"], env=native_env,
+                command=[str(xclient),'ssd'] if args.xwayland else ["kitty", "--config", "NONE", "--class", "bwm-r6-window", "--title", "BWM R6 fixture", "-e", "/usr/bin/sleep", "120"]
+                processes.append(subprocess.Popen(command, env=native_env,
                     stdout=log, stderr=subprocess.STDOUT, start_new_session=True))
             def decorated():
                 state = json.loads(hypr("-j", "breezebars-csd", instance=signature))
@@ -141,13 +163,28 @@ hl.window_rule({name="fixture",match={class="^bwm-r6-window$"},float=true,size="
             frame = (int(x-b["left"]),int(y-b["top"]),int(x+width+b["right"]),int(y+height+b["bottom"]))
             difference = ImageChops.difference(shadow, plain)
             difference.paste((0,0,0), frame)
-            affected = sum(any(p) for p in difference.getdata())
+            affected = sum(any(p) for p in difference.get_flattened_data())
             if affected < 100:
                 raise AssertionError(f"No measurable external shadow in GPU output ({affected} changed pixels)")
             report.update(passed=True, nativeDecoration=True, externalShadowChangedPixels=affected,
                 externalDifferenceBounds=difference.getbbox(), nestedConfigErrors=hypr("configerrors", instance=signature).strip())
             if report["nestedConfigErrors"]:
                 raise AssertionError(report["nestedConfigErrors"])
+            if args.xwayland:
+                first=processes[-1];os.killpg(first.pid,signal.SIGTERM);first.wait(5)
+                for mode,field in (('gtk','gtkFrameExtents'),('motif','motifNoBorder')):
+                    with (root/(mode+'.log')).open('w') as log:
+                        child=subprocess.Popen([str(xclient),mode],env=native_env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+                    processes.append(child)
+                    def classified():
+                        state=json.loads(hypr('-j','breezebars-csd',instance=signature))
+                        return next((w for w in state['windows'] if w['pid']==child.pid and w['ready'] and w['observed'][field]),None)
+                    record=wait(classified,'X11 hint not observed: '+mode)
+                    if record['visible'] or sum(record['borders'].values()):raise AssertionError('Second decoration on '+mode)
+                    report.setdefault('syntheticX11Hints',[]).append(dict(mode=mode,state=record))
+                    os.killpg(child.pid,signal.SIGTERM);child.wait(5)
+                report['xwaylandTested']=True
+                report['x11ClientOwnedShadowPixelsTested']=False
         except Exception as error:
             report.update(passed=False,error=str(error))
             report["nestedLogTail"] = (root / "hypr.log").read_text(errors="replace")[-2500:] if (root / "hypr.log").exists() else ""
@@ -180,9 +217,7 @@ hl.window_rule({name="fixture",match={class="^bwm-r6-window$"},float=true,size="
                 except (ProcessLookupError, FileNotFoundError):
                     pass
             time.sleep(.1)
-            cursor = before["cursor"]
-            if json.loads(hypr("-j", "cursorpos")) != cursor:
-                hypr("dispatch", f'hl.dsp.cursor.move({{x={cursor["x"]},y={cursor["y"]}}})')
+            restore_session(before)
     after = snapshot()
     report["sessionUnchanged"] = after == before
     report["sessionDifferences"] = [key for key in before if before[key] != after[key]]

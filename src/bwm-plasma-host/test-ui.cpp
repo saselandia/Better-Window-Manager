@@ -2064,9 +2064,14 @@ private Q_SLOTS:
             QTRY_VERIFY(corona.isEditMode());
         } else if(scene.startsWith("wallpaper")) {
             desk->internalAction("configure")->trigger();QTRY_VERIFY(desktop.configurationWindow() && desktop.configurationWindow()->isExposed());
-        } else QCOMPARE(scene,QStringLiteral("paste"));
+        } else QVERIFY(scene==QStringLiteral("paste") || scene==QStringLiteral("panel"));
         QTest::qWait(800);
-        QFile marker(ready);QVERIFY(marker.open(QIODevice::WriteOnly));marker.write("ready");marker.close();
+        QFile marker(ready);QVERIFY(marker.open(QIODevice::WriteOnly));
+        const auto *root=panel->rootObject();
+        marker.write(QJsonDocument(QJsonObject::fromVariantMap({{"panel",panel->capabilities()},
+            {"geometry",QVariantList{panel->x(),panel->y(),panel->width(),panel->height()}},
+            {"enabledBorders",panel->enabledBorders()},
+            {"margins",QVariantList{root->property("leftShadowMargin"),root->property("topShadowMargin"),root->property("rightShadowMargin"),root->property("bottomShadowMargin")}}})).toJson());marker.close();
         QElapsedTimer deadline;deadline.start();
         while(!QFile::exists(ready+".stop") && deadline.elapsed()<30000)QTest::qWait(50);
         QVERIFY(QFile::exists(ready+".stop"));
@@ -2113,6 +2118,24 @@ private Q_SLOTS:
         QTRY_COMPARE(va.screenToFollow(),second.screen());QTRY_COMPARE(vb.screenToFollow(),first.screen());
         QTRY_COMPARE(a->screen(),screenB);QTRY_COMPARE(b->screen(),screenA);
         QCOMPARE(a->applets().first(),wa);QCOMPARE(b->applets().first(),wb);
+        // Restore an unloaded desktop from a disconnected output. The displaced
+        // desktop waits on that output and can be restored with the same widgets.
+        auto *disconnected=corona.createContainment("org.kde.plasma.folder");QVERIFY(disconnected);
+        auto config=disconnected->config();config.writeEntry("lastScreen",99);disconnected->restore(config);
+        auto *savedWidget=disconnected->createApplet("org.kde.plasma.analogclock");QVERIFY(savedWidget);
+        QCOMPARE(disconnected->screen(),-1);QCOMPARE(disconnected->lastScreen(),99);
+        QVERIFY(corona.moveContainmentToScreen(disconnected,screenA));
+        QTRY_COMPARE(disconnected->screen(),screenA);QTRY_COMPARE(b->screen(),-1);
+        QCOMPARE(b->lastScreen(),99);QVERIFY(!vb.isVisible());QCOMPARE(b->applets().first(),wb);
+        QVERIFY(corona.moveContainmentToScreen(b,screenA));QTRY_COMPARE(b->screen(),screenA);
+        QTRY_COMPARE(disconnected->screen(),-1);QCOMPARE(disconnected->applets().first(),savedWidget);
+        auto *waiting=corona.createContainment("org.kde.panel");QVERIFY(waiting);
+        waiting->setFormFactor(Plasma::Types::Horizontal);waiting->setLocation(Plasma::Types::TopEdge);
+        auto *waitingWidget=waiting->createApplet("org.kde.plasma.analogclock");QVERIFY(waitingWidget);
+        auto assignments=runtime.assignments();assignments.insert(waiting->id(),"BWM Test Disconnected PD");
+        QVERIFY(runtime.setAssignments(assignments));QVERIFY(!runtime.view(waiting->id()));
+        QVERIFY(corona.moveContainmentToScreen(waiting,screenB));QTRY_VERIFY(runtime.view(waiting->id()));
+        QCOMPARE(runtime.view(waiting->id())->screen(),second.screen());QCOMPARE(waiting->applets().first(),waitingWidget);
         QVERIFY(!corona.moveContainmentToScreen(a,9999));
         corona.setImmutability(Plasma::Types::UserImmutable);
         QVERIFY(!corona.moveContainmentToScreen(a,screenA));QVERIFY(!action->isEnabled());
@@ -2120,6 +2143,11 @@ private Q_SLOTS:
         QTest::qWait(250);source=listFor(screenB);QVERIFY(source);
         source->remove(int(p->id()));QTRY_VERIFY(p->destroyed());QTRY_VERIFY(!runtime.view(p->id()));
         QPointer<ContainmentManagement> owner=management;corona.managementWindow()->close();QTRY_VERIFY(!owner);
+        QVERIFY(corona.moveContainmentToScreen(disconnected,screenA));
+        auto *recovered=corona.viewForContainment(disconnected);QVERIFY(recovered);QTRY_VERIFY(recovered->isVisible());
+        corona.setDesktopViewsActive(false);QVERIFY(!recovered->isVisible());
+        QVERIFY(!corona.moveContainmentToScreen(disconnected,screenB));
+        corona.setDesktopViewsActive(true);QTRY_VERIFY(recovered->isVisible());
         va.hide();vb.hide();corona.unbind(a);corona.unbind(b);
     }
     void originalDesktopEditModeHost() {

@@ -43,7 +43,7 @@ PanelRuntime::PanelRuntime(ViewCorona *corona,QString settings,bool layers,QObje
     connect(&m_reconcile,&QTimer::timeout,this,&PanelRuntime::reconcile);
     if(corona)connect(corona,&Plasma::Corona::editModeChanged,&m_reconcile,qOverload<>(&QTimer::start));
     if(corona)connect(corona,&ViewCorona::movePanelRequested,this,[this](Plasma::Containment *c,QScreen *target){
-        if(c && view(c->id()))moveToOutput(c->id(),target);
+        if(c && m_assignments.contains(c->id()))moveToOutput(c->id(),target);
     });
     if(auto *control=NativeDesktopControl::requiredControl(this))connect(control,&NativeDesktopControl::changed,this,[this,control]{
         if(m_skin=="plasma"){
@@ -171,19 +171,26 @@ bool PanelRuntime::setSkin(const QString &value) {
     if(peer==NativeDesktopControl::Status::Unavailable){m_error=control->state().value("lastError").toString();m_quiescing=false;return false;}
     if(m_quiescing){m_error=tr("Waiting for native panel actions to finish.");return false;}
     const auto before=m_status;const bool notify=m_skin!=value || !m_error.isEmpty();
-    m_skin=value;m_error.clear();reconcile();if(notify && before==m_status)emit changed();return true;
+    m_skin=value;m_error.clear();
+    if(m_corona)m_corona->setDesktopViewsActive(value=="plasma");
+    reconcile();if(notify && before==m_status)emit changed();return true;
 }
 void PanelRuntime::moveToOutput(uint id,QScreen *target) {
-    auto *frame=view(id);if(!frame || !target || !QGuiApplication::screens().contains(target))return;
-    if(!m_outputMovesAllowed){frame->setError(tr("Moving the panel to another output is not available in this host."));return;}
+    auto *frame=view(id);Plasma::Containment *panel=nullptr;
+    if(m_corona)for(auto *c:m_corona->containments())if(c->id()==id && !c->destroyed() &&
+        (c->containmentType()==Plasma::Containment::Panel || c->containmentType()==Plasma::Containment::CustomPanel)){panel=c;break;}
+    if(!panel || !target || !QGuiApplication::screens().contains(target))return;
+    const auto fail=[this,frame](const QString &error){if(frame)frame->setError(error);else {m_error=error;emit changed();}};
+    if(!m_outputMovesAllowed){fail(tr("Moving the panel to another output is not available in this host."));return;}
+    if(panel->immutable() || m_corona->immutability()!=Plasma::Types::Mutable){fail(tr("Moving panels is locked by KDE policy."));return;}
     const auto identity=BwmOutput::identity(target);
     const auto description=(identity.manufacturer+' '+identity.model+' '+identity.serial).simplified();
     QString state;
     if(description.isEmpty() || BwmOutput::resolveScreen(description,&state)!=target) {
-        frame->setError(tr("The target output has no unique description."));return;
+        fail(tr("The target output has no unique description."));return;
     }
-    frame->setError({});
-    if(frame->userConfiguring())m_reopenSettings.insert(id);
+    if(frame)frame->setError({});else m_error.clear();
+    if(frame && frame->userConfiguring())m_reopenSettings.insert(id);
     m_assignments[id]=description;reconcile();
 }
 void PanelRuntime::cloneToOutput(uint id,int location,QScreen *target) {

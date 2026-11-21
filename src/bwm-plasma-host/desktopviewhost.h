@@ -53,6 +53,7 @@ public:
 
     QRect strictAvailableScreenRect() const;
     QScreen *screenToFollow() const { return m_targetScreen.data(); }
+    bool usesLayerShell() const { return m_layerShell; }
     bool setScreenToFollow(QScreen *screen);
     QObject *configuredPanel() const;
     bool usedInAccentColor() const { return false; }

@@ -30,7 +30,8 @@ static void check(bool ok,const char *message){if(!ok)qFatal("%s",message);}
 int main(int argc,char **argv) {
     QGuiApplication app(argc,argv);
     QFile marker(qEnvironmentVariable("BWM_R5_REFERENCE_MARKER"));
-    check(QFileInfo(marker).canonicalFilePath().startsWith(QDir::tempPath()+"/bwm-r5-reference-"),"Not a disposable R5 reference root");
+    const auto canonical=QFileInfo(marker).canonicalFilePath();
+    check(canonical.startsWith(QDir::tempPath()+"/bwm-r5-reference-") || canonical.startsWith(QDir::tempPath()+"/bwm-r6-surface-"),"Not a disposable Plasma reference root");
     check(marker.open(QIODevice::ReadOnly),"Reference marker missing");
     const auto data=QJsonDocument::fromJson(marker.readAll()).object();
     check(qEnvironmentVariable("XDG_RUNTIME_DIR")==data["runtime"].toString(),"Reference runtime mismatch");

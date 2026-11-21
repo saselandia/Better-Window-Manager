@@ -10,6 +10,7 @@ class QQuickWindow;
 class QScreen;
 class QWindow;
 class ContainmentManagement;
+class DesktopViewHost;
 class ViewCorona : public Plasma::Corona {
     Q_OBJECT
     Q_PROPERTY(QObject *panelBeingConfigured READ panelBeingConfigured NOTIFY panelBeingConfiguredChanged)
@@ -25,6 +26,7 @@ public:
     bool moveContainmentToScreen(Plasma::Containment *containment,int screen);
     Q_INVOKABLE void showContainmentManagement();
     QWindow *managementWindow()const;
+    void setDesktopViewsActive(bool active);
     QString containmentPreviewPath(Plasma::Containment *containment)const;
     void grabContainmentPreview(Plasma::Containment *containment);
     // ShellCorona::isScreenUiReady, read by the original Folder View (org.kde.desktopcontainment)
@@ -57,7 +59,7 @@ private:
     void notifyScreens();
     struct Binding {
         QPointer<QQuickWindow> window;
-        QMetaObject::Connection containmentDestroyed,windowDestroyed,screenChanged,windowVisible,uiReady;
+        QMetaObject::Connection containmentDestroyed,windowDestroyed,screenChanged,targetChanged,windowVisible,uiReady;
     };
     void forget(const Plasma::Containment *containment);
     static bool isDesktop(const Plasma::Containment *containment);
@@ -65,6 +67,9 @@ private:
     void updateDesktopScreens();
     void updateManagementAction();
     QHash<const Plasma::Containment*,Binding> m_views;
+    QHash<const Plasma::Containment*,int> m_pendingScreens;
+    QList<QPointer<DesktopViewHost>> m_ownedDesktops;
+    bool m_desktopViewsActive=true;
     QHash<QScreen*,int> m_screenIds;
     QHash<QScreen*,QRect> m_availableRects;
     mutable QSet<const Plasma::Containment*> m_desktopsWithScreen;

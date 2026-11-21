@@ -1,0 +1,1348 @@
+{
+  "version": 1,
+  "date": "2026-11-21",
+  "iteration": 2,
+  "candidate": {
+    "path": "build/r6-surface-plugin/installed/breezebars.so",
+    "sha256": "82f12b999c2b57af05b7421e5d6cdf2fe48680b05a8b6c0c3e980c1303490215",
+    "gnuUniqueSymbols": 0,
+    "installedInDailySession": false,
+    "dailyNoShadowVetoKept": true
+  },
+  "kwinTileGeometry": {
+    "passed": true,
+    "protocolTileCases": 192,
+    "syntheticCases": 192,
+    "maxAlphaError": 0,
+    "maxColorError": 0,
+    "asan": true,
+    "referenceSha256": "4724271f9314b61f16280a096e32bda6008ba551c5e80230b5066aa5452f92cd"
+  },
+  "tilesMatrix": {
+    "passed": false,
+    "visualPassed": true,
+    "themes": [
+      "breeze-dark",
+      "breeze-light",
+      "Sweet"
+    ],
+    "scales": [
+      1,
+      1.25,
+      1.5,
+      2
+    ],
+    "cases": 120,
+    "maxChannelError": 1,
+    "opacityProtocol": "wp_alpha_modifier_v1",
+    "resourceCleanup": 12,
+    "liveResourceShutdown": 12,
+    "sessionDifferences": [
+      "cursor"
+    ],
+    "note": "40-minute run; the only difference was the cursor position, attributed to the user using the computer. A short rerun (breeze-dark 1.25) passed with the session unchanged.",
+    "shortRerun": {
+      "passed": true,
+      "sessionUnchanged": true,
+      "maxChannelError": 1
+    },
+    "perCase": [
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "shadow",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "recreated",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "small",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "tiny",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "docked",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "unset",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "restored",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "opacity",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "opacity-restored",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "shadow",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "recreated",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "small",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "tiny",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "docked",
+        "maxChannelError": 1,
+        "differentPixels": 2
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "unset",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "restored",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "opacity",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "opacity-restored",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.5,
+        "case": "shadow",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.5,
+        "case": "recreated",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.5,
+        "case": "small",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.5,
+        "case": "tiny",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.5,
+        "case": "docked",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.5,
+        "case": "unset",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.5,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.5,
+        "case": "restored",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.5,
+        "case": "opacity",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.5,
+        "case": "opacity-restored",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 2.0,
+        "case": "shadow",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 2.0,
+        "case": "recreated",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 2.0,
+        "case": "small",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 2.0,
+        "case": "tiny",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 2.0,
+        "case": "docked",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 2.0,
+        "case": "unset",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 2.0,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 2.0,
+        "case": "restored",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 2.0,
+        "case": "opacity",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 2.0,
+        "case": "opacity-restored",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "shadow",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "recreated",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "small",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "tiny",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "docked",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "unset",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "restored",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "opacity",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "opacity-restored",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "shadow",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "recreated",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "small",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "tiny",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "docked",
+        "maxChannelError": 1,
+        "differentPixels": 2
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "unset",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "restored",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "opacity",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "opacity-restored",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.5,
+        "case": "shadow",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.5,
+        "case": "recreated",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.5,
+        "case": "small",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.5,
+        "case": "tiny",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.5,
+        "case": "docked",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.5,
+        "case": "unset",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.5,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.5,
+        "case": "restored",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.5,
+        "case": "opacity",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.5,
+        "case": "opacity-restored",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 2.0,
+        "case": "shadow",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 2.0,
+        "case": "recreated",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 2.0,
+        "case": "small",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 2.0,
+        "case": "tiny",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 2.0,
+        "case": "docked",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 2.0,
+        "case": "unset",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 2.0,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 2.0,
+        "case": "restored",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 2.0,
+        "case": "opacity",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 2.0,
+        "case": "opacity-restored",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "shadow",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "recreated",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "small",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "tiny",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "docked",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "unset",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "restored",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "opacity",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "opacity-restored",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "shadow",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "recreated",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "small",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "tiny",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "docked",
+        "maxChannelError": 1,
+        "differentPixels": 2
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "unset",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "restored",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "opacity",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "opacity-restored",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.5,
+        "case": "shadow",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.5,
+        "case": "recreated",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.5,
+        "case": "small",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.5,
+        "case": "tiny",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.5,
+        "case": "docked",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.5,
+        "case": "unset",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.5,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.5,
+        "case": "restored",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.5,
+        "case": "opacity",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.5,
+        "case": "opacity-restored",
+        "maxChannelError": 1,
+        "differentPixels": 1
+      },
+      {
+        "theme": "Sweet",
+        "scale": 2.0,
+        "case": "shadow",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "Sweet",
+        "scale": 2.0,
+        "case": "recreated",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "Sweet",
+        "scale": 2.0,
+        "case": "small",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "Sweet",
+        "scale": 2.0,
+        "case": "tiny",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 2.0,
+        "case": "docked",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 2.0,
+        "case": "unset",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 2.0,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 2.0,
+        "case": "restored",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "Sweet",
+        "scale": 2.0,
+        "case": "opacity",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      },
+      {
+        "theme": "Sweet",
+        "scale": 2.0,
+        "case": "opacity-restored",
+        "maxChannelError": 1,
+        "differentPixels": 3
+      }
+    ]
+  },
+  "nativeDialog": {
+    "passed": true,
+    "sessionUnchanged": true,
+    "themes": [
+      "breeze-dark",
+      "breeze-light",
+      "Sweet"
+    ],
+    "scales": [
+      1,
+      1.25
+    ],
+    "cases": 42,
+    "maxChannelError": 3,
+    "lifecycleExact": [
+      {
+        "backend": "hyprland",
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "lifecycleExact": true
+      },
+      {
+        "backend": "kwin",
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "lifecycleExact": true
+      },
+      {
+        "backend": "hyprland",
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "lifecycleExact": true
+      },
+      {
+        "backend": "kwin",
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "lifecycleExact": true
+      },
+      {
+        "backend": "hyprland",
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "lifecycleExact": true
+      },
+      {
+        "backend": "kwin",
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "lifecycleExact": true
+      },
+      {
+        "backend": "hyprland",
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "lifecycleExact": true
+      },
+      {
+        "backend": "kwin",
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "lifecycleExact": true
+      },
+      {
+        "backend": "hyprland",
+        "theme": "Sweet",
+        "scale": 1.0,
+        "lifecycleExact": true
+      },
+      {
+        "backend": "kwin",
+        "theme": "Sweet",
+        "scale": 1.0,
+        "lifecycleExact": true
+      },
+      {
+        "backend": "hyprland",
+        "theme": "Sweet",
+        "scale": 1.25,
+        "lifecycleExact": true
+      },
+      {
+        "backend": "kwin",
+        "theme": "Sweet",
+        "scale": 1.25,
+        "lifecycleExact": true
+      }
+    ],
+    "perCase": [
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "normal",
+        "maxChannelError": 1,
+        "differentPixels": 5
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "recreated",
+        "maxChannelError": 1,
+        "differentPixels": 5
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "small",
+        "maxChannelError": 1,
+        "differentPixels": 4
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "restored",
+        "maxChannelError": 1,
+        "differentPixels": 5
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "opacity",
+        "maxChannelError": 3,
+        "differentPixels": 18818
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "case": "opacity-restored",
+        "maxChannelError": 1,
+        "differentPixels": 5
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "normal",
+        "maxChannelError": 2,
+        "differentPixels": 273
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "recreated",
+        "maxChannelError": 2,
+        "differentPixels": 273
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "small",
+        "maxChannelError": 1,
+        "differentPixels": 13
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "restored",
+        "maxChannelError": 2,
+        "differentPixels": 273
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "opacity",
+        "maxChannelError": 3,
+        "differentPixels": 29707
+      },
+      {
+        "theme": "breeze-dark",
+        "scale": 1.25,
+        "case": "opacity-restored",
+        "maxChannelError": 2,
+        "differentPixels": 273
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "normal",
+        "maxChannelError": 1,
+        "differentPixels": 5
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "recreated",
+        "maxChannelError": 1,
+        "differentPixels": 5
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "small",
+        "maxChannelError": 1,
+        "differentPixels": 4
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "restored",
+        "maxChannelError": 1,
+        "differentPixels": 5
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "opacity",
+        "maxChannelError": 2,
+        "differentPixels": 18960
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.0,
+        "case": "opacity-restored",
+        "maxChannelError": 1,
+        "differentPixels": 5
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "normal",
+        "maxChannelError": 2,
+        "differentPixels": 277
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "recreated",
+        "maxChannelError": 2,
+        "differentPixels": 277
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "small",
+        "maxChannelError": 1,
+        "differentPixels": 10
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "restored",
+        "maxChannelError": 2,
+        "differentPixels": 277
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "opacity",
+        "maxChannelError": 3,
+        "differentPixels": 29903
+      },
+      {
+        "theme": "breeze-light",
+        "scale": 1.25,
+        "case": "opacity-restored",
+        "maxChannelError": 2,
+        "differentPixels": 277
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "normal",
+        "maxChannelError": 1,
+        "differentPixels": 966
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "recreated",
+        "maxChannelError": 1,
+        "differentPixels": 966
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "small",
+        "maxChannelError": 1,
+        "differentPixels": 103
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "restored",
+        "maxChannelError": 1,
+        "differentPixels": 966
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "opacity",
+        "maxChannelError": 3,
+        "differentPixels": 19219
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.0,
+        "case": "opacity-restored",
+        "maxChannelError": 1,
+        "differentPixels": 966
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "normal",
+        "maxChannelError": 2,
+        "differentPixels": 1586
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "recreated",
+        "maxChannelError": 2,
+        "differentPixels": 1586
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "small",
+        "maxChannelError": 2,
+        "differentPixels": 158
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "hidden",
+        "maxChannelError": 0,
+        "differentPixels": 0
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "restored",
+        "maxChannelError": 2,
+        "differentPixels": 1586
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "opacity",
+        "maxChannelError": 3,
+        "differentPixels": 29930
+      },
+      {
+        "theme": "Sweet",
+        "scale": 1.25,
+        "case": "opacity-restored",
+        "maxChannelError": 2,
+        "differentPixels": 1586
+      }
+    ]
+  },
+  "panelInKwin": {
+    "passed": true,
+    "reference": "plasmashell and kwin_wayland 6.7.5",
+    "cases": [
+      {
+        "scale": 1.0,
+        "differentPixels": 0,
+        "maxChannelDelta": 0
+      },
+      {
+        "scale": 1.25,
+        "differentPixels": 0,
+        "maxChannelDelta": 0
+      },
+      {
+        "scale": 1.5,
+        "differentPixels": 0,
+        "maxChannelDelta": 0
+      },
+      {
+        "scale": 2.0,
+        "differentPixels": 2,
+        "maxChannelDelta": 1
+      }
+    ]
+  },
+  "blur": {
+    "passed": true,
+    "regions": [
+      {
+        "backend": "hyprland",
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "changedPixelsInside": 8960,
+        "changedPixelsOutside": 0,
+        "removalExact": true
+      },
+      {
+        "backend": "kwin",
+        "theme": "breeze-dark",
+        "scale": 1.0,
+        "changedPixelsInside": 8960,
+        "changedPixelsOutside": 0,
+        "removalExact": true
+      }
+    ],
+    "kwinParity": false,
+    "maxChannelError": 33
+  },
+  "xwayland": {
+    "passed": true,
+    "externalShadowChangedPixels": 62584,
+    "syntheticHints": [
+      "gtk",
+      "motif"
+    ],
+    "x11ClientOwnedShadowPixelsTested": false,
+    "sessionUnchanged": true
+  },
+  "regression": {
+    "ctestNormal": "8/8",
+    "ctestAsan": "2/2 (detect_leaks=0)",
+    "pythonR4": "262/262",
+    "breezebarsAndShadowPolicy": "5/5",
+    "decorator": "13/13",
+    "editModeSessionLG": "54/54 steps"
+  },
+  "fixedInThisPass": [
+    "PanelShadows::removeWindow left the window marked as observed: after auto-hide the destroyed connection was not restored and a later SVG change used a freed QWindow (SIGSEGV in test-paneltasks)",
+    "Test drivers restore the focused window after removing the temporary headless output"
+  ]
+}

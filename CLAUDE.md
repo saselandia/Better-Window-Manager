@@ -272,6 +272,15 @@ siendo el nombre del escritorio original que imita Breeze.
   `Desktop::windowState()`, `CViewHitTester`, `Fullscreen::controller()`, `Animation::mgr()`), portéalo con el
   diff del hyprbars oficial entre los commits que fija `hyprpm.toml` de hyprwm/hyprland-plugins.
 - **Pantalla completa**: `modules/fullscreen.lua` (cargado el último de las reglas) la deja sin bordes ni sombra, sin quitar la transparencia; un CSS nuevo para una app debe anular sus bordes/contornos en `:fullscreen` (Discord re-declara variables en `.theme-dark`: hay que ponerlas también ahí).
+- **Host Plasma, superficies y escala:** al recrear una superficie de `DesktopViewHost`, usar
+  `QWindow::destroy()` cualificado: `PlasmaQuick::ContainmentView::destroy()` elimina el anfitrión.
+  Las vistas interactivas R5 cargan el marco de configuración instalado; el arnés reducido es de
+  diagnóstico R4. En Wayland, el DPR de `QScreen` puede ser el entero superior: validar escala
+  fraccionaria con la configuración del compositor y el DPR/metadata de la ventana o captura.
+- **Sombras KDE en breezebars (R6):** el estado de una superficie lo posee un `UniquePtr`: nunca
+  `weak.lock()` sobre él (aborta). No llamar a `xcb_connect` al cargar el plugin: bloquea el XWayland
+  a demanda. Con layer-shell, Qt informa la posición (0,0): usar la geometría del anclaje.
+  `PanelShadows::removeWindow` debe olvidar también la observación de destrucción.
 - **inotify (límite 128 instancias por usuario, por defecto en casi todas las distros)**: cada `FileView` con `watchChanges: true` (y cada `QFileSystemWatcher`) gasta una instancia, también si el archivo no existe. Llegar a 128 rompe otras apps (Obsidian: «EMFILE: too many open files, watch»). No crees un vigilante por elemento de una lista: uno sobre un archivo-marca que reescribe el productor (p. ej. `agents/usage/.updated`). Mide con `find /proc/<pid>/fd -lname 'anon_inode:inotify' | wc -l`.
 - **swww/awww**: GURU publica swww con su nombre nuevo, `awww` (mismo uso). Los scripts usan el que exista.
 - **Luz nocturna**: dos motores (servicio `Hyprsunset.qml` en default (end-4)/Plasma, `nightlight.py` en Retro) con un

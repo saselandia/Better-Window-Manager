@@ -1,8 +1,9 @@
 # Breeze II — R5: modo edición de Plasma (resultados)
 
 R5 sustituye el editor reducido por las interfaces originales de Plasma 6.7.5. Este informe
-recoge cada iteración. Tras la iteración 12 (2026-11-20) R5 queda **lista para la aceptación del
-usuario**; las diferencias que quedan frente a Plasma 6.7.5 están al final de la iteración 12.
+recoge cada iteración. La **iteración 13** (2026-11-20) resuelve los pendientes técnicos de
+la iteración 12, incluido el marco original de configuración y el gestor de pantallas.
+La comparación con Plasma real y los límites actuales están al final de este informe.
 
 ## Punto de partida
 
@@ -854,3 +855,119 @@ python3 src/bwm-plasma-host/preview-isolated.py --binary build/bwm-plasma-host/b
 
 Con Breeze activa (o enviando `skin plasma` al registro en otra skin). Ctrl+C la detiene. No sustituye
 el panel diario ni el fondo de Breeze.
+
+
+## Iteración 13 (2026-11-20) — pendientes reales de R5 y comparación con Plasma
+
+La iteración 12 todavía dejaba trabajo de R5; no bastaba con pasar a R6. Esta iteración
+mantiene el anfitrión aislado y los formatos originales de Plasma. No sustituye el panel
+ni el fondo del escritorio diario, no cambia de skin y no instala plugins en Hyprland.
+
+### Cambios
+
+- **Configuración individual:** las vistas interactivas de panel, escritorio y previsualización
+  cargan el `AppletConfiguration.qml` **instalado**, con barra lateral, páginas del paquete,
+  Atajos, Acerca de y el diálogo original de cambios sin guardar. Aplicar y Descartar ejecutan
+  sus acciones QML originales. `ConfigurationSession` conserva el arnés transaccional reducido
+  únicamente para los diagnósticos R4 (`--probe`, `--exercise` y pruebas de contratos).
+- **Gestor de escritorios y paneles:** acción `manage-containments` y adaptador
+  `containmentmanagement.{h,cpp}` de `shell/shellcontainmentconfig` (Plasma 6.7.5, LGPL).
+  Carga `ShellContainmentConfiguration.qml` y sus delegados instalados sin modificarlos.
+  Los modelos publican las pantallas, contenedores, bordes, actividad, previsualización y
+  eliminación; el movimiento de paneles pasa por `PanelRuntime` y guarda la descripción física.
+  Intercambiar escritorios conserva los contenedores y widgets, recreando sólo la superficie
+  de plataforma. El gestor sale del modo edición como `ShellCorona`. Las vistas de un
+  escritorio desplazado a una pantalla desconectada quedan ocultas y pueden recuperarse.
+  Las vistas recuperadas también siguen la activación de la skin en el anfitrión aislado.
+  Las previsualizaciones capturan sólo los elementos propios y viven en un directorio temporal.
+- **Reserva al añadir paneles:** las preferencias de la plantilla se aplican antes de mostrar
+  el panel y congelar su reserva de edición; desaparece el grosor provisional de 48 px.
+- **Pantalla de «Añadir panel»:** consulta asíncrona de la salida enfocada de Hyprland al
+  seleccionar la acción; resuelve su descripción física. Sigue el contrato de `activeOutputName`
+  de Plasma. La pantalla del menú y la pantalla activa pueden ser distintas.
+- **«Aplicar» al abrir los fondos:** la comparación real confirmó que Plasma empieza con el
+  botón desactivado. El anfitrión descarta una sola vez el aviso de normalización inicial
+  (`SlidePaths`), para que el primer cambio real pueda emitir `unsavedChangesChanged`.
+  El botón empieza desactivado, se activa al elegir otro fondo y vuelve a desactivarse al guardar.
+- **Vida de las vistas:** corregida una captura por referencia de una función local en el
+  sincronizador del escritorio. Para recrear una superficie se usa `QWindow::destroy()`:
+  `ContainmentView::destroy()` programa la eliminación del anfitrión completo.
+
+### Referencia visual y botón central
+
+`check-r5-reference.py` arranca **KWin y plasmashell 6.7.5 reales**, sucesivamente con BWM
+sobre el mismo servidor Wayland virtual y un D-Bus privado. Todas las raíces XDG, actividad,
+escritorio y paquete de prueba son temporales. No utiliza el bus, la pantalla ni la selección
+primaria de la sesión del usuario. No cambia `$HOME`.
+
+La referencia usa Breeze Oscuro, OpenGL y una salida lógica de 1600×1000. El controlador
+aplica la escala mediante `kscreen-doctor` en ese servidor privado y verifica tanto el valor
+nativo como el de cada captura. En Qt Wayland, `QScreen::devicePixelRatio()` puede ser el
+entero superior; no se toma ese valor como prueba de escala fraccionaria de una ventana.
+
+Evidencia numérica y hashes: `BREEZE_R5_REFERENCE_RESULTS.json`.
+
+| Comparación | Resultado |
+| :--- | :--- |
+| Configuración de widget, fondo de color y fondo de imagen, escala 1 | 3/3 imágenes idénticas píxel a píxel |
+| Las mismas tres ventanas a 1,25/1,5/1,6 | 9/9 con iguales dimensiones; diferencias de 9–124 píxeles, máximo 1 unidad por canal de 8 bits; ningún píxel supera esa tolerancia |
+| Modo edición del escritorio a 1/1,25/1,5/1,6 | Capturas revisadas; conserva métricas y disposición. No hay paridad píxel a píxel del escritorio completo: efectos del compositor y visibilidad de «Gestionar…» difieren (ver abajo) |
+| Botón central con URL local desechable | Plasma y BWM crean `org.kde.plasma.icon` apuntando a la misma URL, verificada en la configuración; no copian el archivo al directorio Desktop |
+| Limpieza del comparador | Procesos privados terminados y raíces temporales retiradas; portapapeles del usuario sin utilizar |
+
+La selección primaria de la prueba se publica con `wl-copy --primary` **en el compositor
+privado**. La pulsación central llega por el protocolo de entrada de ese KWin. La prueba
+comprueba el widget y su URL; no se limita a invocar directamente `org.kde.paste`.
+
+Para reproducir (dependencias de prueba: KWin/plasmashell de la versión fijada, kscreen-doctor,
+kactivitymanagerd, D-Bus, wl-clipboard, compilador, wayland-scanner, Qt Gui/DBus y Pillow):
+
+```bash
+python3 src/bwm-plasma-host/check-r5-reference.py --report /tmp/bwm-r5-reference-results.json
+```
+
+El comparador selecciona el proveedor EGL NVIDIA si está instalado en este equipo híbrido;
+`--egl-vendor-json` y `--gbm-backend` permiten indicar otro. `--capture-dir` conserva únicamente
+imágenes del fixture para inspección; se borraron las imágenes de esta ejecución tras revisarlas.
+QPainter no sirve como sustituto: Screenshot2 de esta versión necesita OpenGL. La API de
+scripts `Widget::showConfigurationInterface()` está vacía en Plasma 6.7.5; el fixture abre la
+configuración por su acción original, no por esa función.
+
+### Pruebas de esta iteración
+
+- `originalAppletConfigurationFrame`: marco nativo, guardar con la acción QML original,
+  Atajos, Acerca de, aviso de cambios, Descartar y reapertura con el valor guardado.
+- `originalContainmentManagement`: gestor original y modelos; mover panel, intercambiar
+  escritorios conservando sus widgets, recuperar escritorio y panel desconectados, rechazar
+  pantalla inexistente/política inmutable, eliminar panel y cerrar el gestor.
+- `originalDesktopEditModeHost`: la reserva de «Empty Panel» ya es la de su plantilla durante
+  el modo edición, no la provisional de construcción.
+- `originalDesktopContainmentConfiguration`: empieza sin cambios, elegir fondo activa Aplicar,
+  guardado confirmado en la configuración KDE, modelos de Layout y acciones del ratón.
+- LG, `originalDesktopEditModeInHyprland`: **8/8 pasos**, incluida la salida activa de «Añadir
+  panel». La expectativa respeta la reserva inferior ya existente de la barra diaria.
+- `desktopScreenSwapInHyprland`: **3/3 pasos** sobre LG y MSI, intercambio y recuperación de
+  superficies reales, foco y geometrías/reservas sin cambios al terminar.
+- Hyprland, salida headless temporal a 1,25/1,5/1,6: **24/24 pasos**, pantallas físicas intactas.
+- Regresión: CTest normal **8/8**, selección ASan **2/2** (`detect_leaks=0`), Python R4 **262/262**.
+  Offscreen se ejecuta sin `QT_QPA_PLATFORMTHEME=gtk3` heredado.
+
+### Diferencias actuales y alcance
+
+- **R6:** sombras y desenfoque de menús/paneles/popups y su integración con el compositor.
+  El rectángulo sombreado interno del modo edición viene del QML original; eso no equivale
+  a haber portado los protocolos de efectos de KWin.
+- En el fixture de Plasma, «Gestionar escritorios y paneles…» puede permanecer visible con
+  una sola pantalla: `ShellCorona` calcula su visibilidad al añadir el contenedor, antes de
+  resolver su pantalla, y no la recalcula al asignarla. BWM la actualiza con las asignaciones
+  reales. El gestor está implementado; la diferencia no oculta un backend pendiente.
+- La comparación de ventanas recorta decoración, sombra y cursor. Sólo certifica esas tres
+  interfaces con Breeze Oscuro y las cuatro escalas medidas; no todos los temas/plugins.
+- El paginador sin `--native-desktops` conserva la proyección de R4. La sustitución del
+  panel/escritorio diario y la integración de producción siguen fuera del anfitrión aislado.
+- El gestor y la recuperación de contenedores sin vista se prueban offscreen. Además, las
+  superficies Wayland se intercambian y recuperan tras ocultarlas en los dos monitores reales,
+  con widgets, foco y reservas conservados (3/3 pasos). No se ha desenchufado un monitor físico.
+  No se atribuye al usuario una aceptación visual. Codex no ejecutó commits/push; durante el trabajo
+  aparecieron `7315921` y `a761afb`, que se conservan. Los ajustes finales y el JSON de referencia
+  siguen en el árbol de trabajo.

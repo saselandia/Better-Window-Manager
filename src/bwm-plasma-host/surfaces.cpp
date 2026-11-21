@@ -15,6 +15,23 @@
 #include <QLoggingCategory>
 Q_LOGGING_CATEGORY(lcBwmAnchor,"bwm.r4.anchor",QtWarningMsg)
 namespace BwmSurface {
+class EffectsCommit final:public QObject {
+public:
+    explicit EffectsCommit(QQuickWindow *window):QObject(window),window(window){window->installEventFilter(this);}
+    bool eventFilter(QObject *,QEvent *event)override {
+        if(event->type()==QEvent::Expose && !pending) {
+            pending=true;
+            QTimer::singleShot(0,this,[this]{pending=false;if(window->isExposed())window->update();});
+        }
+        return false;
+    }
+private:
+    QQuickWindow *window;bool pending=false;
+};
+void ensureNativeEffectsCommit(QQuickWindow *window) {
+    if(!window || window->property("bwmNativeEffectsCommit").toBool())return;
+    window->setProperty("bwmNativeEffectsCommit",true);new EffectsCommit(window);
+}
 QRect placePopup(const QRect &area,const QRect &anchor,QSize wanted,Qt::Edge edge,int gap) {
     if(area.isEmpty() || wanted.width()<=0 || wanted.height()<=0 || gap<0)return {};
     const QSize size(std::min(wanted.width(),area.width()),std::min(wanted.height(),area.height()));
@@ -237,6 +254,7 @@ void setPanelReservationPolicy(QQuickWindow *window,bool allowed,bool editing) {
 }
 void configurePanel(QQuickWindow *window,Qt::Edge edge,int gap,bool nativePolicy) {
     if(!window || gap<0 || (edge!=Qt::TopEdge && edge!=Qt::BottomEdge && edge!=Qt::LeftEdge && edge!=Qt::RightEdge))return;
+    ensureNativeEffectsCommit(window);
     // Native policy is explicit opt-in, never inferred from installed packages.
     if(nativePolicy)gap=0;
     window->setProperty("bwmLayerPanel",true);
@@ -299,6 +317,7 @@ void setPanelAcceptsInput(QQuickWindow *window,bool accepts) {
 void registerTypes(){qmlRegisterType<PopupAnchor>("org.bwm.plasma.host",1,0,"PopupAnchor");}
 }
 void PopupAnchor::setPopup(QQuickWindow *popup) {
+    BwmSurface::ensureNativeEffectsCommit(popup);
     if(m_popup==popup)return;
     if(m_popup){m_popup->removeEventFilter(this);disconnect(m_popup,nullptr,this,nullptr);}
     if(m_boundScreen)disconnect(m_boundScreen,nullptr,this,nullptr);

@@ -1,1 +1,6 @@
 *.so
+*.o
+*.d
+kde-shadow-server.h
+kde-shadow-protocol.c
+kde-shadow-protocol.o

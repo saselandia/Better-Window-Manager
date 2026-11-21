@@ -825,6 +825,37 @@ Cambios BWM: sin `ShellCorona`; el diálogo `explorer/AppletAlternatives.qml` in
 carga sin modificar y se ancla como superficie layer-shell (`bwm-r4-popup`) sobre el widget
 del panel mediante `PopupAnchor`, preservando el orden `AppletOrder` del containment.
 
+### Sombras nativas KDE de superficies, paneles y diálogos — R6, iteración 2 (2026-11-21)
+
+`src/breezebars/protocols/shadow.xml` es el protocolo `org_kde_kwin_shadow_manager` v2 de
+**plasma-wayland-protocols** (Martin Gräßlin 2015, LGPL-2.1-or-later), incluido sin cambios con
+su aviso; `wayland-scanner` genera en la compilación el servidor. `src/breezebars/KdeShadow.cpp`
+(GPL-2.0-or-later) implementa ese servidor dentro del plugin: copia acotada de búferes SHM con
+`pread` (`KdeShadowPixels.hpp`, propio BSD-3-Clause), estado aplicado con el commit real de la
+superficie y atlas de nueve piezas siguiendo `NinePatchOpenGL::create` de **KWin 6.7.5**
+(`src/scene/opengl/ninepatch.cpp`, Vlad Zahorodnii 2026, GPL-2.0-or-later). `KdeShadowGeometry.hpp` adapta
+`ShadowItem::buildQuads` de KWin 6.7.5 (`src/scene/shadowitem.cpp`, Vlad Zahorodnii 2021,
+GPL-2.0-or-later) para las ocho piezas del protocolo: bordes ausentes, piezas asimétricas y
+uniones fraccionarias. KDecoration conserva prioridad sobre la sombra del cliente, como KWin.
+
+`src/bwm-plasma-host/panelshadows{.cpp,_p.h}` es `shell/panelshadows.{cpp,h}` de
+**plasma-workspace 6.7.5** (Aaron Seigo 2011, LGPL-2.0-or-later) con cambios BWM marcados:
+categoría de registro propia, ninguna recreación si el estado no cambia, conexión única por
+ventana y `windowState()` de diagnóstico. `PanelViewHost::updateMask` sigue
+`PanelView::updateMask`/`updateEnabledBorders` 6.7.5 para máscara, bordes activos, desenfoque y
+contraste mediante `KWindowEffects` (KWindowSystem 6.29.0). Los diálogos de libplasma 6.7.5
+(`DialogShadows`) se usan sin modificar.
+
+`src/breezebars/check-r6-surfaces.py`, `src/bwm-plasma-host/test-r6-native.cpp` y
+`tests/r6_x11_client.cpp` son arneses propios. Ejecutan los binarios instalados de KWin 6.7.5
+en raíces y buses privados y generan en temporal el cliente de `alpha-modifier-v1.xml` de
+**wayland-protocols** (MIT) y de `fake-input.xml` (LGPL-2.1-or-later). Las capturas contienen
+sólo fondos y rectángulos de prueba. Fuentes correspondientes:
+[plasma-wayland-protocols](https://invent.kde.org/libraries/plasma-wayland-protocols),
+[KWin 6.7.5](https://invent.kde.org/plasma/kwin/-/tree/v6.7.5),
+[plasma-workspace 6.7.5](https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5/shell) y
+[libplasma 6.7.5](https://invent.kde.org/plasma/libplasma/-/tree/v6.7.5).
+
 ### Bordes adyacentes y rectángulo disponible — Plasma 6.7.5 (R5, iteración 10)
 
 El anclaje bilateral `FillAvailable` en `src/bwm-plasma-host/surfaces.cpp` y la publicación del
@@ -862,3 +893,21 @@ usan las plantillas de panel instaladas, y `ShellCorona::addPanel`/`populateAddP
 plantillas `Plasma/LayoutTemplate` (`layout.js`) se ejecutan sin modificar. Textos con el catálogo
 `plasmashell` instalado. Fuente correspondiente:
 <https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5/shell>.
+
+
+### Gestor de escritorios/paneles y configuración nativa — Plasma 6.7.5 (R5, iteración 13)
+
+`src/bwm-plasma-host/containmentmanagement.{h,cpp}` adapta los modelos, roles y operaciones
+presentadas por `shell/shellcontainmentconfig.{h,cpp}` de `plasma-workspace-6.7.5.tar.xz`
+(Cyril Rossi 2021, LGPL-2.0-or-later). Carga sin modificar el
+`configuration/ShellContainmentConfiguration.qml` instalado y sus delegados; sustituye las
+operaciones de ShellCorona por los anfitriones layer-shell y PanelRuntime de BWM, con capturas
+limitadas a contenido propio. Movimiento/recuperación de escritorios sigue el contrato de
+`ShellCorona::setScreenForContainment`; las vistas/contenedores conservan los avisos de su origen.
+Las vistas interactivas de `ConfigurationSession` cargan el `AppletConfiguration.qml` instalado
+sin copiarlo ni modificarlo. Los textos usan los catálogos originales. Fuente correspondiente:
+<https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5/shell> y
+<https://invent.kde.org/plasma/plasma-desktop/-/tree/v6.7.5/desktoppackage/contents/configuration>.
+`check-r5-reference.py` ejecuta los binarios instalados de Plasma/KWin 6.7.5 y genera en temporal
+el cliente del protocolo `fake-input.xml` instalado (plasma-wayland-protocols; Martin Gräßlin 2015,
+LGPL-2.1-or-later); no incorpora binarios ni capturas del escritorio del usuario.

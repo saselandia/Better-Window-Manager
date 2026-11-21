@@ -1486,3 +1486,29 @@ Pruebas: `originalDesktopEditModeHost` y `originalDesktopContainmentConfiguratio
 `originalDesktopEditModeInHyprland` (menú y área útil) y el paso `fractional-desktop-edit-mode` de
 `--fractional-scale`. Ejecutar las pruebas offscreen sin `QT_QPA_PLATFORMTHEME` heredado de la sesión
 (`gtk3` en Retro intenta abrir una pantalla GTK).
+
+
+## R5, iteración 13: marco nativo, gestor de pantallas y referencia real
+
+Las configuraciones interactivas de widgets usan ahora el `AppletConfiguration.qml` instalado
+(barra lateral, Atajos, Acerca de y aviso de cambios). Los diagnósticos `--probe`/`--exercise`
+conservan su arnés R4. `containmentmanagement` adapta los modelos de Plasma 6.7.5 y carga el
+`ShellContainmentConfiguration.qml` original: mover paneles, intercambiar escritorios,
+recuperar contenedores desconectados, previsualizar contenido propio y eliminar. Las asignaciones
+de panel siguen usando descripciones físicas. No se sustituye el escritorio/panel diario.
+
+«Add Panel» consulta la salida activa del compositor. Las preferencias de la plantilla preceden
+la reserva inicial de edición. «Aplicar» empieza desactivado como en Plasma y responde al primer
+cambio real del fondo. Al recrear una superficie, usar **`QWindow::destroy()`**, no el método
+homónimo de `ContainmentView` (elimina el anfitrión).
+
+Comparación reproducible con plasmashell/KWin 6.7.5 privados, escalas reales y botón central
+sobre una selección primaria desechable:
+
+```bash
+python3 src/bwm-plasma-host/check-r5-reference.py --report /tmp/bwm-r5-reference-results.json
+```
+
+El resultado distingue paridad de las ventanas de configuración de la comparación completa
+con efectos del compositor. Requisitos, resultados, diferencias y límites en
+`docs/BREEZE_R5_RESULTS.md`, iteración 13; evidencia en `docs/BREEZE_R5_REFERENCE_RESULTS.json`.

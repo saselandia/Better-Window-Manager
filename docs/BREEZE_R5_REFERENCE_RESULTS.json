@@ -1,0 +1,571 @@
+{
+  "version": 1,
+  "reference": "plasmashell and kwin_wayland 6.7.5",
+  "sessionModified": false,
+  "userClipboardUsed": false,
+  "cases": [
+    {
+      "scale": 1.0,
+      "scene": "applet",
+      "bwm": {
+        "height": 630,
+        "scale": 1,
+        "width": 810,
+        "window": "{06d063bc-157d-47a6-bdd9-41159464dec1}"
+      },
+      "plasma": {
+        "height": 630,
+        "scale": 1,
+        "width": 810,
+        "window": "{57eaebd7-0393-4b21-8c32-bc81831328f8}"
+      },
+      "sameSize": true,
+      "differenceBounds": null,
+      "meanChannelError": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "differentPixels": 0,
+      "maxChannelDelta": 0,
+      "pixelsAboveOneChannelUnit": 0,
+      "bwmSha256": "04eebfef94b165d73d993723028b0f10a40edec0163491906145f9d374333a14",
+      "plasmaSha256": "04eebfef94b165d73d993723028b0f10a40edec0163491906145f9d374333a14"
+    },
+    {
+      "scale": 1.0,
+      "scene": "wallpaper",
+      "bwm": {
+        "height": 630,
+        "scale": 1,
+        "width": 810,
+        "window": "{59c1ab1e-ba97-4bc4-a00c-0ba4a1bc5fc1}"
+      },
+      "plasma": {
+        "height": 630,
+        "scale": 1,
+        "width": 810,
+        "window": "{5edcb64a-f225-439e-ace5-2d13d8526aca}"
+      },
+      "sameSize": true,
+      "differenceBounds": null,
+      "meanChannelError": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "differentPixels": 0,
+      "maxChannelDelta": 0,
+      "pixelsAboveOneChannelUnit": 0,
+      "bwmSha256": "c4bb6087b5f79a9f3d6720b5a1fc0e738da9d1479b528e0fffda3a7ddbd0ee61",
+      "plasmaSha256": "c4bb6087b5f79a9f3d6720b5a1fc0e738da9d1479b528e0fffda3a7ddbd0ee61"
+    },
+    {
+      "scale": 1.0,
+      "scene": "wallpaper-image",
+      "bwm": {
+        "height": 630,
+        "scale": 1,
+        "width": 810,
+        "window": "{d1544077-c501-4833-9edd-831227d8099a}"
+      },
+      "plasma": {
+        "height": 630,
+        "scale": 1,
+        "width": 810,
+        "window": "{a28f55a0-5d4a-4f42-b13a-019f67bbcb0c}"
+      },
+      "sameSize": true,
+      "differenceBounds": null,
+      "meanChannelError": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "differentPixels": 0,
+      "maxChannelDelta": 0,
+      "pixelsAboveOneChannelUnit": 0,
+      "bwmSha256": "483405325febc97d1acc64c623f95ca0794f2eef63ccb37baa8c20226d28c237",
+      "plasmaSha256": "483405325febc97d1acc64c623f95ca0794f2eef63ccb37baa8c20226d28c237"
+    },
+    {
+      "scale": 1.0,
+      "scene": "edit",
+      "bwm": {
+        "height": 1000,
+        "scale": 1,
+        "width": 1600,
+        "window": ""
+      },
+      "plasma": {
+        "height": 1000,
+        "scale": 1,
+        "width": 1600,
+        "window": ""
+      },
+      "sameSize": true,
+      "differenceBounds": [
+        0,
+        0,
+        1600,
+        1000
+      ],
+      "meanChannelError": [
+        0.2430925,
+        0.26147,
+        0.27145375
+      ],
+      "differentPixels": 164789,
+      "maxChannelDelta": 220,
+      "pixelsAboveOneChannelUnit": 82721,
+      "bwmSha256": "3b5ad92978dbe5143a5c4aeeeab81aba5afed8c11fe94fdbb4217386fffb5c77",
+      "plasmaSha256": "833b40c4d0026cbe32e81faeca41dcfe1d1c6320d6c2a693b270aae8aaa10811"
+    },
+    {
+      "scale": 1.0,
+      "scene": "paste",
+      "nativePaste": true,
+      "bwmPaste": true,
+      "userClipboardUsed": false,
+      "result": "org.kde.plasma.icon with the disposable local URL"
+    },
+    {
+      "scale": 1.25,
+      "scene": "applet",
+      "bwm": {
+        "height": 788,
+        "scale": 1.25,
+        "width": 1013,
+        "window": "{bc4381ce-c812-4385-974d-90b74820b1e5}"
+      },
+      "plasma": {
+        "height": 788,
+        "scale": 1.25,
+        "width": 1013,
+        "window": "{21b78797-4140-4149-8c08-2060f0831ae7}"
+      },
+      "sameSize": true,
+      "differenceBounds": [
+        49,
+        20,
+        207,
+        263
+      ],
+      "meanChannelError": [
+        1.127474807201808e-05,
+        1.127474807201808e-05,
+        1.127474807201808e-05
+      ],
+      "differentPixels": 9,
+      "maxChannelDelta": 1,
+      "pixelsAboveOneChannelUnit": 0,
+      "bwmSha256": "d309f23ee9809858690018d1b1a051a5316cafff7a8d4810f778047f2bf4cf5e",
+      "plasmaSha256": "3f4a83f538b05ce77cc761a95263b221c0cad1ab5a3bb4278474a936a8b91abe"
+    },
+    {
+      "scale": 1.25,
+      "scene": "wallpaper",
+      "bwm": {
+        "height": 788,
+        "scale": 1.25,
+        "width": 1013,
+        "window": "{ec93369b-1414-4464-b3d6-4a74b89aff9d}"
+      },
+      "plasma": {
+        "height": 788,
+        "scale": 1.25,
+        "width": 1013,
+        "window": "{bfff2b85-f710-4655-9661-1bc334786f24}"
+      },
+      "sameSize": true,
+      "differenceBounds": [
+        77,
+        34,
+        472,
+        329
+      ],
+      "meanChannelError": [
+        4.134074293073296e-05,
+        2.7560495287155307e-05,
+        2.3802245929815947e-05
+      ],
+      "differentPixels": 35,
+      "maxChannelDelta": 1,
+      "pixelsAboveOneChannelUnit": 0,
+      "bwmSha256": "642863fa9f229782a0e223794f7767d9f8ac7f2e589ff11865761cd6a433a870",
+      "plasmaSha256": "e1ec0478d803f6cd4e4b5a60ba0cf2595ae4bc4076c1dc51acec870302b5e6ac"
+    },
+    {
+      "scale": 1.25,
+      "scene": "wallpaper-image",
+      "bwm": {
+        "height": 788,
+        "scale": 1.25,
+        "width": 1013,
+        "window": "{99094ef0-37b4-4690-accb-a5d779cf4f67}"
+      },
+      "plasma": {
+        "height": 788,
+        "scale": 1.25,
+        "width": 1013,
+        "window": "{baea1c3f-5ad3-41c1-80f7-aca2fe91c483}"
+      },
+      "sameSize": true,
+      "differenceBounds": [
+        42,
+        26,
+        460,
+        518
+      ],
+      "meanChannelError": [
+        8.51869854330255e-05,
+        9.896723307660315e-05,
+        9.771448329082336e-05
+      ],
+      "differentPixels": 94,
+      "maxChannelDelta": 1,
+      "pixelsAboveOneChannelUnit": 0,
+      "bwmSha256": "a46e2a5c37da47f7a6703ad9b251f26470e4048a4c41f79cc1275236fd334a92",
+      "plasmaSha256": "5958e9544ff31d405184d79cf07a9298f3b49cd89486a1e05d270b6fee312b7a"
+    },
+    {
+      "scale": 1.25,
+      "scene": "edit",
+      "bwm": {
+        "height": 1250,
+        "scale": 1.25,
+        "width": 2000,
+        "window": ""
+      },
+      "plasma": {
+        "height": 1250,
+        "scale": 1.25,
+        "width": 2000,
+        "window": ""
+      },
+      "sameSize": true,
+      "differenceBounds": [
+        0,
+        0,
+        2000,
+        1250
+      ],
+      "meanChannelError": [
+        0.2413676,
+        0.2617172,
+        0.2690124
+      ],
+      "differentPixels": 253302,
+      "maxChannelDelta": 220,
+      "pixelsAboveOneChannelUnit": 124138,
+      "bwmSha256": "5f6a5fa779fb693eb6df5a2a9766e1bd5efb115a4cfa3ba8e45b59276a2c62c9",
+      "plasmaSha256": "25345de273a4fa0b39ee66c71a7fde1ccd72e646e9ff8271d805bcf6e91944c9"
+    },
+    {
+      "scale": 1.5,
+      "scene": "applet",
+      "bwm": {
+        "height": 945,
+        "scale": 1.5,
+        "width": 1215,
+        "window": "{869d156c-1803-4ed2-9b1a-e49a1b583a73}"
+      },
+      "plasma": {
+        "height": 945,
+        "scale": 1.5,
+        "width": 1215,
+        "window": "{0a107fad-6cc3-4fb1-8587-ce097cbd5c54}"
+      },
+      "sameSize": true,
+      "differenceBounds": [
+        83,
+        15,
+        291,
+        420
+      ],
+      "meanChannelError": [
+        2.4386526444139614e-05,
+        2.699936856315457e-05,
+        2.52574738171446e-05
+      ],
+      "differentPixels": 33,
+      "maxChannelDelta": 1,
+      "pixelsAboveOneChannelUnit": 0,
+      "bwmSha256": "8fbe8f3927f90bccf14c3c2fa9e3b4044db6b8d5b599dea3976fee50f458c318",
+      "plasmaSha256": "7ebcd1e6803f64089dddf59eaa155ad9d7ac14c030fbeb88f3a4a534577ca75f"
+    },
+    {
+      "scale": 1.5,
+      "scene": "wallpaper",
+      "bwm": {
+        "height": 945,
+        "scale": 1.5,
+        "width": 1215,
+        "window": "{713b85cc-6847-4fe5-8069-8ef93ac3be56}"
+      },
+      "plasma": {
+        "height": 945,
+        "scale": 1.5,
+        "width": 1215,
+        "window": "{a9f3446e-ddcd-41ec-bcf2-fdee4c2dd1c5}"
+      },
+      "sameSize": true,
+      "differenceBounds": [
+        34,
+        32,
+        556,
+        597
+      ],
+      "meanChannelError": [
+        5.5740631872319115e-05,
+        5.05149476342892e-05,
+        4.877305288827923e-05
+      ],
+      "differentPixels": 71,
+      "maxChannelDelta": 1,
+      "pixelsAboveOneChannelUnit": 0,
+      "bwmSha256": "580924f261859b82b2adf8d98289487f0017a6437e0f94cd07735d9dd34934dc",
+      "plasmaSha256": "a73176a52605815ccc21c915a5ebc067c6fdb7550aa7c47215318938b91bba8b"
+    },
+    {
+      "scale": 1.5,
+      "scene": "wallpaper-image",
+      "bwm": {
+        "height": 945,
+        "scale": 1.5,
+        "width": 1215,
+        "window": "{c8157822-a7fa-44f3-98b0-6af494c5741c}"
+      },
+      "plasma": {
+        "height": 945,
+        "scale": 1.5,
+        "width": 1215,
+        "window": "{d87d2d02-21cb-45d9-9c78-07527df0c8cf}"
+      },
+      "sameSize": true,
+      "differenceBounds": [
+        34,
+        35,
+        556,
+        627
+      ],
+      "meanChannelError": [
+        5.1385895007294185e-05,
+        5.225684238029917e-05,
+        5.835347399133407e-05
+      ],
+      "differentPixels": 68,
+      "maxChannelDelta": 1,
+      "pixelsAboveOneChannelUnit": 0,
+      "bwmSha256": "17b4f064063ac748a526398de3be0ca3329a5a6a69e3229c4db3bff4652b96fb",
+      "plasmaSha256": "d22fa29c3a47600f5307951151fd34ad718d4e4ae10abd7a8fd1dd42c0883551"
+    },
+    {
+      "scale": 1.5,
+      "scene": "edit",
+      "bwm": {
+        "height": 1500,
+        "scale": 1.5,
+        "width": 2400,
+        "window": ""
+      },
+      "plasma": {
+        "height": 1500,
+        "scale": 1.5,
+        "width": 2400,
+        "window": ""
+      },
+      "sameSize": true,
+      "differenceBounds": [
+        0,
+        0,
+        2400,
+        1500
+      ],
+      "meanChannelError": [
+        0.24107333333333333,
+        0.25906583333333333,
+        0.2671788888888889
+      ],
+      "differentPixels": 359583,
+      "maxChannelDelta": 220,
+      "pixelsAboveOneChannelUnit": 180471,
+      "bwmSha256": "01a57c1b282d6f791e47e3f7aeee220d91364cde799d71ec53b6b36cf214b7fa",
+      "plasmaSha256": "0b243d65b8c2109ec69d7bce40ae4db0e72906b8841a75b496f36c9d0a85a1d3"
+    },
+    {
+      "scale": 1.6,
+      "scene": "applet",
+      "bwm": {
+        "height": 1008,
+        "scale": 1.6,
+        "width": 1296,
+        "window": "{cc77163e-afe6-4586-9a51-dd8f9b185793}"
+      },
+      "plasma": {
+        "height": 1008,
+        "scale": 1.6,
+        "width": 1296,
+        "window": "{536b5744-d6d8-46de-95d5-bfa423b54b52}"
+      },
+      "sameSize": true,
+      "differenceBounds": [
+        71,
+        85,
+        140,
+        342
+      ],
+      "meanChannelError": [
+        5.358367626886145e-06,
+        5.358367626886145e-06,
+        4.592886537330982e-06
+      ],
+      "differentPixels": 10,
+      "maxChannelDelta": 1,
+      "pixelsAboveOneChannelUnit": 0,
+      "bwmSha256": "cbd7988d9b3ae5ac0f7b00afbada6aec9f7d8d62b94a6166c7e97c8f5f3a271e",
+      "plasmaSha256": "b2dfb3b25fd1d1553b35c7d528ed0f81b663e79dec97296de4eac69cfcfd5229"
+    },
+    {
+      "scale": 1.6,
+      "scene": "wallpaper",
+      "bwm": {
+        "height": 1008,
+        "scale": 1.6,
+        "width": 1296,
+        "window": "{0365624f-e7bd-43f5-9d35-2a30d24eab48}"
+      },
+      "plasma": {
+        "height": 1008,
+        "scale": 1.6,
+        "width": 1296,
+        "window": "{af573fab-fea8-4e47-a0e4-aeb5f86d7f73}"
+      },
+      "sameSize": true,
+      "differenceBounds": [
+        59,
+        33,
+        603,
+        638
+      ],
+      "meanChannelError": [
+        3.138472467176171e-05,
+        3.061924358220654e-05,
+        3.444664902998236e-05
+      ],
+      "differentPixels": 51,
+      "maxChannelDelta": 1,
+      "pixelsAboveOneChannelUnit": 0,
+      "bwmSha256": "58027a2e41d7f08ff043975e339a83ed2a43d4cb5bf49d76bf23c6ee45f4ed85",
+      "plasmaSha256": "2e4d22f10f6f9d241eec4a6604d36fe723d7b0d62b181edb889f50b8ebe7d489"
+    },
+    {
+      "scale": 1.6,
+      "scene": "wallpaper-image",
+      "bwm": {
+        "height": 1008,
+        "scale": 1.6,
+        "width": 1296,
+        "window": "{b36e6083-07a7-4d47-a3de-767497eea38f}"
+      },
+      "plasma": {
+        "height": 1008,
+        "scale": 1.6,
+        "width": 1296,
+        "window": "{8e7265b8-491b-4813-8acb-b4ecab931c66}"
+      },
+      "sameSize": true,
+      "differenceBounds": [
+        40,
+        33,
+        600,
+        662
+      ],
+      "meanChannelError": [
+        8.573388203017832e-05,
+        8.4202919851068e-05,
+        8.496840094062317e-05
+      ],
+      "differentPixels": 124,
+      "maxChannelDelta": 1,
+      "pixelsAboveOneChannelUnit": 0,
+      "bwmSha256": "914949ce878296b613770cf766923dbcd4ab2ebbed68ca34f379c27b373b58df",
+      "plasmaSha256": "3cd2aa7c8847b4639f9d32d5119e10df49c7c36f0ab36d99d93091d6b1747fe0"
+    },
+    {
+      "scale": 1.6,
+      "scene": "edit",
+      "bwm": {
+        "height": 1600,
+        "scale": 1.6,
+        "width": 2560,
+        "window": ""
+      },
+      "plasma": {
+        "height": 1600,
+        "scale": 1.6,
+        "width": 2560,
+        "window": ""
+      },
+      "sameSize": true,
+      "differenceBounds": [
+        0,
+        0,
+        2560,
+        1600
+      ],
+      "meanChannelError": [
+        0.235656982421875,
+        0.253447021484375,
+        0.258952392578125
+      ],
+      "differentPixels": 408254,
+      "maxChannelDelta": 220,
+      "pixelsAboveOneChannelUnit": 193969,
+      "bwmSha256": "8024f98b2a7f6aaa81ab8d43aa6414124237fba23c2d8657f5ec6d7cdfb9a854",
+      "plasmaSha256": "e67b5e6f80e8b2ced5557af4cde18d148dd2b04531c4c3b4d5be55816f049142"
+    }
+  ],
+  "passed": true,
+  "outputs": [
+    {
+      "requestedScale": 1.0,
+      "nativeScale": 1,
+      "description": "",
+      "dpr": 1,
+      "height": 1000,
+      "name": "Virtual-0",
+      "width": 1600
+    },
+    {
+      "requestedScale": 1.25,
+      "nativeScale": 1.25,
+      "description": "",
+      "dpr": 2,
+      "height": 1000,
+      "name": "Virtual-0",
+      "width": 1600
+    },
+    {
+      "requestedScale": 1.5,
+      "nativeScale": 1.5,
+      "description": "",
+      "dpr": 2,
+      "height": 1000,
+      "name": "Virtual-0",
+      "width": 1600
+    },
+    {
+      "requestedScale": 1.6,
+      "nativeScale": 1.6,
+      "description": "",
+      "dpr": 2,
+      "height": 1000,
+      "name": "Virtual-0",
+      "width": 1600
+    }
+  ],
+  "cleanupVerified": true,
+  "pixelParityVerified": false,
+  "configurationParityWithinOneChannelUnit": true
+}

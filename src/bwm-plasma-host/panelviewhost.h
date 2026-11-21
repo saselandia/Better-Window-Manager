@@ -176,6 +176,7 @@ private:
     // PanelView 6.7.5 defaults: AlignLeft, FillAvailable, no offset.
     int m_alignment=Qt::AlignLeft,m_lengthMode=PanelViewEnums::FillAvailable,m_offset=0;
     int m_lastLengthMode=-1;
+    int m_lastEnabledBorders=-1;
     quint64 m_surfaceOrder=0;
     bool m_userConfiguring=false;
     Plasma::Theme m_theme;

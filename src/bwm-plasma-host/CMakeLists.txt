@@ -34,6 +34,7 @@ target_sources(bwm-plasma-configuration PRIVATE tasksource.cpp taskbridge.cpp ta
 target_sources(bwm-plasma-configuration PRIVATE taskthumbnail.cpp tasklauncher.cpp launchrouter.cpp desktopsessioncheck.cpp)
 target_sources(bwm-plasma-configuration PRIVATE panelclone.cpp alternativeshelper.cpp desktopviewhost.cpp containmentconfigview.cpp currentcontainmentactionsmodel.cpp layouttemplate.cpp)
 target_sources(bwm-plasma-configuration PRIVATE containmentmanagement.cpp)
+target_sources(bwm-plasma-configuration PRIVATE panelshadows.cpp)
 target_compile_definitions(bwm-plasma-configuration PRIVATE BWM_TASK_THUMBNAIL_QML="${CMAKE_CURRENT_SOURCE_DIR}/qml/TaskThumbnail.qml"
     BWM_WIDGET_EXPLORER_HOST_QML="${CMAKE_CURRENT_SOURCE_DIR}/qml/WidgetExplorerHost.qml")
 target_include_directories(bwm-plasma-configuration PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
@@ -174,6 +175,16 @@ if(BUILD_TESTING)
     add_test(NAME surface-geometry COMMAND test-surfaces)
     set_tests_properties(surface-geometry PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
     add_executable(test-plasma-ui test-ui.cpp trayprobe.cpp)
+    add_executable(test-r6-native test-r6-native.cpp)
+    set(R6_ALPHA_XML "${WAYLAND_PROTOCOLS_DIR}/staging/alpha-modifier/alpha-modifier-v1.xml")
+    add_custom_command(OUTPUT r6-alpha-client.h r6-alpha-protocol.c
+        COMMAND ${WAYLAND_SCANNER} client-header ${R6_ALPHA_XML} r6-alpha-client.h
+        COMMAND ${WAYLAND_SCANNER} private-code ${R6_ALPHA_XML} r6-alpha-protocol.c
+        DEPENDS ${R6_ALPHA_XML} VERBATIM)
+    target_sources(test-r6-native PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/r6-alpha-client.h ${CMAKE_CURRENT_BINARY_DIR}/r6-alpha-protocol.c)
+    target_include_directories(test-r6-native PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+    target_link_libraries(test-r6-native PRIVATE Qt6::GuiPrivate)
+    target_link_libraries(test-r6-native PRIVATE bwm-plasma-configuration PkgConfig::WAYLAND_CLIENT)
     target_link_libraries(test-plasma-ui PRIVATE bwm-plasma-configuration Qt6::DBus Qt6::Test KF6::Package)
     target_compile_definitions(test-plasma-ui PRIVATE BWM_SHELL_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shell")
     # Session-only (not in CTest): run through check-edit-mode-session.py.

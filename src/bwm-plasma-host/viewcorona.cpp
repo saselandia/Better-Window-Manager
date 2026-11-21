@@ -5,6 +5,7 @@
 #include "outputidentity.h"
 #include <Plasma/Containment>
 #include <Plasma/PluginLoader>
+#include <PlasmaQuick/Dialog>
 #include <KPackage/Package>
 #include <KPackage/PackageLoader>
 #include <KPluginMetaData>
@@ -26,6 +27,12 @@
 #include <QJsonObject>
 #include <QTimer>
 Q_LOGGING_CATEGORY(lcBwmCorona,"bwm.r5.corona",QtWarningMsg)
+namespace {
+QScreen *boundScreen(QQuickWindow *window) {
+    if(auto *desktop=qobject_cast<DesktopViewHost*>(window))return desktop->screenToFollow();
+    return window ? window->screen() : nullptr;
+}
+}
 ViewCorona::ViewCorona() {
     for(auto *screen:QGuiApplication::screens())observe(screen);
     for(int i=0;i<numScreens();++i)m_screenIds.insert(QGuiApplication::screens()[i],i);
@@ -57,6 +64,7 @@ ViewCorona::ViewCorona() {
 ViewCorona::~ViewCorona() {
     delete m_management.data();
     delete m_addPanelMenu.data();
+    for(const auto &view:m_ownedDesktops)delete view.data();
     // Corona destroys its containments in the base destructor, after our map dies.
     for(auto *containment:m_views.keys())forget(containment);
 }
@@ -66,7 +74,7 @@ void ViewCorona::updateManagementAction() {
     manage->setVisible(ids.size()>1);manage->setEnabled(immutability()==Plasma::Types::Mutable);
 }
 void ViewCorona::showContainmentManagement() {
-    if(immutability()!=Plasma::Types::Mutable)return;
+    if(!m_desktopViewsActive || immutability()!=Plasma::Types::Mutable)return;
     // ShellCorona leaves desktop edit mode before swapping desktop surfaces.
     setEditMode(false);
     if(m_management && m_management->window()){m_management->window()->show();m_management->window()->requestActivate();return;}
@@ -75,10 +83,28 @@ void ViewCorona::showContainmentManagement() {
     m_management=view;
 }
 QWindow *ViewCorona::managementWindow()const{return m_management ? m_management->window() : nullptr;}
+void ViewCorona::setDesktopViewsActive(bool active) {
+    if(m_desktopViewsActive==active)return;
+    m_desktopViewsActive=active;
+    if(!active){
+        setEditMode(false);
+        if(m_management && m_management->window())m_management->window()->close();
+        if(m_addPanelMenu)m_addPanelMenu->close();
+    }
+    for(const auto &view:m_ownedDesktops)if(view){
+        if(active && view->screenToFollow())view->show();
+        else {
+            view->hide();
+            if(auto *configuration=view->configurationWindow())configuration->hide();
+            if(auto *side=view->sidePanel())side->hide();
+            if(auto *alternatives=view->alternativesDialog())alternatives->hide();
+        }
+    }
+}
 QQuickWindow *ViewCorona::viewForContainment(const Plasma::Containment *c)const{return m_views.value(c).window.data();}
 bool ViewCorona::moveContainmentToScreen(Plasma::Containment *c,int id) {
     const auto screens=QGuiApplication::screens();
-    if(!c || c->corona()!=this || c->destroyed() || c->immutable() || immutability()!=Plasma::Types::Mutable || id<0 || id>=screens.size())return false;
+    if(!m_desktopViewsActive || !c || c->corona()!=this || c->destroyed() || c->immutable() || immutability()!=Plasma::Types::Mutable || id<0 || id>=screens.size())return false;
     auto *target=screens[id];
     const auto identity=BwmOutput::identity(target);
     const auto description=(identity.manufacturer+' '+identity.model+' '+identity.serial).simplified();
@@ -88,17 +114,32 @@ bool ViewCorona::moveContainmentToScreen(Plasma::Containment *c,int id) {
         emit movePanelRequested(c,target);
         return viewForContainment(c) && viewForContainment(c)->screen()==target;
     }
-    auto *source=qobject_cast<DesktopViewHost*>(viewForContainment(c));if(!source)return false;
-    auto *old=source->screenToFollow();
+    auto *source=qobject_cast<DesktopViewHost*>(viewForContainment(c));
+    auto *old=source ? source->screenToFollow() : nullptr;
+    const int oldId=c->screen()>=0 ? c->screen() : c->lastScreen();
     DesktopViewHost *other=nullptr;
     for(auto it=m_views.cbegin();it!=m_views.cend();++it)
-        if(isDesktop(it.key()) && it.key()!=c && it.value().window && it.value().window->screen()==target) {
+        if(isDesktop(it.key()) && it.key()!=c && boundScreen(it.value().window.data())==target) {
             other=qobject_cast<DesktopViewHost*>(it.value().window.data());break;
         }
+    // A disconnected desktop can have no view yet. Recreate its host while
+    // retaining the containment and all widget objects from the native layout.
+    if(!source) {
+        source=new DesktopViewHost(this,other ? other->usesLayerShell() : QGuiApplication::platformName()==QStringLiteral("wayland"),target);
+        bind(c,source);
+        if(!source->load(c)){unbind(c);delete source;return false;}
+        m_ownedDesktops.append(source);
+    }
     // The layer-shell output cannot be changed while mapped. Each host recreates
     // only its platform surface, retaining its real containment and widget objects.
-    if(other && !other->setScreenToFollow(old))return false;
+    if(other) {
+        if(!old && oldId>=0)m_pendingScreens.insert(other->containment(),oldId);
+        const bool moved=other->setScreenToFollow(old);
+        m_pendingScreens.remove(other->containment());other->containment()->reactToScreenChange();
+        if(!moved)return false;
+    }
     if(!source->setScreenToFollow(target)){if(other)other->setScreenToFollow(target);return false;}
+    source->show();
     requestConfigSync();return true;
 }
 QString ViewCorona::containmentPreviewPath(Plasma::Containment *c)const {
@@ -233,8 +274,9 @@ bool ViewCorona::isDesktop(const Plasma::Containment *containment) {
         && containment->containmentType()!=Plasma::Containment::CustomPanel;
 }
 int ViewCorona::screenForContainment(const Plasma::Containment *containment)const {
+    if(m_pendingScreens.contains(containment))return m_pendingScreens.value(containment);
     auto *window=m_views.value(containment).window.data();
-    const int screen=window ? QGuiApplication::screens().indexOf(window->screen()) : -1;
+    const int screen=QGuiApplication::screens().indexOf(boundScreen(window));
     // ShellCorona 6.7.5 shows the desktop view and its panels before the desktop containment
     // gets its screen; the original Folder View evaluates corona.isScreenUiReady(screen) only
     // when that screen changes. Keep desktops screenless until their view and panels are ready.
@@ -267,7 +309,7 @@ bool ViewCorona::isScreenUiReady(int screen)const {
     if(screen<0 || screen>=numScreens())return false;
     for(auto it=m_views.constBegin();it!=m_views.constEnd();++it) {
         auto *window=it.value().window.data();
-        if(window && isDesktop(it.key()) && QGuiApplication::screens().indexOf(window->screen())==screen && !window->isVisible())return false;
+        if(window && isDesktop(it.key()) && QGuiApplication::screens().indexOf(boundScreen(window))==screen && !window->isVisible())return false;
     }
     return panelsReady(screen);
 }
@@ -283,6 +325,8 @@ void ViewCorona::bind(Plasma::Containment *containment,QQuickWindow *window) {
     binding.containmentDestroyed=connect(containment,&QObject::destroyed,this,[this,containment]{forget(containment);});
     binding.windowDestroyed=connect(window,&QObject::destroyed,this,[this,containment]{forget(containment);containment->reactToScreenChange();});
     binding.screenChanged=connect(window,&QQuickWindow::screenChanged,this,[containment]{containment->reactToScreenChange();});
+    if(auto *desktop=qobject_cast<DesktopViewHost*>(window))
+        binding.targetChanged=connect(desktop,&DesktopViewHost::screenToFollowChanged,this,[containment]{containment->reactToScreenChange();});
     binding.windowVisible=connect(window,&QWindow::visibleChanged,this,[this]{updateDesktopScreens();});
     binding.uiReady=connect(containment,&Plasma::Containment::uiReadyChanged,this,[this]{updateDesktopScreens();});
     m_views.insert(containment,binding);
@@ -292,6 +336,7 @@ void ViewCorona::forget(const Plasma::Containment *containment) {
     m_desktopsWithScreen.remove(containment);
     const auto binding=m_views.take(containment);
     disconnect(binding.containmentDestroyed);disconnect(binding.windowDestroyed);disconnect(binding.screenChanged);
+    disconnect(binding.targetChanged);
     disconnect(binding.windowVisible);disconnect(binding.uiReady);
 }
 void ViewCorona::unbind(Plasma::Containment *containment) {

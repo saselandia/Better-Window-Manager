@@ -115,9 +115,17 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   restituida. Sólo instalado mediante `make install` en `build/`, no en la sesión diaria.
   **R6 abierta; `no_shadow=true` sigue vigente.** Pendientes paneles/menús/popups,
   XWayland/CSD y comparación visual completa; `docs/BREEZE_R6_RESULTS.md`.
+* **R6, iteración 2 (2026-11-21, §326):** breezebars sirve `org_kde_kwin_shadow_manager` v2
+  (`KdeShadow.cpp`): `KWindowShadow`, `DialogShadows` y `PanelShadows` originales envían sus
+  piezas. El panel publica desenfoque/contraste/sombras como `PanelView`; el plugin ya no
+  bloquea el XWayland a demanda. Frente a KWin 6.7.5 en compositores privados: 120 casos de
+  piezas (3 temas, 4 escalas) máx. 1/255, diálogo original máx. 3/255 con ciclo de vida
+  exacto, panel idéntico salvo 1/255 a escala 2, desenfoque con región correcta pero
+  intensidad distinta. Candidato sólo en `build/r6-surface-plugin`; **veto diario intacto**.
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
-  Probado offscreen y visto en Hyprland; resto de R5 pendiente (`docs/BREEZE_R5_RESULTS.md`).
+  Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
+  `docs/BREEZE_R5_RESULTS.md`.
   Iteración 2 (§304): «Set Position…» (flechas como capas, borde cambiado sin recrear la vista,
   paso a otro monitor en la vista desechable), medido en Hyprland con `check-edit-mode-session.py`.
   Iteración 3 (§305): «Añadir widgets…» con el `WidgetExplorer.qml` original en una capa lateral;
@@ -146,9 +154,14 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   probado con ratón real en el LG (`preview-isolated.py --desktop`): Folder View y menú del escritorio
   originales (corregido el orden de `isScreenUiReady`), «Desktop and Wallpaper…» con
   `ContainmentConfigView` (fondo y Layout), «Add Panel» ejecutando las plantillas `layout.js` originales
-  y área útil del compositor en `strictAvailableScreenRect`. R5 lista para aceptación del usuario;
-  diferencias restantes (marco de configuración de widgets de R4, sombras/desenfoque R6, gestión de
-  escritorios entre pantallas) en `docs/BREEZE_R5_RESULTS.md`.
+  y área útil del compositor en `strictAvailableScreenRect`. Iteración 13 (§325): configuración de
+  widgets con `AppletConfiguration.qml` instalado, gestor original de escritorios/paneles y modelos
+  (mover/intercambiar/recuperar conservando widgets), reserva de plantilla correcta desde su creación,
+  «Add Panel» en la salida activa y Aplicar inicialmente desactivado. Comparación con plasmashell y
+  KWin 6.7.5 privados: 12 ventanas de configuración a escala 1/1,25/1,5/1,6 (idénticas a 1; error
+  máximo de 1/255 por canal en fraccionaria), 4 capturas de modo edición con diferencias registradas,
+  botón central con selección primaria desechable. Quedan los efectos de R6 y la integración diaria,
+  sin atribuir aceptación al usuario; `docs/BREEZE_R5_RESULTS.md` y su JSON de referencia.
 * **Breeze II (2026-11-12):** `docs/BREEZE_PLAN_V2.md`, R0 entregada con referencia y límites documentados;
   R1 corrige origen de especiales al minimizar, activación común y filtro de Alt+Tab (pruebas
   aisladas; fallo visual original pendiente). R2 tiene primer KCM QWidget real, descubierto por
@@ -5771,3 +5784,83 @@ git status; git log --oneline -5; git push origin main
   `no_shadow=true` conservado**, sin instalar candidato/auxiliar diarios ni reiniciar shell/
   sesión. Detalle y evidencias en `docs/BREEZE_R6_RESULTS.md` y
   `docs/BREEZE_R6_SHADOW_RESULTS.json`. AGENTS/CLAUDE sincronizados. Sin commit ni push.
+
+
+### 325. Breeze R5: pendientes de la iteración 12, marco/gestor originales y referencia Plasma real (2026-11-20)
+
+* **Petición:** comprobar si quedaba trabajo de R5 y hacerlo antes de continuar R6. La iteración
+  anterior sí dejaba funciones y pruebas pendientes; se retoma R5. Se conserva el candidato R6 de
+  §324 sin instalarlo ni ampliar sus cambios.
+* **Configuración de widgets:** vistas interactivas con `AppletConfiguration.qml` instalado, barra
+  lateral, Atajos, Acerca de y aviso original de cambios. Aplicar/Descartar originales probados.
+  El marco reducido y las transacciones R4 quedan sólo en su arnés de diagnóstico, no en esas vistas.
+* **Gestor:** `containmentmanagement.{h,cpp}` adapta los modelos de `shell/shellcontainmentconfig`
+  6.7.5, LGPL-2.0-or-later (Cyril Rossi 2021). Carga el gestor/delegados originales sin modificar,
+  publica tarjetas/previsualizaciones propias y mueve paneles por descripción física. Intercambia
+  escritorios y recupera contenedores desconectados conservando widgets. Sale del modo edición.
+  En las vistas Qt se cualifica `QWindow::destroy()`; el método de `ContainmentView` elimina el host.
+* **Otros pendientes corregidos:** preferencias de plantilla antes de congelar la reserva de edición
+  (ya no 48 px hasta salir); «Add Panel» consulta asíncronamente la salida enfocada del compositor;
+  captura por valor de la función local del sincronizador de escritorio. La comparación real confirma
+  Aplicar inicialmente desactivado: se descarta el aviso inicial de normalización de `SlidePaths`
+  para que el primer cambio real emita su aviso. Guardar fondo sigue confirmado por configuración KDE.
+* **Referencia real aislada:** `check-r5-reference.py` + `tests/r5_reference_client.cpp` arrancan KWin
+  y plasmashell 6.7.5 con D-Bus, actividad y raíces XDG privados, sin cambiar `$HOME`. OpenGL,
+  Breeze Oscuro, 1600×1000 lógicos; escalas 1/1,25/1,5/1,6 aplicadas/verificadas con kscreen-doctor
+  privado y metadatos de captura. `QScreen` puede dar DPR entero superior: no prueba la escala real.
+  Tres ventanas por escala (widget/color/imagen): a 1 idénticas; en fraccionaria 9–124 píxeles
+  distintos, diferencia máxima de 1/255 por canal. Modo edición comparado y revisado con diferencias
+  de efectos del compositor y visibilidad inicial de «Gestionar…» documentadas; no paridad total.
+* **Botón central:** entrada Wayland y selección primaria privadas; nativo y BWM crean un widget
+  `org.kde.plasma.icon` con la URL local desechable comprobada, no una copia del archivo a Desktop.
+  No se leyó ni sustituyó el portapapeles del usuario. Los procesos/raíces privados se retiran;
+  capturas de fixture borradas tras inspección, hashes/métricas en `docs/BREEZE_R5_REFERENCE_RESULTS.json`.
+* **Pruebas:** CTest normal 8/8, ASan 2/2 (`detect_leaks=0`), Python R4 262/262. Casos nuevos del
+  marco original y gestor (incl. recuperación desconectados), reserva de plantilla y estado de Aplicar.
+  LG: 8 pasos con escritorio, explorador, ajustes, alternativas, salida activa para panel y limpieza.
+  Headless Hyprland 1,25/1,5/1,6: 24/24, salidas físicas sin cambios. Offscreen sin plataforma gtk3.
+* **Alcance:** R5 técnica en el anfitrión aislado; queda la aceptación propia del usuario y la
+  integración diaria de R4. Efectos del compositor, producción y demás límites en los informes R5/R6.
+  Recuperación de contenedores sin vista probada offscreen; intercambio y recuperación de
+  superficies Wayland en LG/MSI (3/3, foco y reservas intactos), sin desconexión física. Skin diaria conservada
+  (`plasma` en esta sesión); no reinicio de Quickshell/sesión ni instalación de .so diario.
+  Codex no ejecutó commits/push. Durante el trabajo aparecieron `7315921` y `a761afb` (incluyen
+  parte de los archivos aún en progreso); se conserva ese historial. Los últimos ajustes y la
+  evidencia JSON siguen en el árbol de trabajo.
+
+### 326. Breeze R6, iteración 2: sombras nativas KDE de superficies, panel, diálogos y XWayland (2026-11-21)
+
+* **Origen:** iniciada por Codex (ChatGPT) y terminada por Claude cuando a Codex se le agotó
+  el uso. Se revisó lo que dejó en el árbol, se repitieron sus ensayos con el estado final y
+  se corrigieron dos fallos.
+* **Hecho (Codex):** servidor `org_kde_kwin_shadow_manager` v2 en `src/breezebars/KdeShadow.cpp`
+  con `protocols/shadow.xml` (LGPL-2.1, generado con `wayland-scanner`; Makefile/CMake/meson
+  actualizados, requisito `breezebars-build`). Copia SHM acotada (`KdeShadowPixels.hpp`), atlas
+  `NinePatchOpenGL` y geometría `ShadowItem::buildQuads` para ocho piezas
+  (`KdeShadowGeometry.hpp`), estado aplicado en el commit real de la superficie, prioridad de
+  KDecoration, `hyprctl -j breezebars-shadows`. Panel: `PanelShadows` de plasma-workspace 6.7.5
+  (`panelshadows.cpp`) y `KWindowEffects` desde `PanelViewHost::updateMask`; bordes con la
+  geometría del anclaje (Qt da (0,0) en layer-shell). Diálogos: `ensureNativeEffectsCommit`
+  pide un fotograma para que una escena estática envíe los efectos. CSDDetect ya no llama a
+  `xcb_connect` al cargar. Arneses `check-r6-surfaces.py`, `test-r6-native.cpp`,
+  `tests/r6_x11_client.cpp` y `--xwayland` en `check-r6-nested.py`.
+* **Corregido en esta continuación:** `PanelShadows::removeWindow` dejaba la ventana como
+  observada tras desconectar su aviso de destrucción; después de auto-ocultar no se
+  reconectaba y un cambio de SVG usaba un `QWindow` liberado (SIGSEGV 3/3 en
+  `test-paneltasks`). Los ensayos restauran ahora puntero y ventana enfocada (dirección+PID):
+  retirar la salida headless temporal daba el foco a la última ventana de otro monitor.
+* **Comprobado:** matriz de piezas Breeze oscuro/claro/Sweet × 1/1,25/1,5/2, 120 casos con
+  opacidad por `wp_alpha_modifier_v1`, máx. 1/255; 12 liberaciones y 12 cierres con sombras
+  vivas. Ese ensayo de 40 min terminó con el puntero movido (sesión en uso); repetición corta
+  con la sesión intacta. Diálogo `PlasmaQuick::Dialog` original, 3 temas × 1/1,25: 42 casos,
+  máx. 3/255, recreación/ocultar/opacidad exactos, sesión intacta. Panel BWM frente a
+  plasmashell en KWin: idéntico a 1/1,25/1,5, 1/255 en 2 píxeles a 2 (informe de Codex).
+  Desenfoque: región exacta y retirada limpia; intensidad hasta 33/255 distinta (algoritmo de
+  Hyprland). XWayland privado: sombra KDE en ventana SSD, sin segundo marco con GTK/Motif.
+  Regresión: CTest 8/8, ASan 2/2, Python R4 262/262, breezebars/política 5/5, decorador 13/13,
+  suite de sesión en el LG 54/54 sin capas residuales y `configerrors` vacío.
+* **Límites:** sólo SHM; sin `_KDE_NET_WM_SHADOW` ni dmabuf; contraste no disponible (KWin 6.7.5
+  tampoco lo ofrece por separado); sin sombras de menús/tooltips de Quickshell; sin comparación
+  con una sesión Plasma completa. Candidato `build/r6-surface-plugin/installed/breezebars.so`,
+  0 símbolos UNIQUE, no instalado en `config/hypr/plugins`; `no_shadow=true` sigue vigente y
+  activarlo exige volver a iniciar sesión. Evidencia `docs/BREEZE_R6_SURFACE_RESULTS.json`.

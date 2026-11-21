@@ -142,7 +142,7 @@ class BreezebarsBuildTest(unittest.TestCase):
         tmp = Path(tempfile.mkdtemp(prefix="breezebars-build-"))
         self.addCleanup(shutil.rmtree, tmp, True)
         src = tmp / "src"
-        shutil.copytree(PLUGIN, src / "breezebars", ignore=shutil.ignore_patterns("*.so"))
+        shutil.copytree(PLUGIN, src / "breezebars", ignore=shutil.ignore_patterns("*.so", "*.o", "*.d", "kde-shadow-server.h", "kde-shadow-protocol.c"))
         shutil.copytree(ROOT / "src" / "bwm-decorator", src / "bwm-decorator", ignore=shutil.ignore_patterns("*.o", "moc_*", "bwm-decorator"))
         res = subprocess.run(["make", "-C", str(src / "breezebars")], capture_output=True, text=True, timeout=900)
         self.assertEqual(res.returncode, 0, res.stderr[-3000:])

@@ -353,6 +353,13 @@
       "packages": {"gentoo": "dev-lang/lua:5.4", "arch": "base-devel", "fedora": "gcc-c++ make lua-devel copr:solopasha/hyprland:hyprland-devel", "opensuse": "gcc-c++ make lua54-devel hyprland-devel", "debian": null},
       "notes": {"gentoo": "Las cabeceras vienen con gui-wm/hyprland; el compilador, make y pkg-config ya están en cualquier Gentoo."}
     },
+    "breezebars-build": {
+      "label": "Compilar breezebars y su protocolo nativo de sombras KDE",
+      "why": "Sólo para compilar el plugin: cabeceras de Hyprland y generador Wayland de los protocolos KDE incluidos",
+      "check": {"type": "pkgconfig", "modules": ["hyprland", "pixman-1", "libdrm", "libinput", "libudev", "wayland-server", "xkbcommon", "lua5.4"], "cmds": ["make", "c++", "pkg-config", "wayland-scanner"]},
+      "packages": {"gentoo": "dev-libs/wayland dev-lang/lua:5.4", "arch": "base-devel wayland", "fedora": "gcc-c++ make wayland-devel lua-devel copr:solopasha/hyprland:hyprland-devel", "opensuse": "gcc-c++ make wayland-devel lua54-devel hyprland-devel", "debian": null},
+      "notes": {"all": "El protocolo XML está incluido con sus avisos. Compilar con -fno-gnu-unique y desplegar sólo con make install; el candidato se prueba en un compositor desechable antes del próximo inicio de sesión."}
+    },
     "imagemagick": {
       "label": "ImageMagick 7 (magick)",
       "referenceVersion": "7.1.2.32",

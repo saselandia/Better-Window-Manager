@@ -42,6 +42,14 @@ render en un compositor desechable con anfitrión en una salida virtual temporal
 diaria de sombras sigue deshabilitada: alcance, límites y comandos en
 `docs/BREEZE_R6_RESULTS.md`. El candidato sólo se ha instalado en `build/`, con `make install`.
 
+R6, iteración 2 (2026-11-21): `KdeShadow.cpp` sirve `org_kde_kwin_shadow_manager` v2
+(`protocols/shadow.xml`, generado con `wayland-scanner` en la compilación) para que
+`KWindowShadow`, los diálogos de libplasma y los paneles envíen sus ocho piezas originales.
+Sólo SHM; el estado se aplica con el commit real de la superficie y KDecoration tiene
+prioridad. Diagnóstico `hyprctl -j breezebars-shadows`. El plugin ya no conecta con X11 al
+cargarse (bloqueaba el XWayland a demanda). `check-r6-surfaces.py` compara con KWin 6.7.5 en
+compositores privados (piezas, diálogo original, desenfoque); resultados en el mismo documento.
+
 `hyprctl breezebars-interactive move|resize <dirección>` (F9, «Mover»/«Redimensionar» del menú de la
 ventana): la ventana sigue al puntero hasta el siguiente clic, como KWin. La etiqueta `bwm-no-border`
 («Sin barra de título ni marco») quita la barra.

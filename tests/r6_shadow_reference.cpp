@@ -3,6 +3,8 @@
 // The oracle body is read verbatim from the selected KWin release by check-r6-shadows.py.
 #include "DecoLogic.hpp"
 #include "ShadowBuffer.hpp"
+#include "KdeShadowGeometry.hpp"
+#include "KdeShadowPixels.hpp"
 #include "shadowstate.h"
 #include <QCoreApplication>
 #include <QFile>
@@ -30,7 +32,9 @@ struct Shadow {
     enum ShadowElements { ShadowElementTop, ShadowElementTopRight, ShadowElementRight,
         ShadowElementBottomRight, ShadowElementBottom, ShadowElementBottomLeft, ShadowElementLeft, ShadowElementTopLeft };
     KDecoration3::DecorationShadow deco;
+    std::optional<std::array<BwmKde::Size,8>> sizes;
     QSizeF elementSize(ShadowElements e) const {
+        if(sizes)return QSizeF((*sizes)[e].w,(*sizes)[e].h);
         switch (e) {
         case ShadowElementTop: return deco.topGeometry().size();
         case ShadowElementTopRight: return deco.topRightGeometry().size();
@@ -141,7 +145,41 @@ static void stateAndBuffers() {
 int main(int argc,char** argv) {
     QCoreApplication app(argc,argv);
     stateAndBuffers();
+    {
+        const int fd=memfd_create("r6-client-tile",MFD_CLOEXEC);assert(fd>=0);assert(ftruncate(fd,160)==0);
+        std::array<unsigned char,160> data;for(size_t i=0;i<data.size();++i)data[i]=i;
+        assert(pwrite(fd,data.data(),data.size(),0)==ssize_t(data.size()));
+        const auto copied=BwmKde::readTile(fd,4,3,24,8,160);assert(copied && copied->size()==48);
+        for(int y=0;y<3;++y)assert(std::memcmp(copied->data()+y*16,data.data()+8+y*24,16)==0);
+        assert(!BwmKde::readTile(fd,4,3,15,8,160));assert(!BwmKde::readTile(fd,2049,1,8196,0,160));
+        assert(!BwmKde::readTile(fd,4,3,24,-1,160));assert(!BwmKde::readTile(fd,4,3,24,8,50));
+        assert(ftruncate(fd,10)==0);assert(!BwmKde::readTile(fd,4,3,24,8,160));
+        close(fd);assert(!BwmKde::readTile(fd,4,3,24,8,160));
+    }
     QJsonArray cases;
+    int protocolCases=0;
+    for(int mask=0;mask<16;++mask)for(int variant=0;variant<3;++variant)
+    for(const auto frame:{SRectD{10.25,20.5,800,528},SRectD{0,0,17.5,11.25},SRectD{0,0,5,5},SRectD{0,0,4,40}}) {
+        std::array<BwmKde::Size,8> sizes{{{3,11},{17,13},{19,5},{23,29},{7,31},{37,41},{43,2},{47,53}}};
+        const std::array<int,8> borders{1,3,2,6,4,12,8,9};
+        for(size_t n=0;n<8;++n)if((mask&borders[n])!=borders[n])sizes[n]={};
+        if(variant==1)sizes[7]={};if(variant==2){sizes[1]={};sizes[3]={};}
+        const double ml=std::max({sizes[7].w,sizes[6].w,sizes[5].w}),mt=std::max({sizes[7].h,sizes[0].h,sizes[1].h});
+        const double W=ml+std::max(sizes[0].w,sizes[4].w)+std::max({sizes[1].w,sizes[2].w,sizes[3].w});
+        const double H=mt+std::max(sizes[6].h,sizes[2].h)+std::max({sizes[3].h,sizes[4].h,sizes[5].h});
+        std::array<QPointF,8> origins{{{ml,0},{W-sizes[1].w,0},{W-sizes[2].w,mt},{W-sizes[3].w,H-sizes[3].h},
+            {ml,H-sizes[4].h},{0,H-sizes[5].h},{0,mt},{0,0}}};
+        const SExtents offset{3.25,4.5,5.75,6};
+        KWin::Window window{frame.w,frame.h};KWin::Shadow shadow;shadow.sizes=sizes;
+        KWin::ShadowItem item{&window,&shadow,QRectF(frame.x-offset.left,frame.y-offset.top,frame.w+offset.left+offset.right,frame.h+offset.top+offset.bottom)};
+        const auto expected=item.buildQuads();const auto actual=BwmKde::tileQuads(frame,offset,sizes);
+        assert(expected.size()==qsizetype(actual.size()));
+        for(size_t n=0;n<actual.size();++n){const auto &q=actual[n];const auto &e=expected[n];const auto origin=origins[q.tile];
+            assert(near(q.dst.x,e[0].x) && near(q.dst.y,e[0].y) && near(q.dst.w,e[2].x-e[0].x) && near(q.dst.h,e[2].y-e[0].y));
+            assert(near(q.src.x+origin.x(),e[0].u) && near(q.src.y+origin.y(),e[0].v) && near(q.src.w,e[2].u-e[0].u) && near(q.src.h,e[2].v-e[0].v));
+        }
+        ++protocolCases;
+    }
     // Odd fractional overlaps, fully contained asymmetric corners, zero-sized edges,
     // tiny windows and image DPR independent of output scale.
     for (auto inner : {SRectD{16.5,17.5,1,1},SRectD{30,2,1,1},SRectD{0,2,1,1}})
@@ -168,6 +206,6 @@ int main(int argc,char** argv) {
             result["name"]=v["name"]; samples.append(result);
         }
     }
-    std::cout << QJsonDocument(QJsonObject{{"syntheticCases",cases.size()},{"nativeSamples",samples},
+    std::cout << QJsonDocument(QJsonObject{{"syntheticCases",cases.size()},{"protocolTileCases",protocolCases},{"nativeSamples",samples},
         {"maxAlphaError",0},{"maxColorError",0},{"mutableShadowAndShortBuffer",true}}).toJson().constData();
 }

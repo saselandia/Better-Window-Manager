@@ -157,16 +157,17 @@ DesktopViewHost::DesktopViewHost(Plasma::Corona *corona, bool layerShell, QScree
     });
 }
 bool DesktopViewHost::setScreenToFollow(QScreen *target) {
-    if(!target || !QGuiApplication::screens().contains(target))return false;
+    if(target && !QGuiApplication::screens().contains(target))return false;
     if(m_targetScreen==target)return true;
     if(m_sidePanel)m_sidePanel->hide();
     if(m_alternativesDialog)m_alternativesDialog->hide();
-    const bool visible=isVisible();hide();QWindow::destroy();
-    m_targetScreen=target;setScreen(target);configureLayerSurface();setGeometry(target->geometry());
+    const bool visible=isVisible() || !m_targetScreen;hide();QWindow::destroy();
+    m_targetScreen=target;
+    if(target){setScreen(target);configureLayerSurface();setGeometry(target->geometry());}
     if(containment())containment()->reactToScreenChange();
     m_compositorUsable={};scheduleCompositorAreaRefresh();
     emit screenToFollowChanged();emit strictAvailableScreenRectChanged();
-    if(visible)show();return true;
+    if(visible && target)show();return true;
 }
 
 DesktopViewHost::~DesktopViewHost()

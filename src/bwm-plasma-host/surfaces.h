@@ -11,6 +11,9 @@ namespace BwmSurface {
 // All inputs/outputs are logical pixels in the same screen coordinate system.
 QRect placePopup(const QRect &available, const QRect &anchor, QSize wanted, Qt::Edge panelEdge, int gap=0);
 void configurePanel(QQuickWindow *window, Qt::Edge edge, int gap=64, bool nativePolicy=false);
+// KWindowShadow requests an UpdateRequest after Expose; a static Qt Quick scene
+// also needs a dirty frame to commit those pending native surface effects.
+void ensureNativeEffectsCommit(QQuickWindow *window);
 struct PanelAnchoring {
     LayerShellQt::Window::Anchors anchors;
     LayerShellQt::Window::Anchor exclusiveEdge;

@@ -1,4 +1,4 @@
-project('hyprbars', 'cpp',
+project('hyprbars', 'cpp', 'c',
   version: '0.1',
   default_options: ['buildtype=release'],
 )
@@ -15,6 +15,7 @@ endif
 add_project_arguments(
   [
     '-Wno-narrowing',
+    '-fno-gnu-unique',
   ],
   language: 'cpp')
 
@@ -22,8 +23,12 @@ globber = run_command('find', '.', '-name', '*.cpp', check: true)
 src = globber.stdout().strip().split('\n')
 
 hyprland = dependency('hyprland')
+scanner = find_program('wayland-scanner')
+shadow_header = custom_target('kde-shadow-server', input: 'protocols/shadow.xml', output: 'kde-shadow-server.h', command: [scanner, 'server-header', '@INPUT@', '@OUTPUT@'])
+shadow_code = custom_target('kde-shadow-code', input: 'protocols/shadow.xml', output: 'kde-shadow-protocol.c', command: [scanner, 'private-code', '@INPUT@', '@OUTPUT@'])
 
-shared_module(meson.project_name(), src,
+shared_module(meson.project_name(), src, shadow_header, shadow_code,
+  include_directories: include_directories('.'),
   dependencies: [
     dependency('hyprland'),
     dependency('pixman-1'),
@@ -32,6 +37,8 @@ shared_module(meson.project_name(), src,
     dependency('libudev'),
     dependency('wayland-server'),
     dependency('xkbcommon'),
+    dependency('xcb'),
+    cpp_compiler.find_library('dl'),
   ],
   install: true,
 )

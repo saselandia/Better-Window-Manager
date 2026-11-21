@@ -354,6 +354,7 @@ int main(int argc, char **argv) {
             if(!desk)desk=corona.createContainment("org.kde.plasma.folder");
             if(!desk || desk->failedToLaunch()){fprintf(stderr,"Cannot create the desktop containment.\n");return 8;}
             const auto syncDesktop=[&,findDesktop]{
+                corona.setDesktopViewsActive(runtime.skin()=="plasma");
                 QScreen *target=BwmOutput::resolveScreen(desktopOutput);
                 if(!desk)desk=findDesktop();
                 const bool wanted=runtime.skin()=="plasma" && target && desk;

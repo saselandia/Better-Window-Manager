@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "panelviewhost.h"
+#include "panelshadows_p.h"
+#include <KWindowEffects>
 #include "alternativeshelper.h"
 #include "panelsession.h"
 #include "packagewindows.h"
@@ -36,6 +38,10 @@ void PanelViewHost::registerTypes() {
 }
 PanelViewHost::PanelViewHost(Plasma::Corona *corona,QString viewSettingsFile):ContainmentView(corona),m_viewSettingsFile(std::move(viewSettingsFile)) {
     m_reflow.setSingleShot(true);m_reflow.setInterval(0);
+    connect(this,&QWindow::xChanged,this,&PanelViewHost::updateMask);
+    connect(this,&QWindow::yChanged,this,&PanelViewHost::updateMask);
+    connect(this,&QWindow::widthChanged,this,&PanelViewHost::updateMask);
+    connect(this,&QWindow::heightChanged,this,&PanelViewHost::updateMask);
     connect(&m_reflow,&QTimer::timeout,this,&PanelViewHost::reflow);
     connect(this,&PlasmaQuick::ContainmentView::locationChanged,this,[this](Plasma::Types::Location location){
         // PanelView 6.7.5 follows a new edge with the form factor and restore(). Outside
@@ -58,6 +64,7 @@ PanelViewHost::PanelViewHost(Plasma::Corona *corona,QString viewSettingsFile):Co
     rootContext()->setContextProperty("panel",this);
     connect(this,&QWindow::screenChanged,this,&PanelViewHost::screenToFollowChanged);
     connect(&m_theme,&Plasma::Theme::themeChanged,this,&PanelViewHost::adaptiveOpacityEnabledChanged);
+    connect(&m_theme,&Plasma::Theme::themeChanged,this,&PanelViewHost::updateMask);
     connect(this,&QWindow::visibleChanged,this,[this]{invalidateFrame();});
     connect(this,&QWindow::screenChanged,this,[this]{invalidateFrame();});
     connect(this,&QWindow::widthChanged,this,[this]{invalidateFrame();});
@@ -156,6 +163,9 @@ QVariantMap PanelViewHost::capabilities()const {
         {"reservationOwner",property("bwmPanelReservationAllowed").isValid()?property("bwmPanelReservationAllowed").toBool():native},
         {"editModeReservation",property("bwmPanelEditing").toBool()},
         {"exclusiveZoneRequested",property("bwmExclusiveZoneRequested").isValid()?property("bwmExclusiveZoneRequested").toInt():-1},
+        {"nativeShadowRequests",PanelShadows::self()->windowState(const_cast<PanelViewHost*>(this))},
+        {"blurAvailable",KWindowEffects::isEffectAvailable(KWindowEffects::BlurBehind)},
+        {"contrastAvailable",KWindowEffects::isEffectAvailable(KWindowEffects::BackgroundContrast)},
         {"reservedArea",false},{"compositorBlur",false},{"externalPanelShadows",false},{"waylandVerified",false}};
 }
 bool PanelViewHost::load(Plasma::Containment *c) {
@@ -200,6 +210,11 @@ bool PanelViewHost::load(Plasma::Containment *c) {
         connect(root,signal,&m_reflow,SLOT(start()));
     connect(root,SIGNAL(floatingnessTargetChanged()),this,SLOT(animateFloating()));
     connect(root,SIGNAL(panelMaskChanged()),this,SLOT(updateMask()));
+    // PanelView observes padding independently from the graphical mask. A style
+    // can change these SVG margins without changing the mask at all.
+    for(const char *signal:{SIGNAL(leftShadowMarginChanged()),SIGNAL(topShadowMarginChanged()),
+        SIGNAL(rightShadowMarginChanged()),SIGNAL(bottomShadowMarginChanged())})
+        connect(root,signal,this,SLOT(updateMask()));
     // Panel.qml decides DodgeWindows from its own TasksModel (touchingWindow), as for
     // PanelView. Its window model gets the BWM source when task actions are enabled.
     if(root->metaObject()->indexOfSignal("touchingWindowChanged()")>=0)
@@ -312,14 +327,29 @@ void PanelViewHost::setBackgroundHints(int value) {
 }
 int PanelViewHost::enabledBorders()const {
     int mask=KSvg::FrameSvg::AllBorders;
-    if(m_floating || !containment())return mask;
-    switch(location()) {
-    case Plasma::Types::TopEdge:return mask & ~KSvg::FrameSvg::TopBorder;
-    case Plasma::Types::BottomEdge:return mask & ~KSvg::FrameSvg::BottomBorder;
-    case Plasma::Types::LeftEdge:return mask & ~KSvg::FrameSvg::LeftBorder;
-    case Plasma::Types::RightEdge:return mask & ~KSvg::FrameSvg::RightBorder;
-    default:return mask;
+    if(m_backgroundHints==Plasma::Types::NoBackground)return KSvg::FrameSvg::NoBorder;
+    if(!containment())return mask;
+    const auto *root=rootObject();
+    if(!root || root->property("floatingness").toDouble()==0) {
+        switch(location()) {
+        case Plasma::Types::TopEdge:mask &= ~KSvg::FrameSvg::TopBorder;break;
+        case Plasma::Types::BottomEdge:mask &= ~KSvg::FrameSvg::BottomBorder;break;
+        case Plasma::Types::LeftEdge:mask &= ~KSvg::FrameSvg::LeftBorder;break;
+        case Plasma::Types::RightEdge:mask &= ~KSvg::FrameSvg::RightBorder;break;
+        default:break;
+        }
     }
+    if(root && screen()) {
+        const auto bounds=screen()->geometry();
+        // wl_layer_shell doesn't report global position to QWindow. Qt may
+        // reset x/y to zero after configure; use the anchoring owner's geometry.
+        const auto rect=property("bwmPanelRect").isValid() ? property("bwmPanelRect").toRect() : geometry();
+        if(rect.x()-qRound(root->property("leftShadowMargin").toReal())<=bounds.left())mask &= ~KSvg::FrameSvg::LeftBorder;
+        if(rect.y()-qRound(root->property("topShadowMargin").toReal())<=bounds.top())mask &= ~KSvg::FrameSvg::TopBorder;
+        if(rect.x()+rect.width()+qRound(root->property("rightShadowMargin").toReal())>=bounds.x()+bounds.width())mask &= ~KSvg::FrameSvg::RightBorder;
+        if(rect.y()+rect.height()+qRound(root->property("bottomShadowMargin").toReal())>=bounds.y()+bounds.height())mask &= ~KSvg::FrameSvg::BottomBorder;
+    }
+    return mask;
 }
 QRect PanelViewHost::dogdeGeometryByDistance(int distance)const {
     if(!screen())return {};
@@ -384,7 +414,12 @@ void PanelViewHost::animateFloating() {
 }
 void PanelViewHost::updateMask() {
     auto *root=rootObject();if(!root)return;
+    const int borders=enabledBorders();
+    if(m_lastEnabledBorders!=borders){m_lastEnabledBorders=borders;emit policyChanged();}
     if(m_autoHidden) {
+        PanelShadows::self()->removeWindow(this);
+        KWindowEffects::enableBlurBehind(this,false);
+        KWindowEffects::enableBackgroundContrast(this,false);
         // Only a strip on the output edge takes input while hidden, like KWin's edge.
         constexpr int strip=2;QRect rect(QPoint(),size());
         switch(containment()?containment()->location():Plasma::Types::BottomEdge){
@@ -396,10 +431,26 @@ void PanelViewHost::updateMask() {
         setMask(QRegion(rect));return;
     }
     const auto value=root->property("panelMask");
-    if(value.metaType().id()!=QMetaType::QRegion)return;
-    auto region=value.value<QRegion>();
-    if(root->property("floatingness").toDouble()!=0)region.translate(root->property("floatingTranslucentItemOffset").toPoint());
-    setMask(region);
+    auto region=value.metaType().id()==QMetaType::QRegion ? value.value<QRegion>() : QRegion();
+    region.translate(root->property("floatingTranslucentItemOffset").toPoint());
+    if(region.isEmpty())region=QRegion(QRect(QPoint(),size()));
+    const bool background=m_backgroundHints!=Plasma::Types::NoBackground;
+    KWindowEffects::enableBlurBehind(this,background && m_theme.blurBehindEnabled(),region);
+    KWindowEffects::enableBackgroundContrast(this,background && m_theme.backgroundContrastEnabled(),
+        m_theme.backgroundContrast(),m_theme.backgroundIntensity(),m_theme.backgroundSaturation(),region);
+    // Plasma's graphical mask is tight; input extends to the physical edge for Fitts's law.
+    QRect input(QPoint(),size());const auto bound=region.boundingRect();
+    switch(location()) {
+    case Plasma::Types::LeftEdge:input.setRight(bound.right());break;
+    case Plasma::Types::TopEdge:input.setBottom(bound.bottom());break;
+    case Plasma::Types::RightEdge:input.setLeft(bound.left());break;
+    case Plasma::Types::BottomEdge:input.setTop(bound.top());break;
+    default:break;
+    }
+    setMask(input);
+    const QMargins padding(qRound(root->property("leftShadowMargin").toReal()),qRound(root->property("topShadowMargin").toReal()),
+        qRound(root->property("rightShadowMargin").toReal()),qRound(root->property("bottomShadowMargin").toReal()));
+    PanelShadows::self()->addWindow(this,KSvg::FrameSvg::EnabledBorders(enabledBorders()),padding);
 }
 void PanelViewHost::showConfigurationInterface(Plasma::Applet *applet) {
     if(!applet)return;

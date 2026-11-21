@@ -1055,6 +1055,48 @@ private Q_SLOTS:
         m_steps.append(QJsonObject{{"step", "fractional-cleanup"}, {"scale", expectedScale}, {"passed", true}});
         puts(QJsonDocument(QJsonObject{{"steps", m_steps}}).toJson(QJsonDocument::Compact).constData());
     }
+    void desktopScreenSwapInHyprland()
+    {
+        m_steps={};
+        auto *first=BwmOutput::resolveScreen(qEnvironmentVariable("BWM_R5_OUTPUT"));QVERIFY(first);
+        QScreen *second=nullptr;for(auto *screen:QGuiApplication::screens())if(screen!=first){second=screen;break;}
+        if(!second)QSKIP("Needs two connected outputs");
+        const auto firstReserved=reserved(first->name()),secondReserved=reserved(second->name());
+        const int baseline=ownClients();
+        ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout(QStringLiteral("bwm-r5-screen-swap-appletsrc"));
+        auto *a=corona.createContainment("org.kde.plasma.folder"),*b=corona.createContainment("org.kde.plasma.folder");QVERIFY(a && b);
+        auto *wa=a->createApplet("org.kde.plasma.analogclock"),*wb=b->createApplet("org.kde.plasma.analogclock");QVERIFY(wa && wb);
+        DesktopViewHost va(&corona,true,first),vb(&corona,true,second);
+        corona.bind(a,&va);corona.bind(b,&vb);QVERIFY(va.load(a));QVERIFY(vb.load(b));va.show();vb.show();
+        QTRY_VERIFY(va.isExposed() && vb.isExposed());
+        const int screenA=QGuiApplication::screens().indexOf(first),screenB=QGuiApplication::screens().indexOf(second);
+        QTRY_COMPARE(a->screen(),screenA);QTRY_COMPARE(b->screen(),screenB);
+        QVERIFY(corona.moveContainmentToScreen(a,screenB));
+        QTRY_VERIFY(va.isExposed() && vb.isExposed());QTRY_COMPARE(a->screen(),screenB);QTRY_COMPARE(b->screen(),screenA);
+        QTRY_COMPARE(layers(QStringLiteral("bwm-r5-desktop"),first->name()).value(0),first->geometry());
+        QTRY_COMPARE(layers(QStringLiteral("bwm-r5-desktop"),second->name()).value(0),second->geometry());
+        QCOMPARE(va.screenToFollow(),second);QCOMPARE(vb.screenToFollow(),first);
+        QCOMPARE(a->applets().first(),wa);QCOMPARE(b->applets().first(),wb);
+        m_steps.append(QJsonObject{{"step","desktop-swap-wayland-surfaces"},{"passed",true}});
+        // Park a view as after output removal, then recover it through the same
+        // manager operation. No physical monitor is unplugged or reconfigured.
+        QVERIFY(vb.setScreenToFollow(nullptr));QTRY_COMPARE(b->screen(),-1);QVERIFY(!vb.isVisible());
+        QVERIFY(corona.moveContainmentToScreen(b,screenB));QTRY_COMPARE(b->screen(),screenB);
+        QTRY_COMPARE(a->screen(),-1);QVERIFY(!va.isVisible());QVERIFY(vb.isVisible());
+        QVERIFY(corona.moveContainmentToScreen(b,screenA));QTRY_COMPARE(b->screen(),screenA);
+        QVERIFY(corona.moveContainmentToScreen(a,screenB));QTRY_COMPARE(a->screen(),screenB);
+        QTRY_VERIFY(va.isExposed() && vb.isExposed());
+        QCOMPARE(a->applets().first(),wa);QCOMPARE(b->applets().first(),wb);
+        m_steps.append(QJsonObject{{"step","desktop-recover-wayland-surface"},{"passed",true}});
+        va.hide();vb.hide();corona.unbind(a);corona.unbind(b);
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r5-desktop"),first->name()).isEmpty());
+        QTRY_VERIFY(layers(QStringLiteral("bwm-r5-desktop"),second->name()).isEmpty());
+        QTRY_COMPARE(reserved(first->name()),firstReserved);QTRY_COMPARE(reserved(second->name()),secondReserved);
+        QCOMPARE(ownClients(),baseline);
+        m_steps.append(QJsonObject{{"step","desktop-swap-cleanup"},{"passed",true}});
+        puts(QJsonDocument(QJsonObject{{"steps",m_steps}}).toJson(QJsonDocument::Compact).constData());
+    }
     void originalDesktopEditModeInHyprland()
     {
         // R5 iteración 11: DesktopViewHost hosting the installed, unmodified Desktop.qml

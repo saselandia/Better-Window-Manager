@@ -331,7 +331,10 @@ void initDecorationDetection() {
         for(auto& manager:PROTO::serverDecorationKDE->m_managers)manager->setCreate(KdeFactory(manager->requests.create));
         for(auto& d:PROTO::serverDecorationKDE->m_decos)wrapKde(d.get());
     }
-    connectX(); // X setup happens at initialization/timer, never on render or IPC queries.
+    // XWayland is lazy: xcb_connect() here would wait for its setup reply while
+    // blocking the compositor event loop which must first start the X server.
+    // refreshDecorationDetection connects after an X11 window has mapped, when
+    // that server is necessarily ready. Never connect on render or IPC queries.
     timer=wl_event_loop_add_timer(g_pCompositor->m_wlEventLoop,[](void*)->int {refreshDecorationDetection();if(timer)wl_event_source_timer_update(timer,100);return 0;},nullptr);
     wl_event_source_timer_update(timer,100);
 }

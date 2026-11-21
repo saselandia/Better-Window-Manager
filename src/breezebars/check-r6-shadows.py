@@ -106,7 +106,7 @@ def main():
         report = json.loads(tested.stdout)
     report.update(version=1, passed=True, kwinVersion="6.7.5", referenceSha256=digest,
         asan=args.asan, compositorModified=False, compositorRenderVerified=False,
-        asanScope="Comparison harness, ShadowState and shadow-buffer reader; sampled helper is a normal build" if args.asan else "none",
+        asanScope="Comparison harness, ShadowState and both bounded shadow/tile buffer readers; sampled helper is a normal build" if args.asan else "none",
         scope="KWin method on Qt geometry, KDecoration3 geometry, CPU raster and native helper samples")
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")

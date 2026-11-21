@@ -30,6 +30,9 @@
 #include <QProcess>
 #include <KService>
 #include <QtTest>
+#include <execinfo.h>
+#include <csignal>
+#include <unistd.h>
 class PanelTaskCorona:public Plasma::Corona {
 public:QRect screenGeometry(int)const override{return {0,0,1920,1080};}
 };
@@ -47,6 +50,9 @@ QMenu *visibleMenuWith(const QString &text){
 class PanelTaskTest:public QObject {
     Q_OBJECT
 private Q_SLOTS:
+    void initTestCase() {
+        if(qEnvironmentVariableIsSet("BWM_R6_TEST_BACKTRACE"))std::signal(SIGSEGV,[](int){void *frames[64];int n=backtrace(frames,64);backtrace_symbols_fd(frames,n,2);_exit(139);});
+    }
     void panelRegistrationFindsVisualAppletAndMergesItsLauncher(){
         QCOMPARE(QGuiApplication::platformName(),"offscreen");
         QVERIFY(qEnvironmentVariableIsEmpty("HYPRLAND_INSTANCE_SIGNATURE"));

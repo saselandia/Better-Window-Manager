@@ -52,11 +52,17 @@ def main():
     parser.add_argument('--report', type=Path, required=True)
     parser.add_argument('--scales', default='1,1.25,1.5,1.6')
     parser.add_argument('--capture-dir', type=Path, help='Keep only fixture images for visual inspection')
+    parser.add_argument('--egl-vendor-json', type=Path, help='EGL vendor for the private compositor (auto: NVIDIA when installed)')
+    parser.add_argument('--gbm-backend', help='GBM backend for the private compositor')
     parser.add_argument('--scenes', default='applet,wallpaper,wallpaper-image,edit,paste')
     args = parser.parse_args()
+    vendor = args.egl_vendor_json
+    if vendor is None and Path('/usr/share/glvnd/egl_vendor.d/10_nvidia.json').is_file():
+        vendor = Path('/usr/share/glvnd/egl_vendor.d/10_nvidia.json')
+    backend = args.gbm_backend or ('nvidia-drm' if vendor and vendor.name=='10_nvidia.json' else None)
     scales = [float(value) for value in args.scales.split(',')]
     scenes = args.scenes.split(',')
-    if any(scene not in ('applet', 'wallpaper', 'wallpaper-image', 'edit', 'paste') for scene in scenes):
+    if any(scene not in ('applet', 'wallpaper', 'wallpaper-image', 'edit', 'paste', 'panel') for scene in scenes):
         parser.error('Unknown scene')
     captures = args.capture_dir.resolve() if args.capture_dir else None
     if captures:
@@ -84,10 +90,13 @@ def main():
                 env.update(XDG_CONFIG_HOME=str(root/'config'), XDG_DATA_HOME=str(root/'data'),
                     XDG_CACHE_HOME=str(root/'cache'), XDG_STATE_HOME=str(root/'state'), XDG_RUNTIME_DIR=str(root/'runtime'),
                     XDG_CONFIG_DIRS=str(root/'defaults'), DBUS_SYSTEM_BUS_ADDRESS='unix:path='+str(root/'no-system-bus'),
-                    KWIN_COMPOSE='O2', GBM_BACKEND='nvidia-drm',
-                    __EGL_VENDOR_LIBRARY_FILENAMES='/usr/share/glvnd/egl_vendor.d/10_nvidia.json',
+                    KWIN_COMPOSE='O2',
                     QSG_RHI_BACKEND='opengl', XDG_SESSION_TYPE='wayland', XDG_CURRENT_DESKTOP='KDE',
                     KWIN_SCREENSHOT_NO_PERMISSION_CHECKS='1', KWIN_WAYLAND_NO_PERMISSION_CHECKS='1', LANG='en_US.UTF-8', LANGUAGE='en')
+                if vendor:
+                    env['__EGL_VENDOR_LIBRARY_FILENAMES'] = str(vendor.resolve())
+                if backend:
+                    env['GBM_BACKEND'] = backend
                 (root/'config/user-dirs.dirs').write_text(f'XDG_DESKTOP_DIR="{root}/Desktop"\n')
                 (root/'config/kdeglobals').write_text(Path('/usr/share/color-schemes/BreezeDark.colors').read_text()+'\n[KDE]\nwidgetStyle=Breeze\n')
                 (root/'config/plasmarc').write_text('[Theme]\nname=breeze-dark\n')
@@ -104,8 +113,8 @@ PlasmoidItem {
         Text { anchors.centerIn: parent; text: "R5"; color: "white" }
     }
 }
-''' 
-                fixture.write_text(original_fixture.replace('PlasmoidItem {', 'PlasmoidItem { Timer { interval: 1500; running: true; onTriggered: Plasmoid.internalAction("configure").trigger() }'))
+'''
+                fixture.write_text(original_fixture.replace('PlasmoidItem {', 'PlasmoidItem { Timer { interval: 1500; running: true; onTriggered: Plasmoid.internalAction("configure").trigger() }') if 'applet' in scenes else original_fixture)
                 processes = []
                 def launch(argv, name, child_env=None):
                     with (root/f'{name}.log').open('w') as log:
@@ -127,7 +136,7 @@ PlasmoidItem {
                     run([client, 'input', 'move', '2', '2', '0'])
                     time.sleep(.35)
                     image = root/f'{source}-{scene}.png'
-                    meta = json.loads(run([client, 'capture', image, *(['workspace'] if scene=='edit' else [])]))
+                    meta = json.loads(run([client, 'capture', image, *(['workspace'] if scene in ('edit','panel') else [])]))
                     if abs(meta['scale']-scale)>.02:
                         raise AssertionError('Capture scale differs from requested scale: '+str(meta))
                     if captures:
@@ -217,6 +226,8 @@ PlasmoidItem {
                                 script('var d=desktops()[0]; d.wallpaperPlugin="org.kde.image"; d.currentConfigGroup=["Wallpaper","org.kde.image","General"]; d.writeConfig("Image","file:///usr/share/wallpapers/Next/");');time.sleep(.4)
                             script('desktops()[0].showConfigurationInterface()');time.sleep(.7)
                             native[scene] = capture('plasma', scene);key(1)
+                        elif scene=='panel':
+                            native[scene] = capture('plasma', scene)
                         elif scene=='edit':
                             script('var d=desktops()[0]; d.wallpaperPlugin="org.kde.color"; d.currentConfigGroup=["Wallpaper","org.kde.color","General"]; d.writeConfig("Color","#202428");');time.sleep(.4)
                             run([client, 'input', 'click', '500', '300', '273'])
@@ -236,6 +247,7 @@ PlasmoidItem {
                         wait(lambda: ready.exists() or own.poll() is not None, 'BWM native scene did not become ready', 15)
                         if not ready.exists():
                             raise RuntimeError((root/f'host-{scene}.log').read_text()[-2500:])
+                        host_state=json.loads(ready.read_text())
                         if scene=='paste':
                             paste()
                             result = {'scale': scale, 'scene': scene, 'nativePaste': True, 'bwmPaste': True, 'userClipboardUsed': False, 'result': 'org.kde.plasma.icon with the disposable local URL'}
@@ -248,9 +260,12 @@ PlasmoidItem {
                                 if source.size==original.size:
                                     difference = ImageChops.difference(source, original)
                                     result.update(differenceBounds=difference.getbbox(), meanChannelError=ImageStat.Stat(difference).mean,
-                                        differentPixels=sum(any(pixel) for pixel in difference.get_flattened_data()))
+                                        differentPixels=sum(any(pixel) for pixel in difference.get_flattened_data()),
+                                        maxChannelDelta=max(hi for lo, hi in difference.getextrema()),
+                                        pixelsAboveOneChannelUnit=sum(max(pixel)>1 for pixel in difference.get_flattened_data()))
                                 result['bwmSha256'] = hashlib.sha256(image.read_bytes()).hexdigest()
                                 result['plasmaSha256'] = hashlib.sha256(reference.read_bytes()).hexdigest()
+                        result['hostState']=host_state
                         ready.with_name(ready.name+'.stop').write_text('stop')
                         own.wait(8)
                         if own.returncode:
@@ -268,6 +283,9 @@ PlasmoidItem {
                     report['cleanupVerified'] = all(process.poll() is not None for process in processes)
     report['passed'] = 'error' not in report and bool(report['cases']) and report.get('cleanupVerified', False)
     report['pixelParityVerified'] = report['passed'] and all(case.get('differentPixels', 0)==0 and case.get('sameSize', True) for case in report['cases'])
+    configuration_cases = [case for case in report['cases'] if case['scene'] in ('applet', 'wallpaper', 'wallpaper-image')]
+    report['configurationParityWithinOneChannelUnit'] = report['passed'] and bool(configuration_cases) and all(
+        case.get('sameSize') and case.get('maxChannelDelta', 256)<=1 for case in configuration_cases)
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n')
     print(json.dumps({key: report.get(key) for key in ('passed', 'pixelParityVerified', 'error', 'cleanupVerified')}, ensure_ascii=False))
