@@ -1,5 +1,35 @@
 # R6 — sombras y efectos nativos de KDE
 
+## Iteración 9: menús contextuales, temas globales (`ThemeHost`) y KRunner (2026-11-21)
+
+Continúa la iteración 8 en la sesión diaria (sin depender del plugin candidato):
+
+* **Menús contextuales** (`menus/MenuHost.qml`): la capa `quickshell:plasmaMenu` entra en
+  `breeze-blur-frames`. El menú abierto y sus submenús (incluidos submenús dinámicos de bandeja)
+  enlazan `background.imagePath` a `BlurPath` (`widgets/background` → `translucent/widgets/background`
+  con desenfoque) y publican sus marcos abiertos en `BackgroundEffect.blurRegion` (liberando las
+  regiones previas al actualizar o cerrar).
+* **Temas globales de terceros (`ThemeHost`)**: `switcher/compat/Dialog.qml` acepta
+  `bwmDialogImagePath` y registra su `KSvg.FrameSvgItem` en `bwmBlurTarget.frame`. `osd/Osd.qml` y
+  `switcher/Switcher.qml` + `ThemedSwitcher.qml` pasan la ruta resuelta por `BlurPath` y enlazan
+  `BackgroundEffect.blurRegion` al marco del tema cargado en el otro motor QML (con reserva al
+  propio `themed` en OSD si un tema no usa `Dialog`).
+* **KRunner** (`skins/plasma/hypr/rules.lua`): `krunner` (`PlasmaQuick::PlasmaWindow` con
+  `LayerShellQt::Window::setScope("krunner")`) ya pide `KWindowEffects::enableBlurBehind` y usa
+  `translucent/dialogs/background` de `libplasma`; su capa `krunner` entra ahora en
+  `breeze-blur-frames` (`ignore_alpha = 0.01`, `blur_popups = true`) para recortar esquinas y
+  márgenes transparentes.
+
+Comprobado: `hyprctl reload` sin errores de configuración, reinicio de mantenimiento del shell sin
+errores (mismos workspaces y foco), `test_plasma_interfaces.py` 8/8 (incluye `BwmCompat.Dialog` en
+`ThemeHost` recibiendo ruta translúcida y registrando su marco), `test_plasma_menus_ui.py` 5/5
+(comprueba `background.imagePath` en menú y submenú y regiones de desenfoque al abrir y cerrar) y
+`test_plasma_shadow_policy.py` 1/1 (actualizado con `layer_rule` y comprobación de
+`breeze-blur-frames`). Pendiente: comprobación visual en vivo de Alt+Tab real, menús contextuales,
+KRunner y un tema global de terceros.
+
+---
+
 ## Iteración 8: OSD, cambiador y descripciones emergentes (2026-11-21)
 
 Sigue la iteración 6 en la sesión diaria. En Plasma también son diálogos con desenfoque:

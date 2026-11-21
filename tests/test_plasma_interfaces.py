@@ -124,6 +124,9 @@ class InterfaceUiTest(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix='bwm-f12-theme-') as temp:
             theme=Path(temp)/'main.qml'
             theme.write_text('import QtQuick\nItem {Component.onCompleted:{authenticator.startAuthenticating();Qt.quit();}}')
+            compat_uri=(SHELL/'modules/plasma/switcher/compat').as_uri()
+            dialog_theme=Path(temp)/'dialog.qml'
+            dialog_theme.write_text(f'import QtQuick\nimport "{compat_uri}" as BwmCompat\nBwmCompat.Dialog {{ mainItem: Item {{ width: 120; height: 60 }} }}\n')
             text='''//@ pragma UseQApplication
 import QtQuick
 import Quickshell
@@ -136,6 +139,7 @@ ShellRoot {
  Component.onCompleted:Config.blockWrites=true
  property int requests:0
  property bool intercepted:false
+ QtObject { id: blurSink; property Item frame: null }
  QtObject {
   id:mockContext
   property string currentText:""
@@ -163,13 +167,15 @@ ShellRoot {
  Switcher.Switcher {controller:controller}
  Osd.Osd {id:osd}
  ThemeHost {id:host;source:THEME;contextProperties:({authenticator:auth});onQuitRequested:intercepted=true}
+ ThemeHost {id:dialogHost;source:DIALOG_THEME;contextProperties:({bwmDialogImagePath:"translucent/dialogs/background",bwmBlurTarget:blurSink})}
  Timer {interval:1500;running:true;onTriggered:{
   if(!host.ready||!intercepted||requests!==1)throw Error("theme authentication/quit contract failed");
+  if(!dialogHost.ready||!blurSink.frame||blurSink.frame.imagePath!=="translucent/dialogs/background")throw Error("themed dialog blur contract failed: "+(blurSink.frame?.imagePath??"null"));
   osd.osdValue=75;osd.osdMaxValue=100;osd.icon="audio-volume-high";osd.showingProgress=true;
   console.log("F12_UI_OK");Qt.quit();
  }}
 }
-'''.replace('THEME',json.dumps(theme.as_uri()))
+'''.replace('DIALOG_THEME',json.dumps(dialog_theme.as_uri())).replace('THEME',json.dumps(theme.as_uri()))
             output=self.run_qml(text)
         self.assertIn('F12_UI_OK',output)
         active=output.split('F12_UI_OK')[0]

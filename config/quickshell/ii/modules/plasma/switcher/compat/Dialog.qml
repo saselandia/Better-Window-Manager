@@ -18,5 +18,10 @@ Item {
  height:(mainItem?.height??0)+frame.margins.top+frame.margins.bottom
  signal sceneGraphError()
  onMainItemChanged:if(mainItem){mainItem.parent=root;mainItem.x=frame.margins.left;mainItem.y=frame.margins.top;}
- KSvg.FrameSvgItem {id:frame;anchors.fill:parent;imagePath:"dialogs/background";z:-1}
+ KSvg.FrameSvgItem {
+  id:frame;anchors.fill:parent;z:-1
+  imagePath:(typeof bwmDialogImagePath==="string"&&bwmDialogImagePath.length>0)?bwmDialogImagePath:"dialogs/background"
+ }
+ Component.onCompleted:if(typeof bwmBlurTarget==="object"&&bwmBlurTarget)bwmBlurTarget.frame=frame
+ Component.onDestruction:if(typeof bwmBlurTarget==="object"&&bwmBlurTarget&&bwmBlurTarget.frame===frame)bwmBlurTarget.frame=null
 }

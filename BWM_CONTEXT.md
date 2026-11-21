@@ -150,6 +150,11 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 * **R6, iteración 8 (2026-11-21, §332):** OSD y cambiador piden desenfoque y usan variantes
   translúcidas (capas en `breeze-blur-frames`); descripciones emergentes con `widgets/tooltip`
   translúcido. Temas globales propios (`ThemeHost`) sin desenfoque; Alt+Tab real sin ver.
+* **R6, iteración 9 (2026-11-21, §333):** menús contextuales (`MenuHost`, incluidos submenús),
+  diálogos de temas globales en `ThemeHost` (`compat/Dialog.qml` en OSD y cambiador) y KRunner
+  (capa `krunner` en `breeze-blur-frames`) ya piden desenfoque y usan variantes translúcidas.
+  Activo en la sesión diaria; pruebas QML y política Lua en verde. Pendiente verificación visual en
+  vivo de Alt+Tab, menús, KRunner y un tema global de terceros.
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -6009,3 +6014,28 @@ git status; git log --oneline -5; git push origin main
 * **Incidencia:** abrir el cambiador por IPC sin Alt lo cerró activando otra ventana; se devolvió el
   foco a la original (Firefox) y se borraron las capturas. No abrir Alt+Tab por IPC en la sesión real.
 * **Pendiente:** Alt+Tab real, temas globales con `ThemeHost`, menús contextuales y KRunner.
+
+### 333. Breeze R6, iteración 9: menús contextuales, temas globales (`ThemeHost`) y KRunner (2026-11-21)
+
+* **Petición:** continuar por lo pendiente de §332 (desenfoque en temas globales con `ThemeHost`,
+  menús contextuales y KRunner).
+* **Hecho:**
+  * `config/hypr/skins/plasma/hypr/rules.lua`: `breeze-blur-frames` incluye `quickshell:plasmaMenu`
+    y `krunner` (`krunner` usa `PlasmaQuick::PlasmaWindow` con `LayerShellQt::setScope("krunner")`,
+    que ya llama a `KWindowEffects::enableBlurBehind` y usa `translucent/dialogs/background`).
+  * `config/quickshell/ii/modules/plasma/menus/MenuHost.qml`: aplica `BlurPath`
+    (`widgets/background`) al menú abierto y sus submenús (incluidos dinámicos) y actualiza
+    `BackgroundEffect.blurRegion` con sus marcos abiertos (destruyendo regiones previas).
+  * `config/quickshell/ii/modules/plasma/switcher/compat/Dialog.qml`, `osd/Osd.qml`,
+    `switcher/Switcher.qml` y `switcher/ThemedSwitcher.qml`: pasan `bwmDialogImagePath` y
+    `bwmBlurTarget` al motor QML de `ThemeHost` para que `BwmCompat.Dialog` use la variante
+    translúcida y registre su `FrameSvgItem` en `BackgroundEffect.blurRegion`.
+  * Pruebas actualizadas: `tests/test_plasma_interfaces.py` (contrato `BwmCompat.Dialog` en
+    `ThemeHost`), `tests/test_plasma_menus_ui.py` (fondo translúcido en menú/submenú y conteo de
+    regiones al abrir y cerrar) y `tests/test_plasma_shadow_policy.py` (añadido `layer_rule` y
+    verificación de `breeze-blur-frames`).
+* **Comprobado:** `hyprctl reload` sin errores, reinicio de mantenimiento del shell sin errores
+  (mismos workspaces y foco), `test_plasma_interfaces.py` 8/8, `test_plasma_menus_ui.py` 5/5 y
+  `test_plasma_shadow_policy.py` 1/1.
+* **Pendiente:** comprobación visual en vivo de Alt+Tab real, menús contextuales, KRunner y un tema
+  global de terceros; e instalar el plugin candidato de §331 y reiniciar sesión cuando proceda.

@@ -80,6 +80,9 @@ ShellRoot {
             report("windowInScreen", inScreen(m));
             const more = (() => { for (let i = 0; i < m.count; i++) if (m.itemAt(i)?.subMenu) { const sm = m.itemAt(i).subMenu; if (sm.title.indexOf("More") >= 0 || sm.title.indexOf("Más") >= 0) return sm; } return null; })();
             report("moreItems", items(more, true));
+            report("windowBgPath", m?.background?.imagePath ?? "");
+            report("moreBgPath", more?.background?.imagePath ?? "");
+            report("windowBlurCount", host.blurRegionCount);
             const max = find(m, m.tr("Ma&ximize"));
             report("windowMenuSubmenuOk", !!more);
             report("maximizeChecked", max?.checked ?? null);
@@ -116,6 +119,7 @@ ShellRoot {
             break;
         case 15:
             report("closed", !M.PlasmaMenus.opened && !host.menu);
+            report("closedBlurCount", host.blurRegionCount);
             report("done", true);
             Qt.quit();
             break;
@@ -195,6 +199,10 @@ class PlasmaMenusUiTest(unittest.TestCase):
                                               "&Hide from Screenshots and Screen Recordings"])
         self.assertIn("Configure Special &Window Settings…", r["moreItems"])
         self.assertFalse(r["maximizeChecked"])
+        self.assertIn("widgets/background", r["windowBgPath"])
+        self.assertEqual(r["windowBgPath"], r["moreBgPath"])
+        if r["windowBgPath"].startswith("translucent/"):
+            self.assertGreaterEqual(r["windowBlurCount"], 1)
 
     def test_window_menu_action_runs(self):
         tags = {t.rstrip("*") for t in (self.after or {}).get("tags", [])}
@@ -221,6 +229,7 @@ class PlasmaMenusUiTest(unittest.TestCase):
         self.assertEqual(r["panelItems"], ["Add or Manage Widgets…", "—", "Enter Edit Mode"])
         self.assertTrue(r["panelInScreen"])
         self.assertTrue(r["closed"])
+        self.assertEqual(r["closedBlurCount"], 0)
 
     def test_spanish_catalog(self):
         r = self.results["es"]

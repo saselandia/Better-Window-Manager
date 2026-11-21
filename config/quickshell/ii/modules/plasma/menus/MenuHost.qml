@@ -16,6 +16,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import org.kde.plasma.components as PC3
+import qs.modules.plasma.theme
 import qs.modules.plasma.tray as PlasmaTray
 
 Scope {
@@ -23,6 +24,55 @@ Scope {
 
     // El menú abierto (pruebas: tests/test_plasma_menus_ui.py)
     readonly property var menu: loader.item
+    readonly property int blurRegionCount: _blurRegions.length
+    property var _trackedMenus: []
+    property var _blurRegions: []
+
+    BlurPath { id: menuBgPath; path: "widgets/background" }
+    Component { id: blurRegionComp; Region {} }
+    Connections {
+        target: PlasmaTheme
+        function onBlurChanged() { root.updateBlurRegions(); }
+    }
+
+    function trackMenu(m) {
+        if (!m || root._trackedMenus.indexOf(m) >= 0)
+            return;
+        root._trackedMenus.push(m);
+        if (m.background && m.background.hasOwnProperty("imagePath"))
+            m.background.imagePath = Qt.binding(() => menuBgPath.resolved);
+        m.openedChanged.connect(root.updateBlurRegions);
+        if (m.contentModel && m.contentModel.countChanged)
+            m.contentModel.countChanged.connect(() => { root.trackSubmenus(m); root.updateBlurRegions(); });
+        root.trackSubmenus(m);
+    }
+
+    function trackSubmenus(m) {
+        if (!m)
+            return;
+        for (let i = 0; i < m.count; ++i) {
+            const sub = m.itemAt(i)?.subMenu ?? (typeof m.menuAt === "function" ? m.menuAt(i) : null);
+            if (sub)
+                root.trackMenu(sub);
+        }
+    }
+
+    function updateBlurRegions() {
+        const next = [];
+        if (PlasmaTheme.blur && PlasmaMenus.opened) {
+            for (const m of root._trackedMenus) {
+                if (m)
+                    root.trackSubmenus(m);
+                if (m && m.opened && m.background)
+                    next.push(blurRegionComp.createObject(win, { item: m.background }));
+            }
+        }
+        const prev = root._blurRegions;
+        root._blurRegions = next;
+        blurRoot.regions = next;
+        for (const r of prev)
+            r.destroy();
+    }
 
     IpcHandler {
         target: "plasmaWindowMenu"
@@ -58,6 +108,8 @@ Scope {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: PlasmaMenus.opened ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         anchors { top: true; bottom: true; left: true; right: true }
+        // KWin's blur behind the open menu and any open submenu (widgets/background translucent)
+        BackgroundEffect.blurRegion: Region { id: blurRoot }
 
         // Pulsar fuera del menú lo cierra (el menú también lo hace; esto cubre los huecos)
         MouseArea {
@@ -83,7 +135,13 @@ Scope {
         }
         Connections {
             target: PlasmaMenus
-            function onOpenedChanged() { if (!PlasmaMenus.opened) loader.active = false; }
+            function onOpenedChanged() {
+                if (!PlasmaMenus.opened) {
+                    loader.active = false;
+                    root._trackedMenus = [];
+                    root.updateBlurRegions();
+                }
+            }
         }
     }
 
@@ -94,9 +152,12 @@ Scope {
         if (!m)
             return;
         m.parent = host;
+        root._trackedMenus = [];
+        root.trackMenu(m);
         m.closed.connect(() => { if (loader.item === m) PlasmaMenus.close(); });
         m.popup(host, PlasmaMenus.x, PlasmaMenus.y);
         root.place(m);
+        root.updateBlurRegions();
         // Las entradas que llegan después (recientes, D-Bus menu) cambian el tamaño: se recoloca
         m.heightChanged.connect(() => root.place(m));
         m.widthChanged.connect(() => root.place(m));

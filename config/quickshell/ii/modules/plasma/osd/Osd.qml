@@ -46,14 +46,15 @@ PanelWindow {
         function displayText(text:string,iconName:string):void {root.display(iconName,text,100,"",false);}
         function hide():void {root.hide();}
     }
+    QtObject { id: themedBlur; property Item frame: null }
     Loader {
         id:themed;anchors.fill:parent
         active:InterfaceTheme.state.osdSource!==""
         source:active?Qt.resolvedUrl("ThemedOsd.qml"):""
-        onLoaded:item.values=Qt.binding(()=>({osdValue:root.osdValue,osdMaxValue:root.osdMaxValue,osdAdditionalText:root.osdAdditionalText,icon:root.icon,showingProgress:root.showingProgress,timeout:root.timeout}))
+        onLoaded:item.values=Qt.binding(()=>({osdValue:root.osdValue,osdMaxValue:root.osdMaxValue,osdAdditionalText:root.osdAdditionalText,icon:root.icon,showingProgress:root.showingProgress,timeout:root.timeout,bwmDialogImagePath:osdPath.resolved,bwmBlurTarget:themedBlur}))
     }
-    // KWin's blur behind the OSD dialog (built-in look; a theme's own QML runs in its own engine)
-    BackgroundEffect.blurRegion:Region { item:PlasmaTheme.blur&&root.opened&&frame.visible?frame:null }
+    // KWin's blur behind the OSD dialog (both built-in and third-party look-and-feel themes)
+    BackgroundEffect.blurRegion:Region { item:PlasmaTheme.blur&&root.opened?(frame.visible?frame:(themedBlur.frame??themed)):null }
     BlurPath { id:osdPath; path:"widgets/background" }
     KSvg.FrameSvgItem {
         visible:!(themed.item?.ready??false)
