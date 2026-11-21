@@ -6064,7 +6064,16 @@ git status; git log --oneline -5; git push origin main
     bajo demanda automáticamente; `breeze-no-border` mantiene siempre `no_shadow = true`.
   * `tests/test_plasma_shadow_policy.py`: verifica ambos casos (`no_shadow` con plugin anterior y
     retirado con plugin R6).
-* **Comprobado:** `test_plasma_shadow_policy.py` 3/3, `hyprctl reload` y `hyprctl configerrors`
-  vacío, `decorator.py status` escuchando.
-* **Pendiente:** cerrar e iniciar sesión para cargar el nuevo `breezebars.so` y `bwm-decorator` y
-  verificar visualmente sombras KDE, esquinas y desenfoque bajo demanda en ventanas normales.
+* **Comprobado (post-reinicio, con los binarios R6 cargados):**
+  * `hyprctl configerrors` vacío, `hl.plugin.breezebars.blur_on_request` presente,
+    `breezebars-shadows` v2 activo (`shm: true`, XWayland `:0`), `breezebars-csd` correcto y
+    `bwm-decorator` escuchando; `test_plasma_shadow_policy.py` 3/3.
+  * Sombras KDE medidas sobre fondo `#dcdcdc` en ventana SSD real (`kind: kde`): 0 px de hueco y
+    contorno de 1 px (`143/255`) en los 4 lados, degradado arriba 34 px / abajo 56 px / izquierda
+    46 px / derecha 44 px y 4 esquinas continuas (19/18/30/29 px). Ventana `bwm-no-border`: 0 px
+    de sombra.
+  * `blur_on_request` + `SquareTop` sobre tablero en ventana translúcida: sin petición, contraste
+    120 en cuerpo y franja superior; con petición, contraste 8 en cuerpo y 6 en franja superior.
+  * `bwm-plasma-osd` y `quickshell:plasmaMenu` verificados en vivo sin errores QML; capturas
+    borradas y foco/workspaces intactos.
+* **Estado R6:** desplegado y verificado en la sesión diaria. Listo para `git push` o pasar a R7.

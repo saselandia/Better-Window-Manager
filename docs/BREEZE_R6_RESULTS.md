@@ -16,9 +16,21 @@ iniciar sesión):
   siga cargado el plugin anterior en esta sesión, ambos vetos se conservan; `breeze-no-border`
   mantiene siempre `no_shadow = true`.
 
-Comprobado: `test_plasma_shadow_policy.py` 3/3 y `hyprctl reload` sin errores de configuración.
-Pendiente: volver a iniciar sesión para cargar el nuevo `breezebars.so` y `bwm-decorator` y
-comprobar visualmente sombras KDE, esquinas y desenfoque bajo demanda en ventanas normales.
+Comprobado tras reiniciar sesión (con el `breezebars.so` y `bwm-decorator` nuevos cargados):
+* **Plugin y auxiliar:** `hyprctl configerrors` vacío, `hl.plugin.breezebars.blur_on_request`
+  presente, `breezebars-shadows` activo (`waylandProtocolVersion: 2`, `shm: true`, XWayland `:0`),
+  `breezebars-csd` clasificando SSD/CSD/X11 correctamente y `bwm-decorator` escuchando.
+* **Sombras en los 4 bordes y 4 esquinas (ventana SSD `kind: kde` sobre fondo `#dcdcdc`):**
+  0 px de hueco en los 4 lados (`first_px=0`), contorno Breeze de 1 px (`143/255`) en los 4 lados y
+  degradado KDE continuo con la asimetría de Breeze (arriba 34 px, abajo 56 px, izquierda 46 px,
+  derecha 44 px; esquinas TL 19 px, TR 18 px, BL 30 px, BR 29 px).
+* **Sin barra y marco (`bwm-no-border`):** 0 píxeles de sombra fuera del marco.
+* **Ventanas normales (`blur_on_request` + `SquareTop`, tablero blanco/negro detrás):** sin pedir
+  desenfoque, contraste **120** (`72..192`) en cuerpo y franja superior (sin desenfoque ni doble
+  mezcla); pidiendo desenfoque, contraste **8** (`86..94`) en cuerpo y **6** (`85..91`) en la
+  franja superior.
+* **Capas en vivo:** `bwm-plasma-osd` y `quickshell:plasmaMenu` verificados sin errores QML,
+  capturas temporales borradas y foco/workspaces intactos.
 
 ---
 
