@@ -118,6 +118,19 @@ Singleton {
     readonly property color negative: color("Window", "ForegroundNegative")
     readonly property color neutral: color("Window", "ForegroundNeutral")
     readonly property color positive: color("Window", "ForegroundPositive")
+    // KWin's blur effect ([Plugins] blurEnabled in kwinrc, on by default). With it Plasma draws the
+    // translucent variants of the theme (libplasma ThemePrivate::updateKSvgSelectors) and asks for
+    // blur behind; skins/plasma/hypr/kwin.lua enables it in Hyprland from the same key.
+    property var kwinrc: ({})
+    readonly property bool blur: (root.kwinrc["Plugins"]?.blurEnabled ?? "true").toLowerCase() !== "false"
+    FileView {
+        path: root.configDir + "/kwinrc"
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+        onLoaded: root.kwinrc = root.parseIni(text())
+        onLoadFailed: root.kwinrc = ({})
+    }
     readonly property bool dark: (0.2126 * windowBackground.r + 0.7152 * windowBackground.g + 0.0722 * windowBackground.b) < 0.5
 
     // Fuentes de Plasma ([General] de kdeglobals); sin ellas, las de la skin

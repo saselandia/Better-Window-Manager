@@ -124,7 +124,7 @@ hl.config({
             color        = "rgba(00000020)",
         },
 
-        -- Blur Dual-Kawase desactivado en plasma para evitar halo gris en márgenes CSD
+        -- Breeze enciende el desenfoque como KWin en skins/plasma/hypr/kwin.lua (sólo lo que lo pide)
         blur = {
             enabled           = not is_plasma and not is_retro,  -- Omarchy: sin blur salvo modo glass
             size              = 6,
@@ -132,6 +132,11 @@ hl.config({
             vibrancy          = 0.2,
             new_optimizations = true,
             ignore_opacity    = true,
+            -- Breeze (skins/plasma/hypr/kwin.lua) sets these like KWin's blur: a reload does not
+            -- restore what nobody sets again, so the other skins put back Hyprland's defaults.
+            noise             = 0.0117,
+            contrast          = 0.8916,
+            brightness        = 1,
         },
     },
 

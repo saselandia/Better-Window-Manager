@@ -6,12 +6,14 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Wayland
 import org.kde.ksvg as KSvg
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.components as PC3
 import org.kde.plasma.extras as PlasmaExtras
 import qs.modules.plasma.panel
+import qs.modules.plasma.theme
 import qs.modules.plasma.applets as Applets
 import "TrayLogic.js" as Logic
 PopupWindow {
@@ -57,14 +59,18 @@ PopupWindow {
     anchor.rect.width:panelSpan.width;anchor.rect.height:panelSpan.height
     anchor.edges:edge==="bottom"?Edges.Top:edge==="top"?Edges.Bottom:edge==="left"?Edges.Right:Edges.Left
     anchor.gravity:anchor.edges
+    // KWin's blur behind the dialog; the panel layer rule (blur_popups, ignore_alpha) keeps its shape
+    BackgroundEffect.blurRegion:Region { item:PlasmaTheme.blur&&trayWindow.visible?trayFrame:null }
     HyprlandFocusGrab { active:trayWindow.visible&&trayWindow.grabReady;windows:trayWindow.grabReady?[trayWindow, trayWindow.anchorItem.QsWindow.window].filter(w=>w):[];onCleared:TrayState.close() }
     Item {
     id:surface
     anchors.fill:parent
     focus:true
     Keys.onEscapePressed:event=>{TrayState.close();event.accepted=true;}
+    BlurPath { id:dialogPath;path:"dialogs/background";withoutBlur:"solid/dialogs/background" }
     KSvg.FrameSvgItem {
-        anchors.fill:parent;imagePath:"solid/dialogs/background";prefix:""
+        id:trayFrame
+        anchors.fill:parent;imagePath:dialogPath.resolved;prefix:""
         // Docked to the panel: no border on that side, as PlasmaQuick::Dialog
         enabledBorders:!trayWindow.docked?KSvg.FrameSvgItem.AllBorders
             :({bottom:KSvg.FrameSvgItem.AllBorders&~KSvg.FrameSvgItem.BottomBorder,

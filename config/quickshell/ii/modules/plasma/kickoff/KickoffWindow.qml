@@ -13,6 +13,7 @@ import org.kde.ksvg as KSvg
 import org.kde.kirigami as Kirigami
 import qs
 import qs.modules.plasma.panel
+import qs.modules.plasma.theme
 
 /**
  * BWM: anfitrión del Kickoff portado (fase 4 de docs/BREEZE_PLAN.md). En Plasma lo muestra un
@@ -79,11 +80,15 @@ Scope {
             onClicked: if (kickoff.hideOnWindowDeactivate) root.close()
         }
 
+        // KWin's blur behind the dialog (ext_background_effect); the layer rule keeps its shape
+        BackgroundEffect.blurRegion: Region { item: PlasmaTheme.blur && root.opened ? frame : null }
+        BlurPath { id: dialogPath; path: "dialogs/background"; withoutBlur: "solid/dialogs/background" }
+
         KSvg.FrameSvgItem {
             id: frame
-            // Plasma usa la variante translúcida sólo con el efecto de desenfoque de KWin; Breeze no
-            // desenfoca (decoration.blur apagado), así que, como Plasma sin desenfoque, la sólida
-            imagePath: "solid/dialogs/background"
+            // Plasma usa la variante translúcida sólo con el efecto de desenfoque de KWin; sin él,
+            // como Plasma sin desenfoque, la sólida
+            imagePath: dialogPath.resolved
             // En Plasma el diálogo es una ventana propia y su borde recorta lo que se extiende hacia sus
             // márgenes (las pestañas del pie bajan bottomPadding); aquí la capa ocupa toda la pantalla y eso
             // tapaba 3 px del panel: se recorta en el borde del diálogo

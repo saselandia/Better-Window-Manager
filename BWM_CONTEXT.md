@@ -138,6 +138,11 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   KWin con su intensidad por defecto (los valores de Hyprland por defecto, 32/255). Activarlo en
   Breeze diario (Quickshell `BackgroundEffect`, variantes translúcidas, `no_blur` sólo a quien no lo
   pide) queda pendiente del usuario; en Breeze sigue apagado.
+* **R6, iteración 6 (2026-11-21, §330):** desenfoque de KWin activo en Breeze diario (lo pidió el
+  usuario): `kwin.lua` lo enciende según `blurEnabled`/`BlurStrength` de `kwinrc` (7 pasadas,
+  `size` 8 por defecto, sin modulaciones); panel, Kickoff, bandeja y notificaciones lo piden con
+  `BackgroundEffect` y usan las variantes `translucent` del tema (`theme/BlurPath.qml`); regla
+  `breeze-blur-frames` con `ignore_alpha`. Ventanas que lo piden: pendiente (llevan `no_blur`).
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -5944,3 +5949,25 @@ git status; git log --oneline -5; git push origin main
   a todas. Activarlo en Breeze diario es un cambio visible: pendiente de decisión del usuario.
 * **Herramientas:** `check-r6-surfaces.py --blur-pattern edge`, `--hypr-blur`, `--backends`;
   `test-r6-native` con `BWM_R6_EFFECTS_PATTERN=edge`. Sin cambios en la sesión diaria.
+
+### 330. Breeze R6, iteración 6: desenfoque de KWin en Breeze diario (2026-11-21)
+
+* **Petición:** «Sí, actívalo», tras el análisis de §329.
+* **Hecho:** `skins/plasma/hypr/kwin.lua` enciende `decoration.blur` salvo `[Plugins]
+  blurEnabled=false` y traduce `[Effect-blur] BlurStrength` con la tabla de KWin (iteraciones + 3
+  pasadas, desplazamiento como `size`; 7/8 por defecto) sin ruido/contraste/brillo/viveza;
+  `kde-config-bridge.py` exporta `blur`/`blurStrength`; `appearance.lua` repone en las otras skins
+  los valores por defecto de Hyprland. Regla de capa `breeze-blur-frames` (`ignore_alpha` 0,01,
+  `blur_popups`) para panel, Kickoff y notificaciones. `BackgroundEffect.blurRegion` en
+  `Panel.qml`, `KickoffWindow.qml`, `TrayPopup.qml` y `NotificationPopups.qml`; nuevo
+  `theme/BlurPath.qml` (orden de búsqueda de KSvg con el selector `translucent`) y
+  `PlasmaTheme.blur` (lee `kwinrc` del usuario: un vigilante más; inotify medido en 106/128).
+* **Comprobado:** `hyprctl getoption` tras recarga, `configerrors` vacío, reinicio de
+  mantenimiento del shell sin errores (mismos workspaces y foco); Kickoff por IPC con marco
+  translúcido sobre fondo desenfocado; puente KDE 21 y QML 30 pruebas. El panel del usuario está en
+  «Opaco».
+* **Límites:** ventanas que piden desenfoque siguen con `no_blur` (requiere el plugin); menús,
+  descripción emergente, OSD, cambiador y KRunner aún no lo piden; no probado el cambio de skin con
+  estos valores ni comparado con Plasma completo.
+* **Incidencia:** un comando de esta sesión extrajo `quickshell-0.3.2/` en la raíz del repo por no
+  cambiar de carpeta; se borró (no estaba en Git).

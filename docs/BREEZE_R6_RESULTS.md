@@ -1,5 +1,46 @@
 # R6 — sombras y efectos nativos de KDE
 
+## Iteración 6: desenfoque de KWin en Breeze diario (2026-11-21)
+
+Activado a petición del usuario tras el análisis de la iteración 5. **Afecta a la sesión diaria**
+(no depende del plugin candidato).
+
+* **Hyprland** (`skins/plasma/hypr/kwin.lua`): `decoration.blur` encendido salvo que `kwinrc`
+  `[Plugins] blurEnabled=false`. La intensidad sale de `[Effect-blur] BlurStrength` con la tabla
+  de iteraciones/desplazamiento de KWin (`initBlurStrengthValues`) y Hyprland recibe tres pasadas
+  más con ese desplazamiento: `passes` 7, `size` 8 con la intensidad por defecto (15), la
+  combinación medida en la iteración 5. Sin ruido, contraste, brillo ni viveza. Las otras 14
+  intensidades siguen la misma regla sin medición propia. `kde-config-bridge.py` exporta
+  `blur` y `blurStrength`; `appearance.lua` repone los valores por defecto de Hyprland
+  (`noise`, `contrast`, `brightness`) en las demás skins, porque una recarga no los devuelve.
+* **Qué se desenfoca:** como KWin, sólo lo que lo pide. El panel, Kickoff, la ventana de la
+  bandeja (y las demás ventanas emergentes del panel) y las notificaciones piden desenfoque con
+  `BackgroundEffect.blurRegion` de Quickshell (`ext_background_effect_v1`) sobre su marco. La
+  regla de capa `breeze-blur-frames` (`ignore_alpha` 0,01, `blur_popups`) lo recorta donde el
+  marco es transparente: esquinas redondeadas y huecos entre notificaciones, como la máscara
+  KSvg que usa KWin.
+* **Variantes del tema:** con el desenfoque, libplasma activa el selector `translucent` de KSvg.
+  El nuevo `theme/BlurPath.qml` reproduce su orden de búsqueda (variante translúcida del tema
+  actual, si no su variante normal, si no la translúcida del tema de reserva); `PlasmaTheme.blur`
+  lee `kwinrc` del usuario. Sin desenfoque se conserva la variante anterior (sólida en los
+  diálogos). En Breeze el diálogo translúcido tiene alfa 216/255 (el sólido, 255).
+
+Comprobado en la sesión real: opciones de Hyprland leídas con `hyprctl getoption` tras la
+recarga, sin errores de configuración ni del shell (un reinicio de mantenimiento, mismos
+workspaces y foco). Kickoff abierto por IPC un momento: su fondo pasa del sólido (32, 35, 38) a
+(33, 37, 38) con desviación ≤0,5 sobre una terminal con texto claro, es decir, marco translúcido
+sobre fondo desenfocado. El panel del usuario está en modo «Opaco», así que se ve sólido como en
+Plasma. Pruebas: puente KDE 21 (nueva: tabla de intensidad, efecto desactivado, límites), QML de
+panel, bandeja, Kickoff y tareas 30.
+
+Pendiente: las **ventanas** que piden desenfoque no lo reciben, porque la regla
+`breeze-float-all` les pone `no_blur` (Hyprland desenfocaría si no todas las translúcidas); hará
+falta que el plugin lo quite sólo a las que lo piden. Tampoco piden desenfoque todavía los menús
+contextuales, la descripción emergente propia, el OSD, el cambiador ni KRunner. No se ha
+probado el cambio a otra skin con estos valores ni la comparación visual con Plasma completo.
+
+---
+
 ## Iteración 5: intensidad del desenfoque y contorno (análisis, 2026-11-21)
 
 **R6 sigue abierta.** No cambia nada de la sesión diaria: en Breeze `decoration.blur` sigue

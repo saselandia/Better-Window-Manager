@@ -305,6 +305,33 @@ class BridgeTest(unittest.TestCase):
         follows = subprocess.run([lua, "-e", harness], capture_output=True, text=True, check=True)
         self.assertEqual(follows.stdout.strip(), "1")
 
+    def test_kwin_blur_effect_maps_to_hyprland_blur(self):
+        lua = shutil.which("lua5.4") or shutil.which("lua")
+        if not lua:
+            self.skipTest("lua interpreter not available")
+        kwin = ROOT / "config/hypr/skins/plasma/hypr/kwin.lua"
+        harness = (
+            "local last = nil\n"
+            "hl = { config = function(t) last = t end, window_rule = function() end }\n"
+            f"dofile({json.dumps(str(kwin))})\n"
+            "local b = last.decoration.blur\n"
+            "print(tostring(b.enabled) .. ' ' .. b.passes .. ' ' .. b.size .. ' ' .. b.noise .. ' ' .. b.vibrancy)\n"
+        )
+        # KWin defaults: effect on, strength 15 (4 iterations, offset 8) -> 7 passes, size 8
+        self.write(self.config / "kwinrc", "[Windows]\nFocusPolicy=ClickToFocus\n")
+        self.m.enter()
+        self.assertEqual(self.m.kwin_settings()["blurStrength"], 15)
+        out = subprocess.run([lua, "-e", harness], capture_output=True, text=True, check=True)
+        self.assertEqual(out.stdout.split(), ["true", "7", "8", "0", "0"])
+        # Strength 3 (2 iterations, offset 2.5) and the effect disabled in [Plugins]
+        self.write(self.config / "kwinrc", "[Plugins]\nblurEnabled=false\n\n[Effect-blur]\nBlurStrength=3\n")
+        self.m.reconcile()
+        out = subprocess.run([lua, "-e", harness], capture_output=True, text=True, check=True)
+        self.assertEqual(out.stdout.split(), ["false", "5", "3", "0", "0"])
+        # Out of range strengths are clamped like the KCM slider
+        self.write(self.config / "kwinrc", "[Effect-blur]\nBlurStrength=99\n")
+        self.assertEqual(self.m.kwin_settings()["blurStrength"], 15)
+
 
 if __name__ == "__main__":
     unittest.main()

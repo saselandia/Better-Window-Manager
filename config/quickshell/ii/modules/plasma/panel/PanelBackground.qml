@@ -7,6 +7,7 @@
 import QtQuick
 import org.kde.ksvg as KSvg
 import org.kde.kirigami as Kirigami
+import qs.modules.plasma.theme
 Item {
     id: root
     property string edge: "bottom"
@@ -17,6 +18,9 @@ Item {
     property real panelOpacity: opacityMode === "opaque" || (opacityMode === "adaptive" && touchingWindow) ? 1 : 0
     readonly property var frameMargins: translucentItem.margins
     readonly property var shadowMargins: shadow.margins
+    // PanelView::updateMask (6.7.5) asks KWin to blur the frame's shape: the window takes it from here
+    readonly property Item blurItem: translucentItem
+    BlurPath { id: panelPath; path: "widgets/panel-background" }
     property bool touchesLeft:false
     property bool touchesRight:false
     property bool touchesTop:false
@@ -40,7 +44,7 @@ Item {
     }
     KSvg.FrameSvgItem {
         id: translucentItem
-        anchors.fill:parent; imagePath:"widgets/panel-background"
+        anchors.fill:parent; imagePath:panelPath.resolved
         prefix:[root.direction,""]; enabledBorders:root.borderMask
     }
     KSvg.FrameSvgItem {

@@ -8,6 +8,7 @@ import qs.services
 import qs.modules.common
 import org.kde.kirigami as Kirigami
 import qs.modules.plasma.menus
+import qs.modules.plasma.theme
 import qs.modules.plasma.tray as PlasmaTray
 import "PanelLogic.js" as Logic
 Scope {
@@ -46,6 +47,8 @@ Scope {
             anchors.left:geo.edge==="left"||!vertical
             anchors.right:geo.edge==="right"||!vertical
             mask:Region { item:hitArea }
+            // KWin's blur behind the frame (ext_background_effect); the layer rule keeps its shape
+            BackgroundEffect.blurRegion:Region { item:PlasmaTheme.blur&&panel.visible?background.blurItem:null }
             Component.onCompleted: { PanelState.update(screen.name,geo); HyprlandData.updateAll(); }
             Component.onDestruction:PanelState.remove(screen.name)
             onGeoChanged:PanelState.update(screen.name,geo)

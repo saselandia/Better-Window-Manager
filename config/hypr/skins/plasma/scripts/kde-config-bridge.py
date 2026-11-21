@@ -314,6 +314,9 @@ def kwin_settings():
         "buttonsRight": decor.get("ButtonsOnRight", "IAX"),
         "animationFactor": number(kde.get("AnimationDurationFactor"), 1, 0, 20),
         "singleClick": kde.get("SingleClick", "false").lower() == "true",
+        # KWin's blur effect: on unless disabled in kwinrc [Plugins]; strength 1–15 ([Effect-blur])
+        "blur": w.get("Plugins", {}).get("blurEnabled", "true").lower() != "false",
+        "blurStrength": int(number(w.get("Effect-blur", {}).get("BlurStrength"), 15, 1, 15)),
     }
 
 

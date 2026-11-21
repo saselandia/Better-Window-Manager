@@ -5,8 +5,25 @@ local ok, settings = pcall(dofile, state)
 local k = ok and type(settings) == "table" and settings or {}
 local follows = k.focus ~= nil and k.focus ~= "ClickToFocus"
 local native_snap = not (hl.plugin and hl.plugin.breezebars and hl.plugin.breezebars.snap_config)
+
+-- KWin's blur effect (plugins/blur, 6.7.5): only surfaces that ask for it are blurred
+-- (ext_background_effect_v1; Hyprland does the same for layers). Both are dual Kawase with the
+-- same kernels but step differently per pass: BlurStrength picks KWin's iterations/offset
+-- (initBlurStrengthValues) and Hyprland gets three more passes at that offset, the closest match
+-- measured at the default strength 15 (docs/BREEZE_R6_RESULTS.md, iteration 6). No noise,
+-- contrast, brightness or vibrancy: KWin applies none of Hyprland's modulations.
+local kwin_blur = { { 1, 1.5 }, { 1, 2 }, { 2, 2.5 }, { 2, 3 }, { 3, 2.6 }, { 3, 3.2 }, { 3, 3.8 },
+    { 3, 4.4 }, { 3, 5 }, { 4, 23 / 6 }, { 4, 14 / 3 }, { 4, 5.5 }, { 4, 19 / 3 }, { 4, 43 / 6 }, { 4, 8 } }
+local blur_step = kwin_blur[math.max(1, math.min(15, math.floor(k.blurStrength or 15)))]
 hl.config({
     input = { follow_mouse = follows and 1 or 2 },
+    decoration = { blur = {
+        enabled = k.blur ~= false,
+        passes = math.min(8, blur_step[1] + 3),
+        size = math.floor(blur_step[2] + 0.5),
+        noise = 0, contrast = 1, brightness = 1, vibrancy = 0,
+        new_optimizations = true, ignore_opacity = true, xray = false, popups = false,
+    } },
     general = { snap = {
         enabled = native_snap and ((k.borderSnap or 10) > 0 or (k.windowSnap or 10) > 0),
         monitor_gap = k.borderSnap or 10,

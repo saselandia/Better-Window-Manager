@@ -7,6 +7,7 @@ import Quickshell.Hyprland
 import qs
 import qs.modules.common
 import qs.services
+import qs.modules.plasma.theme
 // BWM: initialize Plasma's KSvg image set even in an isolated popup host.
 import org.kde.plasma.core as PlasmaCore
 import org.kde.ksvg as KSvg
@@ -26,6 +27,9 @@ Scope {
         color:"transparent";exclusionMode:ExclusionMode.Ignore
         WlrLayershell.namespace:"quickshell:plasmaNotifications"
         WlrLayershell.layer:WlrLayer.Overlay
+        // KWin's blur behind each card; ignore_alpha drops it in the gaps between them
+        BackgroundEffect.blurRegion:Region { item:PlasmaTheme.blur&&toastWindow.visible?list:null }
+        BlurPath { id:dialogPath;path:"dialogs/background";withoutBlur:"solid/dialogs/background" }
         ColumnLayout {
             id:list
             anchors.fill:parent
@@ -36,7 +40,7 @@ Scope {
                     id:toast
                     required property var modelData
                     Layout.fillWidth:true;implicitHeight:card.implicitHeight+12
-                    KSvg.FrameSvgItem { anchors.fill:parent;imagePath:"solid/dialogs/background";prefix:"" }
+                    KSvg.FrameSvgItem { anchors.fill:parent;imagePath:dialogPath.resolved;prefix:"" }
                     NotificationCard {
                         id:card
                         anchors { left:parent.left;right:parent.right;margins:6 }
