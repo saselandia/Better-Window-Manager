@@ -58,7 +58,11 @@ int main(int argc,char **argv){
     const bool effects=qEnvironmentVariableIsSet("BWM_R6_EFFECTS");
     std::unique_ptr<QObject> pattern;
     if(effects) {
-        QQmlComponent checker(&engine);checker.setData("import QtQuick\nItem { width: 1280; height: 800; Repeater { model: 640; Rectangle { required property int index; x: (index % 32)*40; y: Math.floor(index / 32)*40; width: 40; height: 40; color: (index % 32 + Math.floor(index / 32)) % 2 ? '#404040' : '#c0c0c0' } } }",QUrl());
+        // BWM_R6_EFFECTS_PATTERN=edge: four large quadrants crossing the blurred half of the
+        // fixture (320,220 180x120): the blurred step profile measures the blur radius.
+        const QByteArray quadrants="import QtQuick\nItem { width: 1280; height: 800; Repeater { model: 4; Rectangle { required property int index; x: index % 2 ? 365 : 0; y: index < 2 ? 0 : 280; width: index % 2 ? 915 : 365; height: index < 2 ? 280 : 520; color: (index === 0 || index === 3) ? '#202020' : '#e0e0e0' } } }";
+        const QByteArray squares="import QtQuick\nItem { width: 1280; height: 800; Repeater { model: 640; Rectangle { required property int index; x: (index % 32)*40; y: Math.floor(index / 32)*40; width: 40; height: 40; color: (index % 32 + Math.floor(index / 32)) % 2 ? '#404040' : '#c0c0c0' } } }";
+        QQmlComponent checker(&engine);checker.setData(qgetenv("BWM_R6_EFFECTS_PATTERN")=="edge"?quadrants:squares,QUrl());
         pattern.reset(checker.create());auto *p=qobject_cast<QQuickItem*>(pattern.get());require(p,"Checkerboard fixture did not load");p->setParentItem(backdrop.contentItem());
     }
     auto *background=LayerShellQt::Window::get(&backdrop);

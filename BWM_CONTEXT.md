@@ -132,6 +132,12 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   entero más cercano a `round(radio × escala)` de KWin, potencia 2. Breeze oscuro 73→16/255 y
   claro 109→27/255 a 1–1,5; a escala 2 la regla entera no llega (9 u 11 px frente a 10). Queda el
   suavizado del contorno en las esquinas. Sin instalar.
+* **R6, iteración 5 (2026-11-21, §329, análisis):** contorno en esquinas = cobertura distinta de
+  `renderBorder` y el sombreador de KWin, sin parámetro. Desenfoque: mismo *dual kawase*, distinto
+  desplazamiento por pasada; `passes` 7/`size` 8 sin ruido/contraste/brillo/viveza queda a 4/255 de
+  KWin con su intensidad por defecto (los valores de Hyprland por defecto, 32/255). Activarlo en
+  Breeze diario (Quickshell `BackgroundEffect`, variantes translúcidas, `no_blur` sólo a quien no lo
+  pide) queda pendiente del usuario; en Breeze sigue apagado.
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -5921,3 +5927,20 @@ git status; git log --oneline -5; git push origin main
 * **Límites:** a escala 2 la regla entera da 9 u 11 px frente a 10; queda el suavizado del contorno
   (`renderBorder` frente al sombreador de borde de KWin). Sin instalar en la sesión diaria; veto
   `no_shadow=true` intacto.
+
+### 329. Breeze R6, iteración 5: desenfoque y contorno (análisis, 2026-11-21)
+
+* **Petición:** «haz commit y continúa» tras la iteración 4.
+* **Contorno:** las 40–57 diferencias diagonales de las esquinas vienen de la cobertura de
+  `renderBorder` de Hyprland frente al borde SDF de KWin (`fwidth`); no hay parámetro: límite.
+* **Desenfoque:** KWin 6.7.5 (`downsample/upsample.frag`, `initBlurStrengthValues`) y Hyprland
+  0.56.2 (`blur1/blur2.glsl`) comparten núcleos *dual kawase*; KWin desplaza `offset`/2 téxeles del
+  nivel leído y recorta a región + 150 px, Hyprland `size` al reducir y `size`/4 al ampliar sobre
+  búferes de monitor. Barrido en el anidado frente a KWin (intensidad 15 por defecto): Hyprland por
+  defecto 32/255, `passes` 7/`size` 8 (o 8/4) con `noise` 0 y `contrast`/`brightness` 1, `vibrancy`
+  0 → 4/255 en tablero y 2/255 en cuadrantes. No mide la saturación 150 %; depende del tamaño de la
+  región.
+* **Semántica:** capas sólo si lo piden (como KWin); ventanas todas salvo `no_blur`, que Breeze pone
+  a todas. Activarlo en Breeze diario es un cambio visible: pendiente de decisión del usuario.
+* **Herramientas:** `check-r6-surfaces.py --blur-pattern edge`, `--hypr-blur`, `--backends`;
+  `test-r6-native` con `BWM_R6_EFFECTS_PATTERN=edge`. Sin cambios en la sesión diaria.

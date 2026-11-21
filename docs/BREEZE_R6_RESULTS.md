@@ -1,5 +1,54 @@
 # R6 — sombras y efectos nativos de KDE
 
+## Iteración 5: intensidad del desenfoque y contorno (análisis, 2026-11-21)
+
+**R6 sigue abierta.** No cambia nada de la sesión diaria: en Breeze `decoration.blur` sigue
+apagado y el panel/Kickoff usan las variantes sólidas del tema, como Plasma sin desenfoque.
+
+**Contorno de Breeze en las esquinas (hasta 27/255).** Son 40–57 píxeles del suavizado diagonal:
+`renderBorder` de Hyprland y el sombreador de borde de KWin (`sdf.glsl`, `fwidth`) calculan la
+cobertura de otra forma. No hay parámetro que lo iguale; haría falta un sombreador propio. Se
+deja como límite.
+
+**Desenfoque.** Los dos usan *dual kawase* con los mismos núcleos de reducción y ampliación
+(`downsample/upsample.frag` de KWin 6.7.5 y `blur1/blur2.glsl` de Hyprland 0.56.2), pero:
+
+* KWin desplaza `offset` × medio téxel del nivel leído, igual al reducir que al ampliar, y
+  recorta la captura a la región más `expandSize` (150 px con 4 iteraciones). Su intensidad por
+  defecto (`BlurStrength=15`) son 4 iteraciones con `offset` 8; además satura al 150 % y añade
+  ruido 5.
+* Hyprland desplaza `size` téxeles al reducir y `size`/4 al ampliar, sobre búferes del tamaño del
+  monitor, y aplica `contrast`, `brightness`, `vibrancy` y `noise` propios.
+
+No hay una equivalencia exacta con un solo parámetro. Medido en el compositor anidado frente a
+KWin (región de 90×120 px, fondo de tablero y fondo de cuadrantes con bordes nítidos, escala 1):
+
+| Hyprland | Tablero | Cuadrantes |
+| :--- | :--- | :--- |
+| Por defecto (`size` 8, 1 pasada) | 32/255 | — |
+| `passes` 4, `size` 8 | 6/255 | 16/255 |
+| `passes` 6, `size` 6 | — | 5/255 |
+| `passes` 7, `size` 8 (o 8 y 4), `noise` 0, `contrast`/`brightness` 1, `vibrancy` 0 | **4/255** | **2/255** |
+
+Diferencia máxima dentro de la región. El fondo gris no mide la saturación del 150 % de KWin
+(`vibrancy` de Hyprland es otra operación), y el resultado depende del tamaño de la región por
+el recorte de KWin: el ajuste es para la intensidad por defecto, no una tabla para los 15
+valores de `BlurStrength`.
+
+**Semántica.** En capas (paneles, menús) Hyprland sólo desenfoca lo que lo pide por
+`ext_background_effect_v1`, como KWin. En ventanas desenfoca todas las translúcidas salvo
+`no_blur`, y Breeze pone `no_blur` a todas: una ventana que pida desenfoque no lo recibiría.
+Igualar a KWin en Breeze diario supone activar el desenfoque, pedirlo desde Quickshell
+(`BackgroundEffect.blurRegion`) en panel, Kickoff y menús, usar las variantes translúcidas del
+tema y quitar `no_blur` sólo a las ventanas que lo piden. Es un cambio visible de la sesión
+diaria: pendiente de la decisión del usuario.
+
+Herramientas nuevas: `check-r6-surfaces.py --effects --blur-pattern edge` (cuadrantes con
+bordes nítidos tras la región), `--hypr-blur "<campos Lua>"` y `--backends hyprland|kwin` para
+barrer parámetros capturando KWin una sola vez.
+
+---
+
 ## Iteración 4: radio de las esquinas del contenido (2026-11-21)
 
 **R6 sigue abierta** y el veto diario `no_shadow=true` sigue vigente. La diferencia mayor de la

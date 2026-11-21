@@ -54,6 +54,9 @@ def main():
     p.add_argument('--kind',choices=('tiles','dialog','decorated'),default='tiles',help='Native tiles, the complete original PlasmaQuick::Dialog, or a server-side decorated window (KDecoration shadow)')
     p.add_argument('--helper',type=Path,default=ROOT/'src/bwm-decorator/bwm-decorator',help='bwm-decorator for the decorated kind (Hyprland side)')
     p.add_argument('--trace',action='store_true',help='Retain only this fixture client protocol log beside its captures')
+    p.add_argument('--hypr-blur',default='',help='Extra Lua fields for the nested Hyprland decoration.blur table (e.g. "size=8,passes=4")')
+    p.add_argument('--blur-pattern',choices=('checker','edge'),default='checker',help='Background behind the blur fixture; edge quadrants measure the blur radius')
+    p.add_argument('--backends',default='hyprland,kwin',help='Compositors to run; comparisons need both')
     a=p.parse_args();scales=[float(v) for v in a.scales.split(',')];themes=a.themes.split(',')
     if a.effects and a.kind!='tiles':p.error('The blur fixture uses the tiles client')
     module=a.module.resolve();binary=a.binary.resolve()
@@ -88,7 +91,7 @@ def main():
         for theme in themes:
           for scale in scales:
             images={};states={}
-            for backend in ('hyprland','kwin'):
+            for backend in [v for v in ('hyprland','kwin') if v in a.backends.split(',')]:
               with tempfile.TemporaryDirectory(prefix='bwm-r6-surface-') as d:
                 root=Path(d)
                 for name in ('config','data','cache','state','runtime','defaults'):(root/name).mkdir(mode=0o700)
@@ -113,6 +116,7 @@ def main():
                     XDG_RUNTIME_DIR=str(root/'runtime'),DBUS_SYSTEM_BUS_ADDRESS='unix:path='+str(root/'no-system-bus'),BWM_R6_TEST_ROOT=str(root),
                     QSG_RHI_BACKEND='opengl',LANG='en_US.UTF-8',LANGUAGE='en')
                 if a.effects:env['BWM_R6_EFFECTS']='1'
+                if a.effects:env['BWM_R6_EFFECTS_PATTERN']=a.blur_pattern
                 env['BWM_R6_CLIENT_KIND']=a.kind
                 vendor=Path('/usr/share/glvnd/egl_vendor.d/10_nvidia.json')
                 if vendor.is_file():env.update(GBM_BACKEND='nvidia-drm',__EGL_VENDOR_LIBRARY_FILENAMES=str(vendor))
@@ -136,7 +140,7 @@ def main():
                         wait(lambda:(root/'deco.sock').exists(),'Disposable decorator socket missing')
                     config=root/'hyprland.lua';config.write_text(f'hl.monitor({{output="",mode="{width}x{height}",position="0x0",scale={scale}}})\n'+
                       ('hl.window_rule({name="fixture",match={class="^bwm-r6-decorated$"},float=true,center=true,no_shadow=false})\n' if a.kind=='decorated' else '')+
-                      'hl.config({general={border_size=0},misc={disable_hyprland_logo=true,disable_splash_rendering=true},animations={enabled=false},xwayland={enabled=false},input={follow_mouse=0},decoration={shadow={enabled=false},blur={enabled='+('true' if a.effects else 'false')+'}}})\n')
+                      'hl.config({general={border_size=0},misc={disable_hyprland_logo=true,disable_splash_rendering=true},animations={enabled=false},xwayland={enabled=false},input={follow_mouse=0},decoration={shadow={enabled=false},blur={enabled='+('true' if a.effects else 'false')+(','+a.hypr_blur if a.hypr_blur else '')+'}}})\n')
                     compositor=launch(['Hyprland','--config',config],'compositor')
                     instance=wait(lambda:next((i for i in json.loads(hypr('instances','-j')) if i['pid']==compositor.pid),None),'Nested compositor did not start')
                     signature=instance['instance'];env['WAYLAND_DISPLAY']=str(runtime/instance['wl_socket'])
@@ -248,6 +252,7 @@ def main():
                 finally:
                   for child in reversed(processes):stop(child)
                   if a.trace and captures and (root/'client.log').exists():shutil.copy2(root/'client.log',captures/f'{theme}-{scale}-{backend}-client.log')
+            if len(images)<2:continue
             ref,own=images['kwin'],images['hyprland']
             for name in (name for name,_ in commands if name!='plain'):
               original,current=ref[name],own[name]
