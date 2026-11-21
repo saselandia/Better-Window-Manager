@@ -1,10 +1,11 @@
--- BWM F10: traditional defaults and decoration states belong only to Breeze.
--- KWin blurs only the windows that ask for it. breezebars (blur_on_request) sets no_blur at the
--- lowest priority on the others; an older plugin keeps every window unblurred.
+-- BWM F10 / R6: traditional defaults and decoration states belong only to Breeze.
+-- The validated R6 breezebars plugin (blur_on_request) renders KDE decoration shadows and sets
+-- no_blur at the lowest priority on windows that do not ask for blur; an older loaded plugin
+-- keeps both vetoes until the next session.
 local float_all = { name = "breeze-float-all", match = { class = ".*" },
-    -- Keep custom shadows disabled until their capture/render path is validated.
-    float = true, no_shadow = true, border_size = 0 }
+    float = true, border_size = 0 }
 if not (hl.plugin and hl.plugin.breezebars and hl.plugin.breezebars.blur_on_request) then
+    float_all.no_shadow = true
     float_all.no_blur = true
 end
 hl.window_rule(float_all)

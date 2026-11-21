@@ -1,5 +1,27 @@
 # R6 — sombras y efectos nativos de KDE
 
+## Despliegue en sesión diaria (2026-11-21)
+
+Desplegado a petición del usuario (sin tocar los procesos en marcha; entra en vigor al volver a
+iniciar sesión):
+
+* **`src/breezebars`:** compilado limpio con `-fno-gnu-unique` e instalado de forma atómica con
+  `make install` en `config/hypr/plugins/breezebars.so` (**0 símbolos UNIQUE**). Incluye sombras
+  KDE de decoración, protocolo `org_kde_kwin_shadow_manager` v2, `contentRounding`,
+  `blur_on_request` y `SquareTop` sin mezcla doble.
+* **`src/bwm-decorator`:** instalado de forma atómica con `decorator.py build` en
+  `~/.local/share/bwm/bin/bwm-decorator` (supervisor actual intacto).
+* **`skins/plasma/hypr/rules.lua`:** `breeze-float-all` retira `no_shadow = true` junto a
+  `no_blur = true` cuando el plugin cargado expone `blur_on_request` (la próxima sesión). Mientras
+  siga cargado el plugin anterior en esta sesión, ambos vetos se conservan; `breeze-no-border`
+  mantiene siempre `no_shadow = true`.
+
+Comprobado: `test_plasma_shadow_policy.py` 3/3 y `hyprctl reload` sin errores de configuración.
+Pendiente: volver a iniciar sesión para cargar el nuevo `breezebars.so` y `bwm-decorator` y
+comprobar visualmente sombras KDE, esquinas y desenfoque bajo demanda en ventanas normales.
+
+---
+
 ## Iteración 9: menús contextuales, temas globales (`ThemeHost`) y KRunner (2026-11-21)
 
 Continúa la iteración 8 en la sesión diaria (sin depender del plugin candidato):

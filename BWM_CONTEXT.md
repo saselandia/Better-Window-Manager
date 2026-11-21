@@ -151,10 +151,13 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   translúcidas (capas en `breeze-blur-frames`); descripciones emergentes con `widgets/tooltip`
   translúcido. Temas globales propios (`ThemeHost`) sin desenfoque; Alt+Tab real sin ver.
 * **R6, iteración 9 (2026-11-21, §333):** menús contextuales (`MenuHost`, incluidos submenús),
-  diálogos de temas globales en `ThemeHost` (`compat/Dialog.qml` en OSD y cambiador) y KRunner
-  (capa `krunner` en `breeze-blur-frames`) ya piden desenfoque y usan variantes translúcidas.
-  Activo en la sesión diaria; pruebas QML y política Lua en verde. Pendiente verificación visual en
-  vivo de Alt+Tab, menús, KRunner y un tema global de terceros.
+  diálogos de temas globales en `ThemeHost` (`compat/Dialog.qml` en OSD y cambiador), editor del
+  panel (`PanelEditor`) y KRunner (capa `krunner` en `breeze-blur-frames`) ya piden desenfoque y
+  usan variantes translúcidas. Pruebas QML, puente KDE, cambio de skin y política Lua en verde.
+* **R6, despliegue (2026-11-21, §334):** `breezebars.so` (0 UNIQUE) y `bwm-decorator` instalados
+  atómicamente; `breeze-float-all` retira `no_shadow` y `no_blur` cuando el plugin expone
+  `blur_on_request` (entra en vigor al volver a iniciar sesión; la sesión actual conserva ambos
+  vetos hasta entonces).
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -6044,3 +6047,24 @@ git status; git log --oneline -5; git push origin main
 * **Pendiente:** comprobación visual en vivo de Alt+Tab real, menús contextuales, KRunner y un tema
   global de terceros; e instalar el plugin candidato de §331 + `bwm-decorator` y reiniciar sesión
   cuando proceda.
+
+### 334. Breeze R6, despliegue atómico de `breezebars` y `bwm-decorator` (2026-11-21)
+
+* **Petición:** desplegar el candidato de R6 (`make install` + `decorator.py build` + retirar
+  `no_shadow` para la próxima sesión).
+* **Hecho:**
+  * `make -C src/breezebars clean && make -C src/breezebars -j$(nproc) && make -C src/breezebars install`:
+    instalado atómicamente en `config/hypr/plugins/breezebars.so` con `-fno-gnu-unique` y **0**
+    símbolos `UNIQUE`.
+  * `python3 config/hypr/skins/plasma/scripts/decorator.py build`: instalado atómicamente en
+    `~/.local/share/bwm/bin/bwm-decorator` (supervisor en marcha sin interrupciones).
+  * `config/hypr/skins/plasma/hypr/rules.lua`: `breeze-float-all` mueve `no_shadow = true` al
+    bloque del plugin anterior (`not hl.plugin.breezebars.blur_on_request`), de modo que la sesión
+    actual conserva ambos vetos hasta reiniciar y la próxima sesión activa sombras KDE y desenfoque
+    bajo demanda automáticamente; `breeze-no-border` mantiene siempre `no_shadow = true`.
+  * `tests/test_plasma_shadow_policy.py`: verifica ambos casos (`no_shadow` con plugin anterior y
+    retirado con plugin R6).
+* **Comprobado:** `test_plasma_shadow_policy.py` 3/3, `hyprctl reload` y `hyprctl configerrors`
+  vacío, `decorator.py status` escuchando.
+* **Pendiente:** cerrar e iniciar sesión para cargar el nuevo `breezebars.so` y `bwm-decorator` y
+  verificar visualmente sombras KDE, esquinas y desenfoque bajo demanda en ventanas normales.

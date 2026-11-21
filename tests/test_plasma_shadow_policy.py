@@ -47,11 +47,14 @@ class ShadowPolicyTest(unittest.TestCase):
             }}
             assert(loadfile({str(path)!r}))()
             assert(rules["breeze-float-all"].no_blur == true, "older plugin must keep no_blur on all windows")
+            assert(rules["breeze-float-all"].no_shadow == true, "older plugin must keep no_shadow veto")
 
             rules = {{}}
             hl.plugin.breezebars.blur_on_request = function() return true end
             assert(loadfile({str(path)!r}))()
-            assert(rules["breeze-float-all"].no_blur == nil, "blur_on_request plugin should let plugin own no_blur")
+            assert(rules["breeze-float-all"].no_blur == nil, "R6 plugin should let plugin own no_blur")
+            assert(rules["breeze-float-all"].no_shadow == nil, "R6 plugin enables validated KDE shadows")
+            assert(rules["breeze-no-border"].no_shadow == true, "no-border windows stay shadowless")
         '''
         result = subprocess.run(["lua", "-"], input=script, text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
