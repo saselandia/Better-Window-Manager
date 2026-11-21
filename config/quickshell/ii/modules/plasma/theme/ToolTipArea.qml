@@ -103,10 +103,13 @@ Item {
         implicitWidth: Math.max(1, bg.margins.left + bg.margins.right + mainLayout.implicitWidth + Kirigami.Units.smallSpacing * 2)
         implicitHeight: Math.max(1, bg.margins.top + bg.margins.bottom + mainLayout.implicitHeight + Kirigami.Units.smallSpacing * 2)
 
+        // ToolTipDialog draws «widgets/tooltip»; with KWin's blur, its translucent variant (the
+        // panel layer rule blurs its popups). Without blur, the previous solid dialog.
+        BlurPath { id: tooltipPath; path: "widgets/tooltip"; withoutBlur: "solid/dialogs/background" }
         KSvg.FrameSvgItem {
             id: bg
             anchors.fill: parent
-            imagePath: "solid/dialogs/background"
+            imagePath: tooltipPath.resolved
             prefix: ""
         }
 

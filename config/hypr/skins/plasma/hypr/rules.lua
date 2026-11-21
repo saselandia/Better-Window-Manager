@@ -17,7 +17,7 @@ end
 -- its shadow (BackgroundEffect); ignore_alpha drops the blur where the frame is transparent, so
 -- the rounded corners keep their shape. Popups of the panel (tray, tooltips) are dialogs too.
 hl.layer_rule({ name = "breeze-blur-frames",
-    match = { namespace = "^quickshell:(plasmaPanel|plasmaKickoff|plasmaNotifications)$" },
+    match = { namespace = "^(quickshell:(plasmaPanel|plasmaKickoff|plasmaNotifications|altTab)|bwm-plasma-osd)$" },
     ignore_alpha = 0.01, blur_popups = true })
 hl.window_rule({ name = "breeze-no-capture", match = { tag = "bwm-no-capture" }, no_screen_share = true })
 -- Native no-border also removes compositor borders/shadows; CSD negotiation stays automatic.

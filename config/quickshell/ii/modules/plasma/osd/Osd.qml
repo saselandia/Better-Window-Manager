@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
 import qs.modules.plasma.runtime
+import qs.modules.plasma.theme
 import org.kde.ksvg as KSvg
 PanelWindow {
     id: root
@@ -51,9 +52,12 @@ PanelWindow {
         source:active?Qt.resolvedUrl("ThemedOsd.qml"):""
         onLoaded:item.values=Qt.binding(()=>({osdValue:root.osdValue,osdMaxValue:root.osdMaxValue,osdAdditionalText:root.osdAdditionalText,icon:root.icon,showingProgress:root.showingProgress,timeout:root.timeout}))
     }
+    // KWin's blur behind the OSD dialog (built-in look; a theme's own QML runs in its own engine)
+    BackgroundEffect.blurRegion:Region { item:PlasmaTheme.blur&&root.opened&&frame.visible?frame:null }
+    BlurPath { id:osdPath; path:"widgets/background" }
     KSvg.FrameSvgItem {
         visible:!(themed.item?.ready??false)
-        id:frame;anchors.fill:parent;imagePath:"widgets/background"
+        id:frame;anchors.fill:parent;imagePath:osdPath.resolved
         Local.OsdItem {
             id:content
             anchors {fill:parent;leftMargin:frame.margins.left;rightMargin:frame.margins.right;topMargin:frame.margins.top;bottomMargin:frame.margins.bottom}

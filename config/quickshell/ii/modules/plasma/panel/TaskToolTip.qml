@@ -6,6 +6,7 @@ import Quickshell.Widgets
 import Quickshell.Wayland
 import org.kde.ksvg as KSvg
 import org.kde.plasma.components as PC3
+import qs.modules.plasma.theme
 PopupWindow {
     id:popup
     required property var taskItem
@@ -31,7 +32,9 @@ PopupWindow {
     Timer { id:openTimer; interval:400; onTriggered:popup.opened=(popup.group?.toplevels.length??0)>0 }
     Timer { id:closeTimer; interval:400; onTriggered:if(!hover.hovered) popup.opened=false }
     HoverHandler { id:hover; onHoveredChanged:if(!hovered) closeTimer.restart() }
-    KSvg.FrameSvgItem { anchors.fill:parent; imagePath:"dialogs/background" }
+    // ToolTipDialog: «widgets/tooltip», translucent with KWin's blur (panel popups are blurred)
+    BlurPath { id:tooltipPath; path:"widgets/tooltip"; withoutBlur:"dialogs/background" }
+    KSvg.FrameSvgItem { anchors.fill:parent; imagePath:tooltipPath.resolved }
     RowLayout {
         id:row; anchors.centerIn:parent; spacing:8
         Repeater {

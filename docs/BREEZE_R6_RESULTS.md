@@ -1,5 +1,28 @@
 # R6 — sombras y efectos nativos de KDE
 
+## Iteración 8: OSD, cambiador y descripciones emergentes (2026-11-21)
+
+Sigue la iteración 6 en la sesión diaria. En Plasma también son diálogos con desenfoque:
+
+* **OSD** (`osd/Osd.qml`) y **cambiador de ventanas** (`switcher/ThumbnailGrid.qml`): piden
+  desenfoque sobre su marco con `BackgroundEffect` y usan la variante translúcida
+  (`widgets/background` y `dialogs/background`); sus capas (`bwm-plasma-osd`,
+  `quickshell:altTab`) entran en la regla `breeze-blur-frames`. El aspecto de un tema global
+  propio (`ThemeHost`, otro motor QML) no pide desenfoque todavía.
+* **Descripciones emergentes** del panel (`theme/ToolTipArea.qml`) y de las tareas
+  (`panel/TaskToolTip.qml`): ya las desenfocaba `blur_popups` de la capa del panel; ahora dibujan,
+  como `ToolTipDialog`, `widgets/tooltip` en su variante translúcida. Sin desenfoque conservan
+  la variante anterior.
+
+Comprobado: reinicio de mantenimiento del shell sin errores (mismos workspaces y foco), OSD
+por IPC dibujado en su capa con la variante nueva, pruebas QML de interfaces, bandeja, tareas,
+panel y Kickoff (la de entrada de tareas recibe un sustituto de `BlurPath`). El cambiador no se
+abre por IPC sin la tecla Alt pulsada (el controlador lo da por soltado y activa otra ventana):
+en el intento cambió la ventana con foco, que se devolvió a la original; no se repitió. Falta
+verlo con Alt+Tab real.
+
+---
+
 ## Iteración 7: ventanas que piden desenfoque y franja superior doble (2026-11-21)
 
 **Candidato en `build/r6-surface-plugin`, sin instalar**: con el plugin diario actual no cambia

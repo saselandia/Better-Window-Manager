@@ -18,6 +18,7 @@ import Quickshell
 import Quickshell.Widgets
 import Quickshell.Wayland
 import org.kde.kirigami as Kirigami
+import qs.modules.plasma.theme
 
 // BWM: TabBoxSwitcher/PlasmaCore.Dialog replaced by the layer-shell host and existing MRU controller.
 PanelWindow {
@@ -32,8 +33,11 @@ PanelWindow {
  WlrLayershell.layer:WlrLayer.Overlay
  WlrLayershell.keyboardFocus:controller.isOpen?WlrKeyboardFocus.Exclusive:WlrKeyboardFocus.None
  MouseArea {anchors.fill:parent;onClicked:tabBox.controller.cancel()}
+ // TabBoxSwitcher is a PlasmaCore.Dialog: translucent and blurred with KWin's blur effect
+ BackgroundEffect.blurRegion:Region { item:PlasmaTheme.blur&&tabBox.controller.isOpen?frame:null }
+ BlurPath { id:switcherPath; path:"dialogs/background" }
  KSvg.FrameSvgItem {
-  id:frame;anchors.centerIn:parent;imagePath:"dialogs/background"
+  id:frame;anchors.centerIn:parent;imagePath:switcherPath.resolved
   width:dialogMainItem.width+margins.left+margins.right
   height:dialogMainItem.height+margins.top+margins.bottom
  }

@@ -108,6 +108,11 @@ class TaskInputTests(unittest.TestCase):
             tooltip = (PANEL/'TaskToolTip.qml').read_text().replace(
                 'ScreencopyView {', 'Item { property var captureSource; property bool live;')
             (folder/'TaskToolTip.qml').write_text(tooltip)
+            # The tooltip resolves its frame with the theme's BlurPath; this harness checks
+            # input, not the look: a stub keeps the variant used without blur.
+            theme = folder/'modules/plasma/theme';theme.mkdir(parents=True)
+            (theme/'qmldir').write_text('module qs.modules.plasma.theme\nBlurPath 1.0 BlurPath.qml\n')
+            (theme/'BlurPath.qml').write_text('import QtQuick\nQtObject { required property string path; property string withoutBlur: path; readonly property string resolved: withoutBlur }\n')
             (folder/'test.qml').write_text(HARNESS)
             # No real task backend, IPC, or detached command may enter this harness.
             combined = task+tooltip+HARNESS

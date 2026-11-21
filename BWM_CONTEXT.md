@@ -147,6 +147,9 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   prioridad mínima sólo a las ventanas que no piden desenfoque (`blur_on_request` para las reglas);
   `SquareTop` ya no mezcla dos veces la franja superior de ventanas translúcidas (fallo también
   diario). Mismo resultado que KWin con ventana normal translúcida a 1 y 1,5; regla del usuario manda.
+* **R6, iteración 8 (2026-11-21, §332):** OSD y cambiador piden desenfoque y usan variantes
+  translúcidas (capas en `breeze-blur-frames`); descripciones emergentes con `widgets/tooltip`
+  translúcido. Temas globales propios (`ThemeHost`) sin desenfoque; Alt+Tab real sin ver.
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -5992,3 +5995,17 @@ git status; git log --oneline -5; git push origin main
   / 83 824 a 1,5), retirada exacta; regla del usuario gana. Decoración 1/1,5 igual que §328, capas y
   breezebars 4/4. Candidato 0 UNIQUE.
 * **Límites:** sin instalar en la sesión diaria (plugin + volver a iniciar sesión).
+
+### 332. Breeze R6, iteración 8: OSD, cambiador y descripciones emergentes (2026-11-21)
+
+* **Petición:** «CONTINUA» tras §331.
+* **Hecho:** `osd/Osd.qml` y `switcher/ThumbnailGrid.qml` con `BackgroundEffect.blurRegion` sobre su
+  marco y `BlurPath` (variantes translúcidas de `widgets/background` y `dialogs/background`);
+  `breeze-blur-frames` añade `quickshell:altTab` y `bwm-plasma-osd`. `theme/ToolTipArea.qml` y
+  `panel/TaskToolTip.qml` usan `widgets/tooltip` translúcido con desenfoque (como `ToolTipDialog`);
+  sin desenfoque, lo de antes. `tests/test_plasma_task_input.py` da un sustituto de `BlurPath`.
+* **Comprobado:** shell reiniciado sin errores, OSD por IPC, pruebas QML (interfaces, bandeja, tareas,
+  panel, Kickoff), puente KDE y `--verify-config`.
+* **Incidencia:** abrir el cambiador por IPC sin Alt lo cerró activando otra ventana; se devolvió el
+  foco a la original (Firefox) y se borraron las capturas. No abrir Alt+Tab por IPC en la sesión real.
+* **Pendiente:** Alt+Tab real, temas globales con `ThemeHost`, menús contextuales y KRunner.
