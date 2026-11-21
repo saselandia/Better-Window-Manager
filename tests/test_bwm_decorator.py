@@ -295,6 +295,24 @@ class BwmDecoratorTest(unittest.TestCase):
         self.assertTrue(new.shadow and new.shadow["pixels"])
         self.assertEqual(h.client.errors, [])
 
+    def test_hicolor_icon_outside_bundled_breeze(self):
+        """Offscreen Qt only searched ":/icons": an app icon installed in hicolor (or any
+        Aurorae menu icon) was empty. The helper adds the XDG icon folders."""
+        from PIL import Image
+        data = Path(tempfile.mkdtemp(prefix="bwm-deco-icons-"))
+        self.addCleanup(shutil.rmtree, data, True)
+        folder = data / "icons/hicolor/48x48/apps"
+        folder.mkdir(parents=True)
+        Image.new("RGBA", (48, 48), (255, 0, 0, 255)).save(folder / "bwm-test-red.png")
+        h = self.helper(kdeglobals=scheme("BreezeDark"), data=str(data))
+        w = h.client.create(1, caption="icon", app_class="bwm-test", icon="bwm-test-red")
+        self.assertIsNotNone(h.client.wait_frame(1))
+        h.client.settle()
+        image = dc.frame_image(w.frames[-1])
+        top = image.crop((0, 0, image.width // 3, int(w.geometry["borders"][1])))
+        red = sum(1 for p in top.getdata() if p[0] > 200 and p[1] < 60 and p[2] < 60 and p[3] > 200)
+        self.assertGreater(red, 20, "hicolor icon not painted in the title bar")
+
     def test_aurorae_third_party(self):
         found = find_aurorae()
         if not found:
@@ -311,6 +329,24 @@ class BwmDecoratorTest(unittest.TestCase):
         self.assertGreater(w.geometry["borders"][1], 10)
         top = image.crop((0, 0, image.width, int(w.geometry["borders"][1])))
         self.assertGreater(sum(1 for p in top.getdata() if p[3] > 0), top.width * 2, "barra vacía")
+
+    def test_aurorae_shadow_includes_borders_for_window_created_active(self):
+        """Aurorae crea su sombra en init(), antes de los bordes, y sólo la rehace al cambiar de
+        activa: como KWin, el auxiliar crea la decoración inactiva y la activa después."""
+        found = find_aurorae()
+        if not found:
+            self.skipTest("no hay temas Aurorae (BWM_TEST_AURORAE_DIR=<datos con aurorae/themes>)")
+        data, theme = found
+        h = self.helper(kdeglobals=scheme("BreezeDark"), library="org.kde.kwin.aurorae",
+                        theme=f"__aurorae__svg__{theme}", data=data)
+        w = h.client.create(1, width=360, height=240, scale=1.5)
+        self.assertIsNotNone(h.client.wait_frame(1, timeout=8))
+        h.client.settle(0.5)
+        if not w.shadow or not w.shadow["size"][0]:
+            self.skipTest(f"el tema {theme} no tiene sombra")
+        left, top, right, bottom = w.geometry["borders"]
+        pl, pt, pr, pb = w.shadow["padding"]
+        self.assertEqual(w.shadow["size"], (round(360 + left + right + pl + pr), round(240 + top + bottom + pt + pb)))
 
 
 class SupervisorTest(unittest.TestCase):

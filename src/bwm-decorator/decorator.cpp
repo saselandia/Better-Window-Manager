@@ -17,6 +17,7 @@
 #include <QImage>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QStandardPaths>
 #include <QWheelEvent>
 
 #include <cmath>
@@ -244,11 +245,28 @@ void Bridge::readIconTheme()
         m_iconCache.clear();
     }
     QIcon::setFallbackThemeName(QStringLiteral("hicolor"));
+    // BWM: the offscreen platform has no theme plugin and Qt only searches ":/icons".
+    // Breeze happened to work through its bundled icon resources; Aurorae and every
+    // icon outside them (hicolor app icons) were empty. Search the XDG icon folders
+    // as the KDE platform theme does in KWin.
+    QStringList paths = QIcon::themeSearchPaths();
+    const QStringList xdg = QStandardPaths::locateAll(QStandardPaths::GenericDataLocation, QStringLiteral("icons"), QStandardPaths::LocateDirectory);
+    for (const QString &path : xdg)
+        if (!paths.contains(path))
+            paths.append(path);
+    if (paths != QIcon::themeSearchPaths()) {
+        QIcon::setThemeSearchPaths(paths);
+        m_iconCache.clear();
+    }
+    QStringList fallback = QIcon::fallbackSearchPaths();
+    const QString pixmaps = QStringLiteral("/usr/share/pixmaps");
+    if (!fallback.contains(pixmaps))
+        QIcon::setFallbackSearchPaths(fallback << pixmaps);
 }
 
 // BWM: icono de la ventana como lo busca Breeze: el .desktop por id (la clase de Wayland suele ser
 // el id) y, si no, el que declara StartupWMClass
-QIcon Bridge::iconFor(const QString &appClass, const QString &iconName)
+QIcon Bridge::iconFor(const QString &appClass, const QString &iconName, bool x11)
 {
     if (!iconName.isEmpty())
         return QIcon::fromTheme(iconName);
@@ -269,9 +287,15 @@ QIcon Bridge::iconFor(const QString &appClass, const QString &iconName)
                 }
             }
         }
-        icon = service ? service->icon() : appClass.toLower();
+        icon = service ? service->icon() : QString();
         cached = m_iconCache.insert(appClass, icon);
     }
+    // KWin 6.7.5 XdgToplevelWindow::updateIcon: a Wayland window without a desktop file
+    // shows the "wayland" icon. X11 windows keep the class-name guess (KWin reads their
+    // own pixmaps, which this helper does not receive).
+    if (cached.value().isEmpty())
+        return QIcon::fromTheme(x11 ? appClass.toLower() : QStringLiteral("wayland"),
+                                QIcon::fromTheme(QStringLiteral("application-x-executable")));
     QIcon result = QIcon::fromTheme(cached.value());
     return result.isNull() ? QIcon::fromTheme(QStringLiteral("application-x-executable")) : result;
 }
@@ -341,7 +365,7 @@ Window::Window(Connection *connection, uint32_t id, Bridge *bridge, const Window
     , m_bridge(bridge)
     , m_state(state)
 {
-    m_icon = m_bridge->iconFor(m_state.appClass, m_state.iconName);
+    m_icon = m_bridge->iconFor(m_state.appClass, m_state.iconName, m_state.flags & X11);
     m_renderTimer.setSingleShot(true);
     m_renderTimer.setInterval(0);
     connect(&m_renderTimer, &QTimer::timeout, this, &Window::render);
@@ -351,7 +375,15 @@ Window::Window(Connection *connection, uint32_t id, Bridge *bridge, const Window
             Q_EMIT m_decoration->window()->paletteChanged(m_bridge->palette()->palette());
         scheduleRender();
     });
+    // KWin creates a window's decoration before mapping it, while it is still inactive
+    // (DecorationBridge::createDecoration), and activates it afterwards. Plugins rely on
+    // that order: Aurorae builds its shadow in init() before the first borders apply and
+    // rebuilds it only when the active state changes. Follow the same lifecycle; a window
+    // created already active would keep a shadow sized without its borders.
+    m_state.flags &= ~Active;
     recreateDecoration();
+    if (state.flags & Active)
+        setState(state);
 }
 
 Window::~Window()
@@ -401,8 +433,8 @@ void Window::setState(const WindowState &state)
     const WindowState old = m_state;
     m_state = state;
     auto *w = m_decoration ? m_decoration->window() : nullptr;
-    if (state.appClass != old.appClass || state.iconName != old.iconName) {
-        m_icon = m_bridge->iconFor(state.appClass, state.iconName);
+    if (state.appClass != old.appClass || state.iconName != old.iconName || ((state.flags ^ old.flags) & X11)) {
+        m_icon = m_bridge->iconFor(state.appClass, state.iconName, state.flags & X11);
         if (w)
             Q_EMIT w->iconChanged(m_icon);
     }
@@ -612,6 +644,9 @@ void Window::render()
     }
     QImage image(buffer.data, width, height, stride, QImage::Format_ARGB32_Premultiplied);
     image.fill(Qt::transparent);
+    // Paint in logical units on an image carrying the output scale, as KWin's
+    // DecorationItem does: QIcon then picks the high-resolution pixmap.
+    image.setDevicePixelRatio(s);
     {
         QPainter painter(&image);
         painter.setRenderHint(QPainter::Antialiasing);
@@ -619,9 +654,8 @@ void Window::render()
             if (dest[i].isEmpty())
                 continue;
             painter.save();
-            painter.setClipRect(dest[i]);
-            painter.translate(dest[i].topLeft());
-            painter.scale(s, s);
+            painter.setClipRect(QRectF(QPointF(dest[i].topLeft()) / s, QSizeF(dest[i].size()) / s));
+            painter.translate(QPointF(dest[i].topLeft()) / s);
             painter.translate(-parts[i].topLeft());
             m_decoration->paint(&painter, parts[i]);
             painter.restore();

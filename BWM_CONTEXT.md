@@ -122,6 +122,11 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   piezas (3 temas, 4 escalas) máx. 1/255, diálogo original máx. 3/255 con ciclo de vida
   exacto, panel idéntico salvo 1/255 a escala 2, desenfoque con región correcta pero
   intensidad distinta. Candidato sólo en `build/r6-surface-plugin`; **veto diario intacto**.
+* **R6, iteración 3 (2026-11-21, §327):** decoración completa (marco, contorno, icono y sombra
+  KDecoration) de una ventana normal frente a KWin 6.7.5 en GPU: Breeze oscuro/claro y Sweet
+  Aurorae × 1/1,25/1,5/2. Corregidos contorno a doble escala, icono a 1x en HiDPI e iconos vacíos
+  del auxiliar offscreen (sólo `:/icons`; afectaba también a la sesión diaria) y sombra de Aurorae
+  sin bordes en ventanas creadas activas (Sweet 2/255). Quedan esquinas del contenido. Sin instalar.
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -5864,3 +5869,31 @@ git status; git log --oneline -5; git push origin main
   con una sesión Plasma completa. Candidato `build/r6-surface-plugin/installed/breezebars.so`,
   0 símbolos UNIQUE, no instalado en `config/hypr/plugins`; `no_shadow=true` sigue vigente y
   activarlo exige volver a iniciar sesión. Evidencia `docs/BREEZE_R6_SURFACE_RESULTS.json`.
+
+### 327. Breeze R6, iteración 3: decoración completa frente a KWin real (2026-11-21)
+
+* **Petición:** «continúa» tras el commit de la iteración 2. Faltaba comparar en GPU la decoración de
+  las ventanas normales (lo más visible de R6) con KWin real.
+* **Hecho:** `test-r6-native` añade el tipo `decorated` (xdg_toplevel con decoración del servidor y
+  una segunda ventana para volverla inactiva). `check-r6-surfaces.py --kind decorated` arranca
+  `bwm-decorator` para el Hyprland anidado, da a ambos compositores el mismo `kwinrc` (Breeze o
+  Aurorae Sweet-Dark copiada a la raíz privada) y alinea por el color del contenido (erosión para
+  ignorar el puntero).
+* **Corregido:** grosor del contorno escalado dos veces en `barRemote.cpp` (`renderBorder` ya
+  escala); el auxiliar pinta sobre una imagen con `devicePixelRatio` (iconos nítidos en HiDPI);
+  `Bridge::readIconTheme` añade las carpetas XDG `icons` y `/usr/share/pixmaps` (offscreen sólo
+  buscaba `:/icons`: Aurorae y los iconos hicolor salían vacíos, también en la sesión diaria);
+  icono `wayland` de reserva como KWin y bandera `X11` (65536) en el protocolo. La referencia KWin
+  usa ahora el tema de plataforma de KDE y dos escritorios. Sombra de Aurorae: se crea en `init()`
+  antes de los bordes y sólo se rehace al cambiar de activa; KWin crea la decoración inactiva y la
+  activa al mapear. El auxiliar la creaba activa (Sweet: 380×260 en vez de 388×292) y ahora sigue
+  ese ciclo: decoración inactiva y estado real después.
+* **Comprobado:** 36 casos. Breeze oscuro máx. 73/255 y claro 109/255, sólo en el antialiasing de
+  las esquinas del contenido; sombra ≤2/255. Sweet máx. 2/255. La primera imagen es idéntica a la
+  reactivada en los 12 pares (comprobación estricta). Decorador 15/15 (regresiones de hicolor y de
+  la sombra de Aurorae, que fallan con el binario anterior), breezebars 4/4, XWayland anidado y
+  piezas sin cambios. Las imágenes pasan; la matriz y XWayland sólo vieron moverse el puntero
+  (uso del equipo durante el ensayo).
+* **Límites:** sin comparar tamaño/maximizado pedidos por el cliente (Hyprland conserva el tamaño
+  flotante; BWM bloquea el maximizado de apps), enrollar ni X11 frente a KWin. Auxiliar y plugin
+  corregidos sin instalar en la sesión diaria. Evidencia `docs/BREEZE_R6_DECORATION_RESULTS.json`.

@@ -49,6 +49,9 @@ Sólo SHM; el estado se aplica con el commit real de la superficie y KDecoration
 prioridad. Diagnóstico `hyprctl -j breezebars-shadows`. El plugin ya no conecta con X11 al
 cargarse (bloqueaba el XWayland a demanda). `check-r6-surfaces.py` compara con KWin 6.7.5 en
 compositores privados (piezas, diálogo original, desenfoque); resultados en el mismo documento.
+`--kind decorated` compara la decoración completa (marco, contorno y sombra KDecoration) de una
+ventana con decoración del servidor; el contorno se pasa a `renderBorder` en unidades lógicas
+(Hyprland ya aplica la escala del monitor).
 
 `hyprctl breezebars-interactive move|resize <dirección>` (F9, «Mover»/«Redimensionar» del menú de la
 ventana): la ventana sigue al puntero hasta el siguiente clic, como KWin. La etiqueta `bwm-no-border`

@@ -87,7 +87,7 @@ public:
     QString plugin() const { return m_plugin; }
     QString theme() const { return m_theme; }
     DecorationPalette *palette() const { return m_palette.get(); }
-    QIcon iconFor(const QString &appClass, const QString &iconName);
+    QIcon iconFor(const QString &appClass, const QString &iconName, bool x11 = false);
 
 Q_SIGNALS:
     // Plugin o tema distinto: hay que recrear todas las decoraciones

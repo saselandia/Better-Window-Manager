@@ -66,19 +66,26 @@ int main(int argc,char **argv){
     background->setAnchors(LayerShellQt::Window::Anchors::fromInt(LayerShellQt::Window::AnchorTop|LayerShellQt::Window::AnchorBottom|LayerShellQt::Window::AnchorLeft|LayerShellQt::Window::AnchorRight));
     background->setExclusiveZone(-1);background->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);background->setScope("bwm-r6-background");backdrop.show();
     const bool dialogMode=qEnvironmentVariable("BWM_R6_CLIENT_KIND")=="dialog";
+    // A normal xdg_toplevel asking for server-side decoration: the compositor's
+    // KDecoration (KWin) or bwm-decorator + breezebars (Hyprland) draws frame and shadow.
+    const bool decoratedMode=qEnvironmentVariable("BWM_R6_CLIENT_KIND")=="decorated";
+    if(decoratedMode)QGuiApplication::setDesktopFileName("bwm-r6-decorated");
     std::unique_ptr<QQuickWindow> holder;
     if(dialogMode)holder=std::make_unique<PlasmaQuick::Dialog>();else holder=std::make_unique<QQuickWindow>();
-    auto &window=*holder;window.setColor(Qt::transparent);window.resize(180,120);
+    auto &window=*holder;window.setColor(decoratedMode?QColor("#2a6f97"):QColor(Qt::transparent));window.resize(decoratedMode?QSize(360,240):QSize(180,120));
+    if(decoratedMode)window.setTitle("BWM R6");
+    else {
     auto *layer=LayerShellQt::Window::get(&window);layer->setLayer(LayerShellQt::Window::LayerTop);
     layer->setAnchors(LayerShellQt::Window::Anchors::fromInt(LayerShellQt::Window::AnchorTop|LayerShellQt::Window::AnchorLeft));
     layer->setMargins(QMargins(320,220,0,0));layer->setExclusiveZone(-1);layer->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);layer->setScope("bwm-r6-shadow-client");
+    }
     std::unique_ptr<QObject> object(component.create());auto *item=qobject_cast<QQuickItem*>(object.get());require(item,"Fixture QML did not load");
     item->setSize(window.size());item->setImplicitWidth(180);item->setImplicitHeight(120);
     if(dialogMode) {
         BwmSurface::ensureNativeEffectsCommit(&window);
         auto *dialog=static_cast<PlasmaQuick::Dialog*>(&window);
         dialog->setLocation(Plasma::Types::Floating);dialog->setHideOnWindowDeactivate(false);dialog->setMainItem(item);
-    } else item->setParentItem(window.contentItem());
+    } else if(!decoratedMode) item->setParentItem(window.contentItem());
     if(effects)item->setProperty("color",QColor("#80707070"));
     if(!dialogMode) {
         QObject::connect(&window,&QWindow::widthChanged,&window,[&]{item->setWidth(window.width());});QObject::connect(&window,&QWindow::heightChanged,&window,[&]{item->setHeight(window.height());});
@@ -90,7 +97,7 @@ int main(int argc,char **argv){
     reloadTiles();
     KWindowShadow shadow;shadow.setWindow(&window);int borders=15;bool wantsShadow=true;
     const auto applyShadow=[&]{
-        if(dialogMode)return true; // libplasma's original DialogShadows owns all requests.
+        if(dialogMode || decoratedMode)return true; // DialogShadows / the compositor's decoration own these.
         shadow.destroy();
         shadow.setTopTile(borders&1?tiles[0]:nullptr);shadow.setTopRightTile((borders&3)==3?tiles[1]:nullptr);
         shadow.setRightTile(borders&2?tiles[2]:nullptr);shadow.setBottomRightTile((borders&6)==6?tiles[3]:nullptr);
@@ -102,6 +109,7 @@ int main(int argc,char **argv){
         shadow.setPadding(padding);return !wantsShadow || shadow.create();
     };
     window.show();
+    std::unique_ptr<QQuickWindow> second;
     int sequence=-1;QTimer timer;timer.setInterval(50);
     QObject::connect(&timer,&QTimer::timeout,&app,[&]{
         if(!window.isExposed() && sequence<0)return;
@@ -122,6 +130,12 @@ int main(int argc,char **argv){
             opacity=qBound(0.0,doc["opacity"].toDouble(),1.0);
             wp_alpha_modifier_surface_v1_set_multiplier(alphaSurface,uint32_t(std::numeric_limits<uint32_t>::max()*opacity));
         }
+        if(doc.contains("second")) {
+            // A second window of the same app takes focus: the first one turns inactive.
+            if(doc["second"].toBool() && !second){second=std::make_unique<QQuickWindow>();second->setColor(QColor("#b04040"));second->setTitle("BWM R6 B");second->resize(120,80);second->show();}
+            else if(!doc["second"].toBool() && second){second->close();second.reset();}
+        }
+        if(doc.contains("maximized"))doc["maximized"].toBool()?window.showMaximized():window.showNormal();
         if(doc["recreate"].toBool()){shadow.destroy();window.hide();window.destroy();window.show();}
         if(doc.contains("visible"))window.setVisible(doc["visible"].toBool());
         if(doc.contains("blur"))KWindowEffects::enableBlurBehind(&window,doc["blur"].toBool(),QRegion(0,0,window.width()/2,window.height()));
@@ -135,7 +149,7 @@ int main(int argc,char **argv){
             output.write(QJsonDocument(QJsonObject{{"sequence",next},{"created",created},{"shadow",shadow.isCreated()},{"borders",borders},{"theme",theme.themeName()},
                 {"svgImageSet",svg.imageSet()->imageSetName()},{"svgSource",QDir(root).relativeFilePath(source)},{"svgSha256",QString::fromLatin1(hash)},
                 {"size",QJsonArray{window.width(),window.height()}},{"dpr",window.devicePixelRatio()},{"tiles",sizes},
-                {"padding",QJsonArray{p.left(),p.top(),p.right(),p.bottom()}},{"position",QJsonArray{window.x(),window.y()}},
+                {"padding",QJsonArray{p.left(),p.top(),p.right(),p.bottom()}},{"position",QJsonArray{window.x(),window.y()}},{"maximized",bool(window.windowStates() & Qt::WindowMaximized)},
                 {"blurAvailable",KWindowEffects::isEffectAvailable(KWindowEffects::BlurBehind)},
                 {"nativeOpacity",opacity},{"alphaModifierAvailable",bool(alphaManager)},
                 {"contrastAvailable",KWindowEffects::isEffectAvailable(KWindowEffects::BackgroundContrast)}}).toJson());

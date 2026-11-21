@@ -31,6 +31,9 @@ def stop(p):
     try:p.wait(5)
     except subprocess.TimeoutExpired:os.killpg(p.pid,signal.SIGKILL);p.wait(5)
 
+class _Done(Exception):
+    pass
+
 def wait(predicate,message,timeout=15):
     end=time.monotonic()+timeout
     while time.monotonic()<end:
@@ -48,14 +51,15 @@ def main():
     p.add_argument('--themes',default='breeze-dark,breeze-light,Sweet')
     p.add_argument('--capture-dir',type=Path)
     p.add_argument('--effects',action='store_true',help='Measure native half-window blur on a private checkerboard')
-    p.add_argument('--kind',choices=('tiles','dialog'),default='tiles',help='Native tiles or the complete original PlasmaQuick::Dialog')
+    p.add_argument('--kind',choices=('tiles','dialog','decorated'),default='tiles',help='Native tiles, the complete original PlasmaQuick::Dialog, or a server-side decorated window (KDecoration shadow)')
+    p.add_argument('--helper',type=Path,default=ROOT/'src/bwm-decorator/bwm-decorator',help='bwm-decorator for the decorated kind (Hyprland side)')
     p.add_argument('--trace',action='store_true',help='Retain only this fixture client protocol log beside its captures')
     a=p.parse_args();scales=[float(v) for v in a.scales.split(',')];themes=a.themes.split(',')
     if a.effects and a.kind!='tiles':p.error('The blur fixture uses the tiles client')
     module=a.module.resolve();binary=a.binary.resolve()
     if not module.is_file() or not binary.is_file():p.error('Build and atomically install the candidate in build/ first')
     if module.parent==ROOT/'config/hypr/plugins':p.error('Use a separate candidate in build/, never the daily module')
-    from PIL import Image,ImageChops,ImageStat
+    from PIL import Image,ImageChops,ImageStat,ImageFilter
     before=nested.snapshot();instances={v['instance'] for v in json.loads(hypr('instances','-j'))}
     clients=json.loads(hypr('-j','clients'))
     if any(c.get('class')=='aquamarine' for c in clients):p.error('Another nested compositor is open')
@@ -91,6 +95,15 @@ def main():
                 color='BreezeLight' if theme=='breeze-light' else 'BreezeDark'
                 (root/'config/kdeglobals').write_text(Path(f'/usr/share/color-schemes/{color}.colors').read_text()+'\n[KDE]\nwidgetStyle=Breeze\n')
                 (root/'config/plasmarc').write_text('[Theme]\nname='+theme+'\n')
+                if a.kind=='decorated':
+                    # Same decoration for both compositors, read from the private kwinrc.
+                    # Sweet uses its Aurorae SVG theme (third-party decoration path).
+                    aurorae=next((base/'aurorae/themes/Sweet-Dark' for base in [Path(os.environ.get('XDG_DATA_HOME',str(Path.home()/'.local/share'))),*[Path(v) for v in os.environ.get('XDG_DATA_DIRS','/usr/local/share:/usr/share').split(':')]] if (base/'aurorae/themes/Sweet-Dark').is_dir()),None) if theme=='Sweet' else None
+                    if theme=='Sweet' and aurorae is None:raise FileNotFoundError('Aurorae Sweet-Dark is not installed')
+                    if aurorae:shutil.copytree(aurorae,root/'data/aurorae/themes/Sweet-Dark')
+                    deco='library=org.kde.kwin.aurorae\ntheme=__aurorae__svg__Sweet-Dark\n' if aurorae else 'library=org.kde.breeze\ntheme=Breeze\n'
+                    # Two desktops: KDecoration hides «on all desktops» with only one, BWM has several.
+                    (root/'config/kwinrc').write_text('[Desktops]\nNumber=2\nRows=1\n\n[Windows]\nPlacement=Centered\n\n[org.kde.kdecoration2]\n'+deco)
                 theme_roots=[Path(os.environ.get('XDG_DATA_HOME',str(Path.home()/'.local/share'))),*[Path(v) for v in os.environ.get('XDG_DATA_DIRS','/usr/local/share:/usr/share').split(':')]]
                 source=next((base/'plasma/desktoptheme'/theme for base in theme_roots if (base/'plasma/desktoptheme'/theme).is_dir()),None)
                 if source is None:raise FileNotFoundError('Installed Plasma style is missing: '+theme)
@@ -117,8 +130,13 @@ def main():
                   width,height=round(1280*scale),round(800*scale)
                   if backend=='hyprland':
                     env.update(XDG_RUNTIME_DIR=str(runtime))
+                    if a.kind=='decorated':
+                        helper_env=dict(env,QT_QPA_PLATFORM='offscreen');env['BWM_DECORATOR_SOCKET']=str(root/'deco.sock')
+                        launch([a.helper.resolve(),'--socket',root/'deco.sock'],'helper',helper_env)
+                        wait(lambda:(root/'deco.sock').exists(),'Disposable decorator socket missing')
                     config=root/'hyprland.lua';config.write_text(f'hl.monitor({{output="",mode="{width}x{height}",position="0x0",scale={scale}}})\n'+
-                      'hl.config({misc={disable_hyprland_logo=true,disable_splash_rendering=true},animations={enabled=false},xwayland={enabled=false},input={follow_mouse=0},decoration={shadow={enabled=false},blur={enabled='+('true' if a.effects else 'false')+'}}})\n')
+                      ('hl.window_rule({name="fixture",match={class="^bwm-r6-decorated$"},float=true,center=true,no_shadow=false})\n' if a.kind=='decorated' else '')+
+                      'hl.config({general={border_size=0},misc={disable_hyprland_logo=true,disable_splash_rendering=true},animations={enabled=false},xwayland={enabled=false},input={follow_mouse=0},decoration={shadow={enabled=false},blur={enabled='+('true' if a.effects else 'false')+'}}})\n')
                     compositor=launch(['Hyprland','--config',config],'compositor')
                     instance=wait(lambda:next((i for i in json.loads(hypr('instances','-j')) if i['pid']==compositor.pid),None),'Nested compositor did not start')
                     signature=instance['instance'];env['WAYLAND_DISPLAY']=str(runtime/instance['wl_socket'])
@@ -130,7 +148,9 @@ def main():
                     hypr('dispatch','hl.dsp.cursor.move({x=2,y=2})',instance=signature)
                   else:
                     env.pop('WAYLAND_DISPLAY',None)
-                    env.update(KWIN_COMPOSE='O2',KWIN_SCREENSHOT_NO_PERMISSION_CHECKS='1',XDG_CURRENT_DESKTOP='KDE',XDG_SESSION_TYPE='wayland')
+                    # Plasma runs KWin with the KDE platform theme: title font from kdeglobals
+                    # (Noto Sans 10), not the generic Qt fallback.
+                    env.update(QT_QPA_PLATFORMTHEME='kde',KWIN_COMPOSE='O2',KWIN_SCREENSHOT_NO_PERMISSION_CHECKS='1',XDG_CURRENT_DESKTOP='KDE',XDG_SESSION_TYPE='wayland')
                     compositor=launch(['kwin_wayland','--virtual','--no-kactivities','--no-global-shortcuts','--width','1280','--height','800','--scale',str(scale),'--socket','r6-reference'],'compositor')
                     wait(lambda:(root/'runtime/r6-reference').exists(),'KWin did not start')
                     env['WAYLAND_DISPLAY']=str(root/'runtime/r6-reference')
@@ -146,6 +166,7 @@ def main():
                     ('unset',{'shadow':False,'borders':15}),('hidden',{'visible':False}),('restored',{'visible':True,'shadow':True}),
                     ('opacity',{'opacity':.5}),('opacity-restored',{'opacity':1.0})]
                   if a.effects:commands=[('plain',{'shadow':False,'blur':False}),('blur',{'blur':True}),('blur-removed',{'blur':False})]
+                  elif a.kind=='decorated':commands=[('active',{}),('inactive',{'second':True}),('reactivated',{'second':False})]
                   elif a.kind=='dialog':commands=[('normal',{}),('recreated',{'recreate':True}),('small',{'size':[17,11]}),('hidden',{'visible':False}),('restored',{'size':[180,120],'visible':True}),('opacity',{'opacity':.5}),('opacity-restored',{'opacity':1.0})]
                   for name,command in commands:
                     sequence+=1
@@ -162,14 +183,34 @@ def main():
                     if abs(state['dpr']-scale)>.02:raise AssertionError('Wrong client DPR: '+str(state))
                     if backend=='hyprland':
                         state['protocol']=json.loads(hypr('-j','breezebars-shadows',instance=signature))
-                    time.sleep(.25);path=root/(name+'.png')
+                        if a.kind=='decorated':
+                            def decorated():
+                                csd=json.loads(hypr('-j','breezebars-csd',instance=signature))
+                                own=[w for w in csd['windows'] if w['class']=='bwm-r6-decorated']
+                                expected=2 if command.get('second') else 1
+                                return own if len(own)==expected and all(w['kind']=='kde' for w in own) else None
+                            state['decoration']=wait(decorated,'Native KDecoration never arrived')
+                    # The first decorated frame can be followed by a settled one.
+                    time.sleep(1.0 if a.kind=='decorated' and sequence==1 else .25);path=root/(name+'.png')
                     if backend=='hyprland':run(['grim','-o',output,path])
                     else:run([capture_client,'capture',path,'workspace'])
                     with Image.open(path) as im:
                         # Exclude compositor notifications/cursor, not any shadow:
                         # a 128-logical-pixel margin encloses the complete native tiles.
                         region=tuple(round(v*scale) for v in (192,92,628,468))
-                        result[name]=im.convert('RGB').crop(region)
+                        rgb=im.convert('RGB')
+                        if a.kind=='decorated':
+                            # Placement may differ between compositors: align on the
+                            # fixture content colour, then keep 128 logical px around it.
+                            mask=ImageChops.difference(rgb,Image.new('RGB',rgb.size,(0x2a,0x6f,0x97))).convert('L').point(lambda v:255 if v<=3 else 0)
+                            # Erode first: a few cursor pixels can share the fixture colour.
+                            box=mask.filter(ImageFilter.MinFilter(5)).getbbox()
+                            box=box and (box[0]-2,box[1]-2,box[2]+2,box[3]+2)
+                            if not box:raise AssertionError('Decorated fixture content not found in '+name)
+                            m=round(128*scale)
+                            region=(0,0,rgb.width,rgb.height) if command.get('maximized') else (box[0]-m,box[1]-m,box[2]+m,box[3]+m)
+                            state.setdefault('contentBox',list(box))
+                        result[name]=rgb.crop(region)
                     if captures:shutil.copy2(path,captures/f'{theme}-{scale}-{backend}-{name}.png')
                   images[backend]=result;states[backend]=backend_states
                   sequence+=1;(root/'command.json').write_text(json.dumps({'sequence':sequence,'quit':True}));fixture.wait(5)
@@ -180,6 +221,10 @@ def main():
                         return state if not any(state[key] for key in ('surfaces','objects','applied','queued')) else None
                     empty=wait(released,'Shadow resources survived the native client')
                     report.setdefault('resourceCleanup',[]).append(dict(theme=theme,scale=scale,**empty))
+                    if a.kind=='decorated':
+                        stop(compositor)
+                        if compositor.returncode not in (0,-signal.SIGTERM):raise AssertionError('Compositor failed at shutdown: '+str(compositor.returncode))
+                        raise _Done()
                     # A second client remains mapped with a live shadow while the
                     # compositor exits. Plugin teardown must retire every resource
                     # before its callbacks/code are unloaded.
@@ -193,6 +238,8 @@ def main():
                     stop(compositor)
                     if compositor.returncode not in (0,-signal.SIGTERM):raise AssertionError('Compositor failed at live-shadow shutdown: '+str(compositor.returncode))
                     report.setdefault('liveResourceShutdown',[]).append({'theme':theme,'scale':scale,'passed':True,'resourcesBeforeExit':before_exit})
+                except _Done:
+                  pass
                 except Exception:
                   report['failureLogs']={name:(root/(name+'.log')).read_text(errors='replace')[-1800:] for name in ('compositor','client') if (root/(name+'.log')).exists()}
                   for crash in (root/'cache/hyprland').glob('hyprlandCrashReport*'):
@@ -210,7 +257,27 @@ def main():
                 'meanChannelError':ImageStat.Stat(delta).mean,'differentPixels':sum(any(v) for v in delta.get_flattened_data()),
                 'differenceBounds':delta.getbbox(),'kwin':states['kwin'][name],'hyprland':states['hyprland'][name]}
               report['cases'].append(entry);print(json.dumps({k:v for k,v in entry.items() if k not in ('kwin','hyprland')}),flush=True)
+            if a.kind=='decorated':
+              # Shadow presence must match KWin: some Aurorae themes ship none.
+              counts={}
+              for backend in images:
+                ring=images[backend]['active'].copy();w,h=ring.size;m=round(128*scale)
+                ring.paste(Image.new('RGB',(w-2*m+2*round(40*scale),h-2*m+2*round(40*scale)),(0x80,0x80,0x80)),(m-round(40*scale),m-round(40*scale)))
+                counts[backend]=sum(any(abs(c-0x80)>2 for c in px) for px in ring.get_flattened_data())
+              if (counts['hyprland']>=100)!=(counts['kwin']>=100):raise AssertionError(f'Decoration shadow presence differs from KWin: {counts}')
             for backend in images:
+              if a.kind=='decorated':
+                own=images[backend];ring=own['active'].copy();w,h=ring.size;m=round(128*scale)
+                inner=Image.new('RGB',(w-2*m+2*round(40*scale),h-2*m+2*round(40*scale)),(0x80,0x80,0x80))
+                ring.paste(inner,(m-round(40*scale),m-round(40*scale)))
+                shadow=sum(any(abs(c-0x80)>2 for c in px) for px in ring.get_flattened_data())
+                # The first frame must already be the settled one, as in KWin: a decoration
+                # created active once kept an Aurorae shadow sized without its borders.
+                moved=sum(max(px)>2 for px in ImageChops.difference(own['reactivated'],own['active']).get_flattened_data())
+                if moved:raise AssertionError(f'{backend}: reactivation changed the decorated window ({moved} pixels)')
+                if ImageChops.difference(own['inactive'],own['active']).getbbox() is None:raise AssertionError(backend+': focus change did not repaint the decoration')
+                report.setdefault('decorationShadows',[]).append({'backend':backend,'theme':theme,'scale':scale,'shadowPixelsOutsideFrame':shadow,'reactivationPixelsAboveTwo':moved})
+                continue
               if a.kind=='dialog':
                 own=images[backend]
                 if ImageChops.difference(own['opacity'],own['normal']).getbbox() is None:raise AssertionError(backend+': native opacity was not applied')

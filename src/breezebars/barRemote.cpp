@@ -155,6 +155,8 @@ SWindowState CHyprBar::currentRemoteState() {
         flags |= MaximizedVertically;
     if (PW->m_pinned)
         flags |= OnAllDesktops;
+    if (PW->m_isX11)
+        flags |= X11;
     s.flags = flags;
 
     // Bordes de la pantalla junto a la ventana (Breeze quita bordes o esquinas ahí)
@@ -393,7 +395,9 @@ void CHyprBar::renderRemote(PHLMONITOR pMonitor, float a) {
         Config::CGradientValueData grad(CHyprColor{static_cast<uint64_t>(g.outlineColor)});
         g_pHyprOpenGL->renderBorder(box, grad,
                                     {.round = static_cast<int>(std::round(radius * pMonitor->m_scale)), .roundingPower = 2.F,
-                                     .borderSize = std::max(1, static_cast<int>(std::round(g.outlineThickness * pMonitor->m_scale))), .a = a});
+                                     // renderBorder scales borderSize by the monitor itself: pass logical
+                                     // units. Breeze snaps 1 logical px to the pixel grid like this.
+                                     .borderSize = std::max(1, static_cast<int>(std::round(g.outlineThickness))), .a = a});
     }
 }
 

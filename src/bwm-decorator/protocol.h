@@ -65,6 +65,7 @@ enum WindowFlag : uint32_t {
     Modal = 1u << 13,
     ProvidesContextHelp = 1u << 14,
     ExcludedFromCapture = 1u << 15,
+    X11 = 1u << 16, // XWayland window (icon fallback differs, as in KWin)
 };
 
 // Pointer.kind

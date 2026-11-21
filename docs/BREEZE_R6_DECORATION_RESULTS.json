@@ -1,0 +1,472 @@
+{
+ "version": 1,
+ "date": "2026-11-21",
+ "scope": "Server-side KDecoration (Breeze/Aurorae) frame and shadow of a normal xdg_toplevel: nested Hyprland + bwm-decorator + breezebars candidate versus kwin_wayland 6.7.5, private roots and buses",
+ "reference": "kwin_wayland 6.7.5 --virtual, KDE platform theme, 2 virtual desktops, Placement=Centered",
+ "alignment": "content colour bounding box, 128 logical px margin",
+ "themes": {
+  "breeze-dark": "Breeze decoration, BreezeDark colours",
+  "breeze-light": "Breeze decoration, BreezeLight colours",
+  "Sweet": "Aurorae Sweet-Dark (third-party SVG theme, ships no shadow)"
+ },
+ "scales": [
+  1,
+  1.25,
+  1.5,
+  2
+ ],
+ "cases": [
+  {
+   "theme": "breeze-dark",
+   "scale": 1.0,
+   "case": "active",
+   "maxChannelError": 27,
+   "differentPixels": 1629
+  },
+  {
+   "theme": "breeze-dark",
+   "scale": 1.0,
+   "case": "inactive",
+   "maxChannelError": 52,
+   "differentPixels": 2559
+  },
+  {
+   "theme": "breeze-dark",
+   "scale": 1.0,
+   "case": "reactivated",
+   "maxChannelError": 27,
+   "differentPixels": 1629
+  },
+  {
+   "theme": "breeze-dark",
+   "scale": 1.25,
+   "case": "active",
+   "maxChannelError": 22,
+   "differentPixels": 40767
+  },
+  {
+   "theme": "breeze-dark",
+   "scale": 1.25,
+   "case": "inactive",
+   "maxChannelError": 39,
+   "differentPixels": 36069
+  },
+  {
+   "theme": "breeze-dark",
+   "scale": 1.25,
+   "case": "reactivated",
+   "maxChannelError": 22,
+   "differentPixels": 40767
+  },
+  {
+   "theme": "breeze-dark",
+   "scale": 1.5,
+   "case": "active",
+   "maxChannelError": 45,
+   "differentPixels": 58140
+  },
+  {
+   "theme": "breeze-dark",
+   "scale": 1.5,
+   "case": "inactive",
+   "maxChannelError": 73,
+   "differentPixels": 68174
+  },
+  {
+   "theme": "breeze-dark",
+   "scale": 1.5,
+   "case": "reactivated",
+   "maxChannelError": 45,
+   "differentPixels": 58140
+  },
+  {
+   "theme": "breeze-dark",
+   "scale": 2.0,
+   "case": "active",
+   "maxChannelError": 27,
+   "differentPixels": 9444
+  },
+  {
+   "theme": "breeze-dark",
+   "scale": 2.0,
+   "case": "inactive",
+   "maxChannelError": 52,
+   "differentPixels": 11513
+  },
+  {
+   "theme": "breeze-dark",
+   "scale": 2.0,
+   "case": "reactivated",
+   "maxChannelError": 27,
+   "differentPixels": 9444
+  },
+  {
+   "theme": "breeze-light",
+   "scale": 1.0,
+   "case": "active",
+   "maxChannelError": 38,
+   "differentPixels": 1620
+  },
+  {
+   "theme": "breeze-light",
+   "scale": 1.0,
+   "case": "inactive",
+   "maxChannelError": 45,
+   "differentPixels": 2555
+  },
+  {
+   "theme": "breeze-light",
+   "scale": 1.0,
+   "case": "reactivated",
+   "maxChannelError": 38,
+   "differentPixels": 1620
+  },
+  {
+   "theme": "breeze-light",
+   "scale": 1.25,
+   "case": "active",
+   "maxChannelError": 39,
+   "differentPixels": 40754
+  },
+  {
+   "theme": "breeze-light",
+   "scale": 1.25,
+   "case": "inactive",
+   "maxChannelError": 43,
+   "differentPixels": 36061
+  },
+  {
+   "theme": "breeze-light",
+   "scale": 1.25,
+   "case": "reactivated",
+   "maxChannelError": 39,
+   "differentPixels": 40754
+  },
+  {
+   "theme": "breeze-light",
+   "scale": 1.5,
+   "case": "active",
+   "maxChannelError": 100,
+   "differentPixels": 58153
+  },
+  {
+   "theme": "breeze-light",
+   "scale": 1.5,
+   "case": "inactive",
+   "maxChannelError": 109,
+   "differentPixels": 68180
+  },
+  {
+   "theme": "breeze-light",
+   "scale": 1.5,
+   "case": "reactivated",
+   "maxChannelError": 100,
+   "differentPixels": 58153
+  },
+  {
+   "theme": "breeze-light",
+   "scale": 2.0,
+   "case": "active",
+   "maxChannelError": 40,
+   "differentPixels": 9450
+  },
+  {
+   "theme": "breeze-light",
+   "scale": 2.0,
+   "case": "inactive",
+   "maxChannelError": 46,
+   "differentPixels": 11508
+  },
+  {
+   "theme": "breeze-light",
+   "scale": 2.0,
+   "case": "reactivated",
+   "maxChannelError": 40,
+   "differentPixels": 9450
+  },
+  {
+   "theme": "Sweet",
+   "scale": 1.0,
+   "case": "active",
+   "maxChannelError": 0,
+   "differentPixels": 0
+  },
+  {
+   "theme": "Sweet",
+   "scale": 1.0,
+   "case": "inactive",
+   "maxChannelError": 0,
+   "differentPixels": 0
+  },
+  {
+   "theme": "Sweet",
+   "scale": 1.0,
+   "case": "reactivated",
+   "maxChannelError": 0,
+   "differentPixels": 0
+  },
+  {
+   "theme": "Sweet",
+   "scale": 1.25,
+   "case": "active",
+   "maxChannelError": 1,
+   "differentPixels": 5504
+  },
+  {
+   "theme": "Sweet",
+   "scale": 1.25,
+   "case": "inactive",
+   "maxChannelError": 2,
+   "differentPixels": 7818
+  },
+  {
+   "theme": "Sweet",
+   "scale": 1.25,
+   "case": "reactivated",
+   "maxChannelError": 1,
+   "differentPixels": 5504
+  },
+  {
+   "theme": "Sweet",
+   "scale": 1.5,
+   "case": "active",
+   "maxChannelError": 1,
+   "differentPixels": 8
+  },
+  {
+   "theme": "Sweet",
+   "scale": 1.5,
+   "case": "inactive",
+   "maxChannelError": 1,
+   "differentPixels": 332
+  },
+  {
+   "theme": "Sweet",
+   "scale": 1.5,
+   "case": "reactivated",
+   "maxChannelError": 1,
+   "differentPixels": 8
+  },
+  {
+   "theme": "Sweet",
+   "scale": 2.0,
+   "case": "active",
+   "maxChannelError": 1,
+   "differentPixels": 2
+  },
+  {
+   "theme": "Sweet",
+   "scale": 2.0,
+   "case": "inactive",
+   "maxChannelError": 1,
+   "differentPixels": 4
+  },
+  {
+   "theme": "Sweet",
+   "scale": 2.0,
+   "case": "reactivated",
+   "maxChannelError": 1,
+   "differentPixels": 2
+  }
+ ],
+ "maxChannelErrorByTheme": {
+  "breeze-dark": 73,
+  "breeze-light": 109,
+  "Sweet": 2
+ },
+ "decorationShadows": [
+  {
+   "backend": "hyprland",
+   "theme": "breeze-dark",
+   "scale": 1.0,
+   "shadowPixelsOutsideFrame": 13530,
+   "reactivationExact": true
+  },
+  {
+   "backend": "kwin",
+   "theme": "breeze-dark",
+   "scale": 1.0,
+   "shadowPixelsOutsideFrame": 13530,
+   "reactivationExact": true
+  },
+  {
+   "backend": "hyprland",
+   "theme": "breeze-dark",
+   "scale": 1.25,
+   "shadowPixelsOutsideFrame": 20795,
+   "reactivationExact": true
+  },
+  {
+   "backend": "kwin",
+   "theme": "breeze-dark",
+   "scale": 1.25,
+   "shadowPixelsOutsideFrame": 21456,
+   "reactivationExact": true
+  },
+  {
+   "backend": "hyprland",
+   "theme": "breeze-dark",
+   "scale": 1.5,
+   "shadowPixelsOutsideFrame": 30415,
+   "reactivationExact": true
+  },
+  {
+   "backend": "kwin",
+   "theme": "breeze-dark",
+   "scale": 1.5,
+   "shadowPixelsOutsideFrame": 29684,
+   "reactivationExact": true
+  },
+  {
+   "backend": "hyprland",
+   "theme": "breeze-dark",
+   "scale": 2.0,
+   "shadowPixelsOutsideFrame": 54120,
+   "reactivationExact": true
+  },
+  {
+   "backend": "kwin",
+   "theme": "breeze-dark",
+   "scale": 2.0,
+   "shadowPixelsOutsideFrame": 54120,
+   "reactivationExact": true
+  },
+  {
+   "backend": "hyprland",
+   "theme": "breeze-light",
+   "scale": 1.0,
+   "shadowPixelsOutsideFrame": 13530,
+   "reactivationExact": true
+  },
+  {
+   "backend": "kwin",
+   "theme": "breeze-light",
+   "scale": 1.0,
+   "shadowPixelsOutsideFrame": 13530,
+   "reactivationExact": true
+  },
+  {
+   "backend": "hyprland",
+   "theme": "breeze-light",
+   "scale": 1.25,
+   "shadowPixelsOutsideFrame": 20795,
+   "reactivationExact": true
+  },
+  {
+   "backend": "kwin",
+   "theme": "breeze-light",
+   "scale": 1.25,
+   "shadowPixelsOutsideFrame": 21456,
+   "reactivationExact": true
+  },
+  {
+   "backend": "hyprland",
+   "theme": "breeze-light",
+   "scale": 1.5,
+   "shadowPixelsOutsideFrame": 30415,
+   "reactivationExact": true
+  },
+  {
+   "backend": "kwin",
+   "theme": "breeze-light",
+   "scale": 1.5,
+   "shadowPixelsOutsideFrame": 29684,
+   "reactivationExact": true
+  },
+  {
+   "backend": "hyprland",
+   "theme": "breeze-light",
+   "scale": 2.0,
+   "shadowPixelsOutsideFrame": 54120,
+   "reactivationExact": true
+  },
+  {
+   "backend": "kwin",
+   "theme": "breeze-light",
+   "scale": 2.0,
+   "shadowPixelsOutsideFrame": 54120,
+   "reactivationExact": true
+  },
+  {
+   "backend": "hyprland",
+   "theme": "Sweet",
+   "scale": 1.0,
+   "shadowPixelsOutsideFrame": 0,
+   "reactivationExact": true
+  },
+  {
+   "backend": "kwin",
+   "theme": "Sweet",
+   "scale": 1.0,
+   "shadowPixelsOutsideFrame": 0,
+   "reactivationExact": true
+  },
+  {
+   "backend": "hyprland",
+   "theme": "Sweet",
+   "scale": 1.25,
+   "shadowPixelsOutsideFrame": 0,
+   "reactivationExact": true
+  },
+  {
+   "backend": "kwin",
+   "theme": "Sweet",
+   "scale": 1.25,
+   "shadowPixelsOutsideFrame": 0,
+   "reactivationExact": true
+  },
+  {
+   "backend": "hyprland",
+   "theme": "Sweet",
+   "scale": 1.5,
+   "shadowPixelsOutsideFrame": 0,
+   "reactivationExact": true
+  },
+  {
+   "backend": "kwin",
+   "theme": "Sweet",
+   "scale": 1.5,
+   "shadowPixelsOutsideFrame": 0,
+   "reactivationExact": true
+  },
+  {
+   "backend": "hyprland",
+   "theme": "Sweet",
+   "scale": 2.0,
+   "shadowPixelsOutsideFrame": 0,
+   "reactivationExact": true
+  },
+  {
+   "backend": "kwin",
+   "theme": "Sweet",
+   "scale": 2.0,
+   "shadowPixelsOutsideFrame": 0,
+   "reactivationExact": true
+  }
+ ],
+ "remainingDifferences": [
+  "Rounded bottom corners of the client content: Hyprland rounding shader vs KWin clip (up to 52/255 on a few pixels; 100/255 where the light outline meets the blue fixture at 1.5)",
+  "Shadow gradient at fractional scales: at most 2/255 (half-pixel offset)"
+ ],
+ "fixedInThisPass": [
+  "Outline thickness was scaled twice (renderBorder already applies the monitor scale): 2 logical px at scale 2",
+  "Decoration painted with painter.scale instead of the image device pixel ratio: QIcon picked the 1x pixmap",
+  "Offscreen helper searched only :/icons: Aurorae menu icons and hicolor app icons were empty",
+  "Wayland windows without a desktop file now show the \"wayland\" icon as in KWin (X11 flag added to the wire protocol)",
+  "Reference KWin now runs with the KDE platform theme (title font Noto Sans 10) and two desktops",
+  "Aurorae shadow sized without the decoration borders on windows created active (380x260 instead of 388x292 for 360x240): the helper now creates the decoration inactive and activates it afterwards, as KWin does on map; the first frame equals the settled one in all 12 theme/scale pairs"
+ ],
+ "notCompared": [
+  "Client-driven resize and maximize (Hyprland keeps floating size; BWM suppresses client maximize)",
+  "Shading, keep above/below, XWayland pixels against KWin"
+ ],
+ "shadowPresenceNote": "Sweet-Dark builds its shadow from the 10 logical px theme padding: it stays inside the 40 px band excluded by the presence count in both compositors",
+ "run": {
+  "report": "build/r6-decorated-final.json",
+  "imageComparisonsPassed": true,
+  "sessionDifferences": [
+   "cursor"
+  ],
+  "note": "passed=false only because the pointer moved during the ~40 min run (user activity); cleanup verified"
+ }
+}

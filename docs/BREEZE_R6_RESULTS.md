@@ -1,5 +1,76 @@
 # R6 — sombras y efectos nativos de KDE
 
+## Iteración 3: decoración completa frente a KWin real (2026-11-21)
+
+**R6 sigue abierta** y el veto diario `no_shadow=true` sigue vigente. Las iteraciones 1 y 2
+comparaban la sombra de la decoración con el método de KWin por CPU, y las sombras de cliente
+por GPU. Ésta compara en GPU **la decoración completa** de una ventana normal con decoración
+del servidor: marco, contorno, botones, icono y sombra KDecoration. Se usan Hyprland anidado
+con `bwm-decorator` y el candidato de breezebars, frente a `kwin_wayland` 6.7.5 en raíces y
+buses privados. Evidencia en
+[BREEZE_R6_DECORATION_RESULTS.json](BREEZE_R6_DECORATION_RESULTS.json).
+
+### Fallos encontrados y corregidos
+
+* **Contorno a doble escala:** breezebars pasaba a `renderBorder` el grosor ya multiplicado por la
+  escala, y Hyprland vuelve a aplicarla. A escala 2 el contorno de Breeze medía 4 px en vez de 2.
+* **Icono a 1x en HiDPI:** el auxiliar pintaba con `painter.scale()`; ahora pinta sobre una imagen
+  con la densidad de la salida, como `DecorationItem` de KWin, y `QIcon` elige el mapa nítido.
+* **Iconos vacíos fuera de Breeze:** con la plataforma offscreen Qt sólo buscaba en `:/icons`. La
+  decoración Breeze funcionaba por sus iconos incrustados; Aurorae y cualquier icono que sólo esté
+  en hicolor (por ejemplo, Steam) salían vacíos. También pasaba en la sesión diaria. El auxiliar
+  añade las carpetas XDG `icons` y `/usr/share/pixmaps`. Prueba de regresión que falla con el
+  binario anterior.
+* **Icono de reserva:** una ventana Wayland sin `.desktop` muestra el icono `wayland`, como
+  `XdgToplevelWindow::updateIcon`. Nueva bandera `X11` (65536) en el protocolo para no aplicarlo
+  a XWayland.
+* **Sombra de Aurorae sin los bordes:** Aurorae crea su sombra en `init()`, antes de que se apliquen
+  los bordes, y sólo la rehace al cambiar de activa/inactiva o al maximizar. KWin crea la
+  decoración antes de mapear la ventana, aún inactiva, y la activa después: la sombra se rehace
+  ya con bordes. El auxiliar la creaba activa y Sweet quedaba con una sombra de 380×260 en lugar
+  de 388×292 (ventana 360×240), estirada: la primera imagen difería en las esquinas del lado
+  derecho (hasta 44/255 a 1,5) hasta el siguiente cambio de foco. Ahora el auxiliar crea la
+  decoración inactiva y le entrega después el estado real, como KWin. Prueba de regresión que
+  falla con el binario anterior.
+* **Referencia:** KWin arrancaba sin el tema de plataforma de KDE y usaba otra fuente de título
+  (barra 8 px más alta). Ahora usa el de KDE, con dos escritorios para mostrar el botón
+  «en todos los escritorios», como BWM.
+
+### Resultado (activa, inactiva bajo otra ventana y reactivada)
+
+| Tema | Escalas | Máx. | Dónde |
+| :--- | :--- | :--- | :--- |
+| Breeze oscuro | 1/1,25/1,5/2 | 73/255 | Antialiasing de las esquinas redondeadas del contenido; sombra ≤2/255 |
+| Breeze claro | 1/1,25/1,5/2 | 109/255 | Igual: el contorno claro toca el azul en la esquina a 1,5 |
+| Sweet (Aurorae) | 1/1,25/1,5/2 | 2/255 | Sólo el degradado de la sombra a escala fraccionaria |
+
+Marco, barra de título, botones, icono y colores activos/inactivos coinciden. En los 12 pares
+tema/escala la primera imagen ya es idéntica a la de después de reactivar, como en KWin (la
+comprobación ahora es estricta). La sombra coincide en presencia y forma. La de Sweet es su
+relleno de 10 px: queda dentro de la franja que excluye el recuento de presencia, en los dos
+compositores. Regresión: decorador 15/15 (pruebas nuevas de hicolor y de la sombra de Aurorae),
+breezebars 4/4, XWayland anidado (sombra KDE en 62 584 píxeles, sin segundo marco con
+GTK/Motif), piezas a 1,5 y diálogo sin cambios. La matriz final (`build/r6-decorated-final.json`)
+pasó todas las comparaciones de imagen; su `passed` es falso sólo porque el puntero se movió
+durante los ~40 min de ensayo.
+
+### Pendiente
+
+* Antialiasing de las esquinas del contenido (sombreador de redondeo de Hyprland frente al recorte de KWin).
+* Según el código de Aurorae 6.7.5, tampoco en KWin rehace Aurorae su sombra al redimensionar la
+  ventana: se estira hasta el siguiente cambio de foco. Se conserva ese comportamiento original.
+* No comparado: tamaño y maximizado pedidos por el cliente. Hyprland mantiene el tamaño flotante y
+  BWM bloquea a propósito las peticiones de maximizado de las apps. Tampoco enrollar,
+  encima/debajo ni píxeles X11 frente a KWin.
+* El auxiliar y el plugin corregidos se usarán en la sesión diaria al instalarlos (auxiliar con
+  `decorator.py build` y plugin con `make install`) y volver a iniciar sesión. No se ha hecho.
+
+```bash
+python3 src/breezebars/check-r6-surfaces.py --module build/r6-surface-plugin/installed/breezebars.so --kind decorated --report build/r6-decorated.json
+```
+
+---
+
 ## Iteración 2: superficies, paneles, diálogos y XWayland (2026-11-21)
 
 Iniciada por Codex y terminada por Claude tras agotarse su uso. **R6 sigue abierta**: el

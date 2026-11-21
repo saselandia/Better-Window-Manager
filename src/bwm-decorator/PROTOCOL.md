@@ -45,7 +45,8 @@ la app), cadena `iconName` (vacía: el auxiliar busca el icono del `.desktop` po
 `flags`: 1 activa, 2 maximizada en horizontal, 4 en vertical, 8 en todos los escritorios,
 16 encima, 32 debajo, 64 enrollada, 128 se puede cerrar, 256 maximizar, 512 minimizar, 1024 mover,
 2048 redimensionar, 4096 enrollar, 8192 modal, 16384 tiene ayuda contextual, 32768 excluida de
-capturas.
+capturas, 65536 ventana X11 (XWayland). Sin `.desktop`, una ventana Wayland muestra el icono
+`wayland`, como KWin; una X11 conserva la suposición por clase.
 
 `edges` (`Qt::Edges`, bordes de pantalla junto a la ventana): 1 arriba, 2 izquierda, 4 derecha, 8 abajo.
 

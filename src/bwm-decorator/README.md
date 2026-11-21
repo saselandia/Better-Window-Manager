@@ -11,7 +11,9 @@ plataforma Qt «offscreen»: nada de Qt entra en Hyprland (regla 1).
   `kwinrc`, Aurorae SVG con el motor v2, recarga), `Settings` (como `SettingsImpl`: botones, tamaño
   de borde, fuente), `ClientImpl` (lo que la decoración ve de la ventana) y `Window` (estado de una
   ventana, eventos, confirmación del estado de KDecoration3 con `apply(nextState())`, dibujo de las
-  cuatro piezas del marco a la escala del monitor y sombra).
+  cuatro piezas del marco a la escala del monitor y sombra). Como KWin, crea cada decoración con
+  la ventana inactiva y le entrega después el estado real: Aurorae calcula su sombra en `init()`
+  y sólo la rehace al cambiar de activa.
 - `palette.{h,cpp}`: `decorationpalette` de **kwin v6.7.5** (GPL-2.0-or-later) sin cambios de
   lógica. Colores del esquema de `kdeglobals` (grupo Header o, en esquemas antiguos, `[WM]`).
 - `server.{h,cpp}`: socket, mensajes y vigilancia de la configuración.
