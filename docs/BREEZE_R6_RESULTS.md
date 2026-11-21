@@ -1,5 +1,36 @@
 # R6 — sombras y efectos nativos de KDE
 
+## Iteración 4: radio de las esquinas del contenido (2026-11-21)
+
+**R6 sigue abierta** y el veto diario `no_shadow=true` sigue vigente. La diferencia mayor de la
+iteración 3 (Breeze hasta 73/255 oscuro y 109/255 claro) eran las esquinas inferiores del
+contenido de la ventana. Medida píxel a píxel, no era el suavizado: el radio era menor.
+
+* KWin 6.7.5 recorta la ventana con `round(radio × escala)` píxeles y un círculo exacto
+  (`itemrenderer_opengl.cpp`, `sdf.glsl`).
+* Hyprland 0.56.2 usa la regla de redondeo × escala × (potencia / 2) y resta 1 píxel antes de
+  dibujar la superficie (`ElementRenderer.cpp`, «to fix a border issue»). Además breezebars
+  redondeaba el radio lógico a entero antes de escalarlo. Breeze da 5 lógicos a escala 1 y
+  5,33 a 1,5: Hyprland dibujaba 4 px en vez de 5 y 6,5 en vez de 8.
+* Ahora la regla es el entero que deja el radio de Hyprland más cerca del de KWin
+  (`contentRounding` en `DecoLogic.hpp`), con potencia de redondeo 2 en esas ventanas.
+
+| Tema | 1 | 1,25 | 1,5 | 2 |
+| :--- | :--- | :--- | :--- | :--- |
+| Breeze oscuro | 12/255 | 16/255 | 14/255 | 52/255 |
+| Breeze claro | 22/255 | 27/255 | 26/255 | 46/255 |
+| Sweet (Aurorae) | 0/255 | 2/255 | 1/255 | 1/255 |
+
+Máximos por par tema/escala (activa, inactiva y reactivada). Lo que queda en Breeze es el
+suavizado del contorno en las esquinas (`renderBorder` de Hyprland frente al sombreador de
+borde de KWin) y 1/255 de color del contorno. A escala 2 el objetivo son 10 px y la regla
+entera sólo permite 9 u 11: no mejora (límite del tipo de la regla de Hyprland). La primera
+imagen sigue siendo idéntica a la reactivada en los 24 casos. Matriz completa con la sesión
+intacta (`build/r6-decorated-iter4.json`, `passed: true`); breezebars 4/4 con la prueba nueva de
+redondeo (todas las escalas y radios frente a cualquier otro entero).
+
+---
+
 ## Iteración 3: decoración completa frente a KWin real (2026-11-21)
 
 **R6 sigue abierta** y el veto diario `no_shadow=true` sigue vigente. Las iteraciones 1 y 2
@@ -56,7 +87,7 @@ durante los ~40 min de ensayo.
 
 ### Pendiente
 
-* Antialiasing de las esquinas del contenido (sombreador de redondeo de Hyprland frente al recorte de KWin).
+* Esquinas del contenido: resuelto en la iteración 4 salvo a escala 2.
 * Según el código de Aurorae 6.7.5, tampoco en KWin rehace Aurorae su sombra al redimensionar la
   ventana: se estira hasta el siguiente cambio de foco. Se conserva ese comportamiento original.
 * No comparado: tamaño y maximizado pedidos por el cliente. Hyprland mantiene el tamaño flotante y

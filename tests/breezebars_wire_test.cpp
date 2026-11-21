@@ -135,6 +135,28 @@ static void testActions() {
     std::puts("ok acciones");
 }
 
+// Radio de la ventana en píxeles tras la regla de Hyprland: regla * escala - 1
+static double hyprlandRadius(int rule, double scale) {
+    return rule ? std::max(0.0, rule * scale - 1) : 0;
+}
+
+static void testContentRounding() {
+    // Breeze 6.7.5: 5 lógicos a escala 1 y 2; 4,8 a 1,25; 5,33 a 1,5
+    CHECK(contentRounding(5, 1) == 6 && hyprlandRadius(6, 1) == 5);
+    CHECK(contentRounding(5.333333333333333, 1.5) == 6 && hyprlandRadius(6, 1.5) == 8);
+    CHECK(std::abs(hyprlandRadius(contentRounding(4.8, 1.25), 1.25) - 6) <= 0.5);
+    CHECK(std::abs(hyprlandRadius(contentRounding(5, 2), 2) - 10) <= 1);
+    CHECK(contentRounding(0, 1) == 0 && contentRounding(5, 0) == 0 && contentRounding(0.2, 1) == 0);
+    for (double s : {1.0, 1.25, 1.5, 1.75, 2.0, 3.0})
+        for (double r = 0.5; r < 20; r += 0.25) {
+            const double target = std::round(r * s);
+            const int    best   = contentRounding(r, s);
+            for (int v = 0; v < 40; ++v)
+                CHECK(std::abs(hyprlandRadius(best, s) - target) <= std::abs(hyprlandRadius(v, s) - target) + 1e-9);
+        }
+    std::puts("ok redondeo");
+}
+
 static void testParse() {
     // Mensaje construido a mano: PointerResult(press, no aceptado, barra, izquierdo)
     auto msg = CWriter(ServerMessage::PointerResult, 7).u32(Press).u32(0).u32(9).u32(1).finish();
@@ -308,6 +330,7 @@ int main(int argc, char** argv) {
     testDamage();
     testShadow();
     testActions();
+    testContentRounding();
     testParse();
     if (argc > 1)
         testHelper(argv[1]);

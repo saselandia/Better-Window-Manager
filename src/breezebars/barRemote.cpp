@@ -231,10 +231,14 @@ void CHyprBar::applyRoundingOverride(int value) {
     auto PW = m_pWindow.lock();
     if (!PW || !PW->m_ruleApplicator)
         return;
-    if (value < 0)
+    if (value < 0) {
         PW->m_ruleApplicator->rounding().unset(Desktop::Types::PRIORITY_LAYOUT);
-    else
+        PW->m_ruleApplicator->roundingPower().unset(Desktop::Types::PRIORITY_LAYOUT);
+    } else {
+        // KWin clips the content with a circular corner: keep power 2 whatever the global value
         PW->m_ruleApplicator->rounding().set(value, Desktop::Types::PRIORITY_LAYOUT);
+        PW->m_ruleApplicator->roundingPower().set(2.F, Desktop::Types::PRIORITY_LAYOUT);
+    }
     m_remote.roundingOverride = value;
     g_pHyprRenderer->damageWindow(PW);
 }
@@ -252,7 +256,8 @@ void CHyprBar::onRemoteMessage(const SMessage& msg, int fd) {
         const bool first = !m_remote.geometry;
         m_remote.geometry = *msg.geometry;
         const auto& g     = *msg.geometry;
-        applyRoundingOverride(static_cast<int>(std::round(std::max(g.radius[2], g.radius[3]))));
+        const auto  MON = m_pWindow.lock() ? m_pWindow.lock()->m_monitor.lock() : nullptr;
+        applyRoundingOverride(contentRounding(std::max(g.radius[2], g.radius[3]), MON ? MON->m_scale : 1.0));
         (void)first;
         updateRemotePositioning();
         damageEntire();

@@ -127,6 +127,11 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   Aurorae × 1/1,25/1,5/2. Corregidos contorno a doble escala, icono a 1x en HiDPI e iconos vacíos
   del auxiliar offscreen (sólo `:/icons`; afectaba también a la sesión diaria) y sombra de Aurorae
   sin bordes en ventanas creadas activas (Sweet 2/255). Quedan esquinas del contenido. Sin instalar.
+* **R6, iteración 4 (2026-11-21, §328):** radio de las esquinas del contenido como KWin: Hyprland
+  dibuja regla × escala − 1 px y breezebars redondeaba antes de escalar. Ahora la regla es el
+  entero más cercano a `round(radio × escala)` de KWin, potencia 2. Breeze oscuro 73→16/255 y
+  claro 109→27/255 a 1–1,5; a escala 2 la regla entera no llega (9 u 11 px frente a 10). Queda el
+  suavizado del contorno en las esquinas. Sin instalar.
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -5897,3 +5902,22 @@ git status; git log --oneline -5; git push origin main
 * **Límites:** sin comparar tamaño/maximizado pedidos por el cliente (Hyprland conserva el tamaño
   flotante; BWM bloquea el maximizado de apps), enrollar ni X11 frente a KWin. Auxiliar y plugin
   corregidos sin instalar en la sesión diaria. Evidencia `docs/BREEZE_R6_DECORATION_RESULTS.json`.
+
+### 328. Breeze R6, iteración 4: radio de las esquinas del contenido (2026-11-21)
+
+* **Petición:** «continúa» tras el commit de la iteración 3. Quedaba la mayor diferencia de la
+  decoración Breeze frente a KWin: las esquinas inferiores del contenido.
+* **Causa medida:** no era el suavizado sino el radio. KWin recorta con `round(radio × escala)` y
+  círculo exacto (`itemrenderer_opengl.cpp`, `sdf.glsl` 6.7.5); Hyprland 0.56.2 usa regla × escala ×
+  (potencia/2) − 1 px (`ElementRenderer.cpp`), y `barRemote.cpp` redondeaba el radio lógico a
+  entero: 4 px en vez de 5 a escala 1, 6,5 en vez de 8 a 1,5.
+* **Hecho:** `contentRounding()` en `DecoLogic.hpp` elige el entero que deja el radio de Hyprland
+  más cerca del de KWin con la escala del monitor; `applyRoundingOverride` fija también potencia 2.
+  Prueba en `tests/breezebars_wire_test.cpp` («ok redondeo»): todas las escalas/radios frente a
+  cualquier otro entero.
+* **Comprobado:** matriz completa (`build/r6-decorated-iter4.json`, `passed: true`, sesión intacta):
+  Breeze oscuro 12/16/14/52 y claro 22/27/26/46 a 1/1,25/1,5/2; Sweet ≤2. Primera imagen idéntica a la
+  reactivada en los 24 casos. Breezebars 4/4. Candidato en `build/r6-surface-plugin`, 0 UNIQUE.
+* **Límites:** a escala 2 la regla entera da 9 u 11 px frente a 10; queda el suavizado del contorno
+  (`renderBorder` frente al sombreador de borde de KWin). Sin instalar en la sesión diaria; veto
+  `no_shadow=true` intacto.

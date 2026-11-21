@@ -20,63 +20,63 @@
    "theme": "breeze-dark",
    "scale": 1.0,
    "case": "active",
-   "maxChannelError": 27,
+   "maxChannelError": 8,
    "differentPixels": 1629
   },
   {
    "theme": "breeze-dark",
    "scale": 1.0,
    "case": "inactive",
-   "maxChannelError": 52,
+   "maxChannelError": 12,
    "differentPixels": 2559
   },
   {
    "theme": "breeze-dark",
    "scale": 1.0,
    "case": "reactivated",
-   "maxChannelError": 27,
+   "maxChannelError": 8,
    "differentPixels": 1629
   },
   {
    "theme": "breeze-dark",
    "scale": 1.25,
    "case": "active",
-   "maxChannelError": 22,
+   "maxChannelError": 9,
    "differentPixels": 40767
   },
   {
    "theme": "breeze-dark",
    "scale": 1.25,
    "case": "inactive",
-   "maxChannelError": 39,
-   "differentPixels": 36069
+   "maxChannelError": 16,
+   "differentPixels": 36067
   },
   {
    "theme": "breeze-dark",
    "scale": 1.25,
    "case": "reactivated",
-   "maxChannelError": 22,
+   "maxChannelError": 9,
    "differentPixels": 40767
   },
   {
    "theme": "breeze-dark",
    "scale": 1.5,
    "case": "active",
-   "maxChannelError": 45,
+   "maxChannelError": 8,
    "differentPixels": 58140
   },
   {
    "theme": "breeze-dark",
    "scale": 1.5,
    "case": "inactive",
-   "maxChannelError": 73,
-   "differentPixels": 68174
+   "maxChannelError": 14,
+   "differentPixels": 68173
   },
   {
    "theme": "breeze-dark",
    "scale": 1.5,
    "case": "reactivated",
-   "maxChannelError": 45,
+   "maxChannelError": 8,
    "differentPixels": 58140
   },
   {
@@ -104,63 +104,63 @@
    "theme": "breeze-light",
    "scale": 1.0,
    "case": "active",
-   "maxChannelError": 38,
+   "maxChannelError": 13,
    "differentPixels": 1620
   },
   {
    "theme": "breeze-light",
    "scale": 1.0,
    "case": "inactive",
-   "maxChannelError": 45,
+   "maxChannelError": 22,
    "differentPixels": 2555
   },
   {
    "theme": "breeze-light",
    "scale": 1.0,
    "case": "reactivated",
-   "maxChannelError": 38,
+   "maxChannelError": 13,
    "differentPixels": 1620
   },
   {
    "theme": "breeze-light",
    "scale": 1.25,
    "case": "active",
-   "maxChannelError": 39,
+   "maxChannelError": 27,
    "differentPixels": 40754
   },
   {
    "theme": "breeze-light",
    "scale": 1.25,
    "case": "inactive",
-   "maxChannelError": 43,
-   "differentPixels": 36061
+   "maxChannelError": 27,
+   "differentPixels": 36060
   },
   {
    "theme": "breeze-light",
    "scale": 1.25,
    "case": "reactivated",
-   "maxChannelError": 39,
+   "maxChannelError": 27,
    "differentPixels": 40754
   },
   {
    "theme": "breeze-light",
    "scale": 1.5,
    "case": "active",
-   "maxChannelError": 100,
+   "maxChannelError": 25,
    "differentPixels": 58153
   },
   {
    "theme": "breeze-light",
    "scale": 1.5,
    "case": "inactive",
-   "maxChannelError": 109,
+   "maxChannelError": 26,
    "differentPixels": 68180
   },
   {
    "theme": "breeze-light",
    "scale": 1.5,
    "case": "reactivated",
-   "maxChannelError": 100,
+   "maxChannelError": 25,
    "differentPixels": 58153
   },
   {
@@ -270,8 +270,8 @@
   }
  ],
  "maxChannelErrorByTheme": {
-  "breeze-dark": 73,
-  "breeze-light": 109,
+  "breeze-dark": 52,
+  "breeze-light": 46,
   "Sweet": 2
  },
  "decorationShadows": [
@@ -445,8 +445,9 @@
   }
  ],
  "remainingDifferences": [
-  "Rounded bottom corners of the client content: Hyprland rounding shader vs KWin clip (up to 52/255 on a few pixels; 100/255 where the light outline meets the blue fixture at 1.5)",
-  "Shadow gradient at fractional scales: at most 2/255 (half-pixel offset)"
+  "Breeze outline corners: Hyprland renderBorder versus the KWin border shader antialiasing (up to 27/255 at 1.25/1.5, outline colour 1/255 apart)",
+  "Content corner at scale 2: KWin clips with 10 px, the integer Hyprland rule gives 9 or 11 (rule * scale - 1); up to 52/255 on a few pixels",
+  "Shadow gradient at fractional scales: at most 2/255"
  ],
  "fixedInThisPass": [
   "Outline thickness was scaled twice (renderBorder already applies the monitor scale): 2 logical px at scale 2",
@@ -454,7 +455,8 @@
   "Offscreen helper searched only :/icons: Aurorae menu icons and hicolor app icons were empty",
   "Wayland windows without a desktop file now show the \"wayland\" icon as in KWin (X11 flag added to the wire protocol)",
   "Reference KWin now runs with the KDE platform theme (title font Noto Sans 10) and two desktops",
-  "Aurorae shadow sized without the decoration borders on windows created active (380x260 instead of 388x292 for 360x240): the helper now creates the decoration inactive and activates it afterwards, as KWin does on map; the first frame equals the settled one in all 12 theme/scale pairs"
+  "Aurorae shadow sized without the decoration borders on windows created active (380x260 instead of 388x292 for 360x240): the helper now creates the decoration inactive and activates it afterwards, as KWin does on map; the first frame equals the settled one in all 12 theme/scale pairs",
+  "Content corner radius: Hyprland 0.56.2 draws window surfaces with rule*scale-1 device pixels and the plugin rounded the logical radius first (4 px instead of 5 at scale 1, 6.5 instead of 8 at 1.5). The rounding rule is now the integer closest to KWin round(radius*scale), with rounding power 2: Breeze dark 73->16/255 and light 109->27/255 at 1-1.5"
  ],
  "notCompared": [
   "Client-driven resize and maximize (Hyprland keeps floating size; BWM suppresses client maximize)",
@@ -462,11 +464,23 @@
  ],
  "shadowPresenceNote": "Sweet-Dark builds its shadow from the 10 logical px theme padding: it stays inside the 40 px band excluded by the presence count in both compositors",
  "run": {
-  "report": "build/r6-decorated-final.json",
-  "imageComparisonsPassed": true,
-  "sessionDifferences": [
-   "cursor"
-  ],
-  "note": "passed=false only because the pointer moved during the ~40 min run (user activity); cleanup verified"
+  "report": "build/r6-decorated-iter4.json",
+  "passed": true,
+  "sessionUnchanged": true,
+  "cleanupVerified": true
+ },
+ "maxChannelErrorByThemeAndScale": {
+  "breeze-dark@1.0": 12,
+  "breeze-dark@1.25": 16,
+  "breeze-dark@1.5": 14,
+  "breeze-dark@2.0": 52,
+  "breeze-light@1.0": 22,
+  "breeze-light@1.25": 27,
+  "breeze-light@1.5": 26,
+  "breeze-light@2.0": 46,
+  "Sweet@1.0": 0,
+  "Sweet@1.25": 2,
+  "Sweet@1.5": 1,
+  "Sweet@2.0": 1
  }
 }

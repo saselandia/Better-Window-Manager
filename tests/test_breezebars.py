@@ -107,7 +107,7 @@ int main() {
     def test_logic_without_helper(self):
         res = subprocess.run([str(self.binary)], capture_output=True, text=True, timeout=30)
         self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
-        for name in ("secciones", "piezas", "daños", "sombra", "acciones", "mensajes"):
+        for name in ("secciones", "piezas", "daños", "sombra", "acciones", "redondeo", "mensajes"):
             self.assertIn(f"ok {name}", res.stdout)
 
 

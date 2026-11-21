@@ -18,7 +18,9 @@ decoración de KWin activa (Breeze, Aurorae, de terceros). El plugin es el pegam
   subida sólo en los rectángulos dañados; la última imagen se estira mientras llega la del tamaño
   nuevo; contorno del tema; sombra de nueve trozos como KWin en una decoración aparte
   (`CBreezeShadow`, sin reservar espacio); redondeo del contenido = radio inferior de la decoración
-  (prioridad mínima, las reglas del usuario mandan; arriba lo cuadra `SquareTop.cpp`).
+  convertido con `contentRounding`: el entero que deja el radio de Hyprland (regla × escala − 1)
+  más cerca de `round(radio × escala)` de KWin, con potencia 2 (prioridad mínima, las reglas del
+  usuario mandan; arriba lo cuadra `SquareTop.cpp`).
 - Puntero como KWin: movimiento, pulsar, soltar y rueda van a la decoración sin aceptar; lo que
   ningún botón acepta (`PointerResult`) es del compositor: mover desde la barra (con el snapping de
   siempre), redimensionar desde los bordes que diga la decoración, doble clic (`on_double_click`,

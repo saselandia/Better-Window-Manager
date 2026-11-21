@@ -177,6 +177,29 @@ namespace BwmDeco {
         return eMaximizeAxis::BOTH;
     }
 
+    // Rounding rule (integer, logical) that makes Hyprland clip the client content like KWin.
+    // KWin rounds the window container with round(radius * scale) device pixels
+    // (itemrenderer_opengl.cpp); Hyprland 0.56.2 uses rule * scale * (power / 2) and removes one
+    // device pixel before drawing the surface (ElementRenderer.cpp, "to fix a border issue").
+    // With power 2, choose the integer whose result is closest to KWin's radius.
+    inline int contentRounding(double logicalRadius, double scale) {
+        if (!(logicalRadius > 0) || !(scale > 0))
+            return 0;
+        const double target = std::round(logicalRadius * scale);
+        if (target <= 0)
+            return 0;
+        int    best = 0;
+        double err  = target;
+        for (int v = 1; v <= static_cast<int>(std::ceil((target + 1) / scale)) + 1; ++v) {
+            const double e = std::abs(std::max(0.0, v * scale - 1) - target);
+            if (e < err - 1e-9) {
+                best = v;
+                err  = e;
+            }
+        }
+        return best;
+    }
+
     // Colores de los tooltips del esquema de KDE ([Colors:Tooltip] de kdeglobals), ARGB.
     struct STooltipColors {
         uint32_t background = 0xff292c30, foreground = 0xfffcfcfc;
