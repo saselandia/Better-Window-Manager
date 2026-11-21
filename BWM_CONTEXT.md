@@ -156,8 +156,14 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   usan variantes translúcidas. Pruebas QML, puente KDE, cambio de skin y política Lua en verde.
 * **R6, despliegue (2026-11-21, §334):** `breezebars.so` (0 UNIQUE) y `bwm-decorator` instalados
   atómicamente; `breeze-float-all` retira `no_shadow` y `no_blur` cuando el plugin expone
-  `blur_on_request` (entra en vigor al volver a iniciar sesión; la sesión actual conserva ambos
-  vetos hasta entonces).
+  `blur_on_request` (verificado en vivo tras reiniciar: 4 bordes/esquinas KDE, `blur_on_request` y
+  `SquareTop` sin doble mezcla).
+* **R7, iteración 1 (2026-11-21, §335):** animaciones de Breeze consolidadas en
+  `skins/plasma/hypr/animations.lua` con las curvas y duraciones de KWin 6.7.5 (`scale` 200 ms
+  `popin 80%` `OutCubic`/`InCubic`, `maximize` 250 ms, `fadingpopups` 150/600 ms, `slide` con muelle
+  nativo `spring:kwin_slide` `k=300/factor, ζ=1.1`); corregido el bug invertido de `AnimationDurationFactor`
+  (`speed` medido en `libhyprutils`: 1.0 = 100 ms, proporcional al factor) y eliminados `md3_*` y
+  `popin 60%`. Ver `docs/BREEZE_R7_RESULTS.md`.
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -6077,3 +6083,29 @@ git status; git log --oneline -5; git push origin main
   * `bwm-plasma-osd` y `quickshell:plasmaMenu` verificados en vivo sin errores QML; capturas
     borradas y foco/workspaces intactos.
 * **Estado R6:** desplegado y verificado en la sesión diaria. Listo para `git push` o pasar a R7.
+
+### 335. Breeze R7, iteración 1: animaciones predeterminadas de KWin 6.7.5 y `AnimationDurationFactor` (2026-11-21)
+
+* **Petición:** `git push` de R6 y continuar con R7 (`docs/BREEZE_PLAN_V2.md`).
+* **Hecho:**
+  * `git push origin main` (`5cadd75..43cffbd`).
+  * Medición empírica contra `libhyprutils.so`: `speed = 2.0` → 50 % a 100 ms (200 ms), `speed = 4.0`
+    → 25 % a 100 ms (400 ms); `SSpringCurve{300, 2√300·1.1, 1}` coincide con `KWin::SpringMotion(300, 1.1)`
+    (`t99 = 465 ms`). Corregido el bug previo de `kwin.lua` que dividía `speed / factor` (al revés).
+  * `config/hypr/skins/plasma/hypr/animations.lua` consolidado como fuente única de verdad (eliminado
+    el bloque duplicado de `kwin.lua` y todas las curvas `md3_*` y `popin 60%`): `scale` 200 ms
+    `popin 80%` (`kwin_out_cubic`/`kwin_in_cubic`), `maximize` 250 ms (`windowsMove`), `slidingpopups`
+    200 ms, `fadingpopups` 150 ms `kwin_linear` / 600 ms `kwin_out_quart`, `slide` con curva nativa
+    `spring = "kwin_slide"` (`stiffness = 300/factor`, `dampening = 2√k·1.1`, `mass = 1`), y Magic
+    (`specialWorkspace*`) 250 ms `kwin_out_cubic` `slidevert`.
+  * `config/hypr/skins/plasma/scripts/kde-config-bridge.py`: exporta `scaleEnabled`, `scaleDuration`,
+    `scaleIn`, `scaleOut`, `maximizeEnabled`, `slideEnabled`, `fadingPopupsEnabled` y
+    `slidingPopupsEnabled`.
+  * `config/quickshell/ii/modules/plasma/skinPicker/PickerWindow.qml`: 140/160 ms fijos →
+    `Kirigami.Units.shortDuration`.
+  * Documentado en `docs/BREEZE_R7_RESULTS.md`.
+* **Comprobado:** `hyprctl reload` sin errores, `hyprctl animations` con `spring:kwin_slide` y
+  curvas `kwin_*` activas en la sesión real, `tests/test_kde_config_bridge.py` 22/22 y
+  `tests/test_plasma_shadow_policy.py` 3/3.
+* **Pendiente:** comparación temporal por fotogramas frente a Plasma 6.7.5, evaluar `squash` /
+  minimizado hacia tarea y página de efectos habilitados en Preferencias (sólo los soportados).

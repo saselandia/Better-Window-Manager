@@ -6,6 +6,7 @@ import "." as Local
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
+import org.kde.kirigami as Kirigami
 
 /**
  * Full-screen transparent layer with a Plasma applet popup card anchored above
@@ -92,8 +93,8 @@ PanelWindow {
         bottomRightRadius: !win.atTop && win.edgeGap === 0 ? 0 : 7
         clip: true
 
-        Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-        Behavior on slide { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: Kirigami.Units.shortDuration; easing.type: Easing.OutCubic } }
+        Behavior on slide { NumberAnimation { duration: Kirigami.Units.shortDuration; easing.type: Easing.OutCubic } }
 
         MouseArea { anchors.fill: parent } // Block backdrop click-through
     }

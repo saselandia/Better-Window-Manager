@@ -332,6 +332,86 @@ class BridgeTest(unittest.TestCase):
         self.write(self.config / "kwinrc", "[Effect-blur]\nBlurStrength=99\n")
         self.assertEqual(self.m.kwin_settings()["blurStrength"], 15)
 
+    def test_kwin_default_animations_and_duration_factor(self):
+        if not shutil.which("lua"):
+            self.skipTest("lua is needed to evaluate animations.lua")
+        anim_lua = ROOT / "config/hypr/skins/plasma/hypr/animations.lua"
+        kwin_lua = ROOT / "config/hypr/skins/plasma/hypr/kwin.lua"
+        # No MD3 curves or popin 60% remain in Breeze's animation route
+        self.assertNotIn("md3_", anim_lua.read_text())
+        self.assertNotIn("popin 60%", anim_lua.read_text())
+        self.assertNotIn("md3_", kwin_lua.read_text())
+
+        def eval_anim():
+            self.m.generate_kwin()
+            script = f"""
+            local cfg, curves, anims = {{}}, {{}}, {{}}
+            hl = {{
+                config = function(t)
+                    if t.animations then cfg.enabled = t.animations.enabled end
+                end,
+                curve = function(name, spec) curves[name] = spec end,
+                animation = function(a) anims[a.leaf] = a end,
+            }}
+            dofile({str(anim_lua)!r})
+            local function f(v) return v == nil and "nil" or tostring(v) end
+            local wi = anims.windowsIn or {{}}
+            local wo = anims.windowsOut or {{}}
+            local wm = anims.windowsMove or {{}}
+            local fli = anims.fadeLayersIn or {{}}
+            local flo = anims.fadeLayersOut or {{}}
+            local ws = anims.workspaces or {{}}
+            local sp = curves.kwin_slide or {{}}
+            print(table.concat({{
+                f(cfg.enabled),
+                f(wi.enabled), f(wi.speed), f(wi.bezier), f(wi.style),
+                f(wo.bezier), f(wo.style),
+                f(wm.enabled), f(wm.speed),
+                f(fli.speed), f(flo.speed),
+                f(ws.enabled), f(ws.spring), f(sp.stiffness),
+            }}, "|"))
+            """
+            out = subprocess.run(["lua", "-e", script], check=True, text=True, capture_output=True)
+            return out.stdout.strip().split("|")
+
+        # Factor 1 (default KWin 6.7.5)
+        self.write(self.config / "kdeglobals", "[KDE]\nAnimationDurationFactor=1\n")
+        r1 = eval_anim()
+        self.assertEqual(r1[:13], [
+            "true", "true", "2.0", "kwin_out_cubic", "popin 80%",
+            "kwin_in_cubic", "popin 80%", "true", "2.5",
+            "1.5", "6.0", "true", "kwin_slide",
+        ])
+        self.assertAlmostEqual(float(r1[13]), 300.0, places=2)
+
+        # Factor 2 (twice as slow: speed doubles, spring stiffness halves)
+        self.write(self.config / "kdeglobals", "[KDE]\nAnimationDurationFactor=2\n")
+        r2 = eval_anim()
+        self.assertEqual(r2[2], "4.0")
+        self.assertEqual(r2[8], "5.0")
+        self.assertAlmostEqual(float(r2[13]), 150.0, places=2)
+
+        # Factor 0 (instant: animations disabled)
+        self.write(self.config / "kdeglobals", "[KDE]\nAnimationDurationFactor=0\n")
+        r0 = eval_anim()
+        self.assertEqual(r0[0], "false")
+
+        # Return to factor 1 (must restore exact defaults)
+        self.write(self.config / "kdeglobals", "[KDE]\nAnimationDurationFactor=1\n")
+        self.assertEqual(eval_anim(), r1)
+
+        # KWin plugin toggles and Effect-scale parameters
+        self.write(self.config / "kwinrc",
+                   "[Plugins]\nscaleEnabled=false\nslideEnabled=false\nmaximizeEnabled=false\n"
+                   "[Effect-scale]\nDuration=300\nInScale=0.9\nOutScale=0.85\n")
+        rt = eval_anim()
+        self.assertEqual(rt[1], "false")       # windowsIn disabled
+        self.assertEqual(rt[2], "3.0")         # 300 ms
+        self.assertEqual(rt[4], "popin 90%")
+        self.assertEqual(rt[6], "popin 85%")
+        self.assertEqual(rt[7], "false")       # windowsMove disabled
+        self.assertEqual(rt[11], "false")      # workspaces disabled
+
 
 if __name__ == "__main__":
     unittest.main()

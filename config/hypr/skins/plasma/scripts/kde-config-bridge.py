@@ -317,6 +317,15 @@ def kwin_settings():
         # KWin's blur effect: on unless disabled in kwinrc [Plugins]; strength 1–15 ([Effect-blur])
         "blur": w.get("Plugins", {}).get("blurEnabled", "true").lower() != "false",
         "blurStrength": int(number(w.get("Effect-blur", {}).get("BlurStrength"), 15, 1, 15)),
+        # KWin 6.7.5 default animation effects (R7): enabled unless explicitly disabled in [Plugins]
+        "scaleEnabled": w.get("Plugins", {}).get("scaleEnabled", "true").lower() != "false",
+        "scaleDuration": int(number(w.get("Effect-scale", {}).get("Duration"), 200, 0, 5000)) or 200,
+        "scaleIn": number(w.get("Effect-scale", {}).get("InScale"), 0.8, 0.1, 1.0),
+        "scaleOut": number(w.get("Effect-scale", {}).get("OutScale"), 0.8, 0.1, 1.0),
+        "maximizeEnabled": w.get("Plugins", {}).get("maximizeEnabled", "true").lower() != "false",
+        "slideEnabled": w.get("Plugins", {}).get("slideEnabled", "true").lower() != "false",
+        "fadingPopupsEnabled": w.get("Plugins", {}).get("fadingpopupsEnabled", "true").lower() != "false",
+        "slidingPopupsEnabled": w.get("Plugins", {}).get("slidingpopupsEnabled", "true").lower() != "false",
     }
 
 

@@ -29,7 +29,6 @@ hl.config({
         monitor_gap = k.borderSnap or 10,
         window_gap = k.windowSnap or 10,
     } },
-    animations = { enabled = (k.animationFactor or 1) > 0 },
 })
 -- F10: KWin magnets use the complete KDE frame. Disable the competing native magnet above.
 if not native_snap then
@@ -42,20 +41,7 @@ if not native_snap then
         dofile((os.getenv("XDG_STATE_HOME") or os.getenv("HOME") .. "/.local/state") .. "/bwm/plasma/kwintiles.lua")
     end
 end
-
--- Hyprland expresa speed como inverso de duración. Conservamos las curvas de Breeze.
-local factor = k.animationFactor or 1
-if factor > 0 and factor ~= 1 then
-    for _, a in ipairs({
-        { "windows", 3, "md3_decel", "popin 60%" }, { "windowsIn", 3, "md3_decel", "popin 60%" },
-        { "windowsOut", 3, "md3_accel", "popin 60%" }, { "border", 10, "default" },
-        { "fade", 3, "md3_decel" }, { "fadeIn", 3, "md3_decel" }, { "fadeOut", 3, "md3_accel" },
-        { "workspaces", 4, "menu_decel", "slide" }, { "workspacesIn", 4, "menu_decel", "slide" },
-        { "workspacesOut", 4, "menu_decel", "slide" }, { "specialWorkspace", 3, "md3_decel", "slidevert" },
-    }) do
-        hl.animation({ leaf = a[1], enabled = true, speed = math.max(0.1, a[2] / factor), bezier = a[3], style = a[4] })
-    end
-end
+-- R7: Las animaciones y AnimationDurationFactor viven únicamente en skins/plasma/hypr/animations.lua.
 
 -- El plugin actual sólo admite un banco de botones y los glifos I/A/X. El estado conserva ambos
 -- bancos completos para F6a/F6b; no se finge que menú, ayuda o enrollar ya están portados.
