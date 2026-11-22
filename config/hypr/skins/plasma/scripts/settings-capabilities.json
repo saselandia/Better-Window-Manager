@@ -375,10 +375,10 @@
     "limitations": {
       "blur": "Hyprland Dual Kawase mapping; no KDE noise or saturation.",
       "maximize": "Hyprland windowsMove; no snapshot crossfade, also affects moving/resizing.",
-      "slidingpopups": "Hyprland layersIn/Out currently use fade style, not native KWin slide geometry.",
-      "fadingpopups": "Hyprland layer opacity, not individual KWin popup classification.",
-      "scale": "Integer percent scale, not all KWin window eligibility rules.",
-      "slide": "Native Hyprland spring; frame comparison pending."
+      "slidingpopups": "Edge-anchored layers (plasmaNotifications, krunner) use Hyprland slide (200 ms OutCubic); Panel, Kickoff and TrayPopup animate in QML with Kirigami.Units.longDuration OutCubic when slidingpopupsEnabled is true.",
+      "fadingpopups": "Popup layers use fadeLayersIn/Out (150 ms Linear / 600 ms OutQuart); static helper layers (plasmaDesktop, plasmaOutline) use no_anim.",
+      "scale": "200 ms OutCubic/InCubic (popin 80% default, integer percent); KWinScale in breezebars resets interrupted entry to full scale/opacity before close.",
+      "slide": "Native Hyprland spring (stiffness=300/factor, dampening=2*sqrt(k)*1.1, mass=1); forward and mid-flight reversal verified against KWin SpringMotion."
     }
   }
 }

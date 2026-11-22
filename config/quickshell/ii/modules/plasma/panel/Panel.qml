@@ -81,10 +81,10 @@ Scope {
                 x:win.vertical?(win.geo.edge==="left"?win.geo.gap:win.shadowPad):win.geo.start
                 y:win.vertical?win.geo.start:(win.geo.edge==="top"?win.geo.gap:win.shadowPad)
                 width:win.geo.width; height:win.geo.height
-                Behavior on x { enabled:win.layoutReady; NumberAnimation { duration:Kirigami.Units.longDuration; easing.type:Easing.OutCubic } }
-                Behavior on y { enabled:win.layoutReady; NumberAnimation { duration:Kirigami.Units.longDuration; easing.type:Easing.OutCubic } }
-                Behavior on width { enabled:win.layoutReady; NumberAnimation { duration:Kirigami.Units.longDuration; easing.type:Easing.OutCubic } }
-                Behavior on height { enabled:win.layoutReady; NumberAnimation { duration:Kirigami.Units.longDuration; easing.type:Easing.OutCubic } }
+                Behavior on x { enabled:win.layoutReady&&PlasmaTheme.slidingPopups; NumberAnimation { duration:Kirigami.Units.longDuration; easing.type:Easing.OutCubic } }
+                Behavior on y { enabled:win.layoutReady&&PlasmaTheme.slidingPopups; NumberAnimation { duration:Kirigami.Units.longDuration; easing.type:Easing.OutCubic } }
+                Behavior on width { enabled:win.layoutReady&&PlasmaTheme.slidingPopups; NumberAnimation { duration:Kirigami.Units.longDuration; easing.type:Easing.OutCubic } }
+                Behavior on height { enabled:win.layoutReady&&PlasmaTheme.slidingPopups; NumberAnimation { duration:Kirigami.Units.longDuration; easing.type:Easing.OutCubic } }
                 HoverHandler {
                     id:panelHover
                     onHoveredChanged: {

@@ -123,6 +123,8 @@ Singleton {
     // blur behind; skins/plasma/hypr/kwin.lua enables it in Hyprland from the same key.
     property var kwinrc: ({})
     readonly property bool blur: (root.kwinrc["Plugins"]?.blurEnabled ?? "true").toLowerCase() !== "false"
+    readonly property bool slidingPopups: (root.kwinrc["Plugins"]?.slidingpopupsEnabled ?? "true").toLowerCase() !== "false"
+        && parseFloat(root.groups["KDE"]?.AnimationDurationFactor ?? "1") > 0
     FileView {
         path: root.configDir + "/kwinrc"
         watchChanges: true

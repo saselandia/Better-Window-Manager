@@ -27,8 +27,16 @@ PopupWindow {
     visible:tray.expanded
     onVisibleChanged:{
         grabReady=false;
-        if(visible){grabTimer.restart();Qt.callLater(()=>surface.forceActiveFocus());}
-        else grabTimer.stop();
+        if(visible){
+            grabTimer.restart();
+            Qt.callLater(()=>surface.forceActiveFocus());
+            if(PlasmaTheme.slidingPopups&&Kirigami.Units.longDuration>0){surface.slideProgress=0;traySlideIn.restart();}
+            else{traySlideIn.stop();surface.slideProgress=1;}
+        } else {
+            grabTimer.stop();
+            traySlideIn.stop();
+            surface.slideProgress=1;
+        }
     }
     Timer { id:grabTimer;interval:50;onTriggered:if(trayWindow.visible)trayWindow.grabReady=true }
     color:"transparent";implicitWidth:tray.activeApplet==="calendar"?440:460;implicitHeight:540
@@ -66,6 +74,12 @@ PopupWindow {
     id:surface
     anchors.fill:parent
     focus:true
+    property real slideProgress:1
+    transform:Translate {
+        x:(1-surface.slideProgress)*(trayWindow.edge==="left"?-Kirigami.Units.gridUnit:trayWindow.edge==="right"?Kirigami.Units.gridUnit:0)
+        y:(1-surface.slideProgress)*(trayWindow.edge==="top"?-Kirigami.Units.gridUnit:trayWindow.edge==="bottom"?Kirigami.Units.gridUnit:0)
+    }
+    NumberAnimation { id:traySlideIn;target:surface;property:"slideProgress";from:0;to:1;duration:Kirigami.Units.longDuration;easing.type:Easing.OutCubic }
     Keys.onEscapePressed:event=>{TrayState.close();event.accepted=true;}
     BlurPath { id:dialogPath;path:"dialogs/background";withoutBlur:"solid/dialogs/background" }
     KSvg.FrameSvgItem {

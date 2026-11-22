@@ -138,7 +138,7 @@ Scope {
             Connections {
                 target: root
                 function onOpenedChanged() {
-                    if (root.opened && Kirigami.Units.longDuration > 0) {
+                    if (root.opened && PlasmaTheme.slidingPopups && Kirigami.Units.longDuration > 0) {
                         frame.slideProgress = 0;
                         kickoffSlideIn.restart();
                     } else {

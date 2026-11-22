@@ -375,16 +375,22 @@ con paso fijo `dt = 10 ms` a 100 Hz) frente a la integración continua de segund
   (`layoutReady`), `x`, `y`, `width` y `height` del contenedor del panel se animan con
   `Kirigami.Units.longDuration` (200 ms × `factor`) y `Easing.OutCubic` al pasar entre modo
   flotante y acoplado (`de-float` al tocar ventana).
-* **Deslizamiento de entrada de Kickoff (`modules/plasma/kickoff/KickoffWindow.qml`):** como la
-  capa `quickshell:plasmaKickoff` ocupa toda la pantalla para capturar clics fuera, el diálogo
-  `frame` aplica un `Translate` de entrada desde el borde del panel (`±Kirigami.Units.gridUnit → 0`)
-  durante `Kirigami.Units.longDuration` (200 ms × `factor`, `Easing.OutCubic`) sin alterar
-  `frame.x/y/width/height`.
+* **Deslizamiento de entrada de Kickoff y bandeja (`modules/plasma/kickoff/KickoffWindow.qml`,
+  `modules/plasma/tray/TrayPopup.qml`) + `PlasmaTheme.slidingPopups`
+  (`modules/plasma/theme/PlasmaTheme.qml`):** `PlasmaTheme.slidingPopups` lee en vivo
+  `kwinrc [Plugins] slidingpopupsEnabled` y `kdeglobals [KDE] AnimationDurationFactor > 0`. Tanto
+  `Panel.qml` como `KickoffWindow.qml` y `TrayPopup.qml` supeditan sus transiciones de
+  `Kirigami.Units.longDuration` (`200 ms × factor`, `Easing.OutCubic`) a `PlasmaTheme.slidingPopups`,
+  sin alterar la geometría de sus marcos ni sus regiones de desenfoque.
+* **Contrato de capacidades (`skins/plasma/scripts/settings-capabilities.json`):** actualizado
+  `r7_contract.limitations` con el estado real de `KWinScale`, `kwin_slide`, `slidingpopups` y
+  `fadingpopups`.
 
 ### Comprobado
 
 * `hyprctl reload` y `hyprctl configerrors` vacío en la sesión diaria.
-* **51/51** pruebas en verde (`test_r7_animation_measurement` 4/4, `test_r7_effects` 8/8,
+* **71/71** pruebas en verde (`test_r7_animation_measurement` 4/4, `test_r7_effects` 8/8,
   `test_r3_native_settings` 10/10, `test_kde_config_bridge` 22/22, `test_plasma_shadow_policy` 3/3,
-  `test_plasma_panel_native` 4/4).
+  `test_plasma_panel_native` 4/4, `test_plasma_tray` 20/20).
+
 

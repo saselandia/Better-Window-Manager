@@ -6267,11 +6267,17 @@ git status; git log --oneline -5; git push origin main
   * `config/hypr/skins/plasma/hypr/animations.lua`: `breeze-sliding-layers` aplica
     `animation = "slide"` a `quickshell:plasmaNotifications` y `krunner` cuando
     `slidingPopupsEnabled` está activo (con caída a `"fade"` o `no_anim = true`).
-  * `config/quickshell/ii/modules/plasma/panel/Panel.qml` y
-    `config/quickshell/ii/modules/plasma/kickoff/KickoffWindow.qml`: transición de 200 ms `OutCubic`
-    (`Kirigami.Units.longDuration`) en el cambio flotante ↔ acoplado del panel y deslizamiento de
-    entrada `Translate` desde el borde del panel en Kickoff.
-* **Comprobado:** `hyprctl reload` y `hyprctl configerrors` vacío; **51/51** pruebas en verde
+  * `config/quickshell/ii/modules/plasma/theme/PlasmaTheme.qml`,
+    `config/quickshell/ii/modules/plasma/panel/Panel.qml`,
+    `config/quickshell/ii/modules/plasma/kickoff/KickoffWindow.qml`,
+    `config/quickshell/ii/modules/plasma/tray/TrayPopup.qml` y
+    `config/hypr/skins/plasma/scripts/settings-capabilities.json`: `PlasmaTheme.slidingPopups` lee
+    en vivo `kwinrc [Plugins] slidingpopupsEnabled` y `AnimationDurationFactor > 0`; activa las
+    transiciones de 200 ms `OutCubic` (`Kirigami.Units.longDuration`) en el cambio flotante ↔
+    acoplado del panel y el deslizamiento de entrada `Translate` desde el borde del panel en
+    Kickoff y en el popup de la bandeja. Actualizado `r7_contract.limitations`.
+* **Comprobado:** `hyprctl reload` y `hyprctl configerrors` vacío; **71/71** pruebas en verde
   (`test_r7_animation_measurement` 4/4, `test_r7_effects` 8/8, `test_r3_native_settings` 10/10,
-  `test_kde_config_bridge` 22/22, `test_plasma_shadow_policy` 3/3, `test_plasma_panel_native` 4/4).
+  `test_kde_config_bridge` 22/22, `test_plasma_shadow_policy` 3/3, `test_plasma_panel_native` 4/4,
+  `test_plasma_tray` 20/20).
 
