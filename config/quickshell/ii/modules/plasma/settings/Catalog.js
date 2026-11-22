@@ -62,6 +62,9 @@ var sections = [
           name: ["Shortcuts", "Atajos"], keywords: "atajos teclado shortcuts" },
     ] },
     { id: "workspace", name: ["Workspace", "Espacio de trabajo"], items: [
+        { id: "effects", kind: "page", component: PAGES + "DesktopEffects.qml", icon: "preferences-desktop-effects",
+          aliases: ["kcm_kwin_effects", "kcm_bwm_effects", "kcm_animations"], name: ["Desktop Effects", "Efectos de escritorio"],
+          keywords: "efectos escritorio desenfoque blur escala animaciones maximizar deslizar ventanas emergentes" },
         { id: "behavior", kind: "page", component: PAGES + "GeneralBehavior.qml", icon: "preferences-desktop",
           aliases: ["interface"], name: ["General Behavior", "Comportamiento general"], keywords: "clic doble clic animaciones velocidad" },
         { id: "autostart", kind: "bwm", component: BWM + "AutostartConfig.qml", icon: "preferences-system-login",

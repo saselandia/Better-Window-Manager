@@ -9,3 +9,4 @@ HamburgerMenuButton 1.0 HamburgerMenuButton.qml
 ModuleView 1.0 ModuleView.qml
 KcmPage 1.0 KcmPage.qml
 KdeSettingsStore 1.0 KdeSettingsStore.qml
+EffectsStore 1.0 EffectsStore.qml

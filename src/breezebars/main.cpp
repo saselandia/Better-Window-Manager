@@ -51,6 +51,7 @@
 #include "DecoClient.hpp"
 #include "barRemote.hpp"
 #include "KdeShadow.hpp"
+#include "KWinScale.hpp"
 
 extern "C" {
 #include <lua.h>
@@ -779,7 +780,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g_pGlobalState->pReloadedListener  = Event::bus()->m_events.config.reloaded.listen([] { onConfigReloaded(); });
 
     // F7: install negotiation callbacks before attaching decorations.
-    try { initDecorationDetection(); initKdeShadows(); } catch (...) { finishKdeShadows(); closeDecorationDetection(); throw; }
+    try { initDecorationDetection(); initKdeShadows(); initKWinScale(); }
+    catch (...) { finishKWinScale(); finishKdeShadows(); closeDecorationDetection(); throw; }
 
     // add deco to existing windows
     for (auto& w : Desktop::windowState()->windows()) {
@@ -797,6 +799,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 }
 
 APICALL EXPORT void PLUGIN_EXIT() {
+    finishKWinScale();
     finishKdeShadows();
     g_kwinAfterInput.reset();
     stopInnerDwellTimer();

@@ -28,3 +28,9 @@ Continuación R2 (2026-11-12): el host de esta carpeta sigue siendo el lanzador 
 experimental. Ver docs/BREEZE_R2_RESULTS.md antes de cambiar open-settings.sh: faltan páginas
 BWM y alias, por lo que reemplazarlo ahora perdería opciones. No se retira org.bwm.kcm:
 ThemeHost también sirve a las interfaces de sesión y no depende de esta migración.
+
+R7, iteración 2: `DesktopEffects.qml` / `EffectsStore.qml` añaden Efectos de escritorio (`effects`).
+Usan `native-settings.py effects`, el mismo backend que el nuevo `kcm_bwm_effects` nativo, con
+Aplicar/Restablecer/Predeterminados, revisión y lectura posterior. `ModuleView` espera las
+operaciones asíncronas al resolver cambios; `plasmaSettings.qml` también protege el cierre.
+Sólo se ofrecen seis adaptadores implementados, con sus límites en `docs/BREEZE_R7_RESULTS.md`.

@@ -84,3 +84,15 @@ quien presenta sus formularios, sin copiar una lista de opciones a BWM.
 Informe y diferencias por control: `docs/BREEZE_R3_RESULTS.md`. Nueve módulos contando la luz
 nocturna de R2. Compilación/instalación aislada y pruebas pasadas; sin instalación en el prefijo
 real ni cambios de sesión. Los KCM de ventanas fallan con mensaje si no hay Breeze o IPC.
+
+## R7: Efectos de escritorio
+
+Décimo KCM contando luz nocturna: `kcm_bwm_effects`, categoría nativa `desktopbehavior`.
+`settings-native.sh effects` (o `kcm_kwin_effects` / `kcm_animations`) abre este adaptador.
+Mismo controlador `native-settings.py effects` que la página de las Preferencias actuales;
+seis toggles, intensidad de desenfoque, duración/escalas y factor global. Sólo esta página de
+gestores aporta defaults KDE explícitos. Restablecer relee; Predeterminados deja un borrador.
+
+Instalado atómicamente en el prefijo local y descubierto por `systemsettings --list` el
+2026-11-21. Pruebas de persistencia en XDG temporal, sin guardar ajustes de efectos diarios.
+No cambia el lanzador habitual. Límites y verificaciones: `docs/BREEZE_R7_RESULTS.md`.

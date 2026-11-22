@@ -13,6 +13,7 @@ public:
     ManagerModule(QObject *, const KPluginMetaData &, const QStringList &backend);
     void load() override;
     void save() override;
+    void defaults() override;
 private:
     bool request(const QString &, const QJsonObject &, QJsonObject &);
     void populate(const QJsonObject &);
@@ -25,4 +26,6 @@ private:
     QJsonObject m_values;
     QString m_revision;
     QMap<QString, std::function<QJsonValue()>> m_readers;
+    QMap<QString, std::function<void(const QJsonValue &)>> m_writers;
+    QJsonObject m_defaults;
 };

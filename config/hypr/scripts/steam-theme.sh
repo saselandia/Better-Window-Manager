@@ -22,13 +22,18 @@ if [[ $theme == "retro" ]] && grep -Eq '^mode *= *"light"' "$HOME/.local/state/b
   scheme=light
 fi
 
-args=(--color-theme bwm --color-scheme "$scheme" --accent-color theme --extras library/hide-whats-new)
+custom="$HOME/.local/state/bwm/steam/custom.css"
+base_custom="$HOME/.config/hypr/scripts/steam-custom.css"
+: >"$custom"
+[[ -f $base_custom ]] && cat "$base_custom" >"$custom"
+
+args=(--color-theme bwm --color-scheme "$scheme" --accent-color theme
+      --extras library/hide-whats-new --custom-css "$custom")
 if [[ $theme == "retro" ]]; then
   font=$("$HOME/.config/hypr/scripts/font-set.sh" current 2>/dev/null)
-  tui="$HOME/.local/state/bwm/steam/tui.css"
-  printf '* { font-family: "%s", monospace !important; }\n' "${font:-JetBrainsMono Nerd Font}" >"$tui"
+  printf '\n* { font-family: "%s", monospace !important; }\n' "${font:-JetBrainsMono Nerd Font}" >>"$custom"
   args=(--color-theme bwm --color-scheme "$scheme" --accent-color theme
-        --extras library/hide-whats-new general/no-rounded-corners --custom-css "$tui")
+        --extras library/hide-whats-new general/no-rounded-corners --custom-css "$custom")
 fi
 
 if ! (cd "$ADW" && python3 install.py "${args[@]}") >"$HOME/.local/state/bwm/steam/install.log" 2>&1; then

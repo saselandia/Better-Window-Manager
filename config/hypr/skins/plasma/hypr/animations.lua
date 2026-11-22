@@ -14,6 +14,13 @@ hl.config({
     animations = { enabled = factor > 0 },
 })
 
+-- R7: an optional newer breezebars restores KWin's interrupted-entry close policy.
+-- Old plugins keep the native Hyprland fallback.
+if hl.plugin and hl.plugin.breezebars and hl.plugin.breezebars.scale_config then
+    hl.plugin.breezebars.scale_config({enabled = factor > 0 and k.scaleEnabled ~= false,
+        in_scale = k.scaleIn or 0.8})
+end
+
 if factor <= 0 then
     return k
 end
@@ -26,7 +33,8 @@ end
 -- OutCubic: 1 - (1-t)^3  <-> bezier(1/3, 1, 2/3, 1) (idéntica, error 0)
 -- InCubic:  t^3          <-> bezier(1/3, 0, 2/3, 0) (idéntica, error 0)
 -- Linear:   t            <-> bezier(0, 0, 1, 1)
--- OutQuart: 1 - (1-t)^4  <-> bezier(0.25, 1, 0.5, 1)
+-- OutQuart: 1 - (1-t)^4; aproximación cúbica acotada, error máximo < 1/255.
+-- Un Bézier cúbico no representa exactamente este polinomio de grado cuatro.
 -- Slide:    SpringMotion(300 / factor, dampingRatio=1.1) -> muelle nativo de Hyprland
 local slide_stiffness = math.max(1.0, 300.0 / factor)
 local slide_dampening = 2.0 * math.sqrt(slide_stiffness) * 1.1
@@ -34,7 +42,7 @@ local slide_dampening = 2.0 * math.sqrt(slide_stiffness) * 1.1
 hl.curve("kwin_out_cubic", { type = "bezier", points = { { 0.3333, 1.0 }, { 0.6667, 1.0 } } })
 hl.curve("kwin_in_cubic",  { type = "bezier", points = { { 0.3333, 0.0 }, { 0.6667, 0.0 } } })
 hl.curve("kwin_linear",    { type = "bezier", points = { { 0.0, 0.0 },    { 1.0, 1.0 } } })
-hl.curve("kwin_out_quart", { type = "bezier", points = { { 0.25, 1.0 },   { 0.5, 1.0 } } })
+hl.curve("kwin_out_quart", { type = "bezier", points = { { 0.258146, 1.0 }, { 0.488205, 1.0 } } })
 hl.curve("kwin_slide",     { type = "spring", stiffness = slide_stiffness, dampening = slide_dampening, mass = 1 })
 
 -- Abrir / cerrar ventana: plugin «scale» de KWin 6.7.5 (200 ms, InScale/OutScale = 0.8, OutCubic / InCubic)
@@ -56,15 +64,27 @@ hl.animation({ leaf = "fadeOut",       enabled = scale_on, speed = ds(scale_ms),
 local move_on = k.maximizeEnabled ~= false
 hl.animation({ leaf = "windowsMove",   enabled = move_on,  speed = ds(250),      bezier = "kwin_out_cubic" })
 hl.animation({ leaf = "border",        enabled = false,    speed = 1,            bezier = "kwin_linear" })
+-- Hyprland 0.56.2 initializes a newly focused window's dim value to dim_strength
+-- even with dim_inactive=false, then animates it back to zero. Plasma's default
+-- Scale effect must not contain that unrelated dark flash (nor bake it into close).
+hl.animation({ leaf = "fadeDim",       enabled = false,    speed = 1,            bezier = "kwin_linear" })
 
 -- Capas y ventanas emergentes: «slidingpopups» (200 ms, OutCubic) y «fadingpopups» (150 ms Linear / 600 ms OutQuart)
 local layers_on = k.slidingPopupsEnabled ~= false
 local fade_popups_on = k.fadingPopupsEnabled ~= false
-hl.animation({ leaf = "layers",        enabled = layers_on,      speed = ds(200), bezier = "kwin_out_cubic", style = "fade" })
-hl.animation({ leaf = "layersIn",      enabled = layers_on,      speed = ds(200), bezier = "kwin_out_cubic", style = "fade" })
-hl.animation({ leaf = "layersOut",     enabled = layers_on,      speed = ds(200), bezier = "kwin_out_cubic", style = "fade" })
+hl.animation({ leaf = "layers",        enabled = layers_on or fade_popups_on, speed = ds(200), bezier = "kwin_out_cubic", style = "fade" })
+hl.animation({ leaf = "layersIn",      enabled = layers_on or fade_popups_on, speed = ds(200), bezier = "kwin_out_cubic", style = "fade" })
+hl.animation({ leaf = "layersOut",     enabled = layers_on or fade_popups_on, speed = ds(200), bezier = "kwin_out_cubic", style = "fade" })
 hl.animation({ leaf = "fadeLayersIn",  enabled = fade_popups_on, speed = ds(150), bezier = "kwin_linear" })
 hl.animation({ leaf = "fadeLayersOut", enabled = fade_popups_on, speed = ds(600), bezier = "kwin_out_quart" })
+if hl.layer_rule then
+    hl.layer_rule({
+        name = "breeze-sliding-layers",
+        match = { namespace = "^(quickshell:plasmaNotifications|krunner)$" },
+        animation = layers_on and "slide" or (fade_popups_on and "fade" or nil),
+        no_anim = (not layers_on and not fade_popups_on) or nil,
+    })
+end
 
 -- Cambio de escritorio virtual: plugin «slide» de KWin 6.7.5 (SpringMotion nativo, estilo slide)
 local slide_on = k.slideEnabled ~= false

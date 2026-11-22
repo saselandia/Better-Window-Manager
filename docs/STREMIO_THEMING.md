@@ -86,3 +86,9 @@ En Retro, `omarchy/overlays/steam.css` hace que la barra superior use el fondo
 base del tema, como el escritorio. El template compartido conserva la superficie
 elevada para default (end-4) y Breeze (Kde plasma). Esto corrige la diferencia entre `#131a3a` y
 `#060b1e` que se veía en Ethereal.
+
+Además, `config/hypr/scripts/steam-theme.sh` pasa `config/hypr/scripts/steam-custom.css`
+mediante `--custom-css` en todas las skins (en Retro añadiendo después la fuente monoespaciada)
+para restaurar la barra inferior de Steam con el botón «+ Añadir un producto» (y así mantener
+visible el acceso a activar claves sin depender del menú hamburguesa → Productos), manteniendo el
+banner de actualización debajo de la barra superior.

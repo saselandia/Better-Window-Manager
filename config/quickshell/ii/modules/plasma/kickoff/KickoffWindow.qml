@@ -121,6 +121,33 @@ Scope {
                 : win.edge === "bottom" ? win.areaHeight - height - win.distance
                 : clamp(anchorY >= 0 ? anchorY - height / 2 : 0, height, win.areaHeight)
 
+            // R7: KWin slidingpopups slide-in (200 ms OutCubic from panel edge) without altering frame x/y/width/height
+            property real slideProgress: 1
+            transform: Translate {
+                x: (1 - frame.slideProgress) * (win.edge === "left" ? -Kirigami.Units.gridUnit : win.edge === "right" ? Kirigami.Units.gridUnit : 0)
+                y: (1 - frame.slideProgress) * (win.edge === "top" ? -Kirigami.Units.gridUnit : win.edge === "bottom" ? Kirigami.Units.gridUnit : 0)
+            }
+            NumberAnimation {
+                id: kickoffSlideIn
+                target: frame
+                property: "slideProgress"
+                from: 0; to: 1
+                duration: Kirigami.Units.longDuration
+                easing.type: Easing.OutCubic
+            }
+            Connections {
+                target: root
+                function onOpenedChanged() {
+                    if (root.opened && Kirigami.Units.longDuration > 0) {
+                        frame.slideProgress = 0;
+                        kickoffSlideIn.restart();
+                    } else {
+                        kickoffSlideIn.stop();
+                        frame.slideProgress = 1;
+                    }
+                }
+            }
+
             // Que los clics dentro no cierren
             MouseArea {
                 anchors.fill: parent

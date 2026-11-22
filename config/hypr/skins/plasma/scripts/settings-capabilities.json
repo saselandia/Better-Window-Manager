@@ -73,9 +73,9 @@
         "AnimationDurationFactor"
       ],
       "owner": "KDE",
-      "consumer": "kwin.lua + KDE components",
-      "status": "duration-only",
-      "effects": "R7"
+      "consumer": "animations.lua + KDE components",
+      "status": "adapter",
+      "kcm": "kcm_bwm_effects"
     },
     {
       "file": "kcminputrc",
@@ -261,6 +261,46 @@
       "owner": "KDE",
       "consumer": "Qt/KDE applications and interface-theme.py",
       "status": "native-applications-subset"
+    },
+    {
+      "file": "kwinrc",
+      "group": "Plugins",
+      "keys": [
+        "blurEnabled",
+        "scaleEnabled",
+        "maximizeEnabled",
+        "slideEnabled",
+        "fadingpopupsEnabled",
+        "slidingpopupsEnabled"
+      ],
+      "owner": "KDE",
+      "consumer": "kwin.lua / animations.lua",
+      "status": "adapter",
+      "kcm": "kcm_bwm_effects"
+    },
+    {
+      "file": "kwinrc",
+      "group": "Effect-blur",
+      "keys": [
+        "BlurStrength"
+      ],
+      "owner": "KDE",
+      "consumer": "kwin.lua decoration.blur",
+      "status": "approximation",
+      "detail": "Dual Kawase mapping; NoiseStrength and Saturation are not exposed."
+    },
+    {
+      "file": "kwinrc",
+      "group": "Effect-scale",
+      "keys": [
+        "Duration",
+        "InScale",
+        "OutScale"
+      ],
+      "owner": "KDE",
+      "consumer": "animations.lua windowsIn/Out and fadeIn/Out",
+      "status": "adapter",
+      "detail": "Duration=0 uses 200 ms; scale is rounded to integer percent."
     }
   ],
   "service_contracts": [
@@ -323,7 +363,22 @@
       "preserve_unknown": true
     },
     "capability_rule": "Only an implemented BWM renderer can advertise supported=true; installed KWin metadata is discovery, not capability.",
-    "supported_effects": [],
-    "kcm": "R7 must expose only supported capabilities, with load/save/defaults and readback. No KWin D-Bus impersonation."
+    "supported_effects": [
+      "blur",
+      "scale",
+      "maximize",
+      "slide",
+      "fadingpopups",
+      "slidingpopups"
+    ],
+    "kcm": "kcm_bwm_effects: load/save/defaults, optimistic revision and readback; same backend in active Breeze settings. No KWin D-Bus impersonation.",
+    "limitations": {
+      "blur": "Hyprland Dual Kawase mapping; no KDE noise or saturation.",
+      "maximize": "Hyprland windowsMove; no snapshot crossfade, also affects moving/resizing.",
+      "slidingpopups": "Hyprland layersIn/Out currently use fade style, not native KWin slide geometry.",
+      "fadingpopups": "Hyprland layer opacity, not individual KWin popup classification.",
+      "scale": "Integer percent scale, not all KWin window eligibility rules.",
+      "slide": "Native Hyprland spring; frame comparison pending."
+    }
   }
 }

@@ -21,7 +21,15 @@ import "modules/plasma/settings"
 QQC2.ApplicationWindow {
     id: root
     visible: true
-    onClosing: Qt.quit()
+    property bool resolvedClose: false
+    onClosing: event => {
+        if (!resolvedClose && SettingsState.unsavedChanges && SettingsState.askBeforeLeaving) {
+            event.accepted = false;
+            SettingsState.askBeforeLeaving(() => { root.resolvedClose = true; root.close(); });
+            return;
+        }
+        Qt.quit();
+    }
     title: SettingsState.spanish ? "Preferencias del sistema" : "System Settings"
     minimumWidth: Kirigami.Units.gridUnit * 40
     minimumHeight: Kirigami.Units.gridUnit * 28

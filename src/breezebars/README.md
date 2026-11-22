@@ -269,3 +269,27 @@ nativo y la ruta existente de release/snapping lo termina. Cancel sólo afecta a
 Se compensa el mensaje anunciado pero no manejado por XWM.cpp de Hyprland 0.56.2.
 No se fuerzan barras a clientes CSD ni se usa una lista de clases. El binario nuevo requiere
 reiniciar sesión; nunca plugin unload/load. Evidencia y pruebas en docs/BREEZE_PANEL_FIXES.md.
+
+## R7: entrada y cierre durante la apertura
+
+`KWinScale.cpp` usa `window.openLate` para recordar débilmente ventana/PID, monitor, workspace
+y geometría objetivo mientras dura la entrada nativa. En `window.close`, antes de
+`makeSnapshotFB`, restaura el tamaño/posición objetivo y alfa de entrada completa, como
+`ScaleEffect.slotWindowClosed` de KWin 6.7.5. El cierre y su textura siguen perteneciendo a
+`CWindowFadeout` de Hyprland. No sustituye relojes/callbacks ni modifica geometría por frame.
+
+Sólo con `scale_config({enabled=…, in_scale=…})` desde el animations.lua de Breeze. Respeta
+no_anim, estilos/curvas propios, efectos desactivados, fullscreen y workspaces especiales;
+un resize, cambio de monitor/workspace o recarga cancela la intervención. La ventana sigue
+siendo de Hyprland; el plugin conserva sólo referencias débiles (máximo 256 entradas).
+`breezebars-scale` devuelve contadores; `trace=true` añade hasta 512 registros en memoria,
+sin títulos ni contenido, E/S de archivos, IPC adicional ni esperas en callbacks.
+
+El aparente desacoplamiento entre escala y alfa medido inicialmente procedía del dim de
+entrada de Hyprland: mapWindow pone dim_strength incluso con dim_inactive=false. Breeze
+desactiva `fadeDim`; el muestreo del color sólo equivale a alfa en ausencia de ese tinte.
+La traza distingue ambos valores. No se compensa esta diferencia alterando speed o geometría.
+
+Ensayos y límites en `docs/BREEZE_R7_RESULTS.md`; `check-r7-animations.py --module` carga
+únicamente un candidato separado en el compositor hijo, antes de clientes. El plugin diario
+se despliega sólo mediante make install atómico y entra en vigor al iniciar sesión de nuevo.

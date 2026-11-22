@@ -29,6 +29,9 @@ class ShadowPolicyTest(unittest.TestCase):
             for _, ns in ipairs({ "plasmaPanel", "plasmaKickoff", "plasmaNotifications", "altTab", "plasmaMenu", "bwm-plasma-osd", "krunner" }) do
                 assert(blur.match.namespace:find(ns, 1, true), "breeze-blur-frames missing " .. ns)
             end
+            local static = assert(layers["breeze-static-layers"], "breeze-static-layers layer rule missing")
+            assert(static.no_anim == true)
+            assert(static.match.namespace:find("plasmaDesktop", 1, true) and static.match.namespace:find("plasmaOutline", 1, true))
         '''
         result = subprocess.run(["lua", "-"], input=prelude + path.read_text() + assertions,
                                 text=True, capture_output=True)

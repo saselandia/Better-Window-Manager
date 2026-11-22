@@ -173,7 +173,7 @@ siendo el nombre del escritorio original que imita Breeze.
 | Bloqueo / pantalla de inicio de cada skin | `modules/ii/lock/Lock.qml` elige: `lock/LockSurface.qml` (end-4, el desenfoque lo pinta `background/Background.qml` y necesita `session_lock_xray` de `skins/default/hypr/lock.lua`), `omarchyLock/` (Omarchy 4, Retro), `modules/plasma/lock` (KScreenLocker/Breeze, con LockContext común); SDDM común entra solo (`install-boot-theme.sh`) |
 | Apagar, reiniciar, cerrar sesión, suspender | `config/hypr/scripts/bwm-power <acción> [--dry-run]` (común a todas las skins); los menús de cada skin sólo lo llaman |
 | Animaciones (ventanas, workspaces, menús/capas, fondo) | `config/hypr/skins/<id>/hypr/animations.lua` (copia de las del original); fondo: `modules/ii/background` (default (end-4)), `modules/ii/omarchyBackground` (Retro, vía `set-wallpaper.sh`) |
-| Temas web de Stremio / barra de Steam | `scripts/stremio-theme.py`, `scripts/stremio-theme.cjs`, `scripts/steam-theme.sh`, `hypr/omarchy/overlays/steam.css`; alcance en `docs/STREMIO_THEMING.md` |
+| Temas web de Stremio / barra de Steam | `scripts/stremio-theme.py`, `scripts/stremio-theme.cjs`, `scripts/steam-theme.sh`, `scripts/steam-custom.css`, `hypr/omarchy/overlays/steam.css`; alcance en `docs/STREMIO_THEMING.md` |
 | Inactividad (salvapantallas, apagar monitores, bloqueo, suspender) | `modules/ii/idle/BwmIdle.qml` (común) con `idle.screensaver/screensaverTime/screen/lock/suspend` comunes a todas las skins; página Ajustes → Inactividad (`modules/settings/IdleConfig.qml`, también en el menú de Retro); salvapantallas sólo en Retro (`skins/retro/scripts/launch-screensaver.sh`: el nativo de Omarchy si se compiló con `install-screensaver.sh`, si no el de terminal); opciones de Hyprland propias de una skin en `skins/<id>/hypr/misc.lua` |
 | Actualizaciones de Gentoo / Flatpak | `BWM_CONTEXT.md` §2.7; shims `omarchy-update` y `omarchy-update-available` |
 | Reiniciar una app conservando sus ventanas | `bwm_omarchy.restart_app()` (Firefox, Vesktop, Steam, Stremio) + `scripts/bwm_windows.py` (`quiet_activation`: sin `focus_on_activate` mientras se reinicia, o te lleva a su workspace) |
@@ -272,6 +272,13 @@ siendo el nombre del escritorio original que imita Breeze.
   `Desktop::windowState()`, `CViewHitTester`, `Fullscreen::controller()`, `Animation::mgr()`), portéalo con el
   diff del hyprbars oficial entre los commits que fija `hyprpm.toml` de hyprwm/hyprland-plugins.
 - **Pantalla completa**: `modules/fullscreen.lua` (cargado el último de las reglas) la deja sin bordes ni sombra, sin quitar la transparencia; un CSS nuevo para una app debe anular sus bordes/contornos en `:fullscreen` (Discord re-declara variables en `.theme-dark`: hay que ponerlas también ahí).
+- **Animaciones Breeze (R7):** Hyprland 0.56.2 inicializa `m_dimPercent` con `dim_strength` al
+  mapear una ventana enfocada incluso con `dim_inactive=false`. Breeze desactiva `fadeDim` para
+  evitar ese flash oscuro: no confundir una diferencia de brillo con alfa desincronizado al medir
+  capturas. `KWinScale.cpp` sólo restaura escala/alfa completas al cerrar durante la entrada,
+  antes del snapshot nativo; respeta reglas/efectos desactivados, resize, fullscreen y recargas.
+  Nunca reemplaza relojes/callbacks de Hyprland. Nuevo C++ requiere instalación atómica y próxima
+  sesión; no cargarlo en caliente en el compositor diario.
 - **Host Plasma, superficies y escala:** al recrear una superficie de `DesktopViewHost`, usar
   `QWindow::destroy()` cualificado: `PlasmaQuick::ContainmentView::destroy()` elimina el anfitrión.
   Las vistas interactivas R5 cargan el marco de configuración instalado; el arnés reducido es de

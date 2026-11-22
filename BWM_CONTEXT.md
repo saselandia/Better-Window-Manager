@@ -80,7 +80,7 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 | Vesktop | `themes/bwm.theme.css` «BWM Material You» | «BWM Breeze Dark» | «BWM Omarchy TUI» | Sí (escrito en el mismo inodo) |
 | Firefox | userChrome + Pywalfox | igual | + capa TUI | Colores en vivo, sin reiniciar (Pywalfox, variables de Firefox 13x+, §3.82–3.83); la forma de la capa TUI (fuente mono, esquinas) con un reinicio automático al entrar o salir de Retro (§3.85) |
 | Spotify | Spicetify MaterialYou | Breeze | `BWM-Omarchy` | Reinicio automático en su sitio |
-| Steam (cliente/biblioteca, no Tienda/Comunidad web) | Adwaita-for-Steam `bwm` | igual | + esquinas rectas, mono y barra con fondo base (`overlays/steam.css`) | Reinicio automático al acabar el cambio de skin o de tema (no con un juego abierto; vuelve a la bandeja si estaba ahí), §3.82 |
+| Steam (cliente/biblioteca, no Tienda/Comunidad web) | Adwaita-for-Steam `bwm` + barra inferior (`steam-custom.css`) | igual | + esquinas rectas, mono y barra con fondo base (`overlays/steam.css`) | Reinicio automático al acabar el cambio de tema (no en cambios de skin ni con un juego abierto; vuelve a la bandeja si estaba ahí), §3.82, §3.339 |
 | btop, swaync, rofi, Pywalfox, iconos (`icons.theme` o Adwaita en Retro, §3.319) | sí | sí | sí | — |
 | Stremio Linux Flatpak | paleta matugen | Breeze | paleta Omarchy + TUI | Web en vivo mediante `stremio-theme.cjs`; marco GTK al abrir |
 | Omacalc (§3.112) | paleta dinámica matugen/end-4 | Breeze | colores nativos del tema estático o dinámico | Sí, sin reiniciar ni perder el cálculo (`matugen/templates/omacalc-colors.toml`) |
@@ -164,6 +164,31 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   nativo `spring:kwin_slide` `k=300/factor, ζ=1.1`); corregido el bug invertido de `AnimationDurationFactor`
   (`speed` medido en `libhyprutils`: 1.0 = 100 ms, proporcional al factor) y eliminados `md3_*` y
   `popin 60%`. Ver `docs/BREEZE_R7_RESULTS.md`.
+* **R7, iteración 2 (2026-11-21, §336):** Efectos de escritorio en Preferencias (`effects`) y
+  `kcm_bwm_effects` instalado en systemsettings nativo experimental. Mismo backend R3: seis
+  toggles implementados, intensidad del desenfoque, duración/escalas y factor; Aplicar,
+  Restablecer y Predeterminados, revisión/relectura y errores con borrador conservado.
+  `slidingpopups` controla por ahora capas con `fade`, no desplazamiento KDE; límites explícitos
+  en capacidades/informe. Pruebas en XDG temporal y carga Wayland; sin cambiar efectos diarios.
+  R7 sigue abierta por comparación temporal y transformaciones pendientes.
+* **R7, iteración 3 (2026-11-21, §337):** comparación temporal real KWin 6.7.5/Hyprland 0.56.2:
+  2.719 frames (factor 1/2/0), abrir/cerrar/maximizar/restaurar y cierre durante apertura. Factor 0
+  sin estados intermedios de opacidad observados; diferencia de color inicialmente atribuida a
+  escala/alfa (rectificada en §338: dim inicial del arnés) y cancelación de cierre distinta. OutQuart mejorada con cota matemática
+  <1/255, sin certificar aún popups. JSON/lámina en `docs/BREEZE_R7_*`; R7 sigue abierta. Sólo la
+  curva se recargó en diario, sin plugins ni preferencias cambiadas.
+* **R7, iteración 4 (2026-11-21, §338):** eliminado el dim inicial de Breeze con `fadeDim=false`,
+  activo en diario. `KWinScale.cpp` restaura escala/alfa completas al cerrar durante entrada,
+  sin reemplazar relojes. Candidato probado: 2.701 frames sin decoración + 1.401 con KDecoration,
+  ocho guardas y 46 pruebas. Quedan residuos (3,0625 px > 3 px y tres ajustes temporales fuera
+  de margen), sin paridad exacta. Plugin instalado atómicamente; **C++ pendiente de próximo
+  inicio de sesión**, antiguo aún cargado. Sin hot load/reinicio/commit/push. Informe R7.
+* **R7, iteración 5 (2026-11-22, §340):** validado `breezebars-scale` en la sesión diaria tras
+  reiniciar (`resetOnClose: 0 → 1`, `tracked: 0`); comparación numérica de ida y reversión (120 ms)
+  de `KWin::SpringMotion` (RK4 100 Hz) frente a `SSpringCurve`; clasificación de capas
+  (`breeze-static-layers` con `no_anim` en `plasmaDesktop`/`plasmaOutline` y `breeze-sliding-layers`
+  con `slide` en `plasmaNotifications`/`krunner`) y transiciones de 200 ms `OutCubic` en `Panel.qml`
+  (flotante ↔ acoplado) y `KickoffWindow.qml`. 51/51 pruebas en verde.
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -6109,3 +6134,144 @@ git status; git log --oneline -5; git push origin main
   `tests/test_plasma_shadow_policy.py` 3/3.
 * **Pendiente:** comparación temporal por fotogramas frente a Plasma 6.7.5, evaluar `squash` /
   minimizado hacia tarea y página de efectos habilitados en Preferencias (sólo los soportados).
+
+### 336. Breeze R7, iteración 2: preferencias de efectos y KCM nativo (2026-11-21)
+
+* **Petición:** continuar donde lo dejó Gemini, con la página de Efectos de escritorio.
+* **Hecho:** `native-settings.py effects` comparte el contrato R3 con la página activa
+  `DesktopEffects.qml`/`EffectsStore.qml` y el nuevo `kcm_bwm_effects`. Once controles: seis
+  interruptores (`blur`, `scale`, `maximize`, `slide`, `fadingpopups`, `slidingpopups`), intensidad,
+  duración/escalas y factor global. Claves KDE reales, validación de lote/revisión, escritura
+  conservadora/notificación, reconciliación y lectura posterior. Default nativo de escala
+  `Duration=0` conservado como «automático», distinto del 200 ms efectivo.
+* **Interfaz:** Aplicar/Restablecer/Predeterminados; defaults sólo en esquemas que los declaran.
+  Factor con cuatro decimales en QWidget. `ModuleView` espera guardado asíncrono antes de navegar
+  y conserva borrador/página tras error; `plasmaSettings.qml` protege también el cierre pendiente.
+  Alias `effects`/`kcm_kwin_effects`/`kcm_bwm_effects`/`kcm_animations`; el lanzador diario no cambia.
+* **Capacidades:** seis adaptadores con límites en `settings-capabilities.json`; no se expone
+  ruido/saturación, minimizado hacia tarea ni catálogo KWin completo. Capas de `slidingpopups`
+  usan todavía `fade`, maximizar usa `windowsMove` sin cross-fade y popups no tienen clasificación
+  individual KWin. No se cambian curvas ni otras skins. Sin nuevas dependencias.
+* **Comprobado:** R7 8/8 (QML offscreen, backend real con IPC sustituido en XDG temporal,
+  guardar/releer/defaults/restablecer/error y navegación), R3 10/10, puente KDE 22/22, política de
+  sombras 3/3, catálogo 3/3 y CTest 3/3. Carga Wayland de effects/alias/behavior en `qs -p` aparte
+  en workspace 9 sin foco inicial; regla retirada con reload y configerrors vacío. Lectura real
+  del backend: once controles. Instalación KCM atómica con `cmake --install`; SHA-256 del módulo
+  instalado igual al build y `settings-native.sh --list` lo descubre.
+* **Límites:** sin guardar valores de efectos del usuario en las pruebas ni reiniciar shell,
+  compositor o sesión. Comparación temporal, geometría de capas, `kwin_out_quart`, `squash` y
+  cross-fade siguen pendientes; R7 abierta. Informe `docs/BREEZE_R7_RESULTS.md`. Sin commit/push.
+  Los dos config*.json ya estaban modificados al empezar y se conservaron.
+
+### 337. Breeze R7, iteración 3: muestreo temporal real y corrección de OutQuart (2026-11-21)
+
+* **Petición:** continuar tras la página de efectos, con la comparación temporal pendiente.
+* **Hecho:** `tests/r7_animation_client.cpp` y `src/breezebars/check-r7-animations.py`: escena Qt
+  idéntica sin decoración (300×200 en 800×600), clientes con raíces/bus privados y comprobación
+  del peer compositor por PID/UID; Hyprland anidado en salida temporal y KWin virtual. Mismo
+  animations.lua de producción, sin cargar plugins. Screencopy SHM persistente con tiempo
+  ready comprobado; KWin ScreenShot2 con bracket de petición/respuesta y punto medio. Cadencia
+  de muestreo no equivale a FPS presentados; duración y fase ajustadas por separado.
+* **Comprobado:** 2.719 muestras, KWin 6.7.5 / Hyprland 0.56.2 × factores 1/2/0: abrir, maximizar,
+  restaurar, cerrar y cerrar tras 50 ms de apertura. Factor 0 sin opacidad intermedia observada.
+  Maximizado/restauración BWM ~249/499–501 ms; KWin ~262–264/526–535 ms bajo esta captura virtual.
+  Tolerancia temporal declarada ~33,3 ms (dos intervalos), sin prometer equivalencia exacta.
+* **Diferencias:** escala/alfa del mismo frame, tolerancia 3 px: KWin ≤1,41 px, BWM hasta 10,56 px.
+  Cierre durante apertura: KWin vuelve a opacidad/escala completas, BWM continúa el estado parcial
+  (primeros 30 ms: alfa máxima 0,242/0,078 con factores 1/2, frente a 1 en KWin). No se falsea
+  igualdad cambiando speed para compensar planificación. Capturas/JSON en
+  `docs/BREEZE_R7_ANIMATION_RESULTS.json` y `docs/BREEZE_R7_OPEN_FRAMES.png`.
+* **Corregido:** Bézier OutQuart `(0.25,1)/(0.5,1)` tenía error matemático 0,00561944; nueva
+  `(0.258146,1)/(0.488205,1)` ~0,003167, cota entre muestras <0,003396 <1/255. Sigue siendo
+  aproximación, sin certificar renderer de popups ni interpolación interna de libhyprutils.
+  `hyprctl reload`/configerrors vacío en diario. Sin tocar otras skins ni valores KDE del usuario.
+* **Pruebas:** nuevas numéricas/análisis 3/3 (incluye cota de derivada y cuantización), puente
+  KDE 22/22, política de sombras 3/3, efectos R7 8/8 QML incluido y adaptadores R3 10/10.
+  Sin cambios C++ de KCM, por lo que no se repitió CTest. Sin nuevas dependencias de escritorio.
+* **Sesión:** matriz final sólo difería en puntero tras restaurar foco; foco/PID, plugins,
+  workspaces, salidas físicas y reservas iguales. Restauración adicional de puntero después
+  del foco; ensayo posterior Hyprland/factor 0, 404 frames, sesión íntegra. No extrapolar ese
+  resultado retrospectivamente a la matriz. Sin procesos/salidas residuales ni reinicio diario.
+* **Pendiente:** sincronización/cancelación con solución de compositor aislada; muelle y gestos
+  de escritorios, popups/desplazamiento, minimizado hacia tarea, cross-fade, foco/sombra y QML
+  de las interfaces. Informe `docs/BREEZE_R7_RESULTS.md`; no se certifica Plasma completo ni
+  coste/FPS diarios. Sin commit/push. Se conservaron todos los cambios de §336 y los generados
+  ajenos (`config*.json`, `persistent_rules.*`).
+
+
+### 338. Breeze R7, iteración 4: dim inicial y cierre durante entrada (2026-11-21)
+
+* **Rectificación de §337:** `mapWindow` de Hyprland 0.56.2 aplica `dim_strength` al inicio
+  incluso con `dim_inactive=false`; contraste RGB bajo dim no equivale a alfa. El arnés anterior
+  heredaba 0,5 frente a 0,05 de BWM. No demuestra por sí solo un fallo de relojes de animación.
+* **Hecho:** Breeze `fadeDim=false` (recarga diaria verificada). `KWinScale.cpp` sigue entradas
+  por referencia débil/PID, monitor/workspace y objetivos; restaura escala/alfa completas sólo
+  al cerrar durante la entrada, antes del snapshot nativo. No reemplaza relojes/callbacks ni
+  escribe geometría por frame. Reglas propias, no_anim, efectos off, resize/fullscreen,
+  cambio de workspace/monitor y reload conservan su autoridad. Documentación AGENTS/CLAUDE igual.
+* **Comprobado:** matriz final 2.701 frames sin marco y 1.401 con KDecoration, KWin 6.7.5 /
+  Hyprland 0.56.2. Cierre precoz alcanza alfa 1 en ambos. Ocho guardas sin reset indebido ni
+  entradas cerradas retenidas. 46/46 pruebas (numéricas, efectos/QML, R3, puente y sombras).
+  Plugin completo `-fno-gnu-unique`, sin UNIQUE, cargado sólo en compositores aislados.
+* **Límites:** máximo BWM factor 2 sin marco 3,0625 px > tolerancia conservada 3 px; tres
+  ajustes temporales fuera de los márgenes declarados. Temporizador pedido 5 ms mide realmente
+  15,031529 ms con un render intermedio: no afirmar cierre antes del primer render. Matrices y
+  ensayo corto conservan sesión; guarda reload sólo difiere en cursor. Sin certificar paridad,
+  placement, coste/FPS diario ni todo Plasma. Evidencias `docs/BREEZE_R7_SCALE_*.json/png`.
+* **Despliegue:** `make install` atómico; SHA-256 del candidato/archivo diario
+  `103fab72be07684be362d6124705e8d346cf9b716a3e63e0473ec09e928a383d`.
+  El plugin antiguo sigue cargado (`breezebars-scale`: unknown request). Nuevo C++ sólo tras
+  salir/entrar; no se hizo hot unload/load ni logout/reinicio de shell/compositor. Lua sí activa.
+* **Pendiente:** validar próximo inicio diario, residuos temporales, slide/gestos, popups,
+  minimizado hacia tarea, cross-fade, foco/sombras y QML de interfaces. R7 abierta. Sin nuevas
+  dependencias, commit ni push. Cambios anteriores/config*.json/persistent_rules.* conservados.
+
+
+### 339. Steam (Adwaita-for-Steam): restaurar barra inferior y botón «Añadir un producto» (2026-11-22)
+
+* **Petición:** el usuario planteó quitar la personalización de Steam porque no veía la opción
+  de agregar un juego con clave; al revisar `~/.local/share/steam-adwaita/adwaita/css/main/headerbar/`
+  (`headerbar.css` y `menu.css`) se vio que Adwaita-for-Steam oculta `div._2foCkpRXhqq0UGVE50BWqj`
+  («Añadir un producto») y colapsa la barra inferior `div._3vCzSrrXZzZjVJFZNg9SGu` a altura 0,
+  replegando «Productos → Activar un producto» dentro del botón hamburguesa. El usuario eligió
+  conservar Adwaita-for-Steam y volver a mostrar la barra inferior / botón por CSS.
+* **Hecho:** nuevo `config/hypr/scripts/steam-custom.css` con mayor especificidad que
+  `headerbar.css` (`html body.DesktopUI ...`, dado que `gamerecording.css` importa `main.min.css`
+  sin `config.css`): usa `display: contents` en `div._1_yS5UP7el0aN4vntx3dx` para mantener el
+  banner de actualización en `order: 2` y colocar `div._3vCzSrrXZzZjVJFZNg9SGu` en `order: 4`
+  (36 px de alto, fondo `--adw-headerbar-bg`, borde `--adw-headerbar-shade`), restaurando
+  `div._2foCkpRXhqq0UGVE50BWqj` con el estilo y radios/fuentes del tema.
+* **Despliegue:** `config/hypr/scripts/steam-theme.sh` genera `~/.local/state/bwm/steam/custom.css`
+  y pasa `--custom-css` en todas las skins (en `retro` añade al final la fuente monoespaciada del
+  sistema). Documentación actualizada en `docs/STREMIO_THEMING.md`, `AGENTS.md`, `CLAUDE.md` y
+  §2.2.
+* **Comprobado:** `steam-theme.sh` ejecutado sobre la sesión en `plasma`: `install.log` sin errores,
+  `~/.local/share/Steam/steamui/adwaita/{config,custom}.css` con la importación y reglas nuevas, y
+  Steam reiniciado en el workspace 2 (`[373, 837]`, `1728×1229`); pruebas `tests/test_steam_restart.py`
+  (6/6 OK). **Pendiente:** confirmación visual del usuario en Steam al pasar al workspace 2.
+
+### 340. Breeze R7, iteración 5: validación en vivo de `breezebars-scale`, muelle/reversión de `slide`, clasificación de capas y QML (2026-11-22)
+
+* **Petición:** continuar con R7 tras las iteraciones 2–4 y el reinicio de sesión.
+* **Hecho:**
+  * Validado en vivo `hyprctl -j breezebars-scale` en la sesión diaria (`version: 1, enabled: true`):
+    al cerrar una ventana de prueba en el workspace 10 a los ~20 ms de mapearse, `resetOnClose`
+    pasa de `0` a `1` y `tracked` vuelve a `0`.
+  * Comparado `KWin::SpringMotion::integrate` (RK4 a 100 Hz con `.dp = state.velocity`, que añade
+    un retardo Euler de ~`dt/2 = 5 ms` en posición) frente a la EDO continua de `SSpringCurve`
+    (`stiffness = 300/factor, dampening = 2√k·1.1, mass = 1`) en ida y reversión a mitad de trayecto
+    (120 ms) para factores 0,5/1/2 (`test_r7_animation_measurement.py`).
+  * `config/hypr/skins/plasma/hypr/rules.lua`: `breeze-static-layers` (`no_anim = true` en
+    `quickshell:(plasmaDesktop|plasmaOutline)`) evita que la guía de snapping tarde 600 ms en
+    desvanecerse al soltar una ventana.
+  * `config/hypr/skins/plasma/hypr/animations.lua`: `breeze-sliding-layers` aplica
+    `animation = "slide"` a `quickshell:plasmaNotifications` y `krunner` cuando
+    `slidingPopupsEnabled` está activo (con caída a `"fade"` o `no_anim = true`).
+  * `config/quickshell/ii/modules/plasma/panel/Panel.qml` y
+    `config/quickshell/ii/modules/plasma/kickoff/KickoffWindow.qml`: transición de 200 ms `OutCubic`
+    (`Kirigami.Units.longDuration`) en el cambio flotante ↔ acoplado del panel y deslizamiento de
+    entrada `Translate` desde el borde del panel en Kickoff.
+* **Comprobado:** `hyprctl reload` y `hyprctl configerrors` vacío; **51/51** pruebas en verde
+  (`test_r7_animation_measurement` 4/4, `test_r7_effects` 8/8, `test_r3_native_settings` 10/10,
+  `test_kde_config_bridge` 22/22, `test_plasma_shadow_policy` 3/3, `test_plasma_panel_native` 4/4).
+

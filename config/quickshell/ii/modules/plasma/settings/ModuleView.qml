@@ -16,7 +16,8 @@ Item {
     id: view
     required property real headerHeight
     readonly property var entry: SettingsState.current ? SettingsState.current.entry : null
-    readonly property var kcm: entry && entry.kind === "kcm" && contentLoader.item ? contentLoader.item.kcm : null
+    readonly property var kcm: contentLoader.item && "kcm" in contentLoader.item ? contentLoader.item.kcm : null
+    readonly property bool busy: !!(kcm && "busy" in kcm && kcm.busy)
     readonly property int buttons: kcm ? kcm.buttons : 0
 
     Kirigami.Theme.colorSet: Kirigami.Theme.Window
@@ -26,10 +27,32 @@ Item {
     Binding {
         target: SettingsState
         property: "unsavedChanges"
-        value: !!(view.kcm && view.kcm.needsSave)
+        value: !!(view.kcm && (view.kcm.needsSave || view.busy))
     }
     property var afterResolve: null
-    function askBeforeLeaving(next) { view.afterResolve = next; unsavedDialog.open(); }
+    property bool resolvingChanges: false
+    function finishResolve() {
+        if (!resolvingChanges) return;
+        resolvingChanges = false;
+        const next = afterResolve;
+        afterResolve = null;
+        if (next) next();
+    }
+    Connections {
+        target: view.kcm
+        ignoreUnknownSignals: true
+        function onNeedsSaveChanged() {
+            Qt.callLater(() => { if (view.kcm && !view.kcm.needsSave && !view.busy) view.finishResolve(); });
+        }
+        function onBusyChanged() {
+            if (!view.busy && view.resolvingChanges && !view.kcm.needsSave) Qt.callLater(view.finishResolve);
+            else if (!view.busy && view.resolvingChanges) {
+                view.resolvingChanges = false;
+                view.afterResolve = null;
+            }
+        }
+    }
+    function askBeforeLeaving(next) { if (!view.busy) { view.afterResolve = next; unsavedDialog.open(); } }
     Component.onCompleted: SettingsState.askBeforeLeaving = view.askBeforeLeaving
 
     Binding {
@@ -114,7 +137,7 @@ Item {
                 }
                 QQC2.Button {
                     visible: (view.buttons & 2) !== 0
-                    enabled: view.kcm && !view.kcm.representsDefaults
+                    enabled: view.kcm && !view.busy && !view.kcm.representsDefaults
                     icon.name: "kt-restore-defaults"
                     text: SettingsState.spanish ? "Predeterminados" : "Defaults"
                     onClicked: view.kcm.defaults()
@@ -122,7 +145,7 @@ Item {
                 Item { Layout.fillWidth: true }
                 QQC2.Button {
                     visible: (view.buttons & 4) !== 0
-                    enabled: view.kcm && view.kcm.needsSave
+                    enabled: view.kcm && !view.busy && view.kcm.needsSave
                     icon.name: "edit-undo"
                     text: SettingsState.spanish ? "Restablecer" : "Reset"
                     QQC2.ToolTip.text: SettingsI18n.i18n("Reset all current changes to previous values")
@@ -131,7 +154,7 @@ Item {
                 }
                 QQC2.Button {
                     visible: (view.buttons & 4) !== 0
-                    enabled: view.kcm && view.kcm.needsSave
+                    enabled: view.kcm && !view.busy && view.kcm.needsSave
                     icon.name: "dialog-ok-apply"
                     text: SettingsState.spanish ? "Aplicar" : "Apply"
                     onClicked: view.kcm.save()
@@ -142,10 +165,17 @@ Item {
 
     Kirigami.PromptDialog {
         id: unsavedDialog
+        objectName: "unsavedChangesDialog"
         title: SettingsI18n.i18n("Apply Settings")
         subtitle: SettingsI18n.i18n("The current page has unsaved changes.\nApply the changes or discard them?")
         standardButtons: Kirigami.Dialog.Apply | Kirigami.Dialog.Discard | Kirigami.Dialog.Cancel
-        onApplied: { view.kcm.save(); close(); const n = view.afterResolve; view.afterResolve = null; if (n) n(); }
+        onApplied: {
+            close();
+            view.resolvingChanges = true;
+            view.kcm.save();
+            if (!view.kcm.needsSave) view.finishResolve();
+            else if (!view.busy) { view.resolvingChanges = false; view.afterResolve = null; }
+        }
         onDiscarded: { view.kcm.load(); close(); const n = view.afterResolve; view.afterResolve = null; if (n) n(); }
         onRejected: view.afterResolve = null
     }

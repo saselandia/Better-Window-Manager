@@ -1,0 +1,12 @@
+{
+  "KPlugin": {
+    "Name": "Desktop Effects",
+    "Name[es]": "Efectos de escritorio",
+    "Description": "Desktop effects supported by Breeze on Hyprland",
+    "Description[es]": "Efectos de escritorio disponibles en Breeze sobre Hyprland",
+    "Icon": "preferences-desktop-effects",
+    "License": "GPL-2.0-or-later"
+  },
+  "X-KDE-System-Settings-Parent-Category": "desktopbehavior",
+  "X-BWM-Category": "effects"
+}

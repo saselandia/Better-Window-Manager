@@ -9,6 +9,7 @@ bwm_settings_profile="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../settings-pro
 export XDG_CONFIG_DIRS="$bwm_settings_profile:${XDG_CONFIG_DIRS:-/etc/xdg}"
 # Opening a shared alias always selects its functional BWM replacement.
 case "${1:-}" in
+    effects|kcm_kwin_effects|kcm_kwin_effects_x11|kcm_animations|kcm_animations_x11) shift; set -- kcm_bwm_effects "$@" ;;
     kcm_kwinoptions) shift; set -- kcm_bwm_windows "$@" ;;
     kcm_kscreen) shift; set -- kcm_bwm_screens "$@" ;;
     kcm_kwin_virtualdesktops) shift; set -- kcm_bwm_workspaces "$@" ;;

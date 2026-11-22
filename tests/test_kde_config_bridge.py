@@ -342,17 +342,21 @@ class BridgeTest(unittest.TestCase):
         self.assertNotIn("popin 60%", anim_lua.read_text())
         self.assertNotIn("md3_", kwin_lua.read_text())
 
-        def eval_anim():
+        def eval_anim(with_adapter=False):
             self.m.generate_kwin()
             script = f"""
-            local cfg, curves, anims = {{}}, {{}}, {{}}
+            local cfg, curves, anims, adapter, layers = {{}}, {{}}, {{}}, {{}}, {{}}
             hl = {{
                 config = function(t)
                     if t.animations then cfg.enabled = t.animations.enabled end
                 end,
                 curve = function(name, spec) curves[name] = spec end,
                 animation = function(a) anims[a.leaf] = a end,
+                layer_rule = function(r) layers[r.name] = r end,
             }}
+            if {str(with_adapter).lower()} then
+                hl.plugin = {{breezebars = {{scale_config = function(spec) adapter = spec end}}}}
+            end
             dofile({str(anim_lua)!r})
             local function f(v) return v == nil and "nil" or tostring(v) end
             local wi = anims.windowsIn or {{}}
@@ -362,6 +366,7 @@ class BridgeTest(unittest.TestCase):
             local flo = anims.fadeLayersOut or {{}}
             local ws = anims.workspaces or {{}}
             local sp = curves.kwin_slide or {{}}
+            local sl = layers["breeze-sliding-layers"] or {{}}
             print(table.concat({{
                 f(cfg.enabled),
                 f(wi.enabled), f(wi.speed), f(wi.bezier), f(wi.style),
@@ -369,6 +374,8 @@ class BridgeTest(unittest.TestCase):
                 f(wm.enabled), f(wm.speed),
                 f(fli.speed), f(flo.speed),
                 f(ws.enabled), f(ws.spring), f(sp.stiffness),
+                f((anims.fadeDim or {{}}).enabled), f(adapter.enabled), f(adapter.in_scale),
+                f(sl.animation), f(sl.no_anim),
             }}, "|"))
             """
             out = subprocess.run(["lua", "-e", script], check=True, text=True, capture_output=True)
@@ -383,6 +390,9 @@ class BridgeTest(unittest.TestCase):
             "1.5", "6.0", "true", "kwin_slide",
         ])
         self.assertAlmostEqual(float(r1[13]), 300.0, places=2)
+        self.assertEqual(r1[14], "false")  # No initial dim flash inherited from fade
+        self.assertEqual(r1[17:19], ["slide", "nil"])
+        self.assertEqual(eval_anim(True)[15:17], ["true", "0.8"])
 
         # Factor 2 (twice as slow: speed doubles, spring stiffness halves)
         self.write(self.config / "kdeglobals", "[KDE]\nAnimationDurationFactor=2\n")
@@ -395,6 +405,7 @@ class BridgeTest(unittest.TestCase):
         self.write(self.config / "kdeglobals", "[KDE]\nAnimationDurationFactor=0\n")
         r0 = eval_anim()
         self.assertEqual(r0[0], "false")
+        self.assertEqual(eval_anim(True)[15], "false")  # Disable candidate before early return
 
         # Return to factor 1 (must restore exact defaults)
         self.write(self.config / "kdeglobals", "[KDE]\nAnimationDurationFactor=1\n")
@@ -402,7 +413,7 @@ class BridgeTest(unittest.TestCase):
 
         # KWin plugin toggles and Effect-scale parameters
         self.write(self.config / "kwinrc",
-                   "[Plugins]\nscaleEnabled=false\nslideEnabled=false\nmaximizeEnabled=false\n"
+                   "[Plugins]\nscaleEnabled=false\nslideEnabled=false\nmaximizeEnabled=false\nslidingpopupsEnabled=false\n"
                    "[Effect-scale]\nDuration=300\nInScale=0.9\nOutScale=0.85\n")
         rt = eval_anim()
         self.assertEqual(rt[1], "false")       # windowsIn disabled
@@ -411,6 +422,12 @@ class BridgeTest(unittest.TestCase):
         self.assertEqual(rt[6], "popin 85%")
         self.assertEqual(rt[7], "false")       # windowsMove disabled
         self.assertEqual(rt[11], "false")      # workspaces disabled
+        self.assertEqual(rt[17:19], ["fade", "nil"])
+        self.assertEqual(eval_anim(True)[15:17], ["false", "0.9"])
+
+        self.write(self.config / "kwinrc",
+                   "[Plugins]\nslidingpopupsEnabled=false\nfadingpopupsEnabled=false\n")
+        self.assertEqual(eval_anim()[17:19], ["nil", "true"])
 
 
 if __name__ == "__main__":

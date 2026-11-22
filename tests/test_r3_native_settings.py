@@ -155,7 +155,9 @@ class NativeSettingsTest(unittest.TestCase):
 
     def test_effect_contract_has_no_installed_equals_supported(self):
         contract=json.loads((ROOT/'config/hypr/skins/plasma/scripts/settings-capabilities.json').read_text())
-        self.assertEqual(contract['r7_contract']['supported_effects'], [])
+        self.assertEqual(set(contract['r7_contract']['supported_effects']),
+                         {'blur', 'scale', 'maximize', 'slide', 'fadingpopups', 'slidingpopups'})
+        self.assertIn('implemented BWM renderer', contract['r7_contract']['capability_rule'])
         self.assertFalse(any(s['starts_service'] for s in contract['service_contracts']))
 
 

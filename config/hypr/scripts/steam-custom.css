@@ -1,0 +1,63 @@
+/* BWM Adwaita-for-Steam custom overrides: restore the bottom bar and Add Game button
+   so "Activate a Product on Steam..." (key activation) remains directly accessible. */
+
+html body.DesktopUI div._1_yS5UP7el0aN4vntx3dx
+{
+	display: contents !important;
+}
+
+html body.DesktopUI div._1_yS5UP7el0aN4vntx3dx > div
+{
+	order: 2 !important;
+}
+
+html body.DesktopUI div._1_yS5UP7el0aN4vntx3dx > div._3vCzSrrXZzZjVJFZNg9SGu
+{
+	order: 4 !important;
+	display: flex !important;
+	align-items: center !important;
+	flex: 0 0 36px !important;
+	height: 36px !important;
+	min-height: 36px !important;
+	overflow: visible !important;
+	padding: 0 8px !important;
+	background: var(--adw-headerbar-bg) !important;
+	box-shadow: inset 0 1px var(--adw-headerbar-shade) !important;
+	-webkit-app-region: no-drag !important;
+}
+
+html body.DesktopUI div._1_yS5UP7el0aN4vntx3dx > div._3vCzSrrXZzZjVJFZNg9SGu div._2foCkpRXhqq0UGVE50BWqj
+{
+	display: flex !important;
+	align-items: center !important;
+	gap: 6px !important;
+	height: 28px !important;
+	padding: 0 10px !important;
+	border-radius: var(--adw-button-radius) !important;
+	color: var(--adw-headerbar-fg) !important;
+	cursor: var(--adw-cursor-pointer) !important;
+	font-family: var(--adw-text-font) !important;
+	transition: var(--adw-button-transition) !important;
+	-webkit-app-region: no-drag !important;
+}
+
+html body.DesktopUI div._1_yS5UP7el0aN4vntx3dx > div._3vCzSrrXZzZjVJFZNg9SGu div._2foCkpRXhqq0UGVE50BWqj:hover
+{
+	background: color-mix(in srgb, currentColor var(--adw-hover-opacity), transparent) !important;
+	box-shadow: var(--adw-button-hc-outline) !important;
+}
+
+html body.DesktopUI div._1_yS5UP7el0aN4vntx3dx > div._3vCzSrrXZzZjVJFZNg9SGu div._2foCkpRXhqq0UGVE50BWqj:active
+{
+	background: color-mix(in srgb, currentColor var(--adw-active-opacity), transparent) !important;
+	box-shadow: var(--adw-button-hc-outline) !important;
+}
+
+html body.DesktopUI div._1_yS5UP7el0aN4vntx3dx > div._3vCzSrrXZzZjVJFZNg9SGu div._2foCkpRXhqq0UGVE50BWqj div._1KrJ3sFAqPBN9mfpaNTU5F,
+html body.DesktopUI div._1_yS5UP7el0aN4vntx3dx > div._3vCzSrrXZzZjVJFZNg9SGu div._2foCkpRXhqq0UGVE50BWqj div._3OhUxFVlQYr9W5ThxstR8k
+{
+	color: var(--adw-headerbar-fg) !important;
+	font-family: var(--adw-text-font) !important;
+	font-size: var(--adw-text-title3-size) !important;
+	font-weight: var(--adw-text-title3-weight) !important;
+}

@@ -48,7 +48,7 @@ def bridge():
 WINDOW_FIELDS = [
     ('kwinrc', 'Windows', 'FocusPolicy', 'Foco', 'focus', 'choice', {'choices': [dict(label='Clic para enfocar', value='ClickToFocus'), dict(label='Seguir ratón (aproximación Hyprland)', value='FocusFollowsMouse')]}),
     ('kwinrc', 'Windows', 'Placement', 'Colocación', 'placement', 'choice', {'choices': [dict(label=x, value=x) for x in ['Smart', 'Centered', 'ZeroCornered', 'UnderMouse', 'Random', 'Maximizing', 'NoPlacement']]}),
-    ('kdeglobals', 'KDE', 'AnimationDurationFactor', 'Factor de duración (0 = desactivadas; efectos en R7)', 'animationFactor', 'real', dict(min=0, max=20)),
+    ('kdeglobals', 'KDE', 'AnimationDurationFactor', 'Factor de duración (0 = desactivadas)', 'animationFactor', 'real', dict(min=0, max=20)),
 ]
 DECOR_FIELDS = [
     ('kwinrc', 'Windows', 'TitlebarDoubleClickCommand', 'Doble clic en barra del servidor', 'doubleClick', 'choice', {'choices': [dict(label=x, value=x) for x in ['Maximize', 'Maximize (vertical only)', 'Maximize (horizontal only)', 'Minimize', 'Close', 'Nothing']]}),
@@ -58,6 +58,26 @@ SNAP_FIELDS = [
     for key, label, setting in [('BorderSnapZone', 'Encaje con pantalla (px)', 'borderSnap'), ('WindowSnapZone', 'Encaje con ventanas (px)', 'windowSnap'), ('CenterSnapZone', 'Encaje con centro (px)', 'centerSnap')]
 ]
 
+# R7: allowlist of controls actually consumed by animations.lua / kwin.lua. KDE owns
+# persistence; this schema is shared by both settings hosts, never a second store.
+# Duration=0 is the native scale default (automatic 200 ms), not a zero-length animation.
+EFFECT_FIELDS = [
+    ('kdeglobals', 'KDE', 'AnimationDurationFactor', 'Factor de duración (0 = instantáneas)', 'Duration factor (0 = instant)', 'animationFactor', 'real', 1, dict(min=0, max=20, decimals=4, step=0.25)),
+    *[('kwinrc', 'Plugins', effect + 'Enabled', es, en, setting, 'bool', True, {})
+      for effect, setting, es, en in [
+          ('blur', 'blur', 'Desenfoque', 'Blur'),
+          ('scale', 'scaleEnabled', 'Escalar al abrir y cerrar ventanas', 'Scale windows when opening and closing'),
+          ('maximize', 'maximizeEnabled', 'Maximizar y restaurar ventanas', 'Maximize and restore windows'),
+          ('slide', 'slideEnabled', 'Deslizar escritorios virtuales', 'Slide virtual desktops'),
+          ('fadingpopups', 'fadingPopupsEnabled', 'Desvanecer ventanas emergentes', 'Fade popups'),
+          ('slidingpopups', 'slidingPopupsEnabled', 'Animar paneles y ventanas emergentes', 'Animate panels and popups'),
+      ]],
+    ('kwinrc', 'Effect-blur', 'BlurStrength', 'Intensidad del desenfoque', 'Blur strength', 'blurStrength', 'int', 15, dict(min=1, max=15)),
+    ('kwinrc', 'Effect-scale', 'Duration', 'Duración de escala (ms; 0 = automática)', 'Scale duration (ms; 0 = automatic)', 'scaleDuration', 'int', 0, dict(min=0, max=5000)),
+    ('kwinrc', 'Effect-scale', 'InScale', 'Escala inicial al abrir (0,8 = 80 %)', 'Opening scale (0.8 = 80%)', 'scaleIn', 'real', 0.8, dict(min=0.1, max=1, decimals=2, step=0.01)),
+    ('kwinrc', 'Effect-scale', 'OutScale', 'Escala final al cerrar (0,8 = 80 %)', 'Closing scale (0.8 = 80%)', 'scaleOut', 'real', 0.8, dict(min=0.1, max=1, decimals=2, step=0.01)),
+]
+
 
 def field(key, label, value, kind='text', **extra):
     return dict(key=key, label=label, value=value, type=kind, **extra)
@@ -65,7 +85,7 @@ def field(key, label, value, kind='text', **extra):
 
 def page(category):
     fields = []
-    if category == 'windows':
+    if category in ('windows', 'effects'):
         b = bridge()
         if not b.active():
             raise ValueError('El comportamiento propio de Breeze sólo se edita con Breeze activo')
@@ -73,8 +93,19 @@ def page(category):
         if version.returncode:
             raise ValueError('No hay acceso al compositor; no se ofrecen controles de ventanas sin aplicación')
         settings = b.kwin_settings()
-        plugins = b.run(['hyprctl', '-j', 'plugins'])
-        definitions = WINDOW_FIELDS + (SNAP_FIELDS + DECOR_FIELDS if plugins.returncode == 0 and 'breezebars' in plugins.stdout else [])
+        if category == 'effects':
+            definitions = [(f, g, k, es, s, kind, dict(default=default, label_en=en, **extra))
+                           for f, g, k, es, en, s, kind, default, extra in EFFECT_FIELDS]
+            # kwin_settings exposes effective duration for the renderer; the editor also
+            # needs KDE's 0=automatic representation so Defaults/readback round-trip.
+            raw = b.merged('kwinrc').get('Effect-scale', {}).get('Duration', '0')
+            try:
+                settings['scaleDuration'] = max(0, min(5000, int(raw)))
+            except (TypeError, ValueError):
+                settings['scaleDuration'] = 0
+        else:
+            plugins = b.run(['hyprctl', '-j', 'plugins'])
+            definitions = WINDOW_FIELDS + (SNAP_FIELDS + DECOR_FIELDS if plugins.returncode == 0 and 'breezebars' in plugins.stdout else [])
         for file, group, key, label, setting, kind, extra in definitions:
             value = settings[setting]
             extra = dict(extra)
@@ -174,20 +205,21 @@ def apply(category, request):
             if not re.fullmatch(r'\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*', value):
                 raise ValueError('Lista de escritorios no válida')
     changes = {k: v for k, v in changes.items() if specs[k]['value'] != v}
-    if category == 'windows' and changes:
+    if category in ('windows', 'effects') and changes:
         b = bridge()
         for file in ('kwinrc', 'kdeglobals'):
             updates = {}
             for ident, value in changes.items():
                 target, group, key = ident.split('\x1f')
                 if target == file:
-                    updates[group, key] = str(value)
+                    updates[group, key] = str(value).lower() if isinstance(value, bool) else str(value)
             if updates:
                 path = CONFIG / file
                 text = b.read(path)
                 if b.atomic(path, b.patch_ini(text, updates), text):
                     b.notify(file, updates)
-        b.reconcile()
+        if not b.reconcile():
+            raise ValueError('Breeze dejó de estar activo; los cambios guardados no se han aplicado')
     elif category == 'cursor' and changes:
         values = {k: f['value'] for k, f in specs.items()} | changes
         command('cursor-manager.py', 'apply', values['theme'], values['size'])
@@ -234,7 +266,7 @@ def main():
         if result is None:
             raise ValueError('Acción desconocida')
         print(json.dumps(result, ensure_ascii=False))
-    except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError) as exc:
+    except (ValueError, RuntimeError, OSError, KeyError, TypeError, subprocess.SubprocessError) as exc:
         print(json.dumps(dict(error=str(exc)), ensure_ascii=False))
         return 1
     return 0

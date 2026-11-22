@@ -10,6 +10,7 @@
 #include <QJsonDocument>
 #include <QLabel>
 #include <QLineEdit>
+#include <QLocale>
 #include <QProcess>
 #include <QScrollArea>
 #include <QSpinBox>
@@ -22,7 +23,9 @@ ManagerModule::ManagerModule(QObject *parent, const KPluginMetaData &data, const
     // There is no invented factory default for a user's applications, monitors or shortcuts.
     setButtons(Apply);
     auto *layout = new QVBoxLayout(widget());
-    auto *notice = new QLabel(i18nd("bwm", "Shared BWM settings. Changes apply only when you press Apply."), widget());
+    auto *notice = new QLabel(data.value(QStringLiteral("X-BWM-Category")) == QStringLiteral("effects")
+        ? i18nd("bwm", "Desktop effects supported by Breeze. Changes apply only when you press Apply.")
+        : i18nd("bwm", "Shared BWM settings. Changes apply only when you press Apply."), widget());
     notice->setWordWrap(true);
     layout->addWidget(notice);
     auto *scroll = new QScrollArea(widget());
@@ -67,6 +70,8 @@ bool ManagerModule::request(const QString &action, const QJsonObject &payload, Q
 }
 void ManagerModule::populate(const QJsonObject &response) {
     m_readers.clear();
+    m_writers.clear();
+    m_defaults = {};
     m_values = {};
     while (m_form->rowCount()) m_form->removeRow(0);
     m_revision = response.value(QStringLiteral("revision")).toString();
@@ -80,6 +85,7 @@ void ManagerModule::populate(const QJsonObject &response) {
             auto *e = new QCheckBox(m_fields);
             e->setChecked(value.toBool());
             m_readers[key] = [e] { return QJsonValue(e->isChecked()); };
+            m_writers[key] = [e](const QJsonValue &v) { e->setChecked(v.toBool()); };
             connect(e, &QCheckBox::toggled, this, &ManagerModule::updateChanged);
             editor = e;
         } else if (type == QStringLiteral("choice")) {
@@ -90,6 +96,7 @@ void ManagerModule::populate(const QJsonObject &response) {
             }
             e->setCurrentIndex(e->findData(value.toVariant()));
             m_readers[key] = [e] { return QJsonValue::fromVariant(e->currentData()); };
+            m_writers[key] = [e](const QJsonValue &v) { e->setCurrentIndex(e->findData(v.toVariant())); };
             connect(e, &QComboBox::currentIndexChanged, this, &ManagerModule::updateChanged);
             editor = e;
         } else if (type == QStringLiteral("int")) {
@@ -97,26 +104,33 @@ void ManagerModule::populate(const QJsonObject &response) {
             e->setRange(f.value(QStringLiteral("min")).toInt(), f.value(QStringLiteral("max")).toInt());
             e->setValue(value.toInt());
             m_readers[key] = [e] { return QJsonValue(e->value()); };
+            m_writers[key] = [e](const QJsonValue &v) { e->setValue(v.toInt()); };
             connect(e, &QSpinBox::valueChanged, this, &ManagerModule::updateChanged);
             editor = e;
         } else if (type == QStringLiteral("real")) {
             auto *e = new QDoubleSpinBox(m_fields);
             e->setRange(f.value(QStringLiteral("min")).toDouble(), f.value(QStringLiteral("max")).toDouble());
-            e->setSingleStep(0.25);
+            e->setDecimals(f.value(QStringLiteral("decimals")).toInt(2));
+            e->setSingleStep(f.value(QStringLiteral("step")).toDouble(0.25));
             e->setValue(value.toDouble());
             m_readers[key] = [e] { return QJsonValue(e->value()); };
+            m_writers[key] = [e](const QJsonValue &v) { e->setValue(v.toDouble()); };
             connect(e, &QDoubleSpinBox::valueChanged, this, &ManagerModule::updateChanged);
             editor = e;
         } else {
             auto *e = new QLineEdit(value.toString(), m_fields);
             m_readers[key] = [e] { return QJsonValue(e->text()); };
+            m_writers[key] = [e](const QJsonValue &v) { e->setText(v.toString()); };
             connect(e, &QLineEdit::textChanged, this, &ManagerModule::updateChanged);
             editor = e;
         }
         editor->setObjectName(key);
         m_values.insert(key, value);
-        m_form->addRow(f.value(QStringLiteral("label")).toString(), editor);
+        if (f.contains(QStringLiteral("default"))) m_defaults.insert(key, f.value(QStringLiteral("default")));
+        const auto labelKey = QLocale().language() == QLocale::Spanish ? QStringLiteral("label") : QStringLiteral("label_en");
+        m_form->addRow(f.value(labelKey).toString(f.value(QStringLiteral("label")).toString()), editor);
     }
+    setButtons(m_defaults.isEmpty() ? Apply : Apply | Default);
     updateChanged();
 }
 QJsonObject ManagerModule::changes() const {
@@ -125,7 +139,17 @@ QJsonObject ManagerModule::changes() const {
         if (it.value()() != m_values.value(it.key())) result.insert(it.key(), it.value()());
     return result;
 }
-void ManagerModule::updateChanged() { setNeedsSave(!changes().isEmpty()); }
+void ManagerModule::updateChanged() {
+    setNeedsSave(!changes().isEmpty());
+    bool atDefaults = !m_defaults.isEmpty();
+    for (auto it = m_defaults.constBegin(); it != m_defaults.constEnd(); ++it)
+        atDefaults = atDefaults && m_readers.value(it.key())() == it.value();
+    setRepresentsDefaults(atDefaults);
+}
+void ManagerModule::defaults() {
+    for (auto it = m_defaults.constBegin(); it != m_defaults.constEnd(); ++it) m_writers.value(it.key())(it.value());
+    updateChanged();
+}
 void ManagerModule::load() {
     QJsonObject response;
     if (request(QStringLiteral("load"), {}, response)) { m_fields->setEnabled(true); populate(response); }

@@ -1,0 +1,132 @@
+[
+  {
+    "guard": "no-anim",
+    "completed": true,
+    "sessionUnchanged": true,
+    "sessionChangedAreas": [],
+    "scaleAdapter": {
+      "version": 1,
+      "enabled": true,
+      "tracked": 0,
+      "starts": 0,
+      "observedFrames": 0,
+      "resetOnClose": 0,
+      "cancelled": 0,
+      "trace": []
+    }
+  },
+  {
+    "guard": "custom-style",
+    "completed": true,
+    "sessionUnchanged": true,
+    "sessionChangedAreas": [],
+    "scaleAdapter": {
+      "version": 1,
+      "enabled": true,
+      "tracked": 0,
+      "starts": 0,
+      "observedFrames": 0,
+      "resetOnClose": 0,
+      "cancelled": 0,
+      "trace": []
+    }
+  },
+  {
+    "guard": "skin-inactive",
+    "completed": true,
+    "sessionUnchanged": true,
+    "sessionChangedAreas": [],
+    "scaleAdapter": {
+      "version": 1,
+      "enabled": false,
+      "tracked": 0,
+      "starts": 0,
+      "observedFrames": 0,
+      "resetOnClose": 0,
+      "cancelled": 0,
+      "trace": []
+    }
+  },
+  {
+    "guard": "scale-off",
+    "completed": true,
+    "sessionUnchanged": true,
+    "sessionChangedAreas": [],
+    "scaleAdapter": {
+      "version": 1,
+      "enabled": false,
+      "tracked": 0,
+      "starts": 0,
+      "observedFrames": 0,
+      "resetOnClose": 0,
+      "cancelled": 0,
+      "trace": []
+    }
+  },
+  {
+    "guard": "resize-entry",
+    "completed": true,
+    "sessionUnchanged": true,
+    "sessionChangedAreas": [],
+    "scaleAdapter": {
+      "version": 1,
+      "enabled": true,
+      "tracked": 0,
+      "starts": 3,
+      "observedFrames": 30,
+      "resetOnClose": 0,
+      "cancelled": 1,
+      "trace": []
+    }
+  },
+  {
+    "guard": "reload-entry",
+    "completed": true,
+    "sessionUnchanged": false,
+    "sessionChangedAreas": [
+      "cursor"
+    ],
+    "scaleAdapter": {
+      "version": 1,
+      "enabled": true,
+      "tracked": 0,
+      "starts": 3,
+      "observedFrames": 30,
+      "resetOnClose": 0,
+      "cancelled": 0,
+      "trace": []
+    }
+  },
+  {
+    "guard": "fullscreen-entry",
+    "completed": true,
+    "sessionUnchanged": true,
+    "sessionChangedAreas": [],
+    "scaleAdapter": {
+      "version": 1,
+      "enabled": true,
+      "tracked": 0,
+      "starts": 3,
+      "observedFrames": 28,
+      "resetOnClose": 0,
+      "cancelled": 1,
+      "trace": []
+    }
+  },
+  {
+    "guard": "workspace-entry",
+    "completed": true,
+    "sessionUnchanged": true,
+    "sessionChangedAreas": [],
+    "scaleAdapter": {
+      "version": 1,
+      "enabled": true,
+      "tracked": 0,
+      "starts": 3,
+      "observedFrames": 29,
+      "resetOnClose": 0,
+      "cancelled": 1,
+      "trace": []
+    }
+  }
+]

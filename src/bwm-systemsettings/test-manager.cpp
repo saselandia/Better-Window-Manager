@@ -4,6 +4,8 @@
 #include <QFile>
 #include <QLabel>
 #include <QSpinBox>
+#include <QDoubleSpinBox>
+#include <QCheckBox>
 #include <QTemporaryDir>
 #include <QtTest>
 class ManagerTest : public QObject {
@@ -11,13 +13,49 @@ class ManagerTest : public QObject {
 private Q_SLOTS:
     void discoveryAndFactory() {
         QCoreApplication::addLibraryPath(QString::fromLocal8Bit(BWM_TEST_PLUGIN_ROOT));
-        for (auto category : {"cursor", "screens", "workspaces", "apps", "startup", "shortcuts", "energy", "windows"}) {
+        for (auto category : {"cursor", "screens", "workspaces", "apps", "startup", "shortcuts", "energy", "windows", "effects"}) {
             const auto metadata = KPluginMetaData::findPluginById("plasma/kcms/systemsettings", QStringLiteral("kcm_bwm_") + category);
             QVERIFY(metadata.isValid());
             const auto result = KPluginFactory::instantiatePlugin<KCModule>(metadata, nullptr);
             QVERIFY2(result.plugin, qPrintable(result.errorString));
             delete result.plugin; // Discovery must never invoke the real controller.
         }
+    }
+    void effectDefaultsAreStagedAndPrecise() {
+        QTemporaryDir tmp;
+        QFile f(tmp.filePath("backend.py"));
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write(R"PY(import json, pathlib, sys
+p = pathlib.Path(sys.argv[1])
+values = json.loads(p.read_text()) if p.exists() else {'scale':False,'factor':0.0625}
+if sys.argv[2] == 'save':
+ values.update(json.load(sys.stdin)['changes'])
+ p.write_text(json.dumps(values))
+print(json.dumps({'revision':'r', 'fields':[
+ {'key':'scale','label':'Scale','type':'bool','value':values['scale'],'default':True},
+ {'key':'factor','label':'Factor','type':'real','value':values['factor'],'default':1,'min':0,'max':20,'decimals':4,'step':0.25}]}))
+)PY");
+        f.close();
+        const QStringList backend{"python3", f.fileName(), tmp.filePath("state")};
+        ManagerModule kcm(nullptr, {}, backend);
+        kcm.load();
+        QCOMPARE(kcm.widget()->findChild<QDoubleSpinBox *>("factor")->value(), 0.0625);
+        QVERIFY(kcm.buttons() & KCModule::Default);
+        QVERIFY(!kcm.representsDefaults());
+        kcm.defaults();
+        QVERIFY(kcm.needsSave());
+        QVERIFY(kcm.representsDefaults());
+        QVERIFY(!QFile::exists(tmp.filePath("state")));
+        kcm.load();
+        QVERIFY(!kcm.needsSave());
+        QVERIFY(!kcm.widget()->findChild<QCheckBox *>("scale")->isChecked());
+        kcm.defaults();
+        kcm.save();
+        QVERIFY(!kcm.needsSave());
+        ManagerModule reopened(nullptr, {}, backend);
+        reopened.load();
+        QVERIFY(reopened.representsDefaults());
+        QVERIFY(reopened.widget()->findChild<QCheckBox *>("scale")->isChecked());
     }
     void transactionAndReopen() {
         QTemporaryDir tmp;

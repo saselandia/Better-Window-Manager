@@ -20,6 +20,11 @@ end
 hl.layer_rule({ name = "breeze-blur-frames",
     match = { namespace = "^(quickshell:(plasmaPanel|plasmaKickoff|plasmaNotifications|altTab|plasmaMenu)|bwm-plasma-osd|krunner)$" },
     ignore_alpha = 0.01, blur_popups = true })
+-- Static helper layers (desktop click catcher and snap outline, which animates its own rect):
+-- never apply KWin popup fade-in/out (600 ms OutQuart) when showing/hiding them.
+hl.layer_rule({ name = "breeze-static-layers",
+    match = { namespace = "^quickshell:(plasmaDesktop|plasmaOutline)$" },
+    no_anim = true })
 hl.window_rule({ name = "breeze-no-capture", match = { tag = "bwm-no-capture" }, no_screen_share = true })
 -- Native no-border also removes compositor borders/shadows; CSD negotiation stays automatic.
 hl.window_rule({ name = "breeze-no-border", match = { tag = "bwm-no-border" },
