@@ -211,6 +211,11 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   (`KickoffWindow.qml`, `MenuHost.qml`, `TrayState`), máscara de entrada restringida a `frame` y
   `keyboardFocus: OnDemand` cuando Kickoff está fijado (`pin`), y cierre con cualquier botón.
   `test_plasma_menus_ui` 5/5 OK, 0 errores en `qs -c ii`.
+* **Preferencias nativas en Breeze (2026-11-22, §346):** `open-settings.sh` (Super+I y menús)
+  usa ahora por defecto el `systemsettings` real de KDE vía `settings-native.sh` (con alias cortos
+  `display`, `effects`, `autostart`, etc. y los 10 `kcm_bwm_*` + `kcm_kwindecoration`).
+  `plasmaSettings.qml` queda para páginas exclusivas de BWM (`background`, `bar`, `services`,
+  `general`, `style`, `about`, `windowrules`), `BWM_SETTINGS_HOST=legacy` o respaldo. 19/19 OK.
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -6393,3 +6398,24 @@ git status; git log --oneline -5; git push origin main
     (y `TrayState` salvo `kind === "tray"`); al expandirse `TrayState` cierra menús no-tray.
 * **Comprobado:** `test_plasma_menus_ui.py` **5/5 OK** (`BWM_RUN_QML_TESTS=1`) y recarga en
   caliente de `qs -c ii` sin avisos ni errores nuevos. Detalle en `docs/BREEZE_R8_RESULTS.md`.
+
+### 346. Breeze R2–R3: `systemsettings` real como lanzador predeterminado de Preferencias (2026-11-22)
+
+* **Petición:** «continua».
+* **Hecho:**
+  * `config/hypr/skins/plasma/scripts/settings-native.sh` (`chmod +x`): añadidos los alias cortos
+    de BWM (`display`, `windowbehavior`, `workspaces`, `keybinds`, `cursor`, `idle`, `nightlight`,
+    `defaultapps`, `autostart`, `sound`, `network`, `globaltheme`, `colors`, `plasmastyle`,
+    `decorations`, `icons`, `appstyle`, `fonts`, `behavior`) hacia sus KCM reales (`kcm_bwm_*` y
+    KDE).
+  * `config/hypr/scripts/open-settings.sh`: en Breeze (`plasma`) lanza ahora `settings-native.sh`
+    cuando están instalados `systemsettings` y `kcm_bwm_windows.so` en `plasma/kcms/systemsettings/`;
+    enruta páginas sólo-BWM (`background`, `bar`, `services`, `general`, `style`, `about`,
+    `windowrules`), `BWM_SETTINGS_HOST=legacy` o instalaciones sin `systemsettings` a
+    `plasmaSettings.qml`.
+  * `tests/test_r3_native_settings.py`: nueva prueba
+    `test_open_settings_routes_plasma_to_native_with_aliases_and_fallback`.
+* **Comprobado:** `test_r3_native_settings` (11/11) + `test_r7_effects` (8/8) = **19/19 OK**;
+  `open-settings.sh --list` en la sesión Wayland real descubre los 10 `kcm_bwm_*` y
+  `kcm_kwindecoration`. **Pendiente del usuario:** abrir Preferencias con `Super+I` y probar
+  visualmente los módulos en su uso diario.

@@ -160,6 +160,63 @@ class NativeSettingsTest(unittest.TestCase):
         self.assertIn('implemented BWM renderer', contract['r7_contract']['capability_rule'])
         self.assertFalse(any(s['starts_service'] for s in contract['service_contracts']))
 
+    def test_open_settings_routes_plasma_to_native_with_aliases_and_fallback(self):
+        import subprocess
+        open_script = ROOT / 'config/hypr/scripts/open-settings.sh'
+        with tempfile.TemporaryDirectory() as tmp:
+            t = Path(tmp)
+            fake_sys = t / 'fake-systemsettings'
+            fake_qs = t / 'fake-qs'
+            fake_sys.write_text('#!/usr/bin/env bash\nprintf "SYS:%s|PLUGINS=%s|XDG=%s\\n" "$*" "${QT_PLUGIN_PATH:-}" "${XDG_CONFIG_DIRS:-}"\n')
+            fake_qs.write_text('#!/usr/bin/env bash\nprintf "QS:%s|PAGE=%s\\n" "$*" "${SETTINGS_PAGE:-}"\n')
+            fake_sys.chmod(0o755)
+            fake_qs.chmod(0o755)
+            fake_kcm = t / 'bwm/systemsettings/lib/qt6/plugins/plasma/kcms/systemsettings/kcm_bwm_windows.so'
+            fake_kcm.parent.mkdir(parents=True)
+            fake_kcm.write_text('')
+            base_env = {**os.environ, 'XDG_DATA_HOME': str(t), 'BWM_SETTINGS_THEME_OVERRIDE': 'plasma',
+                        'BWM_SYSTEMSETTINGS_BIN': str(fake_sys), 'BWM_QS_BIN': str(fake_qs)}
+            base_env.pop('BWM_SETTINGS_HOST', None)
+            base_env.pop('SETTINGS_PAGE', None)
+
+            def run_open(*args, extra_env=None):
+                env = {**base_env, **(extra_env or {})}
+                return subprocess.run(['bash', str(open_script), *args], capture_output=True, text=True, check=True, env=env).stdout.strip()
+
+            out = run_open()
+            self.assertTrue(out.startswith('SYS:|PLUGINS='), out)
+            self.assertIn('settings-profile:', out)
+            for alias, expected in [
+                ('display', 'kcm_bwm_screens'),
+                ('effects', 'kcm_bwm_effects'),
+                ('windowbehavior', 'kcm_bwm_windows'),
+                ('workspaces', 'kcm_bwm_workspaces'),
+                ('keybinds', 'kcm_bwm_shortcuts'),
+                ('cursor', 'kcm_bwm_cursor'),
+                ('idle', 'kcm_bwm_energy'),
+                ('nightlight', 'kcm_bwm_nightlight'),
+                ('defaultapps', 'kcm_bwm_apps'),
+                ('autostart', 'kcm_bwm_startup'),
+                ('sound', 'kcm_pulseaudio'),
+                ('decorations', 'kcm_kwindecoration'),
+            ]:
+                aliased = run_open(alias)
+                self.assertTrue(aliased.startswith(f'SYS:{expected}|'), f'{alias} -> {aliased}')
+
+            for legacy_page in ('background', 'bar', 'services', 'general', 'style', 'about', 'windowrules'):
+                leg = run_open(legacy_page)
+                self.assertIn('plasmaSettings.qml', leg)
+                self.assertIn(f'PAGE={legacy_page}', leg)
+
+            forced_legacy = run_open('display', extra_env={'BWM_SETTINGS_HOST': 'legacy'})
+            self.assertIn('plasmaSettings.qml', forced_legacy)
+
+            missing_sys = run_open('display', extra_env={'BWM_SYSTEMSETTINGS_BIN': str(t / 'no-such-bin')})
+            self.assertIn('plasmaSettings.qml', missing_sys)
+
+            retro = run_open('bar', extra_env={'BWM_SETTINGS_THEME_OVERRIDE': 'retro'})
+            self.assertIn('omarchyMenu settings bar', retro)
+
 
 if __name__ == '__main__':
     unittest.main()
