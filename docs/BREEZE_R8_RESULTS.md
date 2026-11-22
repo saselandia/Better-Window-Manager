@@ -127,3 +127,24 @@ visible y la ventana **no** está minimizada en `special:minimized`/workspace 99
 * Comprobación visual física del usuario al pasar el ratón por tareas y pulsar `Alt+Tab` con
   ventanas reales y un reproductor MPRIS activo.
 * Agenda y respuesta en línea de notificaciones siguen como P2 opcionales.
+
+## Lote 4: exclusión mutua de capas `Overlay` y máscara al fijar Kickoff (2026-11-22)
+
+Al diagnosticar una sesión con dos capas `WlrLayer.Overlay` abiertas a la vez (un menú contextual
+en DP-1 y Kickoff en DP-2), se detectaron y corrigieron dos fallos de interacción:
+
+* **`modules/plasma/kickoff/KickoffWindow.qml`:**
+  * Abrir Kickoff cierra ahora `PlasmaMenus` y `TrayState`.
+  * Cuando Kickoff está fijado (`!kickoff.hideOnWindowDeactivate`), `mask` se restringe a `frame`
+    y `keyboardFocus` pasa a `OnDemand` (antes su `MouseArea` a pantalla completa capturaba todos
+    los clics del monitor).
+  * El fondo de cierre acepta `Qt.AllButtons` en `onPressed` (antes sólo `onClicked` izquierdo).
+* **`modules/plasma/menus/MenuHost.qml`:**
+  * Abrir un menú contextual cierra `GlobalStates.plasmaKickoffOpen` (y `TrayState` salvo cuando
+    `kind === "tray"`, para permitir menús contextuales desde `TrayPopup`).
+  * Expandir `TrayState` cierra cualquier `PlasmaMenus` que no sea de bandeja.
+
+### Comprobado
+
+* `tests/test_plasma_menus_ui.py`: **5/5 OK** (`BWM_RUN_QML_TESTS=1`).
+* Recarga en caliente de `qs -c ii`: 0 errores ni advertencias de `KickoffWindow.qml` / `MenuHost.qml`.

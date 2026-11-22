@@ -16,6 +16,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import org.kde.plasma.components as PC3
+import qs
 import qs.modules.plasma.theme
 import qs.modules.plasma.tray as PlasmaTray
 
@@ -136,11 +137,22 @@ Scope {
         Connections {
             target: PlasmaMenus
             function onOpenedChanged() {
-                if (!PlasmaMenus.opened) {
+                if (PlasmaMenus.opened) {
+                    GlobalStates.plasmaKickoffOpen = false;
+                    if (PlasmaMenus.kind !== "tray")
+                        PlasmaTray.TrayState.close();
+                } else {
                     loader.active = false;
                     root._trackedMenus = [];
                     root.updateBlurRegions();
                 }
+            }
+        }
+        Connections {
+            target: PlasmaTray.TrayState
+            function onExpandedChanged() {
+                if (PlasmaTray.TrayState.expanded && PlasmaMenus.opened && PlasmaMenus.kind !== "tray")
+                    PlasmaMenus.close();
             }
         }
     }

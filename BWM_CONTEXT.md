@@ -207,6 +207,10 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   `ThumbnailGrid.qml`, `ThemedSwitcher.qml` y `WindowThumbnail.qml` vuelven a capturar con doble
   guarda QML (visible + no minimizada); `TaskToolTip.qml` añade icono de respaldo para minimizadas
   y controles multimedia MPRIS (`previous`/`togglePlaying`/`next` + título de pista). 17/17 OK.
+* **R8, lote 4 (2026-11-22, §345):** exclusión mutua entre capas `Overlay` de Breeze
+  (`KickoffWindow.qml`, `MenuHost.qml`, `TrayState`), máscara de entrada restringida a `frame` y
+  `keyboardFocus: OnDemand` cuando Kickoff está fijado (`pin`), y cierre con cualquier botón.
+  `test_plasma_menus_ui` 5/5 OK, 0 errores en `qs -c ii`.
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -6375,3 +6379,17 @@ git status; git log --oneline -5; git push origin main
   `test_window_activation` (7/7) = **17/17 OK** (`BWM_RUN_QML_TESTS=1`); recarga en caliente de
   `qs -c ii` sin errores de estos archivos. **Pendiente del usuario:** comprobación visual física
   al pasar el ratón por tareas y pulsar `Alt+Tab` con ventanas reales y un reproductor MPRIS.
+
+### 345. Breeze R8, lote 4: exclusión mutua de capas `Overlay` y máscara al fijar Kickoff (2026-11-22)
+
+* **Contexto:** en una sesión previa con dos monitores aparecieron simultáneamente `plasmaMenu`
+  (DP-1) y `plasmaKickoff` (DP-2) en `Layer 3 (Overlay)` con `WlrKeyboardFocus.Exclusive`.
+* **Hecho:**
+  * `config/quickshell/ii/modules/plasma/kickoff/KickoffWindow.qml`: al abrir cierra `PlasmaMenus`
+    y `TrayState`; si está fijado (`!kickoff.hideOnWindowDeactivate`), restringe `mask` a `frame` y
+    usa `WlrKeyboardFocus.OnDemand` para no capturar clics fuera; fondo de cierre con
+    `acceptedButtons: Qt.AllButtons` en `onPressed`.
+  * `config/quickshell/ii/modules/plasma/menus/MenuHost.qml`: al abrir cierra `plasmaKickoffOpen`
+    (y `TrayState` salvo `kind === "tray"`); al expandirse `TrayState` cierra menús no-tray.
+* **Comprobado:** `test_plasma_menus_ui.py` **5/5 OK** (`BWM_RUN_QML_TESTS=1`) y recarga en
+  caliente de `qs -c ii` sin avisos ni errores nuevos. Detalle en `docs/BREEZE_R8_RESULTS.md`.

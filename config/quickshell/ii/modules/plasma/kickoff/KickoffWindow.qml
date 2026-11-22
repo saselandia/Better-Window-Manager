@@ -12,8 +12,10 @@ import Quickshell.Hyprland
 import org.kde.ksvg as KSvg
 import org.kde.kirigami as Kirigami
 import qs
+import qs.modules.plasma.menus as PlasmaMenusMod
 import qs.modules.plasma.panel
 import qs.modules.plasma.theme
+import qs.modules.plasma.tray as PlasmaTray
 
 /**
  * BWM: anfitrión del Kickoff portado (fase 4 de docs/BREEZE_PLAN.md). En Plasma lo muestra un
@@ -29,6 +31,12 @@ Scope {
     id: root
 
     readonly property bool opened: GlobalStates.plasmaKickoffOpen
+    onOpenedChanged: {
+        if (opened) {
+            PlasmaMenusMod.PlasmaMenus.close();
+            PlasmaTray.TrayState.close();
+        }
+    }
 
     function open(screenName) {
         GlobalStates.plasmaKickoffScreen = screenName || Hyprland.focusedMonitor?.name || "";
@@ -71,13 +79,19 @@ Scope {
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.namespace: "quickshell:plasmaKickoff"
         WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.keyboardFocus: root.opened ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        // When pinned (hideOnWindowDeactivate === false), never steal clicks or exclusive keyboard
+        // focus outside the Kickoff frame.
+        WlrLayershell.keyboardFocus: !root.opened ? WlrKeyboardFocus.None
+            : (kickoff.hideOnWindowDeactivate ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.OnDemand)
+        mask: Region { item: kickoff.hideOnWindowDeactivate ? backdrop : frame }
         anchors { top: true; bottom: true; left: true; right: true }
 
         // Pulsar fuera: como hideOnWindowDeactivate de un plasmoide (no se cierra si está fijado)
         MouseArea {
+            id: backdrop
             anchors.fill: parent
-            onClicked: if (kickoff.hideOnWindowDeactivate) root.close()
+            acceptedButtons: Qt.AllButtons
+            onPressed: if (kickoff.hideOnWindowDeactivate) root.close()
         }
 
         // KWin's blur behind the dialog (ext_background_effect); the layer rule keeps its shape
