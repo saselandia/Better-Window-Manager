@@ -119,6 +119,7 @@ ShellRoot {
             if(name==="Notifications"||name==="Clipboard")props={backend:mock};
             if(name==="Tray")props={readOnly:true,items:[{id:"demo",title:"Demo tray item",tooltipTitle:"Demo",tooltipDescription:"Safe fixture",icon:"applications-system",status:1}],applets:[{id:"notifications",title:"Notifications",icon:"notifications",active:true}],settings:{},appletProperties:{readOnly:true,backend:mock}};
             if(name==="Power")props={readOnly:true,battery:mock,monitors:[]};
+            if(name==="CalendarZones")Config.options.bar.plasma.clock={selectedTimeZones:["Local","Asia/Tokyo","America/New_York"],lastSelectedTimezone:"Local",displayTimezoneFormat:1};
             if(name==="Compile") {
                 root.compiled=["panel/Panel.qml","panel/PanelContent.qml","tray/TrayController.qml"].map(path=>Qt.createComponent(Qt.resolvedUrl("modules/plasma/"+path)));
                 for(const component of root.compiled)if(component.status===Component.Error)console.log("COMPILEERROR "+component.errorString());
@@ -157,6 +158,7 @@ ShellRoot {
                 if(name==="Notifications") { const b=root.findText(loader.item,"Test action");if(b){const pos=b.mapToItem(loader.item,b.width/2,b.height/2);driver.mouseClick(loader.item,pos.x,pos.y);driver.wait(80);}result.control=!!b;result.actions=root.actions; }
                 if(name==="Clipboard") { result.entries=loader.item.backend.entries.length; }
                 if(name==="Calendar") {result.calendar=!!loader.item.fullRepresentationItem?.monthView;}
+                if(name==="CalendarZones") {const v=loader.item.fullRepresentationItem;result.calendar=!!v?.monthView;result.zones=loader.item.selectedTimeZonesDeduplicatingExplicitLocalTimeZone();result.showClocks=!!v?.showClocks;result.later=loader.item.formatOffset(new Date(loader.item.currentTime.getTime()+2*3600000));result.same=loader.item.formatOffset(loader.item.currentTime);result.current=loader.item.currentTimeZone;}
             }
             console.log("F5RESULT "+JSON.stringify(result));
             const output=Quickshell.env("F5_CAPTURE");
@@ -199,6 +201,13 @@ class AppletUiTests(unittest.TestCase):
     def test_audio(self):self.run_case('Audio','applets/audio/AudioApplet.qml')
     def test_network_read_only(self):self.run_case('Network','applets/network/NetworkApplet.qml')
     def test_media(self):self.run_case('Media','applets/media/MediaApplet.qml')
+    def test_calendar_time_zones_from_native_keys(self):
+        r=self.run_case('CalendarZones','applets/calendar/CalendarApplet.qml')
+        self.assertTrue(r['calendar']);self.assertTrue(r['showClocks'])
+        self.assertEqual(sorted(r['zones']),['America/New_York','Asia/Tokyo','Local'])
+        self.assertIn('2',r['later']);self.assertIn('later',r['later'])
+        self.assertEqual(r['same'],'')
+        self.assertTrue(r['current'])
     def test_calendar(self):self.assertTrue(self.run_case('Calendar','applets/calendar/CalendarApplet.qml')['calendar'])
     def test_bluetooth_uses_mock_and_does_not_discover_on_open(self):
         result=self.run_case('Bluetooth','applets/BluetoothApplet.qml')

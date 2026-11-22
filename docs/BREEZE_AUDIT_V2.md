@@ -50,7 +50,7 @@ P2 una mejora de paridad secundaria. No implica que cada función de KDE deba a�
 | P1/H histórico | kwin-window.py `maximize` y quick-tile | Ctrl+flechas restauraba centrada según §3.153; no se reprodujo en esta auditoría | Comparación de ida/vuelta con marco y workspace correctos |
 | P1/M | modules/plasma/lock; runtime/ThemeHost | Reserva y temas privados con API parcial; PAM/huella no validados | Prueba con usuario mañana; jamás disparar bloqueo desde fixture |
 | P2/C | panel/TasksModel, TaskToolTip | Modelo reducido, Unity progress/badges y controles multimedia pendientes | Proveedores reales LauncherEntry/MPRIS, grupos y filtros de referencia |
-| P2/C | panel/DigitalClock y applets/calendar | QML nativo compacto, configuración multizona/agenda incompleta | Configuración original y plugins de agenda disponibles sin inventar datos |
+| P2/C, parcial corregido (R8 lote 2) | panel/DigitalClock y applets/calendar | Rueda de zonas y lista de relojes del calendario portadas; falta página de zonas y agenda | Configuración original y plugins de agenda disponibles sin inventar datos |
 | P2/C | applets/BluetoothApplet | Port reducido; OBEX/asistente avanzado ausentes | Evaluar Bluedevil existente/proveedor común; no iniciar otro dueño |
 | P2/C | applets/notifications | Sin respuesta en línea, jobs KIO ni programación DND | Ver capacidades del servidor BWM y mapear vista original sólo si efectivas |
 | P2/C | applets/clipboard | cliphist con delegados originales, sin edición/QR/miniaturas | Reutilizar proveedor común, sin lanzar Klipper adicional |

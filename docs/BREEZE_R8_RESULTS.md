@@ -41,5 +41,51 @@ Tras el reinicio de mantenimiento del shell (`bwm-theme-manager.py set plasma --
 
 * Miniaturas en vivo de `TaskToolTip.qml` (`ScreencopyView`): mantienen la contención de
   `docs/BREEZE_RECOVERY.md` hasta habilitar la captura segura de ventanas en el panel diario.
-* Zonas horarias múltiples / agenda de `DigitalClock.qml` y respuesta inline de notificaciones
-  quedan como P2 opcionales (no bloquean el uso diario ni la aceptación R9).
+* ~~Zonas horarias múltiples de `DigitalClock.qml`~~ (resuelto en el lote 2). Agenda y
+  respuesta inline de notificaciones quedan como P2 opcionales (no bloquean R9).
+
+## Lote 2: zonas horarias del reloj y del calendario (2026-11-22)
+
+### Rectificación del lote 1
+
+El registro del shell real (`quickshell -n -c ii`, iniciado 18:30:03, después de la edición de
+`Task.qml` a las 18:27) no tiene avisos de `modules/plasma/*` desde el arranque hasta la primera
+recarga en caliente. Los 72 avisos `Unable to assign [undefined]` de `Task.qml`, `ToolTipArea.qml`,
+`TrayPopup.qml` y `SystemTray.qml` aparecen **sólo** entre «Reloading configuration…» y la carga de
+la nueva generación: son evaluaciones de enlaces durante la destrucción de los objetos anteriores
+(el `!!(...)` de `Task.qml:21` no puede devolver `undefined` en un contexto válido). El «0 avisos»
+del lote 1 vale para el arranque, no para cada recarga en caliente. No se silencian.
+
+### Rueda del reloj (`panel/DigitalClock.qml`)
+
+* Portado sin cambios de lógica el `onWheel` de `applets/digital-clock/DigitalClock.qml` de
+  plasma-workspace 6.7.5 (SHA256 `b3dfe4b4…c988e7`): con `wheelChangesTimezone`, cada clic de
+  120 unidades avanza (abajo) o retrocede (arriba) en `selectedTimeZones`, da la vuelta y acumula
+  medios clics. Lo único adaptado: en lugar de escribir `Plasmoid.configuration`, emite
+  `timeZoneSelected` y `PanelContent.qml` guarda `lastSelectedTimezone` en `bar.plasma.clock`
+  (las mismas claves de `main.xml`). `tzIndex` se recalcula al cambiar la configuración.
+* Con una sola zona no hace nada, igual que el original.
+
+### Calendario (`applets/calendar/CalendarApplet.qml`)
+
+* `selectedTimeZonesDeduplicatingExplicitLocalTimeZone()` devolvía `["Local"]` fijo: la lista de
+  relojes del calendario nunca salía. Ahora sigue `digital-clock/main.qml` 6.7.5: lee
+  `selectedTimeZones`, quita la entrada explícita que coincide con la zona del sistema y ordena con
+  `TimeZoneUtils.sortedTimeZones`. `currentTimeZone` sigue a `lastSelectedTimezone`,
+  `displayTimezoneFormat` a la clave nativa, y `formatTime`/`formatOffset` son los originales
+  (día de la semana si cambia de día, « • N horas antes/después» con el catálogo de Plasma).
+
+### Comprobado
+
+* `tests/test_plasma_panel_native.py` 6/6 (dos nuevos: rueda abajo×3 + arriba con vuelta y
+  medio clic acumulado; rueda ignorada sin `wheelChangesTimezone`).
+* `tests/test_plasma_tray.py` 21/21 (nuevo: calendario con tres zonas, lista visible, desplazamiento
+  «2 hours later», sin desplazamiento para la zona actual). El primer intento con
+  `Europe/Madrid` confirmó la deduplicación original (es la zona del sistema).
+* Recarga en caliente del shell real sin errores nuevos de estos archivos.
+
+### Límites
+
+* No hay página para editar la lista de zonas (la del original es `configTimeZones.qml`, un KCM
+  de applet): se configuran en `bar.plasma.clock` o en el texto del usuario. No probado con la
+  rueda física en el panel diario ni a la vista.

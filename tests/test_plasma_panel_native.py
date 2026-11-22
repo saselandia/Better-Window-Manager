@@ -24,6 +24,7 @@ ShellRoot {
     property int toggles:0
     property int desktopToggles:0
     property int arrowToggles:0
+    property var zones:[]
     Component.onCompleted:Config.blockWrites=true
     FloatingWindow {
         id:host;title:"bwm-native-panel-test"
@@ -40,6 +41,8 @@ ShellRoot {
                 Layout.preferredHeight:vertical?implicitHeight:Number(Quickshell.env("NATIVE_HEIGHT"))
                 Layout.maximumHeight:vertical?-1:Number(Quickshell.env("NATIVE_HEIGHT"))
                 Layout.preferredWidth:vertical?44:implicitWidth
+                settings:Quickshell.env("NATIVE_WHEEL")==="0"?({}):({wheelChangesTimezone:Quickshell.env("NATIVE_WHEEL")==="1",selectedTimeZones:["Local","Europe/Madrid","Asia/Tokyo"],lastSelectedTimezone:"Local"})
+                onTimeZoneSelected:z=>root.zones.push(z)
             }
             Panel.ShowDesktopButton { id:desktop;onToggleRequested:root.desktopToggles++ }
             Tray.SystemTray {
@@ -63,7 +66,9 @@ ShellRoot {
             driver.mouseClick(kickoff,16,16);driver.mouseClick(kickoff,16,16);
             driver.mouseClick(desktop,16,16);
             driver.mouseClick(arrow,11,16);driver.mouseClick(arrow,11,16);
-            console.log("NATIVEPANEL "+JSON.stringify({state:clock.state,height:clock.height,width:clock.width,timePixels:time.font.pixelSize,timeHeight:time.height,datePixels:date.font.pixelSize,bold:time.font.bold,desktopWidth:desktop.width,desktopHeight:desktop.height,arrowWidth:arrow.width,trayIcon:tray.itemSize,trayCell:tray.cellLength,trayLanes:tray.lanes,toggles:root.toggles,closed:!kickoff.expanded,desktopToggles:root.desktopToggles,arrowToggles:root.arrowToggles,arrowClosed:!arrow.expanded}));
+            for(const dy of [-120,-120,-120,120])driver.mouseWheel(clock,clock.width/2,clock.height/2,0,dy);
+            driver.mouseWheel(clock,clock.width/2,clock.height/2,0,-60);
+            console.log("NATIVEPANEL "+JSON.stringify({state:clock.state,height:clock.height,width:clock.width,timePixels:time.font.pixelSize,timeHeight:time.height,datePixels:date.font.pixelSize,bold:time.font.bold,desktopWidth:desktop.width,desktopHeight:desktop.height,arrowWidth:arrow.width,trayIcon:tray.itemSize,trayCell:tray.cellLength,trayLanes:tray.lanes,toggles:root.toggles,closed:!kickoff.expanded,desktopToggles:root.desktopToggles,arrowToggles:root.arrowToggles,arrowClosed:!arrow.expanded,zones:root.zones}));
             Qt.quit();
         }
     }
@@ -86,9 +91,9 @@ class NativePanelTests(unittest.TestCase):
     def tearDownClass(cls):
         cls.path.unlink(missing_ok=True)
         subprocess.run(['hyprctl','reload'],capture_output=True,check=True,timeout=5)
-    def run_case(self,height,vertical=False,auto=False):
+    def run_case(self,height,vertical=False,auto=False,wheel='0'):
         result=subprocess.run(['qs','-p',str(self.path)],capture_output=True,text=True,timeout=10,
-                              env={**os.environ,'NATIVE_HEIGHT':str(height),'NATIVE_VERTICAL':'1' if vertical else '0','NATIVE_AUTOSIZE':'1' if auto else '0'})
+                              env={**os.environ,'NATIVE_HEIGHT':str(height),'NATIVE_VERTICAL':'1' if vertical else '0','NATIVE_AUTOSIZE':'1' if auto else '0','NATIVE_WHEEL':wheel})
         out=result.stdout+result.stderr
         for error in ['ReferenceError:','TypeError:','failed to load','Binding loop']:
             self.assertNotIn(error,out)
@@ -119,3 +124,9 @@ class NativePanelTests(unittest.TestCase):
 
     def test_tray_native_auto_size_setting(self):
         self.run_case(32,auto=True)
+
+    def test_wheel_changes_timezone_like_plasma(self):
+        # DigitalClock.qml 6.7.5 onWheel: down = next, wraps around, half clicks accumulate.
+        self.assertEqual(self.run_case(44,wheel='1')['zones'],['Europe/Madrid','Asia/Tokyo','Local','Asia/Tokyo'])
+    def test_wheel_ignored_when_disabled(self):
+        self.assertEqual(self.run_case(44,wheel='2')['zones'],[])

@@ -193,6 +193,10 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   reiniciar el shell); añadido botón «Clear History» (`Cliphist.wipe`) y copia con `Return` en
   `ClipboardApplet.qml`, e icono + botón de cierre en cada tarjeta de `TaskToolTip.qml`. 25/25
   pruebas QML en verde (`docs/BREEZE_R8_RESULTS.md`).
+* **R8, lote 2 (2026-11-22, §342):** rueda del reloj que cambia de zona horaria (`onWheel` original,
+  guarda `lastSelectedTimezone` en `bar.plasma.clock`) y relojes del calendario con
+  `selectedTimeZones` (antes `["Local"]` fijo). Rectificado el lote 1: los avisos QML de
+  `modules/plasma` sólo salen al destruir la generación anterior en una recarga en caliente.
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -6306,3 +6310,17 @@ git status; git log --oneline -5; git push origin main
 * **Pendiente:** P2 aplazados en `docs/BREEZE_R8_RESULTS.md` o pasar a R9 (aceptación final y
   regresión entre las tres skins).
 
+### 342. Breeze R8, lote 2: zonas horarias del reloj y del calendario (2026-11-22)
+
+* **Petición:** continuar donde lo dejó Gemini (R8) y hacer commit y push.
+* **Rectificación del lote 1:** el registro del shell real no tiene avisos de `modules/plasma/*` al
+  arrancar; los 72 «Unable to assign [undefined]» aparecen sólo entre «Reloading configuration…» y la
+  nueva generación (destrucción de la anterior). El «0 avisos» de §341 vale para el arranque.
+* **Hecho:** `panel/DigitalClock.qml` porta el `onWheel` de plasma-workspace 6.7.5 (adaptado: emite
+  `timeZoneSelected`; `PanelContent.qml` guarda `lastSelectedTimezone` en `bar.plasma.clock`).
+  `applets/calendar/CalendarApplet.qml` lee `selectedTimeZones` con la deduplicación y orden
+  originales (`TimeZoneUtils`), `currentTimeZone`, `displayTimezoneFormat`, `formatTime` y
+  `formatOffset` de `digital-clock/main.qml`.
+* **Comprobado:** panel nativo 6/6 y bandeja 21/21 con `BWM_RUN_QML_TESTS=1` (tres pruebas nuevas);
+  recarga en caliente sin errores nuevos. **No probado:** rueda física en el panel diario; no hay
+  página para editar la lista de zonas. Detalle en `docs/BREEZE_R8_RESULTS.md`.

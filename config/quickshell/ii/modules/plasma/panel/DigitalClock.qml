@@ -105,7 +105,7 @@ MouseArea {
     }
 
     // BWM: immutable host settings replace KConfig property signals.
-    onClockConfigChanged: Qt.callLater(main.timeFormatCorrection)
+    onClockConfigChanged: { main.setTimeZoneIndex(); Qt.callLater(main.timeFormatCorrection); }
     function pointToPixel(pointSize: int): int {
         const pixelsPerInch = Screen.pixelDensity * 25.4
         return Math.round(pointSize / 72 * pixelsPerInch)
@@ -329,6 +329,44 @@ MouseArea {
 
     // BWM: the host handles calendar expansion; no app launch or real action here.
     acceptedButtons:Qt.LeftButton
+
+    // BWM: Plasmoid.configuration is immutable host data; the host persists the choice.
+    signal timeZoneSelected(string timeZone)
+
+    onWheel: wheel => {
+        if (!main.clockConfig.wheelChangesTimezone) {
+            return;
+        }
+        const zones = main.clockConfig.selectedTimeZones || [];
+        if (zones.length < 2) {
+            return;
+        }
+
+        var delta = (wheel.inverted ? -1 : 1) * (wheel.angleDelta.y ? wheel.angleDelta.y : wheel.angleDelta.x);
+        var newIndex = tzIndex;
+        wheelDelta += delta;
+        // magic number 120 for common "one click"
+        // See: https://doc.qt.io/qt-5/qml-qtquick-wheelevent.html#angleDelta-prop
+        while (wheelDelta >= 120) {
+            wheelDelta -= 120;
+            newIndex--;
+        }
+        while (wheelDelta <= -120) {
+            wheelDelta += 120;
+            newIndex++;
+        }
+
+        if (newIndex >= zones.length) {
+            newIndex = 0;
+        } else if (newIndex < 0) {
+            newIndex = zones.length - 1;
+        }
+
+        if (newIndex !== tzIndex) {
+            tzIndex = newIndex;
+            main.timeZoneSelected(zones[newIndex]);
+        }
+    }
    /*
     * Visible elements
     *

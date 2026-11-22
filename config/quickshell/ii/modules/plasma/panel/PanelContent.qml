@@ -177,6 +177,7 @@ Item {
             showDate:root.config.showDate
             showSeconds:root.config.showSeconds
             onClicked:PlasmaTray.TrayState.toggle("calendar",root.panelWindow.screen.name)
+            onTimeZoneSelected:timeZone=>{ Config.options.bar.plasma.clock=Object.assign({},root.config.clock ?? ({}),{lastSelectedTimezone:timeZone}); }
         }
     }
     Component {
