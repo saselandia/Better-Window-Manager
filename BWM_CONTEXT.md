@@ -197,6 +197,11 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   guarda `lastSelectedTimezone` en `bar.plasma.clock`) y relojes del calendario con
   `selectedTimeZones` (antes `["Local"]` fijo). Rectificado el lote 1: los avisos QML de
   `modules/plasma` sólo salen al destruir la generación anterior en una recarga en caliente.
+* **R9, aceptación final (2026-11-22, §343):** verificados binarios cargados en la sesión diaria
+  (`breezebars.so` `103fab72…`, `bwm-decorator`, 10 KCM BWM descubiertos por `settings-native.sh`,
+  dueño único de `qs -c ii`/polkit/bridge, `hyprctl configerrors` vacío y `bwm-requirements.py`
+  completo) y **364 pruebas ejecutadas con 0 fallos** (293 Python multi-skin, 68 QML + C++ Breeze,
+  3 CTest). Informe completo con límites explícitos en `docs/BREEZE_R9_RESULTS.md`.
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -6324,3 +6329,24 @@ git status; git log --oneline -5; git push origin main
 * **Comprobado:** panel nativo 6/6 y bandeja 21/21 con `BWM_RUN_QML_TESTS=1` (tres pruebas nuevas);
   recarga en caliente sin errores nuevos. **No probado:** rueda física en el panel diario; no hay
   página para editar la lista de zonas. Detalle en `docs/BREEZE_R8_RESULTS.md`.
+
+### 343. Breeze R9: aceptación final y regresión de las tres skins (2026-11-22)
+
+* **Petición:** continuar con R9 (`docs/BREEZE_PLAN_V2.md`).
+* **Comprobado en la sesión diaria real:**
+  * `config/hypr/plugins/breezebars.so` (SHA-256 `103fab72be07684be362d6124705e8d346cf9b716a3e63e0473ec09e928a383d`)
+    cargado con `breezebars-shadows` v2 (`shm: true`, XWayland `:0`), `breezebars-scale` v1
+    (`enabled: true`, `resetOnClose: 1`, `tracked: 0`) y `blur_on_request` OK.
+  * `bwm-decorator` instalado y escuchando; `settings-native.sh --list` descubre los 10 KCM BWM
+    (`kcm_bwm_*`) y restringe `kcm_kwin_effects`; dueño único de `qs -c ii` (1),
+    `polkit-kde-authentication-agent-1` (1) y `kde-config-bridge.py watch` (1);
+    `hyprctl configerrors` vacío; `bwm-requirements.py check --skin plasma` todo listo.
+* **Suite de regresión ejecutada (364 pruebas, 0 fallos):**
+  * 293/293 Python multi-skin (`default`, `retro`, `plasma`, R1/Magic Alt+S, R3, R6, R7, Steam, común).
+  * 68/68 QML + C++ Breeze (`test_r7_effects`, `test_plasma_interfaces`, `test_plasma_menus_ui`,
+    `test_plasma_panel_native`, `test_plasma_task_input`, `test_plasma_tray`, `test_breezebars`,
+    `test_bwm_decorator`).
+  * 3/3 CTest (`src/bwm-systemsettings/build`).
+* **Entregado:** `docs/BREEZE_R9_RESULTS.md` con tabla de estado por fase (R0–R8) y límites
+  explícitos (R4–R5 experimental, contención de miniaturas en `TaskToolTip`, pruebas físicas de
+  bloqueo/PAM y energía reservadas al usuario).
