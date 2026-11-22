@@ -31,7 +31,7 @@ Item {
     readonly property string resolvedEdge: {
         if (edge !== "")
             return edge;
-        const win = root.QsWindow.window;
+        const win = root.QsWindow?.window;
         const a = win ? win.anchors : null;
         if (!a || typeof a.top !== "boolean")
             return "bottom";
@@ -47,7 +47,7 @@ Item {
     signal aboutToShow()
 
     function showToolTip() {
-        if (!active || !hasContent || !visible || !root.QsWindow.window)
+        if (!active || !hasContent || !visible || !root.QsWindow?.window)
             return;
         aboutToShow();
         tooltipPopup.visible = true;
@@ -70,7 +70,7 @@ Item {
     HoverHandler {
         id: hoverHandler
         acceptedButtons: Qt.NoButton
-        enabled: root.visible && root.active
+        enabled: !!(root.visible && root.active)
         onHoveredChanged: {
             if (hoverHandler.hovered) {
                 if (root.active && root.hasContent)

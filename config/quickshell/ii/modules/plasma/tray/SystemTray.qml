@@ -48,13 +48,13 @@ Item {
     readonly property var hiddenItems:items.filter(i=>!Logic.visible(settings,i.id,i.status!==Sni.Status.Passive))
     readonly property var visibleApplets:applets.filter(a=>Logic.visible(settings,"applet:"+a.id,a.active))
     readonly property var hiddenApplets:applets.filter(a=>!Logic.visible(settings,"applet:"+a.id,a.active))
-    readonly property string screenName:QsWindow.window?.screen?.name||""
+    readonly property string screenName:QsWindow?.window?.screen?.name||""
     readonly property bool expanded:TrayState.expanded&&TrayState.screenName===screenName
     readonly property string activeApplet:TrayState.applet
     property bool configuring:false
     onActiveAppletChanged:configuring=false
     readonly property var hiddenLayout:({currentIndex:-1})
-    readonly property real contentLength:cellLength*Math.ceil(entries.length/lanes)+(expander.visible?itemSize:0)+Kirigami.Units.smallSpacing
+    readonly property real contentLength:(cellLength*Math.ceil(entries.length/Math.max(1,lanes))+(expander?.visible?itemSize:0)+Kirigami.Units.smallSpacing)||0
     implicitWidth:vertical?Kirigami.Units.iconSizes.medium:contentLength
     implicitHeight:vertical?contentLength:Kirigami.Units.iconSizes.medium
     function openApplet(id) { TrayState.toggle(id,screenName); }

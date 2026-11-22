@@ -183,12 +183,16 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   ocho guardas y 46 pruebas. Quedan residuos (3,0625 px > 3 px y tres ajustes temporales fuera
   de margen), sin paridad exacta. Plugin instalado atómicamente; **C++ pendiente de próximo
   inicio de sesión**, antiguo aún cargado. Sin hot load/reinicio/commit/push. Informe R7.
-* **R7, iteración 5 (2026-11-22, §340):** validado `breezebars-scale` en la sesión diaria tras
+* **R7, iteración 5–6 (2026-11-22, §340):** validado `breezebars-scale` en la sesión diaria tras
   reiniciar (`resetOnClose: 0 → 1`, `tracked: 0`); comparación numérica de ida y reversión (120 ms)
-  de `KWin::SpringMotion` (RK4 100 Hz) frente a `SSpringCurve`; clasificación de capas
-  (`breeze-static-layers` con `no_anim` en `plasmaDesktop`/`plasmaOutline` y `breeze-sliding-layers`
-  con `slide` en `plasmaNotifications`/`krunner`) y transiciones de 200 ms `OutCubic` en `Panel.qml`
-  (flotante ↔ acoplado) y `KickoffWindow.qml`. 51/51 pruebas en verde.
+  de `KWin::SpringMotion` frente a `SSpringCurve`; clasificación de capas (`breeze-static-layers`,
+  `breeze-sliding-layers`), `PlasmaTheme.slidingPopups` en `Panel.qml`, `KickoffWindow.qml` y
+  `TrayPopup.qml`, y contrato `r7_contract` actualizado. 71/71 pruebas en verde.
+* **R8, lote 1 (2026-11-22, §341):** cerrados los 8 avisos QML reales de `modules/plasma/*` en el
+  log en vivo (`Task.qml`, `ToolTipArea.qml`, `SystemTray.qml`, `TrayPopup.qml` → **0 avisos** tras
+  reiniciar el shell); añadido botón «Clear History» (`Cliphist.wipe`) y copia con `Return` en
+  `ClipboardApplet.qml`, e icono + botón de cierre en cada tarjeta de `TaskToolTip.qml`. 25/25
+  pruebas QML en verde (`docs/BREEZE_R8_RESULTS.md`).
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -6280,4 +6284,25 @@ git status; git log --oneline -5; git push origin main
   (`test_r7_animation_measurement` 4/4, `test_r7_effects` 8/8, `test_r3_native_settings` 10/10,
   `test_kde_config_bridge` 22/22, `test_plasma_shadow_policy` 3/3, `test_plasma_panel_native` 4/4,
   `test_plasma_tray` 20/20).
+
+### 341. Breeze R8, lote 1: cierre de avisos QML reales, portapapeles y vista previa de tareas (2026-11-22)
+
+* **Petición:** continuar con R8 (`docs/BREEZE_PLAN_V2.md`).
+* **Hecho:**
+  * Cerrados los 8 avisos `Unable to assign [undefined]` registrados en `qs -c ii log` sobre
+    `modules/plasma/*`: `panel/Task.qml` (`isActive`/`isMinimized`), `theme/ToolTipArea.qml`
+    (`root.QsWindow?.window`, `HoverHandler.enabled`), `tray/SystemTray.qml`
+    (`QsWindow?.window`, `expander?.visible`, `Math.max(1, lanes)`) y `tray/TrayPopup.qml`
+    (`anchorItem?.QsWindow?.window`).
+  * `applets/ClipboardApplet.qml`: botón «Clear History» (`edit-clear-history` → `Cliphist.wipe()`)
+    en la cabecera, foco en el buscador al abrir y `Return`/`Enter` para copiar la primera
+    coincidencia.
+  * `panel/TaskToolTip.qml`: cabecera con icono de la aplicación, título elidido y botón
+    `window-close` por ventana (como `ToolTipInstance.qml` de Plasma 6.7.5).
+  * Informe `docs/BREEZE_R8_RESULTS.md`.
+* **Comprobado:** `tests/test_plasma_task_input.py` 1/1, `tests/test_plasma_panel_native.py` 4/4,
+  `tests/test_plasma_tray.py` 20/20; reinicio de mantenimiento del shell con **0 avisos** en
+  `modules/plasma/*`.
+* **Pendiente:** P2 aplazados en `docs/BREEZE_R8_RESULTS.md` o pasar a R9 (aceptación final y
+  regresión entre las tres skins).
 

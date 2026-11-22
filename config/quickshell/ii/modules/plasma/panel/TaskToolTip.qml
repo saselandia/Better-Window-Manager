@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Widgets
 import Quickshell.Wayland
 import org.kde.ksvg as KSvg
+import org.kde.kirigami as Kirigami
 import org.kde.plasma.components as PC3
 import qs.modules.plasma.theme
 PopupWindow {
@@ -45,8 +46,20 @@ PopupWindow {
                 implicitWidth:190; implicitHeight:140
                 onClicked: { popup.tasksModel.activate(modelData); popup.opened=false; }
                 ColumnLayout {
-                    anchors.fill:parent
-                    PC3.Label { Layout.maximumWidth:180; text:card.modelData.title; elide:Text.ElideRight }
+                    anchors.fill:parent; spacing:4
+                    RowLayout {
+                        Layout.fillWidth:true; spacing:4
+                        Kirigami.Icon {
+                            Layout.preferredWidth:16; Layout.preferredHeight:16
+                            source:Quickshell.iconPath(popup.tasksModel?.entry(popup.group?.appId??"")?.icon||"application-x-executable")
+                        }
+                        PC3.Label { Layout.fillWidth:true; text:card.modelData.title; elide:Text.ElideRight }
+                        PC3.ToolButton {
+                            implicitWidth:20; implicitHeight:20
+                            icon.name:"window-close"
+                            onClicked:if(typeof card.modelData.close==="function"){card.modelData.close();popup.opened=false;}
+                        }
+                    }
                     // Temporary containment: see docs/BREEZE_RECOVERY.md.
                     ScreencopyView {
                         Layout.fillWidth:true; Layout.fillHeight:true

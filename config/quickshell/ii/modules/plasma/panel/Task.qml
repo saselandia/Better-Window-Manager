@@ -18,9 +18,9 @@ Item {
     property bool vertical:edge==="left"||edge==="right"
     readonly property string appId:group?.appId??""
     readonly property var toplevels:group?.toplevels??[]
-    readonly property bool isActive:task.toplevels.some(t=>tasksModel?.isActive(t)??!!t.activated)
-    readonly property bool isMinimized:!!(task.toplevels.length>0 && task.toplevels.every(t=>(tasksModel?.minimized(t)??false)))
-    readonly property bool attention:task.toplevels.some(t=>!!t.urgent)
+    readonly property bool isActive:!!(task.toplevels&&task.toplevels.some(t=>typeof tasksModel?.isActive==="function"?!!tasksModel.isActive(t):!!t?.activated))
+    readonly property bool isMinimized:!!(task.toplevels&&task.toplevels.length>0&&task.toplevels.every(t=>typeof tasksModel?.minimized==="function"?!!tasksModel.minimized(t):false))
+    readonly property bool attention:!!(task.toplevels&&task.toplevels.some(t=>!!t?.urgent))
     readonly property string basePrefix:!task.toplevels.length ? "" : attention ? "attention" : isMinimized ? "minimized" : isActive ? "focus" : "normal"
     // BWM: icon geometry follows Task.qml/LayoutMetrics, using the active theme's frame.
     readonly property real horizontalMargins:metrics.margins.left+metrics.margins.right

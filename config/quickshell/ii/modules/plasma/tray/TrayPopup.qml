@@ -22,7 +22,7 @@ PopupWindow {
     readonly property alias renderItem:surface
     required property var tray
     required property var anchorItem
-    readonly property string edge:PanelState.edgeFor(anchorItem.QsWindow.window?.screen?.name||"")
+    readonly property string edge:PanelState.edgeFor(anchorItem?.QsWindow?.window?.screen?.name||"")
     property bool grabReady:false
     visible:tray.expanded
     onVisibleChanged:{
@@ -43,7 +43,7 @@ PopupWindow {
     // BWM: PlasmaQuick::Dialog docks against the panel edge, not against the icon (which sits inside
     // the containment margins): the anchor rect spans the panel thickness. Floating panels keep
     // CompactApplet's largeSpacing margin.
-    readonly property string screenName:anchorItem.QsWindow.window?.screen?.name||""
+    readonly property string screenName:anchorItem?.QsWindow?.window?.screen?.name||""
     readonly property bool docked:PanelState.gapFor(screenName)<=0
     readonly property var container:{ let item=anchorItem; while(item&&item.parent){ item=item.parent; if(item.isAppletContainer)return item; } return null; }
     readonly property bool horizontalPanel:edge==="top"||edge==="bottom"
@@ -69,7 +69,7 @@ PopupWindow {
     anchor.gravity:anchor.edges
     // KWin's blur behind the dialog; the panel layer rule (blur_popups, ignore_alpha) keeps its shape
     BackgroundEffect.blurRegion:Region { item:PlasmaTheme.blur&&trayWindow.visible?trayFrame:null }
-    HyprlandFocusGrab { active:trayWindow.visible&&trayWindow.grabReady;windows:trayWindow.grabReady?[trayWindow, trayWindow.anchorItem.QsWindow.window].filter(w=>w):[];onCleared:TrayState.close() }
+    HyprlandFocusGrab { active:trayWindow.visible&&trayWindow.grabReady;windows:trayWindow.grabReady?[trayWindow, trayWindow.anchorItem?.QsWindow?.window].filter(w=>w):[];onCleared:TrayState.close() }
     Item {
     id:surface
     anchors.fill:parent
