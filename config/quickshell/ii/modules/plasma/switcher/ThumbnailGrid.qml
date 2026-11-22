@@ -154,14 +154,18 @@ FocusScope {
                             // ScreencopyView needs a container
                             // otherwise it will be drawn the same size as the parent ColumnLayout
                             Item {
+                                id: thumbBox
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
+                                readonly property bool isMinimized: (modelData.workspace?.name === "special:minimized")
+                                    || ((modelData.workspace?.id ?? 0) === 99)
+                                readonly property bool canCapture: tabBox.visible && !isMinimized && (modelData.toplevel != null)
 
                                 ScreencopyView {
                                     anchors.fill: parent
-                                    // Temporary containment for the 2026-11-12 capture crash.
-                                    captureSource: null
-                                    live: false
+                                    captureSource: thumbBox.canCapture ? modelData.toplevel : null
+                                    live: thumbBox.canCapture
+                                    visible: thumbBox.canCapture
                                 }
 
                                 Kirigami.Icon {

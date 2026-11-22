@@ -202,6 +202,11 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   dueño único de `qs -c ii`/polkit/bridge, `hyprctl configerrors` vacío y `bwm-requirements.py`
   completo) y **364 pruebas ejecutadas con 0 fallos** (293 Python multi-skin, 68 QML + C++ Breeze,
   3 CTest). Informe completo con límites explícitos en `docs/BREEZE_R9_RESULTS.md`.
+* **R8, lote 3 (2026-11-22, §344):** levantada la contención de capturas (`BREEZE_RECOVERY.md`)
+  tras confirmar `bwmScreenshareMonitorGuard` v1 en Hyprland 0.56.2: `TaskToolTip.qml`,
+  `ThumbnailGrid.qml`, `ThemedSwitcher.qml` y `WindowThumbnail.qml` vuelven a capturar con doble
+  guarda QML (visible + no minimizada); `TaskToolTip.qml` añade icono de respaldo para minimizadas
+  y controles multimedia MPRIS (`previous`/`togglePlaying`/`next` + título de pista). 17/17 OK.
 * **R5 (2026-11-18, §303):** «Ajustes del panel» originales de Plasma en el anfitrión aislado, abiertos
   con «Enter Edit Mode»; alineación/desplazamiento/modo de longitud guardados en `plasmashellrc`.
   Probado offscreen y visto en Hyprland; evolución hasta la iteración 13 (§325) en
@@ -6350,3 +6355,23 @@ git status; git log --oneline -5; git push origin main
 * **Entregado:** `docs/BREEZE_R9_RESULTS.md` con tabla de estado por fase (R0–R8) y límites
   explícitos (R4–R5 experimental, contención de miniaturas en `TaskToolTip`, pruebas físicas de
   bloqueo/PAM y energía reservadas al usuario).
+
+### 344. Breeze R8, lote 3: miniaturas en vivo con guardas y controles MPRIS en `TaskToolTip` (2026-11-22)
+
+* **Petición:** «continua».
+* **Hecho:**
+  * Verificado `hyprctl -j version` → `"bwmScreenshareMonitorGuard": {"version": 1, "pid": 3191}` en
+    la sesión diaria, levantando la contención temporal de `docs/BREEZE_RECOVERY.md` con doble
+    defensa en QML (sólo capturar cuando la vista está visible y la ventana no está en
+    `special:minimized`/workspace 99).
+  * `config/quickshell/ii/modules/plasma/panel/TaskToolTip.qml`: `ScreencopyView` protegido por
+    `popup.visible && !card.isMinimized && (card.modelData != null)` con icono 48×48 de respaldo
+    para minimizadas, y fila MPRIS (`Quickshell.Services.Mpris`, emparejamiento por
+    `desktopEntry`/`dbusName`/`identity`, título de pista y botones `previous`/`togglePlaying`/`next`).
+  * `config/quickshell/ii/modules/plasma/switcher/{ThumbnailGrid,ThemedSwitcher,compat/WindowThumbnail}.qml`:
+    miniaturas protegidas por visibilidad + exclusión de minimizadas.
+  * `tests/test_plasma_task_input.py`: nueva prueba `test_tooltip_thumbnail_guards_and_mpris_controls`.
+* **Comprobado:** `test_plasma_task_input` (2/2), `test_plasma_interfaces` (8/8) y
+  `test_window_activation` (7/7) = **17/17 OK** (`BWM_RUN_QML_TESTS=1`); recarga en caliente de
+  `qs -c ii` sin errores de estos archivos. **Pendiente del usuario:** comprobación visual física
+  al pasar el ratón por tareas y pulsar `Alt+Tab` con ventanas reales y un reproductor MPRIS.

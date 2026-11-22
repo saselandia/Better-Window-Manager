@@ -134,3 +134,127 @@ class TaskInputTests(unittest.TestCase):
         for edge in ('bottom','top','left','right'):
             with self.subTest(edge=edge):
                 self.run_input_case(edge)
+
+    def test_tooltip_thumbnail_guards_and_mpris_controls(self):
+        harness = r'''
+import QtQuick
+import Quickshell
+ShellRoot {
+    id: root
+    property int prevCount: 0
+    property int toggleCount: 0
+    property int nextCount: 0
+    function findByName(item, name, out) {
+        if (!item) return;
+        if (item.objectName === name) out.push(item);
+        const list = item.children || [];
+        for (let i = 0; i < list.length; ++i) findByName(list[i], name, out);
+    }
+    QtObject {
+        id: fakeModel
+        function minimized(t) { return !!t?.isMin; }
+        function entry(id) { return { icon: "spotify" }; }
+        function activate(t) {}
+    }
+    QtObject {
+        id: fakePlayer
+        property string desktopEntry: "spotify"
+        property string identity: "Spotify"
+        property string dbusName: "org.mpris.MediaPlayer2.spotify"
+        property string trackTitle: "Breeze Theme"
+        property bool isPlaying: true
+        property bool canPlay: true
+        property bool canPause: true
+        property bool canGoNext: true
+        property bool canGoPrevious: true
+        function previous() { root.prevCount++; }
+        function togglePlaying() { root.toggleCount++; isPlaying = !isPlaying; }
+        function next() { root.nextCount++; }
+    }
+    FloatingWindow {
+        id: win
+        title: "bwm-task-input-test"
+        implicitWidth: 200; implicitHeight: 80; visible: true
+        Item { id: anchorBox; width: 48; height: 48; property bool containsMouse: false }
+        TaskToolTip {
+            id: tip
+            taskItem: anchorBox
+            tasksModel: fakeModel
+            group: ({
+                appId: "spotify",
+                toplevels: [
+                    { title: "Visible", isMin: false },
+                    { title: "Minimized", isMin: true }
+                ]
+            })
+            mprisPlayers: [fakePlayer]
+            opened: false
+        }
+        Timer {
+            interval: 120; running: true
+            onTriggered: {
+                const thumbsClosed = [];
+                root.findByName(tip.contentItem, "taskThumb", thumbsClosed);
+                const closedAllNull = thumbsClosed.every(t => t.captureSource === null && !t.live);
+                tip.opened = true;
+                openCheck.start();
+                root._closedAllNull = closedAllNull;
+            }
+        }
+        Timer {
+            id: openCheck; interval: 120
+            onTriggered: {
+                const thumbs = [], rows = [], labels = [], prevs = [], toggles = [], nexts = [];
+                root.findByName(tip.contentItem, "taskThumb", thumbs);
+                root.findByName(tip.contentItem, "mediaRow", rows);
+                root.findByName(tip.contentItem, "mediaTrackLabel", labels);
+                root.findByName(tip.contentItem, "mediaPrev", prevs);
+                root.findByName(tip.contentItem, "mediaToggle", toggles);
+                root.findByName(tip.contentItem, "mediaNext", nexts);
+                const visOk = thumbs.length === 2
+                    && thumbs[0].captureSource !== null && thumbs[0].live === true
+                    && thumbs[1].captureSource === null && thumbs[1].live === false;
+                const mediaVis = rows.length > 0 && rows[0].visible === true;
+                const track = labels.length > 0 ? labels[0].text : "";
+                if (prevs.length > 0) prevs[0].clicked();
+                if (toggles.length > 0) toggles[0].clicked();
+                if (nexts.length > 0) nexts[0].clicked();
+                tip.opened = false;
+                const reopenedNull = thumbs.every(t => t.captureSource === null && !t.live);
+                console.log("THUMBRESULT " + JSON.stringify({
+                    closedAllNull: root._closedAllNull,
+                    visOk: visOk,
+                    mediaVis: mediaVis,
+                    track: track,
+                    prev: root.prevCount,
+                    toggle: root.toggleCount,
+                    next: root.nextCount,
+                    reopenedNull: reopenedNull
+                }));
+                Qt.quit();
+            }
+        }
+    }
+    property bool _closedAllNull: false
+}
+'''
+        with tempfile.TemporaryDirectory(prefix='bwm-task-thumb-') as folder:
+            folder = Path(folder)
+            tooltip = (PANEL/'TaskToolTip.qml').read_text().replace(
+                'ScreencopyView {', 'Item { property var captureSource; property bool live;')
+            (folder/'TaskToolTip.qml').write_text(tooltip)
+            theme = folder/'modules/plasma/theme'; theme.mkdir(parents=True)
+            (theme/'qmldir').write_text('module qs.modules.plasma.theme\nBlurPath 1.0 BlurPath.qml\n')
+            (theme/'BlurPath.qml').write_text('import QtQuick\nQtObject { required property string path; property string withoutBlur: path; readonly property string resolved: withoutBlur }\n')
+            (folder/'test.qml').write_text(harness)
+            result = subprocess.run(['qs','-p',str(folder/'test.qml')],capture_output=True,text=True,timeout=10)
+            output = result.stdout+result.stderr
+            self.assertEqual(result.returncode,0,output)
+            for error in ['TypeError:', 'ReferenceError:', 'failed to load', 'is not a type']:
+                self.assertNotIn(error,output)
+            value = next((json.loads(line.split('THUMBRESULT ',1)[1])
+                          for line in output.splitlines() if 'THUMBRESULT ' in line),None)
+            self.assertEqual(value,dict(
+                closedAllNull=True,visOk=True,mediaVis=True,track="Breeze Theme",
+                prev=1,toggle=1,next=1,reopenedNull=True),output)
+

@@ -89,3 +89,41 @@ del lote 1 vale para el arranque, no para cada recarga en caliente. No se silenc
 * No hay página para editar la lista de zonas (la del original es `configTimeZones.qml`, un KCM
   de applet): se configuran en `bar.plasma.clock` o en el texto del usuario. No probado con la
   rueda física en el panel diario ni a la vista.
+
+## Lote 3: miniaturas en vivo con guardas y controles MPRIS en `TaskToolTip` (2026-11-22)
+
+### Levantamiento de la contención de capturas (`BREEZE_RECOVERY.md`)
+
+Verificado en la sesión activa que Hyprland 0.56.2 ejecuta el parche de usuario de Portage
+(`hyprctl -j version` → `"bwmScreenshareMonitorGuard": {"version": 1, "pid": 3191}`). Además de la
+guarda en el compositor, se añade doble defensa en QML (sólo capturar cuando la superficie está
+visible y la ventana **no** está minimizada en `special:minimized`/workspace 99):
+
+* **`modules/plasma/panel/TaskToolTip.qml`:**
+  * `ScreencopyView` vuelve a capturar `card.modelData` sólo con
+    `card.canCapture = popup.visible && !card.isMinimized && (card.modelData != null)` (`live` y
+    `visible` ligados a `canCapture`). Las ventanas minimizadas muestran el icono centrado de la
+    aplicación (48×48) en lugar de un recuadro vacío.
+  * **Controles multimedia MPRIS** (como `ToolTipInstance.qml` de Plasma 6.7.5): empareja
+    `Mpris.players` con `group.appId` por `desktopEntry`, `dbusName` o `identity` y muestra título
+    de pista + botones `media-skip-backward`, `media-playback-pause`/`start` y
+    `media-skip-forward`.
+* **`modules/plasma/switcher/ThumbnailGrid.qml`:**
+  * `ScreencopyView` ligado a `tabBox.visible && !isMinimized && (modelData.toplevel != null)`.
+* **`modules/plasma/switcher/ThemedSwitcher.qml` y `compat/WindowThumbnail.qml`:**
+  * `bwmToplevels` filtra a `null` las ventanas minimizadas y `WindowThumbnail` sólo enlaza
+    `captureSource` cuando `visible && bwmController.isOpen`.
+
+### Comprobado
+
+* `tests/test_plasma_task_input.py`: **2/2** (nuevo `test_tooltip_thumbnail_guards_and_mpris_controls`
+  comprueba `captureSource: null` cerrado/minimizado, captura activa abierto en ventana visible,
+  vuelta a `null` al cerrar y botones MPRIS `previous`/`togglePlaying`/`next`).
+* `tests/test_plasma_interfaces.py` (8/8) y `tests/test_window_activation.py` (7/7): **17/17 OK**.
+* Recarga en caliente de `qs -c ii` sin errores de los cuatro archivos modificados.
+
+### Pendiente / límites
+
+* Comprobación visual física del usuario al pasar el ratón por tareas y pulsar `Alt+Tab` con
+  ventanas reales y un reproductor MPRIS activo.
+* Agenda y respuesta en línea de notificaciones siguen como P2 opcionales.

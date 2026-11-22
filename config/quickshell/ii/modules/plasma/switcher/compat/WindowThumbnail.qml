@@ -5,6 +5,7 @@ import Quickshell.Wayland
 Item {
  property var wId
  property var winId:wId
- // Temporary containment: see docs/BREEZE_RECOVERY.md.
- ScreencopyView { anchors.fill:parent; captureSource:null; live:false }
+ readonly property var resolvedSource: (visible && (typeof bwmController !== "undefined" ? !!bwmController?.isOpen : true))
+  ? (typeof bwmToplevels !== "undefined" ? (bwmToplevels?.[String(winId)] ?? null) : null) : null
+ ScreencopyView { anchors.fill:parent; captureSource:parent.resolvedSource; live:parent.resolvedSource !== null; visible:parent.resolvedSource !== null }
 }
