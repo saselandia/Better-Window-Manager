@@ -211,6 +211,9 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   (`KickoffWindow.qml`, `MenuHost.qml`, `TrayState`), máscara de entrada restringida a `frame` y
   `keyboardFocus: OnDemand` cuando Kickoff está fijado (`pin`), y cierre con cualquier botón.
   `test_plasma_menus_ui` 5/5 OK, 0 errores en `qs -c ii`.
+* **R8, lote 5 (2026-11-24, §349):** insignias y barra de progreso Unity LauncherEntry en las
+  tareas del panel (`launcher-entries.py` en el bus de sesión, `LauncherEntries.qml`,
+  `TaskBadgeOverlay.qml` original); vistas en sesión con un emisor de prueba.
 * **Preferencias nativas en Breeze (2026-11-22, §346):** `open-settings.sh` (Super+I y menús)
   usa ahora por defecto el `systemsettings` real de KDE vía `settings-native.sh` (con alias cortos
   `display`, `effects`, `autostart`, etc. y los 10 `kcm_bwm_*` + `kcm_kwindecoration`).
@@ -6419,3 +6422,18 @@ git status; git log --oneline -5; git push origin main
   `open-settings.sh --list` en la sesión Wayland real descubre los 10 `kcm_bwm_*` y
   `kcm_kwindecoration`. **Pendiente del usuario:** abrir Preferencias con `Super+I` y probar
   visualmente los módulos en su uso diario.
+
+### 349. Breeze R8, lote 5: insignias y progreso Unity LauncherEntry en las tareas (2026-11-24)
+
+* **Petición:** continuar el plan Breeze v2 (R0–R9 ya cerrados; quedan P2).
+* **Hecho:** `skins/plasma/scripts/launcher-entries.py` escucha `com.canonical.Unity.LauncherEntry.Update`
+  y sanea como `smartlauncherbackend.cpp` 6.7.5; anuncia `com.canonical.Unity` sin desplazar a otro
+  dueño y olvida la entrada al salir el emisor; sale con su padre (`PR_SET_PDEATHSIG`).
+  `panel/LauncherEntries.qml`/`.js` (un `Process`, sólo en Breeze), `panel/TaskBadgeOverlay.qml`
+  (el original con `BadgeEffect`) y en `Task.qml` la barra de `TaskProgressOverlay.qml` y `urgent`
+  como atención. Insignias ocultas con No molestar.
+* **Comprobado:** pruebas nuevas (bus D-Bus privado y QML de insignia/progreso/No molestar); panel,
+  bandeja y skins 40/40. En sesión, un emisor de prueba mostró insignia «5» y 60 % en Signal y se
+  retiraron al salir. Una primera prueba dejó un listener huérfano del shell anterior (causa del
+  `PR_SET_PDEATHSIG`); se mató por PID. El reinicio de mantenimiento movió el foco (devuelto a mano).
+* **No probado:** apps reales que emitan el protocolo. Detalle en `docs/BREEZE_R8_RESULTS.md`.

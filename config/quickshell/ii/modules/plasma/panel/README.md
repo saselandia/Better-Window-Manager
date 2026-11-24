@@ -61,8 +61,13 @@ Kickoff se anclan al borde/posición nuevos hasta sus ports de F4/F5.
 - Bandeja/applets: SysTray y applets BWM existentes hasta F5; Kickoff se porta en F4.
 - No se hospedan plasmoides arbitrarios de la KDE Store: F0 comprobó sus dependencias de
   PlasmaShell y KWin. «Widgets incluidos» no es el catálogo de complementos de Plasma.
-- Unity LauncherEntry (insignias/progreso), controles multimedia del tooltip y múltiples zonas
-  horarias del reloj quedan pendientes; no se muestran datos falsos.
+- Unity LauncherEntry (R8 lote 5): `LauncherEntries.qml`/`.js` guardan el estado que emite
+  `skins/plasma/scripts/launcher-entries.py` (port del protocolo de `smartlauncherbackend.cpp`:
+  señal `com.canonical.Unity.LauncherEntry.Update`, nombre `com.canonical.Unity` sin desplazar
+  a otro dueño, entrada olvidada al salir el emisor). `TaskBadgeOverlay.qml` es el de Plasma
+  6.7.5 con el icono y la cuenta pasados como propiedades; la barra de progreso de Task.qml
+  porta `TaskProgressOverlay.qml`. Insignias ocultas con No molestar, como `Backend::count()`;
+  sin `taskmanagerrulesrc` [Unity Launcher Mapping] ni lista de exclusión de `plasmanotifyrc`.
 - El flujo completo de arrastre, clics de tareas y menú de edición requiere más validación de
   interacción; las pruebas cubren lógica y carga, sin acciones sobre apps del usuario.
 

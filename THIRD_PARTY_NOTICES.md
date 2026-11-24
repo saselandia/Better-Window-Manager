@@ -180,7 +180,9 @@ v6.7.5 y KConfig v6.29.0. No se copió implementación KDE. Rutas y procedencia 
 Panel de Breeze (F3, 2026-11-11): componentes derivados de KDE Plasma **v6.7.5** en
 config/quickshell/ii/modules/plasma/panel, GPL-2.0-or-later. Origen:
 [plasma-desktop](https://invent.kde.org/plasma/plasma-desktop/-/tree/v6.7.5)
-(desktoppackage/contents/views/Panel.qml, containments/panel, applets/taskmanager/qml/Task.qml y
+(desktoppackage/contents/views/Panel.qml, containments/panel, applets/taskmanager/qml/Task.qml,
+TaskBadgeOverlay.qml y TaskProgressOverlay.qml (Kai Uwe Broulik), smartlauncherbackend.cpp como
+referencia del protocolo Unity de `skins/plasma/scripts/launcher-entries.py`, y
 code/TaskTools.js y qml/code/LayoutMetrics.js; manejadores y medidas cotejados de nuevo
 el 2026-11-12) y
 [plasma-workspace](https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5)

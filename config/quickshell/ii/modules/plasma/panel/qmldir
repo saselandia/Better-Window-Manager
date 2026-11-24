@@ -1,6 +1,7 @@
 module qs.modules.plasma.panel
 singleton PanelState 1.0 PanelState.qml
 singleton DesktopState 1.0 DesktopState.qml
+singleton LauncherEntries 1.0 LauncherEntries.qml
 Panel 1.0 Panel.qml
 PanelContent 1.0 PanelContent.qml
 PanelBackground 1.0 PanelBackground.qml
@@ -8,6 +9,7 @@ PanelEditor 1.0 PanelEditor.qml
 TasksModel 1.0 TasksModel.qml
 Task 1.0 Task.qml
 TaskToolTip 1.0 TaskToolTip.qml
+TaskBadgeOverlay 1.0 TaskBadgeOverlay.qml
 DigitalClock 1.0 DigitalClock.qml
 KickoffButton 1.0 KickoffButton.qml
 ShowDesktopButton 1.0 ShowDesktopButton.qml

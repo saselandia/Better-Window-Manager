@@ -20,7 +20,9 @@ Item {
     readonly property var toplevels:group?.toplevels??[]
     readonly property bool isActive:!!(task.toplevels&&task.toplevels.some(t=>typeof tasksModel?.isActive==="function"?!!tasksModel.isActive(t):!!t?.activated))
     readonly property bool isMinimized:!!(task.toplevels&&task.toplevels.length>0&&task.toplevels.every(t=>typeof tasksModel?.minimized==="function"?!!tasksModel.minimized(t):false))
-    readonly property bool attention:!!(task.toplevels&&task.toplevels.some(t=>!!t?.urgent))
+    // BWM: Unity LauncherEntry (SmartLauncher::Item) of this app; urgent counts as attention, as in Task.qml.
+    readonly property var launcherEntry:LauncherEntries.lookup(task.appId, task.tasksModel?.entry(task.appId)?.id ?? "")
+    readonly property bool attention:!!(task.toplevels&&task.toplevels.some(t=>!!t?.urgent)) || !!task.launcherEntry?.urgent
     readonly property string basePrefix:!task.toplevels.length ? "" : attention ? "attention" : isMinimized ? "minimized" : isActive ? "focus" : "normal"
     // BWM: icon geometry follows Task.qml/LayoutMetrics, using the active theme's frame.
     readonly property real horizontalMargins:metrics.margins.left+metrics.margins.right
@@ -56,16 +58,36 @@ Item {
         prefix:task.containsMouse ? Prefixes.taskPrefixHovered(task.basePrefix,task.edge) : Prefixes.taskPrefix(task.basePrefix,task.edge)
         visible:task.containsMouse||task.toplevels.length>0
     }
+    // BWM: TaskProgressOverlay.qml (plasma-desktop 6.7.5) without the attached Plasmoid.
+    Item {
+        id:progressOverlay; objectName:"plasma-task-progress"
+        anchors.fill:frame; clip:true
+        visible:LauncherEntries.progressVisible(task.launcherEntry)
+        readonly property real position:Math.max(0,Math.min(100,task.launcherEntry?.progress ?? 0))/100
+        KSvg.FrameSvgItem {
+            LayoutMirroring.enabled:Qt.application.layoutDirection===Qt.RightToLeft
+            anchors.left:parent.left
+            width:parent.width*progressOverlay.position; height:parent.height
+            imagePath:"widgets/tasks"
+            prefix:Prefixes.taskPrefix("progress",task.edge).concat(Prefixes.taskPrefix("hover",task.edge))
+        }
+    }
     Item {
         id:visual
         x:0; y:0; width:task.width; height:task.height
         Drag.active:drag.active; Drag.source:task; Drag.keys:["bwm-plasma-task"]
         Drag.hotSpot.x:width/2; Drag.hotSpot.y:height/2
         Kirigami.Icon {
+            id:icon
             anchors.centerIn:parent
             width:task.iconExtent; height:width
             active:task.containsMouse
             source:Quickshell.iconPath(task.tasksModel?.entry(task.appId)?.icon || "application-x-executable")
+        }
+        Loader {
+            anchors.fill:icon
+            active:icon.height>=Kirigami.Units.iconSizes.small && LauncherEntries.countVisible(task.launcherEntry)
+            sourceComponent:TaskBadgeOverlay { iconItem:icon; count:task.launcherEntry?.count ?? 0 }
         }
         DragHandler {
             id:drag; target:visual

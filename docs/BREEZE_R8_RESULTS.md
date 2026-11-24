@@ -148,3 +148,46 @@ en DP-1 y Kickoff en DP-2), se detectaron y corrigieron dos fallos de interacci�
 
 * `tests/test_plasma_menus_ui.py`: **5/5 OK** (`BWM_RUN_QML_TESTS=1`).
 * Recarga en caliente de `qs -c ii`: 0 errores ni advertencias de `KickoffWindow.qml` / `MenuHost.qml`.
+
+## Lote 5: insignias y progreso Unity LauncherEntry en las tareas (2026-11-24)
+
+P2 de la auditoría (`panel/TasksModel, TaskToolTip`: «Unity progress/badges»). El
+`SmartLauncherItem` de Plasma vive en el módulo privado compilado dentro del applet
+(`org.kde.plasma.taskmanager.so`) y no se puede importar desde Quickshell, así que:
+
+* **`skins/plasma/scripts/launcher-entries.py`:** escucha en el bus de sesión
+  `com.canonical.Unity.LauncherEntry.Update` (`sa{sv}`), sanea como
+  `smartlauncherbackend.cpp` 6.7.5 (`count` < 2³¹, `progress` 0–1 → 0–100 redondeado, NaN = 0),
+  anuncia `com.canonical.Unity` con `DO_NOT_QUEUE` (si otro dock lo tiene, sólo escucha) y olvida
+  la entrada cuando el emisor sale del bus (`NameOwnerChanged`, como `onServiceUnregistered`).
+  Sale con su proceso padre (`PR_SET_PDEATHSIG` + comprobación cada 5 s): una primera prueba en
+  sesión dejó un huérfano reteniendo el nombre tras el reinicio de mantenimiento.
+* **`panel/LauncherEntries.qml` + `LauncherEntries.js`:** singleton con un único `Process`
+  (sólo mientras la skin es Breeze, relanzado a los 5 s si cae) y lógica pura compartida con las
+  pruebas. Busca por el id del `.desktop` resuelto y, si no, por el `appId` de la ventana.
+* **`panel/TaskBadgeOverlay.qml`:** el original con `BadgeEffect` (recorte del icono bajo la
+  insignia), `Kirigami.Badge` y sufijos «k»/«9k+» del catálogo del applet. **`Task.qml`:** barra de
+  progreso de `TaskProgressOverlay.qml` (`widgets/tasks` `progress` + `hover` por borde) y
+  `urgent` cuenta como atención, como el `when:` original. Insignias ocultas con No molestar
+  (`Notifications.silent`), como `Backend::count()`/`countVisible()`.
+
+### Comprobado
+
+* `tests/test_launcher_entries.py` 3/3: normalización, saneado y una prueba en un **bus D-Bus
+  privado** (`dbus-run-session`): señal real → JSON esperado, `com.canonical.Unity` propio y
+  retirada al salir el emisor.
+* `tests/test_plasma_task_input.py` 3/3 (nueva `test_unity_badge_progress_and_urgent_like_plasma`:
+  insignia «12», relleno 40 %, atención, oculta con No molestar, «9k+», retirada). Repetida 3 veces.
+  Panel nativo, bandeja y skins: 40/40 en conjunto.
+* Sesión real (Breeze, tras un reinicio de mantenimiento del shell): un emisor de prueba de
+  4 s para `signal.desktop` mostró la insignia «5» recortando el icono y el 60 % de progreso en el
+  panel del MSI, y ambos desaparecieron al salir el emisor. Capturas recortadas y borradas.
+
+### Límites
+
+* Sin `taskmanagerrulesrc` [Unity Launcher Mapping], sin `[Badges] InTaskManager` ni lista de
+  apps excluidas de `plasmanotifyrc`; el No molestar programado de Plasma no aplica (se usa el
+  de BWM).
+* No probado con apps reales que envíen el protocolo (Telegram, Vesktop, descargas de Firefox).
+* El reinicio de mantenimiento movió el foco al MSI (workspace 2), como ya se vio en §3.94;
+  se devolvió a mano a la ventana anterior.

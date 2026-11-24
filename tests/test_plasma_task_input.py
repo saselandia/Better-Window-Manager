@@ -84,6 +84,43 @@ ShellRoot {
 }
 '''
 
+STUB_ENTRIES = r'''pragma Singleton
+import QtQuick
+import Quickshell
+import "LauncherEntries.js" as Logic
+Singleton {
+    id: root
+    property var entries: ({})
+    property bool doNotDisturb: false
+    function lookup(appId, desktopId) { return Logic.lookup(root.entries, appId, desktopId); }
+    function countVisible(e) { return Logic.countVisible(e, root.doNotDisturb); }
+    function progressVisible(e) { return Logic.progressVisible(e); }
+    function handle(line) { root.entries = Logic.handle(root.entries, line); }
+}
+'''
+
+
+def prepare_task_folder(folder, task):
+    """Task.qml with its siblings; LauncherEntries keeps the real logic without the bus listener."""
+    (folder/'Task.qml').write_text(task)
+    for name in ('TaskPrefixes.js', 'LauncherEntries.js', 'TaskBadgeOverlay.qml'):
+        shutil.copy(PANEL/name, folder)
+    (folder/'LauncherEntries.qml').write_text(STUB_ENTRIES)
+    (folder/'qmldir').write_text('singleton LauncherEntries 1.0 LauncherEntries.qml\n'
+                                 'Task 1.0 Task.qml\nTaskToolTip 1.0 TaskToolTip.qml\n'
+                                 'TaskBadgeOverlay 1.0 TaskBadgeOverlay.qml\n')
+    # Only capture is stubbed; the actual PopupWindow/card handlers are exercised.
+    tooltip = (PANEL/'TaskToolTip.qml').read_text().replace(
+        'ScreencopyView {', 'Item { property var captureSource; property bool live;')
+    (folder/'TaskToolTip.qml').write_text(tooltip)
+    # The tooltip resolves its frame with the theme's BlurPath; these harnesses check
+    # input/state, not the look: a stub keeps the variant used without blur.
+    theme = folder/'modules/plasma/theme'; theme.mkdir(parents=True)
+    (theme/'qmldir').write_text('module qs.modules.plasma.theme\nBlurPath 1.0 BlurPath.qml\n')
+    (theme/'BlurPath.qml').write_text('import QtQuick\nQtObject { required property string path; property string withoutBlur: path; readonly property string resolved: withoutBlur }\n')
+    return tooltip
+
+
 @unittest.skipUnless(os.environ.get('BWM_RUN_QML_TESTS') == '1' and shutil.which('qs'),
                      'optional isolated QML pointer test')
 class TaskInputTests(unittest.TestCase):
@@ -102,17 +139,7 @@ class TaskInputTests(unittest.TestCase):
             folder = Path(folder)
             task = (PANEL/'Task.qml').read_text().replace(
                 'TaskToolTip {', 'TaskToolTip { objectName:"taskTooltip";')
-            (folder/'Task.qml').write_text(task)
-            shutil.copy(PANEL/'TaskPrefixes.js',folder)
-            # Only capture is stubbed; the actual PopupWindow/card handlers are exercised.
-            tooltip = (PANEL/'TaskToolTip.qml').read_text().replace(
-                'ScreencopyView {', 'Item { property var captureSource; property bool live;')
-            (folder/'TaskToolTip.qml').write_text(tooltip)
-            # The tooltip resolves its frame with the theme's BlurPath; this harness checks
-            # input, not the look: a stub keeps the variant used without blur.
-            theme = folder/'modules/plasma/theme';theme.mkdir(parents=True)
-            (theme/'qmldir').write_text('module qs.modules.plasma.theme\nBlurPath 1.0 BlurPath.qml\n')
-            (theme/'BlurPath.qml').write_text('import QtQuick\nQtObject { required property string path; property string withoutBlur: path; readonly property string resolved: withoutBlur }\n')
+            tooltip = prepare_task_folder(folder, task)
             (folder/'test.qml').write_text(HARNESS)
             # No real task backend, IPC, or detached command may enter this harness.
             combined = task+tooltip+HARNESS
@@ -258,3 +285,77 @@ ShellRoot {
                 closedAllNull=True,visOk=True,mediaVis=True,track="Breeze Theme",
                 prev=1,toggle=1,next=1,reopenedNull=True),output)
 
+
+    def test_unity_badge_progress_and_urgent_like_plasma(self):
+        harness = r'''//@ pragma UseQApplication
+import QtQuick
+import QtTest
+import Quickshell
+ShellRoot {
+    id: root
+    property var taskButton: null
+    QtObject { id: fakeTop; property bool activated:false; property bool urgent:false; property string title:"Mail" }
+    QtObject {
+        id: adapter
+        function click(group) {} function launch(appId) {} function cycle(group, step) {} function activate(w) {}
+        function entry(appId) { return ({ id: "org.example.Mail.desktop", icon: "mail-client" }); }
+        function minimized(w) { return false; }
+    }
+    FloatingWindow {
+        title: "bwm-task-input-test"; implicitWidth: 120; implicitHeight: 80
+        Task { id: button; width:52; height:44; edge:"bottom"; tasksModel:adapter
+               group:({appId:"mail",toplevels:[fakeTop]}); Component.onCompleted:root.taskButton=this }
+        TestCase { id: driver; name:"TaskBadge"; when:false }
+    }
+    Timer {
+        running:true; interval:400
+        onTriggered: {
+            const out = {};
+            const progress = driver.findChild(root.taskButton, "plasma-task-progress");
+            out.idleBadge = !!driver.findChild(root.taskButton, "plasma-task-badge");
+            out.idleProgress = progress.visible;
+            out.idleAttention = root.taskButton.attention;
+            LauncherEntries.handle(JSON.stringify({id:"org.example.mail",count:12,countVisible:true,progress:40,progressVisible:true,urgent:true}));
+            driver.wait(200);
+            const badge = driver.findChild(root.taskButton, "plasma-task-badge");
+            out.badge = badge ? badge.text : "";
+            out.progress = progress.visible;
+            out.fill = Math.round(progress.children[0].width / progress.width * 100);
+            out.attention = root.taskButton.attention;
+            LauncherEntries.doNotDisturb = true;
+            driver.wait(150);
+            out.dndBadge = !!driver.findChild(root.taskButton, "plasma-task-badge");
+            LauncherEntries.doNotDisturb = false;
+            LauncherEntries.handle(JSON.stringify({id:"org.example.mail",count:12500,countVisible:true,progress:40,progressVisible:true,urgent:false}));
+            driver.wait(200);
+            const big = driver.findChild(root.taskButton, "plasma-task-badge");
+            out.big = big ? big.text : "";
+            LauncherEntries.handle(JSON.stringify({id:"org.example.mail",removed:true}));
+            driver.wait(150);
+            out.removedBadge = !!driver.findChild(root.taskButton, "plasma-task-badge");
+            out.removedProgress = progress.visible;
+            console.log("BADGERESULT " + JSON.stringify(out));
+            Qt.quit();
+        }
+    }
+    Timer { running:true; interval:4000; onTriggered:Qt.quit() }
+}
+'''
+        with tempfile.TemporaryDirectory(prefix='bwm-task-badge-') as folder:
+            folder = Path(folder)
+            task = (PANEL/'Task.qml').read_text()
+            tooltip = prepare_task_folder(folder, task)
+            (folder/'test.qml').write_text(harness)
+            combined = task+tooltip+harness
+            self.assertNotIn('execDetached', combined)
+            result = subprocess.run(['qs','-p',str(folder/'test.qml')],capture_output=True,text=True,timeout=10)
+            output = result.stdout+result.stderr
+            self.assertEqual(result.returncode,0,output)
+            for error in ['TypeError:', 'ReferenceError:', 'failed to load', 'is not a type']:
+                self.assertNotIn(error,output)
+            value = next((json.loads(line.split('BADGERESULT ',1)[1])
+                          for line in output.splitlines() if 'BADGERESULT ' in line),None)
+            self.assertEqual(value, dict(idleBadge=False, idleProgress=False, idleAttention=False,
+                                         badge="12", progress=True, fill=40, attention=True,
+                                         dndBadge=False, big="9k+", removedBadge=False,
+                                         removedProgress=False), output)
