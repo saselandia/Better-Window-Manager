@@ -17,6 +17,7 @@
   },
   "palette": "breeze",
   "fileManager": "org.kde.dolphin.desktop",
+  "notifications": "shell",
   "defaultTheme": {
     "mode": "static",
     "name": "Breeze Dark",
@@ -160,7 +161,6 @@
     "nm-connection-editor",
     "bluez",
     "blueman",
-    "swaync",
     "mpvpaper",
     "plasma5support",
     "kdecoration",

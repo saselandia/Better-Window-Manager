@@ -30,6 +30,8 @@ Singleton {
         property string appName: notification?.appName ?? ""
         property string body: notification?.body ?? ""
         property string image: notification?.image ?? ""
+        property bool hasInlineReply: notification?.hasInlineReply ?? false
+        property string inlineReplyPlaceholder: notification?.inlineReplyPlaceholder ?? ""
         property string summary: notification?.summary ?? ""
         property double time
         property string urgency: notification?.urgency.toString() ?? "normal"
@@ -148,15 +150,23 @@ Singleton {
     signal discardAll();
     signal timeout(id: var);
 
-    // The D-Bus notification server: BWM's in Default/Plasma; in Retro Omarchy's own notification
-    // service owns it (modules/ii/omarchyNotifications) so Omarchy's toasts, glyphs and actions
-    // work. Only one server can hold org.freedesktop.Notifications: this one is not created in
-    // Retro (and created again when leaving it; Quickshell retries until the name is free).
-    // Waits for the config so it never grabs the name before knowing the theme.
+    // The D-Bus notification server ("notifications" in each skin.json). Breeze: this one, shown
+    // with Plasma's toasts/applet. Default: swaync, this one only if swaync is not installed.
+    // Retro: Omarchy's own service (modules/ii/omarchyNotifications) for its toasts, glyphs and
+    // actions. Only one server can hold org.freedesktop.Notifications; bwm-theme-manager.py stops
+    // or starts swaync and Quickshell retries until the name is free. Waits for the config (and
+    // the swaync check) so it never grabs the name before knowing the skin.
+    property bool swayncChecked: false
+    property bool swayncInstalled: false
+    Process {
+        running: true
+        command: ["sh", "-c", "command -v swaync"]
+        onExited: exitCode => { root.swayncInstalled = exitCode === 0; root.swayncChecked = true; }
+    }
     readonly property var trackedValues: serverLoader.item ? serverLoader.item.trackedNotifications.values : []
     LazyLoader {
         id: serverLoader
-        active: Config.ready && !Appearance.isRetro
+        active: Config.ready && root.swayncChecked && (Appearance.isPlasma || (!Appearance.isRetro && !root.swayncInstalled))
 
 	NotificationServer {
         id: notifServer
@@ -167,6 +177,8 @@ Singleton {
         bodyMarkupSupported: true
         bodySupported: true
         imageSupported: true
+        // Only Breeze shows Plasma's reply field; elsewhere apps keep their own "Reply" actions.
+        inlineReplySupported: Appearance.isPlasma
         keepOnReload: false
         persistenceSupported: true
 
@@ -224,6 +236,15 @@ Singleton {
             notif.dismiss()
         })
         root.discardAll();
+    }
+
+    function sendInlineReply(id, text) {
+        const notif = root.list.find((n) => n.notificationId === id);
+        if (!notif?.notification?.hasInlineReply || !text)
+            return false;
+        notif.notification.sendInlineReply(text);
+        root.discardNotification(id);
+        return true;
     }
 
     function cancelTimeout(id) {

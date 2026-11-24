@@ -8,6 +8,7 @@
   "windows": "tiling",
   "palette": "omarchy",
   "fileManager": "org.gnome.Nautilus.desktop",
+  "notifications": "shell",
   "defaultTheme": {
     "mode": "dynamic",
     "name": "Paleta dinámica (formato Omarchy)",

@@ -8,6 +8,7 @@ Item {
     required property var notification
     required property var backend
     property bool readOnly:false
+    readonly property bool replying:adapter.replying
     implicitHeight:content.implicitHeight+16
     ModelInterface {
         id:adapter
@@ -17,7 +18,12 @@ Item {
         body:card.notification.body??""
         actionNames:(card.notification.actions??[]).map(a=>a.identifier)
         actionLabels:(card.notification.actions??[]).map(a=>a.text)
-        hasSomeActions:actionNames.length>0
+        // BWM: KDE inline reply over Quickshell's notification server (Breeze advertises it).
+        hasReplyAction:!card.readOnly&&!!card.notification.hasInlineReply
+        replyPlaceholderText:card.notification.inlineReplyPlaceholder??""
+        hasSomeActions:actionNames.length>0||hasReplyAction
+        onReplied:text=> { if(!card.readOnly)card.backend.sendInlineReply(card.notification.notificationId,text); }
+        onForceActiveFocusRequested:card.forceActiveFocus()
         onActionInvoked:actionName=> { if(!card.readOnly)card.backend.attemptInvokeAction(card.notification.notificationId,actionName); }
     }
     ColumnLayout {

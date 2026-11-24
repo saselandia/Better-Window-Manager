@@ -148,10 +148,10 @@ fi
 # 5.1 Gestor de tareas de Retro (btop): existe sólo en Retro, también si se arranca ya en Retro
 python3 -c "import sys; sys.path.insert(0, '$HOME/.config/hypr/scripts'); import bwm_omarchy as b; b.apply_task_manager('$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null)' == 'retro')" 2>/dev/null &
 
-# 6. Centro de notificaciones (swaync). En Retro no: allí el demonio de notificaciones es el de
-#    Omarchy dentro de Quickshell (modules/ii/omarchyNotifications) y sólo uno puede tener
-#    org.freedesktop.Notifications. bwm-theme-manager.py lo cierra/arranca al cambiar de estilo.
-if [[ "$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null)" != "retro" ]] && ! pidof swaync >/dev/null 2>&1; then
+# 6. Centro de notificaciones (swaync), sólo en las skins con "notifications": "swaync" (default).
+#    En Retro y Breeze el demonio está dentro de Quickshell (avisos de Omarchy / de Plasma) y sólo
+#    uno puede tener org.freedesktop.Notifications. bwm-theme-manager.py lo cierra/arranca al cambiar.
+if [[ "$(python3 -c "import sys; sys.path.insert(0, '$HOME/.config/hypr/scripts'); import bwm_skins; print(bwm_skins.notifications('$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null)'))" 2>/dev/null)" == "swaync" ]] && ! pidof swaync >/dev/null 2>&1; then
     if command -v swaync >/dev/null 2>&1; then
         swaync >/dev/null 2>&1 &
     fi

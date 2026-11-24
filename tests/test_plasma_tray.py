@@ -50,6 +50,7 @@ ShellRoot {
     property int actions:0
     property int copied:0
     property int removed:0
+    property string repliedText:""
     QtObject {
         id:mock
         property bool available:true
@@ -63,7 +64,8 @@ ShellRoot {
         readonly property var popupList:list
         function cancelTimeout(id){}
         function timeoutNotification(id){}
-        property var list:[({notificationId:1,appName:"BWM test",appIcon:"notifications",summary:"Example notification",body:"Safe test content",image:"",actions:[{identifier:"test",text:"Test action"}]})]
+        property var list:[({notificationId:1,appName:"BWM test",appIcon:"notifications",summary:"Example notification",body:"Safe test content",image:"",actions:[{identifier:"test",text:"Test action"}],hasInlineReply:Quickshell.env("F5_CASE")==="Reply",inlineReplyPlaceholder:"Reply to BWM"})]
+        function sendInlineReply(id,text){root.repliedText=text;return true}
         property real percentage:.5
         property real health:95
         property bool isPluggedIn:false
@@ -118,7 +120,7 @@ ShellRoot {
         onTriggered:{
             const name=Quickshell.env("F5_CASE");let props={readOnly:true};
             if(name==="Bluetooth")props={backend:mock,adapter:adapter};
-            if(name==="Notifications"||name==="Clipboard")props={backend:mock};
+            if(name==="Notifications"||name==="Clipboard"||name==="Reply")props={backend:mock};
             if(name==="Tray")props={readOnly:true,items:[{id:"demo",title:"Demo tray item",tooltipTitle:"Demo",tooltipDescription:"Safe fixture",icon:"applications-system",status:1}],applets:[{id:"notifications",title:"Notifications",icon:"notifications",active:true}],settings:{},appletProperties:{readOnly:true,backend:mock}};
             if(name==="Power")props={readOnly:true,battery:mock,monitors:[]};
             if(name==="CalendarZones")Config.options.bar.plasma.clock={selectedTimeZones:["Local","Asia/Tokyo","America/New_York"],lastSelectedTimezone:"Local",displayTimezoneFormat:1};
@@ -158,6 +160,16 @@ ShellRoot {
             if(loader.item) {
                 if(name==="Bluetooth") { const b=root.findText(loader.item,"Connect");if(b){const pos=b.mapToItem(loader.item,b.width/2,b.height/2);driver.mouseClick(loader.item,pos.x,pos.y);driver.wait(80);}result.control=!!b;result.actions=root.actions;result.discovery=adapter.discovering; }
                 if(name==="Notifications") { const b=root.findText(loader.item,"Test action");if(b){const pos=b.mapToItem(loader.item,b.width/2,b.height/2);driver.mouseClick(loader.item,pos.x,pos.y);driver.wait(80);}result.control=!!b;result.actions=root.actions; }
+                if(name==="Reply") {
+                    const b=root.findText(loader.item,"Reply");
+                    result.control=!!b;
+                    if(b){const pos=b.mapToItem(loader.item,b.width/2,b.height/2);driver.mouseClick(loader.item,pos.x,pos.y);driver.wait(400);}
+                    let field=null;const walk=i=>{if(!field&&i.placeholderText==="Reply to BWM")field=i;for(const c of i.children??[])walk(c);if(i.contentItem)walk(i.contentItem)};
+                    walk(loader.item);
+                    result.field=!!field;result.fieldFocused=!!field&&field.activeFocus;
+                    if(field){field.text="Hola";field.accepted();driver.wait(50);}
+                    result.replied=root.repliedText;
+                }
                 if(name==="Clipboard") {
                     result.entries=loader.item.backend.entries.length;
                     const found=[];const walk=i=>{if(i.objectName==="plasma-clipboard-image"&&!found.includes(i))found.push(i);for(const c of i.children??[])walk(c);if(i.contentItem)walk(i.contentItem)};
@@ -229,6 +241,13 @@ class AppletUiTests(unittest.TestCase):
     def test_notification_action_uses_existing_backend(self):
         result=self.run_case('Notifications','applets/NotificationsApplet.qml')
         self.assertTrue(result['control']);self.assertEqual(result['actions'],1)
+    def test_notification_inline_reply_like_plasma(self):
+        # Plasma's ActionContainer shows "Reply" first, opens NotificationReplyField and
+        # sends the text through the server (sendInlineReply), never by an action.
+        result=self.run_case('Reply','applets/NotificationsApplet.qml')
+        self.assertTrue(result['control'],result);self.assertTrue(result['field'],result)
+        self.assertTrue(result['fieldFocused'],result)
+        self.assertEqual(result['replied'],'Hola');self.assertEqual(result['actions'],0)
     def test_clipboard_text_and_image_entries(self):
         # Klipper shows images with ImageItemDelegate; the cliphist entry is decoded by a fake
         # binary into a private runtime directory, never into the user's clipboard.

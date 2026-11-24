@@ -180,7 +180,7 @@ Imita **end-4 / illogical-impulse (Material You)**. Material Design 3: barra, pa
 | FFmpegThumbs (miniaturas de vídeo en Dolphin) | Genera miniaturas de vídeo en Dolphin (sin él sólo se ven las que ya estaban en caché) | `kde-apps/ffmpegthumbs` | `ffmpegthumbs` | `ffmpegthumbs` | `ffmpegthumbs` | `ffmpegthumbs` |
 | Omacalc (calculadora de Omarchy) | Calculadora con los colores de cada skin, recarga en vivo y fuente iA Writer Mono incluida | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
 | Compilar Omacalc (Qt 6) | Sólo durante la instalación: BWM compila la calculadora original con soporte para sus paletas | `dev-qt/qtbase` `dev-qt/qtdeclarative` `dev-vcs/git` `sys-devel/patch` | `base-devel` `qt6-base` `qt6-declarative` `git` | `gcc-c++` `make` `qt6-qtbase-devel` `qt6-qtdeclarative-devel` `git` `patch` | `gcc-c++` `make` `qt6-base-devel` `qt6-declarative-devel` `git` `patch` | `build-essential` `qt6-base-dev` `qt6-declarative-dev` `qmake6` `git` `patch` |
-| SwayNotificationCenter | Centro de notificaciones fuera de Retro | `guru:gui-apps/swaync` | `swaync` | `SwayNotificationCenter` | `SwayNotificationCenter` | `sway-notification-center` |
+| SwayNotificationCenter | Centro de notificaciones de default (end-4) | `guru:gui-apps/swaync` | `swaync` | `SwayNotificationCenter` | `SwayNotificationCenter` | `sway-notification-center` |
 | SongRec | Reconocer la música que suena (botón de los ajustes rápidos) | `guru:media-sound/songrec` | `songrec` | — | — | — |
 | hyprsunset | Luz nocturna que no tiñe las capturas (sin él se usa un shader) | `hyproverlay:gui-apps/hyprsunset` | `hyprsunset` | `copr:solopasha/hyprland:hyprsunset` | `hyprsunset` | — |
 | Colores Qt de end-4 (kde-material-you-colors) | Apps Qt de default (end-4) con la paleta del fondo, como en illogical-impulse | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* | *lo trae BWM* |
@@ -278,7 +278,6 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | nm-connection-editor | Botón «Configurar» del applet de red | `gnome-extra/nm-applet` | `nm-connection-editor` | `nm-connection-editor` | `NetworkManager-connection-editor` | `network-manager-gnome` |
 | BlueZ | Applets y paneles de Bluetooth | `net-wireless/bluez` | `bluez-utils` | `bluez` | `bluez` | `bluez` |
 | blueman | Botón «Configurar» del applet Bluetooth | `net-wireless/blueman` | `blueman` | `blueman` | `blueman` | `blueman` |
-| SwayNotificationCenter | Centro de notificaciones fuera de Retro | `guru:gui-apps/swaync` | `swaync` | `SwayNotificationCenter` | `SwayNotificationCenter` | `sway-notification-center` |
 | mpvpaper | Fondos de vídeo en default (end-4) y Breeze (Kde plasma), como switchwall.sh de end-4; sin él se queda el primer fotograma | `guru:gui-apps/mpvpaper` | `aur:mpvpaper` | — | — | — |
 | Plasma5Support | Fuentes de datos que usan los plasmoides portados (reloj, energía) | `kde-plasma/plasma5support` | `plasma5support` | — | — | — |
 | KDecoration3 | Biblioteca de decoraciones de KWin: BWM la usa para dibujar las barras de título del tema de Plasma activo | `kde-plasma/kdecoration` | `kdecoration` | `kdecoration` | — | — |

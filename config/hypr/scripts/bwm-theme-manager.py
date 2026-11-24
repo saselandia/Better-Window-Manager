@@ -978,10 +978,11 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         # 6. Sincronizar el estado flotante / mosaico de las ventanas abiertas tras la recarga
         sync_floating_windows(theme_name, curr_theme, original_clients)
 
-        # 6.1 Demonio de notificaciones: en Retro el de Omarchy (dentro de Quickshell), así que swaync
-        #     se cierra para soltar org.freedesktop.Notifications; en los otros estilos vuelve swaync
+        # 6.1 Demonio de notificaciones (`notifications` de skin.json): "shell" = el servidor de
+        #     Quickshell (Omarchy en Retro, avisos de Plasma en Breeze), así que swaync se cierra para
+        #     soltar org.freedesktop.Notifications; "swaync" (default) lo vuelve a arrancar
         try:
-            if theme_name == "retro":
+            if bwm_skins.notifications(theme_name) == "shell":
                 subprocess.run(["pkill", "-x", "swaync"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             elif shutil.which("swaync") and subprocess.run(["pidof", "swaync"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
                 bwm_session.spawn(["swaync"])

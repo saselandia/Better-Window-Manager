@@ -56,7 +56,7 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 ### 2.1 Estilos y temas
 * **Nombres visibles (§3.70):** `default (end-4)`, `Retro`, `Breeze (Kde plasma)`; ids y rutas siguen siendo `default`, `retro`, `plasma`. Los nombres de los escritorios originales se conservan al hablar de su procedencia.
 * **Cambio de fondo de default (end-4) (§3.70):** `matugen-fast.py` publica la paleta sin hooks bloqueantes y después ejecuta los hooks de apps en un trabajador separado, sin reiniciar apps. Peticiones serializadas, se descartan las intermedias pendientes; Kitty sólo recibe la paleta del motor original. Última medición del aplicador completo: 1,08 s al reaplicar el fondo actual (no es una medida de todas las apps ni de una transición visual entre dos fondos diferentes).
-* Gestor: `config/hypr/scripts/bwm-theme-manager.py get|set|toggle|list <estilo>`. Al cambiar: perfil de Quickshell por estilo (`illogical-impulse/config-<estilo>.json`, secciones propias en `THEME_SPECIFIC_SECTIONS`), colores de Hyprland, plugins (hyprbars sólo en Plasma), iconos, GTK/Qt, apps, recarga de paneles por IPC `bwmSkin.reload` conservando Quickshell (candado `/tmp/bwm-theme-manager.lock`), swaync fuera de Retro, `hyprpolkitagent` fuera de Retro, las apps permanecen abiertas durante el cambio de skin (§3.57).
+* Gestor: `config/hypr/scripts/bwm-theme-manager.py get|set|toggle|list <estilo>`. Al cambiar: perfil de Quickshell por estilo (`illogical-impulse/config-<estilo>.json`, secciones propias en `THEME_SPECIFIC_SECTIONS`), colores de Hyprland, plugins (hyprbars sólo en Plasma), iconos, GTK/Qt, apps, recarga de paneles por IPC `bwmSkin.reload` conservando Quickshell (candado `/tmp/bwm-theme-manager.lock`), swaync sólo en default (`notifications` de `skin.json`; §351), `hyprpolkitagent` fuera de Retro, las apps permanecen abiertas durante el cambio de skin (§3.57).
 * Selector de estilos: Alt+T (Retro: carrusel 3D con capturas de lo que imita cada estilo, `skin-switcher.sh`; default (end-4): rofi; Plasma: «Estilo global»). Temas de Retro: Alt+R (carrusel, sólo existe en Retro: campo `skins` de `keybinds.json`; caché estable de miniaturas JPG como Omarchy, §3.71), menú → Estilo → Temas → Elegir tema; catálogo en Estilo → Temas → Catálogo.
 * **Temas y Plugins:** Retro los integra como listas del menú (§3.136): carrusel nativo de temas y Catálogo; Plugins → Instalados, Catálogo, Clonar y Quitar. Breeze conserva las páginas `ThemesConfig.qml`/`PluginsConfig.qml` con miniaturas, filtros, búsqueda remota y Git/URL; default (end-4) no las muestra. Comparten el motor `bwm-addons.py` y los formatos originales. Guía: `docs/OMARCHY_ADDONS.md`.
 * Temas de comunidad en `~/.local/share/bwm/omarchy-themes` (`XDG_DATA_HOME`); también se reconoce `~/.config/omarchy/themes`, que aquí enlaza al repo y no se usa como destino de instalación. `theme_directory()` y `list_omarchy_themes()` comparten precedencia, igual que la CLI y el carrusel.
@@ -5152,7 +5152,7 @@ hyprland-de/
 * **Stremio Flatpak:** override por app NODE_OPTIONS/BWM_STREMIO_CSS y acceso de sólo lectura a los scripts y `~/.local/state/bwm/stremio` (véase §3.40).
 * **Adwaita-for-Steam** en `~/.local/share/steam-adwaita` (parchea `steamui`).
 * **KDE Plasma 6.7.5 instalado como bibliotecas** (§3.138): `/etc/portage/package.use/bwm-plasma`, `~/.config/kded5rc` (módulos de kded6 desactivados) y `~/.local/share/dbus-1/services/org.freedesktop.Notifications.service` (sin demonio de avisos alternativo). KWin está instalado y no se ejecuta.
-* **Procesos de sesión**: `window-guard.py watch`, `hyprpolkitagent` (sólo fuera de Retro), swaync (sólo fuera de Retro), recordatorios como temporizadores `systemd --user` (`omarchy-reminder-*`).
+* **Procesos de sesión**: `window-guard.py watch`, `hyprpolkitagent` (sólo fuera de Retro), swaync (sólo en default), recordatorios como temporizadores `systemd --user` (`omarchy-reminder-*`).
 
 ---
 
@@ -6446,4 +6446,20 @@ git status; git log --oneline -5; git push origin main
 * **Comprobado:** prueba QML con un `cliphist` falso (imagen 40×20, copia, carpeta 0700); panel,
   bandeja y skins 34/34. **Pendiente:** verlo en el panel diario (archivo nuevo: hace falta reinicio
   de mantenimiento del shell o volver a iniciar sesión). Sin edición/QR/URL.
+
+### 351. Breeze R8, lote 7: avisos de Plasma como servidor en Breeze y respuesta en línea (2026-11-24)
+
+* **Encontrado:** en Breeze, swaync (arrancado por autostart en todas las skins menos Retro) tenía
+  `org.freedesktop.Notifications`: los avisos, el historial y las acciones de Plasma portados en F5
+  nunca se usaban. El usuario eligió los avisos de Plasma.
+* **Hecho:** campo `notifications` en `skin.json` (`swaync` en default, `shell` en Breeze y Retro) y
+  `bwm_skins.notifications()`; el gestor (6.1) y `autostart.sh` cierran o arrancan swaync según él.
+  `services/Notifications.qml` crea su servidor en Breeze, y en default sólo si swaync no está
+  instalado. Respuesta en línea: `inlineReplySupported` sólo en Breeze (las otras skins conservan
+  las acciones «Responder» de las apps), `ActionContainer.qml` original y `NotificationReplyField.qml`,
+  `Notifications.sendInlineReply()`; los toasts piden teclado sólo mientras se escribe.
+* **Comprobado:** prueba QML (botón Reply, campo enfocado, texto enviado por el servidor); 45 pruebas
+  de bandeja, skins, sesión y cambio de skin. En sesión: `set plasma` cerró swaync, Quickshell tomó el
+  nombre (anuncia `inline-reply`) y una notificación de prueba salió como toast de Plasma con Reply.
+  **No probado:** escribir una respuesta real con el teclado en el toast ni con una app real.
 

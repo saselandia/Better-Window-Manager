@@ -20,7 +20,15 @@ PlasmaComponents3.StackView {
     implicitWidth: currentItem.Layout.maximumWidth < Infinity ? currentItem.Layout.maximumWidth : currentItem.implicitWidth
     implicitHeight: currentItem.implicitHeight
 
-    // BWM: this server advertises actions, not the KDE inline-reply protocol.
+    function beginReply() {
+        modelInterface.replying = true;
+        modelInterface.forceActiveFocusRequested();
+        if (currentItem === actionRow) {
+            push(replyFieldComponent);
+        }
+        currentItem.activate()
+    }
+
     pushEnter: Transition {
         NumberAnimation {
             property: "opacity"
@@ -41,7 +49,21 @@ PlasmaComponents3.StackView {
     }
 
     // Notification actions
-    initialItem: actionRow
+    initialItem: {
+        if (actionContainer.modelInterface.hasReplyAction) {
+            // When inliny reply is the only action, default to it.
+            let actionsCount = (actionContainer.modelInterface.actionNames || []).length;
+            // "default" in history is added afterwards , handle it here, too.
+            if (actionContainer.modelInterface.inHistory && actionContainer.modelInterface.addDefaultAction) {
+                ++actionsCount;
+            }
+
+            if (actionsCount === 0) {
+                return replyFieldComponent;
+            }
+        }
+        return actionRow;
+    }
 
     RowLayout {
         id: actionRow
@@ -68,6 +90,13 @@ PlasmaComponents3.StackView {
                     });
                 }
 
+                if (actionContainer.modelInterface.hasReplyAction) {
+                    buttons.unshift({
+                        actionName: "inline-reply",
+                        label: actionContainer.modelInterface.replyActionLabel || i18nc("Reply to message", "Reply")
+                    });
+                }
+
                 if (actionContainer.modelInterface.inHistory && actionContainer.modelInterface.addDefaultAction) {
                     buttons.unshift({
                         actionName: "default",
@@ -91,10 +120,22 @@ PlasmaComponents3.StackView {
                 text: label || ""
 
                 onClicked: {
+                    if (actionName === "inline-reply") {
+                        actionContainer.beginReply();
+                        return;
+                    }
+
                     actionContainer.modelInterface.actionInvoked(actionName);
                 }
             }
         }
     }
 
+    Component {
+        id: replyFieldComponent
+        NotificationReplyField {
+            modelInterface: actionContainer.modelInterface
+            onBeginReplyRequested: actionContainer.beginReply()
+        }
+    }
 }

@@ -231,8 +231,9 @@ siendo el nombre del escritorio original que imita Breeze.
   rename atómico lo deja sordo. qt6ct vigila la carpeta y aun así no repinta apps abiertas. GTK 3 lee
   `~/.config/gtk-3.0/gtk.css` sólo al arrancar → los colores van en un tema que se alterna.
 - **Un solo dueño**: polkit (un agente por sesión) y `org.freedesktop.Notifications`: en Retro los tiene
-  Quickshell (Omarchy); Breeze usa polkit-kde-agent y default, `hyprpolkitagent`/BWM. Al tocar esto, revisa `bwm-theme-manager.py`
-  (6.1/6.2) y `autostart.sh`.
+  Quickshell (Omarchy); Breeze usa polkit-kde-agent y default, `hyprpolkitagent`/BWM. Avisos según
+  `notifications` de `skin.json`: swaync en default, el servidor de Quickshell en Breeze (avisos de Plasma)
+  y Retro. Al tocar esto, revisa `bwm-theme-manager.py` (6.1/6.2), `autostart.sh` y `services/Notifications.qml`.
 - **Flatpak**: `--filesystem=xdg-config/x` se monta también en `~/.var/app/<id>/config/x`; los enlaces de
   `~/.config` apuntan al repo, que también hay que exponer.
 - **Electron** reescribe su argv como una sola cadena: no lo relances con `/proc/<pid>/cmdline` tal cual

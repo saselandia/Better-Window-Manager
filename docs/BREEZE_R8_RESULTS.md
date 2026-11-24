@@ -217,3 +217,32 @@ para las entradas de imagen; BWM mostraba su texto de cliphist («[[ binary data
   mantenimiento del shell o el próximo inicio de sesión.
 * Sin edición, QR ni vista de URL (`EditPage`, `BarcodePage`, `UrlItemDelegate`).
 
+## Lote 7: servidor de avisos en Breeze y respuesta en línea (2026-11-24)
+
+* **Encontrado:** swaync tenía `org.freedesktop.Notifications` en Breeze (autostart lo arrancaba fuera
+  de Retro), así que los toasts, el historial de la bandeja y las acciones de Plasma no recibían nada.
+  Ahora `skin.json` declara `notifications` (`swaync` default, `shell` Breeze/Retro) y el gestor y
+  `autostart.sh` cierran o arrancan swaync según la skin. `services/Notifications.qml` sólo crea su
+  servidor en Breeze (o en default si falta swaync).
+* **Respuesta en línea:** `ActionContainer.qml` vuelve a ser el original (botón Reply primero, campo
+  por defecto si es la única acción) con `NotificationReplyField.qml` (sin `Globals.popupWidth`).
+  `NotificationCard` lo conecta a `Notification.sendInlineReply()` de Quickshell y descarta el aviso
+  al enviar. El servidor sólo anuncia `inline-reply` en Breeze, para que en default las apps no
+  sustituyan su acción «Responder» por un campo que no se muestra. Los toasts toman el teclado
+  (`OnDemand`) sólo mientras se escribe una respuesta y no caducan entonces.
+
+### Comprobado
+
+* `test_notification_inline_reply_like_plasma`: botón Reply, campo enfocado, «Hola» enviado por
+  `sendInlineReply` sin invocar acciones. Bandeja, skins, sesión y cambio de skin: 45/45.
+* Sesión real: `bwm-theme-manager.py set plasma` cerró swaync, el PID de Quickshell tomó el nombre
+  y `GetCapabilities` incluye `inline-reply`; una notificación de prueba con `inline-reply` salió como
+  toast de Plasma con los botones Reply y Abrir. Captura recortada y borrada; aviso cerrado.
+
+### Límites
+
+* No se ha escrito una respuesta real con el teclado en el toast, ni probado con Telegram/Vesktop.
+* La etiqueta del botón es la de Plasma («Reply» en `en_US`); Quickshell no expone el texto que la
+  app da a la acción `inline-reply`.
+* Sin trabajos KIO ni No molestar programado.
+

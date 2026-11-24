@@ -72,6 +72,12 @@ def file_manager(skin_id: str) -> str:
     return value if isinstance(value, str) and value.strip() else DEFAULT_FILE_MANAGER
 
 
+def notifications(skin_id: str) -> str:
+    """Dueño de org.freedesktop.Notifications en la skin: "swaync" o "shell" (el de Quickshell)."""
+    value = skin(skin_id).get("notifications", "swaync")
+    return value if value in ("swaync", "shell") else "swaync"
+
+
 def theme_table(wallpapers_dir: Path) -> dict:
     """Las skins con las claves que usa bwm-theme-manager.py (THEMES)."""
     table = {}

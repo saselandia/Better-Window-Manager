@@ -20,6 +20,7 @@
   "palette": "matugen",
   "_ayuda_fileManager": "Gestor de archivos preferido de la skin (.desktop) cuando Ajustes → Aplicaciones predeterminadas usa el modo «Según la skin». Por defecto: org.kde.dolphin.desktop.",
   "fileManager": "org.kde.dolphin.desktop",
+  "notifications": "swaync",
   "defaultTheme": {
     "mode": "dynamic",
     "name": "Nombre del tema por defecto",

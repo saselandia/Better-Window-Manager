@@ -426,7 +426,7 @@
     "swaync": {
       "label": "SwayNotificationCenter",
       "referenceVersion": "0.12.6",
-      "why": "Centro de notificaciones fuera de Retro",
+      "why": "Centro de notificaciones de default (end-4)",
       "check": {"type": "cmd", "any": ["swaync"]},
       "packages": {"gentoo": "guru:gui-apps/swaync", "arch": "swaync", "fedora": "SwayNotificationCenter", "opensuse": "SwayNotificationCenter", "debian": "sway-notification-center"}
     },

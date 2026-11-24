@@ -27,6 +27,10 @@ Scope {
         color:"transparent";exclusionMode:ExclusionMode.Ignore
         WlrLayershell.namespace:"quickshell:plasmaNotifications"
         WlrLayershell.layer:WlrLayer.Overlay
+        // BWM: like Plasma's popup, take the keyboard only while typing an inline reply
+        // (an on-demand layer would otherwise grab it just by being hovered).
+        property int replyingCount:0
+        WlrLayershell.keyboardFocus:replyingCount>0?WlrKeyboardFocus.OnDemand:WlrKeyboardFocus.None
         // KWin's blur behind each card; ignore_alpha drops it in the gaps between them
         BackgroundEffect.blurRegion:Region { item:PlasmaTheme.blur&&toastWindow.visible?list:null }
         BlurPath { id:dialogPath;path:"dialogs/background";withoutBlur:"solid/dialogs/background" }
@@ -45,11 +49,16 @@ Scope {
                         id:card
                         anchors { left:parent.left;right:parent.right;margins:6 }
                         notification:toast.modelData;backend:root.backend
+                        onReplyingChanged:{
+                            toastWindow.replyingCount+=replying?1:-1;
+                            if(replying){root.backend.cancelTimeout(toast.modelData.notificationId);dismiss.stop();}
+                        }
+                        Component.onDestruction:if(replying)toastWindow.replyingCount--
                     }
                     HoverHandler {
                         onHoveredChanged: {
                             if(hovered)root.backend.cancelTimeout(toast.modelData.notificationId);
-                            else if(toast.modelData.notification?.expireTimeout!==0)dismiss.restart();
+                            else if(!card.replying&&toast.modelData.notification?.expireTimeout!==0)dismiss.restart();
                         }
                     }
                     Timer { id:dismiss;interval:5000;onTriggered:root.backend.timeoutNotification(toast.modelData.notificationId) }
