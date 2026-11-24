@@ -52,8 +52,11 @@ AppletHost {
                         required property string modelData
                         readonly property bool image:root.backend.entryIsImage?.(modelData)??false
                         readonly property string text:modelData.replace(/^\d+\s+/,"")
+                        // Klipper's URL items (type 8): a list of local file URLs, e.g. copied in a
+                        // file manager. cliphist truncates the list text, so the last word may be cut.
+                        readonly property bool urls:!image&&/^file:\/\//.test(text)&&text.trim().split(/\s+/).every(t=>t.startsWith("file://")||"file://".startsWith(t))
                         width:history.width
-                        sourceComponent:image?imageDelegate:textDelegate
+                        sourceComponent:image?imageDelegate:urls?urlDelegate:textDelegate
                         Component {
                             id:textDelegate
                             TextItemDelegate {
@@ -63,6 +66,16 @@ AppletHost {
                                 onRemove:root.backend.deleteEntry(row.modelData)
                                 onBarcode:stack.push(barcodeComponent,{text:row.text})
                                 onEdit:stack.push(editComponent,{modelData:{display:row.text},entry:row.modelData})
+                            }
+                        }
+                        Component {
+                            id:urlDelegate
+                            UrlItemDelegate {
+                                entry:row.modelData
+                                backendBinary:root.backend.cliphistBinary??"cliphist"
+                                enabled:!root.readOnly
+                                onSelected:root.backend.copy(row.modelData)
+                                onRemove:root.backend.deleteEntry(row.modelData)
                             }
                         }
                         Component {

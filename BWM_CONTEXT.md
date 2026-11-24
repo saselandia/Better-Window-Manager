@@ -6474,3 +6474,11 @@ git status; git log --oneline -5; git push origin main
   prueba (`a?.()??b`); entrada borrada de cliphist, portapapeles devuelto y condición corregida.
 * **No probado:** los botones con el ratón en el panel diario.
 
+### 353. Breeze R8, lote 9: archivos copiados en el portapapeles (2026-11-24)
+
+* **Hecho:** `applets/clipboard/UrlItemDelegate.qml` de Klipper 6.7.5 para entradas de cliphist que
+  son URL `file://`: decodifica la entrada completa y usa `gio info` para la miniatura de la caché
+  freedesktop o el icono MIME (en vez del proveedor KIO de Klipper).
+* **Comprobado:** prueba QML con dos archivos (lista completa e iconos); 35/35; captura revisada y
+  borrada. **Límites:** sin generar miniaturas nuevas ni arrastrar desde la fila.
+

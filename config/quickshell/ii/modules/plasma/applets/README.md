@@ -13,7 +13,7 @@ Las vistas comparten los colores y métricas de KDE y se actualizan con el motor
 | media | plasma-workspace/applets/mediacontroller | QML original y Mpris2Model de Plasma; se reemplaza GlobalConfig local (paso de volumen), attached y menú de velocidad. No se inicia otro reproductor ni se cambian las teclas comunes. LGPL-2.0-or-later. |
 | calendar | plasma-workspace/applets/digital-clock/CalendarView.qml | Vista original, calendario/MonthView y datos de KDE. Wrapper de hora local y configuración mínima; acción de configurar no disponible hasta F11. GPL-2.0-or-later. |
 | notifications | plasma-workspace/applets/notifications/components | ModelInterface, Summary, Body y ActionContainer originales. NotificationCard adapta datos/acciones de services/Notifications; encabezado DND/historial reducido de FullRepresentation. Sin importar Globals ni crear NotificationManager.Server. Respuesta en línea con ActionContainer y NotificationReplyField originales sobre `sendInlineReply` de Quickshell (el servidor sólo anuncia `inline-reply` en Breeze). GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL. |
-| clipboard | plasma-workspace/klipper/declarative/qml | TextItemDelegate, ImageItemDelegate, DelegateToolButtons (sin «Invocar acción» ni estrella), BarcodePage (QR con Prison) y EditPage originales; base reducida de ClipboardItemDelegate y búsqueda con cliphist de BWM. Editar copia el texto nuevo y borra la entrada anterior. Las imágenes se decodifican una vez a `$XDG_RUNTIME_DIR/bwm-plasma-clipboard` (0700, se borra con la fila). Copia y borrado por entrada, sin arrancar Klipper. GPL-2.0-or-later. |
+| clipboard | plasma-workspace/klipper/declarative/qml | TextItemDelegate, ImageItemDelegate, UrlItemDelegate (miniaturas de la caché freedesktop o icono MIME con `gio info`), DelegateToolButtons (sin «Invocar acción» ni estrella), BarcodePage (QR con Prison) y EditPage originales; base reducida de ClipboardItemDelegate y búsqueda con cliphist de BWM. Editar copia el texto nuevo y borra la entrada anterior. Las imágenes se decodifican una vez a `$XDG_RUNTIME_DIR/bwm-plasma-clipboard` (0700, se borra con la fila). Copia y borrado por entrada, sin arrancar Klipper. GPL-2.0-or-later. |
 | power | powerdevil/applets/{batterymonitor,brightness} | BatteryItem, BrightnessItem e InhibitionHint originales. Wrapper UPower/Brightness común, enums de carga adaptados a UPower. No inicia PowerDevil ni usa su inhibición/perfiles. LGPL-2.0-or-later. |
 
 Repositorios y fuentes correspondientes (etiqueta v6.7.5):
@@ -37,7 +37,7 @@ accesos a temporizadores/acciones que ya habían desaparecido del proveedor com�
 
 La interfaz de Bluetooth y los encabezados de notificaciones/portapapeles/energía son ports
 reducidos: no se presenta toda la funcionalidad de Plasma como soportada. Faltan OBEX y asistente
-avanzado de emparejamiento, trabajos KIO, DND programado, vista de URL y acciones de Klipper en el portapapeles, plugins de agenda y selección multizona desde ajustes, perfiles e inhibiciones de
+avanzado de emparejamiento, trabajos KIO, DND programado, acciones de Klipper en el portapapeles, plugins de agenda y selección multizona desde ajustes, perfiles e inhibiciones de
 PowerDevil. Se conserva el control común de BWM para luz nocturna, inactividad y servicios.
 Las acciones destructivas/reales de radios, rutas de audio y brillo no se ejecutan en las pruebas.
 

@@ -278,3 +278,26 @@ para las entradas de imagen; BWM mostraba su texto de cliphist («[[ binary data
 * Botones probados por código, no con el ratón en el panel diario. Sin vista de URL (miniaturas de
   archivos) ni acciones de Klipper.
 
+## Lote 9: archivos copiados en el portapapeles (2026-11-24)
+
+* **`applets/clipboard/UrlItemDelegate.qml`:** el de Klipper 6.7.5 (fila de miniaturas con el nombre
+  del archivo debajo y «+N» si no caben). Klipper usa su proveedor `klipperpreview` (KIO
+  `PreviewJob`: miniatura o icono MIME). Aquí la entrada de cliphist se decodifica una vez (el texto
+  de la lista viene recortado) y `gio info` da, por cada URL local, la miniatura de la caché
+  freedesktop (`~/.cache/thumbnails`, la que generan Dolphin y Nautilus) o su icono MIME. Las URL
+  remotas no tienen vista previa, como en Klipper.
+* `ClipboardApplet.qml` elige este delegado cuando todas las palabras de la entrada son `file://`
+  (tolerando la última recortada). Sólo ofrece «Quitar del historial», como el tipo URL de Klipper.
+
+### Comprobado
+
+* La prueba del portapapeles añade una entrada de dos archivos (uno con espacio en el nombre) con un
+  `cliphist` falso: lista completa tras decodificar e iconos `text-plain` e `image-png`. Bandeja,
+  panel y skins: 35/35. Captura de una fila con un `.txt` (icono) y un fondo con miniatura de la
+  caché revisada y borrada. El portapapeles real no se tocó.
+
+### Límites
+
+* Si un archivo no tiene miniatura en la caché se muestra su icono: BWM no genera miniaturas nuevas
+  (Klipper sí, con `PreviewJob`). Sin arrastrar los archivos desde la fila.
+

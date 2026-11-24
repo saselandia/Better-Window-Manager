@@ -59,7 +59,7 @@ ShellRoot {
         property bool connected:false
         property bool silent:false
         property var friendlyDeviceList:[device]
-        property var entries:["1\tDemo clipboard entry","2\t[[ binary data 1 KiB png 40x20 ]]"]
+        property var entries:["1\tDemo clipboard entry","2\t[[ binary data 1 KiB png 40x20 ]]"].concat(Quickshell.env("F5_URL_ENTRY")?[Quickshell.env("F5_URL_ENTRY")]:[])
         property string cliphistBinary:Quickshell.env("F5_FAKE_CLIPHIST")||"cliphist"
         function entryIsImage(entry){return /^\d+\t\[\[.*binary data.*\d+x\d+.*\]\]$/.test(entry)}
         readonly property var popupList:list
@@ -184,6 +184,11 @@ ShellRoot {
                     result.imageReady=!!pic&&pic.status===Image.Ready;result.imageWidth=pic?pic.width:0;result.imageHeight=pic?pic.height:0;
                     if(img)img.clicked();
                     result.copied=root.copied;
+                    const urlRows=[];const walk3=i=>{if(i.objectName==="plasma-clipboard-urls"&&!urlRows.includes(i))urlRows.push(i);for(const c of i.children??[])walk3(c);if(i.contentItem)walk3(i.contentItem)};
+                    walk3(loader.item.fullRepresentationItem??loader.item);
+                    result.urlRows=urlRows.length;
+                    result.urls=urlRows[0]?urlRows[0].urls:[];
+                    result.previewIcons=urlRows[0]?Object.values(urlRows[0].previews).map(p=>p.icon):[];
                     // Klipper's tool buttons: QR code page and edit page on the text row.
                     const stack=(function f(i){if(i.objectName==="plasma-clipboard-stack")return i;for(const c of i.children??[]){const r=f(c);if(r)return r}if(i.contentItem&&i.contentItem!==i){const r=f(i.contentItem);if(r)return r}return null})(loader.item.fullRepresentationItem??loader.item);
                     const qr=root.findText(loader.item.fullRepresentationItem??loader.item,"Show QR code");
@@ -273,12 +278,18 @@ class AppletUiTests(unittest.TestCase):
             png=Path(tmp)/'img.png'
             subprocess.run(['magick','-size','40x20','xc:#3daee9',str(png)],check=True)
             fake=Path(tmp)/'cliphist'
-            fake.write_text('#!/bin/sh\n[ "$1" = decode ] && [ "$2" = 2 ] && exec cat '+str(png)+'\nexit 1\n')
+            docs=Path(tmp)/'docs';docs.mkdir();(docs/'a b.txt').write_text('x');(docs/'c.png').write_bytes(png.read_bytes())
+            full='file://'+str(docs/'a%20b.txt')+' file://'+str(docs/'c.png')
+            fake.write_text('#!/bin/sh\n[ "$1" = decode ] && [ "$2" = 2 ] && exec cat '+str(png)+'\n[ "$1" = decode ] && [ "$2" = 3 ] && { printf "%s" "'+full+'"; exit 0; }\nexit 1\n')
             fake.chmod(0o755)
             runtime=Path(tmp)/'run';runtime.mkdir(mode=0o700)
-            r=self.run_case('Clipboard','applets/ClipboardApplet.qml',env={'F5_FAKE_CLIPHIST':str(fake),'XDG_RUNTIME_DIR':str(runtime),
+            r=self.run_case('Clipboard','applets/ClipboardApplet.qml',env={'F5_FAKE_CLIPHIST':str(fake),'F5_URL_ENTRY':'3\t'+full[:40],'XDG_RUNTIME_DIR':str(runtime),
                 'WAYLAND_DISPLAY':os.path.join(os.environ['XDG_RUNTIME_DIR'],os.environ.get('WAYLAND_DISPLAY','wayland-1'))})
-            self.assertEqual(r['entries'],2);self.assertEqual(r['imageRows'],1)
+            self.assertEqual(r['entries'],3);self.assertEqual(r['imageRows'],1)
+            # Klipper's UrlItemDelegate: full list from the decoded entry (the list text is truncated)
+            # and the MIME icons gio gives for local files.
+            self.assertEqual(r['urlRows'],1);self.assertEqual(r['urls'],full.split(' '))
+            self.assertEqual(sorted(r['previewIcons']),['image-png','text-plain'])
             self.assertTrue(r['decoration'].endswith('/bwm-plasma-clipboard/2'),r)
             self.assertTrue(r['imageReady'],r)
             self.assertEqual((r['imageWidth'],r['imageHeight']),(40,20))
