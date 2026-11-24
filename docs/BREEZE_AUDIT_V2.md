@@ -53,7 +53,7 @@ P2 una mejora de paridad secundaria. No implica que cada función de KDE deba a�
 | P2/C, parcial corregido (R8 lote 2) | panel/DigitalClock y applets/calendar | Rueda de zonas y lista de relojes del calendario portadas; falta página de zonas y agenda | Configuración original y plugins de agenda disponibles sin inventar datos |
 | P2/C | applets/BluetoothApplet | Port reducido; OBEX/asistente avanzado ausentes | Evaluar Bluedevil existente/proveedor común; no iniciar otro dueño |
 | P2/C, parcial corregido (R8 lote 7) | applets/notifications | Respuesta en línea portada y servidor propio en Breeze; sin jobs KIO ni programación DND | Ver capacidades del servidor BWM y mapear vista original sólo si efectivas |
-| P2/C, parcial corregido (R8 lote 6) | applets/clipboard | cliphist con delegados originales de texto e imagen; sin edición/QR/URL | Reutilizar proveedor común, sin lanzar Klipper adicional |
+| P2/C, parcial corregido (R8 lotes 6 y 8) | applets/clipboard | cliphist con delegados, QR y edición originales; sin vista de URL ni acciones de Klipper | Reutilizar proveedor común, sin lanzar Klipper adicional |
 | P2/C | applets/power | UPower/brillo compartidos, sin inhibiciones/perfiles PowerDevil | Evaluar API compatible sin duplicar inhibidores/servicios |
 | P2/M | kickoff/KickoffWindow y menus | Menús PC3 sustituyen QMenu por layer-shell; correcciones visuales recientes | Mantener anclaje/clip/highlights; teclado, accesibilidad y RTL |
 | P2/M | switcher/OSD/runtime | Ports F12 con API de temas privada parcial | Verificar selección del tema, escala, modo oscuro/claro y cancelación |

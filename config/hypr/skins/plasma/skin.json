@@ -137,6 +137,8 @@
     "plasma-workspace",
     "plasma-clock",
     "plasma-digitalclock",
+    "prison-qml",
+    "kquickcontrolsaddons",
     "plasma-nm",
     "plasma-pa",
     "plasma-mpris",

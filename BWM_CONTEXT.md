@@ -6463,3 +6463,14 @@ git status; git log --oneline -5; git push origin main
   nombre (anuncia `inline-reply`) y una notificación de prueba salió como toast de Plasma con Reply.
   **No probado:** escribir una respuesta real con el teclado en el toast ni con una app real.
 
+### 352. Breeze R8, lote 8: código QR y edición en el portapapeles (2026-11-24)
+
+* **Hecho:** `DelegateToolButtons.qml`, `BarcodePage.qml` y `EditPage.qml` de Klipper 6.7.5 en
+  `applets/clipboard` (sin acciones de Klipper ni estrella); `ClipboardApplet.qml` como `StackView`;
+  editar copia el texto nuevo y borra la entrada anterior. IPC `plasmaClipboard`. Requisitos
+  `prison-qml` y `kquickcontrolsaddons` (instalados).
+* **Comprobado:** prueba QML de QR y edición; bandeja, panel y skins 35/35; IPC abre el portapapeles.
+* **Incidencia:** una primera versión escribió «Edited entry» en el portapapeles real durante la
+  prueba (`a?.()??b`); entrada borrada de cliphist, portapapeles devuelto y condición corregida.
+* **No probado:** los botones con el ratón en el panel diario.
+

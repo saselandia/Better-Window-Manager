@@ -11,4 +11,5 @@ Scope {
     IpcHandler { target:"plasmaAudio";function toggle():void{TrayState.toggle("audio","")} function open():void{TrayState.open("audio","")} function close():void{TrayState.close()} }
     IpcHandler { target:"plasmaCalendar";function toggle():void{TrayState.toggle("calendar","")} function open():void{TrayState.open("calendar","")} function close():void{TrayState.close()} }
     IpcHandler { target:"plasmaNotifications";function toggle():void{TrayState.toggle("notifications","")} function open():void{TrayState.open("notifications","")} function close():void{TrayState.close()} }
+    IpcHandler { target:"plasmaClipboard";function toggle():void{TrayState.toggle("clipboard","")} function open():void{TrayState.open("clipboard","")} function close():void{TrayState.close()} }
 }

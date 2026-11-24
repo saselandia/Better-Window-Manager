@@ -246,3 +246,35 @@ para las entradas de imagen; BWM mostraba su texto de cliphist («[[ binary data
   app da a la acción `inline-reply`.
 * Sin trabajos KIO ni No molestar programado.
 
+## Lote 8: código QR y edición en el portapapeles (2026-11-24)
+
+* **`applets/clipboard/DelegateToolButtons.qml`** (el de Klipper 6.7.5 sin «Invocar acción», que son
+  las acciones de URL de Klipper, ni la estrella, que cliphist no guarda): en la fila bajo el puntero
+  o con foco, «Mostrar código QR» y «Editar contenido» en texto y «Quitar del historial» en todas.
+* **`BarcodePage.qml`** (Prison, copiar la imagen del QR con `KQuickControlsAddons.Clipboard`) y
+  **`EditPage.qml`** originales. Klipper reescribe la entrada y la sube; con cliphist, guardar copia el
+  texto nuevo (pasa a ser la primera entrada) y borra la anterior.
+* `ClipboardApplet.qml` es ahora una `StackView` como `KlipperPopup` (la cabecera sigue a la página).
+  Nuevo IPC `plasmaClipboard open|close|toggle`, como los demás applets de la bandeja.
+* Requisitos nuevos declarados (ya instalados): módulos QML `org.kde.prison` y
+  `org.kde.kquickcontrolsaddons`.
+
+### Comprobado
+
+* La prueba del portapapeles abre el QR (página 2, código válido) y la edición (texto original,
+  guardar → texto nuevo copiado, entrada anterior borrada, vuelta a la lista). Bandeja, panel y skins:
+  35/35. Captura del QR revisada y borrada.
+* El IPC abre el portapapeles en la sesión real (es un `PopupWindow`, no aparece en `hyprctl layers`).
+
+### Incidencia
+
+* La primera versión, al guardar, usaba `Quickshell.clipboardText` también cuando el backend tenía su
+  propio `setText` (`a?.()??b` ejecuta `b` si `a` devuelve `undefined`): las pruebas escribieron
+  «Edited entry» en el portapapeles real. Se borró esa entrada de cliphist, se devolvió al portapapeles
+  la entrada que estaba antes y se corrigió la condición; la prueba ya no toca el portapapeles.
+
+### Límites
+
+* Botones probados por código, no con el ratón en el panel diario. Sin vista de URL (miniaturas de
+  archivos) ni acciones de Klipper.
+

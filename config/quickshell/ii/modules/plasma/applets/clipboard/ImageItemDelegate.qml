@@ -21,6 +21,7 @@ import org.kde.kirigami as Kirigami
 ClipboardItemDelegate {
     id: menuItem
     objectName: "plasma-clipboard-image"
+    type: 4 // HistoryItemType::Image: no QR code or edit buttons
 
     required property string entry
     property string backendBinary: "cliphist"

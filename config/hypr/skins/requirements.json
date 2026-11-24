@@ -704,6 +704,20 @@
       "check": {"type": "qml", "module": "org/kde/plasma/clock"},
       "packages": {"gentoo": "kde-plasma/plasma-workspace", "arch": "plasma-workspace", "fedora": "plasma-workspace", "opensuse": null, "debian": "plasma-workspace"}
     },
+    "prison-qml": {
+      "label": "Códigos QR de KDE (Prison)",
+      "referenceVersion": "6.29.0",
+      "why": "Página «Mostrar código QR» del portapapeles de Breeze (BarcodePage de Klipper)",
+      "check": {"type": "qml", "module": "org/kde/prison"},
+      "packages": {"gentoo": "kde-frameworks/prison[qml]", "arch": "prison", "fedora": "kf6-prison", "opensuse": "kf6-prison-imports", "debian": "qml6-module-org-kde-prison"}
+    },
+    "kquickcontrolsaddons": {
+      "label": "Complementos QML de KDE",
+      "referenceVersion": "6.29.0",
+      "why": "Copiar la imagen del código QR del portapapeles de Breeze",
+      "check": {"type": "qml", "module": "org/kde/kquickcontrolsaddons"},
+      "packages": {"gentoo": "kde-frameworks/kdeclarative", "arch": "kdeclarative", "fedora": "kf6-kdeclarative", "opensuse": "kf6-kdeclarative-imports", "debian": "qml6-module-org-kde-kquickcontrolsaddons"}
+    },
     "plasma-digitalclock": {
       "label": "Interfaz del reloj digital de Plasma",
       "referenceVersion": "6.7.5",

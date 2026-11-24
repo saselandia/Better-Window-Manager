@@ -51,6 +51,7 @@ ShellRoot {
     property int copied:0
     property int removed:0
     property string repliedText:""
+    property string editedText:""
     QtObject {
         id:mock
         property bool available:true
@@ -81,6 +82,7 @@ ShellRoot {
         function refresh(){}
         function copy(entry){root.copied++}
         function deleteEntry(entry){root.removed++}
+        function setText(text){root.editedText=text}
     }
     QtObject {
         id:device
@@ -182,6 +184,22 @@ ShellRoot {
                     result.imageReady=!!pic&&pic.status===Image.Ready;result.imageWidth=pic?pic.width:0;result.imageHeight=pic?pic.height:0;
                     if(img)img.clicked();
                     result.copied=root.copied;
+                    // Klipper's tool buttons: QR code page and edit page on the text row.
+                    const stack=(function f(i){if(i.objectName==="plasma-clipboard-stack")return i;for(const c of i.children??[]){const r=f(c);if(r)return r}if(i.contentItem&&i.contentItem!==i){const r=f(i.contentItem);if(r)return r}return null})(loader.item.fullRepresentationItem??loader.item);
+                    const qr=root.findText(loader.item.fullRepresentationItem??loader.item,"Show QR code");
+                    result.qrButton=!!qr;
+                    if(qr){qr.clicked();driver.wait(400);}
+                    result.qrDepth=stack?stack.depth:0;
+                    result.qrValid=!!stack?.currentItem?.valid;
+                    if(stack&&stack.depth>1){stack.pop(null);driver.wait(300);}
+                    const ed=root.findText(loader.item.fullRepresentationItem??loader.item,"Edit contents");
+                    result.editButton=!!ed;
+                    if(ed){ed.clicked();driver.wait(400);}
+                    result.editDepth=stack?stack.depth:0;
+                    const page=stack?.currentItem;
+                    result.editText=page?.text??"";
+                    if(page&&page.saveAndExit){page.text="Edited entry";page.saveAndExit();driver.wait(300);}
+                    result.edited=root.editedText;result.removedAfterEdit=root.removed;result.backDepth=stack?stack.depth:0;
                 }
                 if(name==="Calendar") {result.calendar=!!loader.item.fullRepresentationItem?.monthView;}
                 if(name==="CalendarZones") {const v=loader.item.fullRepresentationItem;result.calendar=!!v?.monthView;result.zones=loader.item.selectedTimeZonesDeduplicatingExplicitLocalTimeZone();result.showClocks=!!v?.showClocks;result.later=loader.item.formatOffset(new Date(loader.item.currentTime.getTime()+2*3600000));result.same=loader.item.formatOffset(loader.item.currentTime);result.current=loader.item.currentTimeZone;}
@@ -265,6 +283,11 @@ class AppletUiTests(unittest.TestCase):
             self.assertTrue(r['imageReady'],r)
             self.assertEqual((r['imageWidth'],r['imageHeight']),(40,20))
             self.assertEqual(r['copied'],1)
+            self.assertTrue(r['qrButton'],r);self.assertEqual(r['qrDepth'],2);self.assertTrue(r['qrValid'],r)
+            self.assertTrue(r['editButton'],r);self.assertEqual(r['editDepth'],2)
+            self.assertEqual(r['editText'],'Demo clipboard entry')
+            self.assertEqual(r['edited'],'Edited entry');self.assertEqual(r['removedAfterEdit'],1)
+            self.assertEqual(r['backDepth'],1)
             self.assertEqual(oct((runtime/'bwm-plasma-clipboard').stat().st_mode&0o777),'0o700')
     def test_power_without_daemon(self):self.run_case('Power','applets/PowerApplet.qml')
 

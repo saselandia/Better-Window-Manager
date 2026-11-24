@@ -143,6 +143,8 @@ Son las versiones registradas en el entorno local de BWM, no las últimas public
 | BluezQt | 6.29.0 | — |
 | Kirigami (componentes KDE) | 6.29.0 | — |
 | Reloj de Plasma | 6.7.5 | — |
+| Códigos QR de KDE (Prison) | 6.29.0 | — |
+| Complementos QML de KDE | 6.29.0 | — |
 | Interfaz del reloj digital de Plasma | 6.7.5 | — |
 | Gestor de actividades de KDE | 6.7.5 | — |
 | Modelo MPRIS de Plasma | 6.7.5 | — |
@@ -251,6 +253,8 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | plasma-workspace (herramientas de temas y KCMs) | plasma-apply-*, lookandfeeltool, módulos de Preferencias (colores, estilo de Plasma, iconos, cursores, fuentes, tema global) y modelos de Kickoff/bandeja. Instala KWin, pero BWM no lo ejecuta | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
 | Reloj de Plasma | Fuente de hora del reloj digital portado de Plasma | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
 | Interfaz del reloj digital de Plasma | Formato y traducciones de zonas horarias del reloj nativo de Plasma | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
+| Códigos QR de KDE (Prison) | Página «Mostrar código QR» del portapapeles de Breeze (BarcodePage de Klipper) | `kde-frameworks/prison[qml]` | `prison` | `kf6-prison` | `kf6-prison-imports` | `qml6-module-org-kde-prison` |
+| Complementos QML de KDE | Copiar la imagen del código QR del portapapeles de Breeze | `kde-frameworks/kdeclarative` | `kdeclarative` | `kf6-kdeclarative` | `kf6-kdeclarative-imports` | `qml6-module-org-kde-kquickcontrolsaddons` |
 | plasma-nm (applet de red) | Modelos de red del applet de Plasma (org.kde.plasma.networkmanagement) | `kde-plasma/plasma-nm` | `plasma-nm` | `plasma-nm` | — | `plasma-nm` |
 | plasma-pa (applet de sonido) | Modelos de sonido del applet de Plasma (org.kde.plasma.private.volume) | `kde-plasma/plasma-pa` | `plasma-pa` | `plasma-pa` | — | `plasma-pa` |
 | Modelo MPRIS de Plasma | Interfaz de los applets portados de Breeze, sin arrancar plasmashell ni sus servidores | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
