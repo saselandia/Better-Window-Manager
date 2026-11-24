@@ -191,3 +191,29 @@ P2 de la auditoría (`panel/TasksModel, TaskToolTip`: «Unity progress/badges»)
 * No probado con apps reales que envíen el protocolo (Telegram, Vesktop, descargas de Firefox).
 * El reinicio de mantenimiento movió el foco al MSI (workspace 2), como ya se vio en §3.94;
   se devolvió a mano a la ventana anterior.
+
+## Lote 6: imágenes en el portapapeles (2026-11-24)
+
+P2 de la auditoría (`applets/clipboard`: «sin miniaturas»). Klipper usa `ImageItemDelegate.qml`
+para las entradas de imagen; BWM mostraba su texto de cliphist («[[ binary data … ]]»).
+
+* **`applets/clipboard/ImageItemDelegate.qml`:** el original de plasma-workspace 6.7.5 con la
+  disposición, tamaño (4 unidades de rejilla) y alineación de Klipper. En lugar de `decoration` del
+  `HistoryModel`, decodifica la entrada con `cliphist decode <id>` una sola vez a
+  `$XDG_RUNTIME_DIR/bwm-plasma-clipboard/<id>` (umask 077, escritura en `.part` y renombrado) y lo
+  borra al destruirse la fila. No toca el portapapeles al mostrarla.
+* **`ClipboardApplet.qml`:** elige texto o imagen por entrada con `Cliphist.entryIsImage`, como el
+  `DelegateChooser` de Klipper; copiar y borrar siguen igual.
+
+### Comprobado
+
+* `tests/test_plasma_tray.py` (ahora 21 pruebas): nueva `test_clipboard_text_and_image_entries`
+  con un `cliphist` falso y un PNG de 40×20: una fila de imagen, imagen cargada a 40×20, clic que
+  copia y carpeta privada 0700. Panel nativo, bandeja y skins: 34/34.
+
+### Límites
+
+* No se ha visto en el panel diario: un archivo nuevo de un módulo necesita un reinicio de
+  mantenimiento del shell o el próximo inicio de sesión.
+* Sin edición, QR ni vista de URL (`EditPage`, `BarcodePage`, `UrlItemDelegate`).
+

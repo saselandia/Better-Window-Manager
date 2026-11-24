@@ -57,7 +57,9 @@ ShellRoot {
         property bool connected:false
         property bool silent:false
         property var friendlyDeviceList:[device]
-        property var entries:["1\tDemo clipboard entry"]
+        property var entries:["1\tDemo clipboard entry","2\t[[ binary data 1 KiB png 40x20 ]]"]
+        property string cliphistBinary:Quickshell.env("F5_FAKE_CLIPHIST")||"cliphist"
+        function entryIsImage(entry){return /^\d+\t\[\[.*binary data.*\d+x\d+.*\]\]$/.test(entry)}
         readonly property var popupList:list
         function cancelTimeout(id){}
         function timeoutNotification(id){}
@@ -156,7 +158,19 @@ ShellRoot {
             if(loader.item) {
                 if(name==="Bluetooth") { const b=root.findText(loader.item,"Connect");if(b){const pos=b.mapToItem(loader.item,b.width/2,b.height/2);driver.mouseClick(loader.item,pos.x,pos.y);driver.wait(80);}result.control=!!b;result.actions=root.actions;result.discovery=adapter.discovering; }
                 if(name==="Notifications") { const b=root.findText(loader.item,"Test action");if(b){const pos=b.mapToItem(loader.item,b.width/2,b.height/2);driver.mouseClick(loader.item,pos.x,pos.y);driver.wait(80);}result.control=!!b;result.actions=root.actions; }
-                if(name==="Clipboard") { result.entries=loader.item.backend.entries.length; }
+                if(name==="Clipboard") {
+                    result.entries=loader.item.backend.entries.length;
+                    const found=[];const walk=i=>{if(i.objectName==="plasma-clipboard-image"&&!found.includes(i))found.push(i);for(const c of i.children??[])walk(c);if(i.contentItem)walk(i.contentItem)};
+                    walk(loader.item.fullRepresentationItem??loader.item);
+                    const img=found[0];
+                    result.imageRows=found.length;
+                    result.decoration=img?String(img.decoration):"";
+                    let pic=null;const walk2=i=>{if(!pic&&i.sourceSize!==undefined&&i.status!==undefined&&String(i.source)!=="")pic=i;for(const c of i.children??[])walk2(c)};
+                    if(img)walk2(img);
+                    result.imageReady=!!pic&&pic.status===Image.Ready;result.imageWidth=pic?pic.width:0;result.imageHeight=pic?pic.height:0;
+                    if(img)img.clicked();
+                    result.copied=root.copied;
+                }
                 if(name==="Calendar") {result.calendar=!!loader.item.fullRepresentationItem?.monthView;}
                 if(name==="CalendarZones") {const v=loader.item.fullRepresentationItem;result.calendar=!!v?.monthView;result.zones=loader.item.selectedTimeZonesDeduplicatingExplicitLocalTimeZone();result.showClocks=!!v?.showClocks;result.later=loader.item.formatOffset(new Date(loader.item.currentTime.getTime()+2*3600000));result.same=loader.item.formatOffset(loader.item.currentTime);result.current=loader.item.currentTimeZone;}
             }
@@ -178,8 +192,8 @@ class AppletUiTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.path.unlink(missing_ok=True)
-    def run_case(self,name,url):
-        r=subprocess.run(['qs','-p',str(self.path)],env={**os.environ,'F5_CASE':name,'F5_URL':url,'LC_ALL':'C.UTF-8'},capture_output=True,text=True,timeout=12)
+    def run_case(self,name,url,env=None):
+        r=subprocess.run(['qs','-p',str(self.path)],env={**os.environ,'F5_CASE':name,'F5_URL':url,'LC_ALL':'C.UTF-8',**(env or {})},capture_output=True,text=True,timeout=12)
         output=r.stdout+r.stderr
         self.assertNotIn('failed to load',output.lower())
         self.assertNotIn('TypeError:',output)
@@ -215,7 +229,24 @@ class AppletUiTests(unittest.TestCase):
     def test_notification_action_uses_existing_backend(self):
         result=self.run_case('Notifications','applets/NotificationsApplet.qml')
         self.assertTrue(result['control']);self.assertEqual(result['actions'],1)
-    def test_clipboard(self):self.assertEqual(self.run_case('Clipboard','applets/ClipboardApplet.qml')['entries'],1)
+    def test_clipboard_text_and_image_entries(self):
+        # Klipper shows images with ImageItemDelegate; the cliphist entry is decoded by a fake
+        # binary into a private runtime directory, never into the user's clipboard.
+        with tempfile.TemporaryDirectory() as tmp:
+            png=Path(tmp)/'img.png'
+            subprocess.run(['magick','-size','40x20','xc:#3daee9',str(png)],check=True)
+            fake=Path(tmp)/'cliphist'
+            fake.write_text('#!/bin/sh\n[ "$1" = decode ] && [ "$2" = 2 ] && exec cat '+str(png)+'\nexit 1\n')
+            fake.chmod(0o755)
+            runtime=Path(tmp)/'run';runtime.mkdir(mode=0o700)
+            r=self.run_case('Clipboard','applets/ClipboardApplet.qml',env={'F5_FAKE_CLIPHIST':str(fake),'XDG_RUNTIME_DIR':str(runtime),
+                'WAYLAND_DISPLAY':os.path.join(os.environ['XDG_RUNTIME_DIR'],os.environ.get('WAYLAND_DISPLAY','wayland-1'))})
+            self.assertEqual(r['entries'],2);self.assertEqual(r['imageRows'],1)
+            self.assertTrue(r['decoration'].endswith('/bwm-plasma-clipboard/2'),r)
+            self.assertTrue(r['imageReady'],r)
+            self.assertEqual((r['imageWidth'],r['imageHeight']),(40,20))
+            self.assertEqual(r['copied'],1)
+            self.assertEqual(oct((runtime/'bwm-plasma-clipboard').stat().st_mode&0o777),'0o700')
     def test_power_without_daemon(self):self.run_case('Power','applets/PowerApplet.qml')
 
 

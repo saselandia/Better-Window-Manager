@@ -37,13 +37,32 @@ AppletHost {
             ListView {
                 id:history;clip:true
                 model:(root.backend.entries??[]).filter(e=>e.toLowerCase().includes(search.text.toLowerCase()))
-                delegate:TextItemDelegate {
+                // BWM: like Klipper's DelegateChooser, images use ImageItemDelegate.
+                delegate:Loader {
+                    id:row
                     required property string modelData
+                    readonly property bool image:root.backend.entryIsImage?.(modelData)??false
                     width:history.width
-                    model:({display:modelData.replace(/^\d+\s+/,"")})
-                    enabled:!root.readOnly
-                    onSelected:root.backend.copy(modelData)
-                    onRemove:root.backend.deleteEntry(modelData)
+                    sourceComponent:image?imageDelegate:textDelegate
+                    Component {
+                        id:textDelegate
+                        TextItemDelegate {
+                            model:({display:row.modelData.replace(/^\d+\s+/,"")})
+                            enabled:!root.readOnly
+                            onSelected:root.backend.copy(row.modelData)
+                            onRemove:root.backend.deleteEntry(row.modelData)
+                        }
+                    }
+                    Component {
+                        id:imageDelegate
+                        ImageItemDelegate {
+                            entry:row.modelData
+                            backendBinary:root.backend.cliphistBinary??"cliphist"
+                            enabled:!root.readOnly
+                            onSelected:root.backend.copy(row.modelData)
+                            onRemove:root.backend.deleteEntry(row.modelData)
+                        }
+                    }
                 }
                 PlasmaExtras.PlaceholderMessage { anchors.centerIn:parent;visible:history.count===0;text:root.i18n("Clipboard is empty") }
             }

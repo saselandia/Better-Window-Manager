@@ -6437,3 +6437,13 @@ git status; git log --oneline -5; git push origin main
   retiraron al salir. Una primera prueba dejó un listener huérfano del shell anterior (causa del
   `PR_SET_PDEATHSIG`); se mató por PID. El reinicio de mantenimiento movió el foco (devuelto a mano).
 * **No probado:** apps reales que emitan el protocolo. Detalle en `docs/BREEZE_R8_RESULTS.md`.
+
+### 350. Breeze R8, lote 6: imágenes en el portapapeles (2026-11-24)
+
+* **Hecho:** `applets/clipboard/ImageItemDelegate.qml` (el original de Klipper 6.7.5) para las
+  entradas de imagen de cliphist: decodificadas una vez a `$XDG_RUNTIME_DIR/bwm-plasma-clipboard`
+  (0700, borradas con la fila); `ClipboardApplet.qml` elige texto o imagen por entrada.
+* **Comprobado:** prueba QML con un `cliphist` falso (imagen 40×20, copia, carpeta 0700); panel,
+  bandeja y skins 34/34. **Pendiente:** verlo en el panel diario (archivo nuevo: hace falta reinicio
+  de mantenimiento del shell o volver a iniciar sesión). Sin edición/QR/URL.
+

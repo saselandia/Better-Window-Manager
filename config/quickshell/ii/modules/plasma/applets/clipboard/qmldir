@@ -1,2 +1,3 @@
 ClipboardItemDelegate 1.0 ClipboardItemDelegate.qml
 TextItemDelegate 1.0 TextItemDelegate.qml
+ImageItemDelegate 1.0 ImageItemDelegate.qml
