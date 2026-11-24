@@ -623,7 +623,7 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   ratón/CSD/snapping, PAM/huella/polkit reales y más temas privados. F13 no modifica el plugin.
 
 ### 2.5 Ventanas, juegos y sistema
-* `window-guard.py watch` (autostart): primary de XWayland = monitor del workspace 1, ventanas fuera de pantalla de vuelta, juegos sin bordes a pantalla completa, y fondo repuesto en los monitores que swww/awww deja en negro al reconectarse (§3.81; `window-guard.py wallpaper` lo hace a mano). También relanza Quickshell si desaparece (~20 s, §3.105). Los demonios de sesión se lanzan con `bwm_session.spawn()` (hijos de Hyprland, no de quien llama). Regla `games-main-monitor` (HP, foco al activarse, inhibir reposo).
+* `window-guard.py watch` (autostart): primary de XWayland = monitor del workspace 1, ventanas fuera de pantalla de vuelta, juegos sin bordes a pantalla completa, y fondo repuesto en los monitores que swww/awww deja en negro al reconectarse (§3.81; `window-guard.py wallpaper` lo hace a mano). También relanza Quickshell si desaparece (~20 s, §3.105). Los demonios de sesión se lanzan con `bwm_session.spawn()` (hijos de Hyprland, no de quien llama). Regla `games-main-monitor` (foco al activarse, inhibir reposo; sin monitor fijo desde §3.347). En Breeze, Alt+Intro maximiza como KDE salvo en juegos y ventanas a pantalla completa, donde alterna la pantalla completa real (`kwin-window.py alt-enter`).
 * Dock de default (end-4) (§3.91): el de end-4 (`modules/ii/dock`), apagado por defecto; las ventanas minimizadas se restauran desde él. Retro usa el de Omarchy (`dock.omarchy`).
 * **Minimizado (§3.113, §3.114):** todas las skins guardan las minimizadas en `special:minimized` con la etiqueta de Omarchy `omarchy-minimized-from-<n>`. Retro usa el script y el dock de Omarchy (sólo workspaces flotantes, vuelve al workspace que tienes delante). default y Breeze usan `toggle-minimize.py`: también en mosaico y sin dock, vuelve a su workspace de origen con la geometría exacta, y «Mostrar escritorio». Las del workspace 99 con `from_ws_<n>` de versiones anteriores se siguen reconociendo.
 * Pantalla completa (§3.90): `modules/fullscreen.lua` la deja sin borde/sombra/redondeo/atenuado en todas las skins (la transparencia se respeta); el CSS de apps (Vesktop, Firefox, Stremio) anula sus bordes en `:fullscreen`.
@@ -6422,6 +6422,19 @@ git status; git log --oneline -5; git push origin main
   `open-settings.sh --list` en la sesión Wayland real descubre los 10 `kcm_bwm_*` y
   `kcm_kwindecoration`. **Pendiente del usuario:** abrir Preferencias con `Super+I` y probar
   visualmente los módulos en su uso diario.
+
+### 347. Juegos en Breeze: Alt+Intro y regla de juegos con un monitor inexistente (2026-11-23)
+
+* **Petición:** GTA San Andreas DE (Proton) quedaba detrás de las ventanas, Alt+Intro dentro del juego ya no lo arreglaba y en un momento dejó de responder al clic.
+* **Causas en BWM:** en Breeze, Alt+Intro es un atajo de BWM (`kwin-window.py maximize --mode toggle`): el juego no recibe la tecla y, si ya estaba a pantalla completa, `maximize()` no hacía nada. La regla común `games-main-monitor` fijaba `monitor = desc:HP X24ih…`, el monitor retirado el 2026-11-04 (y propio de este equipo): no tenía efecto para nadie.
+* **Hecho:** nuevo `kwin-window.py alt-enter` (atajo de Breeze): en juegos (`steam_app_N`, gamescope, `*.exe`) o ventanas a pantalla completa alterna la pantalla completa real (set/unset explícito), como Alt+Intro en default/Retro; en el resto maximiza como antes. Quitado el monitor fijo de la regla (lo decide `window-guard.py`/`xwayland-primary.py`).
+* **Comprobado:** `keybinds-manager.py reload`, `configerrors` vacío, `--verify-config` ok, decisión de `alt_enter` con clientes simulados y `tests.test_kwin_window` OK. **No probado:** pulsar Alt+Intro en el juego ni la causa de los clics (el juego estaba vivo y dibujando su menú de pausa; la pantalla completa se había forzado desde fuera con el juego en modo exclusivo). La sesión anterior de otra IA dejó `steam_app_1547000` flotante en las reglas persistentes (archivos generados del usuario, no incluidos).
+
+### 348. El fondo de Hyprland (modo seguro) tras volver al equipo (2026-11-23)
+
+* **Síntoma:** al volver, el fondo era el de Hyprland por defecto. No hubo caída (Hyprland llevaba 20 h, sin informes nuevos): `swww-daemon` mostraba un color negro en los dos monitores y `window-guard.py watch`, que repone el fondo, ya no estaba en marcha (su salida iba a `/dev/null`, sin rastro de por qué murió; causa no determinada).
+* **Hecho:** `window-guard.py` ahora también comprueba cada 30 s si swww enseña un color y repone el fondo actual (antes sólo tras eventos de monitor, que no llegan al despertar las pantallas o tras el bloqueo); un error en el bucle de eventos ya no lo mata y deja traza. `autostart.sh` guarda su salida en `~/.local/state/bwm/window-guard.log`.
+* **Comprobado:** con un monitor puesto en negro a mano, el vigilante nuevo lo repuso solo en <40 s. **No probado:** el caso real de despertar tras inactividad larga, ni averiguada la causa de la muerte del vigilante anterior (si vuelve a pasar, mirar ese log).
 
 ### 349. Breeze R8, lote 5: insignias y progreso Unity LauncherEntry en las tareas (2026-11-24)
 

@@ -2,6 +2,7 @@
 """Minimizar, maximizar y restaurar como KWin, en un solo sitio (F8 de docs/BREEZE_PLAN.md).
 
   kwin-window.py maximize [--mode toggle|full|vertical|horizontal|restore] [dirección]
+  kwin-window.py alt-enter [dirección]   (Alt+Intro: maximizar; en juegos, pantalla completa real)
   kwin-window.py minimize [dirección]
   kwin-window.py unminimize <dirección>
   kwin-window.py activate <dirección>     (tarea del panel: restaura, enfoca o minimiza la activa)
@@ -35,6 +36,7 @@ import argparse
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -221,6 +223,26 @@ def work_area(client: dict):
     x, y, w, h = monitor_box(mon, round_to_nearest=True)
     left, top, right, bottom = (list(mon.get("reserved", [])) + [0, 0, 0, 0])[:4]
     return (int(x + left), int(y + top), max(1, int(w - left - right)), max(1, int(h - top - bottom)))
+
+
+GAME_CLASS = re.compile(r"^(steam_app_[0-9]+|gamescope|.*\.exe)$", re.IGNORECASE)
+
+
+def is_game_or_fullscreen(client: dict) -> bool:
+    """Juegos (misma clase que la regla games-main-monitor) o ventanas ya a pantalla completa real."""
+    return (client.get("fullscreen", 0) == 2 or client.get("fullscreenClient", 0) == 2
+            or bool(GAME_CLASS.match(client.get("class") or "")))
+
+
+def alt_enter(client: dict) -> None:
+    """Alt+Intro de Breeze: maximizar como KWin, salvo en juegos/pantalla completa, donde alterna
+    la pantalla completa real como en las otras skins (maximizar un juego no tiene sentido y,
+    a pantalla completa, maximize() no hacía nada y la tecla no llegaba a ningún sitio)."""
+    if is_game_or_fullscreen(client):
+        action = "unset" if client.get("fullscreen", 0) == 2 else "set"
+        run_lua(window_lua(client, f"hl.dispatch(hl.dsp.window.fullscreen({{ mode = 0, action = '{action}', window = w }}))"))
+    else:
+        maximize(client, "toggle")
 
 
 def maximize(client: dict, request: str) -> bool:
@@ -438,6 +460,7 @@ def main(argv=None) -> int:
     p = sub.add_parser("maximize")
     p.add_argument("--mode", choices=["toggle", "full", "vertical", "horizontal", "restore"], default="toggle")
     p.add_argument("address", nargs="?")
+    sub.add_parser("alt-enter").add_argument("address", nargs="?")
     for name in ("minimize", "toggle-minimize", "state"):
         sub.add_parser(name).add_argument("address", nargs="?")
     for name in ("unminimize", "activate", "focus"):
@@ -502,6 +525,8 @@ def execute(args) -> int:
         return 1
     if args.cmd == "maximize":
         maximize(client, args.mode)
+    elif args.cmd == "alt-enter":
+        alt_enter(client)
     elif args.cmd == "minimize":
         minimizer().minimize_win(client)
     elif args.cmd == "unminimize":

@@ -207,7 +207,8 @@ fi
 # 9b. Vigilante de ventanas: monitor principal de XWayland = el del workspace 1, ventanas fuera
 #     de pantalla de vuelta a su monitor y juegos sin bordes del tamaño del monitor a pantalla completa
 if ! pgrep -f 'window-guard.py watch' >/dev/null 2>&1; then
-    python3 "$HOME/.config/hypr/scripts/window-guard.py" watch >/dev/null 2>&1 &
+    mkdir -p "$HOME/.local/state/bwm"
+    python3 "$HOME/.config/hypr/scripts/window-guard.py" watch >>"$HOME/.local/state/bwm/window-guard.log" 2>&1 &
 fi
 
 # 9c. Luz nocturna: vuelve a aplicar el estado guardado (hyprsunset o shader, nightlight.py)

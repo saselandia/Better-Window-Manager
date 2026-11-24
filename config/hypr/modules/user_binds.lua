@@ -127,7 +127,7 @@ if active_skin == "default" then hl.bind("CTRL + SUPER + ALT + T", hl.dsp.exec_c
 -- [Lanzadores]
 if active_skin == "plasma" then hl.bind("ALT + F1", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/app-launcher.sh"), { description = "Lanzadores: Lanzador de aplicaciones (Kickoff de Breeze)" }) end
 -- [Ventanas]
-if active_skin == "plasma" then hl.bind("ALT + RETURN", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py maximize --mode toggle"), { description = "Ventanas: Maximizar o restaurar (KDE)" }) end
+if active_skin == "plasma" then hl.bind("ALT + RETURN", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py alt-enter"), { description = "Ventanas: Maximizar o restaurar (KDE; en juegos, pantalla completa)" }) end
 if active_skin == "plasma" then hl.bind("SUPER + Prior", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py maximize --mode full"), { description = "Ventanas: Maximizar ventana (KDE: Meta+RePág)" }) end
 if active_skin == "plasma" then hl.bind("SUPER + Next", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py minimize"), { description = "Ventanas: Minimizar ventana (KDE: Meta+AvPág)" }) end
 if active_skin == "plasma" then hl.bind("SUPER + D", hl.dsp.exec_cmd("python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py show-desktop"), { description = "Ventanas: Echar un vistazo al escritorio (KDE: Meta+D)" }) end

@@ -120,9 +120,10 @@ hl.window_rule({
 pcall(require, "modules.persistent_rules")
 
 
--- Juegos (Steam/Proton, Wine, gamescope) al monitor principal, en todos los estilos.
--- Va junto con scripts/xwayland-primary.py (autostart.sh), que marca ese mismo monitor como
--- principal en XWayland: sin él Wine toma el LG 4K y el juego sale diminuto o fuera de pantalla.
+-- Juegos (Steam/Proton, Wine, gamescope), en todos los estilos. El monitor lo decide
+-- window-guard.py/xwayland-primary.py (principal de XWayland = monitor del workspace 1): sin él
+-- Wine toma el primer monitor y el juego sale diminuto o fuera de pantalla. Aquí no se fija un
+-- monitor por descripción: era el de un equipo concreto (un HP que ya no existe) y no servía.
 -- De Omarchy (misc.focus_on_activate, apps/steam.lua): el juego toma el foco y sube al frente
 -- cuando Wine activa su ventana (con focus_on_activate global en false se ignoraba y quedaba
 -- debajo de otras), y la pantalla no se apaga mientras está a pantalla completa.
@@ -132,7 +133,6 @@ hl.window_rule({
     match             = {
         class = "^(steam_app_[0-9]+|gamescope|.*\\.exe|.*\\.EXE)$",
     },
-    monitor           = "desc:HP Inc. HP X24ih 1CR1420TD4",
     focus_on_activate = true,
     idle_inhibit      = "fullscreen",
 })

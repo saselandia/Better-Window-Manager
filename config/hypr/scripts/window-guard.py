@@ -195,8 +195,26 @@ def keep_shell(checks=None, sleep=time.sleep):
             missing = 0
 
 
+WALLPAPER_CHECK_SECS = 30
+
+
+def keep_wallpaper(checks=None, sleep=time.sleep):
+    """Repone el fondo si swww lo pierde sin que cambie ningún monitor (al despertar las pantallas,
+    tras el bloqueo...): Hyprland enseñaría entonces su fondo por defecto, el del modo seguro."""
+    while checks is None or checks > 0:
+        if checks is not None:
+            checks -= 1
+        sleep(WALLPAPER_CHECK_SECS)
+        try:
+            if black_outputs() and not bwm_session.theme_manager_busy():
+                restore_wallpapers(tries=3)
+        except Exception as exc:  # un fallo puntual no debe parar el vigilante
+            print(f"window-guard: fondo: {exc}", file=sys.stderr, flush=True)
+
+
 def watch():
     threading.Thread(target=keep_shell, daemon=True).start()
+    threading.Thread(target=keep_wallpaper, daemon=True).start()
     xwayland_primary.apply_retrying()
     restore_wallpapers()
     check_all()
@@ -239,6 +257,8 @@ def watch():
                         threading.Thread(target=on_monitors_changed, daemon=True).start()
         except OSError:
             pass
+        except Exception as exc:  # que quede rastro en el log y se siga vigilando
+            print(f"window-guard: error en el bucle de eventos: {exc!r}", file=sys.stderr, flush=True)
         if not os.path.exists(path):
             return 0  # Hyprland ha terminado
         time.sleep(2)

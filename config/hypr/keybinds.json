@@ -1384,13 +1384,13 @@
   {
     "id": "breeze_maximize_toggle",
     "category": "Ventanas",
-    "description": "Maximizar o restaurar (KDE)",
+    "description": "Maximizar o restaurar (KDE; en juegos, pantalla completa)",
     "mods": [
       "ALT"
     ],
     "key": "RETURN",
     "action_type": "exec",
-    "exec": "python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py maximize --mode toggle",
+    "exec": "python3 /home/sasel/.config/hypr/skins/plasma/scripts/kwin-window.py alt-enter",
     "dispatcher": null,
     "dispatcher_arg": null,
     "options": {},
