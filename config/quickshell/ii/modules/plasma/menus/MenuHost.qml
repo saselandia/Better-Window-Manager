@@ -109,8 +109,13 @@ Scope {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: PlasmaMenus.opened ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         anchors { top: true; bottom: true; left: true; right: true }
+        implicitWidth: screen?.width ?? 0
+        implicitHeight: screen?.height ?? 0
         // KWin's blur behind the open menu and any open submenu (widgets/background translucent)
         BackgroundEffect.blurRegion: Region { id: blurRoot }
+        onWidthChanged: if (loader.item && loader.item.opened) root.place(loader.item)
+        onHeightChanged: if (loader.item && loader.item.opened) root.place(loader.item)
+        onScreenChanged: if (loader.item && loader.item.opened) root.place(loader.item)
 
         // Pulsar fuera del menú lo cierra (el menú también lo hace; esto cubre los huecos)
         MouseArea {
@@ -175,19 +180,28 @@ Scope {
         m.widthChanged.connect(() => root.place(m));
     }
     function place(m) {
+        if (!m)
+            return;
+        const maxW = (win.screen?.width ?? 0) > 0 ? win.screen.width : win.width;
+        const maxH = (win.screen?.height ?? 0) > 0 ? win.screen.height : win.height;
+        let nx = PlasmaMenus.x;
+        let ny = PlasmaMenus.y;
         if (PlasmaMenus.kind === "task" || PlasmaMenus.kind === "panel" || PlasmaMenus.kind === "tray") {
             const r = PlasmaMenus.anchorRect;
             const e = PlasmaMenus.edge;
-            if (e === "bottom") { m.x = r.x; m.y = r.y - m.height; }
-            else if (e === "top") { m.x = r.x; m.y = r.y + r.height; }
-            else if (e === "left") { m.x = r.x + r.width; m.y = r.y; }
-            else { m.x = r.x - m.width; m.y = r.y; }
-            m.x = Math.max(0, Math.min(m.x, win.width - m.width));
-            m.y = Math.max(0, Math.min(m.y, win.height - m.height));
-        } else if (win.width > 0 && win.height > 0) {
-            m.x = Math.max(0, Math.min(m.x, win.width - m.width));
-            m.y = Math.max(0, Math.min(m.y, win.height - m.height));
+            if (e === "bottom") { nx = r.x; ny = r.y - m.height; }
+            else if (e === "top") { nx = r.x; ny = r.y + r.height; }
+            else if (e === "left") { nx = r.x + r.width; ny = r.y; }
+            else { nx = r.x - m.width; ny = r.y; }
         }
+        if (maxW > 0)
+            nx = Math.max(0, Math.min(nx, Math.max(0, maxW - m.width)));
+        if (maxH > 0)
+            ny = Math.max(0, Math.min(ny, Math.max(0, maxH - m.height)));
+        m.x = nx;
+        m.y = ny;
+        if (m.opened)
+            root.updateBlurRegions();
     }
 
     Component { id: windowMenu; WindowMenu { parent: host; address: PlasmaMenus.address } }

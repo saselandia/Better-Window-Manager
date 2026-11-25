@@ -114,19 +114,53 @@
         },
         "float": true
     },
-    "signal": {
-        "name": "persist_signal",
-        "description": "signal",
-        "match": {
-            "class": "^signal$"
-        },
-        "float": true
-    },
     "chatgpt": {
         "name": "persist_chatgpt",
         "description": "Chatgpt",
         "match": {
             "class": "^Chatgpt$"
+        },
+        "float": false
+    },
+    "dev_vencord_vesktop": {
+        "name": "persist_dev_vencord_vesktop",
+        "description": "dev.vencord.Vesktop",
+        "match": {
+            "class": "^dev\\.vencord\\.Vesktop$"
+        },
+        "float": true
+    },
+    "steam_app_3951882152": {
+        "name": "persist_steam_app_3951882152",
+        "description": "steam_app_3951882152",
+        "match": {
+            "class": "^steam_app_3951882152$"
+        },
+        "float": true
+    },
+    "steam_main": {
+        "name": "persist_steam_main",
+        "description": "Steam (Ventana Principal)",
+        "match": {
+            "class": "^steam$",
+            "title": "^Steam$"
+        },
+        "float": true
+    },
+    "steam_grand_theft_auto_san_andreas_the_definitive_edition": {
+        "name": "persist_steam_grand_theft_auto_san_andreas_the_definitive_edition",
+        "description": "Steam (Grand Theft Auto: San Andreas - The Definitive Edition)",
+        "match": {
+            "class": "^steam$",
+            "title": "^Grand\\ Theft\\ Auto:\\ San\\ Andreas\\ \\-\\ The\\ Definitive\\ Edition$"
+        },
+        "float": true
+    },
+    "org_kde_dolphin": {
+        "name": "persist_org_kde_dolphin",
+        "description": "org.kde.dolphin",
+        "match": {
+            "class": "^org\\.kde\\.dolphin$"
         },
         "float": false
     },

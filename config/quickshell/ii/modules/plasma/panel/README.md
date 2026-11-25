@@ -41,9 +41,12 @@ En bar.plasma del perfil de Breeze (opción admitida por F3):
 - style: adaptive/translucent/opaque; floating como estilo antiguo sigue siendo compatible.
 - widgets: lista ordenada kickoff/pager/tasks/tray/clock/desktop.
 - taskOrder: orden de grupos; las ancladas siguen en dock.pinnedApps, propio de cada skin.
+- taskManager: claves nativas de Plasma 6.7.5 (`iconSpacing`, `showOnlyCurrentScreen`,
+  `showOnlyCurrentDesktop`, `showOnlyMinimized`, `groupingStrategy` 0/1, `wheelEnabled`).
 - showDate y showSeconds.
 
-Clic derecho en un espacio del panel activa la edición; Configurar abre los controles y permite
+Clic derecho en un espacio del panel activa la edición; Configurar abre `PanelEditor.qml`
+(traducido con `KI18nContext` en el dominio `plasma_shell_org.kde.plasma.desktop`) y permite
 añadir/quitar/reordenar los widgets incluidos. Ajustes → Panel ofrece borde, visibilidad, opacidad
 del tema, grosor, longitud y alineación. Los antiguos color/opacity/centerTasks quedan como datos
 de migración; el fondo ahora lo dibuja el estilo de Plasma, sin una paleta propia superpuesta.

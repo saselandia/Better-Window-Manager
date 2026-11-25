@@ -77,6 +77,31 @@ Singleton {
     }
 
     property bool silent: false
+    property double silentUntil: 0 // Unix epoch ms; 0 = until manually disabled
+    onSilentChanged: if (!silent) silentUntil = 0
+    function setSilentFor(minutes) {
+        const mins = Number(minutes) || 0;
+        if (mins <= 0) {
+            silentUntil = 0;
+            silent = true;
+            return;
+        }
+        silentUntil = Date.now() + mins * 60000;
+        silent = true;
+    }
+    function clearSilentUntil() { silentUntil = 0; }
+    Timer {
+        id: silentExpiryTimer
+        interval: 15000
+        repeat: true
+        running: root.silent && root.silentUntil > 0
+        onTriggered: {
+            if (Date.now() >= root.silentUntil) {
+                root.silentUntil = 0;
+                root.silent = false;
+            }
+        }
+    }
     property int unread: 0
     property var filePath: Directories.notificationsPath
     property list<Notif> list: []

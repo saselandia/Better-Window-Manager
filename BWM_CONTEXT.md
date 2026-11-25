@@ -6517,6 +6517,98 @@ git status; git log --oneline -5; git push origin main
 * **Comprobado:** prueba QML con dos archivos (lista completa e iconos); 35/35; captura revisada y
   borrada. **Límites:** sin generar miniaturas nuevas ni arrastrar desde la fila.
 
+### 354. Breeze R8, lote 10: inhibición manual y perfiles de energía en `PowerApplet` (2026-11-24)
+
+* **Hecho:** cabecera con «Manually block sleep and screen locking» y `power/InhibitionHint.qml` en
+  `PowerApplet.qml` conectados al servicio común `Idle` (`Idle.inhibit` / `Idle.toggleInhibit()`),
+  y `power/PowerProfileItem.qml` sobre `Quickshell.Services.UPower.PowerProfiles` (oculto
+  automáticamente si no hay `power-profiles-daemon`/`tuned-ppd` en el bus de sistema).
+  `SystemTray.qml` marca `power` activo también con `Idle.inhibit`.
+* **Comprobado:** pruebas QML `test_power_without_daemon` y `test_power_with_profiles_and_inhibition`;
+  bandeja, panel y skins **37/37 OK**. **Límites:** sin inhibiciones de apps PowerDevil; archivo
+  nuevo en módulo requiere reinicio de mantenimiento del shell o próximo inicio de sesión; sin
+  comprobación visual física en el panel diario.
+
+### 355. Breeze R8, lote 11: plugins de agenda y opciones nativas en `CalendarApplet` (2026-11-24)
+
+* **Hecho:** `applets/calendar/CalendarApplet.qml` lee ahora `enabledCalendarPlugins` (p. ej.
+  `holidaysevents`), `firstDayOfWeek`, `showWeekNumbers` y `showSeconds` desde `bar.plasma.clock`,
+  activando la columna de agenda original de `CalendarView.qml` (`PlasmaCalendar.EventPluginsManager`).
+* **Comprobado:** prueba QML `test_calendar_agenda_and_native_options`; bandeja, panel y skins
+  **37/37 OK**. **Límites:** sin página gráfica de zonas/plugins en Ajustes; no comprobado
+  visualmente en el panel diario.
+
+### 356. Breeze R8, lote 12: filtros, agrupación y rueda configurable en `TasksModel` (2026-11-25)
+
+* **Hecho:** `panel/PanelLogic.js` (`filterTasks`), `TasksModel.qml`, `PanelContent.qml` y
+  `Task.qml` leen las claves nativas de `bar.plasma.taskManager` (`showOnlyCurrentScreen`,
+  `showOnlyCurrentDesktop`, `showOnlyMinimized`, `groupingStrategy` 0/1 y `wheelEnabled`).
+  `ScriptModel` usa `key` única para ventanas sin agrupar y conserva los lanzadores fijados al
+  filtrar por pantalla/escritorio.
+* **Comprobado:** pruebas de `filterTasks` en `qml6` + panel, entrada de tareas y compilación
+  **22/22 OK**. **Límites:** sin interfaz gráfica para cambiar estos filtros en el panel diario.
+
+### 357. Breeze R8, lote 13: internacionalización KDE y accesibilidad en `PanelEditor` (2026-11-25)
+
+* **Hecho:** `panel/PanelEditor.qml` usa `KI18nContext` (`plasma_shell_org.kde.plasma.desktop`)
+  en lugar de textos castellanos fijos, añade nombres legibles de widgets, `Accessible.name` en
+  controles, cierre con `Escape` y encadenamiento seguro `anchor.item?.QsWindow?.window`.
+* **Comprobado:** pruebas estática y QML en `LC_ALL=C.UTF-8` (`tests/test_plasma_panel.py`);
+  **22/22 OK**. **Límites:** sin prueba con lector de pantalla ni RTL real.
+
+### 358. Breeze R8, lote 14: No molestar temporal en notificaciones (2026-11-25)
+
+* **Hecho:** `services/Notifications.qml` añade `silentUntil`, `setSilentFor(minutes)` y
+  temporizador de expiración; `applets/NotificationsApplet.qml` muestra la hora de fin y el
+  selector de duración («Until turned off», «For 1 hour», «For 4 hours», «Until tomorrow»).
+* **Comprobado:** `test_notification_action_uses_existing_backend` y
+  `test_notification_inline_reply_like_plasma` OK. **Límites:** sin persistencia de `silentUntil`
+  tras reiniciar el shell ni trabajos KIO.
+
+### 359. Breeze R8, lote 15: ownership de escaneo y acciones en `BluetoothApplet` (2026-11-25)
+
+* **Hecho:** `applets/BluetoothApplet.qml` añade `stopOwnedDiscovery()` (nunca apaga un escaneo
+  ajeno y siempre limpia `initiatedDiscovery`), estado `Stop Searching`, `cancelPair()` al
+  emparejar y casillas `Trusted`/`Blocked`.
+* **Comprobado:** `test_bluetooth_uses_mock_and_does_not_discover_on_open` y
+  `BluetoothAppletTests` OK (4/4 bloque Bluetooth/notificaciones). **Límites:** sin OBEX ni
+  prueba con radios físicos.
+
+### 360. Breeze R8, lote 16: controles de tareas/festivos en `PanelEditor` y regresión final (2026-11-25)
+
+* **Hecho:** `panel/PanelEditor.qml` envuelve los controles en `PC3.ScrollView` y expone las
+  opciones nativas de `bar.plasma.taskManager` (`showOnlyCurrentScreen`, `showOnlyCurrentDesktop`,
+  `showOnlyMinimized`, `groupingStrategy`, `wheelEnabled`) y `bar.plasma.clock` (`showWeekNumbers`
+  y plugin `holidaysevents`). Actualizado resumen de R8 en `docs/BREEZE_R9_RESULTS.md`.
+* **Comprobado:** `test_panel_editor_loads_with_english_labels_in_c_locale` ampliado; pasada de
+  regresión **121/121 OK** (`test_plasma_panel`, `test_plasma_panel_native`,
+  `test_plasma_task_input`, `test_plasma_tray`, `test_plasma_menus_ui`, `test_skins`,
+  `test_skin_switch`, `test_kwin_window`, `test_kwin_rules`, `test_r3_native_settings`,
+  `test_launcher_entries`, `test_plasma_interfaces`), `hyprctl configerrors` vacío y
+  `bwm-requirements.py check --skin plasma` completo.
+* **Comprobado en sesión reiniciada:** `hyprctl configerrors` vacío, `breezebars-shadows` v2 y
+  `breezebars-scale` v1 activos, `bwmScreenshareMonitorGuard` v1, `bwm-decorator` escuchando,
+  instancia única de `quickshell -n -c ii` (dueño único de `org.freedesktop.Notifications`) y
+  **0 avisos/errores** en `modules/plasma/*` y `services/Notifications.qml`.
+* **Pendiente:** comprobación visual física en el panel diario (lotes 10–16) y commit si el usuario
+  lo pide.
+
+### 361. Breeze: menús contextuales clavados en la esquina superior izquierda (`500×500` por defecto de `PanelWindow`) (2026-11-25)
+
+* **Síntoma:** al hacer clic derecho en la barra de tareas / panel vacío, el menú contextual se
+  abría arriba a la izquierda de la pantalla (p. ej. `210, 411` en 4K) en lugar de junto al puntero.
+* **Causa:** `PanelWindow` en `MenuHost.qml` no declaraba `implicitWidth`/`implicitHeight`, por lo
+  que antes del `configure` de Wayland `win.width` y `win.height` valían `500×500` (el tamaño por
+  defecto de Quickshell, `> 0`), clampeando `m.x`/`m.y` a `500 - m.width` / `500 - m.height`
+  (zona superior izquierda) y sin recalcular desde las coordenadas originales al redimensionar.
+* **Hecho:** `MenuHost.qml` fija `implicitWidth: screen?.width ?? 0` e
+  `implicitHeight: screen?.height ?? 0`, clampea `place(m)` contra `win.screen.width/height`
+  siempre desde `PlasmaMenus.anchorRect` o `PlasmaMenus.x/y`, recoloca en `onWidthChanged`/
+  `onHeightChanged`/`onScreenChanged` y resincroniza `updateBlurRegions()`. `PlasmaMenus.qml`
+  protege `item?.QsWindow?.window`. Auditados el resto de `PanelWindow` de `modules/plasma/`.
+* **Comprobado:** `tests/test_plasma_menus_ui.py` ampliado con coordenadas reales y apertura en
+  frío (`test_panel_menu_cold_open_never_clamps_to_default_window_size`, `x=800, y=sh-20-h`
+  exactos en vez de `210, 411`): **6/6 OK** (`BWM_RUN_QML_TESTS=1`).
 
 ### 362. Breeze R4–R5: integración diaria de `bwm-plasma-host --session` (2026-11-25)
 
@@ -6815,3 +6907,24 @@ git status; git log --oneline -5; git push origin main
   después matriz de ciclo de vida entre skins/monitores y comparación final de R9. No se
   certifican backends KWin ausentes ni compatibilidad total. El push se verifica contra ambos
   destinos de origin después de crear el commit.
+
+### 372. R9: matriz de ciclo de vida del host nativo entre skins en la sesión real (2026-11-25)
+
+* **Petición:** continuar la integración del plan v2 donde la dejó Codex (§371).
+* **Hecho:** `src/bwm-plasma-host/check-skin-lifecycle.py --run [--sequence …]`. Cambia de
+  skin sólo con el gestor común y tras cada paso comprueba: en Breeze host ready con PID
+  vivo, un `bwm-r4-native-policy` y un `bwm-r5-desktop` por monitor (por descripción) y
+  ninguna capa del respaldo Quickshell; fuera de Breeze host detenido y sin capas
+  `bwm-r4-*`/`bwm-r5-*`; siempre una instancia `ii` (`bwm_session.shell_instances`, no
+  cuenta llamadas `ipc`), `configerrors` vacío, mismas ventanas (dirección+PID) en su
+  workspace, workspaces visibles iguales y reservas iguales a la pasada previa de esa skin.
+  No crea ventanas, no mueve el puntero ni carga plugins; vuelve a la skin inicial.
+  Informe en `$XDG_RUNTIME_DIR/bwm-skin-lifecycle.json`.
+* **Resultado (LG + MSI, escala 1):** retro → plasma → default → plasma → retro → plasma,
+  **PASS**, 2,5–4,1 s por cambio. Reservas Breeze `[0,0,0,48]`, Retro `[0,26,0,0]`, default
+  `[0,40,0,0]` en ambos monitores, idénticas entre pasadas; 12/12 ventanas sin cerrarse ni
+  moverse; host relanzado con PID nuevo en cada entrada a Breeze y sin TypeError/binding
+  loop en su log. Un primer intento marcó «3 instancias» en Retro: el contador contaba
+  procesos `qs -c ii ipc call` transitorios; corregido.
+* **Límites:** no cubre otras escalas/giros/bordes del panel diario, hotplug de monitores ni
+  aceptación visual; R9 sigue abierto.

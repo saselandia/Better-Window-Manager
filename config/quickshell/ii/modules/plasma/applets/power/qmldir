@@ -1,3 +1,4 @@
 BrightnessItem 1.0 BrightnessItem.qml
 BatteryItem 1.0 BatteryItem.qml
 InhibitionHint 1.0 InhibitionHint.qml
+PowerProfileItem 1.0 PowerProfileItem.qml

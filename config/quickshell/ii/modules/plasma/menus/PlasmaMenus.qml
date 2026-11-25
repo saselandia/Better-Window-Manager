@@ -38,7 +38,7 @@ Singleton {
     }
     // Junto a un elemento (botón del panel o icono en TrayPopup): debajo o encima según el borde
     function openFor(kind, item, edge, props) {
-        const win = item.QsWindow.window;
+        const win = item?.QsWindow?.window;
         const p = item.mapToItem(null, 0, 0);
         const s = win?.screen ?? Quickshell.screens.find(sc => sc.name === (item.tray?.screenName ?? "")) ?? Quickshell.screens[0];
         const e = edge || "bottom";

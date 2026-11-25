@@ -42,7 +42,7 @@ Item {
         ({id:"notifications",title:qsTr("Notifications"),icon:Notifications.silent?"notifications-disabled":"notifications",active:Notifications.silent||Notifications.unread>0}),
         ({id:"media",title:qsTr("Media Player"),icon:"media-playback-start",active:MprisController.activePlayer?.isPlaying??false}),
         ({id:"clipboard",title:qsTr("Clipboard"),icon:"klipper",active:false}),
-        ({id:"power",title:qsTr("Battery and Brightness"),icon:"battery",active:Battery.available})
+        ({id:"power",title:qsTr("Battery and Brightness"),icon:"battery",active:Battery.available||Idle.inhibit})
     ]
     readonly property var visibleItems:items.filter(i=>Logic.visible(settings,i.id,i.status!==Sni.Status.Passive))
     readonly property var hiddenItems:items.filter(i=>!Logic.visible(settings,i.id,i.status!==Sni.Status.Passive))

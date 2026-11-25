@@ -30,6 +30,15 @@ hl.window_rule({
     float = true,
 })
 
+-- dev.vencord.Vesktop
+hl.window_rule({
+    name  = "persist_dev_vencord_vesktop",
+    match = {
+        class = "^dev\\.vencord\\.Vesktop$",
+    },
+    float = true,
+})
+
 -- firefox-bin
 hl.window_rule({
     name  = "persist_firefox_bin",
@@ -84,20 +93,20 @@ hl.window_rule({
     float = true,
 })
 
+-- org.kde.dolphin
+hl.window_rule({
+    name  = "persist_org_kde_dolphin",
+    match = {
+        class = "^org\\.kde\\.dolphin$",
+    },
+    float = false,
+})
+
 -- org.quickshell
 hl.window_rule({
     name  = "persist_org_quickshell",
     match = {
         class = "^org\\.quickshell$",
-    },
-    float = true,
-})
-
--- signal
-hl.window_rule({
-    name  = "persist_signal",
-    match = {
-        class = "^signal$",
     },
     float = true,
 })
@@ -109,6 +118,15 @@ hl.window_rule({
         class = "^steam_app_22370$",
     },
     float = false,
+})
+
+-- steam_app_3951882152
+hl.window_rule({
+    name  = "persist_steam_app_3951882152",
+    match = {
+        class = "^steam_app_3951882152$",
+    },
+    float = true,
 })
 
 -- steam_app_960090
@@ -126,6 +144,26 @@ hl.window_rule({
     match = {
         class = "^steam$",
         title = "(?i).*(friends|amigos|chat).*",
+    },
+    float = true,
+})
+
+-- Steam (Grand Theft Auto: San Andreas - The Definitive Edition)
+hl.window_rule({
+    name  = "persist_steam_grand_theft_auto_san_andreas_the_definitive_edition",
+    match = {
+        class = "^steam$",
+        title = "^Grand\\ Theft\\ Auto:\\ San\\ Andreas\\ \\-\\ The\\ Definitive\\ Edition$",
+    },
+    float = true,
+})
+
+-- Steam (Ventana Principal)
+hl.window_rule({
+    name  = "persist_steam_main",
+    match = {
+        class = "^steam$",
+        title = "^Steam$",
     },
     float = true,
 })

@@ -46,7 +46,11 @@ Item {
     // BWM: a wheel-only area also works inside Quickshell's Flickable host.
     MouseArea {
         anchors.fill:parent; acceptedButtons:Qt.NoButton
-        onWheel:event=>{ task.tasksModel.cycle(task.group,event.angleDelta.y>0?-1:1); event.accepted=true; }
+        onWheel:event=>{
+            if(task.tasksModel?.wheelEnabled===false) return;
+            task.tasksModel.cycle(task.group,event.angleDelta.y>0?-1:1);
+            event.accepted=true;
+        }
     }
     // BWM: stable normal-state metrics, as in upstream main.qml's taskFrame.
     KSvg.FrameSvgItem {

@@ -6,12 +6,21 @@ import qs.modules.common
 import "PanelLogic.js" as Logic
 QtObject {
     id: root
+    property var panelMonitor: null
     property var order: Config.options.bar.plasma.taskOrder ?? []
+    readonly property var taskSettings: Config.options.bar.plasma.taskManager ?? ({})
+    readonly property bool wheelEnabled: taskSettings.wheelEnabled ?? true
     readonly property var groups: {
         const values=TaskbarApps.apps.filter(a=>a.appId!=="SEPARATOR");
-        return values.slice().sort((a,b)=>{
+        const sorted=values.slice().sort((a,b)=>{
             const ai=root.order.indexOf(a.appId), bi=root.order.indexOf(b.appId);
             return (ai<0 ? values.indexOf(a)+root.order.length:ai) - (bi<0 ? values.indexOf(b)+root.order.length:bi);
+        });
+        return Logic.filterTasks(sorted, root.taskSettings, {
+            monitorId: root.panelMonitor?.id,
+            workspaceId: root.panelMonitor?.activeWorkspace?.id,
+            clientFor: top => root.client(top),
+            isMinimized: top => root.minimized(top)
         });
     }
     function move(source,target) {

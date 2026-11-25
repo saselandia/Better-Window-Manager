@@ -58,6 +58,8 @@ ShellRoot {
         property bool enabled:true
         property bool connected:false
         property bool silent:false
+        property double silentUntil:0
+        function setSilentFor(mins){silentUntil=mins>0?Date.now()+mins*60000:0;silent=true}
         property var friendlyDeviceList:[device]
         property var entries:["1\tDemo clipboard entry","2\t[[ binary data 1 KiB png 40x20 ]]"].concat(Quickshell.env("F5_URL_ENTRY")?[Quickshell.env("F5_URL_ENTRY")]:[])
         property string cliphistBinary:Quickshell.env("F5_FAKE_CLIPHIST")||"cliphist"
@@ -95,11 +97,16 @@ ShellRoot {
         property int state:0
         property bool batteryAvailable:true
         property real battery:.7
+        property bool trusted:false
+        property bool blocked:false
         function connect(){root.actions++}
         function disconnect(){root.actions++}
         function pair(){root.actions++}
+        function cancelPair(){root.actions++;pairing=false}
     }
     QtObject { id:adapter;property bool enabled:true;property bool discovering:false }
+    QtObject { id:idleMock;property bool inhibit:false;function toggleInhibit(active){inhibit=(active!==null&&active!==undefined)?Boolean(active):!inhibit} }
+    QtObject { id:powerProfilesMock;property int profile:1;property bool hasPerformanceProfile:true;property int degradationReason:2;property var holds:[({profile:2,applicationId:"org.example.Game",reason:"Game running"})] }
     Component.onCompleted:Config.blockWrites=true
     PanelWindow {
         id:host
@@ -124,8 +131,10 @@ ShellRoot {
             if(name==="Bluetooth")props={backend:mock,adapter:adapter};
             if(name==="Notifications"||name==="Clipboard"||name==="Reply")props={backend:mock};
             if(name==="Tray")props={readOnly:true,items:[{id:"demo",title:"Demo tray item",tooltipTitle:"Demo",tooltipDescription:"Safe fixture",icon:"applications-system",status:1}],applets:[{id:"notifications",title:"Notifications",icon:"notifications",active:true}],settings:{},appletProperties:{readOnly:true,backend:mock}};
-            if(name==="Power")props={readOnly:true,battery:mock,monitors:[]};
+            if(name==="Power")props={readOnly:false,battery:mock,monitors:[],idle:idleMock,powerProfiles:powerProfilesMock,powerProfilesAvailable:false};
+            if(name==="PowerProfiles")props={readOnly:false,battery:mock,monitors:[],idle:idleMock,powerProfiles:powerProfilesMock,powerProfilesAvailable:true};
             if(name==="CalendarZones")Config.options.bar.plasma.clock={selectedTimeZones:["Local","Asia/Tokyo","America/New_York"],lastSelectedTimezone:"Local",displayTimezoneFormat:1};
+            if(name==="CalendarAgenda")Config.options.bar.plasma.clock={enabledCalendarPlugins:["holidaysevents"],firstDayOfWeek:1,showWeekNumbers:false,showSeconds:2};
             if(name==="Compile") {
                 root.compiled=["panel/Panel.qml","panel/PanelContent.qml","tray/TrayController.qml"].map(path=>Qt.createComponent(Qt.resolvedUrl("modules/plasma/"+path)));
                 for(const component of root.compiled)if(component.status===Component.Error)console.log("COMPILEERROR "+component.errorString());
@@ -160,8 +169,35 @@ ShellRoot {
                 result.escapeCloses=!TrayPort.TrayState.expanded;
             }
             if(loader.item) {
-                if(name==="Bluetooth") { const b=root.findText(loader.item,"Connect");if(b){const pos=b.mapToItem(loader.item,b.width/2,b.height/2);driver.mouseClick(loader.item,pos.x,pos.y);driver.wait(80);}result.control=!!b;result.actions=root.actions;result.discovery=adapter.discovering; }
-                if(name==="Notifications") { const b=root.findText(loader.item,"Test action");if(b){const pos=b.mapToItem(loader.item,b.width/2,b.height/2);driver.mouseClick(loader.item,pos.x,pos.y);driver.wait(80);}result.control=!!b;result.actions=root.actions; }
+                if(name==="Bluetooth") {
+                    const findByName=(i,n)=>{if(!i)return null;if(i.objectName===n)return i;for(const c of i.children??[]){const r=findByName(c,n);if(r)return r}if(i.contentItem&&i.contentItem!==i){const r=findByName(i.contentItem,n);if(r)return r}if(i.header){const r=findByName(i.header,n);if(r)return r}return null};
+                    const b=root.findText(loader.item,"Connect");if(b){const pos=b.mapToItem(loader.item,b.width/2,b.height/2);driver.mouseClick(loader.item,pos.x,pos.y);driver.wait(80);}
+                    result.control=!!b;result.actions=root.actions;result.discovery=adapter.discovering;
+                    // Foreign discovery must not be stopped when the popup closes.
+                    adapter.discovering=true; loader.item.expanded=false; driver.wait(20);
+                    result.foreignKept=adapter.discovering;
+                    adapter.discovering=false; loader.item.expanded=true; driver.wait(20);
+                    // Owned discovery started by Find Devices must stop and reset ownership on close.
+                    const scan=findByName(loader.item.fullRepresentationItem??loader.item,"plasma-bt-scan");
+                    if(scan){scan.clicked();driver.wait(20);}
+                    result.ownedStarted=adapter.discovering&&loader.item.initiatedDiscovery;
+                    loader.item.expanded=false; driver.wait(20);
+                    result.ownedStopped=!adapter.discovering&&!loader.item.initiatedDiscovery;
+                }
+                if(name==="Notifications") {
+                    const findByName=(i,n)=>{if(!i)return null;if(i.objectName===n)return i;for(const c of i.children??[]){const r=findByName(c,n);if(r)return r}if(i.contentItem&&i.contentItem!==i){const r=findByName(i.contentItem,n);if(r)return r}if(i.header){const r=findByName(i.header,n);if(r)return r}return null};
+                    const b=root.findText(loader.item,"Test action");if(b){const pos=b.mapToItem(loader.item,b.width/2,b.height/2);driver.mouseClick(loader.item,pos.x,pos.y);driver.wait(80);}
+                    result.control=!!b;result.actions=root.actions;
+                    const rootItem=loader.item.fullRepresentationItem??loader.item;
+                    const sw=findByName(rootItem,"plasma-dnd-switch");
+                    const combo=findByName(rootItem,"plasma-dnd-duration");
+                    const lbl=findByName(rootItem,"plasma-dnd-until-label");
+                    if(sw){sw.checked=true;sw.toggled();driver.wait(30);}
+                    result.dndComboVisible=!!combo?.visible;
+                    if(combo){combo.currentIndex=1;combo.activated(1);driver.wait(30);}
+                    result.silentUntilSet=mock.silentUntil>0;
+                    result.untilLabel=lbl?lbl.text:"";
+                }
                 if(name==="Reply") {
                     const b=root.findText(loader.item,"Reply");
                     result.control=!!b;
@@ -208,6 +244,28 @@ ShellRoot {
                 }
                 if(name==="Calendar") {result.calendar=!!loader.item.fullRepresentationItem?.monthView;}
                 if(name==="CalendarZones") {const v=loader.item.fullRepresentationItem;result.calendar=!!v?.monthView;result.zones=loader.item.selectedTimeZonesDeduplicatingExplicitLocalTimeZone();result.showClocks=!!v?.showClocks;result.later=loader.item.formatOffset(new Date(loader.item.currentTime.getTime()+2*3600000));result.same=loader.item.formatOffset(loader.item.currentTime);result.current=loader.item.currentTimeZone;}
+                if(name==="CalendarAgenda") {const v=loader.item.fullRepresentationItem;result.calendar=!!v?.monthView;result.showAgenda=!!v?.showAgenda;result.firstDayOfWeek=v?.monthView?.firstDayOfWeek;result.showWeekNumbers=v?.monthView?.showWeekNumbers;result.showSeconds=loader.item.configuration.showSeconds;result.plugins=loader.item.configuration.enabledCalendarPlugins;}
+                if(name==="Power"||name==="PowerProfiles") {
+                    const findByName=(i,n)=>{if(!i)return null;if(i.objectName===n)return i;for(const c of i.children??[]){const r=findByName(c,n);if(r)return r}if(i.contentItem&&i.contentItem!==i){const r=findByName(i.contentItem,n);if(r)return r}if(i.header){const r=findByName(i.header,n);if(r)return r}return null};
+                    const rootItem=loader.item.fullRepresentationItem??loader.item;
+                    const sw=findByName(rootItem,"plasma-power-inhibit");
+                    const hint=findByName(rootItem,"plasma-power-inhibit-hint");
+                    const prof=findByName(rootItem,"plasma-power-profile");
+                    const slider=findByName(rootItem,"plasma-power-profile-slider");
+                    const deg=findByName(rootItem,"plasma-power-degradation-hint");
+                    result.hasSwitch=!!sw;
+                    result.hintBefore=!!hint?.visible;
+                    if(sw){sw.checked=true;sw.toggled();driver.wait(50);}
+                    result.inhibited=idleMock.inhibit;
+                    result.hintAfter=!!hint?.visible;
+                    result.profilesVisible=!!prof?.visible;
+                    if(name==="PowerProfiles"&&slider){
+                        slider.value=2;slider.moved();driver.wait(50);
+                        result.profileAfter=powerProfilesMock.profile;
+                        result.degradationVisible=!!deg?.visible;
+                        result.holdText=!!root.findText(rootItem,"org.example.Game: Game running");
+                    }
+                }
             }
             console.log("F5RESULT "+JSON.stringify(result));
             const output=Quickshell.env("F5_CAPTURE");
@@ -257,13 +315,26 @@ class AppletUiTests(unittest.TestCase):
         self.assertIn('2',r['later']);self.assertIn('later',r['later'])
         self.assertEqual(r['same'],'')
         self.assertTrue(r['current'])
+    def test_calendar_agenda_and_native_options(self):
+        r=self.run_case('CalendarAgenda','applets/calendar/CalendarApplet.qml')
+        self.assertTrue(r['calendar']);self.assertTrue(r['showAgenda'],r)
+        self.assertEqual(r['firstDayOfWeek'],1,r)
+        self.assertFalse(r['showWeekNumbers'],r)
+        self.assertEqual(r['showSeconds'],2,r)
+        self.assertEqual(r['plugins'],['holidaysevents'],r)
     def test_calendar(self):self.assertTrue(self.run_case('Calendar','applets/calendar/CalendarApplet.qml')['calendar'])
     def test_bluetooth_uses_mock_and_does_not_discover_on_open(self):
         result=self.run_case('Bluetooth','applets/BluetoothApplet.qml')
         self.assertTrue(result['control']);self.assertEqual(result['actions'],1);self.assertFalse(result['discovery'])
+        self.assertTrue(result['foreignKept'],result)
+        self.assertTrue(result['ownedStarted'],result)
+        self.assertTrue(result['ownedStopped'],result)
     def test_notification_action_uses_existing_backend(self):
         result=self.run_case('Notifications','applets/NotificationsApplet.qml')
         self.assertTrue(result['control']);self.assertEqual(result['actions'],1)
+        self.assertTrue(result['dndComboVisible'],result)
+        self.assertTrue(result['silentUntilSet'],result)
+        self.assertTrue(result['untilLabel'].startswith('Until '),result)
     def test_notification_inline_reply_like_plasma(self):
         # Plasma's ActionContainer shows "Reply" first, opens NotificationReplyField and
         # sends the text through the server (sendInlineReply), never by an action.
@@ -300,7 +371,17 @@ class AppletUiTests(unittest.TestCase):
             self.assertEqual(r['edited'],'Edited entry');self.assertEqual(r['removedAfterEdit'],1)
             self.assertEqual(r['backDepth'],1)
             self.assertEqual(oct((runtime/'bwm-plasma-clipboard').stat().st_mode&0o777),'0o700')
-    def test_power_without_daemon(self):self.run_case('Power','applets/PowerApplet.qml')
+    def test_power_without_daemon(self):
+        r=self.run_case('Power','applets/PowerApplet.qml')
+        self.assertTrue(r['hasSwitch'],r);self.assertFalse(r['hintBefore'],r)
+        self.assertTrue(r['inhibited'],r);self.assertTrue(r['hintAfter'],r)
+        self.assertFalse(r['profilesVisible'],r)
+    def test_power_with_profiles_and_inhibition(self):
+        r=self.run_case('PowerProfiles','applets/PowerApplet.qml')
+        self.assertTrue(r['profilesVisible'],r)
+        self.assertEqual(r['profileAfter'],2,r)
+        self.assertTrue(r['degradationVisible'],r)
+        self.assertTrue(r['holdText'],r)
 
 
 class ToolTipAreaTests(unittest.TestCase):

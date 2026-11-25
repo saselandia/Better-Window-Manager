@@ -62,6 +62,47 @@ class PanelTest(unittest.TestCase):
     def test_reorder_is_stable_and_has_no_duplicate(self):
         self.assertEqual(evaluate('Logic.reorder(["a","b","c"],"c","a")'),["c","a","b"])
         self.assertEqual(evaluate('Logic.reorder(["a","b","c"],"a","a")'),["a","b","c"])
+    def test_filter_tasks_screen_desktop_minimized_and_pinned(self):
+        expr = r'''(function(){
+            var clients = {
+                t1: {address:"0x1", monitor:1, workspace:{id:2, name:"2"}, pinned:false},
+                t2: {address:"0x2", monitor:2, workspace:{id:2, name:"2"}, pinned:false},
+                t3: {address:"0x3", monitor:1, workspace:{id:5, name:"5"}, pinned:true},
+                t4: {address:"0x4", monitor:1, workspace:{id:-98, name:"special:minimized"}, pinned:false}
+            };
+            var groups = [
+                {appId:"firefox", pinned:true, toplevels:["t2"]},
+                {appId:"kitty", pinned:false, toplevels:["t1","t3","t4"]}
+            ];
+            var ctx = {
+                monitorId: 1, workspaceId: 2,
+                clientFor: function(t){ return clients[t]; },
+                isMinimized: function(t){ return clients[t].workspace.name === "special:minimized"; }
+            };
+            var byScreen = Logic.filterTasks(groups, {showOnlyCurrentScreen:true}, ctx);
+            var byDesktop = Logic.filterTasks(groups, {showOnlyCurrentDesktop:true}, ctx);
+            var byMin = Logic.filterTasks(groups, {showOnlyMinimized:true}, ctx);
+            return {
+                screen: byScreen.map(function(g){ return [g.appId, g.pinned, g.toplevels]; }),
+                desktop: byDesktop.map(function(g){ return [g.appId, g.toplevels]; }),
+                minimized: byMin.map(function(g){ return [g.appId, g.toplevels]; })
+            };
+        })()'''
+        r = evaluate(expr)
+        self.assertEqual(r["screen"], [["firefox", True, []], ["kitty", False, ["t1", "t3", "t4"]]])
+        self.assertEqual(r["desktop"], [["firefox", ["t2"]], ["kitty", ["t1", "t3"]]])
+        self.assertEqual(r["minimized"], [["kitty", ["t4"]]])
+    def test_filter_tasks_ungrouped_keeps_distinct_keys(self):
+        expr = r'''(function(){
+            var clients = {
+                t1: {address:"0x1", monitor:1, workspace:{id:1, name:"1"}},
+                t2: {address:"0x2", monitor:1, workspace:{id:1, name:"1"}}
+            };
+            var groups = [{appId:"kitty", pinned:true, toplevels:["t1","t2"]}];
+            var ctx = {monitorId:1, workspaceId:1, clientFor:function(t){ return clients[t]; }, isMinimized:function(){ return false; }};
+            return Logic.filterTasks(groups, {groupingStrategy:0}, ctx).map(function(g){ return [g.key, g.appId, g.pinned, g.toplevels]; });
+        })()'''
+        self.assertEqual(evaluate(expr), [["kitty:0x1", "kitty", True, ["t1"]], ["kitty:0x2", "kitty", False, ["t2"]]])
 
 class ReservedAreaTest(unittest.TestCase):
     def setUp(self):
@@ -81,5 +122,89 @@ class ReservedAreaTest(unittest.TestCase):
         monitor={"x":0,"y":0,"width":1000,"height":800,"scale":1,"reserved":[0,0,0,0]}
         _,y,_,h=self.m.traditional_box([0,0],[1000,800],monitor,False,{"panel":{"edge":"bottom","size":44},"edgeMargin":0})
         self.assertEqual(y+h,800)
+
+class PanelEditorI18nTest(unittest.TestCase):
+    def test_panel_editor_uses_kde_i18n_without_hardcoded_spanish(self):
+        src = (ROOT / "config/quickshell/ii/modules/plasma/panel/PanelEditor.qml").read_text()
+        self.assertIn('KI18nContext', src)
+        self.assertIn('plasma_shell_org.kde.plasma.desktop', src)
+        for spanish in ('"Configurar panel"', '"Siempre visible"', '"Widgets incluidos"', '"Terminar"'):
+            self.assertNotIn(spanish, src)
+
+    @unittest.skipUnless(os.environ.get('BWM_RUN_QML_TESTS') == '1' and shutil.which('qs'),
+                         'optional isolated Wayland UI tests')
+    def test_panel_editor_loads_with_english_labels_in_c_locale(self):
+        harness = r'''//@ pragma UseQApplication
+//@ pragma Env QS_NO_RELOAD_POPUP=1
+import QtQuick
+import Quickshell
+import qs.modules.common
+import qs.modules.plasma.panel as PlasmaPanel
+ShellRoot {
+    id: root
+    Component.onCompleted: Config.blockWrites = true
+    FloatingWindow {
+        id: win
+        title: "bwm-panel-editor-test"
+        implicitWidth: 120; implicitHeight: 60
+        Item { id: anchorItem; anchors.fill: parent }
+    }
+    PlasmaPanel.PanelEditor {
+        id: editor
+        anchor.item: anchorItem
+        edge: "bottom"
+    }
+    Timer {
+        interval: 350; running: true
+        onTriggered: {
+            editor.setTaskOption("showOnlyCurrentScreen", true);
+            editor.setTaskOption("groupingStrategy", 0);
+            editor.toggleHolidayPlugin(true);
+            const holidaysOn = editor.holidaysEnabled();
+            editor.toggleHolidayPlugin(false);
+            const holidaysOff = editor.holidaysEnabled();
+            console.log("EDITORRESULT " + JSON.stringify({
+                title: editor.tr("Panel Settings"),
+                tasks: editor.widgetLabel("tasks"),
+                done: editor.tr("Done"),
+                screenOnly: Boolean(Config.options.bar.plasma.taskManager?.showOnlyCurrentScreen),
+                grouping: Config.options.bar.plasma.taskManager?.groupingStrategy,
+                holidaysOn: holidaysOn,
+                holidaysOff: holidaysOff
+            }));
+            editor.closeEditor();
+            Qt.quit();
+        }
+    }
+    Timer { interval: 4000; running: true; onTriggered: Qt.quit() }
+}
+'''
+        rule = 'hl.window_rule({name="tmp-panel-editor-test",match={title="^bwm-panel-editor-test$"},workspace="9 silent"})'
+        if shutil.which('hyprctl'):
+            subprocess.run(['hyprctl', 'eval', rule], capture_output=True, text=True, timeout=5)
+        tmp = tempfile.NamedTemporaryFile('w', dir=ROOT / 'config/quickshell/ii', prefix='zz_prueba_ed_', suffix='.qml', delete=False)
+        try:
+            tmp.write(harness)
+            tmp.close()
+            r = subprocess.run(['qs', '-p', tmp.name], env={**os.environ, 'LC_ALL': 'C.UTF-8'}, capture_output=True, text=True, timeout=12)
+        finally:
+            Path(tmp.name).unlink(missing_ok=True)
+            if shutil.which('hyprctl'):
+                subprocess.run(['hyprctl', 'reload'], capture_output=True, text=True, timeout=5)
+        out = r.stdout + r.stderr
+        for err in ('ReferenceError:', 'TypeError:', 'failed to load'):
+            self.assertNotIn(err, out)
+        line = next((l for l in out.splitlines() if 'EDITORRESULT ' in l), '')
+        self.assertTrue(line, out)
+        data = json.loads(line.split('EDITORRESULT ', 1)[1])
+        self.assertEqual(data, {
+            'title': 'Panel Settings',
+            'tasks': 'Task Manager',
+            'done': 'Done',
+            'screenOnly': True,
+            'grouping': 0,
+            'holidaysOn': True,
+            'holidaysOff': False
+        })
 
 if __name__=="__main__":unittest.main()

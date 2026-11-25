@@ -46,7 +46,7 @@ Item {
         opacity:expanded?1:0
         Behavior on opacity { NumberAnimation { duration:Kirigami.Units.shortDuration;easing.type:Easing.InOutQuad } }
     }
-    TasksModel { id:modelAdapter }
+    TasksModel { id:modelAdapter; panelMonitor:root.panelWindow?.monitor ?? null }
     // F9: el menú del gestor de tareas de Plasma (modules/plasma/menus/TaskMenu.qml)
     function menuFor(group,button) {
         PlasmaMenus.openFor("task",button,root.edge,{group:group});
@@ -134,7 +134,7 @@ Item {
             orientation:root.vertical?ListView.Vertical:ListView.Horizontal
             // BWM: adjacent task frames, with spacing supplied by the Plasma SVG margins.
             spacing:0; clip:true; boundsBehavior:Flickable.StopAtBounds
-            model:ScriptModel { objectProp:"appId"; values:modelAdapter.groups }
+            model:ScriptModel { objectProp:"key"; values:modelAdapter.groups }
             delegate:Task {
                 required property var modelData
                 group:modelData; tasksModel:modelAdapter; edge:root.edge

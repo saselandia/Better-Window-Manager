@@ -20,7 +20,7 @@ la integración sólo por compilar o activar el host.
 
 | Bloque | Comprobado | Pendiente para cerrar |
 | :--- | :--- | :--- |
-| R4–R5: arranque y edición | Host instalado y activo en ambas pantallas; arranque con Breeze, exclusión del panel duplicado y comprobación de PID vivo; editor/explorador originales y añadir widgets probados en Hyprland desechable | Aceptación visual/física del panel y escritura prolongada en Firefox; matriz de cambios de skin y distintas escalas/bordes |
+| R4–R5: arranque y edición | Host instalado y activo en ambas pantallas; arranque con Breeze, exclusión del panel duplicado y comprobación de PID vivo; editor/explorador originales y añadir widgets probados en Hyprland desechable; matriz de skins en la sesión real (§372: retro/plasma/default ×2, LG+MSI escala 1) | Aceptación visual/física del panel y escritura prolongada en Firefox; otras escalas/bordes del panel diario |
 | Seguridad y estabilidad del host | Capturas de foco completas y liberadas al cerrar; panel/escritorio pasivos fuera de interacción; propietario visual del editor; máscara QML sin reentrada; consultas del área útil con reintentos acotados y timeout | Mantener estas regresiones al ampliar contratos de plasmoides; no certificar todos los backends de KWin |
 | Entrada Wayland | 20 ciclos de hover/atención/editor/Escape: 81 letras en una aplicación separada y otra en la ventana elegida después; rechazo de un peer incorrecto, pantallas físicas conservadas y limpieza verificada | Uso físico prolongado de la sesión diaria |
 | Miniaturas y bandeja | Adaptador instalado después de registrar recursos, URL/tipo del Loader coherentes, hash/guarda intactos; registro SNI funcional sin terminar kded | Aceptación visual diaria de miniaturas y compatibilidad de applets con backends ausentes |
@@ -35,7 +35,8 @@ La corrección del área útil evita que una consulta ocupada multiplique dos re
 cada callback hasta saturar el proceso; conserva la última geometría válida si IPC falla.
 
 **Siguiente paso del plan:** aceptación diaria de R4–R5 (editor, explorador, escritura y
-miniaturas), después matriz de ciclo de vida entre skins/monitores y comparación final de R9.
+miniaturas) y comparación final de R9. La matriz de ciclo de vida entre skins en las dos
+salidas actuales ya pasa (`src/bwm-plasma-host/check-skin-lifecycle.py --run`, §372).
 No adelantar su cierre ni aumentar la compatibilidad estimada sin esa evidencia.
 Detalles reproducibles y límites: [BREEZE_R9_RESULTS.md](BREEZE_R9_RESULTS.md),
 [BWM_CONTEXT.md §362–370](../BWM_CONTEXT.md) y `src/bwm-plasma-host/README.md`.

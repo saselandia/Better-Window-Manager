@@ -153,7 +153,15 @@
     "plasma": {
       "alignment": "center",
       "centerTasks": false,
-      "clock": {},
+      "clock": {
+        "displayTimezoneFormat": 1,
+        "lastSelectedTimezone": "Local",
+        "selectedTimeZones": [
+          "Local",
+          "Asia/Tokyo",
+          "America/New_York"
+        ]
+      },
       "color": "#000000",
       "edge": "",
       "floating": false,
@@ -196,7 +204,19 @@
       "style": "opaque",
       "systemTray": {},
       "taskManager": {},
-      "taskOrder": [],
+      "taskOrder": [
+        "org.gnome.nautilus",
+        "org.kde.dolphin",
+        "signal",
+        "steam",
+        "chatgpt",
+        "antigravity",
+        "virt-manager",
+        "com.anthropic.claude",
+        "firefox-bin",
+        "spotify",
+        "dev.vencord.vesktop"
+      ],
       "thickness": 44,
       "trayItems": {},
       "visibility": "always",

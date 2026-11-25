@@ -42,3 +42,46 @@ function reorder(ids, source, target) {
     result.splice(i,0,source);
     return result;
 }
+// BWM: Plasma 6.7.5 taskmanager/main.xml filters (showOnlyCurrentScreen, showOnlyCurrentDesktop,
+// showOnlyMinimized) and groupingStrategy (0 = DoNotGroup, 1 = ByProgramName).
+function filterTasks(groups, options, context) {
+    var cfg = options || {};
+    var ctx = context || {};
+    var byScreen = !!cfg.showOnlyCurrentScreen && ctx.monitorId !== undefined && ctx.monitorId !== null;
+    var byDesktop = !!cfg.showOnlyCurrentDesktop && ctx.workspaceId !== undefined && ctx.workspaceId !== null;
+    var byMinimized = !!cfg.showOnlyMinimized;
+    var ungrouped = cfg.groupingStrategy === 0;
+    var clientFor = typeof ctx.clientFor === "function" ? ctx.clientFor : function() { return null; };
+    var isMinimized = typeof ctx.isMinimized === "function" ? ctx.isMinimized : function() { return false; };
+    var out = [];
+    for (var i = 0; i < (groups || []).length; i++) {
+        var g = groups[i];
+        var tops = (g.toplevels || []).filter(function(t) {
+            var c = clientFor(t);
+            var min = !!isMinimized(t);
+            if (byMinimized && !min) return false;
+            if (byScreen && c && c.monitor !== undefined && c.monitor !== null && c.monitor !== ctx.monitorId) return false;
+            if (byDesktop && c && !c.pinned && !(byMinimized && min)) {
+                var wsId = c.workspace ? c.workspace.id : null;
+                if (wsId !== null && wsId !== undefined && wsId !== ctx.workspaceId) return false;
+            }
+            return true;
+        });
+        if (tops.length === 0) {
+            if (g.pinned && !byMinimized) {
+                out.push({ key: g.appId, appId: g.appId, pinned: true, toplevels: [] });
+            }
+            continue;
+        }
+        if (ungrouped) {
+            for (var j = 0; j < tops.length; j++) {
+                var c2 = clientFor(tops[j]);
+                var suffix = (c2 && c2.address) ? c2.address : String(j);
+                out.push({ key: g.appId + ":" + suffix, appId: g.appId, pinned: !!g.pinned && j === 0, toplevels: [tops[j]] });
+            }
+        } else {
+            out.push({ key: g.appId, appId: g.appId, pinned: !!g.pinned, toplevels: tops });
+        }
+    }
+    return out;
+}

@@ -103,18 +103,21 @@ ShellRoot {
             report("taskOpen", !!m && m.opened);
             report("taskItems", items(m));
             report("taskInScreen", inScreen(m));
+            report("taskPos", m ? [Math.round(m.x), Math.round(m.y)] : [-1, -1]);
             M.PlasmaMenus.openLocal("desktop", Quickshell.screens[0].name, 300, 300, {});
             break;
         }
         case 12:
             report("desktopItems", items(host.menu));
             report("desktopInScreen", inScreen(host.menu));
+            report("desktopPos", host.menu ? [Math.round(host.menu.x), Math.round(host.menu.y)] : [-1, -1]);
             M.PlasmaMenus.openLocal("panel", Quickshell.screens[0].name, 400, Quickshell.screens[0].height - 20,
                                     { panelScreen: Quickshell.screens[0].name, editing: false, edge: "bottom" });
             break;
         case 14:
             report("panelItems", items(host.menu));
             report("panelInScreen", inScreen(host.menu));
+            report("panelPos", host.menu ? [Math.round(host.menu.x), Math.round(host.menu.y)] : [-1, -1]);
             M.PlasmaMenus.close();
             break;
         case 15:
@@ -213,6 +216,8 @@ class PlasmaMenusUiTest(unittest.TestCase):
         self.assertTrue(r["toplevelFound"])
         self.assertTrue(r["taskOpen"])
         self.assertTrue(r["taskInScreen"])
+        self.assertEqual(r["taskPos"][0], 200, r["taskPos"])
+        self.assertGreater(r["taskPos"][1], 100, r["taskPos"])
         items = r["taskItems"]
         for expected in ("Open New Window", "▸ Move to &Desktop", "▸ More", "Enter Edit Mode", "&Close"):
             self.assertIn(expected, items)
@@ -226,8 +231,11 @@ class PlasmaMenusUiTest(unittest.TestCase):
         self.assertIn("Desktop and Wallpaper", r["desktopItems"])
         self.assertIn("Display Configuration", r["desktopItems"])
         self.assertTrue(r["desktopInScreen"])
+        self.assertEqual(r["desktopPos"], [300, 300], r["desktopPos"])
         self.assertEqual(r["panelItems"], ["Add or Manage Widgets…", "—", "Enter Edit Mode"])
         self.assertTrue(r["panelInScreen"])
+        self.assertEqual(r["panelPos"][0], 400, r["panelPos"])
+        self.assertGreater(r["panelPos"][1], 100, r["panelPos"])
         self.assertTrue(r["closed"])
         self.assertEqual(r["closedBlurCount"], 0)
 
@@ -237,6 +245,54 @@ class PlasmaMenusUiTest(unittest.TestCase):
         self.assertIn("Ma&ximizar", r["windowItems"])
         self.assertIn("Abrir una nueva ventana", r["taskItems"])
         self.assertIn("Bloquear pantalla", r["desktopItems"])
+
+    def test_panel_menu_cold_open_never_clamps_to_default_window_size(self):
+        harness = r'''//@ pragma UseQApplication
+//@ pragma Env QS_NO_RELOAD_POPUP=1
+import QtQuick
+import Quickshell
+import qs.modules.plasma.menus as M
+ShellRoot {
+    M.MenuHost { id: host }
+    Timer {
+        interval: 200; running: true
+        onTriggered: {
+            const s = Quickshell.screens[0];
+            M.PlasmaMenus.openLocal("panel", s.name, 800, s.height - 20,
+                                    { panelScreen: s.name, editing: false, edge: "bottom" });
+        }
+    }
+    Timer {
+        interval: 500; running: true
+        onTriggered: {
+            const s = Quickshell.screens[0];
+            const m = host.menu;
+            console.log("COLDPANEL " + JSON.stringify({
+                sw: s.width, sh: s.height,
+                x: m ? Math.round(m.x) : -1, y: m ? Math.round(m.y) : -1,
+                h: m ? Math.round(m.height) : -1, opened: !!m?.opened
+            }));
+            M.PlasmaMenus.close();
+            Qt.quit();
+        }
+    }
+    Timer { interval: 3000; running: true; onTriggered: Qt.quit() }
+}
+'''
+        tmp = SHELL / ("zz_prueba_cold_panel_" + uuid.uuid4().hex[:6] + ".qml")
+        tmp.write_text(harness)
+        try:
+            r = subprocess.run(["qs", "-p", str(tmp)], env={**os.environ, "LC_ALL": "C.UTF-8"},
+                               capture_output=True, text=True, timeout=10)
+        finally:
+            tmp.unlink(missing_ok=True)
+        out = r.stdout + r.stderr
+        line = next((l for l in out.splitlines() if "COLDPANEL " in l), "")
+        self.assertTrue(line, out)
+        d = json.loads(line.split("COLDPANEL ", 1)[1])
+        self.assertTrue(d["opened"], d)
+        self.assertEqual(d["x"], 800, d)
+        self.assertEqual(d["y"], d["sh"] - 20 - d["h"], d)
 
 
 if __name__ == "__main__":

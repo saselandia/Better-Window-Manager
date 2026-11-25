@@ -27,7 +27,22 @@ AppletHost {
                 anchors.fill:parent
                 PC3.Switch { text:root.i18n("Enable Bluetooth"); checked:root.backend.enabled; enabled:!root.readOnly&&!!root.adapter; onToggled:root.adapter.enabled=checked }
                 Item { Layout.fillWidth:true }
-                PC3.ToolButton { icon.name:"view-refresh"; text:root.i18n("Find Devices"); enabled:!root.readOnly&&!!root.adapter&&root.backend.enabled; onClicked: { root.adapter.discovering=!root.adapter.discovering; root.initiatedDiscovery=root.adapter.discovering; if(root.initiatedDiscovery) scanTimeout.restart(); } }
+                PC3.ToolButton {
+                    objectName:"plasma-bt-scan"
+                    icon.name:"view-refresh"
+                    text:root.scanning?root.i18n("Stop Searching"):root.i18n("Find Devices")
+                    checkable:true; checked:root.scanning
+                    enabled:!root.readOnly&&!!root.adapter&&root.backend.enabled
+                    onClicked: {
+                        if(root.adapter.discovering) {
+                            root.stopOwnedDiscovery(true);
+                        } else {
+                            root.adapter.discovering=true;
+                            root.initiatedDiscovery=true;
+                            scanTimeout.restart();
+                        }
+                    }
+                }
             }
         }
         PC3.ScrollView {
@@ -43,18 +58,39 @@ AppletHost {
                     width:devices.width
                     icon:modelData.icon||"bluetooth"
                     title:modelData.name
-                    subtitle:modelData.connected?root.i18n("Connected"):modelData.paired?root.i18n("Not Connected"):root.i18n("Available")
+                    subtitle:modelData.pairing?root.i18n("Pairing…"):modelData.connected?root.i18n("Connected"):modelData.paired?root.i18n("Not Connected"):root.i18n("Available")
                     isBusy:modelData.pairing||modelData.state===BluetoothDeviceState.Connecting||modelData.state===BluetoothDeviceState.Disconnecting
                     defaultActionButtonAction: QQC2.Action {
-                        icon.name:row.modelData.connected?"network-disconnect-symbolic":"network-connect-symbolic"
-                        text:row.modelData.connected?root.i18n("Disconnect"):root.i18n("Connect")
-                        enabled:!root.readOnly&&!row.isBusy
-                        onTriggered: { if(row.modelData.connected) row.modelData.disconnect(); else if(row.modelData.paired) row.modelData.connect(); else row.modelData.pair(); }
+                        icon.name:row.modelData.pairing?"dialog-cancel":row.modelData.connected?"network-disconnect-symbolic":"network-connect-symbolic"
+                        text:row.modelData.pairing?root.i18n("Cancel"):row.modelData.connected?root.i18n("Disconnect"):root.i18n("Connect")
+                        enabled:!root.readOnly&&(!row.isBusy||(row.modelData.pairing&&typeof row.modelData.cancelPair==="function"))
+                        onTriggered: {
+                            if(row.modelData.pairing&&typeof row.modelData.cancelPair==="function") row.modelData.cancelPair();
+                            else if(row.modelData.connected) row.modelData.disconnect();
+                            else if(row.modelData.paired) row.modelData.connect();
+                            else row.modelData.pair();
+                        }
                     }
                     customExpandedViewContent: Component {
                         ColumnLayout {
                             PC3.Label { text:row.modelData.address; textFormat:Text.PlainText }
                             PC3.Label { visible:row.modelData.batteryAvailable; text:root.i18n("Battery")+": "+Math.round(row.modelData.battery*100)+" %" }
+                            PC3.CheckBox {
+                                objectName:"plasma-bt-trusted"
+                                visible:row.modelData.trusted!==undefined
+                                text:root.i18n("Trusted")
+                                checked:Boolean(row.modelData.trusted)
+                                enabled:!root.readOnly&&!row.isBusy
+                                onToggled:row.modelData.trusted=checked
+                            }
+                            PC3.CheckBox {
+                                objectName:"plasma-bt-blocked"
+                                visible:row.modelData.blocked!==undefined
+                                text:root.i18n("Blocked")
+                                checked:Boolean(row.modelData.blocked)
+                                enabled:!root.readOnly&&!row.isBusy
+                                onToggled:row.modelData.blocked=checked
+                            }
                             PC3.Button { text:root.i18n("Forget Device"); enabled:!root.readOnly&&!row.isBusy; onClicked: { confirm.device=row.modelData; confirm.open(); } }
                         }
                     }
@@ -64,9 +100,14 @@ AppletHost {
         }
     }
     property bool scanning:adapter?.discovering??false
-    Timer { id:scanTimeout; interval:30000;onTriggered:if(root.adapter)root.adapter.discovering=false }
-    Component.onDestruction:if(initiatedDiscovery&&adapter)adapter.discovering=false
-    onExpandedChanged:if(!expanded&&initiatedDiscovery) { scanTimeout.stop(); if(adapter)adapter.discovering=false; }
+    function stopOwnedDiscovery(force) {
+        scanTimeout.stop();
+        if((force||initiatedDiscovery)&&adapter) adapter.discovering=false;
+        initiatedDiscovery=false;
+    }
+    Timer { id:scanTimeout; interval:30000; onTriggered:root.stopOwnedDiscovery(false) }
+    Component.onDestruction:root.stopOwnedDiscovery(false)
+    onExpandedChanged:if(!expanded) root.stopOwnedDiscovery(false)
     PC3.Dialog {
         id:confirm
         property var device:null

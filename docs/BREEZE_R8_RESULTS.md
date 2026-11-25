@@ -301,3 +301,202 @@ para las entradas de imagen; BWM mostraba su texto de cliphist («[[ binary data
 * Si un archivo no tiene miniatura en la caché se muestra su icono: BWM no genera miniaturas nuevas
   (Klipper sí, con `PreviewJob`). Sin arrastrar los archivos desde la fila.
 
+## Lote 10: inhibición manual y perfiles de energía en `PowerApplet` (2026-11-24)
+
+P2 de la auditoría (`applets/power`: «UPower/brillo compartidos, sin inhibiciones/perfiles PowerDevil»).
+Se reaprovechan los proveedores comunes sin iniciar PowerDevil ni mostrar controles sin efecto:
+
+* **`applets/PowerApplet.qml`:**
+  * Cabecera `PlasmoidHeading` con el interruptor **«Manually block sleep and screen locking»**
+    conectado al servicio común `Idle` (`Idle.inhibit` / `Idle.toggleInhibit()`), que mantiene el
+    `IdleInhibitor` de Wayland y la pausa de `BwmIdle.qml`. Al activarlo se muestra el componente
+    original `power/InhibitionHint.qml` («You have manually blocked sleep and screen locking.»).
+  * Detecta una vez en el bus de sistema si existe `org.freedesktop.UPower.PowerProfiles` o
+    `net.hadess.PowerProfiles` (`power-profiles-daemon`/`tuned-ppd`); si no está presente, oculta
+    el selector de perfiles para no ofrecer controles sin efecto.
+* **`applets/power/PowerProfileItem.qml`:** adaptado de PowerDevil 6.7.5 sobre
+  `Quickshell.Services.UPower.PowerProfiles` (Power Save / Balanced / Performance según
+  `hasPerformanceProfile`, más avisos `InhibitionHint` para `degradationReason` y `holds`).
+* **`tray/SystemTray.qml`:** el applet `power` pasa a estar activo también cuando `Idle.inhibit`
+  está activado (`Battery.available || Idle.inhibit`), como en Plasma, para que el icono aparezca
+  en la bandeja en sobremesa mientras el reposo esté bloqueado manualmente.
+
+### Comprobado
+
+* `tests/test_plasma_tray.py`: `test_power_without_daemon` (interruptor de inhibición activa el
+  mock `Idle` y muestra `InhibitionHint`, `PowerProfileItem` oculto) y
+  `test_power_with_profiles_and_inhibition` (selector de perfiles visible, cambio a Performance,
+  aviso de degradación por temperatura y `holds`).
+* Bandeja, panel y skins: **37/37 OK** (`BWM_RUN_QML_TESTS=1`).
+
+### Límites
+
+* Sin inhibiciones de aplicaciones externas de PowerDevil ni perfiles automáticos al desconectar
+  corriente. En el equipo actual no hay `power-profiles-daemon` instalado, así que `PowerProfileItem`
+  permanece oculto en uso diario hasta que se instale.
+* Archivo nuevo de módulo (`power/PowerProfileItem.qml`): requiere reinicio de mantenimiento del
+  shell o próximo inicio de sesión para cargarse en el panel diario.
+
+## Lote 11: agenda y opciones nativas del calendario (2026-11-24)
+
+P2 de la auditoría (`panel/DigitalClock y applets/calendar`: «plugins de agenda»). `CalendarView.qml`
+ya instanciaba `PlasmaCalendar.EventPluginsManager`, pero `CalendarApplet.qml` dejaba
+`enabledCalendarPlugins: []`, `firstDayOfWeek: -1`, `showWeekNumbers: true` y `showSeconds: 0` fijos.
+
+* **`applets/calendar/CalendarApplet.qml`:** lee ahora `enabledCalendarPlugins` (p. ej.
+  `["holidaysevents"]` con el plugin instalado `/usr/lib64/qt6/plugins/plasmacalendarplugins/holidaysevents.so`),
+  `firstDayOfWeek`, `showWeekNumbers` y `showSeconds` desde `Config.options.bar.plasma.clock` (las
+  mismas claves de `digital-clock/main.xml` 6.7.5).
+
+### Comprobado
+
+* `tests/test_plasma_tray.py`: nueva `test_calendar_agenda_and_native_options` con
+  `enabledCalendarPlugins: ["holidaysevents"]`, `firstDayOfWeek: 1`, `showWeekNumbers: false` y
+  `showSeconds: 2`: `CalendarView.showAgenda` pasa a `true` y `MonthView` adopta las opciones.
+* Bandeja, panel y skins: **37/37 OK** (`BWM_RUN_QML_TESTS=1`).
+
+### Límites
+
+* Sigue sin página gráfica en Ajustes para elegir zonas horarias o plugins de agenda (se configuran
+  en `bar.plasma.clock` o en el texto del usuario). No comprobado visualmente en el panel diario.
+
+## Lote 12: filtros, agrupación y rueda configurable en `TasksModel` (2026-11-25)
+
+P2 de la auditoría (`panel/TasksModel, TaskToolTip`: «grupos y filtros de referencia»).
+
+* **`panel/PanelLogic.js` (`filterTasks`):** lógica pura de los filtros nativos de
+  `applets/taskmanager/package/contents/config/main.xml` 6.7.5:
+  * `showOnlyCurrentScreen`: filtra por monitor del panel conservando los lanzadores fijados
+    (`toplevels: []`), como `TaskManager::TasksModel`.
+  * `showOnlyCurrentDesktop`: filtra por workspace activo del monitor respetando ventanas fijadas
+    en todos los escritorios (`client.pinned`).
+  * `showOnlyMinimized`: muestra sólo ventanas en `special:minimized`.
+  * `groupingStrategy` (`0 = DoNotGroup`, `1 = ByProgramName` por defecto): en `0` separa cada
+    ventana abierta con una `key` única (`appId:address`).
+* **`panel/TasksModel.qml`, `panel/PanelContent.qml` y `panel/Task.qml`:** `TasksModel` recibe
+  `panelMonitor` desde `PanelContent.qml`, lee `Config.options.bar.plasma.taskManager`, usa
+  `objectProp: "key"` en `ScriptModel` y `Task.qml` respeta `wheelEnabled` (sin bloquear el ciclo
+  al hacer clic).
+
+### Comprobado
+
+* `tests/test_plasma_panel.py`: nuevas `test_filter_tasks_screen_desktop_minimized_and_pinned` y
+  `test_filter_tasks_ungrouped_keeps_distinct_keys` ejecutando `PanelLogic.js` en `qml6`.
+* Panel, panel nativo, entrada de tareas y compilación: **22/22 OK** (`BWM_RUN_QML_TESTS=1`).
+
+### Límites
+
+* Las opciones se leen desde `bar.plasma.taskManager` (o texto del usuario); siguen sin página
+  gráfica de configuración del gestor de tareas en el panel diario.
+
+## Lote 13: internacionalización KDE y accesibilidad en `PanelEditor` (2026-11-25)
+
+P2 de la auditoría (`Accesibilidad/idioma`: «PanelEditor contiene textos castellanos fijos»).
+
+* **`panel/PanelEditor.qml`:** sustituidos todos los textos castellanos fijos por
+  `KI18nContext` con el dominio original de Plasma (`plasma_shell_org.kde.plasma.desktop`),
+  nombres legibles de widgets, `Accessible.name` en desplegables, deslizadores y botones de
+  reordenación, tecla `Escape` para cerrar y encadenamiento seguro `anchor.item?.QsWindow?.window`.
+
+### Comprobado
+
+* `tests/test_plasma_panel.py`: nuevas `test_panel_editor_uses_kde_i18n_without_hardcoded_spanish`
+  y `test_panel_editor_loads_with_english_labels_in_c_locale` (en `LC_ALL=C.UTF-8` devuelve
+  «Panel Settings», «Task Manager», «Done» y cierra sin errores).
+* Panel, panel nativo, entrada de tareas y compilación: **22/22 OK** (`BWM_RUN_QML_TESTS=1`).
+
+### Límites
+
+* No probado con lector de pantalla (Orca) ni en idioma RTL real.
+
+## Lote 14: No molestar temporal en notificaciones (2026-11-25)
+
+P2 de la auditoría (`applets/notifications`: «sin programación DND»).
+
+* **`services/Notifications.qml`:** añadidos `silentUntil` (marca Unix en ms, `0` = indefinido),
+  `setSilentFor(minutes)`, `clearSilentUntil()` y un `Timer` de expiración (cada 15 s mientras
+  `silent && silentUntil > 0`) que apaga `silent` al cumplirse el plazo y limpia `silentUntil` al
+  desactivar DND manualmente. Común a las skins que usan el servidor de Quickshell.
+* **`applets/NotificationsApplet.qml`:** en el encabezado `PlasmoidHeading`, cuando DND está
+  activo se muestra la hora de fin («Until HH:MM» / «Until turned off») y el selector de duración
+  de Plasma 6.7.5 («Until turned off», «For 1 hour», «For 4 hours», «Until tomorrow»).
+
+### Comprobado
+
+* `tests/test_plasma_tray.py`: `test_notification_action_uses_existing_backend` verifica que
+  activar DND muestra el selector, elegir «For 1 hour» fija `silentUntil > 0` y actualiza la
+  etiqueta a «Until …»; `test_notification_inline_reply_like_plasma` sigue OK.
+
+### Límites
+
+* No persiste `silentUntil` entre reinicios del shell; sin trabajos KIO ni DND automático por
+  pantalla duplicada.
+
+## Lote 15: ownership de escaneo y acciones de dispositivo en `BluetoothApplet` (2026-11-25)
+
+P2 de la auditoría (`applets/BluetoothApplet`: «Revisar ownership y parada de discovery iniciado aquí»).
+
+* **`applets/BluetoothApplet.qml`:**
+  * `stopOwnedDiscovery(force)` centraliza la parada de `scanTimeout`, `adapter.discovering` y
+    el reinicio de `initiatedDiscovery = false` (antes `scanTimeout` y `onExpandedChanged` no
+    limpiaban `initiatedDiscovery`, arriesgando parar un escaneo ajeno al destruirse el applet).
+  * El botón `Find Devices` refleja `checked: root.scanning` y cambia a «Stop Searching» mientras
+    escanea.
+  * Durante el emparejamiento (`modelData.pairing`), el botón principal pasa a «Cancel»
+    (`cancelPair()`); en la vista expandida se añaden casillas `Trusted` (`modelData.trusted`) y
+    `Blocked` (`modelData.blocked`).
+
+### Comprobado
+
+* `tests/test_plasma_tray.py`: `test_bluetooth_uses_mock_and_does_not_discover_on_open` verifica
+  que cerrar el popup NO apaga un escaneo iniciado fuera (`foreignKept: true`), y que un escaneo
+  iniciado por `Find Devices` SÍ se detiene y limpia `initiatedDiscovery` al cerrar
+  (`ownedStarted: true`, `ownedStopped: true`); `BluetoothAppletTests` sigue OK (4/4 en bloque).
+
+### Límites
+
+* Sin OBEX ni asistente avanzado de PIN de Bluedevil; no probado con radios/dispositivos físicos.
+
+## Lote 16: controles gráficos de tareas y calendario en `PanelEditor` y cierre de regresión (2026-11-25)
+
+* **`panel/PanelEditor.qml`:** envuelto el contenido en `PC3.ScrollView` (manteniendo «Done» fijo
+  abajo) y añadidos los controles gráficos para las claves nativas de los lotes 11 y 12 cuando sus
+  widgets están activos en el panel:
+  * **Task Manager** (`bar.plasma.taskManager`): `showOnlyCurrentScreen`, `showOnlyCurrentDesktop`,
+    `showOnlyMinimized`, `groupingStrategy` (agrupar por programa) y `wheelEnabled`.
+  * **Digital Clock** (`bar.plasma.clock`): `showWeekNumbers` y «Show holidays» (activa/desactiva
+    `"holidaysevents"` en `enabledCalendarPlugins`).
+
+### Comprobado
+
+* `tests/test_plasma_panel.py`: `test_panel_editor_loads_with_english_labels_in_c_locale` verifica
+  también `setTaskOption("showOnlyCurrentScreen", true)`, `setTaskOption("groupingStrategy", 0)` y
+  `toggleHolidayPlugin(true/false)`.
+* Regresión completa tras lotes 10–16 (`BWM_RUN_QML_TESTS=1`):
+  * `test_plasma_panel` + `test_plasma_panel_native` + `test_plasma_task_input` + `test_plasma_tray`
+    + `test_plasma_menus_ui` + `test_skins`: **57/57 OK**.
+  * `test_skin_switch` + `test_kwin_window` + `test_kwin_rules`: **42/42 OK**.
+  * `test_r3_native_settings` + `test_launcher_entries`: **14/14 OK**.
+  * `test_plasma_interfaces`: **8/8 OK**.
+  * Total ejecutado: **121/121 OK**; `hyprctl configerrors` vacío; `bwm-requirements.py check --skin plasma`
+    todo listo.
+
+### Comprobado en la sesión reiniciada (2026-11-25)
+
+* Tras reiniciar sesión en Breeze (`plasma`, Hyprland 0.56.2 con `bwmScreenshareMonitorGuard` v1):
+  * `hyprctl configerrors` vacío; `breezebars-shadows` v2 (`shm: true`, XWayland `:0`) y
+    `breezebars-scale` v1 activos; `bwm-decorator` escuchando (`installed: true`).
+  * Instancia única de `quickshell -n -c ii`, dueño único de `org.freedesktop.Notifications`.
+  * **0 avisos ni errores** en `/run/user/1000/quickshell-session.log` ni `qs -c ii log` para
+    `modules/plasma/*` y `services/Notifications.qml` (con `PowerProfileItem.qml` ya cargado).
+
+### Límites
+
+* Sigue sin página gráfica de zonas horarias múltiples (se configuran en `bar.plasma.clock`).
+* Comprobación visual física interactiva del usuario (abrir `PanelEditor`, `PowerApplet`,
+  `NotificationsApplet` y `BluetoothApplet` en el panel diario) sigue en sus manos.
+
+
+
+
+

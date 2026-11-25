@@ -15,11 +15,11 @@ AppletHost {
     readonly property date currentTime:currentClock.dateTime
     readonly property string currentTimeZone:currentClock.timeZone
     configuration: QtObject {
-        property var enabledCalendarPlugins:[]
+        property var enabledCalendarPlugins:Array.isArray(root.clockSettings.enabledCalendarPlugins) ? root.clockSettings.enabledCalendarPlugins : []
         property int displayTimezoneFormat:root.clockSettings.displayTimezoneFormat ?? 1
-        property int showSeconds:0
-        property int firstDayOfWeek:-1
-        property bool showWeekNumbers:true
+        property int showSeconds:root.clockSettings.showSeconds ?? 0
+        property int firstDayOfWeek:root.clockSettings.firstDayOfWeek ?? -1
+        property bool showWeekNumbers:root.clockSettings.showWeekNumbers ?? true
         property bool pin:false
     }
     Clock { id:currentClock; timeZone:root.clockSettings.lastSelectedTimezone || "Local" }
