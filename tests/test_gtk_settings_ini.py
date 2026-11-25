@@ -4,6 +4,7 @@ import os
 import sys
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "config/hypr/scripts"
@@ -27,8 +28,8 @@ def worker(path, key, values, rounds):
 
 class GtkSettingsIniTests(unittest.TestCase):
     def test_concurrent_writers_keep_header(self):
-        with tempfile.TemporaryDirectory() as d:
-            os.environ["XDG_RUNTIME_DIR"] = d
+        with tempfile.TemporaryDirectory() as d, \
+                unittest.mock.patch.object(bwm_gtk_ini, "LOCK", Path(d) / "lock"):
             path = Path(d) / "settings.ini"
             path.write_text(BASE)
             jobs = [("gtk-theme-name", ["BWM-1", "BWM-2"]),

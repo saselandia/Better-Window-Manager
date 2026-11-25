@@ -6947,3 +6947,37 @@ git status; git log --oneline -5; git push origin main
 * **Comprobado:** `tests/test_gtk_settings_ini.py` (tres procesos × 200 escrituras sin ver
   nunca una cabecera rota, sin reescritura innecesaria, enlace conservado) y 43 pruebas de
   skins/Qt/puente/runtime; matriz real retro → plasma PASS con la cabecera intacta.
+
+### 374. R9: batería de regresión repetida con el host nativo activo (2026-11-25)
+
+* **Petición:** continuar R9. La batería de §343 era del 2026-11-22; desde entonces cambiaron los
+  lotes R8 10–16, el host nativo (§362–370) y GTK (§373).
+* **Resultado:** Python 794 OK (85 omitidas), QML+C++ Breeze 119 OK (2 omitidas), CTest KCM 3/3,
+  CTest del host 8/8 y matriz de skins PASS. Tabla en `docs/BREEZE_R9_RESULTS.md` §2.1.
+* **Pruebas corregidas:** `test_breeze_startup` (no contemplaba `native-desktops.py startup` en
+  todas las skins ni `plasma-host.py start`); `test_gtk_settings_ini` (fijaba `XDG_RUNTIME_DIR` a
+  una carpeta temporal ya borrada y rompía `test_launcher_entries` después).
+* **Fallo de aislamiento corregido:** `installed-decoration-option` redirigía `XDG_CONFIG_HOME`
+  después de crear `QApplication`; con `QT_QPA_PLATFORMTHEME=kde` heredado, el tema de plataforma
+  abría antes `breezerc` y el KCM de Breeze escribía el **`~/.config/breezerc` real** (creado
+  a las 18:49:15 con `DrawBackgroundGradient=true`). Archivo borrado (no existía antes: fecha de
+  creación igual a la de la prueba). Ahora `main()` redirige XDG y quita el tema de plataforma
+  antes de `QApplication`, comprueba la ruta de configuración y CTest fija `QT_QPA_PLATFORMTHEME=`.
+  Pasa también con `QT_QPA_PLATFORMTHEME=kde` sin tocar el archivo real.
+* **Kickoff de respaldo (sin resolver):** el arnés de `test_plasma_kickoff_ui` cae dentro de
+  `libkickerplugin` (reinicio del `SystemModel` tras un cambio de `SessionManagement` llegado por
+  D-Bus desde `libkworkspace6`; código KDE 6.7.5 sin símbolos) o se cuelga hasta agotar 60 s.
+  Es intermitente y **no depende del host nativo** (primera hipótesis descartada: pasa y falla
+  con el host activo y parado). Se añadió un único reintento con aviso; aun así falla ~1 de cada
+  4 ejecuciones. La caída en lote hacía fallar también `test_plasma_menus_ui`. Riesgo real: el
+  Kickoff de Quickshell sólo se carga cuando el host no corre, y entonces la misma caída tiraría
+  el shell diario. No se ha visto ninguna caída del propio host. Pendiente: volcado con símbolos
+  (`plasma-workspace` con `debug`/`splitdebug`) para localizar el fallo.
+* **`Config.blockWrites` no protegía nada (corregido):** en Quickshell 0.3.2,
+  `FileView.blockWrites` no frena `writeAdapter()` (comprobado con un FileView aislado). Las
+  instancias de prueba con `Config.blockWrites` escribían el `config.json` real: esta sesión dejó
+  `bar.plasma.kickoff.favoritesPortedToKAstats=false` (devuelto a `true`). `Config.qml` ya no
+  llama a `writeAdapter()` con `blockWrites`; arnés equivalente comprobado sin cambios en el archivo.
+  Al recargar `Config.qml` en caliente, el shell diario cayó en `~QQmlEngine` al destruir la
+  generación anterior y Quickshell se reinició solo (una instancia); trampa ya conocida de las
+  recargas largas (regla 2).

@@ -13,6 +13,7 @@ lanza es un .desktop de prueba en un XDG_DATA_HOME temporal que sólo crea un ar
 import json
 import os
 import shutil
+import sys
 import subprocess
 import tempfile
 import time
@@ -252,10 +253,23 @@ class PlasmaKickoffUiTest(unittest.TestCase):
         screen = os.environ.get("BWM_TEST_SCREEN", "DP-1")
         harness.write_text(HARNESS.replace("@SCREEN@", screen))
         try:
-            out = subprocess.run(["qs", "-p", str(harness)], env=env, capture_output=True, text=True, timeout=60)
+            # §374: libkickerplugin 6.7.5 (KDE) cae a veces al reiniciar su SystemModel por un
+            # cambio de SessionManagement (D-Bus) durante el arnés. Un único reintento si
+            # Quickshell cae; se avisa para que no pase inadvertido.
+            for attempt in range(2):
+                try:
+                    out = subprocess.run(["qs", "-p", str(harness)], env=env, capture_output=True,
+                                         text=True, timeout=60)
+                    cls.log = out.stdout + out.stderr
+                    failed = "Quickshell has crashed" in cls.log
+                except subprocess.TimeoutExpired as exc:
+                    cls.log = (exc.stdout or b"").decode(errors="replace") + (exc.stderr or b"").decode(errors="replace")
+                    failed = True
+                if not failed:
+                    break
+                sys.stderr.write("\n[aviso] el arnés de Kickoff cayó o se colgó dentro de KDE; reintento único\n")
         finally:
             harness.unlink(missing_ok=True)
-        cls.log = out.stdout + out.stderr
         cls.results = {}
         for line in cls.log.splitlines():
             if "KICKOFFTEST " in line:

@@ -2,19 +2,24 @@
 #include <KPluginFactory>
 #include <KPluginMetaData>
 #include <KCModule>
+#include <QApplication>
 #include <QCheckBox>
 #include <QImage>
 #include <QProcess>
 #include <QTemporaryDir>
 #include <QtTest>
+#include <QStandardPaths>
+static QTemporaryDir *s_tmp = nullptr;
 class DecorationOptionTest : public QObject {
     Q_OBJECT
 private Q_SLOTS:
     void nativeOptionPersistsAndChangesRendering() {
-        QTemporaryDir tmp;
+        // The config roots are redirected in main(), before QApplication: a platform theme or
+        // widget style created with the application may open breezerc first, and KSharedConfig
+        // would then keep writing the user's real file (§374).
+        QTemporaryDir &tmp = *s_tmp;
         QVERIFY(tmp.isValid());
-        qputenv("XDG_CONFIG_HOME", tmp.path().toUtf8());
-        qputenv("XDG_CONFIG_DIRS", tmp.path().toUtf8());
+        QCOMPARE(QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation), tmp.path());
         const auto decoration = KPluginMetaData::findPluginById("org.kde.kdecoration3", "org.kde.breeze");
         QVERIFY(decoration.isValid());
         // No fixed BWM option catalog: follow the installed decoration's configuration metadata.
@@ -45,5 +50,17 @@ private Q_SLOTS:
         QVERIFY(on != off); // Installed KDecoration renderer actually consumed the saved option.
     }
 };
-QTEST_MAIN(DecorationOptionTest)
+int main(int argc, char **argv)
+{
+    QTemporaryDir tmp;
+    if (!tmp.isValid())
+        return 1;
+    s_tmp = &tmp;
+    qputenv("XDG_CONFIG_HOME", tmp.path().toUtf8());
+    qputenv("XDG_CONFIG_DIRS", tmp.path().toUtf8());
+    qunsetenv("QT_QPA_PLATFORMTHEME");
+    QApplication app(argc, argv);
+    DecorationOptionTest test;
+    return QTest::qExec(&test, argc, argv);
+}
 #include "test-decoration-option.moc"

@@ -56,10 +56,14 @@ hyprctl() {
                 calls, _ = self.startup(skin)
                 loads = [c for c in calls if c.startswith('hyprctl plugin load ')]
                 self.assertEqual(len(loads), 1)
-                helpers = [c for c in calls if c.startswith('python ')]
-                self.assertEqual(len(helpers), 3 if skin == 'plasma' else 0)
+                # §255: the opt-in desktop provider decides by itself, in every skin
+                provider = [c for c in calls if c.endswith('native-desktops.py startup')]
+                self.assertEqual(len(provider), 1)
+                helpers = [c for c in calls if c.startswith('python ') and c not in provider]
+                expected = ['kde-config-bridge.py enter', 'kde-config-bridge.py start',
+                            'decorator.py start', 'plasma-host.py start'] if skin == 'plasma' else []
+                self.assertEqual([h.rsplit('/', 1)[1] for h in helpers], expected)
                 if helpers:
-                    self.assertTrue(helpers[0].endswith('kde-config-bridge.py enter'))
                     self.assertLess(calls.index(helpers[0]), calls.index(loads[0]))
 
     def test_loaded_plugin_is_not_loaded_again(self):
@@ -70,7 +74,7 @@ hyprctl() {
 
     def test_optional_plugin_absent_and_failed_load_do_not_trigger_retries(self):
         calls, _ = self.startup('retro', binary=False)
-        self.assertFalse(calls)
+        self.assertFalse([c for c in calls if not c.endswith('native-desktops.py startup')])
         calls, stderr = self.startup('retro', fail=True)
         self.assertEqual(sum(c.startswith('hyprctl plugin load ') for c in calls), 1)
         self.assertIn('No se pudo cargar breezebars', stderr)

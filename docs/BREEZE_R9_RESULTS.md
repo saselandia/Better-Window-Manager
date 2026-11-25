@@ -1,6 +1,7 @@
 # R9 — Aceptación final y regresión de las tres skins
 
-> Estado actualizado: 2026-11-25. La batería de §2 corresponde al 2026-11-22.
+> Estado actualizado: 2026-11-25. La batería de §2 se repitió el 2026-11-25 (§2.1); la tabla
+> original del 2026-11-22 se conserva debajo.
 > R4–R5 está activo en la sesión diaria; R9 sigue abierto por aceptación física/visual.
 
 ## 1. Binarios y servicios realmente cargados en la sesión diaria
@@ -21,6 +22,18 @@ Quickshell `ii`):
 ---
 
 ## 2. Suite de regresión ejecutada en R9
+
+### 2.1 Repetición del 2026-11-25 (host nativo activo)
+
+| Bloque | Resultado | Notas |
+| :--- | :--- | :--- |
+| Python completo (`unittest discover -s tests`) | **794 OK**, 85 omitidas (QML sin activar) | Corregidas dos pruebas: `test_breeze_startup` no contemplaba `native-desktops.py startup` (§255) ni `plasma-host.py start` (§362); `test_gtk_settings_ini` dejaba `XDG_RUNTIME_DIR` apuntando a una carpeta borrada |
+| QML + C++ Breeze (17 módulos, `BWM_RUN_QML_TESTS=1`) | **119 OK**, 2 omitidas (pasada final) | `test_plasma_kickoff_ui` **inestable**: el arnés cae o se cuelga dentro de Kicker 6.7.5 (KDE) en ~1 de cada 4 ejecuciones aun con un reintento (§374); no depende del host nativo |
+| CTest `src/bwm-systemsettings` | **3/3 OK** | `installed-decoration-option` fallaba con `QT_QPA_PLATFORMTHEME=kde` heredado y escribía el `~/.config/breezerc` real; corregido (§374) |
+| CTest `build/bwm-plasma-host` (sin `native-*`) | **8/8 OK** | |
+| Matriz de skins en la sesión real | **PASS** | `check-skin-lifecycle.py` (§372) |
+| Aislamiento de configuración | **Corregido** | `Config.blockWrites` no frenaba `writeAdapter()` en Quickshell 0.3.2: las pruebas QML escribían el `config.json` real (§374) |
+
 
 | Bloque | Tipo | Resultado | Alcance |
 | :--- | :--- | :--- | :--- |

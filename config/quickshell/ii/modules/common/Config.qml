@@ -62,7 +62,10 @@ Singleton {
         interval: root.readWriteDelay
         repeat: false
         onTriggered: {
-            configFileView.writeAdapter()
+            // Quickshell 0.3.2: FileView.blockWrites no frena writeAdapter() (§374). Sin esta
+            // guarda, las instancias de prueba con blockWrites escribían el config.json real.
+            if (!root.blockWrites)
+                configFileView.writeAdapter()
         }
     }
 
@@ -75,7 +78,7 @@ Singleton {
         onAdapterUpdated: fileWriteTimer.restart()
         onLoaded: root.ready = true
         onLoadFailed: error => {
-            if (error == FileViewError.FileNotFound) {
+            if (error == FileViewError.FileNotFound && !root.blockWrites) {
                 writeAdapter();
             }
         }
