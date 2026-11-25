@@ -106,6 +106,28 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 
 ### 2.4 Breeze (Kde plasma): port sobre Hyprland
 
+* **Host nativo y foco (§362–370, 2026-11-25):** `bwm-plasma-host --session` activo como
+  panel/escritorio diario por petición expresa del usuario (§364), con las correcciones de
+  foco de §363 instaladas. Quickshell retira su panel, Kickoff, bandeja y DesktopCatcher
+  mientras la marca ready identifica al host vivo (§366, no basta que exista el archivo).
+  Arranque desde Hyprland, al iniciar Breeze y volver
+  a la skin; `bar.plasma.nativeHost=false` o `BWM_PLASMA_NATIVE_HOST=0` desactiva el arranque.
+  Regresión en Hyprland desechable: seis fallos con FocusGrab anterior, diez casos pasan con
+  el nuevo. §365 comprueba editor → explorador → añadir reloj → Escape → foco de aplicación
+  y edición de escritorio en Hyprland desechable; corregido visualParent ausente del editor
+  nativo. Pendientes aceptación visual física en la sesión diaria y escritura prolongada
+  real en Firefox; no se certifica compatibilidad completa de los widgets.
+  Miniaturas (§367): adaptación activada al arrancar tras cargar el paquete de tareas;
+  hash y guarda del compositor conservados. Pendiente aceptación visual en el panel diario.
+  §368 corrige el cast del Loader asíncrono del tooltip y recupera el objeto SNI de kded
+  sin terminar sus otros módulos; watcher verificado con host y cliente registrados.
+  §369 elimina el bucle de panelMask con señales encoladas: cuatro bordes/flotación/opacidad
+  probados, 32 casos UI y regresión nativa de edición/foco pasan; arranque diario sin ese aviso.
+  §370 añade entrada Wayland real en el compositor aislado: 20 ciclos de hover/atención/editor,
+  Escape y escritura, más elección de otra ventana; no usa activación forzada al regresar.
+  Corrige el crecimiento exponencial de reintentos de área útil si hyprctl sigue ocupado:
+  temporizadores reutilizables, una petición pendiente y timeout de consulta de 1 s.
+
 * **R6, primera iteración (2026-11-20, §324):** sombra KDecoration contrastada contra
   `ShadowItem::buildQuads` de KWin 6.7.5: uniones fraccionarias/asimétricas, coordenadas de
   imagen, observación de cambios internos, memfd sellado/lectura `pread` acotada, daños
@@ -6495,3 +6517,301 @@ git status; git log --oneline -5; git push origin main
 * **Comprobado:** prueba QML con dos archivos (lista completa e iconos); 35/35; captura revisada y
   borrada. **Límites:** sin generar miniaturas nuevas ni arrastrar desde la fila.
 
+
+### 362. Breeze R4–R5: integración diaria de `bwm-plasma-host --session` (2026-11-25)
+
+* **Petición:** activar e integrar de verdad `src/bwm-plasma-host` en la sesión diaria de Breeze
+  para sustituir el panel QML viejo de Quickshell y usar `PanelConfiguration.qml`,
+  `DesktopEditMode.qml`, `WidgetExplorer.qml` y plasmoides originales de KDE Plasma 6.7.5.
+* **Hecho:**
+  * `src/bwm-plasma-host/main.cpp`: nuevo modo `--session` con almacén persistente propio en
+    `~/.config/bwm-plasma-host/{appletsrc,plasmashellrc,assignments.json}`, bloqueo único
+    `bwm-plasma-host.lock`, salida limpia por `SIGTERM`/`SIGINT` con guardado, autoguardado cada
+    30 s, paneles predeterminados de Plasma 6.7.5 y `DesktopViewHost` por pantalla conectada, y
+    marcador `$XDG_RUNTIME_DIR/bwm-plasma-host.ready`.
+  * `config/hypr/skins/plasma/scripts/plasma-host.py` (`build|install|start|stop|status`):
+    compila e instala atómicamente en `~/.local/share/bwm/bin/bwm-plasma-host` y gestiona su
+    arranque/parada sólo en Breeze (con `BWM_R4_TASK_ACTIONS=1`, `BWM_R4_DESKTOP_ACTIONS=1`,
+    `BWM_R5_HYPR_RUNTIME` y `BWM_R4_LAUNCH_CONTEXT`). Conectado en `autostart.sh`,
+    `bwm-theme-manager.py` y `skins/plasma/skin.json`.
+  * `config/quickshell/ii/panelFamilies/IllogicalImpulseFamily.qml`: detecta de forma reactiva
+    `bwm-plasma-host.ready` y desactiva `Panel.qml`, `KickoffWindow`, `TrayController.qml` y
+    `DesktopCatcher.qml` mientras el anfitrión nativo corre (conservando respaldo automático si
+    se detiene, y manteniendo `NotificationPopups`, `MenuHost`, `AltTab`, `OSD`, `Lock`, `Outline`).
+* **Comprobado en vivo:** compilado e instalado en `~/.local/share/bwm/bin/bwm-plasma-host`;
+  `plasma-host.py start` → `running: true, ready: true`; `hyprctl layers` muestra
+  `bwm-r4-native-policy` (48 px abajo) y `bwm-r5-desktop` en DP-1 y DP-2 sin ningún
+  `quickshell:plasmaPanel` duplicado; `tests.test_skins` + `tests.test_autostart` **11/11 OK**.
+* **Corrección inmediata:** `DesktopViewHost::configureLayerSurface()` usa ahora
+  `KeyboardInteractivityNone` fuera del modo edición (y `OnDemand` sólo con `corona()->isEditMode()`),
+  evitando que el fondo `LayerBackground` secuestre el teclado en Hyprland; los lanzadores
+  iniciales de `org.kde.plasma.icontasks` omiten `preferred://browser` sin icono resuelto.
+* **Incidencia y contención:** el usuario reportó secuestro intermitente del teclado mientras
+  escribía en Firefox incluso tras cambiar `DesktopViewHost` a `KeyboardInteractivityNone`. Se
+  detuvo `bwm-plasma-host` de inmediato (Quickshell restauró su panel de respaldo en <2 s) y se
+  protegió `plasma-host.py start` tras `BWM_PLASMA_NATIVE_HOST=1` o `--force` hasta aislar y
+  corregir la causa exacta (`PanelViewHost::statusChanged` → `setPanelAcceptsInput` / `FocusGrab`
+  / `PopupAnchor`).
+
+### 363. Host Plasma: capturas de foco incompletas y retenidas (2026-11-25)
+
+* **Petición:** corregir el secuestro de teclado/pantalla descrito en la conversación con
+  Antigravity (§362), que persistía escribiendo en Firefox tras desactivar el teclado del fondo.
+* **Fallos reproducidos:** `FocusGrab::start` descartaba silenciosamente ventanas sin superficie
+  y podía capturar sólo el panel mientras su popup no estaba listo. Aceptaba destinos pasivos y
+  no soltaba la captura al ocultar/destruir sus ventanas; al desaparecer el popup, el panel podía
+  seguir en la lista del compositor. No hay una traza del incidente original que permita atribuir
+  todos los episodios de Firefox a una sola de estas rutas.
+* **Corrección común del host:** lista completa visible/expuesta y primer destino interactivo;
+  liberar ante Hide, destrucción de objeto/superficie y `cleared` del compositor. `PopupAnchor`
+  invalida reintentos por generación, cancela al cambiar/destruir propietario y sólo incluye
+  acompañantes pasivos del mismo panel. El panel lleva `activateOnShow=false`, usa `update()`
+  para comprometer el cambio de modo y sale de AcceptingInput al perder foco/ocultarse/Escape.
+  No se modifican iconos, SVG, temas ni plugins del compositor.
+* **Prueba del fallo y de la corrección:** `test-focus-safety.cpp` + `check-focus-safety.py`
+  ejecutan exclusivamente en Hyprland 0.56.2 desechable sobre una salida anfitriona headless.
+  `FocusGrab` de HEAD enlazado en un binario aparte: seis fallos (captura parcial, cuatro
+  pérdidas de superficie, destino pasivo). Con la corrección: **10/10 OK**, incluida
+  sustitución de captura por el compositor y conservación del foco de una ventana normal
+  tras cierres rápidos. Sin plugins, capturas ni dispositivos físicos; configuración de
+  monitores físicos conservada y limpieza verificada. Informes ignorados por Git en
+  `build/bwm-plasma-host/focus-safety{,-before}-results.json`.
+* **Regresión:** CTest `surface-geometry` e `isolated-local-configuration` OK; esta última
+  incluye 31 casos UI, con `panelInputModeEndsWithFocusOrVisibility` nuevo (FocusOut/Hide/Escape),
+  configuración, modo edición, explorador de widgets, alternativas, perfiles y backends aislados.
+* **Despliegue:** instalado atómicamente con `plasma-host.py install`; SHA256 del binario
+  compilado e instalado coincidente: `8f7bb29c24ea3d22caf7a0478ac287e727b03598b631978e94466c0c68f89618`.
+  Host diario sigue detenido y sin `.ready`; opt-in intacto. Quickshell no se ha reiniciado.
+* **Pendiente:** aceptación de una sesión completa del host nativo y del caso físico escribiendo
+  en Firefox. No se anuncia esa aceptación ni eliminación universal de robos de foco.
+
+### 364. Activación diaria del panel nativo y edición original de Plasma (2026-11-25)
+
+* **Petición expresa:** sustituir el PanelEditor.qml de respaldo al pulsar Modo edición /
+  Añadir widgets y activar R4–R5 en la sesión diaria. Esta petición sustituye la contención
+  temporal descrita al cerrar §363.
+* **Hecho:** `plasma-host.py start` habilita por defecto el host instalado sólo en Breeze,
+  siguiendo `bar.plasma.nativeHost` (predeterminado true, como Quickshell). Se conserva
+  `BWM_PLASMA_NATIVE_HOST=0` para desactivar y `--force` para arranque explícito. Los hooks de
+  autostart/cambio de skin ya existentes pasan por esa política: no depende de exportar una
+  variable en una terminal. No se escriben archivos de configuración del usuario.
+* **Vida de sesión:** lanzamiento con `bwm_session.spawn(..., allow_fallback=False)` y
+  variables Qt/XDG/host explícitas, eliminando BWM_SKIN_SWITCH/WAYLAND_SOCKET. Ya no hereda
+  la vida del asistente mediante Popen. El arranque espera PID propio + marca ready y falla
+  con parada/retirada del marcador si no confirma en cinco segundos. Detección de PID por
+  argv exacto (`bwm-plasma-host --session`) y UID, no coincidencia parcial de un comando ajeno.
+* **Comprobado:** binario instalado coincide con §363; `status` devuelve enabled/running/ready
+  true. En las dos pantallas hay un `bwm-r4-native-policy` de 48 px y un `bwm-r5-desktop`,
+  sin capas `quickshell:plasmaPanel` ni `quickshell:plasmaDesktop`. Foco en aplicación normal
+  después del arranque y `hyprctl configerrors` vacío. Política de activación probada con
+  config temporal (true/false/null y override 0/1); Python compila. Se mantuvo la instancia
+  única de Quickshell; no hubo reinicio de shell ni carga de plugins.
+* **Interfaces:** PanelViewHost/PanelConfigView y DesktopViewHost alojan las vistas originales
+  instaladas de Plasma (PanelConfiguration.qml, DesktopEditMode.qml, WidgetExplorer.qml).
+  Ahora las acciones del panel/escritorio las recibe ese host, sin el PanelEditor del respaldo.
+* **Pendiente:** comprobación visual física de esas acciones y escritura real continuada
+  en Firefox. Se observan avisos de backends incompletos (miniaturas nativas bloqueadas por
+  hash no revisado; protocolos/servicios de KWin no disponibles): activar el host no los da
+  por resueltos ni acredita compatibilidad total.
+
+### 365. Validación nativa de edición/widgets y propietario del editor (2026-11-25)
+
+* **Petición:** continuar tras activar el host diario de §364. Al retomar seguía activo
+  después del arranque de sesión; en su log aparecía `PanelConfigView: Exposed with no
+  visual parent. Window positioning broken.`
+* **Causa y corrección:** el editor sólo entregaba el dueño a PopupAnchor;
+  PopupPlasmaWindow también necesita `setVisualParent(panelView->rootObject())`. Se aplica
+  sólo a paneles layer-shell: al aplicarlo a la previsualización en ventana normal, la
+  regresión detectó un cambio de propagación de Escape al volver del explorador. Se conserva
+  su cadena de foco anterior. El código final cambia cinco líneas del constructor.
+* **Prueba nueva:** `check-focus-safety.py --edit-mode` con `test-editmode-session`, informe
+  `build/bwm-plasma-host/edit-validation-results.json`. Vistas directas desechables en
+  Hyprland anidado sobre salida anfitriona headless. Esa salida no ofrece EDID: no certifica
+  asignación por descripción de PanelRuntime, migraciones ni escalas, ni relaja sus guardas.
+* **Antes:** falla la aserción del propietario y aparece el mismo aviso del editor. **Después:**
+  dos casos de integración pasan (4/4 contando init/cleanup): editor colocado dentro de la
+  salida y encima del panel, explorador original/catálogo cargados, añadir digitalclock,
+  cierre/reapertura del editor, Escape sale de edición y foco conservado en una ventana
+  normal tras 650 ms. Escritorio original entra en edición y al salir vuelve a
+  KeyboardInteractivityNone. Sin el aviso de PanelConfigView, pantallas físicas conservadas
+  y limpieza verificada. No se validan los backends de sombras/protocolos ausentes del ensayo.
+* **Regresión:** diez casos de foco OK; CTest surface-geometry e isolated-local-configuration
+  OK (31 casos UI, incluido el cierre del explorador en previsualización).
+* **Despliegue comprobado:** instalación atómica y reinicio sólo del host con plasma-host.py
+  install/stop/start; enabled/running/ready true. SHA256 compilado/instalado:
+  `e88b364ebb37757d241b4d8d857bd0fa985d3ba736b14ce8337ed07c5083044d`. Dos paneles y dos
+  escritorios nativos, sin respaldo duplicado, foco en aplicación normal y configerrors
+  vacío. Sin reiniciar Quickshell ni cargar plugins.
+* **Pendiente:** aceptación visual física y escritura real continuada en Firefox. Los
+  backends incompletos de §364 no se dan por resueltos con este cambio.
+
+### 366. Recuperación de Quickshell ante una marca ready abandonada (2026-11-25)
+
+* **Petición:** continuar con la integración diaria del host. Encontrado un hueco de
+  recuperación: IllogicalImpulseFamily.qml sólo ejecutaba `test -f ...ready`. SIGKILL o
+  una caída evita el borrado de main.cpp y deja oculto el panel de respaldo indefinidamente.
+* **Corrección:** nuevo `plasma-host.py ready` (salida 0/1, sin mutaciones ni escaneo de
+  procesos), que lee el PID de la marca y exige UID propio y argv exacto del host de sesión.
+  status y la confirmación de start usan también esa identidad; un host diferente vivo
+  no valida una marca antigua. El shell lo consulta con su Process existente cada 1,5 s.
+* **Fallo del comprobador:** antes de solicitar running=true se borra receivedResult;
+  Quickshell puede emitir sólo runningChanged(false) al fallar el arranque. Así un fallo
+  no conserva un resultado true anterior. Un exit 1 o FailedToStart habilita el respaldo;
+  el estado vuelve a nativo cuando el comprobador vuelve a confirmar vida.
+* **Pruebas:** `BWM_RUN_QML_TESTS=1 python3 -m unittest tests.test_native_plasma_host
+  tests.test_autostart tests.test_skins tests.test_skin_switch`: **27/27 OK**. Siete casos
+  nuevos: marca ausente/corrupta, PID ajeno vivo, marca de host muerto, otro host vivo,
+  consulta sin mutaciones/escaneo, SIGKILL de un ejecutable propio desechable que deja la
+  marca, y Process QML real aislado con secuencia éxito → fallo → éxito → FailedToStart.
+  El arnés QML no tiene ventanas, loaders de sesión ni acciones sobre el escritorio.
+* **Aplicado en vivo:** dos recargas QML registradas, sin reiniciar el host ni Quickshell.
+  Host diario conserva su PID y ready=true; una instancia ii, dos paneles/escritorios
+  nativos sin duplicados y configerrors vacío. No se mató el host diario para probarlo.
+* **Límite:** se detecta la terminación del proceso, no un bloqueo con el proceso aún vivo;
+  no se afirma heartbeat ni recuperación física completa tras un crash real del host diario.
+
+### 367. Miniaturas del host diario: recurso aún no registrado al verificarlo (2026-11-25)
+
+* **Petición:** continuar la integración diaria. El log seguía mostrando `thumbnails
+  disabled: Unreviewed native PipeWireThumbnail.qml` y, al abrir tooltips, falta del módulo
+  org.kde.pipewire. Instalar ese consumidor no aporta el protocolo de captura de KWin.
+* **Causa comprobada:** en --session se llamaba a installTaskThumbnails antes de cargar
+  applets. El recurso compilado de org.kde.plasma.icontasks aún no existía en memoria;
+  después de crear el applet su hash coincide con el original revisado. El preview y las
+  pruebas anteriores creaban los applets primero y por eso no reproducían el arranque diario.
+* **Corrección:** inicializar la adaptación después de loadLayout/creación de applets y
+  antes de construir PanelRuntime/vistas. Se conserva la vida del motor compartido.
+  installTaskThumbnails distingue recurso no cargado, motor ausente y hash no revisado;
+  no se modifica el hash aceptado ni se omite la guarda de captura del compositor.
+* **Pruebas:** dos regresiones nuevas de arranque en frío/registro del recurso por icontasks;
+  CTest isolated-task-thumbnail 15/15 QtTest y isolated-local-configuration (31 casos UI)
+  OK. El primer caso reproduce el diagnóstico incorrecto antes del cambio. No se repitió
+  la captura nativa ya aceptada de §241: este cambio es de inicialización/QML, no de protocolo.
+* **Guarda real:** check-thumbnail-compositor.py confirma por IPC el PID del peer Wayland,
+  UID propio, guarda v1 y capturesStarted=false. No se cambian capacidades/permisos ni Hyprland.
+* **Despliegue:** instalación atómica y stop/start sólo del host. SHA256 compilado/instalado
+  `b6890f4a9a60e8d2bbf249a8812b3f7066a5ecfe1c2e670270eeaf6209a262e2`. Log nuevo confirma
+  `task thumbnails adapter installed`, status enabled/running/ready true, un panel y
+  escritorio nativos por monitor sin duplicados; configerrors vacío. Sin reiniciar Quickshell.
+* **Pendiente:** ver las miniaturas en las tareas reales del panel diario. La activación del
+  adaptador no prueba recepción de fotogramas, HDR ni cobertura universal. Otros backends
+  KWin incompletos y la aceptación física prolongada del teclado siguen pendientes.
+
+### 368. Loader de miniaturas y registro SNI de kded sin objeto (2026-11-25)
+
+* **Petición:** seguir revisando la integración diaria. Tras un nuevo inicio el adaptador
+  de §367 estaba instalado, pero ToolTipInstance.qml:260 registraba TypeError de hasThumbnail.
+* **Miniaturas:** Loader.source carga por URL y el tooltip convierte el item al tipo
+  PipeWireThumbnail. Sólo se interceptaba QmlFile: carga dinámica y tipo tenían identidades
+  distintas. Se intercepta también UrlString de la misma URL exacta, sin cambiar el tooltip
+  original, registrar tipos KDE ni vaciar cachés. Regresión con Loader asíncrono por URL
+  falla antes y pasa después; sourceComponent/construcción directa no reproducían el fallo.
+* **Despliegue/pruebas:** isolated-task-thumbnail 15/15 QtTest e isolated-local-configuration
+  (31 casos UI) OK. Instalación atómica y stop/start sólo del host. Hash compilado/instalado:
+  `7c2337181f7bf7564460a5a078c2c2b5f34db25345aaa5e376fdf5d8a2bdbaec`. Adaptador confirmado
+  y cero TypeError de hasThumbnail observados en el registro nuevo. No se afirma validación
+  física de imágenes ni se repite la captura aceptada en §241.
+* **Bandeja:** kded poseía StatusNotifierWatcher sin el objeto /StatusNotifierWatcher.
+  Tenía activos ktimezoned, smbwatcher, desktopnotifier y audioshortcutsservice: no procede
+  terminarlo. Descargar sólo el watcher tampoco libera su reserva; se dejó cargado y
+  funcional, conservando esos cuatro módulos.
+* **Recuperación persistente:** plasma-host.py activa únicamente statusnotifierwatcher si
+  falta el objeto y su propietario es kded del mismo UID, antes/después del arranque. Tras
+  verificar el objeto registra hosts y endpoints /StatusNotifierItem existentes del mismo
+  UID (máx. 64 peers, 8 consultas paralelas, plazos acotados). No arranca apps, termina
+  kded ni cambia autoload/configuración del usuario; no cubre rutas SNI no estándar.
+  bwm-shell-conflicts acepta un registro SNI funcional compartido y deja de sugerir quitarlo
+  sólo por pertenecer a kded. Conserva la detección del caso roto.
+* **Comprobado:** r4-session-check --tray pasa a watcher-observed: kded6, hostRegistered
+  true y un cliente recuperado. Mismo kded con los cuatro módulos anteriores y el watcher.
+  Dos paneles/escritorios nativos sin duplicados y configerrors vacío. Sin reiniciar
+  Quickshell ni cargar plugins del compositor.
+* **Regresión de servicios:** 39/39 en test_native_plasma_host, test_shell_conflicts,
+  test_autostart, test_skins y test_skin_switch (incluye QML aislado). Cubre watcher sano,
+  respuestas inválidas, errores de consulta, propietario ajeno y reparación sin kill/unload.
+* **Pendiente:** aceptación visual física de miniaturas/bandeja y teclado prolongado en
+  Firefox; otros backends de KWin no se dan por resueltos con este cambio.
+
+### 369. Bucle de panelMask al leer la máscara durante su evaluación QML (2026-11-25)
+
+* **Petición:** continuar comprobando la estabilidad. Persistía el aviso de binding loop de
+  panelMask en Panel.qml original, tanto al arrancar como en una prueba aislada nueva.
+* **Causa y corrección:** panelMaskChanged y las señales de márgenes SVG llamaban a
+  PanelViewHost::updateMask de forma síncrona. KSvg puede emitirlas durante la evaluación
+  de la máscara; leerla y publicar enabledBorders vuelve a entrar en su binding. Las cinco
+  conexiones usan ahora Qt::QueuedConnection, al terminar esa evaluación. No se cambia
+  Panel.qml, SVG, animaciones ni el cálculo geométrico de máscaras/bordes de BWM.
+* **Regresión que reproduce el fallo:** nativePanelMaskSettlesWithoutBindingLoops usa el
+  panel original y recorre Bottom/Top/Left/Right, flotación y opacidad; comprueba máscara
+  no vacía dentro de la ventana y ausencia de avisos de bucle. Antes falla por panelMask;
+  después pasa. Es verificación de QRegion/Qt, no entrada física en cada pixel del panel.
+* **Comprobado:** isolated-local-configuration pasa con 32 casos UI. Hyprland anidado:
+  recorrido editor/explorador/widgets/Escape y edición de escritorio 4/4; foco 10/10,
+  pantallas físicas conservadas y limpieza verificada. Informes en build/bwm-plasma-host/
+  panel-mask-native-{edit,focus}-results.json (ignorados por Git).
+* **Despliegue:** instalación atómica y stop/start sólo del host. Hash compilado/instalado
+  `f3cb3d3420592ab0b20c6e44fc9380ff8ec24d5f279092db0ad79183fc2eba70`. Status enabled/running/
+  ready true; log nuevo con cero Binding loop y cero TypeError, adaptador de miniaturas
+  instalado. Un panel/escritorio nativo por monitor, sin duplicados; foco en aplicación y
+  configerrors vacío. Bandeja verificada (host y dos items registrados); sin reiniciar
+  Quickshell ni cargar plugins del compositor.
+* **Pendiente:** aceptación visual/física en el uso diario. Los avisos de protocolos KWin
+  ausentes y otros backends incompletos no se dan por resueltos por eliminar este bucle.
+
+
+### 370. Entrada Wayland real y reintentos acotados del área útil (2026-11-25)
+
+* **Petición:** continuar la verificación del secuestro de pantalla/teclado con el host nativo
+  diario. El ensayo añade teclado/puntero virtuales únicamente al Hyprland desechable:
+  marca del runner, ruta de configuración temporal, UID/PID de SO_PEERCRED y argv del peer
+  comprobados antes de crear dispositivos. Rechazo probado de un PID incorrecto.
+* **Prueba de escritura:** aplicación Qt separada del host, con recuento de teclas recibidas
+  desde su propia conexión Wayland. Veinte ciclos de hover sobre panel/escritorio, cambios
+  de atención, ajustes originales y Escape entregan 81 letras; una segunda aplicación
+  elegida al cerrar conserva el foco durante 650 ms y recibe otra letra. Ninguna activación
+  forzada de la aplicación previa al cerrar. La prueba espera su FocusIn antes de escribir;
+  un fallo inicial al enviar la tecla antes de terminar el cierre era una carrera del ensayo.
+  Se descartó una restauración de foco adicional: no forma parte de la solución.
+* **Fallo real encontrado:** el recorrido repetido saturaba el proceso. El diagnóstico contó
+  9.593 temporizadores QSingleShotTimer de DesktopViewHost entre 10.000 eventos. Cada consulta
+  de área útil ocupada llamaba a scheduleCompositorAreaRefresh, que generaba otros dos
+  reintentos: crecimiento exponencial si hyprctl no terminaba a tiempo.
+* **Corrección:** dos QTimer reutilizables (150/700 ms), una consulta en vuelo y un único bit
+  de solicitud pendiente. La consulta tiene timeout de 1 s; tanto finished como FailedToStart
+  liberan el slot. Conserva el área anterior si falla, permite recuperarse y desconecta/mata
+  la consulta al destruir la vista. No mueve focos, monitores, cursor ni workspaces.
+* **Regresión:** desktopAreaQueryCoalescesAndRecovers simula un hyprctl bloqueado, cien cambios
+  de edición, lanzamiento fallido (PATH sólo del fixture) y respuesta nueva con reservas.
+  Pasa normal y ASan (3/3 QtTest cada uno, init/cleanup incluidos); añadida a check-local.py.
+  Los 32 casos UI previos de isolated-local-configuration pasan (54,52 s), más esta regresión.
+  Hyprland desechable pasa 6/6 QtTest, incluidas las dos pruebas nuevas de entrada, con
+  pantallas físicas conservadas y limpieza verificada. Informes y diagnósticos privados
+  en build/bwm-plasma-host/{wayland-typing-results.json,area-query-results.log,local-results.json};
+  equivalente ASan en build/bwm-plasma-host-asan/area-query-results.log. XML MIT de los dos
+  protocolos de prueba documentados en THIRD_PARTY_NOTICES.md; no se añade dependencia de
+  ejecución ni se enlaza entrada virtual al host diario.
+* **Despliegue verificado:** instalación atómica y stop/start sólo de bwm-plasma-host;
+  PID 38228 → 72875. Hash construido/instalado
+  `96cb79414481d07418a1f345fa4b05ea1889ee811bb801bb88bbd511c4accb06`.
+  enabled/running/ready true; dos paneles y dos escritorios nativos, Quickshell único
+  (PID 3302), aplicación activa y configerrors vacío. Log nuevo: cero TypeError/Binding loop,
+  adaptador de miniaturas instalado. Bandeja funcional con host registrado y dos items.
+  No se reinicia Quickshell ni se cargan plugins del compositor.
+* **Límites:** prueba automatizada en compositor aislado, no escritura física prolongada en
+  Firefox ni aceptación visual diaria. Los protocolos/backend KWin ausentes siguen pendientes.
+
+
+### 371. Estado del plan de integración y publicación solicitada (2026-11-25)
+
+* **Petición:** commit/push del trabajo y actualizar el punto del plan de integración.
+* **Documentación:** BREEZE_PLAN_V2.md abre con estado vigente, evidencia y siguiente paso;
+  su lista de 2026-11-12 queda identificada como historial. BREEZE_R9_RESULTS.md deja de
+  declarar el plan completo: R4–R5 está activo diariamente, pero R9 sigue abierto por
+  aceptación física/visual, matriz de skins/monitores y comparación final con Plasma.
+* **Alcance de publicación:** integración nativa de §362 y correcciones/pruebas §363–370,
+  procedencia de protocolos y documentación asociada. Cambios previos de R8 y archivos de
+  configuración generados se mantienen fuera de este commit; no se descartan ni se alteran.
+* **Continuación:** aceptación diaria del editor/explorador, escritura prolongada y miniaturas;
+  después matriz de ciclo de vida entre skins/monitores y comparación final de R9. No se
+  certifican backends KWin ausentes ni compatibilidad total. El push se verifica contra ambos
+  destinos de origin después de crear el commit.

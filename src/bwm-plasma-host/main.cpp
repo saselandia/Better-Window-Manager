@@ -17,6 +17,10 @@
 #include <QScreen>
 #include <QMetaProperty>
 #include <QRegularExpression>
+#include <QSocketNotifier>
+#include <QStandardPaths>
+#include <sys/socket.h>
+#include <unistd.h>
 #include <KConfigLoader>
 #include <KConfigPropertyMap>
 #include <KPackage/PackageLoader>
@@ -74,6 +78,14 @@ struct MenuLogger:QObject {
         return false;
     }
 };
+static int g_sigFd[2] = {-1, -1};
+static void bwmSessionSignalHandler(int) {
+    char b = 1;
+    if (g_sigFd[0] >= 0) {
+        const ssize_t ignored = ::write(g_sigFd[0], &b, 1);
+        (void)ignored;
+    }
+}
 }
 int main(int argc, char **argv) {
     if(argc==3 && QString::fromLocal8Bit(argv[1])=="--stage-preview-appearance") {
@@ -86,8 +98,9 @@ int main(int argc, char **argv) {
         }
         puts(QJsonDocument(report).toJson(QJsonDocument::Compact).constData());return 0;
     }
-    const bool desktopPreview=argc==3 && (QString::fromLocal8Bit(argv[1])=="--follow-panel-preview" ||
-        QString::fromLocal8Bit(argv[1])=="--serve-profile");
+    const bool sessionMode=argc==2 && QString::fromLocal8Bit(argv[1])=="--session";
+    const bool desktopPreview=sessionMode || (argc==3 && (QString::fromLocal8Bit(argv[1])=="--follow-panel-preview" ||
+        QString::fromLocal8Bit(argv[1])=="--serve-profile"));
     if(!desktopPreview){qunsetenv("BWM_R4_DESKTOP_ACTIONS");qunsetenv("BWM_R4_DESKTOP_RUNTIME");qunsetenv("BWM_R4_DESKTOP_CONFIG");}
     if(!desktopPreview){qunsetenv("BWM_R4_TASK_ACTIONS");qunsetenv("BWM_R4_TASK_RUNTIME");qunsetenv("BWM_R4_TASK_CONFIG");}
     if(!desktopPreview)qunsetenv("BWM_R4_NATIVE_DESKTOPS");
@@ -126,17 +139,228 @@ int main(int argc, char **argv) {
     if(args.size()==2 && args[1]=="--launch-task-application")return runNativeTaskLauncher();
     const bool allDesktopTasks=qEnvironmentVariable("BWM_R4_TASK_ALL_DESKTOPS")=="1";
     const bool taskThumbnails=qEnvironmentVariable("BWM_R4_TASK_THUMBNAILS")=="1";
-    if(taskThumbnails && !(args.size()==3 && args[1]=="--follow-panel-preview" && qEnvironmentVariable("BWM_R4_TASK_ACTIONS")=="1")){
+    if(!sessionMode && taskThumbnails && !(args.size()==3 && args[1]=="--follow-panel-preview" && qEnvironmentVariable("BWM_R4_TASK_ACTIONS")=="1")){
         fprintf(stderr,"Task thumbnails require a disposable following task preview.\n");return 2;
     }
-    if(allDesktopTasks && !(args.size()==3 && args[1]=="--follow-panel-preview" && qEnvironmentVariable("BWM_R4_TASK_ACTIONS")=="1")){
+    if(!sessionMode && allDesktopTasks && !(args.size()==3 && args[1]=="--follow-panel-preview" && qEnvironmentVariable("BWM_R4_TASK_ACTIONS")=="1")){
         fprintf(stderr,"All-desktops task mode requires a disposable following task preview, not a saved profile.\n");return 2;
     }
-    if(allDesktopTasks){
+    if(!sessionMode && allDesktopTasks){
         for(const auto *name:{"XDG_CONFIG_HOME","XDG_DATA_HOME","XDG_CACHE_HOME","XDG_RUNTIME_DIR"})
             if(!QFileInfo(qEnvironmentVariable(name)).canonicalFilePath().startsWith(QDir::tempPath()+"/")){
                 fprintf(stderr,"All-desktops task mode requires disposable XDG directories.\n");return 2;
             }
+    }
+    if(sessionMode) {
+        const QString runtimeDir = qEnvironmentVariable("XDG_RUNTIME_DIR", QStringLiteral("/run/user/%1").arg(::getuid()));
+        const QString configBase = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
+        const QString storeDir = configBase + QStringLiteral("/bwm-plasma-host");
+        QDir().mkpath(storeDir);
+        QLockFile sessionLock(runtimeDir + QStringLiteral("/bwm-plasma-host.lock"));
+        sessionLock.setStaleLockTime(0);
+        if(!sessionLock.tryLock(0)) {
+            fprintf(stderr,"bwm-plasma-host --session is already running.\n");
+            return 0;
+        }
+        if(::socketpair(AF_UNIX, SOCK_STREAM, 0, g_sigFd) == 0) {
+            std::signal(SIGTERM, bwmSessionSignalHandler);
+            std::signal(SIGINT, bwmSessionSignalHandler);
+            auto *sn = new QSocketNotifier(g_sigFd[1], QSocketNotifier::Read, &app);
+            QObject::connect(sn, &QSocketNotifier::activated, &app, [&app, sn]{
+                sn->setEnabled(false);
+                char b = 0;
+                const ssize_t ignored = ::read(g_sigFd[1], &b, 1);
+                (void)ignored;
+                app.quit();
+            });
+        }
+        app.setQuitOnLastWindowClosed(false);
+        const QString layoutPath = storeDir + QStringLiteral("/appletsrc");
+        const QString viewSettingsPath = storeDir + QStringLiteral("/plasmashellrc");
+        const QString assignmentsPath = storeDir + QStringLiteral("/assignments.json");
+        const QString readyPath = runtimeDir + QStringLiteral("/bwm-plasma-host.ready");
+
+        std::unique_ptr<PlasmaQuick::SharedQmlEngine> thumbnailEngine;
+
+        ViewCorona corona;
+        auto shell = KPackage::PackageLoader::self()->loadPackage(QStringLiteral("Plasma/Shell"), QStringLiteral(BWM_SHELL_SOURCE_DIR));
+        if(!shell.isValid()) { fprintf(stderr,"bwm-plasma-host: invalid Plasma/Shell package\n"); return 5; }
+        corona.setKPackage(shell);
+        if(QFileInfo::exists(layoutPath)) corona.loadLayout(layoutPath);
+
+        const auto screenDesc = [](QScreen *s) -> QString {
+            const auto id = BwmOutput::identity(s);
+            return (id.manufacturer + QLatin1Char(' ') + id.model + QLatin1Char(' ') + id.serial).simplified();
+        };
+
+        QHash<uint, QString> assignments;
+        if(QFile f(assignmentsPath); f.open(QIODevice::ReadOnly)) {
+            const auto obj = QJsonDocument::fromJson(f.readAll()).object();
+            for(auto it = obj.begin(); it != obj.end(); ++it) {
+                bool ok = false;
+                const uint cid = it.key().toUInt(&ok);
+                if(ok && it.value().isString() && !it.value().toString().isEmpty())
+                    assignments.insert(cid, it.value().toString());
+            }
+        }
+
+        QList<Plasma::Containment*> existingPanels;
+        for(auto *c : corona.containments())
+            if(c->containmentType() == Plasma::Containment::Panel && !c->destroyed()) existingPanels.append(c);
+
+        if(existingPanels.isEmpty()) {
+            const QStringList defaultApplets{
+                QStringLiteral("org.kde.plasma.kickoff"),
+                QStringLiteral("org.kde.plasma.icontasks"),
+                QStringLiteral("org.kde.plasma.marginsseparator"),
+                QStringLiteral("org.kde.plasma.systemtray"),
+                QStringLiteral("org.kde.plasma.digitalclock"),
+                QStringLiteral("org.kde.plasma.showdesktop")
+            };
+            for(QScreen *s : QGuiApplication::screens()) {
+                auto *panel = corona.createContainment(QStringLiteral("org.kde.panel"));
+                if(!panel) continue;
+                panel->setFormFactor(Plasma::Types::Horizontal);
+                panel->setLocation(Plasma::Types::BottomEdge);
+                for(const auto &pluginId : defaultApplets) {
+                    auto *applet = panel->createApplet(pluginId);
+                    if(applet && pluginId == QStringLiteral("org.kde.plasma.icontasks")) {
+                        auto general = applet->config().group(QStringLiteral("General"));
+                        general.writeEntry(QStringLiteral("showOnlyCurrentDesktop"), false);
+                        general.writeEntry(QStringLiteral("showOnlyCurrentScreen"), false);
+                        general.writeEntry(QStringLiteral("launchers"), QStringList{
+                            QStringLiteral("applications:systemsettings.desktop"),
+                            QStringLiteral("applications:org.kde.dolphin.desktop")
+                        });
+                    }
+                }
+                const QString desc = screenDesc(s);
+                if(!desc.isEmpty()) assignments.insert(panel->id(), desc);
+            }
+        } else {
+            const auto screens = QGuiApplication::screens();
+            int fallbackIdx = 0;
+            for(auto *panel : existingPanels) {
+                if(!assignments.contains(panel->id()) && !screens.isEmpty()) {
+                    const QString desc = screenDesc(screens[fallbackIdx % screens.size()]);
+                    if(!desc.isEmpty()) assignments.insert(panel->id(), desc);
+                    ++fallbackIdx;
+                }
+            }
+        }
+
+        // createApplet/loadLayout registers the task package's compiled resources.
+        // Verify/install the endpoint after that, but before any panel view loads it
+        // into the shared QML engine. An early check sees an absent qrc, not a new hash.
+        if(taskThumbnails) {
+            thumbnailEngine = std::make_unique<PlasmaQuick::SharedQmlEngine>();
+            QString thumbErr;
+            if(!installTaskThumbnails(thumbnailEngine->engine().get(), &thumbErr)) {
+                fprintf(stderr,"bwm-plasma-host: thumbnails disabled: %s\n", qPrintable(thumbErr));
+                thumbnailEngine.reset();
+            } else {
+                fprintf(stderr,"bwm-plasma-host: task thumbnails adapter installed\n");
+            }
+        }
+
+        PanelRuntime runtime(&corona, viewSettingsPath, true, nullptr, true);
+        runtime.setOutputMovesAllowed(true);
+        runtime.setPanelCloningAllowed(true);
+        runtime.setPanelAddingAllowed(true);
+        QObject::connect(&corona, &ViewCorona::addPanelRequested, &runtime, [&runtime](const QString &data, QScreen *target){
+            if(!runtime.addPanel(data, target)) fprintf(stderr,"Add Panel: %s\n", qPrintable(runtime.error()));
+        }, Qt::QueuedConnection);
+        if(!assignments.isEmpty() && !runtime.setAssignments(assignments)) {
+            fprintf(stderr,"bwm-plasma-host: setAssignments: %s\n", qPrintable(runtime.error()));
+        }
+
+        const auto saveState = [&]{
+            QJsonObject obj;
+            const auto current = runtime.assignments();
+            for(auto it = current.begin(); it != current.end(); ++it)
+                obj.insert(QString::number(it.key()), it.value());
+            if(QFile f(assignmentsPath + QStringLiteral(".tmp")); f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+                f.write(QJsonDocument(obj).toJson(QJsonDocument::Compact));
+                f.flush();
+                f.close();
+                QFile::remove(assignmentsPath);
+                QFile::rename(assignmentsPath + QStringLiteral(".tmp"), assignmentsPath);
+            }
+            corona.saveLayout(layoutPath);
+            corona.config()->sync();
+        };
+
+        // Host one DesktopViewHost per connected screen for Plasma's original DesktopEditMode and right-click menu.
+        std::map<QString, std::unique_ptr<DesktopViewHost>> desktopViews;
+        QHash<QString, QPointer<Plasma::Containment>> desktopContainments;
+        QList<Plasma::Containment*> existingDesktops;
+        for(auto *c : corona.containments())
+            if(c->containmentType() == Plasma::Containment::Desktop && !c->destroyed()) existingDesktops.append(c);
+
+        const auto syncDesktops = [&]{
+            corona.setDesktopViewsActive(true);
+            QSet<QString> alive;
+            int deskIdx = 0;
+            for(QScreen *s : QGuiApplication::screens()) {
+                const QString desc = screenDesc(s);
+                if(desc.isEmpty()) continue;
+                alive.insert(desc);
+                if(desktopViews.count(desc) > 0) continue;
+                Plasma::Containment *desk = desktopContainments.value(desc);
+                if(!desk) {
+                    while(deskIdx < existingDesktops.size() && desktopContainments.values().contains(existingDesktops[deskIdx])) ++deskIdx;
+                    desk = deskIdx < existingDesktops.size() ? existingDesktops[deskIdx++] : corona.createContainment(QStringLiteral("org.kde.plasma.folder"));
+                }
+                if(!desk || desk->failedToLaunch()) continue;
+                desktopContainments.insert(desc, desk);
+                auto view = std::make_unique<DesktopViewHost>(&corona, true, s);
+                corona.bind(desk, view.get());
+                if(!view->load(desk)) {
+                    fprintf(stderr,"Desktop (%s): %s\n", qPrintable(desc), qPrintable(view->error()));
+                    corona.unbind(desk);
+                    continue;
+                }
+                view->show();
+                desktopViews.emplace(desc, std::move(view));
+            }
+            for(auto it = desktopViews.begin(); it != desktopViews.end(); ) {
+                if(!alive.contains(it->first)) {
+                    it->second->hide();
+                    if(it->second->containment()) corona.unbind(it->second->containment());
+                    it = desktopViews.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+        };
+
+        if(!runtime.setSkin(QStringLiteral("plasma"))) {
+            fprintf(stderr,"bwm-plasma-host: setSkin(plasma): %s\n", qPrintable(runtime.error()));
+        }
+        syncDesktops();
+        QObject::connect(&app, &QGuiApplication::screenAdded, &app, [syncDesktops](QScreen*){ syncDesktops(); });
+        QObject::connect(&app, &QGuiApplication::screenRemoved, &app, [syncDesktops](QScreen*){ syncDesktops(); });
+        QObject::connect(&runtime, &PanelRuntime::changed, &app, saveState, Qt::QueuedConnection);
+
+        if(QFile f(readyPath); f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            f.write(QByteArray::number(::getpid()) + "\n");
+            f.close();
+        }
+        QTimer autoSave;
+        autoSave.setInterval(30000);
+        QObject::connect(&autoSave, &QTimer::timeout, &app, saveState);
+        autoSave.start();
+
+        const int code = app.exec();
+        QFile::remove(readyPath);
+        for(auto it = desktopViews.begin(); it != desktopViews.end(); ++it) {
+            it->second->hide();
+            if(it->second->containment()) corona.unbind(it->second->containment());
+        }
+        desktopViews.clear();
+        saveState();
+        runtime.setSkin(QStringLiteral("default"));
+        return code;
     }
     if(args.size()==3 && args[1]=="--maximize-fixture") {
         if(!QRegularExpression("^org\\.bwm\\.r4\\.maximize\\.[a-f0-9]{32}$").match(args[2]).hasMatch())return 2;

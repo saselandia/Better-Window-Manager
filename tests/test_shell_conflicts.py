@@ -27,6 +27,16 @@ class ShellConflictsTest(unittest.TestCase):
         with self.owner('kded6'), mock.patch.object(helper.subprocess, 'run', return_value=mock.Mock(stdout='u 123\n')):
             self.assertEqual(helper.conflict('trays'), {'pid': 123, 'name': 'kded6'})
 
+    def test_functional_kde_registry_is_not_a_competing_tray_host(self):
+        responses = [mock.Mock(stdout='u 123\n'), mock.Mock(returncode=0, stdout='as 1 ":1.42/StatusNotifierItem"')]
+        with self.owner('kded6'), mock.patch.object(helper.subprocess, 'run', side_effect=responses):
+            self.assertIsNone(helper.conflict('trays'))
+
+    def test_malformed_watcher_reply_does_not_hide_a_conflict(self):
+        responses = [mock.Mock(stdout='u 123\n'), mock.Mock(returncode=0, stdout='as 2 "one"')]
+        with self.owner('kded6'), mock.patch.object(helper.subprocess, 'run', side_effect=responses):
+            self.assertEqual(helper.conflict('trays'), {'pid': 123, 'name': 'kded6'})
+
     def test_our_shell_and_notification_owner_are_not_conflicts(self):
         for name in ('quickshell', 'swaync'):
             with self.owner(name), mock.patch.object(helper.subprocess, 'run', return_value=mock.Mock(stdout='u 123\n')):

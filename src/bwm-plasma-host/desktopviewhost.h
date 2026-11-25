@@ -17,6 +17,7 @@
 #include <QPointer>
 #include <QRect>
 #include <QScreen>
+#include <QTimer>
 #include <QUrl>
 
 namespace Plasma {
@@ -110,6 +111,10 @@ private:
     // in output-local coordinates; invalid when unknown (no compositor IPC).
     QRect m_compositorUsable;
     QPointer<QProcess> m_areaQuery;
+    QTimer m_areaRefreshSoon;
+    QTimer m_areaRefreshSettled;
+    QTimer m_areaQueryTimeout;
+    bool m_areaRefreshPending = false;
     QPointer<QObject> m_appletConfigSession;
     FocusGrab m_sidePanelGrab;
     FocusGrab m_alternativesGrab;

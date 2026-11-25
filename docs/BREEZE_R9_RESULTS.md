@@ -1,4 +1,7 @@
-# R9 — Aceptación final y regresión de las tres skins (2026-11-22)
+# R9 — Aceptación final y regresión de las tres skins
+
+> Estado actualizado: 2026-11-25. La batería de §2 corresponde al 2026-11-22.
+> R4–R5 está activo en la sesión diaria; R9 sigue abierto por aceptación física/visual.
 
 ## 1. Binarios y servicios realmente cargados en la sesión diaria
 
@@ -36,7 +39,7 @@ Quickshell `ii`):
 | **R0** | Auditoría, línea base y contención de captura | **Verificado** | `docs/BREEZE_R0_RESULTS.md`, `BREEZE_R0_REFERENCE.md/.json`, `BREEZE_RECOVERY.md` |
 | **R1** | Magic (Alt+S) común y restauración especial en las 3 skins | **Verificado** | `docs/BREEZE_R1_RESULTS.md`, `test_r1_local_validation`, `test_special_workspace_restore`, `test_skin_switch` en verde |
 | **R2–R3** | `systemsettings` real con KCMs BWM, opciones nativas de terceros y transacciones | **Verificado (con límites)** | `open-settings.sh` (Super+I y menús) lanza ahora `systemsettings` real vía `settings-native.sh` con los 10 KCM BWM (`kcm_bwm_*`), `kcm_kwindecoration` y alias cortos (`display`, `effects`, `autostart`, etc.); `plasmaSettings.qml` queda para páginas sólo-BWM (`background`, `bar`, `services`, `general`, `style`, `about`, `windowrules`), `BWM_SETTINGS_HOST=legacy` o respaldo sin `systemsettings`. CTest 3/3, `test_r3_native_settings` 11/11, `test_r7_effects` 8/8 |
-| **R4–R5** | Anfitrión nativo `bwm-plasma-host`, edición original de panel/escritorio, plasmoides externos | **Parcial (experimental)** | `docs/BREEZE_R4_RESULTS.md`, `docs/BREEZE_R5_RESULTS.md`: validado offscreen y en compositores de ensayo; el panel diario de la sesión sigue siendo el port QML de Quickshell hasta que el usuario decida migrarlo |
+| **R4–R5** | Anfitrión nativo `bwm-plasma-host`, edición original de panel/escritorio, plasmoides externos | **Activo en sesión diaria; aceptación parcial** | §364: activado por petición expresa con corrección de foco de §363 instalada. Arranque por defecto en Breeze desde Hyprland; panel/escritorio nativos en ambas pantallas sin duplicados de Quickshell. §365 valida editor/explorador originales, añadir widget, Escape y regreso del foco en Hyprland desechable; corregido propietario visual del editor. Pendientes aceptación visual física, escritura continuada en Firefox y backends incompletos de KWin. §367–368 corrigen arranque/cast de miniaturas y registro SNI de kded. §369 corrige panelMask: 32 casos UI, foco y edición nativa pasan; arranque sin bucles QML. §370 verifica 20 ciclos con entrada Wayland desde otra aplicación y corrige reintentos exponenciales del área útil (normal/ASan). Aceptación visual física pendiente; no implica compatibilidad completa |
 | **R6** | Sombras KDE originales, esquinas del contenido y desenfoque KWin | **Verificado (con límites)** | `docs/BREEZE_R6_RESULTS.md`: `breezebars.so` y `bwm-decorator` cargados en la sesión diaria; sombras en los 4 bordes/esquinas medidas sobre fondo `#dcdcdc` (0 px de hueco, contorno 1 px, degradado 34/56/46/44 px); `blur_on_request` y `SquareTop` verificados en vivo; desenfoque en panel, Kickoff, bandeja, notificaciones, OSD, cambiador (y `ThemeHost`), menús, tooltips, `PanelEditor` y KRunner. Límite: sin `_KDE_NET_WM_SHADOW` X11 ni dmabuf; contorno de esquinas de Breeze a escala 2 limitado por el radio entero de Hyprland |
 | **R7** | Animaciones predeterminadas de Plasma 6.7.5 y sus ajustes | **Verificado (con límites)** | `docs/BREEZE_R7_RESULTS.md`: fuente única `animations.lua`, curvas exactas `kwin_*`, muelle nativo `spring:kwin_slide` verificado frente a `KWin::SpringMotion` en ida y reversión, `AnimationDurationFactor` corregido y medido en `libhyprutils`, `KWinScale` cargado y validado en vivo (`resetOnClose: 0 → 1`), página `Efectos de escritorio` (`kcm_bwm_effects`), `breeze-static-layers`, `breeze-sliding-layers` y `PlasmaTheme.slidingPopups` en panel/Kickoff/bandeja. Límite: sin `squash` hacia la tarea ni cross-fade de instantánea en `maximize`; 3 residuos temporales >33 ms bajo captura virtual en iteración 4 |
 | **R8** | Mejoras de uso diario y avisos QML | **Verificado (con límites)** | `docs/BREEZE_R8_RESULTS.md` (lotes 1–3): `ClipboardApplet` («Clear History» + `Return`), `TaskToolTip` (icono, botón cerrar, miniaturas en vivo con guardas sobre `bwmScreenshareMonitorGuard` v1 y controles MPRIS), `ThumbnailGrid`/`WindowThumbnail` con miniaturas protegidas, rueda de zonas horarias en reloj y lista en calendario, y guardas en `Task`/`ToolTipArea`/`SystemTray`/`TrayPopup`. Límites: avisos de teardown en recarga en caliente de Qt Quick; comprobación visual física de miniaturas/rueda pendiente del usuario; agenda y respuesta inline como P2 |
@@ -46,4 +49,18 @@ Quickshell `ii`):
 
 ## 4. Conclusión
 
-El plan `BREEZE_PLAN_V2.md` (R0–R9) queda completado con **364 pruebas ejecutadas sin fallos**, binarios R6/R7 cargados y verificados en la sesión diaria, y todos los límites y pruebas manuales pendientes documentados explícitamente arriba sin ocultar diferencias medidas.
+**R9 sigue abierto; el plan no está completamente aceptado.** Las 364 pruebas de §2
+son la batería histórica de 2026-11-22. Después se activó R4–R5 en la sesión diaria y se
+corrigieron foco, propietario visual del editor, disponibilidad del host, miniaturas,
+registro SNI, máscara del panel y reintentos del área útil (BWM_CONTEXT §362–370).
+
+La validación de 2026-11-25 añade 20 ciclos con entrada Wayland en otra aplicación
+(81 letras más una en la ventana elegida), 6/6 QtTest de edición/entrada, los 32 casos UI
+anteriores y la regresión de consulta bloqueada/recuperación normal y ASan. El binario
+instalado y activo coincide con el construido; la sesión tiene dos paneles y dos escritorios
+nativos, una sola instancia de Quickshell y ningún error de configuración.
+
+Siguiente: aceptación visual/física diaria de edición, escritura prolongada en Firefox y
+miniaturas; matriz de cambios de skin/monitores y comparación final con Plasma. Los backends
+KWin ausentes y las limitaciones de los informes no se consideran resueltos por estas pruebas.
+El estado operativo y el orden de continuación están al principio de `BREEZE_PLAN_V2.md`.

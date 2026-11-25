@@ -16,13 +16,17 @@ public:
     explicit FocusGrab(QObject *parent=nullptr);
     ~FocusGrab() override;
     static bool available();
-    // Starts a new grab for the windows that already have a Wayland surface. Returns false
-    // when the protocol is missing or none of the windows has a surface yet.
+    // The first window is the keyboard destination, the rest are companions. All must
+    // be visible and exposed before committing: a panel alone must never grab input
+    // while its popup is still mapping. Hiding/destroying any member releases the grab.
     bool start(const QList<QWindow*> &windows);
     void stop();
     bool active()const{return m_client;}
 Q_SIGNALS:
     void cleared();
 private:
+    bool eventFilter(QObject *, QEvent *) override;
     FocusGrabClient *m_client=nullptr;
+    QList<QPointer<QWindow>> m_windows;
+    QList<QMetaObject::Connection> m_connections;
 };

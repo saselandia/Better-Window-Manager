@@ -234,6 +234,9 @@ siendo el nombre del escritorio original que imita Breeze.
   Quickshell (Omarchy); Breeze usa polkit-kde-agent y default, `hyprpolkitagent`/BWM. Avisos según
   `notifications` de `skin.json`: swaync en default, el servidor de Quickshell en Breeze (avisos de Plasma)
   y Retro. Al tocar esto, revisa `bwm-theme-manager.py` (6.1/6.2), `autostart.sh` y `services/Notifications.qml`.
+  Bandeja (§368): un registro SNI funcional de kded sirve a varios hosts y no es conflicto.
+  Si sólo reservó el nombre sin objeto, el host activa sólo statusnotifierwatcher; no matar
+  kded ni descargar sus otros módulos activos.
 - **Flatpak**: `--filesystem=xdg-config/x` se monta también en `~/.var/app/<id>/config/x`; los enlaces de
   `~/.config` apuntan al repo, que también hay que exponer.
 - **Electron** reescribe su argv como una sola cadena: no lo relances con `/proc/<pid>/cmdline` tal cual
@@ -285,6 +288,10 @@ siendo el nombre del escritorio original que imita Breeze.
   Las vistas interactivas R5 cargan el marco de configuración instalado; el arnés reducido es de
   diagnóstico R4. En Wayland, el DPR de `QScreen` puede ser el entero superior: validar escala
   fraccionaria con la configuración del compositor y el DPR/metadata de la ventana o captura.
+  `PanelConfigView` nativo necesita `visualParent` en PopupPlasmaWindow además de PopupAnchor;
+  limitarlo a vistas layer-shell: en la previsualización de ventana normal cambia la cadena de Escape (§365).
+  Señales QML de panelMask/márgenes SVG → updateMask con Qt::QueuedConnection (§369):
+  leer la máscara/publicar bordes dentro de su evaluación vuelve a entrar en el binding.
 - **Sombras KDE en breezebars (R6):** el estado de una superficie lo posee un `UniquePtr`: nunca
   `weak.lock()` sobre él (aborta). No llamar a `xcb_connect` al cargar el plugin: bloquea el XWayland
   a demanda. Con layer-shell, Qt informa la posición (0,0): usar la geometría del anclaje.
@@ -488,6 +495,11 @@ siendo el nombre del escritorio original que imita Breeze.
   leer con NoGlobals/ruta absoluta, defaults explícitos y escribir destino nuevo SimpleConfig.
   Se respetan valores efectivos inmutables/borrados; no se migran sus restricciones al snapshot.
   Miniaturas del preview (§239): instalar kpipewire no aporta el protocolo KDE de captura.
+  Arranque diario (§367): registrar los recursos del paquete de tareas al crear/cargar
+  applets antes de instalar la adaptación, y hacerlo antes de crear las vistas. Un qrc
+  aún no cargado no significa que el hash original haya cambiado; no relajar su guarda.
+  Loader.source y el tipo QML deben resolver al mismo endpoint (§368): interceptar QmlFile
+  y UrlString de esa URL exacta. Probar Loader asíncrono por URL, además de sourceComponent.
   --task-thumbnails adapta sólo PipeWireThumbnail.qml original por URL/hash revisados en el
   motor compartido; no re-registrar tipos KDE ni manipular estado privado. Backend por
   handle extranjero estable + mapping64bits, sólo ventanas y snapshot iniciado tras vincular
@@ -624,6 +636,19 @@ siendo el nombre del escritorio original que imita Breeze.
   `KeyboardInteractivityOnDemand` le da el foco de teclado (`InputManager::mouseMoveUnified`), aunque
   `follow_mouse = 2`. Un `PlasmaCore.Dialog` con `hideOnWindowDeactivate` se oculta entonces sin clic
   (R5: barra «Añadir widgets…» frente al panel en edición): el cierre por clic fuera va por la captura de foco.
+  `FocusGrab` del host exige todas las superficies expuestas, con el popup interactivo primero;
+  nunca capturar sólo el panel mientras se mapea el popup. Liberar al ocultar/destruir cualquier
+  miembro y cancelar reintentos de aperturas anteriores. El panel no se activa al mostrarse y
+  sale de `AcceptingInputStatus` con FocusOut/Hide/Escape (§363). Ensayos de foco sólo en el
+  compositor desechable de `src/bwm-plasma-host/check-focus-safety.py`, nunca en la sesión diaria.
+  La marca `bwm-plasma-host.ready` puede sobrevivir a una caída: comprobar su PID con
+  `plasma-host.py ready`, nunca sólo la existencia del archivo (§366).
+  El ensayo `--edit-mode` incluye teclado/puntero virtuales sólo tras verificar el PID/UID
+  del peer y su configuración temporal (§370); nunca inyectar entrada en el compositor diario.
+  Esperar la activación que devuelve el compositor tras Escape antes de enviar la siguiente
+  tecla; no añadir restauraciones de foco a partir de una carrera del propio ensayo.
+  Área útil del escritorio: consultas con timeout y reintentos coalescidos; una consulta
+  ocupada no debe programar otros dos reintentos por cada callback (§370, saturaba el host).
 
 ## 6. Cómo probar
 

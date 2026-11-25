@@ -311,14 +311,19 @@ void setPanelAcceptsInput(QQuickWindow *window,bool accepts) {
     if(!window)return;
     window->setFlag(Qt::FramelessWindowHint,true);
     window->setFlag(Qt::WindowDoesNotAcceptFocus,!accepts);
-    LayerShellQt::Window::get(window)->setKeyboardInteractivity(accepts ? LayerShellQt::Window::KeyboardInteractivityOnDemand : LayerShellQt::Window::KeyboardInteractivityNone);
-    window->requestUpdate();
+    auto *role=LayerShellQt::Window::get(window);
+    // Revealing/recreating a panel is not a request to activate it. A focused widget
+    // may accept input, but geometry/status updates must never activate the panel.
+    role->setActivateOnShow(false);
+    role->setKeyboardInteractivity(accepts ? LayerShellQt::Window::KeyboardInteractivityOnDemand : LayerShellQt::Window::KeyboardInteractivityNone);
+    window->update();
 }
 void registerTypes(){qmlRegisterType<PopupAnchor>("org.bwm.plasma.host",1,0,"PopupAnchor");}
 }
 void PopupAnchor::setPopup(QQuickWindow *popup) {
     BwmSurface::ensureNativeEffectsCommit(popup);
     if(m_popup==popup)return;
+    m_grab.stop();++m_grabGeneration;
     if(m_popup){m_popup->removeEventFilter(this);disconnect(m_popup,nullptr,this,nullptr);}
     if(m_boundScreen)disconnect(m_boundScreen,nullptr,this,nullptr);
     m_popup=popup;
@@ -333,7 +338,7 @@ void PopupAnchor::setPopup(QQuickWindow *popup) {
         connect(popup,&QQuickWindow::xChanged,this,[this]{if(m_requestedPosition)update();});
         connect(popup,&QQuickWindow::yChanged,this,[this]{if(m_requestedPosition)update();});
     }
-    update();emit changed();
+    update();visibilityChanged();emit changed();
 }
 PopupAnchor::PopupAnchor(QObject *parent):QObject(parent) {
     // Hyprland keeps keyboard focus on a layer when a click hits no surface, so a Dialog
@@ -346,27 +351,40 @@ PopupAnchor::PopupAnchor(QObject *parent):QObject(parent) {
 }
 void PopupAnchor::visibilityChanged() {
     m_grab.stop();
-    if(m_popup && m_popup->isVisible())QTimer::singleShot(0,this,[this]{tryFocusGrab(0);});
+    const auto generation=++m_grabGeneration;
+    if(m_popup && m_popup->isVisible())QTimer::singleShot(0,this,[this,generation]{tryFocusGrab(0,generation);});
 }
-void PopupAnchor::tryFocusGrab(int attempt) {
+void PopupAnchor::setNonInteractive(bool enabled) {
+    if(m_nonInteractive==enabled)return;
+    m_nonInteractive=enabled;visibilityChanged();update();
+}
+void PopupAnchor::tryFocusGrab(int attempt,quint64 generation) {
+    if(generation!=m_grabGeneration)return;
     if(!m_popup || !m_popup->isVisible() || m_nonInteractive || m_grab.active())return;
     if(!m_panel || !m_panel->property("bwmLayerPanel").toBool() || !FocusGrab::available())return;
     if(!m_popup->property("hideOnWindowDeactivate").toBool())return;
     // The panel stays whitelisted so its launcher can toggle the popup closed itself, like a
-    // click on a Plasma panel (it never takes focus). Companion non-interactive Dialogs of
-    // the package (Andromeda's avatar) do not count as outside either.
+    // click on a Plasma panel (it never takes focus). Only mapped companion Dialogs
+    // belonging to this panel may join; another output/package must remain outside.
     QList<QWindow*> windows{m_popup.data(),m_panel.data()};
     for(auto *window:QGuiApplication::allWindows())
-        if(window->isVisible() && window->property("bwmPackageWindowNonInteractive").toBool())windows.append(window);
+        if(window->isVisible() && window->isExposed() && window->property("bwmPackageWindowNonInteractive").toBool()) {
+            auto *anchor=window->findChild<PopupAnchor*>(QStringLiteral("bwmPackagePopupAnchor"),Qt::FindDirectChildrenOnly);
+            if(anchor && anchor->m_panel==m_panel)windows.append(window);
+        }
     const bool started=m_grab.start(windows);
     qCDebug(lcBwmAnchor)<<"focus grab"<<m_popup->objectName()<<"started"<<started<<"attempt"<<attempt<<"windows"<<windows.size();
-    if(!started && attempt<20)QTimer::singleShot(25,this,[this,attempt]{tryFocusGrab(attempt+1);});
+    if(!started && attempt<20)QTimer::singleShot(25,this,[this,attempt,generation]{tryFocusGrab(attempt+1,generation);});
 }
 void PopupAnchor::setVisualParent(QQuickItem *parent) {
     if(m_parent==parent)return;
     if(m_parent)disconnect(m_parent,nullptr,this,nullptr);
     m_parent=parent;
     if(parent) {
+        connect(parent,&QObject::destroyed,this,[this]{
+            m_parent=nullptr;m_grab.stop();++m_grabGeneration;
+            if(m_popup)m_popup->hide();
+        });
         connect(parent,&QQuickItem::windowChanged,this,&PopupAnchor::bindPanel);
         connect(parent,&QQuickItem::xChanged,this,&PopupAnchor::update);
         connect(parent,&QQuickItem::yChanged,this,&PopupAnchor::update);
@@ -376,6 +394,7 @@ void PopupAnchor::setVisualParent(QQuickItem *parent) {
     bindPanel();emit changed();
 }
 void PopupAnchor::bindPanel() {
+    m_grab.stop();++m_grabGeneration;
     if(m_panel){m_panel->removeEventFilter(this);disconnect(m_panel,nullptr,this,nullptr);}
     m_panel=m_parent ? m_parent->window() : nullptr;
     if(m_panel) {
@@ -384,8 +403,11 @@ void PopupAnchor::bindPanel() {
         connect(m_panel,&QQuickWindow::widthChanged,this,&PopupAnchor::update);
         connect(m_panel,&QQuickWindow::heightChanged,this,&PopupAnchor::update);
         connect(m_panel,&QQuickWindow::screenChanged,this,&PopupAnchor::update);
+        connect(m_panel,&QQuickWindow::visibleChanged,this,[this](bool visible){
+            if(!visible){m_grab.stop();++m_grabGeneration;if(m_popup)m_popup->hide();}
+        });
     }
-    update();
+    update();visibilityChanged();
 }
 bool PopupAnchor::eventFilter(QObject *object,QEvent *event) {
     if(object==m_panel && event->type()==QEvent::DynamicPropertyChange) {

@@ -159,3 +159,27 @@ hasta 512 píxeles y solicitudes hasta 4 fps. No se certifica colorimetría HDR 
 
 Miniaturas del preview aceptadas en §247; R4 todavía no está cerrada. Omitir `--task-thumbnails` conserva la prueba
 anterior ya aceptada. La barra diaria y las contenciones de recuperación siguen intactas.
+
+## Arranque del host diario (§367, 2026-11-25)
+
+La integración de `--session` intentaba verificar PipeWireThumbnail.qml antes de cargar
+los applets: el qrc aún no estaba registrado y se informaba erróneamente de un original
+no revisado. El recurso mantiene el hash revisado. Se instala ahora la adaptación después
+de crear/cargar applets y antes de crear las vistas PanelRuntime, conservando el motor
+compartido durante toda la sesión. Ausencia de recurso y hash distinto tienen errores
+separados; la comprobación del hash y la guarda del peer Wayland siguen siendo obligatorias.
+
+Pruebas locales: 15/15 (incluyen arranque en frío y registro por org.kde.plasma.icontasks),
+más la regresión de configuración/UI. Compositor diario verificado por IPC con PID igual
+al peer, sin iniciar capturas durante ese diagnóstico. Binario instalado y reiniciado:
+el log confirma `task thumbnails adapter installed`. Esto confirma el arranque del
+adaptador; no acredita por sí solo fotogramas ni aceptación visual de cada tarea diaria.
+
+§368: ToolTipInstance.qml usa `Loader.source: "PipeWireThumbnail.qml"` y convierte el item
+al tipo hermano. Redirigir sólo QmlFile carga la adaptación pero deja la URL del Loader
+con otra identidad de tipo; el cast devuelve null y falla hasThumbnail. El interceptor
+trata también UrlString de la misma URL exacta. Regresión con Loader asíncrono por URL
+(la prueba previa usaba sourceComponent y no reproducía el fallo). Sin cambiar QML KDE,
+registrar tipos KDE, limpiar cachés del motor ni ampliar los recursos interceptados.
+Pruebas locales 15/15 y configuración/UI OK; binario instalado y host reiniciado, sin
+TypeError de hasThumbnail observado en su registro nuevo. La aceptación visual sigue aparte.

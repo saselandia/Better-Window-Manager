@@ -22,8 +22,10 @@ private Q_SLOTS:
         QQuickWindow panel;panel.resize(300,48);BwmSurface::configurePanel(&panel,Qt::BottomEdge,64);
         auto *panelRole=LayerShellQt::Window::get(&panel);QCOMPARE(panelRole->exclusionZone(),-1);
         QCOMPARE(panelRole->keyboardInteractivity(),LayerShellQt::Window::KeyboardInteractivityNone);
+        QVERIFY(!panelRole->activateOnShow());
         QVERIFY(panel.flags().testFlag(Qt::WindowDoesNotAcceptFocus));QCOMPARE(panel.color(),QColor(Qt::transparent));
         BwmSurface::setPanelAcceptsInput(&panel,true);
+        QVERIFY(!panelRole->activateOnShow());
         QCOMPARE(panelRole->keyboardInteractivity(),LayerShellQt::Window::KeyboardInteractivityOnDemand);QVERIFY(!panel.flags().testFlag(Qt::WindowDoesNotAcceptFocus));
         BwmSurface::setPanelAcceptsInput(&panel,false);
         QCOMPARE(panelRole->keyboardInteractivity(),LayerShellQt::Window::KeyboardInteractivityNone);

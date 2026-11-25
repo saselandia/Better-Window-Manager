@@ -164,8 +164,9 @@ def main():
             tray_metadata['KPlugin']['Id'] = 'org.bwm.r4.tray-child'
             tray_metadata['X-Plasma-NotificationAreaCategory'] = 'ApplicationStatus'
             (tray_child/'metadata.json').write_text(json.dumps(tray_metadata))
-            for test in ('liveCatalogRefreshAndNativeMetadata', 'backendInventoryUsesLiveInstancesAndNativeMetadata',
-                         'nativeTrayPropertyRoles', 'nativeTrayInventoryAndProfileCheckpoint', 'nativeTrayChildFreshProcessReadback',
+            for test in ('desktopAreaQueryCoalescesAndRecovers', 'liveCatalogRefreshAndNativeMetadata', 'backendInventoryUsesLiveInstancesAndNativeMetadata',
+                         'nativeTrayPropertyRoles', 'panelInputModeEndsWithFocusOrVisibility', 'nativePanelMaskSettlesWithoutBindingLoops',
+                         'nativeTrayInventoryAndProfileCheckpoint', 'nativeTrayChildFreshProcessReadback',
                          'previewStatusRequiresRenderedFrameAndFreshAcknowledgement', 'sharedConfigurationTransactions',
                          'sharedConfigurationFreshProcessReadback', 'moduleConfigurationTransactions',
                          'moduleConfigurationFreshProcessReadback', 'profileRecoveryFromExplicitSnapshot',

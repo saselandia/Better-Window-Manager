@@ -65,7 +65,7 @@ public:
     void setUseRequestedPosition(bool enabled) {m_requestedPosition=enabled;update();}
     void setIndependentWindow(bool enabled) {m_independentWindow=enabled;}
     // Notification/OSD/tooltip/output-only Dialogs: overlay role without keyboard focus.
-    void setNonInteractive(bool enabled) {m_nonInteractive=enabled;update();}
+    void setNonInteractive(bool enabled);
 Q_SIGNALS:
     void changed();
 protected:
@@ -73,7 +73,7 @@ protected:
 private:
     void update();
     void visibilityChanged();
-    void tryFocusGrab(int attempt);
+    void tryFocusGrab(int attempt, quint64 generation);
     void bindPanel();
     QPointer<QQuickWindow> m_popup;
     QPointer<QQuickItem> m_parent;
@@ -85,4 +85,5 @@ private:
     bool m_independentWindow=false;
     bool m_nonInteractive=false;
     FocusGrab m_grab;
+    quint64 m_grabGeneration=0;
 };

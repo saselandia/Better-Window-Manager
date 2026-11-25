@@ -35,6 +35,8 @@ Q_IMPORT_PLUGIN(BwmWindowSystemPlugin)
 #include <LayerShellQt/Window>
 #include <KPackage/PackageJob>
 #include <QTemporaryDir>
+#include <QAbstractEventDispatcher>
+#include <QScopeGuard>
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -135,6 +137,46 @@ private Q_SLOTS:
             QVERIFY2(path.startsWith(QDir::tempPath()+"/"),name);
         }
         QVERIFY(qEnvironmentVariable("DBUS_SESSION_BUS_ADDRESS").startsWith("unix:path="+QDir::tempPath()+"/"));
+    }
+    void desktopAreaQueryCoalescesAndRecovers() {
+        QTemporaryDir temporary;QVERIFY(temporary.isValid());
+        const auto oldPath=qgetenv("PATH"),oldRuntime=qgetenv("BWM_R5_HYPR_RUNTIME"),oldSignature=qgetenv("HYPRLAND_INSTANCE_SIGNATURE");
+        const auto restore=qScopeGuard([&]{qputenv("PATH",oldPath);qputenv("BWM_R5_HYPR_RUNTIME",oldRuntime);qputenv("HYPRLAND_INSTANCE_SIGNATURE",oldSignature);});
+        const QString command=temporary.filePath("hyprctl");
+        const auto writeCommand=[&](const QByteArray &body) {
+            QFile file(command);
+            return file.open(QIODevice::WriteOnly|QIODevice::Truncate) && file.write(body)==body.size()
+                && file.setPermissions(QFile::ReadOwner|QFile::WriteOwner|QFile::ExeOwner);
+        };
+        QVERIFY(writeCommand("#!/bin/sh\nexec /bin/sleep 10\n"));
+        qputenv("PATH",temporary.path().toUtf8());
+        qputenv("BWM_R5_HYPR_RUNTIME",temporary.path().toUtf8());
+        qputenv("HYPRLAND_INSTANCE_SIGNATURE","disposable-area-query");
+        TestOutput output("DP-66","AreaQuery","Q1",{0,0,1024,768});
+        TestCorona corona;DesktopViewHost desktop(&corona,false,output.screen());
+        auto singleShots=[] {
+            int count=0;
+            for(auto *object:QAbstractEventDispatcher::instance()->children())
+                if(QByteArray(object->metaObject()->className())=="QSingleShotTimer")++count;
+            return count;
+        };
+        const int before=singleShots();
+        for(int i=0;i<100;++i)corona.setEditMode(i%2==0);
+        QTest::qWait(350);
+        QVERIFY2(singleShots()<=before+2,"Usable-area refresh queued an unbounded number of retries");
+        const auto busy=[&] {
+            for(auto *process:desktop.findChildren<QProcess*>())
+                if(process->state()!=QProcess::NotRunning)return true;
+            return false;
+        };
+        QVERIFY(busy());
+        QVERIFY2(QTest::qWaitFor([&]{return !busy();},3500),"Stuck hyprctl query was not terminated");
+        // FailedToStart must also release the in-flight slot, so later IPC can recover.
+        QVERIFY(QFile::remove(command));
+        corona.setEditMode(true);QTest::qWait(900);QVERIFY(!busy());
+        QVERIFY(writeCommand("#!/bin/sh\nprintf '%s' '[{\"name\":\"DP-66\",\"reserved\":[1,2,3,4]}]'\n"));
+        corona.setEditMode(false);
+        QVERIFY(QTest::qWaitFor([&]{return desktop.strictAvailableScreenRect()==QRect(1,2,1020,762);},2000));
     }
     void liveCatalogRefreshAndNativeMetadata() {
         Catalog catalog;
@@ -429,6 +471,55 @@ private Q_SLOTS:
         QTRY_VERIFY(!removedSession);
         QVERIFY(!panel.configuration(removedId));QVERIFY(!panel.configure(removedId));
         QVERIFY(b->configScheme());
+    }
+    void panelInputModeEndsWithFocusOrVisibility() {
+        TestCorona corona;
+        corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        auto *c=corona.createContainment("org.kde.panel");QVERIFY(c);
+        c->setFormFactor(Plasma::Types::Horizontal);c->setLocation(Plasma::Types::BottomEdge);
+        PanelViewHost view(&corona);QVERIFY2(view.load(c),qPrintable(view.error()));
+        BwmSurface::configurePanel(&view,Qt::BottomEdge);view.show();
+        auto *role=LayerShellQt::Window::get(&view);
+        for(const auto type:{QEvent::FocusOut,QEvent::Hide}) {
+            c->setStatus(Plasma::Types::AcceptingInputStatus);
+            QCOMPARE(role->keyboardInteractivity(),LayerShellQt::Window::KeyboardInteractivityOnDemand);
+            QVERIFY(!role->activateOnShow());
+            QEvent event(type);QCoreApplication::sendEvent(&view,&event);
+            QCOMPARE(c->status(),Plasma::Types::PassiveStatus);
+            QCOMPARE(role->keyboardInteractivity(),LayerShellQt::Window::KeyboardInteractivityNone);
+        }
+        c->setStatus(Plasma::Types::AcceptingInputStatus);
+        QTest::keyClick(&view,Qt::Key_Escape);
+        QCOMPARE(c->status(),Plasma::Types::PassiveStatus);
+        QCOMPARE(role->keyboardInteractivity(),LayerShellQt::Window::KeyboardInteractivityNone);
+    }
+    void nativePanelMaskSettlesWithoutBindingLoops() {
+        TestCorona corona;
+        corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        auto *c=corona.createContainment("org.kde.panel");QVERIFY(c);
+        c->setFormFactor(Plasma::Types::Horizontal);c->setLocation(Plasma::Types::BottomEdge);
+        QStringList loops;
+        PanelViewHost view(&corona);
+        connect(view.engine().get(),&QQmlEngine::warnings,&view,[&loops](const QList<QQmlError> &errors){
+            for(const auto &e:errors)if(e.description().contains("Binding loop") && e.description().contains("panelMask"))loops.append(e.toString());
+        });
+        QVERIFY2(view.load(c),qPrintable(view.error()));
+        BwmSurface::configurePanel(&view,Qt::BottomEdge,0,true);view.show();
+        view.setLengthMode(PanelViewEnums::FillAvailable);
+        for(const auto location:{Plasma::Types::BottomEdge,Plasma::Types::TopEdge,Plasma::Types::LeftEdge,Plasma::Types::RightEdge}) {
+            c->setLocation(location);
+            const bool vertical=location==Plasma::Types::LeftEdge || location==Plasma::Types::RightEdge;
+            c->setFormFactor(vertical?Plasma::Types::Vertical:Plasma::Types::Horizontal);
+            const auto edge=location==Plasma::Types::LeftEdge?Qt::LeftEdge:location==Plasma::Types::RightEdge?Qt::RightEdge:location==Plasma::Types::TopEdge?Qt::TopEdge:Qt::BottomEdge;
+            BwmSurface::setPanelEdge(&view,edge);
+            view.setFloating(true);QTRY_COMPARE(view.rootObject()->property("floatingness").toDouble(),1.0);
+            view.setOpacityMode(PanelViewEnums::Opaque);
+            view.setFloating(false);QTRY_COMPARE(view.rootObject()->property("floatingness").toDouble(),0.0);
+            view.setOpacityMode(PanelViewEnums::Translucent);
+            QTRY_VERIFY(!view.mask().isEmpty());
+            QVERIFY(QRect(QPoint(),view.size()).contains(view.mask().boundingRect()));
+        }
+        QVERIFY2(loops.isEmpty(),qPrintable(loops.join('\n')));
     }
     void originalShellPanelView() {
         TestCorona corona;

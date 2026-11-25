@@ -80,6 +80,23 @@ target_compile_definitions(bwm-plasma-host PRIVATE BWM_SHELL_SOURCE_DIR="${CMAKE
 target_link_libraries(bwm-plasma-host PRIVATE Qt6::Widgets Qt6::Quick Plasma::Plasma Plasma::PlasmaQuick KF6::Package KF6::ConfigCore KF6::ConfigQml)
 include(CTest)
 if(BUILD_TESTING)
+    # Input devices exist only in explicit, private nested-compositor tests.
+    add_library(bwm-test-input STATIC tests/nested-input.cpp)
+    target_include_directories(bwm-test-input PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+    target_link_libraries(bwm-test-input PUBLIC Qt6::Core PkgConfig::WAYLAND_CLIENT)
+    foreach(INPUT keyboard pointer)
+        if(INPUT STREQUAL "keyboard")
+            set(INPUT_XML "${CMAKE_CURRENT_SOURCE_DIR}/tests/protocols/virtual-keyboard-unstable-v1.xml")
+        else()
+            set(INPUT_XML "${CMAKE_CURRENT_SOURCE_DIR}/tests/protocols/wlr-virtual-pointer-unstable-v1.xml")
+        endif()
+        add_custom_command(OUTPUT test-virtual-${INPUT}-client.h test-virtual-${INPUT}-protocol.c
+            COMMAND ${WAYLAND_SCANNER} client-header ${INPUT_XML} test-virtual-${INPUT}-client.h
+            COMMAND ${WAYLAND_SCANNER} private-code ${INPUT_XML} test-virtual-${INPUT}-protocol.c
+            DEPENDS ${INPUT_XML} VERBATIM)
+        target_sources(bwm-test-input PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/test-virtual-${INPUT}-client.h
+            ${CMAKE_CURRENT_BINARY_DIR}/test-virtual-${INPUT}-protocol.c)
+    endforeach()
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
     find_package(Qt6 REQUIRED COMPONENTS Test)
     find_package(KF6StatusNotifierItem REQUIRED)
@@ -171,6 +188,9 @@ if(BUILD_TESTING)
     add_executable(test-desktop test-desktop.cpp)
     target_link_libraries(test-desktop PRIVATE bwm-window-system Qt6::Test Qt6::Quick Plasma::Plasma)
     add_executable(test-surfaces test-surfaces.cpp)
+    # Explicit runner isolates focus-grab requests from the daily compositor.
+    add_executable(test-focus-safety test-focus-safety.cpp)
+    target_link_libraries(test-focus-safety PRIVATE bwm-plasma-configuration Qt6::Test)
     target_link_libraries(test-surfaces PRIVATE bwm-plasma-configuration Qt6::Test)
     add_test(NAME surface-geometry COMMAND test-surfaces)
     set_tests_properties(surface-geometry PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
@@ -189,7 +209,10 @@ if(BUILD_TESTING)
     target_compile_definitions(test-plasma-ui PRIVATE BWM_SHELL_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shell")
     # Session-only (not in CTest): run through check-edit-mode-session.py.
     add_executable(test-editmode-session test-editmode-session.cpp)
-    target_link_libraries(test-editmode-session PRIVATE bwm-plasma-configuration Qt6::Test KF6::Package)
+    add_executable(test-typing-window tests/typing-window.cpp)
+    target_link_libraries(test-typing-window PRIVATE Qt6::Quick)
+    add_dependencies(test-editmode-session test-typing-window)
+    target_link_libraries(test-editmode-session PRIVATE bwm-plasma-configuration bwm-test-input Qt6::Test KF6::Package)
     target_compile_definitions(test-editmode-session PRIVATE BWM_SHELL_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shell")
     add_executable(test-plasma-tray-events test-tray-events.cpp)
     target_link_libraries(test-plasma-tray-events PRIVATE bwm-plasma-configuration Qt6::WaylandClientPrivate

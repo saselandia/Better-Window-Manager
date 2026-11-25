@@ -3,7 +3,9 @@
 // layer-shell panel in the running Hyprland and measures where the compositor
 // placed each surface (hyprctl layers). No pointer input except the autohide case, which warps
 // the cursor to the panel's own edge strip and restores it; no daily panel changes.
-// Run through check-edit-mode-session.py, which isolates every XDG root.
+// Run through check-edit-mode-session.py, which isolates every XDG root. The
+// explicit nested cases use check-focus-safety.py; virtual input is guarded by
+// that runner's private compositor PID, UID and configuration path.
 #include "outputidentity.h"
 #include "panelconfigview.h"
 #include "panelruntime.h"
@@ -12,6 +14,7 @@
 #include "surfaces.h"
 #include "widgetexplorerview.h"
 #include "desktopviewhost.h"
+#include "tests/nested-input.h"
 #include <KConfig>
 #include <KLocalizedString>
 #include <KConfigGroup>
@@ -36,6 +39,8 @@
 #include <QScreen>
 #include <QTest>
 #include <QtPlugin>
+#include <QScopeGuard>
+#include <linux/input-event-codes.h>
 
 Q_IMPORT_PLUGIN(BwmWindowSystemPlugin)
 
@@ -120,6 +125,44 @@ QString activeWindow()
 {
     return hyprJson({QStringLiteral("-j"), QStringLiteral("activewindow")}).object().value(QStringLiteral("address")).toString();
 }
+// A different Wayland client, like a real application rather than another host window.
+class TypingClient {
+    QProcess process;
+    QByteArray pending;
+    bool active = false;
+    int characters = 0;
+    QString address;
+    void read() {
+        pending += process.readAllStandardOutput();
+        while (pending.contains('\n')) {
+            const auto line = pending.first(pending.indexOf('\n'));
+            pending.remove(0, line.size() + 1);
+            if (line.startsWith("ACTIVE ")) active = line.mid(7).toInt();
+            if (line.startsWith("TYPED ")) characters = line.mid(6).toInt();
+        }
+    }
+public:
+    ~TypingClient() { if (process.state() != QProcess::NotRunning) { process.kill(); process.waitForFinished(1000); } }
+    bool start() {
+        process.start(QCoreApplication::applicationDirPath()+"/test-typing-window", {});
+        if (!process.waitForStarted(1000)) return false;
+        return QTest::qWaitFor([&] {
+            for (const auto &client : hyprJson({"-j","clients"}).array()) {
+                const auto object = client.toObject();
+                if (object.value("pid").toInteger() == process.processId()) {
+                    address = object.value("address").toString();return true;
+                }
+            }
+            return false;
+        }, 2000);
+    }
+    bool activate() {
+        hyprJson({"dispatch", QString("hl.dsp.focus({window='address:%1'})").arg(address)});
+        return QTest::qWaitFor([&] { return isActive(); }, 1000);
+    }
+    bool isActive() { read();return active; }
+    int count() { read();return characters; }
+};
 struct EnterCounter : QObject {
     int enters = 0;
     bool eventFilter(QObject *, QEvent *event) override {if (event->type() == QEvent::Enter) ++enters;return false;}
@@ -159,6 +202,129 @@ class EditModeSessionTest : public QObject
 
 private Q_SLOTS:
     void initTestCase() { BwmSurface::registerTypes();PanelViewHost::registerTypes(); }
+    void inputFixtureRejectsWrongPeer() {
+        const auto previous=qgetenv("BWM_FOCUS_COMPOSITOR_PID");
+        const auto restore=qScopeGuard([&]{qputenv("BWM_FOCUS_COMPOSITOR_PID",previous);});
+        qputenv("BWM_FOCUS_COMPOSITOR_PID","1");
+        NestedInput input;QVERIFY(!input.open());
+        QVERIFY2(input.error.contains("peer"),qPrintable(input.error));
+    }
+    void typingSurvivesNativeSurfaces() {
+        QVERIFY(qEnvironmentVariable("BWM_FOCUS_NESTED")=="1");
+        auto *screen=QGuiApplication::screens().first();
+        NestedInput input;QVERIFY2(input.open(),qPrintable(input.error));
+        ViewCorona corona;
+        corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout("bwm-typing-fixture");
+        auto *c=corona.createContainment("org.kde.panel");QVERIFY(c);
+        c->setLocation(Plasma::Types::BottomEdge);c->setFormFactor(Plasma::Types::Horizontal);
+        QVERIFY(c->createApplet("org.kde.plasma.analogclock"));
+        PanelViewHost panel(&corona);panel.setScreen(screen);corona.bind(c,&panel);
+        QVERIFY2(panel.load(c),qPrintable(panel.error()));
+        BwmSurface::configurePanel(&panel,Qt::BottomEdge);panel.show();QTRY_VERIFY(panel.isExposed());
+        auto *desk=corona.createContainment("org.kde.plasma.folder");QVERIFY(desk);
+        const QString folder=QDir(qEnvironmentVariable("XDG_DATA_HOME")).filePath("typing-desktop");
+        QDir().mkpath(folder);desk->config().group("General").writeEntry("url",QUrl::fromLocalFile(folder));
+        DesktopViewHost desktop(&corona,true,screen);corona.bind(desk,&desktop);
+        QVERIFY2(desktop.load(desk),qPrintable(desktop.error()));desktop.show();QTRY_VERIFY(desktop.isExposed());
+        TypingClient app;QVERIFY(app.start());QVERIFY(app.activate());
+        int expected=0;
+        const auto type=[&]{input.key(KEY_A);++expected;return QTest::qWaitFor([&]{return app.count()==expected;},1000);};
+        QVERIFY(type());
+        const auto size=screen->geometry().size();
+        for(int cycle=0;cycle<20;++cycle) {
+            const auto strip=panel.property("bwmPanelRect").toRect();
+            input.move(strip.center().x(),strip.center().y(),size.width(),size.height());
+            QTest::qWait(25);QVERIFY2(type(),"Hovering the idle panel intercepted keyboard input");
+            input.move(3,3,size.width(),size.height());
+            QTest::qWait(25);QVERIFY2(type(),"Hovering the desktop intercepted keyboard input");
+            c->setStatus(Plasma::Types::NeedsAttentionStatus);
+            QVERIFY2(type(),"An attention update intercepted keyboard input");
+            c->setStatus(Plasma::Types::ActiveStatus);
+            c->internalAction("configure")->trigger();
+            QPointer<PanelConfigView> dialog;QTRY_VERIFY((dialog=openDialog()));
+            dialog->requestActivate();QTRY_VERIFY(dialog->isActive());
+            input.key(KEY_ESC);QTRY_VERIFY(!corona.isEditMode());
+            QTRY_VERIFY(layers("bwm-r4-popup").isEmpty());
+            QVERIFY2(QTest::qWaitFor([&]{return app.isActive();},1000),"Application keyboard focus was not returned");
+            QVERIFY2(type(),"Keyboard input did not return after closing native panel settings");
+        }
+        QCOMPARE(app.count(),81);
+        // A choice made while the editor closes must win over its previous app.
+        c->internalAction("configure")->trigger();
+        QPointer<PanelConfigView> dialog;QTRY_VERIFY((dialog=openDialog()));
+        dialog->requestActivate();QTRY_VERIFY(dialog->isActive());
+        input.key(KEY_ESC);QTRY_VERIFY(!corona.isEditMode());
+        TypingClient chosen;QVERIFY(chosen.start());QVERIFY(chosen.activate());
+        QTest::qWait(650);QVERIFY(chosen.isActive());
+        input.key(KEY_A);QVERIFY(QTest::qWaitFor([&]{return chosen.count()==1;},1000));
+        QCOMPARE(app.count(),81);
+        printf("WAYLAND_TYPING {\"cycles\":20,\"characters\":81,\"chosenWindowCharacters\":1,\"delivered\":true}\n");
+    }
+    void originalEditorAndExplorerOnNestedOutput()
+    {
+        // Direct disposable views: nested outputs have no EDID identity. This checks
+        // native surfaces/input, not production output assignment or migration.
+        QVERIFY(qEnvironmentVariable("BWM_FOCUS_NESTED")=="1");
+        QCOMPARE(QGuiApplication::screens().size(),1);
+        auto *screen=QGuiApplication::screens().first();
+        ViewCorona corona;
+        corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout("bwm-nested-editor-appletsrc");
+        auto *c=corona.createContainment("org.kde.panel");QVERIFY(c);
+        c->setLocation(Plasma::Types::BottomEdge);c->setFormFactor(Plasma::Types::Horizontal);
+        QVERIFY(c->createApplet("org.kde.plasma.analogclock"));
+        QQuickWindow app;app.resize(500,300);app.setTitle("BWM editor focus fixture");app.show();
+        QTRY_VERIFY(app.isExposed());app.requestActivate();QTRY_VERIFY(app.isActive());
+        PanelViewHost view(&corona);view.setScreen(screen);corona.bind(c,&view);
+        QVERIFY2(view.load(c),qPrintable(view.error()));
+        BwmSurface::configurePanel(&view,Qt::BottomEdge);view.show();QTRY_VERIFY(view.isExposed());
+        c->internalAction("configure")->trigger();
+        QPointer<PanelConfigView> dialog;QTRY_VERIFY((dialog=openDialog()));
+        QTRY_VERIFY(dialog->isExposed());QTRY_COMPARE(layers("bwm-r4-popup").size(),1);
+        QCOMPARE(dialog->visualParent(),view.rootObject());
+        QVERIFY(dialog->mainItem());
+        const auto panelRect=view.property("bwmPanelRect").toRect();
+        const auto dialogRect=layers("bwm-r4-popup").first();
+        QVERIFY(screen->geometry().contains(dialogRect));
+        QVERIFY(dialogRect.bottom()<panelRect.top());
+        dialog->showAddWidgetDialog();
+        QTRY_VERIFY(view.widgetExplorer() && view.widgetExplorer()->isVisible());
+        auto *explorer=view.widgetExplorer();
+        QVERIFY2(explorer->error().isEmpty(),qPrintable(explorer->error()));
+        QTRY_COMPARE(layers("bwm-r5-widget-explorer").size(),1);
+        auto *root=explorer->rootItem();
+        const auto eval=[&](const QString &code){QQmlExpression e(qmlContext(root),root,code);return e.evaluate();};
+        QTRY_VERIFY(eval("root.widgetExplorer !== null && root.widgetExplorer.widgetsModel.count > 1").toBool());
+        const int before=c->applets().size();
+        eval("root.widgetExplorer.addApplet('org.kde.plasma.digitalclock')");
+        QTRY_COMPARE(c->applets().size(),before+1);
+        eval("sidePanelStack.item.closed()");
+        QTRY_VERIFY(layers("bwm-r5-widget-explorer").isEmpty());
+        QTRY_VERIFY((dialog=openDialog()));dialog->requestActivate();QTRY_VERIFY(dialog->isActive());
+        QTest::keyClick(dialog,Qt::Key_Escape);QTRY_VERIFY(!corona.isEditMode());
+        QTRY_VERIFY(layers("bwm-r4-popup").isEmpty());
+        app.requestActivate();QTRY_VERIFY(app.isActive());QTest::qWait(650);QVERIFY(app.isActive());
+        QCOMPARE(LayerShellQt::Window::get(&view)->keyboardInteractivity(),LayerShellQt::Window::KeyboardInteractivityNone);
+    }
+    void originalDesktopEditModeOnNestedOutput()
+    {
+        QVERIFY(qEnvironmentVariable("BWM_FOCUS_NESTED")=="1");
+        auto *screen=QGuiApplication::screens().first();
+        ViewCorona corona;
+        corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",QStringLiteral(BWM_SHELL_SOURCE_DIR)));
+        corona.loadLayout("bwm-nested-desktop-appletsrc");
+        auto *desk=corona.createContainment("org.kde.plasma.folder");QVERIFY(desk);
+        DesktopViewHost view(&corona,true,screen);corona.bind(desk,&view);
+        QVERIFY2(view.load(desk),qPrintable(view.error()));view.show();QTRY_VERIFY(view.isExposed());
+        QCOMPARE(LayerShellQt::Window::get(&view)->keyboardInteractivity(),LayerShellQt::Window::KeyboardInteractivityNone);
+        view.enterEditMode();QTRY_VERIFY(corona.isEditMode());
+        auto *root=view.rootObject();QVERIFY(root);
+        QTRY_VERIFY(([&]{QQmlExpression e(qmlContext(root),root,"containmentParent.scale < 1.0");return e.evaluate().toBool();})());
+        corona.setEditMode(false);
+        QCOMPARE(LayerShellQt::Window::get(&view)->keyboardInteractivity(),LayerShellQt::Window::KeyboardInteractivityNone);
+        view.hide();QTRY_VERIFY(layers("bwm-r5-desktop").isEmpty());
+    }
     void nativeMultiplePanelReservationsInHyprland()
     {
         m_steps={};const auto output=qEnvironmentVariable("BWM_R5_OUTPUT");auto *screen=BwmOutput::resolveScreen(output);QVERIFY(screen);

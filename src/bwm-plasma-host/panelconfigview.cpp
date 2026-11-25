@@ -140,6 +140,11 @@ PanelConfigView::PanelConfigView(Plasma::Containment *containment, PanelViewHost
 {
     connect(panelView, &QObject::destroyed, this, &QObject::deleteLater);
     setScreen(panelView->screen());
+    // The native layer popup also needs libplasma's visual owner. PopupAnchor only
+    // supplies its layer geometry. Ordinary-window previews retain their separate
+    // Qt window focus chain (a transient parent there changes Escape propagation).
+    if (panelView->property("bwmLayerPanel").toBool())
+        setVisualParent(panelView->rootObject());
 
     m_sharedQmlEngine->setTranslationDomain(QStringLiteral("plasma_shell_org.kde.plasma.desktop"));
     m_sharedQmlEngine->rootContext()->setContextProperties({

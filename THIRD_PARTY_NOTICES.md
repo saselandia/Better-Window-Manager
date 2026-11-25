@@ -913,3 +913,22 @@ sin copiarlo ni modificarlo. Los textos usan los catálogos originales. Fuente c
 `check-r5-reference.py` ejecuta los binarios instalados de Plasma/KWin 6.7.5 y genera en temporal
 el cliente del protocolo `fake-input.xml` instalado (plasma-wayland-protocols; Martin Gräßlin 2015,
 LGPL-2.1-or-later); no incorpora binarios ni capturas del escritorio del usuario.
+
+### Protocolos de entrada para regresiones aisladas de foco (2026-11-25)
+
+Sólo los ensayos de `src/bwm-plasma-host/tests/nested-input.{h,cpp}` generan clientes de
+los siguientes XML, conservados sin modificar y con sus avisos MIT completos:
+
+* `tests/protocols/virtual-keyboard-unstable-v1.xml`: wlroots, revisión
+  `0855cdacb2eeeff35849e2e9c4db0aa996d78d10`, copyright Kristian Høgsberg, Intel,
+  Collabora y Purism. Fuente:
+  <https://gitlab.freedesktop.org/wlroots/wlroots/-/blob/0855cdacb2eeeff35849e2e9c4db0aa996d78d10/protocol/virtual-keyboard-unstable-v1.xml>.
+  SHA-256 `7ad7870003ecd592cae47dc19d277a609b7f18fd7b7be012623cf3225a7294f5`.
+* `tests/protocols/wlr-virtual-pointer-unstable-v1.xml`: wlr-protocols, revisión
+  `b010a03648b88d143236de193bddbfea0c08bc84`, copyright Josef Gajdusek 2019. Fuente:
+  <https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/blob/b010a03648b88d143236de193bddbfea0c08bc84/unstable/wlr-virtual-pointer-unstable-v1.xml>.
+  SHA-256 `3ff6d540be0bc5228195bf072bde42117ea17945a5c2061add5d3cf97d6bb524`.
+
+Los dispositivos se crean sólo después de comprobar el PID/UID del compositor desechable,
+su configuración temporal y la marca del runner. No se enlazan al anfitrión de producción.
+El mapa XKB mínimo del fixture es código de BWM; no se añade una biblioteca cliente nueva.

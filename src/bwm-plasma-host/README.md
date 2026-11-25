@@ -1,8 +1,11 @@
 # bwm-plasma-host — experimento R4
 
-Auxiliar fuera de Hyprland con Corona/Applet/PlasmoidItem originales. **No es el nuevo panel**.
+Auxiliar fuera de Hyprland con Corona/Applet/PlasmoidItem originales. El modo diario usa el panel original de Plasma.
 Arquitectura y límites en `docs/BREEZE_R4_ARCH.md`; resultados en `docs/BREEZE_R4_RESULTS.md`.
-No tiene instalación ni autostart. No ejecutar sobre la configuración real como ensayo.
+El modo `--session` tiene instalación y hooks mediante `plasma-host.py`; desde §364 de
+`BWM_CONTEXT.md` se activa por defecto en Breeze con las correcciones de foco de §363.
+`bar.plasma.nativeHost=false` o `BWM_PLASMA_NATIVE_HOST=0` conserva el panel de respaldo.
+No ejecutar sobre la configuración real como ensayo.
 
 ```bash
 cmake -S src/bwm-plasma-host -B /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host
@@ -20,6 +23,74 @@ seleccionar y revisar el paquete antes. No modifica las fuentes seleccionadas. `
 sólo prueba una propiedad booleana de una página, no todas las configuraciones posibles;
 usa la transacción del diálogo real. `--probe` carga con esa misma fábrica e informa también
 configurationError y loader/module/component, sin dar por operativa una configuración fallida.
+
+## Seguridad del foco (2026-11-25)
+
+`FocusGrab::start` exige una lista completa de ventanas visibles, expuestas y con superficie
+Wayland; la primera debe aceptar teclado. Nunca se captura sólo el panel porque su popup
+todavía no está listo. Ocultar/destruir cualquier miembro libera la captura, también al
+recrear una superficie; `cleared` del compositor deja el objeto inactivo. Los reintentos de
+`PopupAnchor` pertenecen a una generación y no sobreviven al cierre/cambio de propietario.
+Los acompañantes pasivos se restringen al mismo panel. El panel no se activa al mostrarse
+y abandona `AcceptingInputStatus` al perder foco, ocultarse o pulsar Escape.
+
+Prueba explícita sobre un Hyprland nuevo en una salida anfitriona headless temporal:
+
+```bash
+cmake --build build/bwm-plasma-host --target test-focus-safety -j4
+python3 src/bwm-plasma-host/check-focus-safety.py \
+  --binary build/bwm-plasma-host/test-focus-safety \
+  --report build/bwm-plasma-host/focus-safety-results.json
+```
+
+El runner no arranca el host diario, carga plugins ni usa dispositivos físicos. Mantiene
+intacta la configuración de las pantallas físicas y retira el compositor/salida de ensayo.
+No equivale a validar una sesión completa del host ni el caso del usuario escribiendo en Firefox.
+
+Para comprobar además PanelConfiguration → WidgetExplorer → añadir un reloj → cerrar con Escape
+y el modo edición del escritorio, usar el mismo runner con `--edit-mode` y el binario
+`build/bwm-plasma-host/test-editmode-session`. Usa vistas desechables directamente sobre la
+salida anidada (sin EDID); no certifica asignación de monitores, escalas ni migración de perfiles.
+El recorrido incluye teclado y puntero virtuales conectados únicamente al compositor
+anidado: verifica UID/PID del peer Wayland y su `--config` temporal antes de crear dispositivos.
+Un peer incorrecto debe rechazarse. `typingSurvivesNativeSurfaces` envía letras a una
+aplicación propia en otro proceso con el puntero sobre el panel/escritorio y cambios de atención, y comprueba
+el retorno del teclado después de Escape durante 20 ciclos. Espera la activación devuelta
+por el compositor, sin `requestActivate` sobre la aplicación previa al cerrar; enviar una
+tecla antes de completarse ese cierre mide una carrera del ensayo. También comprueba
+que otra ventana elegida al cerrar conserva el foco y recibe su letra.
+Los protocolos se enlazan sólo al ejecutable de prueba,
+con las dependencias Wayland ya declaradas; el host diario no incorpora dispositivos virtuales.
+El editor nativo entrega su `visualParent` tanto a PopupPlasmaWindow como a PopupAnchor: el anclaje
+layer-shell no sustituye la relación de propietario que necesita libplasma.
+Las previsualizaciones en ventana normal conservan su cadena de foco/Escape de Qt.
+
+La consulta asíncrona del área útil del escritorio usa dos temporizadores reutilizables
+(150/700 ms), una consulta en vuelo y una única petición pendiente. Una consulta ocupada
+no programa nuevos árboles de reintentos; se termina tras un segundo y conserva el área
+anterior si falla. `FailedToStart` también libera la consulta. La regresión
+`desktopAreaQueryCoalescesAndRecovers` simula IPC bloqueado, cien cambios de edición,
+fallo al lanzar el comando y recuperación con reservas nuevas. Es independiente del foco.
+
+Las señales panelMaskChanged y de márgenes SVG actualizan la máscara mediante conexión
+encolada (§369). KSvg puede emitirlas mientras evalúa el binding; leer panelMask/publicar
+enabledBorders en ese mismo momento lo vuelve a evaluar y produce un bucle. La regresión
+recorre los cuatro bordes, flotación y opacidad con el Panel.qml original y comprueba que
+la región de entrada sea no vacía y quede dentro de la ventana, sin bucles QML.
+
+La marca `.ready` contiene el PID del host y puede sobrevivir a un cierre abrupto. El
+shell consulta `plasma-host.py ready` cada 1,5 s: exige proceso vivo del mismo UID con
+argv exacto `bwm-plasma-host --session`. Una marca ausente/corrupta/antigua o un error
+al lanzar el comprobador desactiva el takeover y permite cargar el panel de respaldo.
+La consulta no borra marcas ni arranca/detiene procesos. Comprueba vida del proceso,
+no su capacidad de responder si se bloquea. Regresión:
+`BWM_RUN_QML_TESTS=1 python3 -m unittest tests.test_native_plasma_host`.
+
+Si kded reservó StatusNotifierWatcher sin publicar su objeto, `plasma-host.py start`
+activa sólo su módulo statusnotifierwatcher, antes/después de arrancar el host. No termina
+kded ni descarga otros módulos. Al reparar, registra hosts y hasta 64 endpoints SNI
+estándar existentes del mismo UID; consultas acotadas, sin arrancar apps. Un registro SNI
+funcional se comparte y no se presenta como conflicto por pertenecer a kded.
 
 ## Diálogo, catálogo y vista interactiva (continuación R4)
 

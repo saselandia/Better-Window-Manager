@@ -215,7 +215,10 @@ public:
 class ThumbnailRedirect:public QQmlAbstractUrlInterceptor {
 public:
     QUrl intercept(const QUrl &url,DataType type)override {
-        if(type==QmlFile && url==QUrl("qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/PipeWireThumbnail.qml"))
+        // ToolTipInstance uses Loader.source (a URL) and casts its item to the
+        // sibling QML type. Both paths must identify the same adapted component;
+        // redirecting only QmlFile loads an item that the original cast rejects.
+        if((type==QmlFile || type==UrlString) && url==QUrl("qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/PipeWireThumbnail.qml"))
             return QUrl::fromLocalFile(QStringLiteral(BWM_TASK_THUMBNAIL_QML));
         return url;
     }
@@ -317,8 +320,12 @@ bool installTaskThumbnails(QQmlEngine *engine,QString *error){
             return false;
         }
     }
+    if(!engine){if(error)*error="Missing QML engine; capture adaptation blocked";return false;}
     QFile original(":/qt/qml/plasma/applet/org/kde/plasma/taskmanager/PipeWireThumbnail.qml");
-    if(!engine || !original.open(QIODevice::ReadOnly) || QCryptographicHash::hash(original.readAll(),QCryptographicHash::Sha256).toHex()!=
+    if(!original.open(QIODevice::ReadOnly)){
+        if(error)*error="Native task package resource not loaded; capture adaptation blocked";return false;
+    }
+    if(QCryptographicHash::hash(original.readAll(),QCryptographicHash::Sha256).toHex()!=
         QByteArrayLiteral("b76fc7105bb69bf00a1cad94533fc0292a6ca7171409ec89bee75d2f68077e6b")){
         if(error)*error="Unreviewed native PipeWireThumbnail.qml; capture adaptation blocked";return false;
     }

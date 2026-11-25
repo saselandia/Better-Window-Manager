@@ -4,6 +4,7 @@
 #include <QGuiApplication>
 #include <QWaylandClientExtensionTemplate>
 #include <QWindow>
+#include <QPlatformSurfaceEvent>
 #include <qpa/qplatformnativeinterface.h>
 
 namespace {
@@ -18,7 +19,7 @@ Manager *manager() {
     return instance->isActive() ? instance : nullptr;
 }
 wl_surface *surfaceFor(QWindow *window) {
-    if(!window || !window->handle() || !window->isVisible())return nullptr;
+    if(!window || !window->handle() || !window->isVisible() || !window->isExposed())return nullptr;
     auto *native=QGuiApplication::platformNativeInterface();
     return native ? static_cast<wl_surface*>(native->nativeResourceForWindow("surface",window)) : nullptr;
 }
@@ -29,7 +30,10 @@ public:
     FocusGrabClient(::hyprland_focus_grab_v1 *object,FocusGrab *owner):QtWayland::hyprland_focus_grab_v1(object),m_owner(owner){}
     ~FocusGrabClient() override{destroy();}
 protected:
-    void hyprland_focus_grab_v1_cleared() override{if(m_owner)Q_EMIT m_owner->cleared();}
+    void hyprland_focus_grab_v1_cleared() override{
+        const QPointer<FocusGrab> owner=m_owner;
+        if(owner){owner->stop();Q_EMIT owner->cleared();}
+    }
 private:
     QPointer<FocusGrab> m_owner;
 };
@@ -40,13 +44,34 @@ bool FocusGrab::available(){return manager();}
 bool FocusGrab::start(const QList<QWindow*> &windows) {
     stop();
     auto *m=manager();
-    if(!m)return false;
+    if(!m || windows.isEmpty() || !windows.first() || windows.first()->flags().testFlag(Qt::WindowDoesNotAcceptFocus))return false;
     QList<wl_surface*> surfaces;
-    for(auto *window:windows)if(auto *surface=surfaceFor(window);surface && !surfaces.contains(surface))surfaces.append(surface);
-    if(surfaces.isEmpty())return false;
+    for(auto *window:windows) {
+        auto *surface=surfaceFor(window);
+        if(!surface)return false; // Never silently commit a partial whitelist.
+        if(!surfaces.contains(surface))surfaces.append(surface);
+    }
     m_client=new FocusGrabClient(m->create_grab(),this);
     for(auto *surface:surfaces)m_client->add_surface(surface);
     m_client->commit();
+    for(auto *window:windows) {
+        if(m_windows.contains(window))continue;
+        m_windows.append(window);
+        window->installEventFilter(this);
+        m_connections.append(connect(window,&QWindow::visibleChanged,this,[this](bool visible){if(!visible)stop();}));
+        m_connections.append(connect(window,&QObject::destroyed,this,[this]{stop();}));
+    }
     return true;
 }
-void FocusGrab::stop(){delete m_client;m_client=nullptr;}
+void FocusGrab::stop(){
+    for(const auto &connection:m_connections)disconnect(connection);
+    m_connections.clear();
+    for(const auto &window:m_windows)if(window)window->removeEventFilter(this);
+    m_windows.clear();
+    delete m_client;m_client=nullptr;
+}
+bool FocusGrab::eventFilter(QObject *,QEvent *event){
+    if(event->type()==QEvent::Hide || (event->type()==QEvent::PlatformSurface &&
+       static_cast<QPlatformSurfaceEvent*>(event)->surfaceEventType()==QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed))stop();
+    return false;
+}

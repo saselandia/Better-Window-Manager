@@ -10,6 +10,36 @@ Cada bloque es un prompt para una sesión nueva. Ejecutarlos en orden; el objeti
 sesión es implementar y comprobar su fase, salvo R0, que es una auditoría. No ejecutar todas
 las fases con un único prompt ni confundir «compila» con «es igual a Plasma».
 
+## Estado de integración — 2026-11-25
+
+**Punto actual: R4–R5 instalado en la sesión diaria; aceptación de R9 abierta.**
+El panel diario ya usa `bwm-plasma-host --session` y las interfaces originales de Plasma
+6.7.5 (`PanelConfiguration`, `DesktopEditMode`, `WidgetExplorer`). El port de Quickshell
+queda como respaldo si el proceso nativo deja de estar disponible. No se da por terminada
+la integración sólo por compilar o activar el host.
+
+| Bloque | Comprobado | Pendiente para cerrar |
+| :--- | :--- | :--- |
+| R4–R5: arranque y edición | Host instalado y activo en ambas pantallas; arranque con Breeze, exclusión del panel duplicado y comprobación de PID vivo; editor/explorador originales y añadir widgets probados en Hyprland desechable | Aceptación visual/física del panel y escritura prolongada en Firefox; matriz de cambios de skin y distintas escalas/bordes |
+| Seguridad y estabilidad del host | Capturas de foco completas y liberadas al cerrar; panel/escritorio pasivos fuera de interacción; propietario visual del editor; máscara QML sin reentrada; consultas del área útil con reintentos acotados y timeout | Mantener estas regresiones al ampliar contratos de plasmoides; no certificar todos los backends de KWin |
+| Entrada Wayland | 20 ciclos de hover/atención/editor/Escape: 81 letras en una aplicación separada y otra en la ventana elegida después; rechazo de un peer incorrecto, pantallas físicas conservadas y limpieza verificada | Uso físico prolongado de la sesión diaria |
+| Miniaturas y bandeja | Adaptador instalado después de registrar recursos, URL/tipo del Loader coherentes, hash/guarda intactos; registro SNI funcional sin terminar kded | Aceptación visual diaria de miniaturas y compatibilidad de applets con backends ausentes |
+| R6–R8 | Conservar evidencias y límites de sus informes; no se han vuelto a certificar en esta actualización | Completar los límites funcionales y visuales que cada informe mantiene abiertos |
+| R9 | Regresión automatizada y comprobación del binario diario instalado | Comparación visual final y aceptación de integración; **no cerrado** |
+
+Validación más reciente: los 32 casos UI anteriores de `isolated-local-configuration`
+pasan, más `desktopAreaQueryCoalescesAndRecovers` normal/ASan; el recorrido nativo de edición
+con entrada Wayland pasa 6/6 QtTest (incluidos init/cleanup). El host instalado está ready,
+con dos paneles/dos escritorios nativos, Quickshell único y sin errores de configuración.
+La corrección del área útil evita que una consulta ocupada multiplique dos reintentos por
+cada callback hasta saturar el proceso; conserva la última geometría válida si IPC falla.
+
+**Siguiente paso del plan:** aceptación diaria de R4–R5 (editor, explorador, escritura y
+miniaturas), después matriz de ciclo de vida entre skins/monitores y comparación final de R9.
+No adelantar su cierre ni aumentar la compatibilidad estimada sin esa evidencia.
+Detalles reproducibles y límites: [BREEZE_R9_RESULTS.md](BREEZE_R9_RESULTS.md),
+[BWM_CONTEXT.md §362–370](../BWM_CONTEXT.md) y `src/bwm-plasma-host/README.md`.
+
 ## 1. Resultado que se busca
 
 1. El mismo workspace especial de BWM en las tres skins: Alt+S, enviar ventanas, activarlas,
@@ -121,7 +151,7 @@ poner high a toda la sesión por incluir una comparación visual.
 
 Si una fase crece demasiado, dividirla por entregables manteniendo sus puertas de aceptación.
 Las fases se ejecutan de forma secuencial; no trabajar simultáneamente en el plugin o el puente.
-Estado al 2026-11-12 tras la primera ejecución:
+Historial al 2026-11-12 tras la primera ejecución (el estado vigente está al principio):
 
 - **R0 entregada:** auditoría actualizada, contratos upstream y 26 huellas en
   BREEZE_R0_REFERENCE.json. Protocolo BREEZE_R0_REFERENCE.md preparado según la alternativa

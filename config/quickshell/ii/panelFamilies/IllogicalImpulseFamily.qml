@@ -1,7 +1,9 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 
 import qs.modules.common
+import qs.modules.common.functions
 import qs.modules.ii.background
 import qs.modules.ii.bar
 import qs.modules.ii.cheatsheet
@@ -35,17 +37,51 @@ import qs.modules.ii.omarchyNotifications
 import qs.omarchyShell
 
 Scope {
+    id: familyRoot
+    // R4–R5: while native bwm-plasma-host (--session) is running, it owns the Plasma panel,
+    // Kickoff, System Tray and DesktopEditMode; Quickshell keeps the fallback ready if it stops.
+    property bool _nativeHostReady: false
+    readonly property bool nativePlasmaHost: Appearance.isPlasma && _nativeHostReady && (Config.options?.bar?.plasma?.nativeHost ?? true)
+    readonly property string _nativeHostHelper: FileUtils.trimFileProtocol(Quickshell.shellPath("../..")) + "/hypr/skins/plasma/scripts/plasma-host.py"
+    Process {
+        id: nativeHostProbe
+        command: ["python3", familyRoot._nativeHostHelper, "ready"]
+        property bool receivedResult: false
+        function check() {
+            if (running) return;
+            // FailedToStart may only emit runningChanged(false), without ever
+            // announcing true. Clear the previous result before requesting start.
+            receivedResult = false;
+            running = true;
+        }
+        onExited: exitCode => {
+            receivedResult = true;
+            familyRoot._nativeHostReady = (exitCode === 0);
+        }
+        onRunningChanged: {
+            if (running) receivedResult = false;
+            else if (!receivedResult) familyRoot._nativeHostReady = false;
+        }
+    }
+    Timer {
+        interval: 1500
+        repeat: true
+        running: Appearance.isPlasma
+        triggeredOnStart: true
+        onTriggered: nativeHostProbe.check()
+    }
+
     // Retro: Omarchy's own bar, inside omarchy-shell's host (omarchyShell/), with its panels and plugins
     PanelLoader { extraCondition: !Config.options.bar.vertical && !Appearance.isRetro && !Appearance.isPlasma; component: Bar {} }
     PanelLoader { extraCondition: Appearance.isRetro; component: OmarchyShell {} }
     // The source is empty outside Breeze: its KDE QML dependencies remain skin-specific.
     PanelLoader {
-        extraCondition: Appearance.isPlasma
+        extraCondition: Appearance.isPlasma && !familyRoot.nativePlasmaHost
         source: extraCondition ? Qt.resolvedUrl("../modules/plasma/panel/Panel.qml") : ""
     }
     // Fondo pintado por el shell, como en el original: el de end-4 en default (end-4) y el de
     // Omarchy (con su transición) en Retro; Breeze sigue con swww salvo background.enable
-    PanelLoader { extraCondition: (!Appearance.isRetro && !Appearance.isPlasma) || (Appearance.isPlasma && Boolean(Config.options.background?.enable)); component: Background {} }
+    PanelLoader { extraCondition: (!Appearance.isRetro && !Appearance.isPlasma) || (Appearance.isPlasma && !familyRoot.nativePlasmaHost && Boolean(Config.options.background?.enable)); component: Background {} }
     PanelLoader { extraCondition: Appearance.isRetro; component: OmarchyBackground {} }
     PanelLoader { extraCondition: !Appearance.isRetro; component: Cheatsheet {} }
     // BWM's dock; Retro has Omarchy's instead (dock.omarchy), never both
@@ -76,16 +112,16 @@ Scope {
     PanelLoader { component: WallpaperSelector {} }
     PanelLoader { component: AltTab {} }
     PanelLoader { component: OmarchyMenu {} }
-    PanelLoader { extraCondition: Appearance.isPlasma; component: PlasmaKickoffPort.KickoffWindow {} } // F4: Kickoff de Plasma 6.7.5 portado
+    PanelLoader { extraCondition: Appearance.isPlasma && !familyRoot.nativePlasmaHost; component: PlasmaKickoffPort.KickoffWindow {} } // F4: Kickoff de Plasma 6.7.5 portado
     PanelLoader { component: BwmIdle {} }
     // F5: KDE applet interfaces, BWM data/services; no Plasma notification server.
-    PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/tray/TrayController.qml"):"" }
-    PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/applets/NotificationPopups.qml"):"" }
+    PanelLoader { extraCondition: Appearance.isPlasma && !familyRoot.nativePlasmaHost; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/tray/TrayController.qml") : "" }
+    PanelLoader { extraCondition: Appearance.isPlasma; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/applets/NotificationPopups.qml") : "" }
     // F9: menús contextuales de Plasma (ventana, tareas, escritorio, panel) y el clic derecho en el fondo
-    PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/menus/MenuHost.qml"):"" }
-    PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/menus/DesktopCatcher.qml"):"" }
-    PanelLoader { extraCondition:Appearance.isPlasma;source:extraCondition?Qt.resolvedUrl("../modules/plasma/skinPicker/SkinPicker.qml"):"" }
+    PanelLoader { extraCondition: Appearance.isPlasma; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/menus/MenuHost.qml") : "" }
+    PanelLoader { extraCondition: Appearance.isPlasma && !familyRoot.nativePlasmaHost; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/menus/DesktopCatcher.qml") : "" }
+    PanelLoader { extraCondition: Appearance.isPlasma; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/skinPicker/SkinPicker.qml") : "" }
     // F10: KSvg outline and KWin-format custom tiling editor, Breeze only.
-    PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/tiling/Outline.qml"):"" }
-    PanelLoader { extraCondition:Appearance.isPlasma; source:extraCondition?Qt.resolvedUrl("../modules/plasma/tiling/TileEditor.qml"):"" }
+    PanelLoader { extraCondition: Appearance.isPlasma; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/tiling/Outline.qml") : "" }
+    PanelLoader { extraCondition: Appearance.isPlasma; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/tiling/TileEditor.qml") : "" }
 }

@@ -201,6 +201,7 @@ fi
         # Subsequent changes are debounced by the single F2 bridge.
         python3 "$HOME/.config/hypr/skins/plasma/scripts/kde-config-bridge.py" start
         python3 "$HOME/.config/hypr/skins/plasma/scripts/decorator.py" start
+        python3 "$HOME/.config/hypr/skins/plasma/scripts/plasma-host.py" start
     fi
 ) &
 

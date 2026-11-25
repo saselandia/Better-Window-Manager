@@ -46,6 +46,7 @@
 #include <KLocalizedString>
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 using namespace Qt::StringLiterals;
 
@@ -87,6 +88,17 @@ DesktopViewHost::DesktopViewHost(Plasma::Corona *corona, bool layerShell, QScree
     , m_layerShell(layerShell)
     , m_targetScreen(targetScreen ? targetScreen : screen())
 {
+    for (QTimer *timer : {&m_areaRefreshSoon, &m_areaRefreshSettled, &m_areaQueryTimeout})
+        timer->setSingleShot(true);
+    m_areaRefreshSoon.setInterval(150);
+    m_areaRefreshSettled.setInterval(700);
+    m_areaQueryTimeout.setInterval(1000);
+    connect(&m_areaRefreshSoon, &QTimer::timeout, this, &DesktopViewHost::refreshCompositorArea);
+    connect(&m_areaRefreshSettled, &QTimer::timeout, this, &DesktopViewHost::refreshCompositorArea);
+    connect(&m_areaQueryTimeout, &QTimer::timeout, this, [this] {
+        if (m_areaQuery && m_areaQuery->state() != QProcess::NotRunning)
+            m_areaQuery->kill();
+    });
     setResizeMode(SizeRootObjectToView);
     setColor(Qt::transparent);
     setTitle(tr("Desktop"));
@@ -173,6 +185,10 @@ bool DesktopViewHost::setScreenToFollow(QScreen *target) {
 DesktopViewHost::~DesktopViewHost()
 {
     qApp->removeEventFilter(this);
+    if (m_areaQuery) {
+        m_areaQuery->disconnect(this);
+        m_areaQuery->kill();
+    }
     m_sidePanelGrab.stop();
     m_alternativesGrab.stop();
     delete m_alternativesEngine.data();
@@ -236,8 +252,8 @@ QRect DesktopViewHost::strictAvailableScreenRect() const
 void DesktopViewHost::scheduleCompositorAreaRefresh()
 {
     // Exclusive zones are applied by the compositor asynchronously after a commit.
-    QTimer::singleShot(150, this, &DesktopViewHost::refreshCompositorArea);
-    QTimer::singleShot(700, this, &DesktopViewHost::refreshCompositorArea);
+    m_areaRefreshSoon.start();
+    m_areaRefreshSettled.start();
 }
 
 void DesktopViewHost::refreshCompositorArea()
@@ -246,17 +262,32 @@ void DesktopViewHost::refreshCompositorArea()
     QScreen *s = screenToFollow();
     if (runtime.isEmpty() || !s || qEnvironmentVariable("HYPRLAND_INSTANCE_SIGNATURE").isEmpty())
         return;
-    if (m_areaQuery && m_areaQuery->state() != QProcess::NotRunning) {
-        scheduleCompositorAreaRefresh();
+    if (m_areaQuery) {
+        // Coalesce requests while IPC is busy. Retrying each pending callback with
+        // two more callbacks grows exponentially when hyprctl is slow or stuck.
+        m_areaRefreshPending = true;
         return;
     }
     auto *process = new QProcess(this);
     m_areaQuery = process;
+    const auto complete = [this, process] {
+        if (m_areaQuery != process)
+            return;
+        m_areaQuery = nullptr;
+        m_areaQueryTimeout.stop();
+        process->deleteLater();
+        if (std::exchange(m_areaRefreshPending, false) && !m_areaRefreshSoon.isActive())
+            m_areaRefreshSoon.start();
+    };
     auto environment = QProcessEnvironment::systemEnvironment();
     environment.insert(u"XDG_RUNTIME_DIR"_s, runtime);
     process->setProcessEnvironment(environment);
-    connect(process, &QProcess::finished, this, [this, process](int code, QProcess::ExitStatus status) {
-        process->deleteLater();
+    connect(process, &QProcess::errorOccurred, this, [complete](QProcess::ProcessError error) {
+        if (error == QProcess::FailedToStart)
+            complete();
+    });
+    connect(process, &QProcess::finished, this, [this, process, complete](int code, QProcess::ExitStatus status) {
+        complete();
         QScreen *s = screenToFollow();
         if (code != 0 || status != QProcess::NormalExit || !s)
             return;
@@ -281,6 +312,8 @@ void DesktopViewHost::refreshCompositorArea()
         }
     });
     process->start(u"hyprctl"_s, {u"-j"_s, u"monitors"_s}, QIODevice::ReadOnly);
+    if (m_areaQuery == process)
+        m_areaQueryTimeout.start();
 }
 
 QObject *DesktopViewHost::configuredPanel() const
@@ -308,7 +341,8 @@ void DesktopViewHost::configureLayerSurface()
     role->setAnchors(W::Anchors(W::AnchorTop) | W::AnchorBottom | W::AnchorLeft | W::AnchorRight);
     role->setExclusiveZone(-1);
     role->setDesiredSize(QSize(0, 0));
-    role->setKeyboardInteractivity(W::KeyboardInteractivityOnDemand);
+    const bool editing = corona() && corona()->isEditMode();
+    role->setKeyboardInteractivity(editing ? W::KeyboardInteractivityOnDemand : W::KeyboardInteractivityNone);
     role->setActivateOnShow(false);
     role->setCloseOnDismissed(false);
     role->setWantsToBeOnActiveScreen(false);

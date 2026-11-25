@@ -10,6 +10,7 @@
 #include <QJsonArray>
 #include <QTemporaryDir>
 #include <QFile>
+#include <QCryptographicHash>
 #include <QScopeGuard>
 #include <unistd.h>
 #include <Plasma/Corona>
@@ -28,6 +29,21 @@ class ThumbnailTest:public QObject {
     Q_OBJECT
 private Q_SLOTS:
     void initTestCase(){QVERIFY(!qEnvironmentVariableIsEmpty("BWM_R4_THUMBNAIL_LOCAL_ROOT"));}
+    void coldStartupDoesNotMislabelAnUnloadedResource() {
+        QVERIFY(!QFile::exists(":/qt/qml/plasma/applet/org/kde/plasma/taskmanager/PipeWireThumbnail.qml"));
+        PlasmaQuick::SharedQmlEngine shared;QString error;
+        QVERIFY(!installTaskThumbnails(shared.engine().get(),&error));
+        QVERIFY2(error.contains("not loaded"),qPrintable(error));
+    }
+    void sessionIconTasksRegistersTheReviewedResource() {
+        ThumbnailCorona corona;
+        auto *c=corona.createContainment("org.kde.panel");QVERIFY(c);
+        auto *applet=c->createApplet("org.kde.plasma.icontasks");QVERIFY(applet && !applet->failedToLaunch());
+        QFile original(":/qt/qml/plasma/applet/org/kde/plasma/taskmanager/PipeWireThumbnail.qml");
+        QVERIFY(original.open(QIODevice::ReadOnly));
+        QCOMPARE(QCryptographicHash::hash(original.readAll(),QCryptographicHash::Sha256).toHex(),
+                 QByteArrayLiteral("b76fc7105bb69bf00a1cad94533fc0292a6ca7171409ec89bee75d2f68077e6b"));
+    }
     void missingNativeDisplayIsNotReportedAsMissingMarker(){
         const auto result=thumbnailCompositorGuardStatus();
         QVERIFY(!result.value("verified").toBool());
@@ -236,6 +252,24 @@ private Q_SLOTS:
         QVERIFY(!thumbnail->ready());
         thumbnail->acceptFrame(QImage(16,16,QImage::Format_RGB32));QVERIFY(thumbnail->ready());
         thumbnail->setUuid("different");QVERIFY(!thumbnail->ready());
+        // ToolTipInstance.qml uses an unqualified sibling type in a Loader cast.
+        // Check that path too: a namespaced direct construction can hide a mismatch.
+        QQmlComponent sibling(engine);
+        sibling.setData(R"(
+            import QtQuick
+            Item {
+                id: thumbnailSourceItem
+                property string winId: "00000000-0000-0000-0000-000000000000"
+                readonly property bool loaded: loader.status === Loader.Ready
+                readonly property bool castWorks: (loader.item as PipeWireThumbnail) !== null
+                Loader { id: loader; asynchronous: true; source: "PipeWireThumbnail.qml" }
+            }
+        )",QUrl("qrc:/qt/qml/plasma/applet/org/kde/plasma/taskmanager/BwmThumbnailCastProbe.qml"));
+        QTRY_VERIFY_WITH_TIMEOUT(sibling.status()!=QQmlComponent::Loading,2000);
+        std::unique_ptr<QObject> siblingObject(sibling.create());
+        QVERIFY2(siblingObject,qPrintable(sibling.errorString()));
+        QTRY_VERIFY(siblingObject->property("loaded").toBool());
+        QVERIFY(siblingObject->property("castWorks").toBool());
     }
 };
 QTEST_MAIN(ThumbnailTest)

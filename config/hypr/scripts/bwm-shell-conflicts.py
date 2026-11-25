@@ -15,6 +15,19 @@ SERVICES = {
 }
 
 
+def functional_tray_watcher():
+    """A working SNI registry can serve several hosts; ownership is not a conflict."""
+    try:
+        result = subprocess.run(
+            ['busctl', '--user', '--auto-start=no', '--timeout=1', 'get-property',
+             SERVICES['trays'][0], '/StatusNotifierWatcher', SERVICES['trays'][0],
+             'RegisteredStatusNotifierItems'], capture_output=True, text=True, timeout=2)
+        values = shlex.split(result.stdout)
+        return result.returncode == 0 and len(values) >= 2 and values[0] == 'as' and int(values[1]) == len(values)-2
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return False
+
+
 def conflict(group):
     service, executables = SERVICES[group]
     try:
@@ -33,6 +46,8 @@ def conflict(group):
             return None
         name = (process / 'exe').resolve(strict=True).name
         if name in executables:
+            if group == 'trays' and functional_tray_watcher():
+                return None
             return {'pid': pid, 'name': name}
     except (OSError, ValueError, subprocess.SubprocessError):
         pass

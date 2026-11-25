@@ -862,8 +862,9 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         if curr_theme == "plasma" and not cfg.get("is_plasma"):
             subprocess.run(kde_bridge + ["import", "--no-reload"], check=True)
             subprocess.run(kde_bridge + ["leave"], check=True)
-            # Auxiliar de decoraciones de KDE (F6a): sólo en Breeze
+            # Auxiliar de decoraciones de KDE (F6a) y anfitrión nativo de Plasma (R4–R5): sólo en Breeze
             subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "decorator.py"), "stop"], check=False)
+            subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "plasma-host.py"), "stop"], check=False)
 
         # 1. Guardar la configuración del tema actual antes de cambiar
         save_current_theme_config(curr_theme)
@@ -1019,6 +1020,7 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         if cfg.get("is_plasma"):
             subprocess.run(kde_bridge + ["start"], check=False)
             subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "decorator.py"), "start"], check=False)
+            subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "plasma-host.py"), "start"], check=False)
 
         bwm_settings_hooks.skin_changed('after', curr_theme, theme_name)
 

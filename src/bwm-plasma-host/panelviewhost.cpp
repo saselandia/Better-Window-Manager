@@ -27,6 +27,7 @@
 #include <QElapsedTimer>
 #include <QGuiApplication>
 #include <QPlatformSurfaceEvent>
+#include <QKeyEvent>
 #include <algorithm>
 #include <cmath>
 
@@ -91,6 +92,20 @@ bool PanelViewHost::event(QEvent *event) {
     // PanelView::event 6.7.5 for the edge-activated modes. Entering the hidden strip is
     // what KWin's screen edge does for the original: it reveals the panel.
     switch(event->type()) {
+    case QEvent::FocusOut:
+    case QEvent::Hide:
+        if(event->type()==QEvent::Hide)m_containsMouse=false;
+        // Do not leave AcceptingInput armed after returning to an application:
+        // Hyprland gives an on-demand layer keyboard focus even on mere hover.
+        if(containment() && containment()->status()==Plasma::Types::AcceptingInputStatus)
+            containment()->setStatus(Plasma::Types::PassiveStatus);
+        break;
+    case QEvent::KeyPress:
+        // PanelView::keyPressEvent 6.7.5 also releases its input mode on Escape.
+        if(static_cast<QKeyEvent*>(event)->key()==Qt::Key_Escape && containment() &&
+           containment()->status()==Plasma::Types::AcceptingInputStatus)
+            containment()->setStatus(Plasma::Types::PassiveStatus);
+        break;
     case QEvent::Show:
         m_surfaceOrder=nextSurfaceOrder.fetch_add(1);
         break;
@@ -107,7 +122,6 @@ bool PanelViewHost::event(QEvent *event) {
     case QEvent::DragLeave:
         m_containsDrag=false;m_containsMouse=false;if(edgeActivated())m_unhideTimer.start();break;
     case QEvent::Drop:m_containsDrag=false;break;
-    case QEvent::Hide:m_containsMouse=false;break;
     default:break;
     }
     const bool result=ContainmentView::event(event);
@@ -209,12 +223,15 @@ bool PanelViewHost::load(Plasma::Containment *c) {
         SIGNAL(minPanelHeightChanged()),SIGNAL(minPanelWidthChanged())})
         connect(root,signal,&m_reflow,SLOT(start()));
     connect(root,SIGNAL(floatingnessTargetChanged()),this,SLOT(animateFloating()));
-    connect(root,SIGNAL(panelMaskChanged()),this,SLOT(updateMask()));
+    // These signals can be emitted while KSvg is evaluating its mask/margins.
+    // Reading panelMask and publishing enabledBorders synchronously from there
+    // re-enters the same QML binding. Apply after its evaluation has completed.
+    connect(root,SIGNAL(panelMaskChanged()),this,SLOT(updateMask()),Qt::QueuedConnection);
     // PanelView observes padding independently from the graphical mask. A style
     // can change these SVG margins without changing the mask at all.
     for(const char *signal:{SIGNAL(leftShadowMarginChanged()),SIGNAL(topShadowMarginChanged()),
         SIGNAL(rightShadowMarginChanged()),SIGNAL(bottomShadowMarginChanged())})
-        connect(root,signal,this,SLOT(updateMask()));
+        connect(root,signal,this,SLOT(updateMask()),Qt::QueuedConnection);
     // Panel.qml decides DodgeWindows from its own TasksModel (touchingWindow), as for
     // PanelView. Its window model gets the BWM source when task actions are enabled.
     if(root->metaObject()->indexOfSignal("touchingWindowChanged()")>=0)
