@@ -127,7 +127,7 @@ Singleton {
   // translates its events, so they are read in the C locale.
   Process {
     id: events
-    command: ["pactl", "subscribe"]
+    command: [Quickshell.shellPath("scripts/follow-reader").toString().replace(/^file:\/\//, ""), "pactl", "subscribe"] // BWM: §379
     environment: ({ LC_ALL: "C" })
     onRunningChanged: if (running) root.subscribedAt = Date.now()
     onExited: {

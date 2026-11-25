@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+"""Ejecuta un comando de larga vida y lo termina cuando desaparece el lector de su stdout.
+
+Uso: follow-reader COMANDO [ARGS…]
+
+Una recarga en caliente de Quickshell destruye los `Process` de la generación anterior
+sin matar a sus hijos, y el proceso del shell sigue vivo (PR_SET_PDEATHSIG no actúa):
+un `nmcli monitor` o un `inotifywait -m` quedaba huérfano hasta su próxima escritura, y el
+segundo retenía una instancia de inotify (§379). Este envoltorio vigila el extremo de
+escritura de la tubería, que informa de POLLERR en cuanto no queda lector, y entonces
+termina al hijo. La salida del hijo va directa a la tubería, sin pasar por aquí.
+Reenvía SIGTERM/SIGINT/SIGHUP, devuelve el código de salida del hijo y, si el
+envoltorio muere, el hijo recibe SIGTERM (PR_SET_PDEATHSIG).
+"""
+import ctypes
+import os
+import select
+import signal
+import sys
+
+
+def main() -> int:
+    if len(sys.argv) < 2:
+        print(__doc__.split("\n\n")[1], file=sys.stderr)
+        return 2
+    parent = os.getpid()
+    pid = os.fork()
+    if pid == 0:
+        try:
+            ctypes.CDLL(None, use_errno=True).prctl(1, signal.SIGTERM)  # PR_SET_PDEATHSIG
+        except (OSError, AttributeError):
+            pass
+        if os.getppid() != parent:
+            os._exit(0)
+        try:
+            os.execvp(sys.argv[1], sys.argv[1:])
+        except OSError as e:
+            print(f"follow-reader: {sys.argv[1]}: {e.strerror}", file=sys.stderr)
+            os._exit(127)
+
+    def forward(sig, _frame):
+        try:
+            os.kill(pid, sig)
+        except ProcessLookupError:
+            pass
+    for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+        signal.signal(sig, forward)
+
+    pidfd = os.pidfd_open(pid)
+    poller = select.poll()
+    poller.register(pidfd, select.POLLIN)
+    poller.register(sys.stdout.fileno(), 0)  # sólo POLLERR/POLLHUP, siempre informados
+    while True:
+        try:
+            events = poller.poll()
+        except InterruptedError:
+            continue
+        for fd, ev in events:
+            if fd == pidfd:
+                _, status = os.waitpid(pid, 0)
+                code = os.waitstatus_to_exitcode(status)
+                if code < 0:  # el hijo murió por una señal: morir igual
+                    signal.signal(-code, signal.SIG_DFL)
+                    os.kill(os.getpid(), -code)
+                return code
+            if ev & (select.POLLERR | select.POLLHUP | select.POLLNVAL):
+                forward(signal.SIGTERM, None)
+                ready = select.select([pidfd], [], [], 2)[0]
+                if not ready:
+                    forward(signal.SIGKILL, None)
+                os.waitpid(pid, 0)
+                return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

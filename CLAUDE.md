@@ -305,7 +305,8 @@ siendo el nombre del escritorio original que imita Breeze.
 - **Quickshell**: un archivo con el mismo nombre que un tipo que usa dentro (p. ej. `PolkitAgent.qml`) lo ensombrece;
   tipos de una carpeta hermana cargada por `Loader` no se resuelven (usa `component` en línea o importa la carpeta).
   Una recarga en caliente destruye los `Process` de la generación vieja sin matar a sus hijos (§378):
-  un auxiliar duradero debe salir al perder su lector de stdout, no sólo con `PR_SET_PDEATHSIG`.
+  un auxiliar duradero debe salir al perder su lector de stdout, no sólo con `PR_SET_PDEATHSIG`; para comandos
+  ajenos (`nmcli monitor`, `inotifywait -m`…) envuélvelos con `scripts/follow-reader` (§379).
   Dos módulos importados con un archivo del mismo nombre: gana el último import (pasó con `Dock.qml` de `dock` y
   `omarchyDock`); usa `import … as Nombre`.
 - **Hyprland 0.55 Lua**: `hyprctl dispatch 'hl.dsp.…'`; inyectar atajos con

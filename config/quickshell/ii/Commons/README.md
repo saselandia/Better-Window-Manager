@@ -29,6 +29,9 @@ BWM changes, kept minimal so the files can be refreshed from upstream:
   `focusedmon`/`focusedmonv2` events (`focusedScreen`). No copy is switched on until that first
   answer (`focusKnown`, 2 s fallback): switching one on and handing over at load made Quickshell
   warn once per panel.
+- `InputDevices.qml`, `UntypedInput.qml`: their long-running `inotifywait -m` / `pactl subscribe`
+  run under `scripts/follow-reader`, which ends them once the shell stops reading (a hot reload
+  left them orphaned; BWM_CONTEXT §379).
 
 Last refreshed from `quattro` `d9cc361c` (2026-11-08): every other file in `Commons/` and `Ui/`
 is identical to upstream. To refresh again, copy upstream's files and re-apply the list above.

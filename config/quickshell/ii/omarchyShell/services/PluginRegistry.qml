@@ -728,6 +728,7 @@ QtObject {
 
   property Process localPluginWatcher: Process {
     command: [
+      Quickshell.shellPath("scripts/follow-reader").toString().replace(/^file:\/\//, ""), // BWM: §379
       "inotifywait",
       "-m",
       "-r",

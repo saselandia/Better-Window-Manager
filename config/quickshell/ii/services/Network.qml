@@ -163,7 +163,7 @@ Singleton {
     Process {
         id: subscriber
         running: true
-        command: ["nmcli", "monitor"]
+        command: [Quickshell.shellPath("scripts/follow-reader").toString().replace(/^file:\/\//, ""), "nmcli", "monitor"] // BWM: §379
         stdout: SplitParser {
             onRead: root.update()
         }

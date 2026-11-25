@@ -7050,3 +7050,22 @@ git status; git log --oneline -5; git push origin main
 * **Comprobado:** salida en 0,05 s al cerrar el lector; relevo del nombre en cola con dos
   listeners; huérfanos retirados por PID tras comprobar que su tubería no tenía lector;
   `test_launcher_entries` 3/3.
+
+### 379. Auxiliares de larga vida del shell huérfanos tras recargas (2026-11-25)
+
+* **Encontrado** al buscar más casos como §378: dos `nmcli monitor` (`services/Network.qml`) y un
+  `inotifywait -m` (`Commons/InputDevices.qml`) de generaciones anteriores, sin lector. Sólo
+  morían en su próxima escritura (SIGPIPE); el `inotifywait` retenía una instancia de inotify
+  (límite de 128 por usuario).
+* **Hecho:** `config/quickshell/ii/scripts/follow-reader COMANDO…` ejecuta el comando y lo
+  termina cuando el extremo de escritura de su stdout informa POLLERR (no queda lector). Reenvía
+  SIGTERM/SIGINT/SIGHUP, conserva el código de salida o la señal del hijo, y el hijo muere con
+  el envoltorio (`PR_SET_PDEATHSIG`). La salida del hijo va directa a la tubería. Aplicado a
+  `nmcli monitor`, `pactl subscribe` (`Commons/UntypedInput.qml`) y los dos `inotifywait`
+  (`Commons/InputDevices.qml`, `omarchyShell/services/PluginRegistry.qml`, marcado «BWM»). El
+  portapapeles ya retira su `wl-paste --watch` anterior con `pkill`.
+* **Comprobado:** pruebas del envoltorio (lector cerrado → hijo fuera en 0,01 s; código 3; SIGTERM
+  reenviado; comando inexistente 127; SIGKILL del envoltorio mata al hijo). En la sesión, tras una
+  recarga real de `Network.qml`, el `nmcli monitor` anterior terminó solo y queda uno. Huérfanos
+  previos retirados por PID tras comprobar que no tenían lector. Los zombis `<defunct>` son
+  procesos ya terminados que Quickshell no recoge; desaparecen al reiniciar el shell.
