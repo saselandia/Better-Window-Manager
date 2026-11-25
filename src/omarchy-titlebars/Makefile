@@ -1,5 +1,5 @@
 # omarchy-hyprland-titlebars de Omarchy (omacom, 379ff91, el último para Hyprland 0.56; BSD-3-Clause +
-# MIT), sin cambios: las barras de los workspaces flotantes de Retro. Se compila aquí en vez de con su
+# MIT), sin cambios salvo dropOwnDecorations() en main.cpp (BWM, §377): las barras de los workspaces flotantes de Retro. Se compila aquí en vez de con su
 # CMakeLists.txt (que se conserva) para usar las mismas opciones que src/hyprbars.
 CXXFLAGS ?= -O2
 CXXFLAGS += -shared -fPIC -fno-gnu-unique -std=c++2b -Wno-narrowing

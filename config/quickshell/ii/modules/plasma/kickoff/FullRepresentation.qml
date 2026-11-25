@@ -251,7 +251,17 @@ EmptyPage {
         }
     }
 
-    Component.onCompleted: {
-        rootModel.refresh();
+    // BWM (§375): la primera población crea las SystemEntry de los favoritos de sistema
+    property bool bwmPopulated: false
+    function bwmPopulate() {
+        if (!bwmPopulated && kickoff.sessionReady) {
+            bwmPopulated = true;
+            rootModel.refresh();
+        }
     }
+    Connections {
+        target: kickoff
+        function onSessionReadyChanged() { root.bwmPopulate(); }
+    }
+    Component.onCompleted: bwmPopulate()
 }

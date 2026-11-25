@@ -623,7 +623,7 @@
     "plasma-workspace": {
       "label": "plasma-workspace (herramientas de temas y KCMs)",
       "referenceVersion": "6.7.5",
-      "why": "plasma-apply-*, lookandfeeltool, módulos de Preferencias (colores, estilo de Plasma, iconos, cursores, fuentes, tema global) y modelos de Kickoff/bandeja. Instala KWin, pero BWM no lo ejecuta",
+      "why": "plasma-apply-*, lookandfeeltool, módulos de Preferencias (colores, estilo de Plasma, iconos, cursores, fuentes, tema global) y modelos de Kickoff (Kicker, SessionManagement)/bandeja. Instala KWin, pero BWM no lo ejecuta",
       "check": {"type": "cmd", "any": ["plasma-apply-colorscheme"]},
       "packages": {"gentoo": "kde-plasma/plasma-workspace", "arch": "plasma-workspace", "fedora": "plasma-workspace", "opensuse": null, "debian": "plasma-workspace"},
       "notes": {"gentoo": "USE recomendado: -semantic-desktop (evita baloo).", "all": "Sus servicios de kded que chocan con BWM se desactivan en ~/.config/kded5rc (docs/BREEZE_ARCH.md)."}

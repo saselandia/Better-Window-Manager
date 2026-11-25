@@ -54,9 +54,15 @@ RowLayout {
 
     spacing: kickoff.backgroundMetrics.spacing
 
-    Kicker.SystemModel {
-        id: systemModel
-        favoritesModel: kickoff.rootModel.systemFavoritesModel
+    // BWM (§375): se crea cuando el backend de sesión ya está listo (ver Kickoff.qml)
+    readonly property var systemModel: systemModelInstantiator.object
+    Instantiator {
+        id: systemModelInstantiator
+        active: kickoff.sessionReady
+        model: 1
+        delegate: Kicker.SystemModel {
+            favoritesModel: kickoff.rootModel.systemFavoritesModel
+        }
     }
 
     // BWM: apagar, reiniciar, cerrar sesión, suspender, hibernar y bloquear son comunes a todas las

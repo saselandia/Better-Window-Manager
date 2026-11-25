@@ -119,6 +119,18 @@ def follow_parent(loop):
     GLib.timeout_add_seconds(5, check)
     signal.signal(signal.SIGTERM, lambda *_: loop.quit())
 
+    # A hot reload of the shell destroys its Process without ending the shell process,
+    # so PDEATHSIG never fires: the old listener kept the name with nobody reading it.
+    # The write end of a pipe reports POLLERR once its last reader is gone.
+    def reader_gone(*_):
+        loop.quit()
+        return False
+    try:
+        GLib.io_add_watch(sys.stdout.fileno(), GLib.PRIORITY_DEFAULT,
+                          GLib.IOCondition.ERR | GLib.IOCondition.HUP, reader_gone)
+    except (OSError, ValueError):
+        pass
+
 
 def main():
     loop = GLib.MainLoop()
@@ -131,9 +143,10 @@ def main():
                          "/org/freedesktop/DBus", None, Gio.DBusSignalFlags.NONE,
                          listener.on_owner_changed)
     # Like Plasma, announce com.canonical.Unity so apps that look for a dock emit updates;
-    # never replace another owner (another dock keeps it, we just listen).
+    # never replace another owner (another dock keeps it, we just listen), but wait in the
+    # queue so the name is not left without owner when that dock or an old listener exits.
     Gio.bus_own_name_on_connection(bus, "com.canonical.Unity",
-                                   Gio.BusNameOwnerFlags.DO_NOT_QUEUE, None, None)
+                                   Gio.BusNameOwnerFlags.NONE, None, None)
     emit({"reset": True})
     try:
         loop.run()

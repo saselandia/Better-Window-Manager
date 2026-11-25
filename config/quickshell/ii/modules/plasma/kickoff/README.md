@@ -59,3 +59,15 @@ siempre: `qs -c ii ipc call plasmaKickoff toggle|open|close`.
 en una instancia aparte. Comprueba los modelos, la búsqueda y el lanzamiento con Intro de una app de
 prueba, la navegación como en Plasma, el menú contextual, Escape y los botones de sesión. No
 escribe la configuración y usa otro cliente de favoritos, que vacía al terminar.
+
+## Rodeo de una caída de Kicker 6.7.5 (§375)
+
+`SystemModel::populate()` borra con `qDeleteAll` las `SystemEntry` y, al quedar cero, la
+`SessionManagement` estática. Si el backend logind termina de cargar (respuestas D-Bus
+asíncronas) después de crear las entradas, la señal `isValidChanged` llega a
+`SystemModel::refresh()` desde la misma entrada y `SessionManagement` que se están borrando:
+uso tras liberar dentro de `libkickerplugin`. `Kickoff.qml` crea antes un
+`SessionManagement` de `org.kde.plasma.private.sessions` (comparte el backend, singleton por
+proceso) y `FullRepresentation.qml`/`LeaveButtons.qml` no crean sus modelos con `SystemEntry`
+hasta que sale de `Loading`. No se modifica código de KDE.
+

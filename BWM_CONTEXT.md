@@ -6981,3 +6981,72 @@ git status; git log --oneline -5; git push origin main
   Al recargar `Config.qml` en caliente, el shell diario cayó en `~QQmlEngine` al destruir la
   generación anterior y Quickshell se reinició solo (una instancia); trampa ya conocida de las
   recargas largas (regla 2).
+
+### 375. Kickoff de Breeze: caída de Kicker 6.7.5 localizada y esquivada (2026-11-25)
+
+* **Petición:** continuar con la caída de §374, sin resolver.
+* **Causa (código KDE leído en plasma-workspace 6.7.5):** `SystemEntry::refresh()` emite
+  `isValidChanged` cuando el backend logind de `SessionManagement` termina sus consultas D-Bus
+  asíncronas (`CanPowerOff`, `CanReboot`…). `SystemModel` la conecta a `refresh()`, que hace
+  `qDeleteAll(m_entries)`: borra la entrada que está emitiendo y, con el contador a cero, la
+  `SessionManagement` estática que originó la señal. Uso tras liberar si las respuestas llegan
+  después de crear el modelo: intermitente, coincide con la pila del informe (libkworkspace6 →
+  Qt → libkickerplugin → libc). También explica los cuelgues.
+* **Rodeo sin tocar KDE:** `Kickoff.qml` crea antes un `SessionManagement` de
+  `org.kde.plasma.private.sessions`; el backend es un singleton por proceso, así que basta con
+  esperar a que salga de `Loading`. `FullRepresentation.qml` retrasa la primera
+  `rootModel.refresh()` (favoritos de sistema) y `LeaveButtons.qml` crea su `SystemModel` con un
+  `Instantiator` cuando el backend está listo. Detalle en el README de `modules/plasma/kickoff`.
+* **Comprobado:** `test_plasma_kickoff_ui` 14/14 seguidas sin caída ni reintento (antes caía
+  ~la mitad de los intentos); menús, panel nativo e interfaces en verde. El reintento de §374 se
+  conserva como red, con aviso. Protege también el Kickoff de respaldo del shell diario, que sólo
+  se carga sin el host nativo. No se ha cargado en el shell diario (el host nativo está activo).
+
+### 376. Hyprland caía en cada cierre de sesión: decoraciones de un plugin ya descargado (2026-11-25)
+
+* **Encontrado:** `coredumpctl` y el kernel registran `Hyprland segfault at X ip X error 14`
+  (salto a código no mapeado) en cada `bwm-power logout` desde el 2026-11-17 (17, 19, 20 y 25 de
+  noviembre). La parte baja de la dirección cambiaba con cada reinstalación de `breezebars`; en la
+  versión instalada, `…d00` es el liberador de `CUniquePointer<CHyprBar>`.
+* **Causa (Hyprland 0.56.2, `PluginSystem.cpp`/`Window.cpp`):** al salir, Hyprland descarga los
+  plugins antes de destruir las ventanas. `unloadPlugin` llama a `removeWindowDecoration`, que sólo
+  encola en `m_decosToRemove`; `updateWindowDecos()` vuelve sin hacer nada si la ventana no está
+  mapeada u oculta. Las ventanas X11 desmapeadas que siguen vivas (Steam tiene varias) conservan
+  barra y sombra, y al destruirse llaman al liberador en el `.so` ya descargado.
+* **Corrección:** `PLUGIN_EXIT` de `breezebars` (`dropOwnDecorations`) quita y destruye nuestras
+  `CHyprBar`/`CBreezeShadow` de todas las ventanas (mapeadas o no) y de su cola, con el código aún
+  cargado. Instalado con `make install` (0 símbolos UNIQUE); **efecto en el próximo inicio de
+  sesión**, sin carga en caliente.
+* **Comprobado:** `src/breezebars/check-exit-unload.py` (Hyprland desechable en el workspace 9,
+  kitty + ventana X11 desmapeada viva, `hl.dsp.exit()`): plugin anterior 2/2 SIGSEGV con la misma
+  firma del kernel; corregido 6/6 salida 0. Pruebas de breezebars OK.
+* **Pendiente, sin tocar (regla 4):** `omarchy-titlebars.so` (Retro, Omarchy sin cambios) tiene el
+  mismo fallo: 2/2 SIGSEGV en el mismo ensayo (`--plugin …/omarchy-titlebars.so --config-key
+  hyprbars`). Sólo afecta a sesiones en las que llegó a cargarse (un workspace flotante en Retro).
+
+### 377. El mismo arreglo en las barras de Omarchy de Retro (2026-11-25)
+
+* **Petición:** el usuario autoriza corregir `omarchy-titlebars` (regla 4), que tenía el fallo de §376.
+* **Hecho:** único parche BWM en `src/omarchy-titlebars/main.cpp`: `dropOwnDecorations()` al
+  principio de `exitOmarchyFloating()` destruye las `COmarchyFloatingHyprBar` de todas las
+  ventanas, mapeadas o no, y las quita de `m_decosToRemove`. Resto del plugin sin cambios. Avisos
+  actualizados en `THIRD_PARTY_NOTICES.md`, el `Makefile` y la regla 4 de AGENTS/CLAUDE.
+* **Comprobado:** `check-exit-unload.py --plugin src/omarchy-titlebars/titlebars.so --config-key
+  hyprbars`: 4/4 salidas limpias (antes 2/2 SIGSEGV), 0 segfaults nuevos en el kernel, 0 símbolos
+  UNIQUE. Instalado con `make install`; entra en vigor la próxima vez que se cargue al iniciar
+  sesión. Al actualizar desde Omarchy, conservar el parche marcado «BWM».
+
+### 378. Listener Unity duplicado tras recargas del shell (2026-11-25)
+
+* **Encontrado** revisando el registro del host nativo («Failed to register unity service»):
+  tres `launcher-entries.py` vivos, todos hijos del mismo Quickshell; dos escribían a tuberías
+  sin lector. Una recarga en caliente destruye el `Process` de la generación anterior sin que
+  muera el proceso del shell, así que `PR_SET_PDEATHSIG` no actúa. El más antiguo retenía
+  `com.canonical.Unity`. El aviso del host es inocuo: `smartlauncherbackend.cpp` 6.7.5 se
+  suscribe a `Update` antes de pedir el nombre y escucha igual.
+* **Corregido:** el listener vigila su stdout (`IO_ERR|IO_HUP` de la tubería) y sale cuando
+  desaparece el lector. Pide el nombre en cola (`BusNameOwnerFlags.NONE`, sin reemplazar al
+  dueño), para que no quede sin dueño cuando sale el anterior.
+* **Comprobado:** salida en 0,05 s al cerrar el lector; relevo del nombre en cola con dos
+  listeners; huérfanos retirados por PID tras comprobar que su tubería no tenía lector;
+  `test_launcher_entries` 3/3.

@@ -19,6 +19,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.ksvg as KSvg
 import org.kde.plasma.components as PC3
 import org.kde.plasma.private.kicker as Kicker
+import org.kde.plasma.private.sessions as Sessions
 import org.kde.kirigami as Kirigami
 
 import "code/tools.js" as Tools
@@ -83,6 +84,13 @@ Item {
     // Used to prevent the width from changing frequently when the scrollbar appears or disappears
     readonly property bool mayHaveGridWithScrollBar: Plasmoid.configuration.applicationsDisplay === 0
         || (Plasmoid.configuration.favoritesDisplay === 0 && kickoff.rootModel.favoritesModel.count > minimumGridRowCount * minimumGridRowCount)
+
+    // BWM (§375): SystemModel/SystemEntry de Kicker 6.7.5 borran la SessionManagement que está
+    // emitiendo si el backend logind termina de cargar (respuestas D-Bus asíncronas) después de
+    // crear sus entradas: uso tras liberar en libkickerplugin. El backend es un singleton por
+    // proceso; esperamos a que salga de Loading antes de crear los modelos con SystemEntry.
+    readonly property QtObject sessionWarmup: Sessions.SessionManagement {}
+    readonly property bool sessionReady: sessionWarmup.state !== 0 // 0 = State.Loading
 
     //BEGIN Models
     readonly property Kicker.RootModel rootModel: Kicker.RootModel {

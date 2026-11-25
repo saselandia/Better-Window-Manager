@@ -20,6 +20,7 @@
 #include <hyprland/src/managers/fullscreen/FullscreenController.hpp>
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/desktop/view/Window.hpp>
+#include <hyprland/src/render/decorations/DecorationPositioner.hpp>
 #include <hyprland/src/config/ConfigManager.hpp>
 #include <hyprland/src/config/shared/parserUtils/ParserUtils.hpp>
 #include <hyprland/src/render/Renderer.hpp>
@@ -798,7 +799,31 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     return {"breezebars", "Breeze (KDE) title bars for BWM, a fork of hyprbars.", "Vaxry, BWM", "1.0"};
 }
 
+// Hyprland 0.56.2 unloads plugins before it destroys windows, and its own cleanup
+// (CPluginSystem::unloadPlugin -> removeWindowDecoration) only queues the removal:
+// CWindow::updateWindowDecos returns early for unmapped or hidden windows. At logout
+// bwm-power closes every window first, so they still own our bars and shadows when
+// the .so is gone and their UniquePointer deleter jumps into unmapped code (SIGSEGV,
+// "segfault at X ip X error 14", BWM_CONTEXT §376). Destroy them ourselves while the
+// plugin code is still loaded.
+static void dropOwnDecorations() {
+    const auto own = [](IHyprWindowDecoration* d) { return dynamic_cast<CHyprBar*>(d) || dynamic_cast<CBreezeShadow*>(d); };
+    for (const auto& w : Desktop::windowState()->windows()) {
+        if (!w)
+            continue;
+        std::erase_if(w->m_decosToRemove, own);
+        for (auto it = w->m_windowDecorations.begin(); it != w->m_windowDecorations.end();) {
+            if (own(it->get())) {
+                g_pDecorationPositioner->uncacheDecoration(it->get());
+                it = w->m_windowDecorations.erase(it);
+            } else
+                ++it;
+        }
+    }
+}
+
 APICALL EXPORT void PLUGIN_EXIT() {
+    dropOwnDecorations();
     finishKWinScale();
     finishKdeShadows();
     g_kwinAfterInput.reset();

@@ -28,7 +28,7 @@ Quickshell `ii`):
 | Bloque | Resultado | Notas |
 | :--- | :--- | :--- |
 | Python completo (`unittest discover -s tests`) | **794 OK**, 85 omitidas (QML sin activar) | Corregidas dos pruebas: `test_breeze_startup` no contemplaba `native-desktops.py startup` (§255) ni `plasma-host.py start` (§362); `test_gtk_settings_ini` dejaba `XDG_RUNTIME_DIR` apuntando a una carpeta borrada |
-| QML + C++ Breeze (17 módulos, `BWM_RUN_QML_TESTS=1`) | **119 OK**, 2 omitidas (pasada final) | `test_plasma_kickoff_ui` **inestable**: el arnés cae o se cuelga dentro de Kicker 6.7.5 (KDE) en ~1 de cada 4 ejecuciones aun con un reintento (§374); no depende del host nativo |
+| QML + C++ Breeze (17 módulos, `BWM_RUN_QML_TESTS=1`) | **119 OK**, 2 omitidas (pasada final) | Caída de Kicker 6.7.5 en el arnés de Kickoff localizada y esquivada (§375): 14/14 ejecuciones sin caída ni reintento |
 | CTest `src/bwm-systemsettings` | **3/3 OK** | `installed-decoration-option` fallaba con `QT_QPA_PLATFORMTHEME=kde` heredado y escribía el `~/.config/breezerc` real; corregido (§374) |
 | CTest `build/bwm-plasma-host` (sin `native-*`) | **8/8 OK** | |
 | Matriz de skins en la sesión real | **PASS** | `check-skin-lifecycle.py` (§372) |

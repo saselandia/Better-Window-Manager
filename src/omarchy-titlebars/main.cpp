@@ -5,6 +5,7 @@
 #include <any>
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/desktop/view/Window.hpp>
+#include <hyprland/src/render/decorations/DecorationPositioner.hpp> // BWM
 #include <hyprland/src/desktop/state/WindowState.hpp>
 #include <hyprland/src/config/ConfigManager.hpp>
 #include <hyprland/src/config/shared/parserUtils/ParserUtils.hpp>
@@ -295,7 +296,29 @@ static PLUGIN_DESCRIPTION_INFO initializeOmarchyFloating(HANDLE handle) {
   return {"hyprbars", "A plugin to add title bars to windows.", "Vaxry", "1.0"};
 }
 
+// BWM (§376/§377): Hyprland 0.56.2 unloads plugins before destroying windows and
+// removeWindowDecoration only queues the removal, which updateWindowDecos skips for
+// unmapped/hidden windows. Those windows (e.g. Steam's unmapped X11 ones) keep our bars
+// and, when destroyed, call their deleter in the unloaded .so (SIGSEGV on exit).
+// Destroy our decorations here while the plugin code is still loaded.
+static void dropOwnDecorations() {
+  const auto own = [](IHyprWindowDecoration *d) { return dynamic_cast<COmarchyFloatingHyprBar *>(d) != nullptr; };
+  for (const auto &w : Desktop::windowState()->windows()) {
+    if (!w)
+      continue;
+    std::erase_if(w->m_decosToRemove, own);
+    for (auto it = w->m_windowDecorations.begin(); it != w->m_windowDecorations.end();) {
+      if (own(it->get())) {
+        g_pDecorationPositioner->uncacheDecoration(it->get());
+        it = w->m_windowDecorations.erase(it);
+      } else
+        ++it;
+    }
+  }
+}
+
 static void exitOmarchyFloating() {
+  dropOwnDecorations(); // BWM
   for (auto &m : State::monitorState()->monitors())
     m->m_scheduledRecalc = true;
 

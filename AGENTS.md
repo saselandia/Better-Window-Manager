@@ -67,7 +67,7 @@ siendo el nombre del escritorio original que imita Breeze.
 4. Campos `breezebars:*` de `hl.window_rule` (sólo existen con el plugin de Breeze cargado): dentro de
    `if hl.plugin and hl.plugin.breezebars then … end`, o sale «Your config has errors» en los otros estilos.
    **Dos plugins de barras, separados:** Breeze = `breezebars` (`src/breezebars`, `breezebars.so`: Breeze, CSD,
-   snapping); Retro = el de Omarchy sin cambios (`src/omarchy-titlebars`, `omarchy-titlebars.so`, se registra como
+   snapping); Retro = el de Omarchy sin cambios salvo la limpieza de decoraciones al descargarse (§377; `src/omarchy-titlebars`, `omarchy-titlebars.so`, se registra como
    `hyprbars`). No mezcles funciones de uno en el otro sin que lo pida el usuario.
 5. Puede haber **otra sesión de IA trabajando a la vez**: en los commits añade sólo tus archivos (revisa el
    `git diff` de cada uno). Archivos generados que cambian solos con el estilo/tema/fondo — no los incluyas salvo
@@ -167,7 +167,7 @@ siendo el nombre del escritorio original que imita Breeze.
 | Configuración del usuario en texto (manda sobre BWM) | `scripts/bwm-user-config` (`list/edit/apply/path`), `~/.config/bwm/user/{hyprland.lua,shell.jsonc}`, `~/.config/omarchy/shell.toml`, `~/.config/bwm/extensions/menu.jsonc`; `hyprland.lua` la carga al final con `pcall`; `bwm-theme-manager.py apply-user` y al cambiar de skin |
 | Configuración integrada de Retro | `modules/ii/omarchyMenu/omarchy/settings/` (filas nativas y editor de pantallas dentro de `Menu.qml`) + `skins/retro/scripts/settings.py` (listas sobre los gestores comunes); `open-settings.sh [página]` → IPC `omarchyMenu.settings`. `retroSettings.qml` sólo redirige, sin ventana propia |
 | Un comando `omarchy-*` que falta | `config/hypr/scripts/omarchy-shims/` (+ enlace en `~/.local/bin`, `bwm-plugin.sh catalog`) |
-| Modo de cada workspace en Retro (mosaico, desplazamiento, flotante con barras) | `skins/retro/hypr/workspace-modes.lua` (port de Omarchy; modos en `~/.local/state/omarchy/workspace-layouts/`), shims `omarchy-hyprland-workspace-layout-*` y `bwm-workspace-layout-set`; barras con el plugin de Omarchy sin cambios (`src/omarchy-titlebars`), nada del de Breeze |
+| Modo de cada workspace en Retro (mosaico, desplazamiento, flotante con barras) | `skins/retro/hypr/workspace-modes.lua` (port de Omarchy; modos en `~/.local/state/omarchy/workspace-layouts/`), shims `omarchy-hyprland-workspace-layout-*` y `bwm-workspace-layout-set`; barras con el plugin de Omarchy (`src/omarchy-titlebars`, sólo parche BWM de §377), nada del de Breeze |
 | Reglas de ventana / juegos | `hypr/modules/rules.lua`, reglas por app de Omarchy (`Commons/omarchy/default/hypr/apps/`, cargadas por `modules/app_rules.lua`), `scripts/window-guard.py` |
 | Atajos | `keybinds.json` vía `keybinds-manager.py` |
 | Bloqueo / pantalla de inicio de cada skin | `modules/ii/lock/Lock.qml` elige: `lock/LockSurface.qml` (end-4, el desenfoque lo pinta `background/Background.qml` y necesita `session_lock_xray` de `skins/default/hypr/lock.lua`), `omarchyLock/` (Omarchy 4, Retro), `modules/plasma/lock` (KScreenLocker/Breeze, con LockContext común); SDDM común entra solo (`install-boot-theme.sh`) |
@@ -304,6 +304,8 @@ siendo el nombre del escritorio original que imita Breeze.
 - **XWayland**: Hyprland no fija primary (Wine usa el primer monitor); coordenadas X distintas de las de Hyprland.
 - **Quickshell**: un archivo con el mismo nombre que un tipo que usa dentro (p. ej. `PolkitAgent.qml`) lo ensombrece;
   tipos de una carpeta hermana cargada por `Loader` no se resuelven (usa `component` en línea o importa la carpeta).
+  Una recarga en caliente destruye los `Process` de la generación vieja sin matar a sus hijos (§378):
+  un auxiliar duradero debe salir al perder su lector de stdout, no sólo con `PR_SET_PDEATHSIG`.
   Dos módulos importados con un archivo del mismo nombre: gana el último import (pasó con `Dock.qml` de `dock` y
   `omarchyDock`); usa `import … as Nombre`.
 - **Hyprland 0.55 Lua**: `hyprctl dispatch 'hl.dsp.…'`; inyectar atajos con
