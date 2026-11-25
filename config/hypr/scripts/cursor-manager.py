@@ -404,56 +404,55 @@ def get_current():
 
 def update_ini_file(filepath: Path, section: str, updates: dict):
     """Safely update keys in an INI file while preserving formatting."""
-    lines = []
-    if filepath.exists():
-        with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-            lines = f.readlines()
+    import bwm_gtk_ini
 
-    section_header = f"[{section}]"
-    in_section = False
-    section_found = False
-    updated_keys = set()
-    new_lines = []
+    def edit(text):
+        lines = text.splitlines(keepends=True)
 
-    for line in lines:
-        sline = line.strip()
-        if sline.startswith("[") and sline.endswith("]"):
-            if in_section:
-                for k, v in updates.items():
-                    if k not in updated_keys:
-                        new_lines.append(f"{k}={v}\n")
-                        updated_keys.add(k)
-            in_section = (sline == section_header)
-            if in_section:
-                section_found = True
-            new_lines.append(line)
-            continue
+        section_header = f"[{section}]"
+        in_section = False
+        section_found = False
+        updated_keys = set()
+        new_lines = []
 
-        if in_section and "=" in line:
-            k = line.split("=", 1)[0].strip()
-            if k in updates:
-                new_lines.append(f"{k}={updates[k]}\n")
-                updated_keys.add(k)
+        for line in lines:
+            sline = line.strip()
+            if sline.startswith("[") and sline.endswith("]"):
+                if in_section:
+                    for k, v in updates.items():
+                        if k not in updated_keys:
+                            new_lines.append(f"{k}={v}\n")
+                            updated_keys.add(k)
+                in_section = (sline == section_header)
+                if in_section:
+                    section_found = True
+                new_lines.append(line)
                 continue
 
-        new_lines.append(line)
+            if in_section and "=" in line:
+                k = line.split("=", 1)[0].strip()
+                if k in updates:
+                    new_lines.append(f"{k}={updates[k]}\n")
+                    updated_keys.add(k)
+                    continue
 
-    if in_section:
-        for k, v in updates.items():
-            if k not in updated_keys:
+            new_lines.append(line)
+
+        if in_section:
+            for k, v in updates.items():
+                if k not in updated_keys:
+                    new_lines.append(f"{k}={v}\n")
+                    updated_keys.add(k)
+
+        if not section_found:
+            if new_lines and not new_lines[-1].endswith("\n"):
+                new_lines.append("\n")
+            new_lines.append(f"\n{section_header}\n")
+            for k, v in updates.items():
                 new_lines.append(f"{k}={v}\n")
-                updated_keys.add(k)
+        return ''.join(new_lines)
 
-    if not section_found:
-        if new_lines and not new_lines[-1].endswith("\n"):
-            new_lines.append("\n")
-        new_lines.append(f"\n{section_header}\n")
-        for k, v in updates.items():
-            new_lines.append(f"{k}={v}\n")
-
-    filepath.parent.mkdir(parents=True, exist_ok=True)
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.writelines(new_lines)
+    bwm_gtk_ini.update(filepath, edit)
 
 def apply_cursor(theme: str, size: int):
     """Apply cursor theme and size system-wide."""

@@ -19,6 +19,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import bwm_gtk_ini  # noqa: E402
+
 HOME = Path.home()
 THEMES = HOME / ".local" / "share" / "themes"
 GTK3 = HOME / ".config" / "gtk-3.0"
@@ -90,10 +93,15 @@ def switch(variant: str):
     gsetting("gtk-theme", new)
     # settings.ini: GTK reads it when there is no gsettings (e.g. under some sandboxes)
     for ini in (GTK3 / "settings.ini", HOME / ".config" / "gtk-4.0" / "settings.ini"):
+        def edit(text):
+            if not text.strip():
+                return text  # nunca reescribir un archivo vacío o ausente con sólo "\n"
+            lines = [f"gtk-theme-name={new}" if l.startswith("gtk-theme-name=") else l
+                     for l in text.splitlines()]
+            return "\n".join(lines) + "\n"
         try:
-            lines = ini.read_text(encoding="utf-8").splitlines()
-            lines = [f"gtk-theme-name={new}" if l.startswith("gtk-theme-name=") else l for l in lines]
-            ini.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            if ini.exists():
+                bwm_gtk_ini.update(ini, edit)
         except Exception:
             pass
 

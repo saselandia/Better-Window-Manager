@@ -200,32 +200,31 @@ def apply(theme: str, accent: str = "", light: bool = False):
 def write_gtk_icons(icons: str):
     """Keep GTK's file fallback consistent with gsettings; preserve all other keys."""
     import re
+    import bwm_gtk_ini
     for version in ('gtk-3.0', 'gtk-4.0'):
         path = HOME / '.config' / version / 'settings.ini'
-        text = path.read_text(encoding='utf-8') if path.exists() else ''
-        lines = text.splitlines(keepends=True)
-        inside = False
-        written = False
-        output = []
-        for line in lines:
-            stripped = line.strip()
-            if stripped.startswith('[') and stripped.endswith(']'):
-                if inside and not written:
-                    output.append(f'gtk-icon-theme-name={icons}\n');written = True
-                inside = stripped == '[Settings]'
-            if inside and re.match(r'^\s*gtk-icon-theme-name\s*=', line):
-                if not written:
-                    output.append(f'gtk-icon-theme-name={icons}\n');written = True
-            else:
-                output.append(line)
-        if not written:
-            if output and not output[-1].endswith('\n'):output[-1] += '\n'
-            if not inside:output.append('[Settings]\n')
-            output.append(f'gtk-icon-theme-name={icons}\n')
-        updated = ''.join(output)
-        if updated != text:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(updated, encoding='utf-8')
+        def edit(text, icons=icons):
+            lines = text.splitlines(keepends=True)
+            inside = False
+            written = False
+            output = []
+            for line in lines:
+                stripped = line.strip()
+                if stripped.startswith('[') and stripped.endswith(']'):
+                    if inside and not written:
+                        output.append(f'gtk-icon-theme-name={icons}\n');written = True
+                    inside = stripped == '[Settings]'
+                if inside and re.match(r'^\s*gtk-icon-theme-name\s*=', line):
+                    if not written:
+                        output.append(f'gtk-icon-theme-name={icons}\n');written = True
+                else:
+                    output.append(line)
+            if not written:
+                if output and not output[-1].endswith('\n'):output[-1] += '\n'
+                if not inside:output.append('[Settings]\n')
+                output.append(f'gtk-icon-theme-name={icons}\n')
+            return ''.join(output)
+        bwm_gtk_ini.update(path, edit)
 
 
 def notify_icons():

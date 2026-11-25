@@ -6928,3 +6928,22 @@ git status; git log --oneline -5; git push origin main
   procesos `qs -c ii ipc call` transitorios; corregido.
 * **Límites:** no cubre otras escalas/giros/bordes del panel diario, hotplug de monitores ni
   aceptación visual; R9 sigue abierto.
+
+### 373. GTK settings.ini: carrera entre escritores que rompía la cabecera (2026-11-25)
+
+* **Síntoma repetido (§3.80, commits `27738b2` y `610945d`):** `~/.config/gtk-3.0/settings.ini`
+  empezaba por `\nSettings]`; GTK ignoraba el archivo y `bwm_icons.write_gtk_icons` añadía
+  después una segunda sección `[Settings]`.
+* **Causa:** `bwm_icons.write_gtk_icons`, `gtk-theme.py switch` y
+  `cursor-manager.update_ini_file` leían y reescribían con `open(..., "w")` casi a la vez al
+  cambiar de skin. Uno truncaba el archivo, otro lo leía vacío y escribía `"\n".join([])+"\n"`
+  en la posición 0, encima del `[` que el primero ya había escrito. Reproducido fuera de la
+  sesión: dos procesos con el método anterior corrompen el archivo en 20/20 ensayos.
+* **Corrección:** nuevo `scripts/bwm_gtk_ini.py` (`update(path, edit)`): candado común
+  `$XDG_RUNTIME_DIR/bwm-gtk-settings.lock`, lectura y escritura bajo él, publicación con
+  archivo temporal + `os.replace` en la carpeta real (conserva el enlace `~/.config/gtk-3.0`
+  → repo y los permisos) y sin escribir si nada cambia. Los tres escritores lo usan;
+  `gtk-theme.py` ya no reescribe un archivo vacío. Formato del archivo sin cambios.
+* **Comprobado:** `tests/test_gtk_settings_ini.py` (tres procesos × 200 escrituras sin ver
+  nunca una cabecera rota, sin reescritura innecesaria, enlace conservado) y 43 pruebas de
+  skins/Qt/puente/runtime; matriz real retro → plasma PASS con la cabecera intacta.
