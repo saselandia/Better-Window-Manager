@@ -398,15 +398,15 @@ void PopupAnchor::tryFocusGrab(int attempt,quint64 generation) {
     // belonging to this panel may join; another output/package must remain outside.
     // A layer desktop is not whitelisted: a click on the desktop closes the popup, as the
     // desktop view taking focus does under KWin.
-    QList<QWindow*> windows{m_popup.data()};
+    QList<QWindow*> windows{m_popup.data()},transient;
     if(m_panel->property("bwmLayerPanel").toBool())windows.append(m_panel.data());
     for(auto *window:QGuiApplication::allWindows())
         if(window->isVisible() && window->isExposed() && window->property("bwmPackageWindowNonInteractive").toBool()) {
             auto *anchor=window->findChild<PopupAnchor*>(QStringLiteral("bwmPackagePopupAnchor"),Qt::FindDirectChildrenOnly);
-            if(anchor && anchor->m_panel==m_panel)windows.append(window);
+            if(anchor && anchor->m_panel==m_panel)transient.append(window);
         }
-    const bool started=m_grab.start(windows);
-    qCDebug(lcBwmAnchor)<<"focus grab"<<m_popup->objectName()<<"started"<<started<<"attempt"<<attempt<<"windows"<<windows.size();
+    const bool started=m_grab.start(windows,transient);
+    qCDebug(lcBwmAnchor)<<"focus grab"<<m_popup->objectName()<<"started"<<started<<"attempt"<<attempt<<"windows"<<windows.size()<<"transient"<<transient.size();
     if(!started && attempt<20)QTimer::singleShot(25,this,[this,attempt,generation]{tryFocusGrab(attempt+1,generation);});
 }
 void PopupAnchor::setVisualParent(QQuickItem *parent) {

@@ -428,6 +428,8 @@ y una nota de cambios BWM; carga sin modificar el `explorer/WidgetExplorer.qml` 
 `src/bwm-plasma-host/shell/contents/applet/CompactApplet.qml` es `desktoppackage/contents/applet/CompactApplet.qml`
 de plasma-desktop 6.7.5 (Marco Martin, GPL-2.0-or-later) con su cabecera SPDX; BWM sólo añade el `PopupAnchor`
 de colocación en capa y cambia dos `objectName` (marcados «BWM», §384).
+`DefaultCompactRepresentation.qml` y `AppletError.qml` de esa misma carpeta son los de plasma-desktop 6.7.5
+sin cambios (Marco Martin, GPL-2.0-or-later, §386).
 `src/bwm-plasma-host/shell/contents/defaults` copia el grupo `[Panel]` de `desktoppackage/contents/defaults`
 de plasma-desktop 6.7.5 (caja de herramientas `org.kde.paneltoolbox` y acción `org.kde.contextmenu`), con
 un comentario de procedencia; los paquetes que nombra se cargan instalados, sin copiarlos.

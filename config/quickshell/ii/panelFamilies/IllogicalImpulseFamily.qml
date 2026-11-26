@@ -4,6 +4,7 @@ import Quickshell.Io
 
 import qs.modules.common
 import qs.modules.common.functions
+import qs.services
 import qs.modules.ii.background
 import qs.modules.ii.bar
 import qs.modules.ii.cheatsheet
@@ -39,7 +40,7 @@ import qs.omarchyShell
 Scope {
     id: familyRoot
     // R4–R5: while native bwm-plasma-host (--session) is running, it owns the Plasma panel,
-    // Kickoff, System Tray and DesktopEditMode; Quickshell keeps the fallback ready if it stops.
+    // Kickoff, System Tray, Notifications and DesktopEditMode; Quickshell keeps the fallback ready if it stops.
     property bool _nativeHostReady: false
     readonly property bool nativePlasmaHost: Appearance.isPlasma && _nativeHostReady && (Config.options?.bar?.plasma?.nativeHost ?? true)
     readonly property string _nativeHostHelper: FileUtils.trimFileProtocol(Quickshell.shellPath("../..")) + "/hypr/skins/plasma/scripts/plasma-host.py"
@@ -56,11 +57,16 @@ Scope {
         }
         onExited: exitCode => {
             receivedResult = true;
-            familyRoot._nativeHostReady = (exitCode === 0);
+            const ready = (exitCode === 0);
+            familyRoot._nativeHostReady = ready;
+            Notifications.updateNativeHostReady(ready);
         }
         onRunningChanged: {
             if (running) receivedResult = false;
-            else if (!receivedResult) familyRoot._nativeHostReady = false;
+            else if (!receivedResult) {
+                familyRoot._nativeHostReady = false;
+                Notifications.updateNativeHostReady(false);
+            }
         }
     }
     Timer {
@@ -114,9 +120,9 @@ Scope {
     PanelLoader { component: OmarchyMenu {} }
     PanelLoader { extraCondition: Appearance.isPlasma && !familyRoot.nativePlasmaHost; component: PlasmaKickoffPort.KickoffWindow {} } // F4: Kickoff de Plasma 6.7.5 portado
     PanelLoader { component: BwmIdle {} }
-    // F5: KDE applet interfaces, BWM data/services; no Plasma notification server.
+    // F5 fallback: KDE applet interfaces over Quickshell's server; off while native host owns notifications.
     PanelLoader { extraCondition: Appearance.isPlasma && !familyRoot.nativePlasmaHost; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/tray/TrayController.qml") : "" }
-    PanelLoader { extraCondition: Appearance.isPlasma; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/applets/NotificationPopups.qml") : "" }
+    PanelLoader { extraCondition: Appearance.isPlasma && !familyRoot.nativePlasmaHost; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/applets/NotificationPopups.qml") : "" }
     // F9: menús contextuales de Plasma (ventana, tareas, escritorio, panel) y el clic derecho en el fondo
     PanelLoader { extraCondition: Appearance.isPlasma; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/menus/MenuHost.qml") : "" }
     PanelLoader { extraCondition: Appearance.isPlasma && !familyRoot.nativePlasmaHost; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/menus/DesktopCatcher.qml") : "" }

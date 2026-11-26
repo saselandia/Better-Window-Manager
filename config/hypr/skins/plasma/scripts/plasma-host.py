@@ -204,10 +204,12 @@ def start_host(force: bool = False) -> int:
         return 0
     ensure_tray_watcher()
     if find_running_pids():
+        notify_quickshell_host(True)
         return 0
 
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     READY_FILE.unlink(missing_ok=True)
+    notify_quickshell_host(True)
 
     env = dict(os.environ)
     env.pop("BWM_SKIN_SWITCH", None)
@@ -242,6 +244,7 @@ def start_host(force: bool = False) -> int:
             command.extend(["-u", key])
     command += assignments + [str(BINARY), "--session"]
     if not bwm_session.spawn(command, str(LOG_FILE), allow_fallback=False):
+        notify_quickshell_host(False)
         print("No se pudo iniciar el anfitrión de Plasma desde Hyprland.", file=sys.stderr)
         return 1
 
@@ -252,11 +255,54 @@ def start_host(force: bool = False) -> int:
         if ready is not None and ready in pids:
             PID_FILE.write_text(f"{ready}\n")
             ensure_tray_watcher()
+            release_quickshell_notifications_if_held(bwm_session)
             return 0
         time.sleep(0.05)
     stop_host()
     print(f"El anfitrión de Plasma no confirmó el arranque; consulta {LOG_FILE}.", file=sys.stderr)
     return 1
+
+
+def release_quickshell_notifications_if_held(bwm_session) -> None:
+    """Quickshell's NotificationServer holds org.freedesktop.Notifications for the
+    lifetime of the process. If it took the name during fallback/boot, restart
+    Quickshell cleanly now that bwm-plasma-host is ready so NotificationHost's
+    QDBusServiceWatcher claims the name immediately."""
+    owner = tray_call(
+        "call", "org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
+        "GetConnectionUnixProcessID", "s", "org.freedesktop.Notifications",
+    )
+    if owner is None or owner.returncode != 0:
+        return
+    parts = owner.stdout.strip().split()
+    if len(parts) != 2 or parts[0] != "u":
+        return
+    try:
+        owner_pid = int(parts[1])
+    except ValueError:
+        return
+    running = bwm_session.shell_instances()
+    if not any(inst["pid"] == owner_pid for inst in running):
+        return
+    for inst in running:
+        try:
+            os.kill(inst["pid"], signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+    for _ in range(40):
+        if not any(Path(f"/proc/{inst['pid']}").exists() for inst in running):
+            break
+        time.sleep(0.05)
+    else:
+        return
+    # Give NotificationHost's QDBusServiceWatcher a moment to claim the freed name
+    # before starting the replacement Quickshell instance.
+    for _ in range(20):
+        st = host_ctl("notifications-status")
+        if st and '"valid":true' in st:
+            break
+        time.sleep(0.05)
+    bwm_session.start_shell()
 
 
 def stop_host() -> int:
@@ -277,6 +323,8 @@ def stop_host() -> int:
                 pass
     PID_FILE.unlink(missing_ok=True)
     READY_FILE.unlink(missing_ok=True)
+    (RUNTIME_DIR / "bwm-plasma-dnd").unlink(missing_ok=True)
+    notify_quickshell_host(False)
     return 0
 
 
@@ -294,14 +342,46 @@ def status_host() -> int:
     return 0
 
 
-def toggle_launcher() -> int:
+def notify_quickshell_host(active: bool) -> None:
+    """Tell Quickshell whether the native Plasma host is taking or releasing D-Bus services."""
+    try:
+        subprocess.run(
+            ["quickshell", "-c", "ii", "ipc", "call", "bwmNotifications", "setNativeHost",
+             "true" if active else "false"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=1.5,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        pass
+
+
+def host_ctl(command: str) -> str | None:
     import socket as _socket
 
     if ready_pid() is None:
-        return 1
+        return None
     sock_path = RUNTIME_DIR / "bwm-plasma-host.sock"
     if not sock_path.exists():
-        return 1
+        return None
+    try:
+        with _socket.socket(_socket.AF_UNIX, _socket.SOCK_STREAM) as s:
+            s.settimeout(1.5)
+            s.connect(str(sock_path))
+            s.sendall((command + "\n").encode("utf-8"))
+            chunks = []
+            while True:
+                data = s.recv(4096)
+                if not data:
+                    break
+                chunks.append(data)
+                if b"\n" in data:
+                    break
+            return b"".join(chunks).decode("utf-8", "ignore").strip()
+    except OSError:
+        return None
+
+
+def toggle_launcher() -> int:
     desc = ""
     try:
         out = subprocess.run(
@@ -315,16 +395,8 @@ def toggle_launcher() -> int:
                     break
     except (OSError, ValueError, subprocess.SubprocessError):
         pass
-    msg = (f"toggle-launcher {desc}\n" if desc else "toggle-launcher\n").encode("utf-8")
-    try:
-        with _socket.socket(_socket.AF_UNIX, _socket.SOCK_STREAM) as s:
-            s.settimeout(1.5)
-            s.connect(str(sock_path))
-            s.sendall(msg)
-            reply = s.recv(64).decode("utf-8", "ignore").strip()
-            return 0 if reply == "ok" else 1
-    except OSError:
-        return 1
+    reply = host_ctl(f"toggle-launcher {desc}" if desc else "toggle-launcher")
+    return 0 if reply == "ok" else 1
 
 
 def main(argv: list[str]) -> int:
@@ -343,7 +415,23 @@ def main(argv: list[str]) -> int:
         return 0 if ready_pid() is not None else 1
     if cmd == "toggle-launcher":
         return toggle_launcher()
-    print("Uso: plasma-host.py build|install|start|stop|status|ready|toggle-launcher", file=sys.stderr)
+    if cmd in ("dnd-status", "dnd-toggle", "notifications-status", "notifications-claim"):
+        reply = host_ctl(cmd)
+        if reply is None:
+            return 1
+        print(reply)
+        return 0
+    if cmd == "dnd-set" and len(argv) >= 2 and argv[1] in ("true", "false", "1", "0"):
+        reply = host_ctl(f"dnd-set {argv[1]}")
+        if reply is None:
+            return 1
+        print(reply)
+        return 0
+    print(
+        "Uso: plasma-host.py build|install|start|stop|status|ready|toggle-launcher|"
+        "dnd-status|dnd-toggle|dnd-set true|false|notifications-status|notifications-claim",
+        file=sys.stderr,
+    )
     return 2
 
 

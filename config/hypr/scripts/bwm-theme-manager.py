@@ -979,14 +979,48 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         # 6. Sincronizar el estado flotante / mosaico de las ventanas abiertas tras la recarga
         sync_floating_windows(theme_name, curr_theme, original_clients)
 
-        # 6.1 Demonio de notificaciones (`notifications` de skin.json): "shell" = el servidor de
-        #     Quickshell (Omarchy en Retro, avisos de Plasma en Breeze), así que swaync se cierra para
-        #     soltar org.freedesktop.Notifications; "swaync" (default) lo vuelve a arrancar
+        # 6.1 Demonio de notificaciones (`notifications` de skin.json):
+        #     - default: swaync (externo)
+        #     - retro: OmarchyNotifications (dentro de Quickshell)
+        #     - plasma: bwm-plasma-host (externo si nativeHost está activo y disponible; si no, Quickshell)
+        #     Quickshell's NotificationServer no libera org.freedesktop.Notifications sin reiniciar
+        #     el proceso; sólo reiniciamos el shell si Quickshell posee actualmente el nombre y el
+        #     nuevo dueño es externo (swaync o bwm-plasma-host).
+        plasma_native_host = False
+        if cfg.get("is_plasma"):
+            try:
+                import importlib.util as _ilu
+                _spec = _ilu.spec_from_file_location("_bwm_plasma_host", PLASMA_SCRIPTS / "plasma-host.py")
+                _mod = _ilu.module_from_spec(_spec) if _spec and _spec.loader else None
+                if _mod is not None:
+                    _spec.loader.exec_module(_mod)
+                    plasma_native_host = bool(_mod.native_host_enabled() and _mod.BINARY.is_file() and os.access(_mod.BINARY, os.X_OK))
+            except Exception:
+                plasma_native_host = False
+
+        external_notif_owner = (bwm_skins.notifications(theme_name) == "swaync" and bool(shutil.which("swaync"))) or plasma_native_host
+
+        def _quickshell_owns_notifications() -> bool:
+            try:
+                out = subprocess.run(
+                    ["busctl", "--user", "--auto-start=no", "call",
+                     "org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
+                     "GetConnectionUnixProcessID", "s", "org.freedesktop.Notifications"],
+                    capture_output=True, text=True, timeout=1.5, check=False,
+                )
+                if out.returncode != 0:
+                    return False
+                parts = out.stdout.strip().split()
+                if len(parts) != 2 or parts[0] != "u":
+                    return False
+                owner_pid = int(parts[1])
+                return any(inst["pid"] == owner_pid for inst in bwm_session.shell_instances())
+            except (OSError, ValueError, subprocess.SubprocessError):
+                return False
+
         try:
             if bwm_skins.notifications(theme_name) == "shell":
                 subprocess.run(["pkill", "-x", "swaync"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            elif shutil.which("swaync") and subprocess.run(["pidof", "swaync"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
-                bwm_session.spawn(["swaync"])
         except Exception:
             pass
 
@@ -997,9 +1031,20 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         except Exception as error:
             print(f"No se pudo actualizar el agente polkit: {error}", file=sys.stderr)
 
+        need_shell_restart = restart_shell or (external_notif_owner and _quickshell_owns_notifications())
+        if plasma_native_host and not need_shell_restart:
+            try:
+                subprocess.run(
+                    ["quickshell", "-c", "ii", "ipc", "call", "bwmNotifications", "setNativeHost", "true"],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=1.5, check=False,
+                )
+            except Exception:
+                pass
+
         # Reconstruir sólo los paneles: conservar el proceso, servicios y cachés del shell.
-        # Instancias antiguas sin este IPC tienen una única recarga de compatibilidad.
-        refreshed = not restart_shell and subprocess.run(
+        # Instancias antiguas sin este IPC o un relevo de org.freedesktop.Notifications desde
+        # Quickshell hacia un servidor externo reinician el shell limpiamente.
+        refreshed = not need_shell_restart and subprocess.run(
             ["quickshell", "-c", "ii", "ipc", "call", "bwmSkin", "reload"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=4,
         ).returncode == 0
@@ -1013,14 +1058,24 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
                 time.sleep(0.05)
             else:
                 raise RuntimeError("El shell anterior sigue activo; no se inicia una segunda instancia")
-            # Hijo de Hyprland (sin BWM_SKIN_SWITCH): si fuera hijo de quien llamó al gestor
-            # (terminal, app de Claude…), moriría con él.
-            bwm_session.start_shell()
+
+        # Arrancar el dueño externo de notificaciones (swaync o bwm-plasma-host) una vez libre el nombre.
+        try:
+            if bwm_skins.notifications(theme_name) == "swaync" and shutil.which("swaync") and subprocess.run(["pidof", "swaync"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
+                bwm_session.spawn(["swaync"])
+        except Exception:
+            pass
 
         if cfg.get("is_plasma"):
             subprocess.run(kde_bridge + ["start"], check=False)
             subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "decorator.py"), "start"], check=False)
             subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "plasma-host.py"), "start"], check=False)
+
+        if not refreshed:
+            # Hijo de Hyprland (sin BWM_SKIN_SWITCH): si fuera hijo de quien llamó al gestor
+            # (terminal, app de Claude…), moriría con él. Arranca tras el host para que su
+            # comprobación inicial vea `ready` y no reclame org.freedesktop.Notifications.
+            bwm_session.start_shell()
 
         bwm_settings_hooks.skin_changed('after', curr_theme, theme_name)
 

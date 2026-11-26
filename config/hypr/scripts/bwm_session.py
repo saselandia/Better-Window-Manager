@@ -111,7 +111,9 @@ def sync_activation_environment() -> bool:
     variables as fallback. Explicit user Lua overrides are preserved by this route.
     """
     return spawn(['dbus-update-activation-environment', '--systemd', 'QT_QPA_PLATFORMTHEME',
-                  'XDG_CONFIG_DIRS', 'XDG_MENU_PREFIX', 'OMARCHY_PATH', 'QML_IMPORT_PATH'],
+                  'XDG_CONFIG_DIRS', 'XDG_MENU_PREFIX', 'OMARCHY_PATH', 'QML_IMPORT_PATH',
+                  'LC_NUMERIC', 'LC_TIME', 'LC_MONETARY', 'LC_MEASUREMENT', 'LC_COLLATE',
+                  'LC_ADDRESS', 'LC_NAME', 'LC_PAPER', 'LC_TELEPHONE'],
                  allow_fallback=False)
 
 

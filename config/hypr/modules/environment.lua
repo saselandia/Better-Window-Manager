@@ -75,3 +75,47 @@ end
 if exists("/etc/xdg/menus/plasma-applications.menu") then
     hl.env("XDG_MENU_PREFIX", "plasma-")
 end
+
+-- Formatos regionales de Plasma (kcm_regionandlang → ~/.config/plasma-localerc [Formats]):
+-- se aplican en todas las skins al entrar, sin pisar el locale del sistema ni el LANG elegido
+-- por el usuario. Sólo se exportan las categorías LC_* escritas explícitamente en [Formats].
+do
+    local cfg_home = os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")
+    local f = io.open(cfg_home .. "/plasma-localerc", "r")
+    if f then
+        local allowed = {
+            LC_NUMERIC = true, LC_TIME = true, LC_MONETARY = true,
+            LC_MEASUREMENT = true, LC_COLLATE = true, LC_ADDRESS = true,
+            LC_NAME = true, LC_PAPER = true, LC_TELEPHONE = true,
+        }
+        local in_formats = false
+        local use_detailed = true
+        local pending = {}
+        local fmt_lang = nil
+        for line in f:lines() do
+            local trimmed = line:match("^%s*(.-)%s*$")
+            if trimmed:match("^%[.+%]$") then
+                in_formats = (trimmed == "[Formats]")
+            elseif in_formats and trimmed ~= "" and not trimmed:match("^#") then
+                local k, v = trimmed:match("^([%w_]+)%s*=%s*(.-)%s*$")
+                if k == "useDetailed" then
+                    use_detailed = (v:lower() ~= "false")
+                elseif k == "LANG" and v ~= "" and v:match("^[%w_.@%-]+$") then
+                    fmt_lang = v
+                elseif k and allowed[k] and v ~= "" and v:match("^[%w_.@%-]+$") then
+                    pending[k] = v
+                end
+            end
+        end
+        f:close()
+        local cur_lang = os.getenv("LANG") or ""
+        if fmt_lang and (cur_lang == "" or cur_lang == "C" or cur_lang == "POSIX") then
+            hl.env("LANG", fmt_lang)
+        end
+        if use_detailed then
+            for k, v in pairs(pending) do
+                hl.env(k, v)
+            end
+        end
+    end
+end

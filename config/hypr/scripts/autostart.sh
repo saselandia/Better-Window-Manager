@@ -59,9 +59,9 @@ export XDG_SESSION_DESKTOP="Hyprland"
 
 export QML_IMPORT_PATH="${XDG_DATA_HOME:-$HOME/.local/share}/bwm/qml${QML_IMPORT_PATH:+:$QML_IMPORT_PATH}"
 
-# Actualizar entorno en systemd y dbus (también defaults/menús de KDE).
+# Actualizar entorno en systemd y dbus (también defaults/menús de KDE y LC_* de plasma-localerc).
 if command -v dbus-update-activation-environment >/dev/null 2>&1; then
-    dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP QT_QPA_PLATFORMTHEME XDG_CONFIG_DIRS XDG_MENU_PREFIX OMARCHY_PATH QML_IMPORT_PATH 2>/dev/null || true
+    dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP QT_QPA_PLATFORMTHEME XDG_CONFIG_DIRS XDG_MENU_PREFIX OMARCHY_PATH QML_IMPORT_PATH LC_NUMERIC LC_TIME LC_MONETARY LC_MEASUREMENT LC_COLLATE LC_ADDRESS LC_NAME LC_PAPER LC_TELEPHONE 2>/dev/null || true
 fi
 
 # 2. Agente de autenticación Polkit (Gentoo en /usr/libexec o PATH). En Retro no: allí es el de

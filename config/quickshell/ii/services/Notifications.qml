@@ -2,6 +2,7 @@ pragma Singleton
 pragma ComponentBehavior: Bound
 
 import qs.modules.common
+import qs.modules.common.functions
 import qs
 import QtQuick
 import Quickshell
@@ -78,7 +79,13 @@ Singleton {
 
     property bool silent: false
     property double silentUntil: 0 // Unix epoch ms; 0 = until manually disabled
-    onSilentChanged: if (!silent) silentUntil = 0
+    property bool _syncingDndFromHost: false
+    onSilentChanged: {
+        if (!silent) silentUntil = 0;
+        if (!root._syncingDndFromHost && root.nativePlasmaHostActive && root.nativeHostReady) {
+            hostDndSetter.apply(root.silent);
+        }
+    }
     function setSilentFor(minutes) {
         const mins = Number(minutes) || 0;
         if (mins <= 0) {
@@ -175,23 +182,91 @@ Singleton {
     signal discardAll();
     signal timeout(id: var);
 
-    // The D-Bus notification server ("notifications" in each skin.json). Breeze: this one, shown
-    // with Plasma's toasts/applet. Default: swaync, this one only if swaync is not installed.
+    // The D-Bus notification server ("notifications" in each skin.json).
+    // Breeze: native bwm-plasma-host owns org.freedesktop.Notifications (NotificationManager::Server);
+    // this server only activates as fallback if bar.plasma.nativeHost is false or the host stops.
+    // Default: swaync, this one only if swaync is not installed.
     // Retro: Omarchy's own service (modules/ii/omarchyNotifications) for its toasts, glyphs and
-    // actions. Only one server can hold org.freedesktop.Notifications; bwm-theme-manager.py stops
-    // or starts swaync and Quickshell retries until the name is free. Waits for the config (and
-    // the swaync check) so it never grabs the name before knowing the skin.
+    // actions. Only one server can hold org.freedesktop.Notifications; bwm-theme-manager.py /
+    // plasma-host.py coordinate handoff cleanly. Waits for config, swaync and native-host checks
+    // so it never grabs the name before knowing the active owner.
     property bool swayncChecked: false
     property bool swayncInstalled: false
+    readonly property string _nativeHostHelper: FileUtils.trimFileProtocol(Quickshell.shellPath("../..")) + "/hypr/skins/plasma/scripts/plasma-host.py"
+    readonly property string _dndStateFile: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/bwm-plasma-dnd"
+    property bool nativeHostChecked: false
+    property bool nativeHostReady: false
+    property bool _nativeHostClaiming: false
+    readonly property bool nativePlasmaHostActive: Appearance.isPlasma && (Config.options?.bar?.plasma?.nativeHost ?? true) && (nativeHostReady || _nativeHostClaiming)
+
+    function updateNativeHostReady(ready) {
+        root.nativeHostReady = Boolean(ready);
+        root.nativeHostChecked = true;
+        if (ready) {
+            root._nativeHostClaiming = false;
+            nativeHostClaimTimer.stop();
+            hostDndFileView.reload();
+        }
+    }
+
+    Timer {
+        id: nativeHostClaimTimer
+        interval: 6000
+        repeat: false
+        onTriggered: {
+            root._nativeHostClaiming = false;
+        }
+    }
     Process {
         running: true
         command: ["sh", "-c", "command -v swaync"]
         onExited: exitCode => { root.swayncInstalled = exitCode === 0; root.swayncChecked = true; }
     }
+    Process {
+        running: true
+        command: ["python3", root._nativeHostHelper, "ready"]
+        onExited: exitCode => { root.updateNativeHostReady(exitCode === 0); }
+    }
+    Process {
+        id: hostDndSetter
+        property string pendingState: ""
+        function apply(enabled) {
+            pendingState = enabled ? "true" : "false";
+            if (running) return;
+            command = ["python3", root._nativeHostHelper, "dnd-set", pendingState];
+            running = true;
+        }
+        onExited: {
+            const sent = command[3];
+            if (pendingState && pendingState !== sent) {
+                const next = pendingState;
+                command = ["python3", root._nativeHostHelper, "dnd-set", next];
+                running = true;
+            }
+        }
+    }
+    FileView {
+        id: hostDndFileView
+        path: root.nativePlasmaHostActive ? Qt.resolvedUrl(root._dndStateFile) : ""
+        watchChanges: root.nativePlasmaHostActive
+        onFileChanged: reload()
+        onLoaded: {
+            if (!root.nativePlasmaHostActive) return;
+            const state = text().trim() === "true";
+            if (root.silent !== state) {
+                root._syncingDndFromHost = true;
+                root.silent = state;
+                root._syncingDndFromHost = false;
+            }
+        }
+    }
     readonly property var trackedValues: serverLoader.item ? serverLoader.item.trackedNotifications.values : []
     LazyLoader {
         id: serverLoader
-        active: Config.ready && root.swayncChecked && (Appearance.isPlasma || (!Appearance.isRetro && !root.swayncInstalled))
+        active: Config.ready && root.swayncChecked && root.nativeHostChecked && (
+            (Appearance.isPlasma && !root.nativePlasmaHostActive) ||
+            (!Appearance.isRetro && !Appearance.isPlasma && !root.swayncInstalled)
+        )
 
 	NotificationServer {
         id: notifServer
@@ -361,10 +436,23 @@ Singleton {
         }
     }
 
-    // BWM: shell-readable Do Not Disturb for the Retro menu's ✓ (and anything scripted)
+    // BWM: shell-readable Do Not Disturb for the Retro menu's ✓ (and anything scripted),
+    // plus native Plasma host handoff notifications.
     IpcHandler {
         target: "bwmNotifications"
         function toggleDnd(): void { root.silent = !root.silent; }
         function isDnd(): string { return root.silent ? "true" : "false"; }
+        function setNativeHost(active: string): void {
+            const enabled = (active === "true" || active === "1");
+            if (enabled) {
+                root._nativeHostClaiming = true;
+                nativeHostClaimTimer.restart();
+            } else {
+                root._nativeHostClaiming = false;
+                root.nativeHostReady = false;
+                nativeHostClaimTimer.stop();
+            }
+            root.nativeHostChecked = true;
+        }
     }
 }

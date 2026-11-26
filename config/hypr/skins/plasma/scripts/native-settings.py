@@ -161,6 +161,48 @@ def page(category):
                 ('lock', 'Bloquear (s; 0 = nunca)', 600, 7200),
                 ('suspend', 'Suspender (s; 0 = nunca)', 0, 14400)]:
             fields.append(field(key, label, data.get('idle', {}).get(key, default), 'int', min=0, max=maximum))
+    elif category == 'input':
+        state = command('input-manager.py', 'get')
+        g = state.get('global', {})
+        profile_choices = [
+            dict(label='Predeterminado', value=''),
+            dict(label='Adaptativo (con aceleración)', value='adaptive'),
+            dict(label='Plano (sin aceleración)', value='flat'),
+        ]
+        fields.append(field('global\x1fsensitivity', 'Global — Velocidad / sensibilidad (-1 a 1)', float(g.get('sensitivity', 0.0)), 'real',
+                            label_en='Global — Pointer speed / sensitivity (-1 to 1)', min=-1.0, max=1.0, decimals=2, step=0.05, default=0.0))
+        fields.append(field('global\x1faccel_profile', 'Global — Perfil de aceleración', str(g.get('accel_profile', '')), 'choice',
+                            label_en='Global — Acceleration profile', choices=profile_choices, default=''))
+        fields.append(field('global\x1fnatural_scroll', 'Global — Desplazamiento natural (ratón)', bool(g.get('natural_scroll', False)), 'bool',
+                            label_en='Global — Natural scrolling (mouse)', default=False))
+        fields.append(field('global\x1fleft_handed', 'Global — Modo zurdo (intercambiar botones)', bool(g.get('left_handed', False)), 'bool',
+                            label_en='Global — Left-handed mode', default=False))
+        fields.append(field('global\x1ftouchpad_natural_scroll', 'Panel táctil — Desplazamiento natural', bool(g.get('touchpad_natural_scroll', False)), 'bool',
+                            label_en='Touchpad — Natural scrolling', default=False))
+        fields.append(field('global\x1ftouchpad_tap_to_click', 'Panel táctil — Tocar para hacer clic', bool(g.get('touchpad_tap_to_click', True)), 'bool',
+                            label_en='Touchpad — Tap to click', default=True))
+        fields.append(field('global\x1ftouchpad_disable_while_typing', 'Panel táctil — Desactivar al escribir', bool(g.get('touchpad_disable_while_typing', True)), 'bool',
+                            label_en='Touchpad — Disable while typing', default=True))
+        for dev in state.get('devices', []):
+            name = dev['name']
+            suffix = '' if dev.get('connected', True) else ' (desconectado)'
+            suffix_en = '' if dev.get('connected', True) else ' (disconnected)'
+            fields.append(field('device\x1f' + name + '\x1fsensitivity', f'{name}{suffix} — Velocidad (-1 a 1)',
+                                float(dev.get('sensitivity', 0.0)), 'real',
+                                label_en=f'{name}{suffix_en} — Speed (-1 to 1)', min=-1.0, max=1.0, decimals=2, step=0.05, default=0.0))
+            fields.append(field('device\x1f' + name + '\x1faccel_profile', f'{name}{suffix} — Perfil de aceleración',
+                                str(dev.get('accel_profile', '')), 'choice',
+                                label_en=f'{name}{suffix_en} — Acceleration profile', choices=profile_choices, default=''))
+            fields.append(field('device\x1f' + name + '\x1fnatural_scroll', f'{name}{suffix} — Desplazamiento natural',
+                                bool(dev.get('natural_scroll', False)), 'bool',
+                                label_en=f'{name}{suffix_en} — Natural scrolling', default=False))
+            fields.append(field('device\x1f' + name + '\x1fleft_handed', f'{name}{suffix} — Modo zurdo',
+                                bool(dev.get('left_handed', False)), 'bool',
+                                label_en=f'{name}{suffix_en} — Left-handed mode', default=False))
+            if dev.get('is_touchpad'):
+                fields.append(field('device\x1f' + name + '\x1ftap_to_click', f'{name}{suffix} — Tocar para hacer clic',
+                                    bool(dev.get('tap_to_click', True)), 'bool',
+                                    label_en=f'{name}{suffix_en} — Tap to click', default=True))
     else:
         raise ValueError('Módulo desconocido')
     revision = hashlib.sha256(json.dumps(fields, sort_keys=True).encode()).hexdigest()
@@ -243,6 +285,18 @@ def apply(category, request):
             command('keybinds-manager.py', 'update', '--id', key, '--mods', mods, '--key', bind_key)
     elif category == 'energy' and changes:
         command('bwm-shared-settings.py', 'idle', json.dumps(changes))
+    elif category == 'input' and changes:
+        state = command('input-manager.py', 'get')
+        g = dict(state.get('global', {}))
+        devs = {d['name']: {k: v for k, v in d.items() if k not in ('name', 'connected', 'is_touchpad')}
+                for d in state.get('devices', [])}
+        for key, value in changes.items():
+            parts = key.split('\x1f')
+            if parts[0] == 'global' and len(parts) == 2:
+                g[parts[1]] = value
+            elif parts[0] == 'device' and len(parts) == 3:
+                devs.setdefault(parts[1], {})[parts[2]] = value
+        command('input-manager.py', 'apply', json.dumps({'global': g, 'devices': devs}))
     reopened = page(category)
     values = {f['key']: f['value'] for f in reopened['fields']}
     if any(values.get(k) != v for k, v in changes.items()):

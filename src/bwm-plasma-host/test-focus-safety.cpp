@@ -93,6 +93,27 @@ private Q_SLOTS:
             app.requestActivate();QTRY_VERIFY(app.isActive());
         }
     }
+    void hidingTransientTooltipKeepsTheGrab() {
+        // Kickoff hides its button tooltip when it expands. The tooltip was a full grab
+        // member, so hiding it released the grab, returned the keyboard to the previous
+        // window and PopupPlasmaWindow closed the launcher right after opening it.
+        QQuickWindow app;app.setTitle("BWM focus fixture");app.resize(500,350);app.show();
+        QTRY_VERIFY(app.isExposed());app.requestActivate();QTRY_VERIFY(app.isActive());
+        QQuickWindow panel;panel.resize(500,48);BwmSurface::configurePanel(&panel,Qt::BottomEdge);
+        panel.show();QTRY_VERIFY(panel.isExposed());
+        QQuickWindow tip;popupRole(tip);tip.setFlag(Qt::WindowDoesNotAcceptFocus,true);
+        LayerShellQt::Window::get(&tip)->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
+        tip.show();QTRY_VERIFY(tip.isExposed());
+        QQuickWindow popup;popupRole(popup);popup.show();QTRY_VERIFY(popup.isExposed());
+        FocusGrab grab;QVERIFY(grab.start({&popup,&panel},{&tip}));
+        QTRY_VERIFY_WITH_TIMEOUT(QGuiApplication::focusWindow()==&popup,2000);
+        tip.hide();
+        QVERIFY(grab.active());
+        QTest::qWait(300);
+        QCOMPARE(QGuiApplication::focusWindow(),&popup);
+        QVERIFY(grab.active());
+        panel.hide();QVERIFY(!grab.active()); // A required member still releases it.
+    }
     void closingPopupPreservesApplicationFocus() {
         QQuickWindow app;app.setTitle("BWM focus fixture");app.resize(500,350);app.show();
         QTRY_VERIFY(app.isExposed());app.requestActivate();QTRY_VERIFY(app.isActive());

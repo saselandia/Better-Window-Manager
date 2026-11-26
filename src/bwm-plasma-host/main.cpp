@@ -59,6 +59,7 @@
 #include "desktopsessioncheck.h"
 #include "profilestore.h"
 #include "trayprobe.h"
+#include "notificationhost.h"
 #include <memory>
 #include <QtPlugin>
 #include <QMenu>
@@ -337,6 +338,9 @@ int main(int argc, char **argv) {
             }
         };
 
+        NotificationHost notificationHost(runtimeDir + QStringLiteral("/bwm-plasma-dnd"));
+        notificationHost.start();
+
         if(!runtime.setSkin(QStringLiteral("plasma"))) {
             fprintf(stderr,"bwm-plasma-host: setSkin(plasma): %s\n", qPrintable(runtime.error()));
         }
@@ -358,7 +362,7 @@ int main(int argc, char **argv) {
                 if(::bind(ctlFd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == 0 && ::listen(ctlFd, 8) == 0) {
                     ::chmod(rawPath.constData(), 0600);
                     ctlNotifier = new QSocketNotifier(ctlFd, QSocketNotifier::Read, &app);
-                    QObject::connect(ctlNotifier, &QSocketNotifier::activated, &app, [ctlFd, &corona, &runtime, &screenDesc]{
+                    QObject::connect(ctlNotifier, &QSocketNotifier::activated, &app, [ctlFd, &corona, &runtime, &screenDesc, &notificationHost]{
                         const int client = ::accept4(ctlFd, nullptr, nullptr, SOCK_CLOEXEC);
                         if(client < 0) return;
                         char buf[512]{};
@@ -416,6 +420,21 @@ int main(int argc, char **argv) {
                                     Q_EMIT chosen->activated();
                                     reply = "ok\n";
                                 }
+                            } else if(line == QStringLiteral("dnd-status")) {
+                                reply = notificationHost.isInhibited() ? "true\n" : "false\n";
+                            } else if(line == QStringLiteral("dnd-toggle")) {
+                                notificationHost.toggleDoNotDisturb();
+                                reply = notificationHost.isInhibited() ? "true\n" : "false\n";
+                            } else if(line == QStringLiteral("dnd-set true") || line == QStringLiteral("dnd-set 1")) {
+                                notificationHost.setDoNotDisturb(true);
+                                reply = notificationHost.isInhibited() ? "true\n" : "false\n";
+                            } else if(line == QStringLiteral("dnd-set false") || line == QStringLiteral("dnd-set 0")) {
+                                notificationHost.setDoNotDisturb(false);
+                                reply = notificationHost.isInhibited() ? "true\n" : "false\n";
+                            } else if(line == QStringLiteral("notifications-status")) {
+                                reply = QJsonDocument(notificationHost.status()).toJson(QJsonDocument::Compact) + "\n";
+                            } else if(line == QStringLiteral("notifications-claim")) {
+                                reply = notificationHost.claimService() ? "ok\n" : "err\n";
                             }
                         }
                         const ssize_t ignored = ::write(client, reply.constData(), size_t(reply.size()));
@@ -442,6 +461,7 @@ int main(int argc, char **argv) {
         autoSave.start();
 
         const int code = app.exec();
+        notificationHost.stop();
         delete ctlNotifier;
         if(ctlFd >= 0) ::close(ctlFd);
         QFile::remove(sockPath);

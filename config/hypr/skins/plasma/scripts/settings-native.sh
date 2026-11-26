@@ -14,6 +14,7 @@ case "${1:-}" in
     workspaces|kcm_kwin_virtualdesktops) shift; set -- kcm_bwm_workspaces "$@" ;;
     keybinds|shortcuts|kcm_keys) shift; set -- kcm_bwm_shortcuts "$@" ;;
     cursor|cursors|kcm_cursortheme) shift; set -- kcm_bwm_cursor "$@" ;;
+    mouse|touchpad|input|kcm_mouse|kcm_touchpad) shift; set -- kcm_bwm_input "$@" ;;
     idle|energy|power|kcm_powerdevilprofilesconfig) shift; set -- kcm_bwm_energy "$@" ;;
     nightlight|kcm_nightcolor|kcm_nightlight) shift; set -- kcm_bwm_nightlight "$@" ;;
     defaultapps|apps|kcm_componentchooser) shift; set -- kcm_bwm_apps "$@" ;;

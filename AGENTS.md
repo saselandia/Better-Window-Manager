@@ -232,8 +232,12 @@ siendo el nombre del escritorio original que imita Breeze.
   `~/.config/gtk-3.0/gtk.css` sólo al arrancar → los colores van en un tema que se alterna.
 - **Un solo dueño**: polkit (un agente por sesión) y `org.freedesktop.Notifications`: en Retro los tiene
   Quickshell (Omarchy); Breeze usa polkit-kde-agent y default, `hyprpolkitagent`/BWM. Avisos según
-  `notifications` de `skin.json`: swaync en default, el servidor de Quickshell en Breeze (avisos de Plasma)
-  y Retro. Al tocar esto, revisa `bwm-theme-manager.py` (6.1/6.2), `autostart.sh` y `services/Notifications.qml`.
+  `notifications` de `skin.json`: `swaync` en default, `bwm-plasma-host` (`NotificationHost`, con
+  Quickshell como respaldo si cae o `bar.plasma.nativeHost=false`) en Breeze (§387) y Omarchy en Retro.
+  **Trampa**: `NotificationServer` de Quickshell no suelta `org.freedesktop.Notifications` al destruir su
+  `Loader` ni admite `ReplaceExistingService`; si `quickshell` lo tiene y pasa a dueño externo, hay
+  que reiniciarlo (`bwm-theme-manager.py` 6.1, `plasma-host.py`). Revisa también `autostart.sh` y
+  `services/Notifications.qml`.
   Bandeja (§368): un registro SNI funcional de kded sirve a varios hosts y no es conflicto.
   Si sólo reservó el nombre sin objeto, el host activa sólo statusnotifierwatcher; no matar
   kded ni descargar sus otros módulos activos.
@@ -648,6 +652,8 @@ siendo el nombre del escritorio original que imita Breeze.
   `plasma-host.py ready`, nunca sólo la existencia del archivo (§366).
   `plasma-host.py build` deja `build/bwm-plasma-host` con `BUILD_TESTING=OFF`: su CTest
   ejecuta binarios de prueba viejos. Probar en `build/bwm-plasma-host-tests` (ON) (§383).
+  Descripciones emergentes sobre el panel entran en `FocusGrab` como transitorias: ocultarlas
+  sólo las quita de la captura (Kickoff las oculta al abrirse; soltar la captura lo cerraba, §386).
   `FocusGrab` confirma primero sólo el popup y luego el panel: Hyprland da el teclado a
   cualquier superficie de la lista y, si es el panel, libplasma oculta el popup (§383).
   El ensayo `--edit-mode` incluye teclado/puntero virtuales sólo tras verificar el PID/UID

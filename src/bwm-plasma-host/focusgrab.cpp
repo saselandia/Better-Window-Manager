@@ -41,7 +41,7 @@ private:
 FocusGrab::FocusGrab(QObject *parent):QObject(parent){}
 FocusGrab::~FocusGrab(){stop();}
 bool FocusGrab::available(){return manager();}
-bool FocusGrab::start(const QList<QWindow*> &windows) {
+bool FocusGrab::start(const QList<QWindow*> &windows,const QList<QWindow*> &transient) {
     stop();
     auto *m=manager();
     if(!m || windows.isEmpty() || !windows.first() || windows.first()->flags().testFlag(Qt::WindowDoesNotAcceptFocus))return false;
@@ -50,6 +50,12 @@ bool FocusGrab::start(const QList<QWindow*> &windows) {
         auto *surface=surfaceFor(window);
         if(!surface)return false; // Never silently commit a partial whitelist.
         if(!surfaces.contains(surface))surfaces.append(surface);
+    }
+    QList<QPair<QWindow*,wl_surface*>> extra;
+    for(auto *window:transient) {
+        if(!window || windows.contains(window))continue;
+        auto *surface=surfaceFor(window);
+        if(surface && !surfaces.contains(surface))extra.append({window,surface}); // Optional.
     }
     m_client=new FocusGrabClient(m->create_grab(),this);
     // Hyprland 0.56.2 CFocusGrab::refocusKeyboard gives the keyboard to the first committed
@@ -60,8 +66,9 @@ bool FocusGrab::start(const QList<QWindow*> &windows) {
     // commit finds that surface focused and committed and keeps it.
     m_client->add_surface(surfaces.first());
     m_client->commit();
-    if(surfaces.size()>1) {
+    if(surfaces.size()>1 || !extra.isEmpty()) {
         for(int i=1;i<surfaces.size();++i)m_client->add_surface(surfaces.at(i));
+        for(const auto &pair:extra)m_client->add_surface(pair.second);
         m_client->commit();
     }
     for(auto *window:windows) {
@@ -71,17 +78,37 @@ bool FocusGrab::start(const QList<QWindow*> &windows) {
         m_connections.append(connect(window,&QWindow::visibleChanged,this,[this](bool visible){if(!visible)stop();}));
         m_connections.append(connect(window,&QObject::destroyed,this,[this]{stop();}));
     }
+    for(const auto &pair:extra) {
+        QWindow *window=pair.first;
+        m_transient.insert(window,pair.second);
+        window->installEventFilter(this);
+        m_connections.append(connect(window,&QWindow::visibleChanged,this,[this,window](bool visible){if(!visible)dropTransient(window);}));
+        m_connections.append(connect(window,&QObject::destroyed,this,[this,window]{m_transient.remove(window);}));
+    }
     return true;
+}
+void FocusGrab::dropTransient(QWindow *window) {
+    auto it=m_transient.find(window);
+    if(it==m_transient.end())return;
+    window->removeEventFilter(this);
+    if(m_client){m_client->remove_surface(it.value());m_client->commit();}
+    m_transient.erase(it);
 }
 void FocusGrab::stop(){
     for(const auto &connection:m_connections)disconnect(connection);
     m_connections.clear();
     for(const auto &window:m_windows)if(window)window->removeEventFilter(this);
     m_windows.clear();
+    for(auto it=m_transient.cbegin();it!=m_transient.cend();++it)it.key()->removeEventFilter(this);
+    m_transient.clear();
     delete m_client;m_client=nullptr;
 }
-bool FocusGrab::eventFilter(QObject *,QEvent *event){
+bool FocusGrab::eventFilter(QObject *object,QEvent *event){
     if(event->type()==QEvent::Hide || (event->type()==QEvent::PlatformSurface &&
-       static_cast<QPlatformSurfaceEvent*>(event)->surfaceEventType()==QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed))stop();
+       static_cast<QPlatformSurfaceEvent*>(event)->surfaceEventType()==QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed)) {
+        auto *window=qobject_cast<QWindow*>(object);
+        if(window && m_transient.contains(window))dropTransient(window);
+        else stop();
+    }
     return false;
 }

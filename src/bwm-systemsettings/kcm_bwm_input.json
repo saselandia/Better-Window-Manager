@@ -1,0 +1,10 @@
+{
+  "KPlugin": {
+    "Name": "BWM — Ratón y panel táctil",
+    "Description": "Ratón y panel táctil por dispositivo sobre Hyprland: gestor común de BWM",
+    "Icon": "input-mouse",
+    "License": "GPL-2.0-or-later"
+  },
+  "X-KDE-System-Settings-Parent-Category": "pointing-devices",
+  "X-BWM-Category": "input"
+}

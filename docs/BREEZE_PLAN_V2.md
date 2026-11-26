@@ -10,6 +10,8 @@ Cada bloque es un prompt para una sesión nueva. Ejecutarlos en orden; el objeti
 sesión es implementar y comprobar su fase, salvo R0, que es una auditoría. No ejecutar todas
 las fases con un único prompt ni confundir «compila» con «es igual a Plasma».
 
+> **Plan siguiente:** [BREEZE_PLAN_V3.md](BREEZE_PLAN_V3.md) (T0–T9, desde 2026-11-26).
+
 ## Estado de integración — 2026-11-26
 
 **Plan completado (R0–R9 cerrados con límites técnicos explícitos).**

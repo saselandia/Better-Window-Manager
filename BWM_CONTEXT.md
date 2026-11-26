@@ -106,6 +106,7 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 
 ### 2.4 Breeze (Kde plasma): port sobre Hyprland
 
+* **Breeze III (`docs/BREEZE_PLAN_V3.md`, T0–T9, 2026-11-26, §385):** plan activo. Avisos de Plasma, Preferencias que funcionan u ocultan, fondo único BWM ↔ Plasma, temas globales completos (disposición, bienvenida, salida), atajos globales de KDE sin pisar los de BWM, paquetes que faltan, compatibilidad medida con la tienda y vista general. Sin empezar.
 * **Breeze II (`BREEZE_PLAN_V2.md`, R0–R9 cerrados — 2026-11-26, §§372–381):** plan completado
   con los binarios finales cargados en la nueva sesión (`breezebars.so` §376, `omarchy-titlebars.so`
   §377, `bwm-plasma-host` ready en ambas pantallas, `bwm-plasma-desktops`, `bwm-decorator` y
@@ -638,7 +639,11 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 * **Preferencias F11:** `plasmaSettings.qml`/`modules/plasma/settings` con KCM reales mediante
   org.bwm.kcm. Páginas comunes de BWM para lo compartido. Alt+T abre el selector anterior de skins de Breeze (`modules/plasma/skinPicker`);
   los temas globales de Plasma se eligen dentro de Preferencias. KNS descarga a rutas estándar.
-* **Servicios:** único servidor de avisos de BWM, agente polkit KDE en Breeze/Omarchy en Retro.
+* **Servicios:** notificaciones nativas de Plasma 6.7.5 en `bwm-plasma-host` (`NotificationHost`,
+  `NotificationManager::Server`, `org.kde.JobViewServer`/`kuiserver`, popups `NotificationWindow` en
+  `LayerShellQt` y `plasmanotifyrc` en vivo), con relevo automático a Quickshell como respaldo si el
+  host cae o `bar.plasma.nativeHost=false`, y sincronización bidireccional de «No molestar» con
+  `bwmNotifications` (§387); agente polkit KDE en Breeze/Omarchy en Retro.
   bwm-shell-conflicts comprueba al dueño D-Bus. Kded reserva nombres en cola aun con módulos
   desactivados; sólo se retira automáticamente su reserva de bandeja rota si no tiene objeto
   y sus módulos son ninguno/ktimezoned. No se detienen otros módulos o un watcher funcional.
@@ -7238,3 +7243,38 @@ git status; git log --oneline -5; git push origin main
   superior derecha redondeada por el tema, como en Plasma. Sin errores QML en el registro del host.
   Bandeja y lanzadores de terceros (AndromedaLauncher crea su propio `PlasmaCore.Dialog`) sin comprobar
   a la vista.
+
+### 385. Plan Breeze III tras recorrer Plasma 6.7.5 (2026-11-26)
+
+* **Petición:** con Breeze II cerrado, ver si queda algo de Plasma por implementar, comparándolo con Plasma y no sólo con los archivos de BWM, y escribir el plan siguiente.
+* **Hecho:** `docs/BREEZE_PLAN_V3.md` (T0–T9, un prompt por fase con esfuerzo). Huecos comprobados en la sesión: el applet de notificaciones de la bandeja nativa no puede registrar su servidor (lo tiene Quickshell) y nadie lee `plasmanotifyrc`; Ratón, Touchpad y otras páginas de Preferencias dependen de KWin; dos fondos sin sincronizar (nota de `todo.md`); el host no ofrece `org.kde.PlasmaShell`, así que los temas globales no cambian la disposición, y bienvenida/salida no se usan; `kglobalacceld` instalado pero sin correr; faltan `ksystemstats`, `kdeplasma-addons` y `powerdevil`; Klipper duplica cliphist; sin vista general ni esquinas activas. Regla pedida por el usuario: los atajos de KDE nunca pisan los de BWM (`keybinds.json` manda; las colisiones quedan en conflicto). Descartados: Actividades, scripts/efectos de KWin de terceros, menú global, minimizar hacia la tarea, sombras X11, Discover y Restaurar sesión.
+* Enlazado desde `BREEZE_PLAN_V2.md`. Sólo documentación; ninguna fase empezada.
+
+### 386. Breeze III, T0: comprobaciones de uso real y Kickoff que se cerraba al pulsarlo (2026-11-26)
+
+* **Petición:** empezar T0; el usuario pidió que las pruebas las hiciera el asistente.
+* **Método:** ratón/teclado virtual (uinput, autorizado por el usuario) sobre workspaces vacíos y una kitty desechable. Se paró al ver que el usuario volvía a usar el MSI (un clic cayó en su Discord, sin efecto); todo restaurado (ventana, regla, workspaces, foco por dirección, host sin depuración).
+* **Correcto:** desplegables de la bandeja y del reloj anclados y cerrables con Escape o clic fuera; modo edición desde el panel y desde el escritorio minimiza y devuelve la ventana a su sitio; miniaturas de grupo 602×316 (2 ventanas) y 296×195 (una).
+* **Fallo corregido:** al pulsar el icono de Kickoff con su descripción visible, el menú se cerraba en <0,3 s. La descripción entraba en la captura de foco y, al ocultarla Kickoff, `FocusGrab` soltaba la captura entera. Ahora las ventanas transitorias se quitan de la captura sin soltarla (`FocusGrab::start(windows, transient)`, `remove_surface`). `test-focus-safety` 12/12, CTest 8/8, host `bb0c73db…` instalado, clic real 3/3.
+* **Segunda tanda (sesión libre, con guarda que paraba si cambiaba un workspace):** AndromedaLauncher (vía «Alternativas») se abre con clic y con Super y se cierra bien; con el estilo Sweet los desplegables toman sus colores y esquinas y siguen rectos del lado del panel.
+* **Segundo fallo corregido:** los widgets del escritorio salían con el icono genérico y al pulsarlos fallaba («non-existent property "expanded"»): el `DefaultCompactRepresentation.qml` del paquete del host era una versión mínima de R4. Ahora es el original de plasma-desktop 6.7.5, más su `AppletError.qml`, que faltaba. Comprobado con un widget Bluetooth en el escritorio: icono, desplegable anclado, cierre y «Quitar».
+* Sesión restaurada: workspaces, foco, `plasmarc` y panel desde la copia previa (Kickoff vuelve a su id 42). T0 completada; detalle en `docs/BREEZE_T0_RESULTS.md`.
+
+### 387. Breeze III, T1: notificaciones nativas de Plasma en Breeze (2026-11-26)
+
+* **Petición:** implementar T1 de `docs/BREEZE_PLAN_V3.md` (notificaciones de Plasma 6.7.5 en Breeze con relevo limpio, respaldo de Quickshell, «no molestar» común y efecto real de `kcm_notifications`).
+* **Servidor y popups (`src/bwm-plasma-host/notificationhost.{h,cpp}`, `main.cpp`, `CMakeLists.txt`):** `bwm-plasma-host --session` enlaza `PW::LibNotificationManager` (6.7.5) y reclama `org.freedesktop.Notifications` mediante el `NotificationManager::Server::self()` original (con `DontQueueService | AllowReplacement` y `QDBusServiceWatcher` para reclamar automáticamente al liberarse), sin parchear el applet `org.kde.plasma.notifications` de la bandeja nativa (que además registra `org.kde.JobViewServer` y `org.kde.kuiserver` y usa `libcanberra` para sonidos). `NotificationHost` intercepta `NotificationWindow` (`PlasmaQuick::PlasmaWindow`) en `QPlatformSurfaceEvent::SurfaceCreated` y las adapta a `LayerShellQt::Window` (`namespace` `bwm-plasma-notification`, `LayerTop`/`LayerOverlay` según `isCritical`, `KeyboardInteractivityNone` por defecto y `OnDemand` cuando `takeFocus` pasa a `true` para respuesta en línea), preservando la posición de `Globals.qml` frente al reset `(0, 0)` de `QWaylandWindow::handleGeometryChange`.
+* **Relevo y «No molestar» (`services/Notifications.qml`, `IllogicalImpulseFamily.qml`, `plasma-host.py`, `bwm-theme-manager.py`):** `bwm-plasma-host.sock` añade `dnd-status`, `dnd-toggle`, `dnd-set true|false`, `notifications-status` y `notifications-claim`, y escribe atómicamente `$XDG_RUNTIME_DIR/bwm-plasma-dnd` (observado con `FileView` en `Notifications.qml` para sincronizar `Notifications.silent` y `bwmNotifications` IPC en ambos sentidos). `NotificationPopups.qml` de respaldo sólo se carga cuando `!nativePlasmaHost`. Comprobado en `dbus-run-session`: `Quickshell`'s `NotificationServer` no libera `org.freedesktop.Notifications` al destruir `LazyLoader`/`Loader` ni permite `ReplaceExistingService`; por eso `bwm-theme-manager.py` y `plasma-host.py` reinician Quickshell únicamente cuando `quickshell` posee el nombre y el nuevo dueño es externo (`bwm-plasma-host` o `swaync`).
+* **Autoridad del monitor de popups:** en Breeze con host nativo manda Plasma (`plasmanotifyrc` + pantalla del panel principal en `Globals.qml`); `notifications.forceMonitor` aplica al respaldo de Quickshell, Retro y default sin `swaync`.
+* **Comprobado:** `test-notifications` (CTest `notification-host` en `dbus-run-session`, 4/4 PASS), `check-notifications-session.py` (`test-notifications-session` en Hyprland anidado + D-Bus privado: popup nativo en capa `bwm-plasma-notification` `x=36, y=665` con 0 `xdg_toplevel`, recolocación en vivo a `TopLeft` `x=36, y=125` vía `plasmanotifyrc` + señal `ConfigChanged`, DND y parada limpia), CTest completo `build/bwm-plasma-host-tests` **15/15 PASS**, binario instalado (`260a191aac3295a5…`), DND bidireccional en sesión, caída/recuperación del host (`bwm-plasma-host → quickshell → bwm-plasma-host`) y ciclo `plasma → retro → default → plasma` (`bwm-plasma-host → quickshell → swaync → bwm-plasma-host`). Pendiente de verificación visual por el usuario: acciones interactivas, respuesta en línea, trabajo KIO real y cambios desde `kcm_notifications`. Informe en `docs/BREEZE_T1_RESULTS.md`.
+
+### 388. Breeze III, T2: Preferencias del sistema (`kcm_bwm_input`, `plasma-localerc` y perfil KAuthorized) (2026-11-26)
+
+* **Petición:** implementar T2 de `docs/BREEZE_PLAN_V3.md` (recorrer todas las páginas de `settings-native.sh`, crear `kcm_bwm_input`, aplicar `plasma-localerc` `LC_*` en todas las skins y ocultar las páginas sin efecto mediante KAuthorized).
+* **Ratón y panel táctil (`kcm_bwm_input`):** nuevo gestor común `config/hypr/scripts/input-manager.py` (descubre dispositivos reales de `hyprctl -j devices`, filtra `consumer-control`/`system-control`, guarda `config/hypr/input-devices.json` y genera `config/hypr/modules/input_devices.lua`, cargado por `hyprland.lua` antes del Lua del usuario) + KCM `src/bwm-systemsettings/kcm_bwm_input.json` / `plugin_input.cpp` (categoría `pointing-devices`, conectado a `native-settings.py` y alias en `settings-native.sh`). Cubre velocidad/sensibilidad, perfil de aceleración (`""`/`adaptive`/`flat`), desplazamiento natural, modo zurdo y opciones de touchpad (`natural_scroll`, `tap-to-click`, `disable_while_typing`), globales y por dispositivo.
+* **Región y formatos (`plasma-localerc`):** `config/hypr/modules/environment.lua` carga `[Formats]` (`LC_*`) en todas las skins al iniciar sesión sin pisar `LANG` del sistema/usuario (sólo aplica `LANG` si estaba vacío/`C`/`POSIX`, respeta `useDetailed=false` y valida caracteres); `autostart.sh` y `bwm_session.py` (`sync_activation_environment`) propagan los `LC_*` a D-Bus y `systemd --user`.
+* **Perfil KAuthorized (`settings-profile/kdeglobals`):** ocultadas `kcm_mouse`, `kcm_touchpad`, `kcm_kwinscreenedges` (+ `_x11`), `kcm_kwintouchscreen` (+ `_x11`), `kcm_touchscreen`, `kcm_access`, `kcm_smserver` y `kcm_activities` (43 módulos activos en `systemsettings --list`, incluidos `kcm_bwm_input`, `kcm_notifications` y `kcm_regionandlang`).
+* **Comprobado:** `make -C src/bwm-systemsettings test install` (CTest 3/3 PASS, `kcm_bwm_input.so` instalado atómicamente), `tests/test_breeze_t2.py` (4/4 PASS: `input-manager.py` + sintaxis Lua, `native-settings.py input load`, `plasma-localerc` en `environment.lua` con `lua5.4`, y visibilidad real en `systemsettings --list`), `hyprctl configerrors` vacío. Informe completo página a página en `docs/BREEZE_T2_RESULTS.md`.
+
+
+
