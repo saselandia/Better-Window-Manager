@@ -1589,3 +1589,44 @@ python3 src/bwm-plasma-host/check-r5-reference.py --report /tmp/bwm-r5-reference
 El resultado distingue paridad de las ventanas de configuración de la comparación completa
 con efectos del compositor. Requisitos, resultados, diferencias y límites en
 `docs/BREEZE_R5_RESULTS.md`, iteración 13; evidencia en `docs/BREEZE_R5_REFERENCE_RESULTS.json`.
+
+
+## T3: un fondo entre BWM y Plasma
+
+`WallpaperBridge` utiliza el esquema y `KConfigPropertyMap` de `ShellCorona::setWallpaper`
+(Plasma 6.7.5), compartidos con `ContainmentConfigView::applyWallpaper`. El appletsrc sólo lo
+escribe Plasma. Cada escritorio conserva su plugin y configuración nativos; las asignaciones
+persistentes son por descripción de monitor en `bwm-plasma-host/desktop-assignments.json`.
+Las salidas virtuales sin EDID usan una identidad efímera que no se guarda.
+
+El socket privado acepta `wallpaper-status` y `wallpaper-set <JSON>` (`source`, `still`,
+`video`; `screen` opcional). El selector BWM aplica a todas las pantallas. «Escritorio y
+fondo…» cambia sólo el containment configurado. El principal de Qt alimenta el fondo único de
+BWM (si no hay principal disponible, el primer containment por ID). `PreviewImage` no se
+exporta. Presentación exporta la diapositiva actual; un paquete/otro plugin sin archivo local
+exporta una imagen del **subárbol del fondo**, sin iconos ni ventanas. Captura tras cargar o
+aplicar, no en cada fotograma; ocho imágenes recientes más las aún referenciadas.
+
+`wallpaper-sync.py export` publica con `bwm_wallpaper.publish` las cachés y perfiles de BWM y
+llama al renderizador habitual de arranque. Valida la skin y el PID de la marca ready para
+rechazar exportaciones tardías. No extrae colores de la imagen en Breeze. El paquete estándar
+`Plasma/Wallpaper` `org.bwm.video` reproduce vídeo mudo y en bucle con QtMultimedia; BWM le pasa
+el primer fotograma para el bloqueo y el respaldo. Los demás plugins conservan sus formatos.
+
+Con host listo, se retiran swww y mpvpaper/OWE. `window-guard.py` detecta su caída en unos 2 s y
+llama al respaldo (swww, y mpvpaper para vídeo). Cambiar el fondo sin host guarda una petición
+que `plasma-host.py start` reaplica; entrar de otra skin no sustituye los fondos por pantalla
+por la imagen representativa del bloqueo. No hay demonio ni vigilante inotify adicional.
+
+Prueba (XDG/D-Bus privados, compositor anidado, recursos desechables):
+
+```bash
+python3 src/bwm-plasma-host/check-wallpapers-session.py \
+  --binary build/bwm-plasma-host-tests/bwm-plasma-host \
+  --test build/bwm-plasma-host-tests/test-wallpapers-session \
+  --report build/bwm-plasma-host-tests/wallpaper-session-results.json
+```
+
+El script sustituye los comandos de motores externos para no parar los de la sesión diaria;
+el escritorio y el plugin de vídeo sí se renderizan de verdad. Informe y límites en
+`docs/BREEZE_T3_RESULTS.md`.

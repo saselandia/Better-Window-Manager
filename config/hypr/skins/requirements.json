@@ -73,6 +73,12 @@
       "packages": {"gentoo": "dev-qt/qtbase[gtk]", "arch": "qt6-base", "fedora": "qt6-qtbase-gui", "opensuse": "qt6-platformtheme-gtk3", "debian": "qt6-gtk-platformtheme"},
       "manual": "En Gentoo: activa USE=gtk en dev-qt/qtbase (package.use) y recompílalo"
     },
+    "qt-multimedia-qml": {
+      "label": "Qt Multimedia (QML)",
+      "why": "Fondos de vídeo dentro del escritorio nativo de Breeze, sin otro reproductor debajo",
+      "check": {"type": "qml", "module": "QtMultimedia"},
+      "packages": {"gentoo": "dev-qt/qtmultimedia[qml,ffmpeg]", "arch": "qt6-multimedia qt6-multimedia-ffmpeg", "fedora": "qt6-qtmultimedia", "opensuse": "qt6-multimedia-imports", "debian": "qml6-module-qtmultimedia qt6-multimedia-plugins"}
+    },
     "qt-imageformats": {
       "label": "Plugin WebP de Qt (qtimageformats)",
       "referenceVersion": "6.11.2",

@@ -51,6 +51,10 @@
 #include "panelruntime.h"
 #include "taskpreview.h"
 #include "desktopviewhost.h"
+#include "wallpaperbridge.h"
+#include <QLocalServer>
+#include <QLocalSocket>
+#include <QSaveFile>
 #include "tasklauncher.h"
 #include "previewappearance.h"
 #include "taskthumbnail.h"
@@ -187,6 +191,7 @@ int main(int argc, char **argv) {
         std::unique_ptr<PlasmaQuick::SharedQmlEngine> thumbnailEngine;
 
         ViewCorona corona;
+        WallpaperBridge wallpapers(&corona, QStringLiteral(BWM_WALLPAPER_HELPER_SOURCE));
         auto shell = KPackage::PackageLoader::self()->loadPackage(QStringLiteral("Plasma/Shell"), QStringLiteral(BWM_SHELL_SOURCE_DIR));
         if(!shell.isValid()) { fprintf(stderr,"bwm-plasma-host: invalid Plasma/Shell package\n"); return 5; }
         corona.setKPackage(shell);
@@ -297,6 +302,10 @@ int main(int argc, char **argv) {
         // Host one DesktopViewHost per connected screen for Plasma's original DesktopEditMode and right-click menu.
         std::map<QString, std::unique_ptr<DesktopViewHost>> desktopViews;
         QHash<QString, QPointer<Plasma::Containment>> desktopContainments;
+        const QString desktopAssignmentsPath = storeDir + QStringLiteral("/desktop-assignments.json");
+        QJsonObject desktopAssignments;
+        if (QFile f(desktopAssignmentsPath); f.open(QIODevice::ReadOnly))
+            desktopAssignments = QJsonDocument::fromJson(f.readAll()).object();
         QList<Plasma::Containment*> existingDesktops;
         for(auto *c : corona.containments())
             if(c->containmentType() == Plasma::Containment::Desktop && !c->destroyed()) existingDesktops.append(c);
@@ -306,17 +315,37 @@ int main(int argc, char **argv) {
             QSet<QString> alive;
             int deskIdx = 0;
             for(QScreen *s : QGuiApplication::screens()) {
-                const QString desc = screenDesc(s);
-                if(desc.isEmpty()) continue;
+                const QString persistentDesc = screenDesc(s);
+                // Virtual outputs without EDID still need a desktop. Their connector
+                // is an in-memory key only; never persist it as monitor identity.
+                const QString desc = persistentDesc.isEmpty() ? QStringLiteral("runtime:%1").arg(s->name()) : persistentDesc;
                 alive.insert(desc);
                 if(desktopViews.count(desc) > 0) continue;
                 Plasma::Containment *desk = desktopContainments.value(desc);
                 if(!desk) {
+                    for (auto *candidate : existingDesktops)
+                        if (!desktopContainments.values().contains(candidate)
+                            && desktopAssignments.value(QString::number(candidate->id())).toString() == desc) { desk = candidate; break; }
                     while(deskIdx < existingDesktops.size() && desktopContainments.values().contains(existingDesktops[deskIdx])) ++deskIdx;
-                    desk = deskIdx < existingDesktops.size() ? existingDesktops[deskIdx++] : corona.createContainment(QStringLiteral("org.kde.plasma.folder"));
+                    if (!desk && desktopAssignments.isEmpty())
+                        desk = deskIdx < existingDesktops.size() ? existingDesktops[deskIdx++] : nullptr;
+                    if (!desk) desk = corona.createContainment(QStringLiteral("org.kde.plasma.folder"));
                 }
                 if(!desk || desk->failedToLaunch()) continue;
                 desktopContainments.insert(desc, desk);
+                // Bootstrap only an unconfigured image wallpaper. Existing native
+                // per-screen choices always win over BWM's representative path.
+                if (desk->wallpaperPlugin() == QStringLiteral("org.kde.image") &&
+                    desk->config().group(QStringLiteral("Wallpaper")).group(QStringLiteral("org.kde.image"))
+                        .group(QStringLiteral("General")).readEntry(QStringLiteral("Image"), QString()).isEmpty()) {
+                    QFile f(configBase + QStringLiteral("/illogical-impulse/config.json"));
+                    if (f.open(QIODevice::ReadOnly)) {
+                        const auto bg = QJsonDocument::fromJson(f.readAll()).object().value("background").toObject();
+                        const QString still = bg.value("thumbnailPath").toString(bg.value("wallpaperPath").toString());
+                        if (QFileInfo(still).isFile()) WallpaperBridge::apply(desk, QStringLiteral("org.kde.image"),
+                            {{QStringLiteral("Image"), QUrl::fromLocalFile(still).toString()}});
+                    }
+                }
                 auto view = std::make_unique<DesktopViewHost>(&corona, true, s);
                 corona.bind(desk, view.get());
                 if(!view->load(desk)) {
@@ -324,7 +353,22 @@ int main(int argc, char **argv) {
                     corona.unbind(desk);
                     continue;
                 }
+                QObject::connect(view.get(), &PlasmaQuick::ContainmentView::containmentChanged, &app, [&, nativeView = view.get(), desc, persistentDesc] {
+                    if (auto *c = nativeView->containment()) {
+                        desktopContainments[desc] = c;
+                        wallpapers.observe(c, desc);
+                        if (persistentDesc.isEmpty()) return;
+                        desktopAssignments[QString::number(c->id())] = desc;
+                        QSaveFile f(desktopAssignmentsPath);
+                        if (f.open(QIODevice::WriteOnly)) { f.write(QJsonDocument(desktopAssignments).toJson()); f.commit(); }
+                    }
+                });
+                if (!persistentDesc.isEmpty()) desktopAssignments[QString::number(desk->id())] = desc;
+                if (QSaveFile f(desktopAssignmentsPath); !persistentDesc.isEmpty() && f.open(QIODevice::WriteOnly)) {
+                    f.write(QJsonDocument(desktopAssignments).toJson()); f.commit();
+                }
                 view->show();
+                wallpapers.observe(desk, desc);
                 desktopViews.emplace(desc, std::move(view));
             }
             for(auto it = desktopViews.begin(); it != desktopViews.end(); ) {
@@ -338,6 +382,22 @@ int main(int argc, char **argv) {
             }
         };
 
+        QObject::connect(&wallpapers, &WallpaperBridge::changed, &app, [&] {
+            auto updated = desktopAssignments;
+            for (const auto &entry : wallpapers.status().value("screens").toArray()) {
+                const auto screen = entry.toObject();
+                const auto description = screen.value("screen").toString();
+                if (!description.isEmpty() && !description.startsWith(QStringLiteral("runtime:")))
+                    updated[QString::number(screen.value("containment").toInt())] = description;
+            }
+            if (updated == desktopAssignments) return;
+            QSaveFile f(desktopAssignmentsPath);
+            if (f.open(QIODevice::WriteOnly)) {
+                f.write(QJsonDocument(updated).toJson());
+                if (f.commit()) desktopAssignments = updated;
+            }
+        });
+
         NotificationHost notificationHost(runtimeDir + QStringLiteral("/bwm-plasma-dnd"));
         notificationHost.start();
 
@@ -350,26 +410,22 @@ int main(int argc, char **argv) {
         QObject::connect(&runtime, &PanelRuntime::changed, &app, saveState, Qt::QueuedConnection);
 
         const QString sockPath = runtimeDir + QStringLiteral("/bwm-plasma-host.sock");
-        int ctlFd = ::socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
-        QSocketNotifier *ctlNotifier = nullptr;
-        if(ctlFd >= 0) {
-            const QByteArray rawPath = QFile::encodeName(sockPath);
-            sockaddr_un addr{};
-            addr.sun_family = AF_UNIX;
-            if(rawPath.size() < int(sizeof(addr.sun_path))) {
-                ::unlink(rawPath.constData());
-                std::memcpy(addr.sun_path, rawPath.constData(), size_t(rawPath.size()) + 1);
-                if(::bind(ctlFd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == 0 && ::listen(ctlFd, 8) == 0) {
-                    ::chmod(rawPath.constData(), 0600);
-                    ctlNotifier = new QSocketNotifier(ctlFd, QSocketNotifier::Read, &app);
-                    QObject::connect(ctlNotifier, &QSocketNotifier::activated, &app, [ctlFd, &corona, &runtime, &screenDesc, &notificationHost]{
-                        const int client = ::accept4(ctlFd, nullptr, nullptr, SOCK_CLOEXEC);
-                        if(client < 0) return;
-                        char buf[512]{};
-                        const ssize_t n = ::read(client, buf, sizeof(buf) - 1);
+        QLocalServer control;
+        control.setSocketOptions(QLocalServer::UserAccessOption);
+        QLocalServer::removeServer(sockPath);
+        if (control.listen(sockPath)) {
+            QObject::connect(&control, &QLocalServer::newConnection, &app, [&] {
+                while (auto *client = control.nextPendingConnection()) {
+                    auto buffer = std::make_shared<QByteArray>();
+                    QObject::connect(client, &QLocalSocket::disconnected, client, &QObject::deleteLater);
+                    QTimer::singleShot(2000, client, [client] { client->abort(); client->deleteLater(); });
+                    auto consume = [&, client, buffer] {
+                        buffer->append(client->readAll());
+                        if (buffer->size() > 65536) { client->abort(); return; }
+                        if (!buffer->contains('\n')) return;
+                        const QString line = QString::fromUtf8(buffer->left(buffer->indexOf('\n')));
+                        client->disconnect(client, &QLocalSocket::readyRead, nullptr, nullptr);
                         QByteArray reply("err\n");
-                        if(n > 0) {
-                            const QString line = QString::fromUtf8(buf, int(n)).trimmed();
                             if(line == QStringLiteral("toggle-launcher") || line.startsWith(QStringLiteral("toggle-launcher "))) {
                                 const QString targetDesc = line.mid(QStringLiteral("toggle-launcher").size()).trimmed();
                                 QScreen *targetScreen = targetDesc.isEmpty() ? nullptr : BwmOutput::resolveScreen(targetDesc);
@@ -420,6 +476,11 @@ int main(int argc, char **argv) {
                                     Q_EMIT chosen->activated();
                                     reply = "ok\n";
                                 }
+                            } else if(line == QStringLiteral("wallpaper-status")) {
+                                reply = QJsonDocument(wallpapers.status()).toJson(QJsonDocument::Compact) + "\n";
+                            } else if(line.startsWith(QStringLiteral("wallpaper-set "))) {
+                                const auto request = QJsonDocument::fromJson(line.mid(14).toUtf8());
+                                reply = request.isObject() && wallpapers.setWallpaper(request.object()) ? "ok\n" : "err\n";
                             } else if(line == QStringLiteral("dnd-status")) {
                                 reply = notificationHost.isInhibited() ? "true\n" : "false\n";
                             } else if(line == QStringLiteral("dnd-toggle")) {
@@ -436,19 +497,13 @@ int main(int argc, char **argv) {
                             } else if(line == QStringLiteral("notifications-claim")) {
                                 reply = notificationHost.claimService() ? "ok\n" : "err\n";
                             }
-                        }
-                        const ssize_t ignored = ::write(client, reply.constData(), size_t(reply.size()));
-                        (void)ignored;
-                        ::close(client);
-                    });
-                } else {
-                    ::close(ctlFd);
-                    ctlFd = -1;
+                        client->write(reply);
+                        client->disconnectFromServer();
+                    };
+                    QObject::connect(client, &QLocalSocket::readyRead, client, consume);
+                    if (client->bytesAvailable()) consume();
                 }
-            } else {
-                ::close(ctlFd);
-                ctlFd = -1;
-            }
+            });
         }
 
         if(QFile f(readyPath); f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -462,8 +517,7 @@ int main(int argc, char **argv) {
 
         const int code = app.exec();
         notificationHost.stop();
-        delete ctlNotifier;
-        if(ctlFd >= 0) ::close(ctlFd);
+        control.close();
         QFile::remove(sockPath);
         QFile::remove(readyPath);
         for(auto it = desktopViews.begin(); it != desktopViews.end(); ++it) {

@@ -14,6 +14,7 @@ change; when the result differs it rewrites boot/.stamp, which the root service 
 
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -23,17 +24,18 @@ from pathlib import Path
 from PIL import Image
 
 HOME = Path.home()
-ASSETS = HOME / ".config" / "hypr" / "omarchy" / "boot"
-OUT = HOME / ".local" / "state" / "bwm" / "boot"
-SCRIPTS = HOME / ".config" / "hypr" / "scripts"
+ASSETS = Path(__file__).resolve().parents[1] / "omarchy" / "boot"
+STATE = Path(os.environ.get("XDG_STATE_HOME", HOME / ".local/state"))
+OUT = STATE / "bwm" / "boot"
+SCRIPTS = Path(__file__).resolve().parent
 FAILED = "#f7768e"  # Omarchy's colour for a wrong password
 
 
 def active_theme():
     try:
-        return subprocess.run([sys.executable, str(SCRIPTS / "bwm-theme-manager.py"), "get"],
-                              capture_output=True, text=True).stdout.strip() or "default"
-    except Exception:
+        config = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config"))
+        return json.loads((config / "illogical-impulse/config.json").read_text()).get("appearance", {}).get("bwmTheme", "default")
+    except (OSError, ValueError):
         return "default"
 
 
@@ -45,13 +47,13 @@ def theme_colors():
     if theme == "retro":
         try:
             import tomllib
-            with open(HOME / ".local" / "state" / "bwm" / "omarchy" / "colors.toml", "rb") as f:
+            with open(STATE / "bwm" / "omarchy" / "colors.toml", "rb") as f:
                 c = tomllib.load(f)
             return c["background"], c["foreground"]
         except Exception:
             pass
     try:
-        c = json.loads((HOME / ".local" / "state" / "quickshell" / "user" / "generated" / "colors.json").read_text())
+        c = json.loads((STATE / "quickshell" / "user" / "generated" / "colors.json").read_text())
         return c["surface"], c["on_surface"]
     except Exception:
         return "#1a1b26", "#ffffff"

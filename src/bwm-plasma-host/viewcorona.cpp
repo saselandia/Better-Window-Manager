@@ -342,6 +342,7 @@ void ViewCorona::bind(Plasma::Containment *containment,QQuickWindow *window) {
     binding.uiReady=connect(containment,&Plasma::Containment::uiReadyChanged,this,[this]{updateDesktopScreens();});
     m_views.insert(containment,binding);
     containment->reactToScreenChange();
+    if (isDesktop(containment)) Q_EMIT desktopViewBound(containment);
 }
 void ViewCorona::forget(const Plasma::Containment *containment) {
     m_desktopsWithScreen.remove(containment);

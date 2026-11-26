@@ -60,7 +60,7 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 * Selector de estilos: Alt+T (Retro: carrusel 3D con capturas de lo que imita cada estilo, `skin-switcher.sh`; default (end-4): rofi; Plasma: «Estilo global»). Temas de Retro: Alt+R (carrusel, sólo existe en Retro: campo `skins` de `keybinds.json`; caché estable de miniaturas JPG como Omarchy, §3.71), menú → Estilo → Temas → Elegir tema; catálogo en Estilo → Temas → Catálogo.
 * **Temas y Plugins:** Retro los integra como listas del menú (§3.136): carrusel nativo de temas y Catálogo; Plugins → Instalados, Catálogo, Clonar y Quitar. Breeze conserva las páginas `ThemesConfig.qml`/`PluginsConfig.qml` con miniaturas, filtros, búsqueda remota y Git/URL; default (end-4) no las muestra. Comparten el motor `bwm-addons.py` y los formatos originales. Guía: `docs/OMARCHY_ADDONS.md`.
 * Temas de comunidad en `~/.local/share/bwm/omarchy-themes` (`XDG_DATA_HOME`); también se reconoce `~/.config/omarchy/themes`, que aquí enlaza al repo y no se usa como destino de instalación. `theme_directory()` y `list_omarchy_themes()` comparten precedencia, igual que la CLI y el carrusel.
-* **Animaciones por skin (§3.94):** `config/hypr/skins/<id>/hypr/animations.lua` (default (end-4) = dots-hyprland, Retro = Omarchy, Breeze = las MD3 anteriores). El fondo lo pinta el shell como en el original: `Background.qml` de end-4 en default (cambio directo, sin la transición «grow» de swww) y el plugin background de Omarchy en Retro (`modules/ii/omarchyBackground`, revelación diagonal de 840 ms); swww queda debajo sin animación. Breeze sigue con swww.
+* **Animaciones por skin (§3.94):** `config/hypr/skins/<id>/hypr/animations.lua` (default (end-4) = dots-hyprland, Retro = Omarchy, Breeze = las MD3 anteriores). El fondo lo pinta el shell como en el original: `Background.qml` de end-4 en default (cambio directo, sin la transición «grow» de swww) y el plugin background de Omarchy en Retro (`modules/ii/omarchyBackground`, revelación diagonal de 840 ms); swww queda debajo sin animación. Breeze usa el fondo nativo por pantalla y conserva swww como respaldo (§389).
 * **Intros de fondo (Retro, §3.116):** un fondo fijo con `backgrounds/intros/<nombre>.<ext>` la reproduce con OWE al elegirlo (también al cambiar de tema) y al entrar, una vez por sesión tras desbloquear; se apaga en el menú → Estilo → Intros de fondo (`omarchy-theme-bg-intro`) o con las animaciones apagadas.
 * **Selectores de fondos:** todas las skins sólo toman `~/Pictures/Wallpapers` (§311). default (end-4) (§3.93): el de end-4 (`modules/ii/wallpaperSelector`, confinado a esa carpeta) con Alt+W, Ctrl+Super+T y Ctrl+Super+Alt+T (aleatorio de la carpeta); aplica con `switchwall.sh`. Retro (§3.111): carrusel original de Omarchy con Alt+W; backend `skins/retro/scripts/wallpaper-picker.py`. Breeze conserva el rofi de `wallpaper-picker.sh`.
 * **default (end-4): selección de colores de end-4 (§3.69)**: `set-wallpaper.sh` llama a `switchwall.sh --colors-only`; respeta `appearance.palette.type`, preferencia claro/oscuro de GSettings y `enableAppsAndShell`. El clasificador automático y el generador de terminal son los originales; dependencias aisladas en `~/.local/share/bwm/default-colors-venv`, preparadas por el instalador.
@@ -106,7 +106,16 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 
 ### 2.4 Breeze (Kde plasma): port sobre Hyprland
 
-* **Breeze III (`docs/BREEZE_PLAN_V3.md`, T0–T9, 2026-11-26, §385):** plan activo. Avisos de Plasma, Preferencias que funcionan u ocultan, fondo único BWM ↔ Plasma, temas globales completos (disposición, bienvenida, salida), atajos globales de KDE sin pisar los de BWM, paquetes que faltan, compatibilidad medida con la tienda y vista general. Sin empezar.
+* **Fondo único BWM ↔ Plasma (T3, §389):** `WallpaperBridge` comparte el aplicador original con
+  «Escritorio y fondo…». BWM aplica a todos los containments; Plasma conserva elecciones por
+  pantalla. La principal de Qt alimenta las cachés/perfiles/bloqueo de BWM; presentación publica
+  su diapositiva y otros plugins una instantánea sólo del fondo. Vídeo nativo `org.bwm.video`
+  (QtMultimedia, póster para bloqueo), sin swww/mpvpaper debajo. `window-guard.py` recupera el
+  respaldo al caer el host; elecciones sin host se reaplican al arrancar, entrar de skin no
+  aplana la configuración por pantalla. Host nuevo activado y fondos diarios originales
+  restaurados; paleta intacta. Pruebas y límites: `docs/BREEZE_T3_RESULTS.md`.
+
+* **Breeze III (`docs/BREEZE_PLAN_V3.md`, T0–T9, 2026-11-26, §385):** plan activo. Avisos de Plasma, Preferencias que funcionan u ocultan, fondo único BWM ↔ Plasma, temas globales completos (disposición, bienvenida, salida), atajos globales de KDE sin pisar los de BWM, paquetes que faltan, compatibilidad medida con la tienda y vista general. T0–T3 completadas (§386–389); T4 es la siguiente.
 * **Breeze II (`BREEZE_PLAN_V2.md`, R0–R9 cerrados — 2026-11-26, §§372–381):** plan completado
   con los binarios finales cargados en la nueva sesión (`breezebars.so` §376, `omarchy-titlebars.so`
   §377, `bwm-plasma-host` ready en ambas pantallas, `bwm-plasma-desktops`, `bwm-decorator` y
@@ -7278,3 +7287,35 @@ git status; git log --oneline -5; git push origin main
 
 
 
+
+
+### 389. Breeze III, T3: fondo único entre BWM y los containments nativos de Plasma (2026-11-26)
+
+* **Petición:** continuar `BREEZE_PLAN_V3.md` por T3. El usuario autorizó después reiniciar host y
+  vigilante, probar un cambio de fondo y restaurar los fondos originales.
+* **Implementado:** `WallpaperBridge` comparte la adaptación de `ShellCorona::setWallpaper` 6.7.5
+  con `ContainmentConfigView::applyWallpaper`, respetando esquemas/claves inmutables. Socket privado
+  asíncrono (`wallpaper-set`/`wallpaper-status`, 64 KiB/2 s), fondos nativos por descripción de
+  pantalla, integración de `set-wallpaper.sh` y `Wallpapers.qml` (IPC y selector de respaldo).
+* **Autoridad:** Plasma por pantalla; BWM aplica a todas, el principal de Qt alimenta su fondo único.
+  `scripts/bwm_wallpaper.py` publica cachés y perfiles en ambos caminos. No exporta PreviewImage;
+  presentación sigue Image; paquetes/plugins sin imagen local exportan sólo su item de fondo.
+  `org.bwm.video` usa formato Plasma/Wallpaper y QtMultimedia, mudo/bucle, póster para el bloqueo.
+  Requisito recomendado declarado y tabla regenerada. Ningún formato de tema alternativo.
+* **Motores/respaldo:** swww/mpvpaper/OWE se retiran con el host listo. `window-guard.py` comprueba
+  su caída cada 2 s y restaura el fondo representativo; una marca ready obsoleta no lo bloquea.
+  Elecciones sin host quedan pendientes; entrar de otra skin conserva los fondos nativos distintos.
+  Exportaciones antiguas rechazadas por skin/PID. Sin demonio ni FileView adicional.
+* **Pruebas:** Python **19/19**, CTest del host (`BUILD_TESTING=ON`) **15/15**; compositor anidado
+  con dos salidas Wayland a escalas 1/1,25, ventana nativa Aplicar, imágenes distintas por pantalla,
+  color (píxel exportado), presentación y vídeo con fotogramas distintos; rutas largas/Unicode,
+  petición fragmentada, reanudación y fallback tras caída. Sin afectar monitores físicos.
+* **Despliegue y sesión:** `plasma-host.py build` instaló atómicamente SHA256 `1c01b5c4a67ca845…`;
+  host activo **1466015**, ready. Fondo temporal aplicado en las dos pantallas y originales
+  restaurados mediante API; BWM recibe el principal nativo, hashes de paleta idénticos,
+  swww/mpvpaper parados, vigilante relanzado como hijo de Hyprland y configerrors vacío.
+  Copia privada previa en `~/.local/state/bwm/t3-session-backup/` (no en Git).
+* **Límites:** sin confirmación visual física del usuario, sin ciclo completo diario de skins ni
+  reconexión física; plugins opacos de terceros exportan al cargar/aplicar, no cada cambio interno
+  arbitrario. SDDM/Plymouth conservan sus colores estáticos, sin foto ni operación root.
+  Informe: `docs/BREEZE_T3_RESULTS.md`. **T3 completada; T4 no empezada al cerrar esta fase.**

@@ -1,0 +1,8 @@
+{
+  "KPackageStructure": "Plasma/Wallpaper",
+  "KPlugin": {
+    "Id": "org.bwm.video", "Name": "Video", "Name[es]": "Vídeo",
+    "Description": "Silent looping video wallpaper", "License": "GPL-2.0-or-later",
+    "Icon": "video-x-generic", "Version": "1.0"
+  }
+}

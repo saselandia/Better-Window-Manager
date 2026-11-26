@@ -39,6 +39,7 @@ _spec.loader.exec_module(xwayland_primary)
 
 sys.path.insert(0, HERE)
 import bwm_session  # noqa: E402
+import bwm_wallpaper
 
 CHECK_DELAYS = (0.3, 1, 2, 4, 7, 12, 20)
 SHELL_CHECK_SECS = 10
@@ -155,6 +156,8 @@ def black_outputs():
 
 def restore_wallpapers(tries=10):
     """Pone el fondo actual en los monitores que swww/awww muestra en negro (un color)."""
+    if bwm_wallpaper.native_plasma_ready():
+        return
     if not WALL_BIN or subprocess.run(["pgrep", "-x", "mpvpaper"], stdout=subprocess.DEVNULL).returncode == 0:
         return  # sin swww, o con un fondo de vídeo (mpvpaper) no hay nada que reponer
     for _ in range(tries):
@@ -201,13 +204,26 @@ WALLPAPER_CHECK_SECS = 30
 def keep_wallpaper(checks=None, sleep=time.sleep):
     """Repone el fondo si swww lo pierde sin que cambie ningún monitor (al despertar las pantallas,
     tras el bloqueo...): Hyprland enseñaría entonces su fondo por defecto, el del modo seguro."""
+    previous_native = None
+    elapsed = WALLPAPER_CHECK_SECS
     while checks is None or checks > 0:
         if checks is not None:
             checks -= 1
-        sleep(WALLPAPER_CHECK_SECS)
+        sleep(2)
         try:
-            if black_outputs() and not bwm_session.theme_manager_busy():
+            native = bwm_wallpaper.native_plasma_ready()
+            if previous_native is not False and not native and not bwm_session.theme_manager_busy():
+                restored = subprocess.run([sys.executable, os.path.join(HERE, "../skins/plasma/scripts/wallpaper-sync.py"), "fallback"],
+                                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
+                if restored.returncode == 0:
+                    previous_native = False
+            if native:
+                previous_native = True
+            elapsed += 2
+            if not native and elapsed >= WALLPAPER_CHECK_SECS and black_outputs() and not bwm_session.theme_manager_busy():
                 restore_wallpapers(tries=3)
+            if elapsed >= WALLPAPER_CHECK_SECS:
+                elapsed = 0
         except Exception as exc:  # un fallo puntual no debe parar el vigilante
             print(f"window-guard: fondo: {exc}", file=sys.stderr, flush=True)
 

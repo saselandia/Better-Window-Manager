@@ -7,7 +7,7 @@ agregar el las kde plasma settings y hacer que coincidan con las settings que te
 
 
 
-añadir en kde plasma el selector de wallpaper bien integrado con el de kde plasma settings para  que se pueda cambiar desde los dos sitios
+HECHO (Breeze III T3, 2026-11-26): añadir en kde plasma el selector de wallpaper bien integrado con el de kde plasma settings para  que se pueda cambiar desde los dos sitios — docs/BREEZE_T3_RESULTS.md
 
 
 

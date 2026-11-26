@@ -12,6 +12,8 @@
 #include "containmentconfigview.h"
 #include "currentcontainmentactionsmodel.h"
 #include "desktopviewhost.h"
+#include "wallpaperbridge.h"
+#include "viewcorona.h"
 
 #include <QDebug>
 #include <QDir>
@@ -222,37 +224,10 @@ void ContainmentConfigView::applyWallpaper()
         params.remove(u"PreviewImage"_s);
     }
 
-    // BWM: ShellCorona::setWallpaper 6.7.5 for this view's containment, without the
-    // D-Bus QColor unmarshalling (parameters never arrive over D-Bus here).
-    Plasma::Containment *containment = m_containment;
-    KConfigPropertyMap *config = nullptr;
-    std::unique_ptr<KConfigPropertyMap> owned;
-    if (m_currentWallpaperPlugin != containment->wallpaperPlugin()) {
-        KPackage::Package pkg = KPackage::PackageLoader::self()->loadPackage(QStringLiteral("Plasma/Generic"));
-        pkg.setDefaultPackageRoot(QStringLiteral(PLASMA_RELATIVE_DATA_INSTALL_DIR "/wallpapers"));
-        pkg.setPath(m_currentWallpaperPlugin);
-        QFile file(pkg.filePath("config", QStringLiteral("main.xml")));
-        KConfigGroup cfg = containment->config().group(u"Wallpaper"_s).group(m_currentWallpaperPlugin);
-        auto *loader = new KConfigLoader(cfg, &file);
-        owned = std::make_unique<KConfigPropertyMap>(loader, nullptr);
-        loader->setParent(owned.get());
-        config = owned.get();
-    } else if (auto *wallpaperGraphicsObject = containment->property("wallpaperGraphicsObject").value<QObject *>()) {
-        config = wallpaperGraphicsObject->property("configuration").value<KConfigPropertyMap *>();
-    }
-    if (config) {
-        const auto items = config->keys();
-        for (const auto &itemName : items) {
-            auto it = params.find(itemName);
-            if (it != params.end()) {
-                config->insert(itemName, it.value());
-            }
-        }
-        config->writeConfig();
-    }
-    containment->setWallpaperPlugin(m_currentWallpaperPlugin);
-    containment->config().sync();
-    onWallpaperChanged(uint(qMax(0, containment->screen())));
+    if (!WallpaperBridge::apply(m_containment, m_currentWallpaperPlugin, params)) return;
+    if (auto *corona = qobject_cast<ViewCorona *>(m_containment->corona()))
+        Q_EMIT corona->wallpaperApplied(m_containment);
+    onWallpaperChanged(uint(qMax(0, m_containment->screen())));
 }
 
 void ContainmentConfigView::onWallpaperChanged(uint /*screenIdx*/)

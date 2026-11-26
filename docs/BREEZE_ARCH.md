@@ -609,3 +609,34 @@ gestores comunes de BWM para todo lo compartido entre skins:
 Informes de aceptación y límites detallados: [BREEZE_R9_RESULTS.md](BREEZE_R9_RESULTS.md) y
 [BREEZE_PLAN_V2.md](BREEZE_PLAN_V2.md).
 
+
+
+## 19. Fondo único (Breeze III, T3)
+
+La autoridad en Breeze con host activo es la configuración nativa de los containments de
+Plasma, por pantalla. `WallpaperBridge::apply` comparte la implementación de
+`ShellCorona::setWallpaper` 6.7.5 con `ContainmentConfigView`; no hay escritor alternativo de
+appletsrc. `set-wallpaper.sh` encamina las elecciones de BWM al socket del host (todas las
+pantallas). La ventana nativa conserva la elección por pantalla y notifica el puente al
+Aplicar. El cambio de diapositiva se sigue desde `configuration.Image`; `PreviewImage` queda
+fuera de la publicación.
+
+La proyección al fondo único de BWM corresponde a `QGuiApplication::primaryScreen()`; si no
+está representada, al containment conectado de menor ID. `bwm_wallpaper.publish` es común a
+los dos caminos y actualiza `current_wallpaper{,_plasma}`, `background.wallpaperPath` y
+`background.thumbnailPath` en ambos perfiles. Imagen/presentación exportan su archivo actual;
+los paquetes y plugins sin imagen local exportan un grab del item del fondo únicamente. Los
+plugins de terceros pueden ofrecer su propia carga asíncrona: si no exponen `loading`, la
+instantánea se obtiene al aplicar/cargar (no se promete seguir cambios internos arbitrarios).
+
+Los vídeos elegidos desde BWM usan `org.bwm.video`, un paquete Plasma/Wallpaper con QtMultimedia,
+sonido silenciado y bucle. Su póster llega al bloqueo. Sin host se conservan swww/mpvpaper;
+con él se retiran para no reproducir detrás del escritorio. El vigilante común recupera el
+último fondo representativo al caer el proceso, incluida una marca ready obsoleta. Las
+elecciones BWM hechas sin host se guardan como petición y se consumen al volver; una entrada
+de skin conserva los fondos nativos por pantalla. Paleta estática de Breeze intacta.
+
+El renderizador de SDDM/Plymouth se invoca por el camino habitual. Sus temas existentes usan
+los colores de la skin, no una foto del escritorio; T3 no añade una foto a esas pantallas ni
+realiza ninguna operación root. `bwm_boot.py` respeta XDG de estado para poder comprobar esa
+publicación sin escribir el staging diario. Informe: `BREEZE_T3_RESULTS.md`.

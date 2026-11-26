@@ -176,6 +176,7 @@ def install_binary() -> int:
         os.replace(tmp_name, BINARY)
     finally:
         Path(tmp_name).unlink(missing_ok=True)
+    subprocess.run([sys.executable, str(SCRIPT_DIR / "wallpaper-sync.py"), "install"], check=True)
     return 0
 
 
@@ -202,9 +203,11 @@ def start_host(force: bool = False) -> int:
         return 0
     if not BINARY.is_file() or not os.access(BINARY, os.X_OK):
         return 0
+    subprocess.run([sys.executable, str(SCRIPT_DIR / "wallpaper-sync.py"), "install"], check=True)
     ensure_tray_watcher()
     if find_running_pids():
         notify_quickshell_host(True)
+        subprocess.run([sys.executable, str(SCRIPT_DIR / "wallpaper-sync.py"), "resume"], check=False, timeout=10)
         return 0
 
     STATE_DIR.mkdir(parents=True, exist_ok=True)
@@ -256,6 +259,7 @@ def start_host(force: bool = False) -> int:
             PID_FILE.write_text(f"{ready}\n")
             ensure_tray_watcher()
             release_quickshell_notifications_if_held(bwm_session)
+            subprocess.run([sys.executable, str(SCRIPT_DIR / "wallpaper-sync.py"), "resume"], check=False, timeout=10)
             return 0
         time.sleep(0.05)
     stop_host()
@@ -415,7 +419,7 @@ def main(argv: list[str]) -> int:
         return 0 if ready_pid() is not None else 1
     if cmd == "toggle-launcher":
         return toggle_launcher()
-    if cmd in ("dnd-status", "dnd-toggle", "notifications-status", "notifications-claim"):
+    if cmd in ("dnd-status", "dnd-toggle", "notifications-status", "notifications-claim", "wallpaper-status"):
         reply = host_ctl(cmd)
         if reply is None:
             return 1

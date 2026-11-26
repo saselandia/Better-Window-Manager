@@ -41,12 +41,19 @@ Singleton {
     function load () {} // For forcing initialization
     
     function openFallbackPicker(darkMode = Appearance.m3colors.darkmode) {
+        if (Appearance.isPlasma) {
+            Quickshell.execDetached([`${Quickshell.env("HOME")}/.config/hypr/scripts/wallpaper-picker.sh`]);
+            return;
+        }
         Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--mode", darkMode ? "dark" : "light"]);
     }
 
     function apply(path, darkMode = Appearance.m3colors.darkmode) {
         if (!path || path.length === 0) return;
-        Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--mode", darkMode ? "dark" : "light", "--image", path]);
+        if (Appearance.isPlasma)
+            Quickshell.execDetached([`${Quickshell.env("HOME")}/.config/hypr/scripts/set-wallpaper.sh`, path]);
+        else
+            Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--mode", darkMode ? "dark" : "light", "--image", path]);
         root.changed()
     }
 

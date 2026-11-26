@@ -21,6 +21,12 @@ if [ ! -f "$WALLPAPER" ]; then
     exit 1
 fi
 
+# Breeze nativo: la misma entrada que los selectores y la IPC, sobre Plasma.
+CURRENT_THEME="$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null || echo default)"
+if [[ "$CURRENT_THEME" == "plasma" ]] && python3 "$HOME/.config/hypr/skins/plasma/scripts/wallpaper-sync.py" route "$WALLPAPER"; then
+    exit 0
+fi
+
 # Fondos de vídeo (Omarchy 4.5): swww, las paletas y el bloqueo usan su primer fotograma; el vídeo
 # lo reproduce el motor de cada skin (bwm-video-wallpaper: OWE en Retro, mpvpaper en las demás)
 VIDEO_WALLPAPER="$HOME/.config/hypr/scripts/bwm-video-wallpaper"
@@ -115,21 +121,8 @@ elif [[ -z "${INTRO:-}" ]]; then
     "$VIDEO_WALLPAPER" stop || true
 fi
 
-mkdir -p "$HOME/.cache"
-echo "$WALLPAPER" > "$HOME/.cache/current_wallpaper"
-
-echo "$WALLPAPER" > "$HOME/.cache/current_wallpaper_${CURRENT_THEME}"
-
-# 2.2 Sincronizar ruta del wallpaper con Quickshell / Illogical Impulse
-if [ -f "$HOME/.config/illogical-impulse/config.json" ] && command -v jq >/dev/null 2>&1; then
-    jq --arg path "$WALLPAPER" --arg still "$STILL" '.background.wallpaperPath = $path | .background.thumbnailPath = $still' "$HOME/.config/illogical-impulse/config.json" > "$HOME/.config/illogical-impulse/config.json.tmp" && mv "$HOME/.config/illogical-impulse/config.json.tmp" "$HOME/.config/illogical-impulse/config.json"
-fi
-
-# 2.3 Sincronizar con el perfil aislado del estilo activo (config-retro.json / config-default.json)
-PROFILE_JSON="$HOME/.config/illogical-impulse/config-${CURRENT_THEME}.json"
-if [ -f "$PROFILE_JSON" ] && command -v jq >/dev/null 2>&1; then
-    jq --arg path "$WALLPAPER" --arg still "$STILL" '.background.wallpaperPath = $path | .background.thumbnailPath = $still' "$PROFILE_JSON" > "$PROFILE_JSON.tmp" && mv "$PROFILE_JSON.tmp" "$PROFILE_JSON"
-fi
+# Publicación común con el camino Plasma → BWM (sin recolorear).
+python3 "$HOME/.config/hypr/scripts/bwm_wallpaper.py" "$WALLPAPER" "$STILL" "$CURRENT_THEME"
 
 # 3. Generar la paleta de colores según el estilo
 if [[ "$CURRENT_THEME" == "plasma" ]]; then

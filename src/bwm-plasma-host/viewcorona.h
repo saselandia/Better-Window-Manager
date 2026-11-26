@@ -47,6 +47,8 @@ public:
     // matching ShellCorona::_availableScreenRect 6.7.5. Pass an invalid rect to reset.
     void setScreenAvailableRect(QScreen *screen,const QRect &rect);
 Q_SIGNALS:
+    void desktopViewBound(Plasma::Containment *containment);
+    void wallpaperApplied(Plasma::Containment *containment);
     void panelBeingConfiguredChanged();
     void enteredEditModeViaDesktopChanged();
     // Action data of ShellCorona::populateAddPanelsMenu: a Panel containment plugin ID or

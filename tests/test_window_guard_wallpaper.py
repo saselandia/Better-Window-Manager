@@ -14,6 +14,16 @@ QUERY = (": DP-1: 3840x2160, scale: 1, currently displaying: image: /w.jpg\n"
 
 
 class WallpaperTest(unittest.TestCase):
+    def setUp(self):
+        ready = mock.patch.object(wg.bwm_wallpaper, 'native_plasma_ready', return_value=False)
+        ready.start()
+        self.addCleanup(ready.stop)
+
+    def test_native_host_does_not_repaint_swww(self):
+        with mock.patch.object(wg.bwm_wallpaper, 'native_plasma_ready', return_value=True), mock.patch.object(wg.subprocess, 'run') as run:
+            wg.restore_wallpapers()
+            run.assert_not_called()
+
     def test_black_outputs_only_color(self):
         with mock.patch.object(wg.subprocess, 'run', return_value=mock.Mock(stdout=QUERY)):
             self.assertEqual(wg.black_outputs(), ['DP-2'])

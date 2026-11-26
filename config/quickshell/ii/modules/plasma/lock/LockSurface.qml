@@ -22,7 +22,7 @@ Item {
   onClearRequested:root.context.clearText()
  }
  Rectangle {anchors.fill:parent;color:Kirigami.Theme.backgroundColor}
- Image {anchors.fill:parent;source:Config.options.background.wallpaperPath;fillMode:Image.PreserveAspectCrop;asynchronous:true;opacity:0.35}
+ Image {anchors.fill:parent;source:Config.options.background.thumbnailPath || Config.options.background.wallpaperPath;fillMode:Image.PreserveAspectCrop;asynchronous:true;opacity:0.35}
  Item {
   anchors.fill:parent
   visible:!(customTheme.item?.ready??false)

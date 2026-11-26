@@ -129,7 +129,12 @@ retro_play() {
   return 1
 }
 
+native_plasma_ready() {
+  python3 -c 'import sys; sys.path.insert(0, sys.argv[1]); from bwm_wallpaper import native_plasma_ready; sys.exit(0 if native_plasma_ready() else 1)' "$SCRIPTS"
+}
+
 play() {
+  if native_plasma_ready; then mpvpaper_stop; owe_stop; return 0; fi
   local video="$1" skin
   skin="$(current_skin)"
   if [[ $skin == retro ]]; then
@@ -141,6 +146,7 @@ play() {
 }
 
 sync_engine() {
+  if native_plasma_ready; then mpvpaper_stop; owe_stop; return 0; fi
   local skin="${1:-$(current_skin)}" wp
   wp="$(current_wallpaper || true)"
   if [[ $skin == retro ]]; then

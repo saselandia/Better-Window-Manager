@@ -937,3 +937,16 @@ los siguientes XML, conservados sin modificar y con sus avisos MIT completos:
 Los dispositivos se crean sólo después de comprobar el PID/UID del compositor desechable,
 su configuración temporal y la marca del runner. No se enlazan al anfitrión de producción.
 El mapa XKB mínimo del fixture es código de BWM; no se añade una biblioteca cliente nueva.
+
+
+### Fondo único BWM ↔ Plasma (T3, Plasma 6.7.5)
+
+`src/bwm-plasma-host/wallpaperbridge.cpp::apply` extrae y comparte la adaptación ya existente
+(en `containmentconfigview.cpp`) de `ShellCorona::setWallpaper` de
+[plasma-workspace 6.7.5](https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5/shell),
+Marco Martin, LGPL-2.0-or-later. Se conservan los créditos; BWM añade validación, respeto de
+claves inmutables y comprobación previa para todas las pantallas. El resto del puente, sus
+pruebas, publicación Python y el paquete `org.bwm.video` son código BWM GPL-2.0-or-later.
+El paquete de vídeo usa la API pública `WallpaperItem`/QtMultimedia; no copia otro plugin.
+Imagen, presentación, color y la interfaz de configuración se cargan de los paquetes KDE
+instalados, sin modificarlos. La fuente correspondiente de la adaptación está en el repo.
