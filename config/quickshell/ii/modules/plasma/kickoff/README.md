@@ -1,5 +1,8 @@
 # Kickoff de Plasma sobre Quickshell (F4)
 
+> **Breeze II (R4–R5):** cuando `bwm-plasma-host --session` está activo, Kickoff corre como plasmoide
+> nativo dentro del host. Este módulo queda como respaldo automático de Quickshell.
+
 Lanzador de aplicaciones de la skin Breeze. Es el **Kickoff de KDE Plasma v6.7.5**
 ([plasma-desktop/applets/kickoff](https://invent.kde.org/plasma/plasma-desktop/-/tree/v6.7.5/applets/kickoff),
 GPL-2.0-or-later) con su QML casi sin cambios. Todo lo adaptado lleva un comentario `// BWM:`.

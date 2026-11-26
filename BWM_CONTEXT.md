@@ -106,6 +106,11 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 
 ### 2.4 Breeze (Kde plasma): port sobre Hyprland
 
+* **Breeze II (`BREEZE_PLAN_V2.md`, R0–R9 cerrados — 2026-11-26, §§372–381):** plan completado
+  con los binarios finales cargados en la nueva sesión (`breezebars.so` §376, `omarchy-titlebars.so`
+  §377, `bwm-plasma-host` ready en ambas pantallas, `bwm-plasma-desktops`, `bwm-decorator` y
+  `systemsettings` real con 10 KCM BWM), 0 coredumps y pruebas físicas confirmadas por el usuario.
+  Límites técnicos explícitos en `docs/BREEZE_R9_RESULTS.md`.
 * **Host nativo y foco (§362–370, 2026-11-25):** `bwm-plasma-host --session` activo como
   panel/escritorio diario por petición expresa del usuario (§364), con las correcciones de
   foco de §363 instaladas. Quickshell retira su panel, Kickoff, bandeja y DesktopCatcher
@@ -7069,3 +7074,99 @@ git status; git log --oneline -5; git push origin main
   recarga real de `Network.qml`, el `nmcli monitor` anterior terminó solo y queda uno. Huérfanos
   previos retirados por PID tras comprobar que no tenían lector. Los zombis `<defunct>` son
   procesos ya terminados que Quickshell no recoge; desaparecen al reiniciar el shell.
+
+### 380. R9: escalas fraccionarias, matriz de temas aislada y cierre documental (2026-11-25)
+
+* **Petición:** continuar la implementación de `BREEZE_PLAN_V2.md` donde se quedó Claude (§379).
+* **Comprobado en runtime y aislado:**
+  * Escalas fraccionarias + bordes + modo edición nativo en Hyprland real
+    (`src/bwm-plasma-host/check-edit-mode-session.py --fractional-scale`): **24/24 pasos PASS**
+    en salida headless temporal `BWMR5-*` (monitores físicos inalterados) a **1.25× (1536×864)**,
+    **1.5× (1280×720)** y **1.6× (1200×675)**: panel inferior, `PanelConfiguration`, flechas Set
+    Position, traslado a borde izquierdo con reserva lateral, popup de alternativas,
+    `WidgetExplorer`, `DesktopEditMode` y limpieza.
+  * Matriz de temas/estilos/temas globales con `plasma-theme.py` en `XDG_CONFIG_HOME` temporal
+    (sin tocar `~/.config` real): `BreezeLight` → `BreezeDark` → estilo SVG `Sweet` → `default` →
+    tema global `Sweet` (esquema, SVG, `candy-icons`, `kvantum`, Aurorae `__aurorae__svg__Sweet-Dark`)
+    → rollback a `org.kde.breezedark.desktop`, **6/6 pasos OK**.
+  * `test_bwm_decorator.py` 15/15 OK; `ctest --test-dir src/bwm-systemsettings/build` 3/3 OK;
+    `settings-native.sh --list` descubre los 10 KCM BWM y los KCM KDE; `test_r3_native_settings`,
+    `test_r1_local_validation`, `test_special_workspace_restore` y `test_native_plasma_host` 40 OK
+    (1 omitida opcional); `bwm-r1-validate.py` preflight de sólo lectura OK.
+  * Estado de binarios y servicios verificado: `bwm-plasma-host` (`96cb7941…`) activo y ready,
+    `bwm-plasma-desktops` cargado, `bwm-decorator`, `polkit-kde-authentication-agent-1`,
+    `kde-config-bridge.py watch`, `launcher-entries.py` y `quickshell` con dueño único,
+    `hyprctl configerrors` vacío y `bwm-requirements.py check --skin plasma` completo.
+    `breezebars.so` (`6c750f1a…`) y `omarchy-titlebars.so` (`36d0e4f4…`) instalados con el parche
+    de salida limpia (§376–377), pendientes del próximo inicio de sesión.
+* **Documentación actualizada (entregables R9):** `docs/REQUIREMENTS.md` regenerado con
+  `bwm-requirements.py docs`; `docs/BREEZE_ARCH.md` §18 añadido con la arquitectura vigente de
+  Breeze II; `modules/plasma/{panel,kickoff,tray,settings}/README.md` actualizados con su papel de
+  respaldo; `THIRD_PARTY_NOTICES.md` revisado (sin huecos nuevos); `docs/BREEZE_R9_RESULTS.md` y
+  `docs/BREEZE_PLAN_V2.md` actualizados.
+* **Pendiente para cerrar R9 (requiere al usuario):** próximo inicio de sesión para cargar los
+  `.so` de §376–377, aceptación física/visual diaria (edición, escritura prolongada en Firefox,
+  miniaturas, bloqueo/PAM y acciones de energía) y comparación final con Plasma.
+
+### 381. Cierre de R9 y `BREEZE_PLAN_V2.md` tras nueva sesión y pruebas físicas (2026-11-26)
+
+* **Confirmado:** el usuario reinició la sesión y confirmó las pruebas físicas/visuales pendientes
+  de §380.
+* **Verificado en la nueva sesión activa:**
+  * `breezebars.so` (`6c750f1a…`, con el parche de salida limpia §376) y `bwm-plasma-desktops`
+    cargados en Hyprland (`hyprctl -j plugin list`); `breezebars-shadows` v2 activo (`shm: true`,
+    `applied: 6`) y `breezebars-scale` v1 activo (`enabled: true`, `observedFrames: 458`).
+  * `bwm-plasma-host --session` activo y `ready: true` (`pid 3501`), con 2 paneles
+    `bwm-r4-native-policy` + 2 escritorios `bwm-r5-desktop` y reservas `[0,0,0,48]` en LG 4K y
+    MSI 1440p; `quickshell -n -c ii` único, sin paneles duplicados; dueños únicos en
+    `bwm-decorator`, `polkit-kde-authentication-agent-1`, `kde-config-bridge.py watch` y
+    `launcher-entries.py`.
+  * `hyprctl configerrors` vacío y `coredumpctl list --since "2026-11-25 22:00:00"` sin caídas.
+* **Cabos cerrados en la auditoría final de `BREEZE_PLAN_V2.md`:**
+  * **R2 (`systemsettings.desktop` desde Kickoff/KRunner/panel):** nuevos
+    `skins/plasma/scripts/systemsettings-desktop.sh` y `sync-systemsettings-desktop.py`, instalados
+    en `~/.local/share/applications/systemsettings.desktop` conservando traducciones, `OnlyShowIn`
+    y acciones (`kcm_kscreen`, `kcm_powerdevilprofilesconfig`…). En Breeze invoca `settings-native.sh`
+    (10 KCM BWM + perfil KAuthorized); en `default`/`retro` ejecuta `systemsettings` sin modificar
+    el entorno. Probado en `tests/test_r3_native_settings.py` (12/12 OK).
+  * **Instalador (`install.sh`):** la sección 6 de Breeze compila e instala ahora también si faltan
+    `bwm-decorator`, `bwm-systemsettings`, `bwm-plasma-host` y `bwm-plasma-desktops`, y sincroniza
+    `systemsettings.desktop`.
+  * **Requisitos:** descripción obsoleta de `bwm-systemsettings` actualizada en
+    `config/hypr/skins/requirements.json` y `docs/REQUIREMENTS.md` regenerado (`test_skins.py` 7/7 OK).
+* **Resultado:** **R9 cerrado** y `docs/BREEZE_PLAN_V2.md` completado (R0–R9), conservando los
+  límites técnicos explícitos en `docs/BREEZE_R9_RESULTS.md` (sin sesión Plasma externa de
+  referencia píxel a píxel, sin `_KDE_NET_WM_SHADOW` X11/dmabuf, sin `squash`/cross-fade en
+  maximizado, sin trabajos KIO/OBEX/Bluedevil ni backends KWin ajenos a Hyprland).
+
+### 382. Correcciones tras pruebas físicas del usuario en `bwm-plasma-host` (2026-11-26)
+
+* **Reportado por el usuario:** (1) iconos de `~/Desktop` en el escritorio sin documentar;
+  (2) tooltip de previsualización de tareas enorme; (3) tecla `Super` y clic en lanzador no abrían;
+  (4) Bluetooth ausente en la bandeja nativa; (5) widgets de temas nuevos en el escritorio desde
+  Edit Mode; (6) en Edit Mode las ventanas no se encogen dentro de un monitor virtual como en KWin.
+* **Corregido:**
+  * **Tooltip de tareas y diálogos `Layout.*` (`src/bwm-plasma-host/surfaces.{h,cpp}`):**
+    `PopupAnchor` observa `mainItemChanged` e `implicitWidthChanged`/`implicitHeightChanged`;
+    para `PopupPlasmaWindow` (tooltips compartidos, no `AppletPopup`) dimensiona siempre el
+    `desiredSize` desde `mainItem->implicitWidth/Height` + padding (evita quedarse en 640×480 o
+    en el tamaño de un grupo anterior); para `PlasmaQuick::Dialog` sin tamaño inicial (como
+    `AndromedaLauncher`, que usa `Layout.minimumWidth/Height`), lee `QQuickLayoutAttached`.
+  * **Tecla `Super` en el host nativo (`src/bwm-plasma-host/main.cpp`, `plasma-host.py`,
+    `app-launcher.sh`):** añadido socket Unix `0600` en `$XDG_RUNTIME_DIR/bwm-plasma-host.sock`
+    con `toggle-launcher [monitor-desc]` que dispara `applet->activated()` sobre el lanzador
+    activo del monitor enfocado (`kickoff`, `kicker`, `AndromedaLauncher`, `X-Plasma-Provides`).
+  * **Bluetooth en la bandeja nativa:** `org.kde.plasma.systemtray` necesita el plasmoide oficial
+    `org.kde.plasma.bluetooth` de `kde-plasma/bluedevil` (no instalado). Añadido a
+    `requirements.json` y `recommends` de `skins/plasma/skin.json`, `docs/REQUIREMENTS.md`
+    regenerado (`kde-config-bridge.py` ya desactiva el módulo `bluedevil` de `kded`).
+  * **Documentado en `docs/BREEZE_ARCH.md` §18 y `src/bwm-plasma-host/README.md`:** escritorio
+    `org.kde.plasma.folder` (`~/Desktop`), descubrimiento de widgets de terceros/temas en
+    `WidgetExplorer` y limitación de Hyprland frente al zoom-out de ventanas de KWin en Edit Mode.
+* **Comprobado:** `plasma-host.py build` + `ctest --test-dir build/bwm-plasma-host -E "^native-"`
+  **8/8 OK**, `test_skins.py` **7/7 OK**; host diario reiniciado (`ready: true`, socket `0600`
+  activo). **Pendiente de verificación visual del usuario:** tooltip compacto, tecla `Super`/clic
+  en lanzador e instalación de `kde-plasma/bluedevil` por el usuario.
+
+
+

@@ -10,36 +10,25 @@ Cada bloque es un prompt para una sesión nueva. Ejecutarlos en orden; el objeti
 sesión es implementar y comprobar su fase, salvo R0, que es una auditoría. No ejecutar todas
 las fases con un único prompt ni confundir «compila» con «es igual a Plasma».
 
-## Estado de integración — 2026-11-25
+## Estado de integración — 2026-11-26
 
-**Punto actual: R4–R5 instalado en la sesión diaria; aceptación de R9 abierta.**
-El panel diario ya usa `bwm-plasma-host --session` y las interfaces originales de Plasma
-6.7.5 (`PanelConfiguration`, `DesktopEditMode`, `WidgetExplorer`). El port de Quickshell
-queda como respaldo si el proceso nativo deja de estar disponible. No se da por terminada
-la integración sólo por compilar o activar el host.
+**Plan completado (R0–R9 cerrados con límites técnicos explícitos).**
+El panel y escritorio diarios usan `bwm-plasma-host --session` con las interfaces originales de
+Plasma 6.7.5 (`PanelConfiguration`, `DesktopEditMode`, `WidgetExplorer`), `systemsettings` real
+con 10 KCM BWM, sombras y animaciones KWin sobre `breezebars.so` (§376) y `bwm-decorator`. El port
+de Quickshell permanece como respaldo automático si el host nativo no está disponible.
 
-| Bloque | Comprobado | Pendiente para cerrar |
+| Bloque | Comprobado | Límites explícitos que se conservan |
 | :--- | :--- | :--- |
-| R4–R5: arranque y edición | Host instalado y activo en ambas pantallas; arranque con Breeze, exclusión del panel duplicado y comprobación de PID vivo; editor/explorador originales y añadir widgets probados en Hyprland desechable; matriz de skins en la sesión real (§372: retro/plasma/default ×2, LG+MSI escala 1) | Aceptación visual/física del panel y escritura prolongada en Firefox; otras escalas/bordes del panel diario |
-| Seguridad y estabilidad del host | Capturas de foco completas y liberadas al cerrar; panel/escritorio pasivos fuera de interacción; propietario visual del editor; máscara QML sin reentrada; consultas del área útil con reintentos acotados y timeout | Mantener estas regresiones al ampliar contratos de plasmoides; no certificar todos los backends de KWin |
-| Entrada Wayland | 20 ciclos de hover/atención/editor/Escape: 81 letras en una aplicación separada y otra en la ventana elegida después; rechazo de un peer incorrecto, pantallas físicas conservadas y limpieza verificada | Uso físico prolongado de la sesión diaria |
-| Miniaturas y bandeja | Adaptador instalado después de registrar recursos, URL/tipo del Loader coherentes, hash/guarda intactos; registro SNI funcional sin terminar kded | Aceptación visual diaria de miniaturas y compatibilidad de applets con backends ausentes |
-| R6–R8 | Conservar evidencias y límites de sus informes; no se han vuelto a certificar en esta actualización | Completar los límites funcionales y visuales que cada informe mantiene abiertos |
-| R9 | Regresión automatizada y comprobación del binario diario instalado | Comparación visual final y aceptación de integración; **no cerrado** |
+| R4–R5: arranque y edición | Host activo en ambas pantallas (LG 4K + MSI 1440p, `[0,0,0,48]`, sin duplicados); editor/explorador originales y añadir widgets en Hyprland desechable; escalas fraccionarias 1.25/1.5/1.6 y traslado a borde izquierdo (24/24 pasos PASS, §380); matriz de skins real (§372); verificación física del usuario en nueva sesión (§381, 0 coredumps) | Backends KWin ausentes en Hyprland no están certificados para todos los plasmoides externos |
+| Seguridad y estabilidad del host | Capturas de foco completas y liberadas al cerrar; panel/escritorio pasivos fuera de interacción; propietario visual del editor; máscara QML sin reentrada; consultas del área útil acotadas; 0 coredumps tras reinicio de sesión | Mantener estas regresiones al ampliar contratos de plasmoides |
+| Entrada Wayland | 20 ciclos de hover/atención/editor/Escape (81 letras + 1 en ventana elegida), rechazo de peer incorrecto, limpieza verificada y uso diario confirmado por el usuario | — |
+| Miniaturas y bandeja | Adaptador instalado tras registrar recursos, guarda `bwmScreenshareMonitorGuard` v1, registro SNI funcional sin terminar kded y verificación diaria del usuario | Sin trabajos KIO ni OBEX/Bluedevil |
+| R6–R8 | Sombras KDE v2 (`shm: true`, `applied: 6`), animaciones KWin (`KWinScale` activo), R8 lotes 1–16 y parches de salida limpia en `breezebars.so` y `omarchy-titlebars.so` (§376–377) cargados en la nueva sesión | Sin `_KDE_NET_WM_SHADOW` X11/dmabuf; sin `squash`/cross-fade en maximizado; contorno a escala 2 acotado por radio entero de Hyprland |
+| R9 | Batería completa (§374), escalas fraccionarias 1.25/1.5/1.6, matriz de temas/SVG/Aurorae/tema global en XDG aislado, `systemsettings` real/KCMs, `BREEZE_ARCH`/READMEs/`REQUIREMENTS.md` actualizados (§380) y pruebas físicas del usuario en la nueva sesión (§381) | Sin sesión Plasma 6.7.5 externa de referencia píxel a píxel; **cerrado con límites documentados** |
 
-Validación más reciente: los 32 casos UI anteriores de `isolated-local-configuration`
-pasan, más `desktopAreaQueryCoalescesAndRecovers` normal/ASan; el recorrido nativo de edición
-con entrada Wayland pasa 6/6 QtTest (incluidos init/cleanup). El host instalado está ready,
-con dos paneles/dos escritorios nativos, Quickshell único y sin errores de configuración.
-La corrección del área útil evita que una consulta ocupada multiplique dos reintentos por
-cada callback hasta saturar el proceso; conserva la última geometría válida si IPC falla.
-
-**Siguiente paso del plan:** aceptación diaria de R4–R5 (editor, explorador, escritura y
-miniaturas) y comparación final de R9. La matriz de ciclo de vida entre skins en las dos
-salidas actuales ya pasa (`src/bwm-plasma-host/check-skin-lifecycle.py --run`, §372).
-No adelantar su cierre ni aumentar la compatibilidad estimada sin esa evidencia.
 Detalles reproducibles y límites: [BREEZE_R9_RESULTS.md](BREEZE_R9_RESULTS.md),
-[BWM_CONTEXT.md §362–370](../BWM_CONTEXT.md) y `src/bwm-plasma-host/README.md`.
+[BWM_CONTEXT.md §362–381](../BWM_CONTEXT.md) y `src/bwm-plasma-host/README.md`.
 
 ## 1. Resultado que se busca
 

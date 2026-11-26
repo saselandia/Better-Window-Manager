@@ -23,6 +23,9 @@ fi
 if [[ "$CURRENT_THEME" == "plasma" ]]; then
     pkill -x "rofi" 2>/dev/null || true
     quickshell -c ii ipc call omarchyMenu close 2>/dev/null || true
+    if python3 /home/sasel/.config/hypr/skins/plasma/scripts/plasma-host.py toggle-launcher 2>/dev/null; then
+        exit 0
+    fi
     quickshell -c ii ipc call plasmaKickoff toggle 2>/dev/null || rofi -show drun -theme "$HOME/.config/rofi/plasma-kickoff.rasi"
 elif [[ "$CURRENT_THEME" == "retro" ]]; then
     pkill -x "rofi" 2>/dev/null || true

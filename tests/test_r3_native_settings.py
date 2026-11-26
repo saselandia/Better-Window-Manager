@@ -217,6 +217,61 @@ class NativeSettingsTest(unittest.TestCase):
             retro = run_open('bar', extra_env={'BWM_SETTINGS_THEME_OVERRIDE': 'retro'})
             self.assertIn('omarchyMenu settings bar', retro)
 
+    def test_systemsettings_desktop_wrapper_and_sync(self):
+        import subprocess
+        wrapper = ROOT / 'config/hypr/skins/plasma/scripts/systemsettings-desktop.sh'
+        sync_script = ROOT / 'config/hypr/skins/plasma/scripts/sync-systemsettings-desktop.py'
+        with tempfile.TemporaryDirectory() as tmp:
+            t = Path(tmp)
+            fake_sys = t / 'fake-systemsettings'
+            fake_sys.write_text('#!/usr/bin/env bash\necho "SYS:$*|PLUG=${QT_PLUGIN_PATH:-}|DIRS=${XDG_CONFIG_DIRS:-}"\n')
+            fake_sys.chmod(0o755)
+            kcm = t / 'share/bwm/systemsettings/lib/qt6/plugins/plasma/kcms/systemsettings/kcm_bwm_windows.so'
+            kcm.parent.mkdir(parents=True)
+            kcm.write_bytes(b'')
+            cfg = t / 'config/illogical-impulse/config.json'
+            cfg.parent.mkdir(parents=True)
+
+            def run_wrap(skin, *args):
+                cfg.write_text(json.dumps({'appearance': {'bwmTheme': skin}}))
+                env = {
+                    'PATH': os.environ.get('PATH', '/usr/bin:/bin'),
+                    'HOME': str(t),
+                    'XDG_CONFIG_HOME': str(t / 'config'),
+                    'XDG_DATA_HOME': str(t / 'share'),
+                    'BWM_SYSTEMSETTINGS_BIN': str(fake_sys),
+                }
+                return subprocess.run([str(wrapper), *args], env=env, check=True, capture_output=True, text=True).stdout.strip()
+
+            plasma_out = run_wrap('plasma', 'kcm_kscreen')
+            self.assertTrue(plasma_out.startswith('SYS:kcm_bwm_screens|'), plasma_out)
+            self.assertIn(str(t / 'share/bwm/systemsettings/lib/qt6/plugins'), plasma_out)
+            self.assertIn('settings-profile', plasma_out)
+
+            for other_skin in ('default', 'retro'):
+                other_out = run_wrap(other_skin, 'kcm_kscreen')
+                self.assertEqual(other_out, 'SYS:kcm_kscreen|PLUG=|DIRS=')
+
+            src = t / 'src.desktop'
+            dest = t / 'dest.desktop'
+            src.write_text(
+                '[Desktop Entry]\n'
+                'Name[es]=Preferencias del sistema\n'
+                'Exec=systemsettings\n'
+                'OnlyShowIn=KDE;\n'
+                '[Desktop Action kcm-kscreen]\n'
+                'Exec=systemsettings kcm_kscreen\n'
+            )
+            subprocess.run(
+                ['python3', str(sync_script), '--source', str(src), '--dest', str(dest), '--wrapper', str(wrapper)],
+                check=True,
+            )
+            rendered = dest.read_text(encoding='utf-8')
+            self.assertIn('Name[es]=Preferencias del sistema', rendered)
+            self.assertIn('OnlyShowIn=KDE;', rendered)
+            self.assertIn(f'Exec={wrapper}\n', rendered)
+            self.assertIn(f'Exec={wrapper} kcm_kscreen\n', rendered)
+
 
 if __name__ == '__main__':
     unittest.main()

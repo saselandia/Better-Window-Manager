@@ -278,6 +278,43 @@ if [[ ${#SKINS[@]} -eq 0 || " ${SKINS[*]} " == *" plasma "* ]]; then
             print_warn "No se pudo compilar. Repítelo con: cd $SCRIPT_DIR/src/breezebars && make && make install"
         fi
     fi
+
+    # Auxiliares nativos de Breeze II (se compilan si faltan sus binarios; atómicos, nunca rompen la instalación)
+    if [[ ! -x "$HOME/.local/share/bwm/bin/bwm-decorator" && -f "$SCRIPT_DIR/src/bwm-decorator/Makefile" ]]; then
+        print_step "6a. Compilando bwm-decorator (decoraciones KDecoration3 de Breeze)..."
+        if make -C "$SCRIPT_DIR/src/bwm-decorator" install >/dev/null 2>&1; then
+            print_success "bwm-decorator instalado."
+        else
+            print_warn "No se pudo compilar bwm-decorator. Repítelo con: make -C $SCRIPT_DIR/src/bwm-decorator install"
+        fi
+    fi
+    if [[ ! -f "$HOME/.local/share/bwm/systemsettings/lib/qt6/plugins/plasma/kcms/systemsettings/kcm_bwm_windows.so" && -f "$SCRIPT_DIR/src/bwm-systemsettings/Makefile" ]]; then
+        print_step "6a. Compilando los KCM nativos de BWM para System Settings..."
+        if make -C "$SCRIPT_DIR/src/bwm-systemsettings" install >/dev/null 2>&1; then
+            print_success "KCM nativos de BWM instalados."
+        else
+            print_warn "No se pudieron compilar los KCM de BWM. Repítelo con: make -C $SCRIPT_DIR/src/bwm-systemsettings install"
+        fi
+    fi
+    if [[ ! -x "$HOME/.local/share/bwm/bin/bwm-plasma-host" && -f "$SCRIPT_DIR/config/hypr/skins/plasma/scripts/plasma-host.py" ]]; then
+        print_step "6a. Compilando bwm-plasma-host (panel y escritorio nativos de Breeze)..."
+        if python3 "$SCRIPT_DIR/config/hypr/skins/plasma/scripts/plasma-host.py" build >/dev/null 2>&1; then
+            print_success "bwm-plasma-host instalado."
+        else
+            print_warn "No se pudo compilar bwm-plasma-host (Quickshell actuará como respaldo)."
+        fi
+    fi
+    if [[ ! -f "$SCRIPT_DIR/config/hypr/plugins/bwm-plasma-desktops.so" && -f "$SCRIPT_DIR/src/bwm-plasma-desktops/Makefile" ]]; then
+        print_step "6a. Compilando el plugin bwm-plasma-desktops para tu versión de Hyprland..."
+        if make -C "$SCRIPT_DIR/src/bwm-plasma-desktops" install >/dev/null 2>&1; then
+            print_success "Plugin bwm-plasma-desktops compilado."
+        else
+            print_warn "No se pudo compilar bwm-plasma-desktops. Repítelo con: make -C $SCRIPT_DIR/src/bwm-plasma-desktops install"
+        fi
+    fi
+    if [[ -f "$TARGET_CONFIG/hypr/skins/plasma/scripts/sync-systemsettings-desktop.py" ]]; then
+        python3 "$TARGET_CONFIG/hypr/skins/plasma/scripts/sync-systemsettings-desktop.py" >/dev/null 2>&1 || true
+    fi
 fi
 
 # 6b. Barras de los workspaces flotantes de Retro: el plugin de Omarchy (omarchy-hyprland-titlebars)

@@ -20,6 +20,9 @@
 #include <QSocketNotifier>
 #include <QStandardPaths>
 #include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/un.h>
+#include <cstring>
 #include <unistd.h>
 #include <KConfigLoader>
 #include <KConfigPropertyMap>
@@ -342,6 +345,93 @@ int main(int argc, char **argv) {
         QObject::connect(&app, &QGuiApplication::screenRemoved, &app, [syncDesktops](QScreen*){ syncDesktops(); });
         QObject::connect(&runtime, &PanelRuntime::changed, &app, saveState, Qt::QueuedConnection);
 
+        const QString sockPath = runtimeDir + QStringLiteral("/bwm-plasma-host.sock");
+        int ctlFd = ::socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+        QSocketNotifier *ctlNotifier = nullptr;
+        if(ctlFd >= 0) {
+            const QByteArray rawPath = QFile::encodeName(sockPath);
+            sockaddr_un addr{};
+            addr.sun_family = AF_UNIX;
+            if(rawPath.size() < int(sizeof(addr.sun_path))) {
+                ::unlink(rawPath.constData());
+                std::memcpy(addr.sun_path, rawPath.constData(), size_t(rawPath.size()) + 1);
+                if(::bind(ctlFd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == 0 && ::listen(ctlFd, 8) == 0) {
+                    ::chmod(rawPath.constData(), 0600);
+                    ctlNotifier = new QSocketNotifier(ctlFd, QSocketNotifier::Read, &app);
+                    QObject::connect(ctlNotifier, &QSocketNotifier::activated, &app, [ctlFd, &corona, &runtime, &screenDesc]{
+                        const int client = ::accept4(ctlFd, nullptr, nullptr, SOCK_CLOEXEC);
+                        if(client < 0) return;
+                        char buf[512]{};
+                        const ssize_t n = ::read(client, buf, sizeof(buf) - 1);
+                        QByteArray reply("err\n");
+                        if(n > 0) {
+                            const QString line = QString::fromUtf8(buf, int(n)).trimmed();
+                            if(line == QStringLiteral("toggle-launcher") || line.startsWith(QStringLiteral("toggle-launcher "))) {
+                                const QString targetDesc = line.mid(QStringLiteral("toggle-launcher").size()).trimmed();
+                                QScreen *targetScreen = targetDesc.isEmpty() ? nullptr : BwmOutput::resolveScreen(targetDesc);
+                                const QString wantedScreenDesc = targetScreen ? screenDesc(targetScreen) : QString();
+                                const auto currentAssignments = runtime.assignments();
+                                auto isLauncher = [](Plasma::Applet *a) -> bool {
+                                    if(!a || a->destroyed()) return false;
+                                    const auto meta = a->pluginMetaData();
+                                    const QString id = meta.pluginId();
+                                    if(id == QStringLiteral("org.kde.plasma.kickoff") ||
+                                       id == QStringLiteral("org.kde.plasma.kicker") ||
+                                       id == QStringLiteral("org.kde.plasma.kickerdash") ||
+                                       id == QStringLiteral("AndromedaLauncher")) return true;
+                                    const QStringList provides = meta.value(QStringLiteral("X-Plasma-Provides"), QStringList());
+                                    if(provides.contains(QStringLiteral("org.kde.plasma.launchermenu"))) return true;
+                                    return id.contains(QStringLiteral("launcher"), Qt::CaseInsensitive);
+                                };
+                                auto findLauncherIn = [&](Plasma::Containment *panel) -> Plasma::Applet* {
+                                    if(!panel || panel->destroyed()) return nullptr;
+                                    const QStringList order = panel->config().group(QStringLiteral("General"))
+                                        .readEntry(QStringLiteral("AppletOrder"), QStringList());
+                                    for(const QString &idStr : order) {
+                                        bool ok = false;
+                                        const uint aid = idStr.toUInt(&ok);
+                                        if(!ok) continue;
+                                        for(auto *a : panel->applets())
+                                            if(a && a->id() == aid && isLauncher(a)) return a;
+                                    }
+                                    for(auto *a : panel->applets())
+                                        if(isLauncher(a)) return a;
+                                    return nullptr;
+                                };
+                                Plasma::Applet *chosen = nullptr;
+                                Plasma::Applet *fallback = nullptr;
+                                for(auto *c : corona.containments()) {
+                                    if(c->containmentType() != Plasma::Containment::Panel || c->destroyed()) continue;
+                                    Plasma::Applet *cand = findLauncherIn(c);
+                                    if(!cand) continue;
+                                    if(!fallback) fallback = cand;
+                                    const QString assigned = currentAssignments.value(c->id());
+                                    if(!wantedScreenDesc.isEmpty() && assigned == wantedScreenDesc) {
+                                        chosen = cand;
+                                        break;
+                                    }
+                                }
+                                if(!chosen) chosen = fallback;
+                                if(chosen) {
+                                    Q_EMIT chosen->activated();
+                                    reply = "ok\n";
+                                }
+                            }
+                        }
+                        const ssize_t ignored = ::write(client, reply.constData(), size_t(reply.size()));
+                        (void)ignored;
+                        ::close(client);
+                    });
+                } else {
+                    ::close(ctlFd);
+                    ctlFd = -1;
+                }
+            } else {
+                ::close(ctlFd);
+                ctlFd = -1;
+            }
+        }
+
         if(QFile f(readyPath); f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
             f.write(QByteArray::number(::getpid()) + "\n");
             f.close();
@@ -352,6 +442,9 @@ int main(int argc, char **argv) {
         autoSave.start();
 
         const int code = app.exec();
+        delete ctlNotifier;
+        if(ctlFd >= 0) ::close(ctlFd);
+        QFile::remove(sockPath);
         QFile::remove(readyPath);
         for(auto it = desktopViews.begin(); it != desktopViews.end(); ++it) {
             it->second->hide();

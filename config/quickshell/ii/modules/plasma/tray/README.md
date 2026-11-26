@@ -1,5 +1,8 @@
 # Bandeja de Plasma sobre Quickshell (F5)
 
+> **Breeze II (R4–R5):** cuando `bwm-plasma-host --session` está activo, la bandeja corre como
+> plasmoide nativo dentro del host. Este módulo queda como respaldo automático de Quickshell.
+
 Port de plasma-workspace v6.7.5, applets/systemtray/qml. AbstractItem.qml y PulseAnimation.qml
 conservan el QML original; StatusNotifierItem.qml adapta sus iconos, clics, menú y rueda a
 Quickshell.Services.SystemTray. SystemTray.qml y TrayPopup.qml adaptan el contenedor, el encabezado

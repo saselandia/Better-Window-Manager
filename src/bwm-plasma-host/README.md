@@ -4,6 +4,10 @@ Auxiliar fuera de Hyprland con Corona/Applet/PlasmoidItem originales. El modo di
 Arquitectura y límites en `docs/BREEZE_R4_ARCH.md`; resultados en `docs/BREEZE_R4_RESULTS.md`.
 El modo `--session` tiene instalación y hooks mediante `plasma-host.py`; desde §364 de
 `BWM_CONTEXT.md` se activa por defecto en Breeze con las correcciones de foco de §363.
+Cada monitor usa `org.kde.plasma.folder` como escritorio (muestra los iconos y lanzadores de
+`~/Desktop`, igual que Plasma), y expone `$XDG_RUNTIME_DIR/bwm-plasma-host.sock` (`toggle-launcher`)
+para que la tecla `Super` abra el lanzador del monitor enfocado. En Edit Mode las ventanas de otras
+aplicaciones no se encogen dentro de un monitor virtual (ese efecto de zoom-out es de KWin).
 `bar.plasma.nativeHost=false` o `BWM_PLASMA_NATIVE_HOST=0` conserva el panel de respaldo.
 No ejecutar sobre la configuración real como ensayo.
 

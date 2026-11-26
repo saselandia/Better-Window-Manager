@@ -590,3 +590,22 @@ siendo trabajo pendiente de R4/R5. Mediciones gráficas y servicios vivos no ver
 Arquitectura y contratos comprobados en [BREEZE_R4_ARCH.md](BREEZE_R4_ARCH.md). El ejecutable
 `src/bwm-plasma-host` carga Applet/PlasmoidItem/ConfigView nativos en pruebas aisladas; aún no
 sustituye los paneles. Informe y puerta de salida pendiente en BREEZE_R4_RESULTS.md.
+
+## 18. Estado actual de Breeze II (R1–R8 integrados, R9 en curso — 2026-11-25)
+
+El port de Breeze II sustituye las piezas provisionales de §3 y §17 por sus equivalentes reales de
+KDE Plasma 6.7.5 donde el compositor lo permite, manteniendo Hyprland como único compositor y los
+gestores comunes de BWM para todo lo compartido entre skins:
+
+| Pieza | Arquitectura vigente | Respaldo / límite |
+| :--- | :--- | :--- |
+| **Panel, escritorio y modo edición (R4–R5)** | `bwm-plasma-host --session` (`src/bwm-plasma-host`, supervisado por `skins/plasma/scripts/plasma-host.py`) aloja `Corona`/`Containment`/`Applet`/`PlasmoidItem`, `PanelConfiguration`, `DesktopEditMode` y `WidgetExplorer` originales en ambas salidas. El escritorio de cada pantalla usa el containment **`org.kde.plasma.folder`**, por lo que muestra los iconos y lanzadores de `~/Desktop` (igual que Plasma). `WidgetExplorer` descubre cualquier plasmoide instalado en `/usr/share/plasma/plasmoids/` y `~/.local/share/plasma/plasmoids/` (incluidos los de temas/KNS) y permite añadirlos al escritorio o al panel. La tecla `Super` (`app-launcher.sh`) invoca `plasma-host.py toggle-launcher` sobre `$XDG_RUNTIME_DIR/bwm-plasma-host.sock` para activar el lanzador del monitor enfocado. Protocolo de escritorios `bwm-plasma-desktops` y capturas protegidas con guarda `bwmScreenshareMonitorGuard` v1 en Hyprland. | El panel/Kickoff/bandeja de Quickshell (`modules/plasma/{panel,kickoff,tray}`) queda como respaldo automático cuando `bwm-plasma-host.ready` no apunta a un proceso vivo o si `bar.plasma.nativeHost=false` / `BWM_PLASMA_NATIVE_HOST=0`. El efecto de Plasma 6 que encoge las ventanas dentro del monitor al entrar en Edit Mode pertenece a KWin (compositor); en Hyprland, `bwm-plasma-host` es un cliente layer-shell y no puede escalar ventanas de otras aplicaciones. Para el icono Bluetooth en la bandeja nativa hace falta `kde-plasma/bluedevil` (`org.kde.plasma.bluetooth`). |
+| **Preferencias del sistema (R2–R3)** | `open-settings.sh` (Super+I y menús) abre `systemsettings` real vía `skins/plasma/scripts/settings-native.sh` con 10 KCM nativos de BWM (`src/bwm-systemsettings`: `kcm_bwm_{apps,cursor,effects,energy,nightlight,screens,shortcuts,startup,windows,workspaces}`), los KCM KDE reales (incluidos QWidget y opciones de decoraciones de terceros) y restricción KAuthorized para `kcm_kwin_effects`. | `plasmaSettings.qml` permanece para páginas exclusivas de BWM (`background`, `bar`, `services`, `general`, `style`, `about`, `windowrules`) o si falta `systemsettings`. |
+| **Decoraciones y sombras (R6)** | `bwm-decorator` (Qt/KDecoration3 fuera de Hyprland) + plugin `breezebars.so` (`CBreezeShadow` de 9 trozos sobre memfd, `blur_on_request`, `SquareTop`, limpieza en `PLUGIN_EXIT`). Veto `no_shadow` retirado para SSD; CSD conserva su propia sombra. | Sin `_KDE_NET_WM_SHADOW` X11 ni dmabuf; contorno de esquinas a escala 2 acotado por el radio entero de Hyprland. |
+| **Animaciones (R7)** | Fuente única `skins/plasma/hypr/animations.lua` con curvas `kwin_*`, muelle `spring:kwin_slide`, `AnimationDurationFactor` aplicado en `libhyprutils`, `KWinScale` en `breezebars` y `kcm_bwm_effects`. | Sin `squash` hacia la tarea ni cross-fade de instantánea en maximizado. |
+| **Magic y ventanas comunes (R1)** | `special:magic` compartido entre las tres skins (`bwm-focus.py`, `kwin-window.py`, `toggle-minimize.py` con origen por nombre). | `special:minimized` siempre separado de `special:magic`. |
+| **Uso diario (R8)** | Notificaciones propias en Breeze con respuesta en línea y DND temporal, Klipper con texto/imagen/URL/QR/edición, reloj con zonas/festivos, `PowerApplet` con inhibición y perfiles, filtros/agrupación en `TasksModel`, `Unity LauncherEntry` único y `BluetoothApplet` con ownership estricto. | Sin trabajos KIO ni OBEX/Bluedevil. |
+
+Informes de aceptación y límites detallados: [BREEZE_R9_RESULTS.md](BREEZE_R9_RESULTS.md) y
+[BREEZE_PLAN_V2.md](BREEZE_PLAN_V2.md).
+

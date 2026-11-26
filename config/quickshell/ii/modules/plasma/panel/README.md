@@ -1,5 +1,10 @@
 # Panel de Plasma sobre Quickshell (F3)
 
+> **Breeze II (R4–R5):** en la sesión diaria el panel y el escritorio los aloja el anfitrión nativo
+> `bwm-plasma-host --session` (`src/bwm-plasma-host/`). Este módulo de Quickshell permanece como
+> respaldo automático cuando el host nativo no está disponible o se desactiva (`bar.plasma.nativeHost=false`
+> o `BWM_PLASMA_NATIVE_HOST=0`).
+
 Panel de Breeze, cargado por ruta con PanelLoader únicamente cuando se activa esa skin.
 Se necesita bwm-theme-manager.py set <skin-actual> --restart-shell al instalar el módulo nuevo:
 reinicio de mantenimiento, sin una segunda instancia del shell.

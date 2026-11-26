@@ -1,6 +1,11 @@
 # Preferencias del sistema de Breeze (F11)
 
-Ventana `plasmaSettings.qml` (proceso `qs -p` aparte, lo lanza `open-settings.sh [página]` y Super+I).
+> **Breeze II (R2–R3):** en Breeze, `Super+I` y `open-settings.sh` abren ahora `systemsettings` real
+> mediante `skins/plasma/scripts/settings-native.sh` con los 10 KCM BWM (`src/bwm-systemsettings/`).
+> `plasmaSettings.qml` permanece para páginas exclusivas de BWM (`background`, `bar`, `services`,
+> `general`, `style`, `about`, `windowrules`), `BWM_SETTINGS_HOST=legacy` o respaldo sin `systemsettings`.
+
+Ventana `plasmaSettings.qml` (proceso `qs -p` aparte).
 
 | Pieza | Origen |
 | :--- | :--- |

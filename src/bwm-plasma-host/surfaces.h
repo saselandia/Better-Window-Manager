@@ -70,14 +70,17 @@ Q_SIGNALS:
     void changed();
 protected:
     bool eventFilter(QObject *,QEvent *) override;
-private:
+private Q_SLOTS:
     void update();
+    void bindMainItem();
+private:
     void visibilityChanged();
     void tryFocusGrab(int attempt, quint64 generation);
     void bindPanel();
     QPointer<QQuickWindow> m_popup;
     QPointer<QQuickItem> m_parent;
     QPointer<QQuickWindow> m_panel;
+    QPointer<QQuickItem> m_watchedMainItem;
     QPointer<QScreen> m_boundScreen;
     bool m_roleConfigured=false;
     bool m_updating=false;

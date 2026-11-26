@@ -683,6 +683,13 @@
       "check": {"type": "qml", "module": "org/kde/bluezqt"},
       "packages": {"gentoo": "kde-frameworks/bluez-qt", "arch": "bluez-qt", "fedora": "kf6-bluez-qt", "opensuse": null, "debian": null}
     },
+    "bluedevil": {
+      "label": "Bluedevil (applet Bluetooth nativo de Plasma)",
+      "referenceVersion": "6.7.5",
+      "why": "Aporta el plasmoide org.kde.plasma.bluetooth en la bandeja nativa de bwm-plasma-host; kde-config-bridge desactiva su módulo kded para no duplicar servicios",
+      "check": {"type": "path", "any": ["/usr/share/plasma/plasmoids/org.kde.plasma.bluetooth/metadata.json", "/usr/lib64/qt6/plugins/plasma/applets/org.kde.plasma.bluetooth.so", "/usr/lib/qt6/plugins/plasma/applets/org.kde.plasma.bluetooth.so"]},
+      "packages": {"gentoo": "kde-plasma/bluedevil", "arch": "bluedevil", "fedora": "bluedevil", "opensuse": "bluedevil6", "debian": "bluedevil"}
+    },
     "kvantum": {
       "label": "Kvantum (estilo de widgets Qt)",
       "why": "Muchos temas globales de la KDE Store (Sweet, Layan…) piden el estilo de aplicaciones Kvantum; sin él las apps Qt vuelven a Breeze/Fusion",
@@ -814,18 +821,18 @@
       }
     },
     "bwm-systemsettings": {
-      "label": "KCM nativos de BWM para System Settings (experimental)",
-      "why": "Módulos nativos R2/R3 y descubrimiento de configuradores; migración todavía parcial",
+      "label": "KCM nativos de BWM para System Settings",
+      "why": "10 módulos nativos BWM (kcm_bwm_*) y descubrimiento de configuradores en Preferencias del sistema real de KDE",
       "check": {
         "type": "path",
         "any": [
-          "~/.local/share/bwm/systemsettings/lib/qt6/plugins/plasma/kcms/systemsettings/kcm_bwm_nightlight.so"
+          "~/.local/share/bwm/systemsettings/lib/qt6/plugins/plasma/kcms/systemsettings/kcm_bwm_windows.so"
         ]
       },
       "provider": "build",
       "build": "make -C {repo}/src/bwm-systemsettings install",
       "notes": {
-        "all": "Prototipo R2: no sustituye aún el lanzador. Necesita CMake, Qt 6 Widgets, KF6 KCMUtils, CoreAddons, Config, I18n y KDecoration3; Qt Test sólo para pruebas. El proceso de systemsettings debe recibir QT_PLUGIN_PATH apuntando al prefijo local, según src/bwm-systemsettings/README.md."
+        "all": "Integrado en Breeze vía settings-native.sh y systemsettings-desktop.sh. Necesita CMake, Qt 6 Widgets, KF6 KCMUtils, CoreAddons, Config, I18n y KDecoration3; Qt Test sólo para pruebas. El lanzador inyecta QT_PLUGIN_PATH y el perfil KAuthorized sólo en Breeze, según src/bwm-systemsettings/README.md."
       }
     },
     "bwm-kcmhost": {

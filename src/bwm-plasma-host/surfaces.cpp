@@ -10,6 +10,7 @@
 #include <QDynamicPropertyChangeEvent>
 #include <QPlatformSurfaceEvent>
 #include <cmath>
+#include <cstring>
 #include <memory>
 #include <QTimer>
 #include <QLoggingCategory>
@@ -320,11 +321,23 @@ void setPanelAcceptsInput(QQuickWindow *window,bool accepts) {
 }
 void registerTypes(){qmlRegisterType<PopupAnchor>("org.bwm.plasma.host",1,0,"PopupAnchor");}
 }
+void PopupAnchor::bindMainItem() {
+    auto *next=m_popup ? m_popup->property("mainItem").value<QQuickItem*>() : nullptr;
+    if(m_watchedMainItem==next)return;
+    if(m_watchedMainItem)disconnect(m_watchedMainItem,nullptr,this,nullptr);
+    m_watchedMainItem=next;
+    if(m_watchedMainItem) {
+        connect(m_watchedMainItem,&QQuickItem::implicitWidthChanged,this,&PopupAnchor::update);
+        connect(m_watchedMainItem,&QQuickItem::implicitHeightChanged,this,&PopupAnchor::update);
+    }
+    update();
+}
 void PopupAnchor::setPopup(QQuickWindow *popup) {
     BwmSurface::ensureNativeEffectsCommit(popup);
     if(m_popup==popup)return;
     m_grab.stop();++m_grabGeneration;
     if(m_popup){m_popup->removeEventFilter(this);disconnect(m_popup,nullptr,this,nullptr);}
+    if(m_watchedMainItem){disconnect(m_watchedMainItem,nullptr,this,nullptr);m_watchedMainItem=nullptr;}
     if(m_boundScreen)disconnect(m_boundScreen,nullptr,this,nullptr);
     m_popup=popup;
     m_roleConfigured=false;m_boundScreen=nullptr;
@@ -337,6 +350,9 @@ void PopupAnchor::setPopup(QQuickWindow *popup) {
         connect(popup,&QQuickWindow::visibleChanged,this,&PopupAnchor::visibilityChanged);
         connect(popup,&QQuickWindow::xChanged,this,[this]{if(m_requestedPosition)update();});
         connect(popup,&QQuickWindow::yChanged,this,[this]{if(m_requestedPosition)update();});
+        if(popup->metaObject()->indexOfSignal("mainItemChanged()")>=0)
+            connect(popup,SIGNAL(mainItemChanged()),this,SLOT(bindMainItem()));
+        bindMainItem();
     }
     update();visibilityChanged();emit changed();
 }
@@ -447,19 +463,60 @@ void PopupAnchor::update() {
     role->setKeyboardInteractivity(m_nonInteractive ? LayerShellQt::Window::KeyboardInteractivityNone : LayerShellQt::Window::KeyboardInteractivityOnDemand);
     role->setCloseOnDismissed(true);role->setScreen(screen);role->setActivateOnShow(!m_nonInteractive);
     QSize wanted=m_popup->size();
+    auto *mainItem=m_popup->property("mainItem").value<QQuickItem*>();
+    if(mainItem && mainItem!=m_watchedMainItem)bindMainItem();
+    auto mainItemSize=[&](bool preferImplicitOnly)->QSize {
+        if(!mainItem)return {};
+        qreal iw=mainItem->implicitWidth(),ih=mainItem->implicitHeight();
+        if(!preferImplicitOnly) {
+            iw=std::max(iw,mainItem->width());
+            ih=std::max(ih,mainItem->height());
+        }
+        if(iw<=0 || ih<=0) {
+            for(QObject *child:mainItem->children()) {
+                if(!child || !std::strstr(child->metaObject()->className(),"LayoutAttached"))continue;
+                if(iw<=0) {
+                    const qreal pref=child->property("preferredWidth").toReal();
+                    const qreal minw=child->property("minimumWidth").toReal();
+                    if(pref>0)iw=pref; else if(minw>0)iw=minw;
+                }
+                if(ih<=0) {
+                    const qreal pref=child->property("preferredHeight").toReal();
+                    const qreal minh=child->property("minimumHeight").toReal();
+                    if(pref>0)ih=pref; else if(minh>0)ih=minh;
+                }
+            }
+        }
+        int w=int(std::ceil(std::max<qreal>(0,iw)));
+        int h=int(std::ceil(std::max<qreal>(0,ih)));
+        if(w>0 || h>0) {
+            if(auto *margins=m_popup->property("margins").value<QObject*>()) {
+                w+=margins->property("left").toInt()+margins->property("right").toInt();
+                h+=margins->property("top").toInt()+margins->property("bottom").toInt();
+            } else {
+                w+=m_popup->property("leftPadding").toInt()+m_popup->property("rightPadding").toInt();
+                h+=m_popup->property("topPadding").toInt()+m_popup->property("bottomPadding").toInt();
+            }
+        }
+        return {w,h};
+    };
+    // Shared ToolTipDialog (PopupPlasmaWindow, not user-resizable AppletPopup) can keep a
+    // stale/default QQuickWindow size (e.g. 640x480 or an earlier group tooltip) after
+    // LayerShellQt configure. Always fit its desired layer size to mainItem's implicit size.
+    const bool isIntrinsicPopup=m_popup->inherits("PlasmaQuick::PopupPlasmaWindow") && !m_popup->inherits("PlasmaQuick::AppletPopup");
+    if(isIntrinsicPopup) {
+        const QSize intrinsic=mainItemSize(true);
+        if(intrinsic.width()>0 && intrinsic.height()>0) {
+            wanted=intrinsic;
+            if(m_popup->size()!=wanted)m_popup->resize(wanted);
+        }
+    }
     if(wanted.width()<=0 || wanted.height()<=0) {
         // PlasmaQuick::Dialog syncs its window size from mainItem in showEvent, which runs
         // after QWindow::create() (SurfaceCreated). A Top|Left layer surface cannot be created
         // with a zero desiredSize: derive an initial non-zero size before showEvent resizes it.
-        if(auto *mainItem=m_popup->property("mainItem").value<QQuickItem*>()) {
-            int w=int(std::ceil(std::max(mainItem->width(),mainItem->implicitWidth())));
-            int h=int(std::ceil(std::max(mainItem->height(),mainItem->implicitHeight())));
-            if(auto *margins=m_popup->property("margins").value<QObject*>()) {
-                w+=margins->property("left").toInt()+margins->property("right").toInt();
-                h+=margins->property("top").toInt()+margins->property("bottom").toInt();
-            }
-            wanted=QSize(std::max(wanted.width(),w),std::max(wanted.height(),h));
-        }
+        const QSize derived=mainItemSize(false);
+        wanted=QSize(std::max(wanted.width(),derived.width()),std::max(wanted.height(),derived.height()));
         wanted=QSize(std::max(1,wanted.width()),std::max(1,wanted.height()));
     }
     QRect placed=BwmSurface::placePopup(area,anchor,wanted,edge);

@@ -141,6 +141,7 @@ Son las versiones registradas en el entorno local de BWM, no las últimas public
 | plasma-nm (applet de red) | 6.7.5 | — |
 | plasma-pa (applet de sonido) | 6.7.5 | — |
 | BluezQt | 6.29.0 | — |
+| Bluedevil (applet Bluetooth nativo de Plasma) | 6.7.5 | — |
 | Kirigami (componentes KDE) | 6.29.0 | — |
 | Reloj de Plasma | 6.7.5 | — |
 | Códigos QR de KDE (Prison) | 6.29.0 | — |
@@ -250,7 +251,7 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | KSvg (SVG de temas de Plasma) | Pinta el panel, los popups y los controles de Breeze con el estilo de Plasma activo (desktoptheme) | `kde-frameworks/ksvg` | `ksvg` | `kf6-ksvg` | — | — |
 | libplasma (PlasmaComponents 3) | Controles de Plasma (botones, menús, deslizadores) con el tema de Plasma en el shell de Breeze | `kde-plasma/libplasma` | `libplasma` | `libplasma` | — | — |
 | Kirigami (componentes KDE) | Iconos, fuentes y métricas de los componentes portados del panel Plasma | `kde-frameworks/kirigami` | `kirigami` | `kf6-kirigami` | — | `qml6-module-org-kde-kirigami` |
-| plasma-workspace (herramientas de temas y KCMs) | plasma-apply-*, lookandfeeltool, módulos de Preferencias (colores, estilo de Plasma, iconos, cursores, fuentes, tema global) y modelos de Kickoff/bandeja. Instala KWin, pero BWM no lo ejecuta | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
+| plasma-workspace (herramientas de temas y KCMs) | plasma-apply-*, lookandfeeltool, módulos de Preferencias (colores, estilo de Plasma, iconos, cursores, fuentes, tema global) y modelos de Kickoff (Kicker, SessionManagement)/bandeja. Instala KWin, pero BWM no lo ejecuta | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
 | Reloj de Plasma | Fuente de hora del reloj digital portado de Plasma | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
 | Interfaz del reloj digital de Plasma | Formato y traducciones de zonas horarias del reloj nativo de Plasma | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | — | `plasma-workspace` |
 | Códigos QR de KDE (Prison) | Página «Mostrar código QR» del portapapeles de Breeze (BarcodePage de Klipper) | `kde-frameworks/prison[qml]` | `prison` | `kf6-prison` | `kf6-prison-imports` | `qml6-module-org-kde-prison` |
@@ -289,11 +290,12 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | Aurorae (decoraciones SVG) | Decoraciones de ventana de la KDE Store en formato Aurorae | `kde-plasma/aurorae` | `aurorae` | `aurorae` | — | — |
 | Preferencias del sistema de KDE | Base de las Preferencias del sistema de Breeze (KCMs con kcmshell6) | `kde-plasma/systemsettings` | `systemsettings` | `plasma-systemsettings` | — | `systemsettings` |
 | BluezQt | Modelos de Bluetooth del applet de Plasma (org.kde.bluezqt) | `kde-frameworks/bluez-qt` | `bluez-qt` | `kf6-bluez-qt` | — | — |
+| Bluedevil (applet Bluetooth nativo de Plasma) | Aporta el plasmoide org.kde.plasma.bluetooth en la bandeja nativa de bwm-plasma-host; kde-config-bridge desactiva su módulo kded para no duplicar servicios | `kde-plasma/bluedevil` | `bluedevil` | `bluedevil` | `bluedevil6` | `bluedevil` |
 | Kvantum (estilo de widgets Qt) | Muchos temas globales de la KDE Store (Sweet, Layan…) piden el estilo de aplicaciones Kvantum; sin él las apps Qt vuelven a Breeze/Fusion | `x11-themes/kvantum` | `kvantum` | `kvantum` | — | — |
 | Gestor de actividades de KDE | Favoritos y recientes del Kickoff de Breeze (KActivities, el formato de Plasma) | `kde-plasma/kactivitymanagerd` | `kactivitymanagerd` | `kactivitymanagerd` | — | `kactivitymanagerd` |
 | Auxiliar de decoraciones de BWM (bwm-decorator) | Dibuja las decoraciones reales de KDE (Breeze, Aurorae, de terceros) para las barras de título de Breeze | — | — | — | — | — |
 | Módulo QML org.bwm.kcm (bwm-kcmhost) | Incrusta los KCM reales de Plasma (colores, estilo, decoraciones, tema global, iconos, fuentes…) en las Preferencias del sistema de Breeze | — | — | — | — | — |
-| KCM nativos de BWM para System Settings (experimental) | Módulos nativos R2/R3 y descubrimiento de configuradores; migración todavía parcial | — | — | — | — | — |
+| KCM nativos de BWM para System Settings | 10 módulos nativos BWM (kcm_bwm_*) y descubrimiento de configuradores en Preferencias del sistema real de KDE | — | — | — | — | — |
 | Compilación de KCM nativos BWM (Qt Widgets y KF6) | Construye los módulos nativos experimentales para System Settings real | `dev-qt/qtbase` `kde-frameworks/kcmutils` `kde-frameworks/ki18n` `kde-frameworks/kcoreaddons` `dev-build/cmake` | `qt6-base` `kcmutils` `ki18n` `kcoreaddons` `cmake` | `qt6-qtbase-devel` `kf6-kcmutils-devel` `kf6-ki18n-devel` `kf6-kcoreaddons-devel` `cmake` | `qt6-base-devel` `kf6-kcmutils-devel` `kf6-ki18n-devel` `kf6-kcoreaddons-devel` `cmake` | `qt6-base-dev` `libkf6kcmutils-dev` `libkf6i18n-dev` `libkf6coreaddons-dev` `cmake` |
 | Anfitrión de módulos de configuración KDE 6 | Abrir el editor original de reglas de KWin desde los menús de Breeze | `kde-frameworks/kcmutils` | `kcmutils` | `kf6-kcmutils` | `kf6-kcmutils` | `libkf6kcmutils-bin` |
 | Editor original de reglas de KWin | Editar kwinrulesrc con kcm_kwinrules; el compositor KWin no se ejecuta | `kde-plasma/kwin` | `kwin` | `kwin` | — | `kwin-common` |

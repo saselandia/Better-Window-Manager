@@ -294,6 +294,39 @@ def status_host() -> int:
     return 0
 
 
+def toggle_launcher() -> int:
+    import socket as _socket
+
+    if ready_pid() is None:
+        return 1
+    sock_path = RUNTIME_DIR / "bwm-plasma-host.sock"
+    if not sock_path.exists():
+        return 1
+    desc = ""
+    try:
+        out = subprocess.run(
+            ["hyprctl", "-j", "monitors"],
+            capture_output=True, text=True, timeout=1.5,
+        )
+        if out.returncode == 0:
+            for mon in json.loads(out.stdout):
+                if mon.get("focused"):
+                    desc = str(mon.get("description", "")).strip()
+                    break
+    except (OSError, ValueError, subprocess.SubprocessError):
+        pass
+    msg = (f"toggle-launcher {desc}\n" if desc else "toggle-launcher\n").encode("utf-8")
+    try:
+        with _socket.socket(_socket.AF_UNIX, _socket.SOCK_STREAM) as s:
+            s.settimeout(1.5)
+            s.connect(str(sock_path))
+            s.sendall(msg)
+            reply = s.recv(64).decode("utf-8", "ignore").strip()
+            return 0 if reply == "ok" else 1
+    except OSError:
+        return 1
+
+
 def main(argv: list[str]) -> int:
     cmd = argv[0] if argv else "status"
     if cmd == "build":
@@ -308,7 +341,9 @@ def main(argv: list[str]) -> int:
         return status_host()
     if cmd == "ready":
         return 0 if ready_pid() is not None else 1
-    print("Uso: plasma-host.py build|install|start|stop|status|ready", file=sys.stderr)
+    if cmd == "toggle-launcher":
+        return toggle_launcher()
+    print("Uso: plasma-host.py build|install|start|stop|status|ready|toggle-launcher", file=sys.stderr)
     return 2
 
 
