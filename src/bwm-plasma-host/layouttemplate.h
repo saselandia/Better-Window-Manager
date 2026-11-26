@@ -26,9 +26,24 @@ class ViewCorona;
 namespace Plasma
 {
 class Containment;
+class Applet;
 }
 
-class LayoutTemplatePanel : public QObject
+class LayoutTemplateWidget : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(QStringList currentConfigGroup READ currentConfigGroup WRITE setCurrentConfigGroup)
+public:
+    explicit LayoutTemplateWidget(Plasma::Applet *applet, QObject *parent);
+    QStringList currentConfigGroup() const { return m_group; }
+    void setCurrentConfigGroup(const QStringList &group) { m_group = group; }
+    Q_INVOKABLE QVariant readConfig(const QString &key, const QVariant &fallback = {}) const;
+    Q_INVOKABLE void writeConfig(const QString &key, const QVariant &value);
+protected:
+    QPointer<Plasma::Applet> m_applet;
+    QStringList m_group;
+};
+
+class LayoutTemplatePanel : public LayoutTemplateWidget
 {
     Q_OBJECT
     Q_PROPERTY(int id READ id CONSTANT)
@@ -42,6 +57,11 @@ class LayoutTemplatePanel : public QObject
     Q_PROPERTY(int minimumLength READ minimumLength WRITE setMinimumLength)
     Q_PROPERTY(int maximumLength READ maximumLength WRITE setMaximumLength)
     Q_PROPERTY(QList<int> widgetIds READ widgetIds)
+    Q_PROPERTY(QString wallpaperPlugin READ wallpaperPlugin WRITE setWallpaperPlugin)
+    Q_PROPERTY(bool floating READ floating WRITE setFloating)
+    Q_PROPERTY(QString hiding READ hiding WRITE setHiding)
+    Q_PROPERTY(QString lengthMode READ lengthMode WRITE setLengthMode)
+    Q_PROPERTY(QString opacity READ opacity WRITE setOpacity)
 public:
     LayoutTemplatePanel(Plasma::Containment *containment, int screen, const QVariantMap &current, QObject *parent);
     int id() const;
@@ -62,6 +82,16 @@ public:
     void setMaximumLength(int pixels);
     QList<int> widgetIds() const;
     Q_INVOKABLE QVariant addWidget(const QString &plugin);
+    QString wallpaperPlugin() const;
+    void setWallpaperPlugin(const QString &plugin);
+    bool floating() const { return m_pending.value("floating", false).toBool(); }
+    void setFloating(bool v) { m_pending.insert("floating", v); }
+    QString hiding() const;
+    void setHiding(const QString &v);
+    QString lengthMode() const;
+    void setLengthMode(const QString &v);
+    QString opacity() const;
+    void setOpacity(const QString &v);
     QVariantMap pendingViewSettings() const { return m_pending; }
     Plasma::Containment *containment() const { return m_containment.data(); }
 
@@ -83,6 +113,10 @@ public:
     // "plasma-desktop-template:<id>" runs the template; any other value is a Panel containment
     // plugin and creates an empty one on the first free edge, as ShellCorona::addPanel.
     bool run(const QString &actionData);
+    bool runLookAndFeel(const QString &package);
+    Q_INVOKABLE QJSValue loadTemplate(const QString &id);
+    Q_INVOKABLE QJSValue desktopsForActivity(const QString &activity);
+    Q_INVOKABLE QJSValue desktopById(int id);
     QString error() const { return m_error; }
     QList<LayoutTemplatePanel *> createdPanels() const { return m_created; }
 
@@ -94,6 +128,9 @@ public:
     Q_INVOKABLE void print(const QString &message) const;
 
 private:
+    bool evaluate(const QString &script, const QString &path);
+    void installApi();
+    int m_depth = 0;
     LayoutTemplatePanel *createPanel(const QString &plugin);
     int screenIndex() const;
     QPointer<ViewCorona> m_corona;

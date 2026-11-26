@@ -73,6 +73,12 @@
       "packages": {"gentoo": "dev-qt/qtbase[gtk]", "arch": "qt6-base", "fedora": "qt6-qtbase-gui", "opensuse": "qt6-platformtheme-gtk3", "debian": "qt6-gtk-platformtheme"},
       "manual": "En Gentoo: activa USE=gtk en dev-qt/qtbase (package.use) y recompílalo"
     },
+    "plasma-splash": {
+      "label": "KSplash QML",
+      "why": "Pantalla de bienvenida del tema global de Plasma al iniciar Breeze",
+      "check": {"type": "cmd", "any": ["ksplashqml"]},
+      "packages": {"gentoo": "kde-plasma/plasma-workspace", "arch": "plasma-workspace", "fedora": "plasma-workspace", "opensuse": "plasma6-workspace", "debian": "plasma-workspace"}
+    },
     "qt-multimedia-qml": {
       "label": "Qt Multimedia (QML)",
       "why": "Fondos de vídeo dentro del escritorio nativo de Breeze, sin otro reproductor debajo",

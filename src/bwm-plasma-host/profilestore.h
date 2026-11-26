@@ -17,6 +17,11 @@ public:
     // Explicit snapshot recovery also works with a missing/broken current head or
     // generation. Takes the same owner lease; never starts or selects a daily panel.
     static QJsonObject recover(const QString &root,const QString &snapshotId);
+    // T4: full DAILY session files, separate from the panel-only preview authority.
+    // Checkpoints never replace a path retained by a live KSharedConfig/Corona.
+    static QString sessionRoot(const QString &legacyRoot);
+    static QString checkpointSession(const QString &sourceRoot);
+    static void sealSession(const QString &generation);
     QJsonObject info()const;
     QJsonObject checkpoint();
     QJsonObject restore(const QString &snapshotId);

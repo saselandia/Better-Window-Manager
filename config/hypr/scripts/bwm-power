@@ -36,6 +36,16 @@ case $action in
   *) echo "$usage" >&2; exit 2 ;;
 esac
 
+# T4: Breeze uses the active Plasma theme's confirmation. The confirmed action
+# returns through this common manager, without opening a second confirmation.
+if [[ $stage == "--confirmed" ]]; then
+  stage=""
+elif [[ -z $stage && $dry_run != 1 && "$action" =~ ^(shutdown|reboot|logout)$ ]]; then
+  if [[ "$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get 2>/dev/null)" == plasma ]]; then
+    exec python3 "$HOME/.config/hypr/skins/plasma/scripts/session-ui.py" prompt "$action"
+  fi
+fi
+
 run() {
   if [[ $dry_run == 1 ]]; then echo "[dry-run] $*"; else "$@"; fi
 }

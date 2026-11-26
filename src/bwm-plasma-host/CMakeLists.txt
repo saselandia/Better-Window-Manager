@@ -34,9 +34,12 @@ add_library(bwm-plasma-configuration STATIC configurationsession.cpp catalog.cpp
 target_sources(bwm-plasma-configuration PRIVATE tasksource.cpp taskbridge.cpp taskpreview.cpp previewappearance.cpp nativedesktopcontrol.cpp desktopregistry.cpp taskmenupolicy.cpp)
 target_sources(bwm-plasma-configuration PRIVATE taskthumbnail.cpp tasklauncher.cpp launchrouter.cpp desktopsessioncheck.cpp)
 target_sources(bwm-plasma-configuration PRIVATE panelclone.cpp alternativeshelper.cpp desktopviewhost.cpp containmentconfigview.cpp currentcontainmentactionsmodel.cpp layouttemplate.cpp)
-target_sources(bwm-plasma-configuration PRIVATE containmentmanagement.cpp)
-target_sources(bwm-plasma-configuration PRIVATE panelshadows.cpp notificationhost.cpp wallpaperbridge.cpp)
+target_sources(bwm-plasma-configuration PRIVATE containmentmanagement.cpp ../bwm-kcmhost/themehost.cpp ../bwm-kcmhost/themehost.h)
+target_include_directories(bwm-plasma-configuration PRIVATE ../bwm-kcmhost)
+target_sources(bwm-plasma-configuration PRIVATE panelshadows.cpp notificationhost.cpp wallpaperbridge.cpp sessionprofile.cpp lookandfeellayout.cpp sessionui.cpp)
 target_compile_definitions(bwm-plasma-configuration PRIVATE BWM_TASK_THUMBNAIL_QML="${CMAKE_CURRENT_SOURCE_DIR}/qml/TaskThumbnail.qml"
+    BWM_SHELL_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shell"
+    BWM_SESSION_UI_HELPER="${CMAKE_CURRENT_SOURCE_DIR}/../../config/hypr/skins/plasma/scripts/session-ui.py"
     BWM_WIDGET_EXPLORER_HOST_QML="${CMAKE_CURRENT_SOURCE_DIR}/qml/WidgetExplorerHost.qml")
 target_include_directories(bwm-plasma-configuration PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 add_library(bwm-thumbnail-protocols STATIC)
@@ -74,7 +77,7 @@ target_compile_definitions(bwm-window-system PRIVATE QT_STATICPLUGIN BWM_WINDOW_
 target_link_libraries(bwm-plasma-configuration PUBLIC bwm-window-system)
 qt6_generate_wayland_protocol_client_sources(bwm-plasma-configuration FILES ${HYPRLAND_PROTOCOLS_DIR}/protocols/hyprland-focus-grab-v1.xml)
 qt6_generate_wayland_protocol_client_sources(bwm-plasma-configuration FILES ${CMAKE_CURRENT_SOURCE_DIR}/../bwm-plasma-desktops/bwm-plasma-desktop-control-v1.xml)
-target_link_libraries(bwm-plasma-configuration PUBLIC Qt6::Widgets Qt6::Quick Plasma::Plasma Plasma::PlasmaQuick KF6::ConfigCore KF6::ConfigQml KF6::Package KF6::CoreAddons KF6::NewStuffWidgets KF6::NewStuffCore KF6::Svg KF6::I18n LayerShellQt::Interface Qt6::WaylandClient Qt6::GuiPrivate)
+target_link_libraries(bwm-plasma-configuration PUBLIC Qt6::Widgets Qt6::Quick Plasma::Plasma Plasma::PlasmaQuick KF6::ConfigCore KF6::ConfigQml KF6::Package KF6::CoreAddons KF6::NewStuffWidgets KF6::NewStuffCore KF6::Svg KF6::I18n KF6::I18nQml LayerShellQt::Interface Qt6::WaylandClient Qt6::GuiPrivate)
 add_executable(bwm-plasma-host main.cpp trayprobe.cpp)
 target_link_libraries(bwm-plasma-host PRIVATE bwm-plasma-configuration Qt6::DBus Qt6::Network)
 target_compile_definitions(bwm-plasma-host PRIVATE BWM_SHELL_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shell"
@@ -203,6 +206,9 @@ if(BUILD_TESTING)
         add_test(NAME notification-host COMMAND ${BWM_TEST_DBUS_RUN_SESSION} -- $<TARGET_FILE:test-notifications>)
         set_tests_properties(notification-host PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen" TIMEOUT 30)
     endif()
+    add_executable(test-t4-session test-t4-session.cpp)
+    target_link_libraries(test-t4-session PRIVATE bwm-plasma-configuration Qt6::Test)
+    target_compile_definitions(test-t4-session PRIVATE BWM_SHELL_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shell")
     add_executable(test-wallpapers-session test-wallpapers-session.cpp)
     target_link_libraries(test-wallpapers-session PRIVATE bwm-plasma-configuration Qt6::Test)
     target_compile_definitions(test-wallpapers-session PRIVATE BWM_SHELL_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shell")

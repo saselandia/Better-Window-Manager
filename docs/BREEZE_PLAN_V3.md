@@ -86,7 +86,7 @@ otro `qs -c ii`, pruebas en compositor anidado y ventanas desechables, informe p
 | T1 | Notificaciones de Plasma en Breeze — **hecha** (§387) | **high** | T0 | No |
 | T2 | Preferencias que funcionan u ocultan — **hecha** (§388) | **medium** | T1 (página de Notificaciones) | No |
 | T3 | Fondo único BWM ↔ Plasma — **hecha** (§389) | **high** | T0 | No |
-| T4 | Temas globales completos: disposición, bienvenida y salida | **high** | T3 | No previsto |
+| T4 | Temas globales: disposición, bienvenida y salida — **implementada**, aceptación física parcial (§390; BREEZE_T4_RESULTS.md) | **high** | T3 | No previsto |
 | T5 | Atajos globales de KDE coherentes con BWM | **high** | T2 (página de Atajos) | No previsto |
 | T6 | Paquetes que faltan, bandeja sin duplicados y detalles | **medium** | T5 (Meta+=, Super+.) | No |
 | T7 | Compatibilidad medida con la tienda KDE | **medium** | T4 | No |

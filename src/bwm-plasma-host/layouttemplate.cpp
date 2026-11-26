@@ -23,6 +23,10 @@
 #include <QLocale>
 #include <QScreen>
 #include <QDebug>
+#include <KConfigGroup>
+#include <QJSValueIterator>
+#include <condition_variable>
+#include <thread>
 
 using namespace Qt::StringLiterals;
 
@@ -51,7 +55,7 @@ int gridUnit()
 }
 
 LayoutTemplatePanel::LayoutTemplatePanel(Plasma::Containment *containment, int screen, const QVariantMap &current, QObject *parent)
-    : QObject(parent), m_containment(containment), m_screen(screen), m_current(current)
+    : LayoutTemplateWidget(containment, parent), m_containment(containment), m_screen(screen), m_current(current)
 {
 }
 int LayoutTemplatePanel::id() const { return m_containment ? int(m_containment->id()) : 0; }
@@ -132,7 +136,11 @@ QVariant LayoutTemplatePanel::addWidget(const QString &plugin)
     // Containment::addWidget (scripting) without geometry: createApplet appends it in order.
     if (!m_containment || plugin.isEmpty()) return {};
     auto *applet = m_containment->createApplet(plugin);
-    return applet ? QVariant(int(applet->id())) : QVariant();
+    if (!applet) return {};
+    QStringList order;
+    for (auto *a : m_containment->applets()) order.append(QString::number(a->id()));
+    m_containment->config().group(u"General"_s).writeEntry(u"AppletOrder"_s, order);
+    return QVariant::fromValue<QObject *>(new LayoutTemplateWidget(applet, this));
 }
 
 LayoutTemplateRunner::LayoutTemplateRunner(ViewCorona *corona, QScreen *target, const QHash<Plasma::Containment *, QVariantMap> &existing, QObject *parent)
@@ -242,26 +250,107 @@ bool LayoutTemplateRunner::run(const QString &actionData)
         return false;
     }
     const QString script = QString::fromUtf8(file.readAll());
-    QJSValue global = m_engine->globalObject();
-    QJSValue self = m_engine->newQObject(this);
-    QJSEngine::setObjectOwnership(this, QJSEngine::CppOwnership);
-    global.setProperty(u"__bwm"_s, self);
-    global.setProperty(u"gridUnit"_s, gridUnit());
-    global.setProperty(u"languageId"_s, QLocale::system().bcp47Name().section(QLatin1Char('-'), 0, 0));
-    const QJSValue prelude = m_engine->evaluate(QStringLiteral(
-        "function Panel(plugin){var p=__bwm.newPanel(plugin===undefined?'':plugin);if(p instanceof Error)throw p;return p;}\n"
-        "function panelById(id){return __bwm.panelById(id);}\n"
-        "function screenGeometry(s){return __bwm.screenGeometry(s);}\n"
-        "function print(m){__bwm.print(String(m));}\n"
-        "Object.defineProperty(this,'panelIds',{get:function(){return __bwm.panelIds();}});\n"));
-    if (prelude.isError()) {
-        m_error = prelude.toString();
-        return false;
-    }
+    return evaluate(script, scriptFile);
+}
+
+bool LayoutTemplateRunner::evaluate(const QString &script, const QString &scriptFile)
+{
+    if (++m_depth > 16 || script.size() > 1024*1024) { --m_depth; m_error = "Layout exceeds execution limits"; return false; }
+    if (m_depth == 1) installApi();
+    std::mutex mutex; std::condition_variable_any done;
+    std::jthread deadline([&](std::stop_token stop) {
+        std::unique_lock lock(mutex);
+        done.wait_for(lock, stop, std::chrono::seconds(3), [] { return false; });
+        if (!stop.stop_requested()) m_engine->setInterrupted(true);
+    });
     const QJSValue result = m_engine->evaluate(script, scriptFile);
+    deadline.request_stop(); done.notify_all(); --m_depth;
     if (result.isError()) {
-        m_error = tr("Layout template %1: %2 (line %3)").arg(name, result.toString(), result.property(u"lineNumber"_s).toString());
+        m_error = tr("Layout %1: %2 (line %3)").arg(scriptFile, result.toString(), result.property(u"lineNumber"_s).toString());
         return false;
     }
     return true;
+}
+
+
+LayoutTemplateWidget::LayoutTemplateWidget(Plasma::Applet *applet, QObject *parent)
+    : QObject(parent), m_applet(applet) {}
+QVariant LayoutTemplateWidget::readConfig(const QString &key, const QVariant &fallback) const {
+    if (!m_applet) return fallback;
+    auto group=m_applet->config(); for(const auto &part:m_group) group=group.group(part);
+    return group.readEntry(key,fallback);
+}
+void LayoutTemplateWidget::writeConfig(const QString &key,const QVariant &value) {
+    if(!m_applet || key.isEmpty()) return;
+    auto group=m_applet->config();for(const auto &part:m_group)group=group.group(part);
+    if(!group.isEntryImmutable(key)){group.writeEntry(key,value);m_applet->configChanged();}
+}
+QString LayoutTemplatePanel::wallpaperPlugin()const{return m_containment?m_containment->wallpaperPlugin():QString();}
+void LayoutTemplatePanel::setWallpaperPlugin(const QString &v){if(m_containment)m_containment->setWallpaperPlugin(v);}
+QString LayoutTemplatePanel::hiding()const{return QStringList{"normal","autohide","dodgewindows","windowsgobelow"}.value(m_pending.value("panelVisibility",0).toInt());}
+void LayoutTemplatePanel::setHiding(const QString &v){const int i=QStringList{"normal","autohide","dodgewindows","windowsgobelow"}.indexOf(v);m_pending.insert("panelVisibility",i);}
+QString LayoutTemplatePanel::lengthMode()const{return QStringList{"fill","fit","custom"}.value(m_pending.value("panelLengthMode",0).toInt());}
+void LayoutTemplatePanel::setLengthMode(const QString &v){const int i=QStringList{"fill","fit","custom"}.indexOf(v);m_pending.insert("panelLengthMode",i);}
+QString LayoutTemplatePanel::opacity()const{return m_pending.value("panelOpacity",2).toInt()==1?"opaque":"translucent";}
+void LayoutTemplatePanel::setOpacity(const QString &v){m_pending.insert("panelOpacity",v=="opaque"?1:v=="translucent"?2:0);}
+QJSValue LayoutTemplateRunner::desktopsForActivity(const QString &) {
+    auto array=m_engine->newArray();int n=0;
+    if(m_corona)for(auto *c:m_corona->containments())if(c->containmentType()==Plasma::Containment::Desktop)
+        array.setProperty(n++,desktopById(c->id()));
+    return array;
+}
+QJSValue LayoutTemplateRunner::desktopById(int id) {
+    if(m_corona)for(auto *c:m_corona->containments())if(c->id()==uint(id)&&c->containmentType()==Plasma::Containment::Desktop) {
+        auto *wrapper=new LayoutTemplatePanel(c,c->screen(),{},this);
+        QJSEngine::setObjectOwnership(wrapper,QJSEngine::CppOwnership);return m_engine->newQObject(wrapper);
+    }
+    return QJSValue();
+}
+QJSValue LayoutTemplateRunner::loadTemplate(const QString &id) {
+    if(!run("plasma-desktop-template:"+id)) return m_engine->throwError(m_error), QJSValue();
+    return m_engine->newObject();
+}
+bool LayoutTemplateRunner::runLookAndFeel(const QString &id) {
+    auto package=KPackage::PackageLoader::self()->loadPackage("Plasma/LookAndFeel",id);
+    if(!package.isValid()){m_error="Invalid look-and-feel package";return false;}
+    auto path=package.filePath("layouts","org.kde.plasma.desktop-layout.js");
+    if(path.isEmpty()) {
+        auto fallback=KPackage::PackageLoader::self()->loadPackage("Plasma/LookAndFeel","org.kde.breeze.desktop");
+        path=fallback.filePath("layouts","org.kde.plasma.desktop-layout.js");
+    }
+    QFile file(path);if(!file.open(QIODevice::ReadOnly)){m_error="Missing native look-and-feel layout";return false;}
+    return evaluate(QString::fromUtf8(file.readAll()),path);
+}
+void LayoutTemplateRunner::installApi() {
+    auto global=m_engine->globalObject();QJSEngine::setObjectOwnership(this,QJSEngine::CppOwnership);
+    global.setProperty("__bwm",m_engine->newQObject(this));global.setProperty("gridUnit",gridUnit());
+    global.setProperty("languageId",QLocale::system().bcp47Name().section('-',0,0));
+    m_engine->evaluate(QStringLiteral(R"JS(
+function Panel(plugin){var p=__bwm.newPanel(plugin===undefined?'':plugin);if(p instanceof Error)throw p;return p;}
+function panelById(id){return __bwm.panelById(id);}
+function screenGeometry(s){return __bwm.screenGeometry(s);}
+function print(m){__bwm.print(String(m));}
+function loadTemplate(id){return __bwm.loadTemplate(id);}
+function currentActivity(){return 'bwm';}
+function desktopsForActivity(a){return __bwm.desktopsForActivity(a);}
+function desktopById(id){return __bwm.desktopById(id);}
+function activities(){return ['bwm'];}
+var __plasmaApi=this;
+function getApiVersion(v){if(v!==1)throw Error('Only Plasma scripting API 1 is supported');return __plasmaApi;}
+Object.defineProperty(this,'panelIds',{get:function(){return __bwm.panelIds();}});
+function __configs(object,configs){Object.keys(configs||{}).forEach(function(g){
+ object.currentConfigGroup=g.split('/').filter(Boolean).map(decodeURIComponent);
+ Object.keys(configs[g]).forEach(function(k){object.writeConfig(k,configs[g][k]);});});}
+function loadSerializedLayout(data){
+ if(Number(data.serializationFormatVersion)!==1)throw Error('Unsupported Plasma serialization version');
+ var desktops=desktopsForActivity(currentActivity());
+ (data.desktops||[]).slice(0,desktops.length).forEach(function(d,i){
+  var target=desktops[i];target.wallpaperPlugin=d.wallpaperPlugin;__configs(target,d.config);
+  (d.applets||[]).forEach(function(a){__configs(target.addWidget(a.plugin),a.config);});});
+ (data.panels||[]).forEach(function(p){var target=new Panel();
+  ['location','alignment','hiding','opacity','lengthMode','floating'].forEach(function(k){if(p[k]!==undefined)target[k]=p[k];});
+  ['height','minimumLength','maximumLength','offset'].forEach(function(k){if(p[k]!==undefined)target[k]=Math.round(p[k]*gridUnit);});
+  __configs(target,p.config);(p.applets||[]).forEach(function(a){__configs(target.addWidget(a.plugin),a.config);});});
+}
+)JS"));
 }

@@ -115,7 +115,14 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   aplana la configuración por pantalla. Host nuevo activado y fondos diarios originales
   restaurados; paleta intacta. Pruebas y límites: `docs/BREEZE_T3_RESULTS.md`.
 
-* **Breeze III (`docs/BREEZE_PLAN_V3.md`, T0–T9, 2026-11-26, §385):** plan activo. Avisos de Plasma, Preferencias que funcionan u ocultan, fondo único BWM ↔ Plasma, temas globales completos (disposición, bienvenida, salida), atajos globales de KDE sin pisar los de BWM, paquetes que faltan, compatibilidad medida con la tienda y vista general. T0–T3 completadas (§386–389); T4 es la siguiente.
+* **Temas globales (T4, §390):** host con `org.kde.PlasmaShell` limitado a immutable y carga de
+  disposición original; ProfileStore prepara generaciones/checkpoints sin sobrescribir la
+  Corona viva, supervisor selecciona perfil y recupera el anterior al fallar. KSplash original
+  al iniciar Breeze, respeta None. Salida del tema original en ThemeHost separado, IPC/atajos
+  y botones nativos por `bwm-power`; auxiliar único sin host. Instalado y apertura/cancelación
+  diaria verificadas; aplicación de disposición física y próximo login pendientes.
+  `docs/BREEZE_T4_RESULTS.md` documenta API admitida y pruebas; no compatibilidad universal.
+* **Breeze III (`docs/BREEZE_PLAN_V3.md`, T0–T9, 2026-11-26, §385):** plan activo. Avisos de Plasma, Preferencias que funcionan u ocultan, fondo único BWM ↔ Plasma, temas globales completos (disposición, bienvenida, salida), atajos globales de KDE sin pisar los de BWM, paquetes que faltan, compatibilidad medida con la tienda y vista general. T0–T3 completadas (§386–389); T4 implementada con aceptación física parcial (§390). T5 no empezada.
 * **Breeze II (`BREEZE_PLAN_V2.md`, R0–R9 cerrados — 2026-11-26, §§372–381):** plan completado
   con los binarios finales cargados en la nueva sesión (`breezebars.so` §376, `omarchy-titlebars.so`
   §377, `bwm-plasma-host` ready en ambas pantallas, `bwm-plasma-desktops`, `bwm-decorator` y
@@ -7319,3 +7326,46 @@ git status; git log --oneline -5; git push origin main
   reconexión física; plugins opacos de terceros exportan al cargar/aplicar, no cada cambio interno
   arbitrario. SDDM/Plymouth conservan sus colores estáticos, sin foto ni operación root.
   Informe: `docs/BREEZE_T3_RESULTS.md`. **T3 completada; T4 no empezada al cerrar esta fase.**
+
+
+### 390. Breeze III, T4: disposición y pantallas del tema global (2026-11-26)
+
+* **Entrega anterior:** T3 commiteada como `798d52f4c98834f40d3f743d5e1ef3da437328da`,
+  push de main verificado en GitHub y GitLab. Cambios generados/ajenos excluidos del commit.
+* **Disposición:** `LookAndFeelLayout` implementa sólo immutable y
+  loadLookAndFeelDefaultLayout de org.kde.PlasmaShell, sin desplazar un plasmashell real.
+  `LayoutTemplateRunner` ejecuta los JS originales y formato serializado API 1; grupos de
+  configuración y applets nativos, límites de ejecución, errores explícitos. Edición abierta
+  impide reemplazar. Funciones no implementadas y compatibilidad limitada documentadas.
+* **Perfiles:** ProfileStore añade generaciones privadas de sesión separadas de los perfiles
+  de prueba de panel. Checkpoint de los cuatro archivos nativos; preparar en otra Corona,
+  cerrar la antigua y seleccionar active-session.json atómicamente. Supervisor finito espera
+  ready/paneles/escritorios/servicio; al fallar vuelve al checkpoint anterior. Nunca escribir
+  sobre el appletsrc de la Corona viva. last-layout.json conserva el resultado.
+* **Sesión:** KSplash original al iniciar Hyprland sólo en Breeze, respeta None; termina al
+  estar listo el host, con PID D-Bus comprobado. SessionUi reutiliza ThemeHost y logout QML
+  original en motores separados por pantalla; cuenta atrás dispara una sola acción común
+  bwm-power --confirmed. Contratos LogoutPrompt/Shutdown limitados para los botones nativos;
+  saveSession fuera del plan. Proxy Quickshell en modules/plasma/session; auxiliar único si
+  el host está ausente. Sin opciones de actualizaciones offline/cargador de arranque.
+* **Pruebas:** Python 28/28 (T4 9, T3 8, guard 4, skins 7); CTest 15/15 (92,70 s);
+  fixture T4 8/8 en Hyprland/D-Bus/XDG privados con dos salidas escala 1/1,25. Breeze,
+  Sweet y Layan original revisado (a0b6a495), script roto/bucle, servicio ajeno, llamada D-Bus,
+  edición abierta, cancelación, cuenta atrás con helper ficticio, Qt.quit aislado. KSplash
+  original de los tres cierra con código 0. Auxiliar Breeze sin host único y cancelado.
+  Supervisor con procesos reales desechables recupera el perfil previo cuando la salida sin
+  EDID no permite activar el panel; éxito cubierto por doble de estado. No acción de energía
+  real. Layan emite bottomRect no definido en su splash original, sin parchearlo.
+* **Despliegue:** instalación atómica SHA256 6854b8b857ea7338…, host diario 1544238 ready;
+  dos paneles/escritorios, notificaciones válidas, interfaces D-Bus introspectadas y
+  configerrors vacío. Mantenimiento del shell por gestor: única instancia 1548511; IPC
+  session open/close abre dos diálogos originales y cancela. Fondos físicos idénticos al
+  estado anterior. El gestor de procesos ahora exige el mismo XDG_RUNTIME_DIR para no
+  detener una sesión distinta durante pruebas aisladas.
+* **Requisitos y procedencia:** KSplash recomendado en catálogo/manifiesto y tabla regenerada;
+  ThemeHost usa KI18nQml del ki18n ya declarado. Contrato de logout MIT y scripting LGPL
+  conservados; sin recursos de Layan copiados al repo ni instalación en el perfil diario.
+* **Pendiente:** próximo login físico con KSplash y cambio de disposición elegido por el
+  usuario en Preferencias; no se ensayaron scripts en el escritorio diario. No se certifica
+  compatibilidad universal de tienda ni acciones de energía físicas. T4 implementada con
+  aceptación física parcial; T5 no empezada. Informe: docs/BREEZE_T4_RESULTS.md.

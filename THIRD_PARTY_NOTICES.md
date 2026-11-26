@@ -950,3 +950,26 @@ pruebas, publicación Python y el paquete `org.bwm.video` son código BWM GPL-2.
 El paquete de vídeo usa la API pública `WallpaperItem`/QtMultimedia; no copia otro plugin.
 Imagen, presentación, color y la interfaz de configuración se cargan de los paquetes KDE
 instalados, sin modificarlos. La fuente correspondiente de la adaptación está en el repo.
+
+### Temas globales: disposición y pantallas de sesión (T4, Plasma 6.7.5)
+
+`src/bwm-plasma-host/sessionui.cpp` adapta el contrato de contexto y señales de
+`logout-greeter/shutdowndlg.cpp` de
+[plasma-workspace 6.7.5](https://invent.kde.org/plasma/plasma-workspace/-/tree/v6.7.5/logout-greeter)
+(Matthias Ettrich 2000, Urs Wolfer 2007, **MIT**). Conserva créditos y licencia. BWM añade
+layer-shell, motores ThemeHost separados, capacidades logind, control de foco/generación,
+acción única entre monitores y envío a su gestor común de energía. No se incluye el greeter
+ni se copia el QML de los temas: se carga de los paquetes instalados.
+
+La ampliación de `layouttemplate.{h,cpp}` conserva **LGPL-2.0-or-later** y su procedencia de
+`shell/scripting` (Aaron Seigo, Harald Sitter): configuración por grupos, envoltorios de
+widgets, API 1 y formato serializado original; BWM añade límites de ejecución. Interfaz
+limitada D-Bus, generaciones de ProfileStore, supervisor Python y pruebas son código BWM
+GPL-2.0-or-later. ThemeHost reutiliza la implementación BWM de `src/bwm-kcmhost` (GPL).
+`ksplashqml` se ejecuta como programa KDE instalado, no se redistribuye su binario aquí.
+
+Se ensayó el script original de **Layan** (Vince Liuice, metadata declara `GPL3.0`),
+[tienda](https://store.kde.org/p/1325243), [fuente](https://github.com/vinceliuice/Layan-kde),
+revisión `a0b6a4956022276aee33309b2e07d1d0ef3db30c`, en rutas temporales aisladas. Sus recursos
+no se incorporan a BWM. Breeze/Sweet también se cargan desde sus instalaciones; sus avisos
+existentes se conservan. Resultados y limitaciones: `docs/BREEZE_T4_RESULTS.md`.

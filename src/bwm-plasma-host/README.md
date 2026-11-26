@@ -1,4 +1,4 @@
-# bwm-plasma-host — experimento R4
+# bwm-plasma-host — anfitrión nativo de Breeze
 
 Auxiliar fuera de Hyprland con Corona/Applet/PlasmoidItem originales. El modo diario usa el panel original de Plasma.
 Arquitectura y límites en `docs/BREEZE_R4_ARCH.md`; resultados en `docs/BREEZE_R4_RESULTS.md`.
@@ -12,6 +12,10 @@ el escritorio) y lo desactiva al salir (§383). Pruebas: `build/bwm-plasma-host-
 `build/bwm-plasma-host` la compila `plasma-host.py build` sin pruebas.
 `bar.plasma.nativeHost=false` o `BWM_PLASMA_NATIVE_HOST=0` conserva el panel de respaldo.
 No ejecutar sobre la configuración real como ensayo.
+
+T4 añade los contratos limitados de disposición/sesión, generaciones de ProfileStore y
+pantallas de los temas globales; detalle reproducible y límites al final de este README y en
+`docs/BREEZE_T4_RESULTS.md`.
 
 ```bash
 cmake -S src/bwm-plasma-host -B /mnt/HDD1TB/Projects/hyprland-de/build/bwm-plasma-host
@@ -1630,3 +1634,43 @@ python3 src/bwm-plasma-host/check-wallpapers-session.py \
 El script sustituye los comandos de motores externos para no parar los de la sesión diaria;
 el escritorio y el plugin de vídeo sí se renderizan de verdad. Informe y límites en
 `docs/BREEZE_T3_RESULTS.md`.
+
+
+## T4: disposición y pantallas de sesión
+
+`LookAndFeelLayout` publica immutable/loadLookAndFeelDefaultLayout de org.kde.PlasmaShell
+sin tomar el nombre de un plasmashell existente. El runner conserva scripts y configuración
+originales; API 1 y loadSerializedLayout formato 1, sin ejecución de programas, ConfigFile ni
+Actividades. Una plantilla incompatible falla explícitamente. Límites y matriz de paquetes:
+`docs/BREEZE_T4_RESULTS.md`.
+
+`ProfileStore::{checkpointSession,sealSession,sessionRoot}` mantiene generaciones de sesión
+separadas de los perfiles de panel. Un candidato no sobrescribe el appletsrc vivo. El
+supervisor finito selecciona active-session.json después de cerrar la Corona anterior y
+vuelve al checkpoint al fallar el nuevo host; resultado en last-layout.json. No modificar
+manualmente la generación seleccionada mientras el host la tenga abierta.
+
+SessionUi enlaza el ThemeHost existente y carga logoutmainscript del tema en un motor por
+pantalla. Qt.quit cancela el diálogo y las cuentas atrás sólo envían una acción a bwm-power.
+Socket: layout-status, session-status, session-prompt all|logout|shutdown|reboot,
+session-cancel. --logout-dialog ofrece el auxiliar único sin host; --prepare-lookandfeel es
+una herramienta de preparación, para raíces desechables. session-ui.py gestiona también el
+KSplash original al iniciar Breeze. No implementa restauración de sesión.
+
+Regresión gráfica, con fuentes Layan revisadas antes de ejecutar el script:
+
+```bash
+cmake --build build/bwm-plasma-host-tests -j6
+python3 src/bwm-plasma-host/check-t4-session.py \
+  --binary build/bwm-plasma-host-tests/bwm-plasma-host \
+  --test build/bwm-plasma-host-tests/test-t4-session \
+  --layan /ruta/al/checkout/Layan-kde \
+  --report build/bwm-plasma-host-tests/t4-session-results.json
+python3 -m unittest discover -s tests -p 'test_breeze_t4.py'
+```
+
+El runner crea XDG/D-Bus y Hyprland privados en una salida temporal, dos pantallas escala
+1/1,25, helper de energía ficticio y auxiliar en dry-run. Retira compositor/reglas/salida.
+No aplica un tema ni ejecuta energía en la sesión diaria. El supervisor real ensaya rollback;
+su rama de éxito se cubre con un doble del estado de salida, sin certificar una aplicación
+completa en monitores físicos. Esa aceptación y el próximo login siguen pendientes.

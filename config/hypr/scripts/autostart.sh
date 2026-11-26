@@ -64,6 +64,10 @@ if command -v dbus-update-activation-environment >/dev/null 2>&1; then
     dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP QT_QPA_PLATFORMTHEME XDG_CONFIG_DIRS XDG_MENU_PREFIX OMARCHY_PATH QML_IMPORT_PATH LC_NUMERIC LC_TIME LC_MONETARY LC_MEASUREMENT LC_COLLATE LC_ADDRESS LC_NAME LC_PAPER LC_TELEPHONE 2>/dev/null || true
 fi
 
+# T4: once per Hyprland login, only Breeze. The original KSplash closes when the
+# native host is ready (or after a bounded fallback deadline), before normal use.
+python3 "$HOME/.config/hypr/skins/plasma/scripts/session-ui.py" splash-start >/dev/null 2>&1 &
+
 # 2. Agente de autenticación Polkit (Gentoo en /usr/libexec o PATH). En Retro no: allí es el de
 #    Omarchy dentro de Quickshell (modules/ii/omarchyPolkit) y polkit sólo admite un agente.
 python3 "$HOME/.config/hypr/scripts/bwm_polkit.py" "$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get)" || echo "BWM: no se pudo iniciar el agente polkit" >&2

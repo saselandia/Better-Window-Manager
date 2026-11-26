@@ -285,6 +285,7 @@ Imita **KDE Plasma 6 (Breeze)**. Panel flotante, Kickoff, applets de red/Bluetoo
 | blueman | Botón «Configurar» del applet Bluetooth | `net-wireless/blueman` | `blueman` | `blueman` | `blueman` | `blueman` |
 | mpvpaper | Fondos de vídeo en default (end-4) y Breeze (Kde plasma), como switchwall.sh de end-4; sin él se queda el primer fotograma | `guru:gui-apps/mpvpaper` | `aur:mpvpaper` | — | — | — |
 | Qt Multimedia (QML) | Fondos de vídeo dentro del escritorio nativo de Breeze, sin otro reproductor debajo | `dev-qt/qtmultimedia[qml,ffmpeg]` | `qt6-multimedia` `qt6-multimedia-ffmpeg` | `qt6-qtmultimedia` | `qt6-multimedia-imports` | `qml6-module-qtmultimedia` `qt6-multimedia-plugins` |
+| KSplash QML | Pantalla de bienvenida del tema global de Plasma al iniciar Breeze | `kde-plasma/plasma-workspace` | `plasma-workspace` | `plasma-workspace` | `plasma6-workspace` | `plasma-workspace` |
 | Plasma5Support | Fuentes de datos que usan los plasmoides portados (reloj, energía) | `kde-plasma/plasma5support` | `plasma5support` | — | — | — |
 | KDecoration3 | Biblioteca de decoraciones de KWin: BWM la usa para dibujar las barras de título del tema de Plasma activo | `kde-plasma/kdecoration` | `kdecoration` | `kdecoration` | — | — |
 | Decoración y estilo Breeze | Barras de título Breeze reales y estilo de widgets Breeze | `kde-plasma/breeze` | `breeze` | `plasma-breeze` | — | `breeze` |

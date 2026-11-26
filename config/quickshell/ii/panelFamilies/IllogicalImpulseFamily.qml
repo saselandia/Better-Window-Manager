@@ -111,7 +111,8 @@ Scope {
     PanelLoader { extraCondition: Config.ready && Appearance.isRetro; component: OmarchyNotifications {} }
     PanelLoader { component: ScreenCorners {} }
     PanelLoader { component: ScreenTranslator {} }
-    PanelLoader { component: SessionScreen {} }
+    PanelLoader { extraCondition: !Appearance.isPlasma; component: SessionScreen {} }
+    PanelLoader { extraCondition: Appearance.isPlasma; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/session/SessionScreen.qml") : "" }
     PanelLoader { component: SidebarLeft {} }
     PanelLoader { component: SidebarRight {} }
     PanelLoader { extraCondition: Config.options.bar.vertical && !Appearance.isRetro && !Appearance.isPlasma; component: VerticalBar {} }

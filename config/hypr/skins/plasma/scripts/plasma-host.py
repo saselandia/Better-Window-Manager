@@ -130,6 +130,11 @@ def is_host_pid(pid: int) -> bool:
         if Path(f"/proc/{pid}").stat().st_uid != os.getuid():
             return False
         cmd = Path(f"/proc/{pid}/cmdline").read_bytes().decode("utf-8", "ignore").rstrip("\0").split("\0")
+        env = dict(item.split(b"=", 1) for item in Path(f"/proc/{pid}/environ").read_bytes().split(b"\0") if b"=" in item)
+        # An isolated host/test or another compositor session must never stop the
+        # daily host merely because both use the same executable and --session.
+        if env.get(b"XDG_RUNTIME_DIR", b"").decode() != str(RUNTIME_DIR):
+            return False
     except OSError:
         return False
     return bool(cmd) and Path(cmd[0]).name == "bwm-plasma-host" and cmd[1:] == ["--session"]

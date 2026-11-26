@@ -40,7 +40,7 @@ PC3.Menu {
     PC3.MenuItem {
         text: root.trc("plasma_containmentactions_contextmenu", "Show Logout Screen")
         icon.name: "system-log-out"
-        onTriggered: GlobalStates.sessionOpen = true
+        onTriggered: Quickshell.execDetached(["python3", root.scripts + "../skins/plasma/scripts/session-ui.py", "prompt", "all"])
     }
     PC3.MenuSeparator {}
     PC3.MenuItem {

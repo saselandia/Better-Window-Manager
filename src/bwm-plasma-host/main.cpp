@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-// Experimental R4 host. Never owns a Plasma D-Bus service or starts plasmashell.
+// Native Plasma host. Implements only the documented Plasma D-Bus subsets; never starts plasmashell.
 #include <QApplication>
 #include <QQuickWindow>
 #include <QQmlComponent>
@@ -52,6 +52,8 @@
 #include "taskpreview.h"
 #include "desktopviewhost.h"
 #include "wallpaperbridge.h"
+#include "lookandfeellayout.h"
+#include "sessionui.h"
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QSaveFile>
@@ -145,6 +147,37 @@ int main(int argc, char **argv) {
         return status.value("verified").toBool()?0:2;
     }
     if(args.size()==2 && args[1]=="--launch-task-application")return runNativeTaskLauncher();
+    if(args.size()==3 && args[1]=="--logout-dialog") {
+        app.setQuitOnLastWindowClosed(false);
+        const auto auxPath=QStandardPaths::writableLocation(QStandardPaths::RuntimeLocation)+"/bwm-plasma-logout.sock";
+        QLockFile auxLock(auxPath+".lock");auxLock.setStaleLockTime(0);
+        if(!auxLock.tryLock(0))return 0;
+        QLocalServer aux;aux.setSocketOptions(QLocalServer::UserAccessOption);QLocalServer::removeServer(auxPath);aux.listen(auxPath);
+        SessionUi ui(QFileInfo(QStringLiteral(BWM_WALLPAPER_HELPER_SOURCE)).dir().absoluteFilePath("../../../scripts/bwm-power"));
+        QObject::connect(&aux,&QLocalServer::newConnection,&app,[&]{
+            while(auto *client=aux.nextPendingConnection()){
+                QObject::connect(client,&QLocalSocket::disconnected,client,&QObject::deleteLater);
+                QTimer::singleShot(1500,client,[client]{client->abort();client->deleteLater();});
+                QObject::connect(client,&QLocalSocket::readyRead,client,[&,client]{
+                    const auto command=client->readAll().trimmed();
+                    client->write("ok\n");client->flush();client->disconnectFromServer();
+                    if(command=="cancel")ui.cancel();
+                });
+            }
+        });
+        QTimer skinGuard;
+        QObject::connect(&skinGuard,&QTimer::timeout,&app,[&]{
+            QFile config(QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation)+"/illogical-impulse/config.json");
+            if(config.open(QIODevice::ReadOnly)&&QJsonDocument::fromJson(config.readAll()).object().value("appearance").toObject().value("bwmTheme").toString()!="plasma")app.quit();
+        });skinGuard.start(1000);
+        QObject::connect(&ui,&SessionUi::closed,&app,&QCoreApplication::quit);
+        if(!ui.prompt(args[2]))return 2;
+        return app.exec();
+    }
+    if(args.size()==4 && args[1]=="--prepare-lookandfeel") {
+        try { puts(LookAndFeelLayout::prepare(args[2],args[3],QStringLiteral(BWM_SHELL_SOURCE_DIR)).toUtf8().constData());return 0; }
+        catch(const std::exception &e){fprintf(stderr,"%s\n",e.what());return 2;}
+    }
     const bool allDesktopTasks=qEnvironmentVariable("BWM_R4_TASK_ALL_DESKTOPS")=="1";
     const bool taskThumbnails=qEnvironmentVariable("BWM_R4_TASK_THUMBNAILS")=="1";
     if(!sessionMode && taskThumbnails && !(args.size()==3 && args[1]=="--follow-panel-preview" && qEnvironmentVariable("BWM_R4_TASK_ACTIONS")=="1")){
@@ -162,8 +195,11 @@ int main(int argc, char **argv) {
     if(sessionMode) {
         const QString runtimeDir = qEnvironmentVariable("XDG_RUNTIME_DIR", QStringLiteral("/run/user/%1").arg(::getuid()));
         const QString configBase = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
-        const QString storeDir = configBase + QStringLiteral("/bwm-plasma-host");
-        QDir().mkpath(storeDir);
+        const QString legacyStoreDir = configBase + QStringLiteral("/bwm-plasma-host");
+        QDir().mkpath(legacyStoreDir);
+        QString storeDir;
+        try { storeDir=ProfileStore::sessionRoot(legacyStoreDir); }
+        catch(const std::exception &error){fprintf(stderr,"Invalid session profile: %s\n",error.what());return 5;}
         QLockFile sessionLock(runtimeDir + QStringLiteral("/bwm-plasma-host.lock"));
         sessionLock.setStaleLockTime(0);
         if(!sessionLock.tryLock(0)) {
@@ -409,6 +445,11 @@ int main(int argc, char **argv) {
         QObject::connect(&app, &QGuiApplication::screenRemoved, &app, [syncDesktops](QScreen*){ syncDesktops(); });
         QObject::connect(&runtime, &PanelRuntime::changed, &app, saveState, Qt::QueuedConnection);
 
+        LookAndFeelLayout layoutApi(&corona, legacyStoreDir, storeDir, saveState);
+        const bool ownsShellApi=layoutApi.start();
+        QObject::connect(&layoutApi, &LookAndFeelLayout::restartRequested, &app, &QCoreApplication::quit);
+        SessionUi sessionUi(QFileInfo(QStringLiteral(BWM_WALLPAPER_HELPER_SOURCE)).dir().absoluteFilePath("../../../scripts/bwm-power"));
+        if(ownsShellApi)sessionUi.start();
         const QString sockPath = runtimeDir + QStringLiteral("/bwm-plasma-host.sock");
         QLocalServer control;
         control.setSocketOptions(QLocalServer::UserAccessOption);
@@ -476,6 +517,17 @@ int main(int argc, char **argv) {
                                     Q_EMIT chosen->activated();
                                     reply = "ok\n";
                                 }
+                            } else if(line == QStringLiteral("layout-status")) {
+                                auto status=layoutApi.status();status["root"]=storeDir;
+                                status["panels"]=QJsonArray::fromVariantList(runtime.panels());
+                                status["desktops"]=int(desktopViews.size());status["runtimeError"]=runtime.error();
+                                reply=QJsonDocument(status).toJson(QJsonDocument::Compact)+"\n";
+                            } else if(line == QStringLiteral("session-status")) {
+                                reply=QJsonDocument(sessionUi.status()).toJson(QJsonDocument::Compact)+"\n";
+                            } else if(line == QStringLiteral("session-cancel")) {
+                                sessionUi.cancel();reply="ok\n";
+                            } else if(line.startsWith(QStringLiteral("session-prompt "))) {
+                                reply=sessionUi.prompt(line.mid(15))?"ok\n":"err\n";
                             } else if(line == QStringLiteral("wallpaper-status")) {
                                 reply = QJsonDocument(wallpapers.status()).toJson(QJsonDocument::Compact) + "\n";
                             } else if(line.startsWith(QStringLiteral("wallpaper-set "))) {

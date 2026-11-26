@@ -640,3 +640,26 @@ El renderizador de SDDM/Plymouth se invoca por el camino habitual. Sus temas exi
 los colores de la skin, no una foto del escritorio; T3 no añade una foto a esas pantallas ni
 realiza ninguna operación root. `bwm_boot.py` respeta XDG de estado para poder comprobar esa
 publicación sin escribir el staging diario. Informe: `BREEZE_T3_RESULTS.md`.
+
+## 20. Disposición y pantallas del tema global (Breeze III, T4)
+
+`LookAndFeelLayout` registra org.kde.plasmashell sólo si está libre. `/PlasmaShell` ofrece
+immutable y loadLookAndFeelDefaultLayout; no evaluateScript. El runner de plantillas ejecuta
+el layout original del paquete (o el de Breeze si falta), con API 1 y configuración nativa.
+La API concreta y sus límites están en `BREEZE_T4_RESULTS.md`.
+
+El perfil diario parte de `~/.config/bwm-plasma-host/`. Si existe active-session.json, el
+host selecciona una generación bajo `$XDG_STATE_HOME/bwm/plasma/session-profiles/` validando
+propietario y ruta. ProfileStore guarda checkpoints de appletsrc, plasmashellrc y las dos
+asignaciones por descripción. El candidato se prepara en otra Corona; el supervisor Python
+selecciona la generación después de cerrar la anterior y recupera el checkpoint si el nuevo
+host no ofrece paneles/escritorios y servicio listos. No se altera el appletsrc abierto por
+un proceso. Las generaciones son independientes de los perfiles experimentales de panel.
+
+`session-ui.py splash-start`, lanzado por autostart sólo una vez al entrar en Breeze, ejecuta
+KSplash original respetando ksplashrc y lo completa al estar listo el host. `SessionUi`
+aloja el logout QML instalado mediante ThemeHost (motor separado por pantalla), con acciones
+únicas hacia bwm-power --confirmed. Contratos limitados LogoutPrompt y Shutdown enlazan los
+botones nativos; el proxy modules/plasma/session conserva IPC y atajos de BWM. Sin host, un
+auxiliar del mismo binario ofrece sólo el diálogo. No restaura sesiones ni ofrece actualizaciones
+offline o selección del cargador. Pruebas físicas pendientes declaradas en el informe T4.

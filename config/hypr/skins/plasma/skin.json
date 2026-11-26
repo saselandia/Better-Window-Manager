@@ -76,6 +76,7 @@
       "config/quickshell/ii/modules/plasma/osd",
       "config/quickshell/ii/modules/plasma/lock",
       "config/quickshell/ii/modules/plasma/runtime",
+      "config/quickshell/ii/modules/plasma/session",
       "config/quickshell/ii/modules/plasma/skinPicker"
     ],
     "hyprland": [
@@ -107,6 +108,7 @@
       "config/hypr/skins/plasma/scripts/decorator.py",
       "config/hypr/skins/plasma/scripts/plasma-host.py",
       "config/hypr/skins/plasma/scripts/wallpaper-sync.py",
+      "config/hypr/skins/plasma/scripts/session-ui.py",
       "config/hypr/skins/plasma/share/plasma/wallpapers",
       "config/hypr/skins/plasma/scripts/csd-audit.py",
       "config/hypr/skins/plasma/scripts/kwin_rules.py",
@@ -169,6 +171,7 @@
     "blueman",
     "mpvpaper",
     "qt-multimedia-qml",
+    "plasma-splash",
     "plasma5support",
     "kdecoration",
     "breeze-decoration",
