@@ -396,7 +396,7 @@ revisión de actualización descrita en el README del auxiliar.
 
 La continuación R4 añade un paquete Plasma/Shell mínimo propio (muebles sobre AppletPopup,
 marco ConfigView y vista temporal), `ConfigurationSession` y `Catalog`, todos GPL-2.0-or-later.
-No copia AppletConfiguration.qml ni CompactApplet.qml de plasma-desktop; carga formularios de
+No copia AppletConfiguration.qml de plasma-desktop; carga formularios de
 los paquetes originales. Usa además KF6 NewStuffWidgets y el proveedor plasmoids.knsrc de la
 distribución, manteniendo sus licencias. QtTest/ASan prueban el adaptador sin redistribuir los
 widgets ni ejecutar un shell Plasma. Estado y diferencias en BREEZE_R4_RESULTS.md.
@@ -425,6 +425,9 @@ originales y una nota de cambios BWM. Cargan sin modificar el `PanelConfiguratio
 `src/bwm-plasma-host/qml/WidgetExplorerHost.qml` adapta parte de `desktoppackage/contents/views/Desktop.qml`
 de plasma-desktop 6.7.5 (Marco Martin, David Edmundson; GPL-2.0-or-later), con su cabecera SPDX
 y una nota de cambios BWM; carga sin modificar el `explorer/WidgetExplorer.qml` instalado.
+`src/bwm-plasma-host/shell/contents/applet/CompactApplet.qml` es `desktoppackage/contents/applet/CompactApplet.qml`
+de plasma-desktop 6.7.5 (Marco Martin, GPL-2.0-or-later) con su cabecera SPDX; BWM sólo añade el `PopupAnchor`
+de colocación en capa y cambia dos `objectName` (marcados «BWM», §384).
 `src/bwm-plasma-host/shell/contents/defaults` copia el grupo `[Panel]` de `desktoppackage/contents/defaults`
 de plasma-desktop 6.7.5 (caja de herramientas `org.kde.paneltoolbox` y acción `org.kde.contextmenu`), con
 un comentario de procedencia; los paquetes que nombra se cargan instalados, sin copiarlos.

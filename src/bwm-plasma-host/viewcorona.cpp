@@ -14,6 +14,7 @@
 #include <QGuiApplication>
 #include <QIcon>
 #include <KLocalizedString>
+#include <KWindowSystem>
 #include <QMenu>
 #include <QQuickWindow>
 #include <QQuickItem>
@@ -49,6 +50,16 @@ ViewCorona::ViewCorona() {
     connect(this,&Plasma::Corona::editModeChanged,this,[this](bool edit){
         if(!edit)setEnteredEditModeViaDesktop(false);
     });
+    // ShellCorona 6.7.5: edit mode shows the desktop (setDashboardShown(edit)), so the
+    // zoomed-out DesktopEditMode.qml is not covered by windows, and leaving "show desktop"
+    // leaves edit mode. KWindowSystem::setShowingDesktop reaches BWM's common minimize
+    // manager through the host's window-system adapter; only with that adapter enabled.
+    if(qEnvironmentVariable("BWM_R4_DESKTOP_ACTIONS")==QLatin1String("1")) {
+        connect(this,&Plasma::Corona::editModeChanged,this,[](bool edit){KWindowSystem::setShowingDesktop(edit);});
+        connect(KWindowSystem::self(),&KWindowSystem::showingDesktopChanged,this,[this](bool showing){
+            if(!showing && isEditMode())setEditMode(false);
+        });
+    }
     auto *manage=new QAction(QIcon::fromTheme(QStringLiteral("video-display")),i18ndc("plasmashell","@action:button","Manage Desktops and Panels…"),this);
     setAction(QStringLiteral("manage-containments"),manage);
     connect(manage,&QAction::triggered,this,&ViewCorona::showContainmentManagement);

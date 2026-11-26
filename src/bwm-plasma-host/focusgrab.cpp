@@ -52,8 +52,18 @@ bool FocusGrab::start(const QList<QWindow*> &windows) {
         if(!surfaces.contains(surface))surfaces.append(surface);
     }
     m_client=new FocusGrabClient(m->create_grab(),this);
-    for(auto *surface:surfaces)m_client->add_surface(surface);
+    // Hyprland 0.56.2 CFocusGrab::refocusKeyboard gives the keyboard to the first committed
+    // surface of an unordered map when the focused one is not whitelisted. With the panel in
+    // the same commit it could pick the panel: Qt then reports the panel view as the focus
+    // window and PopupPlasmaWindow hides the popup it just opened (launcher closing at once).
+    // Commit the destination alone first, so refocusKeyboard can only choose it; the next
+    // commit finds that surface focused and committed and keeps it.
+    m_client->add_surface(surfaces.first());
     m_client->commit();
+    if(surfaces.size()>1) {
+        for(int i=1;i<surfaces.size();++i)m_client->add_surface(surfaces.at(i));
+        m_client->commit();
+    }
     for(auto *window:windows) {
         if(m_windows.contains(window))continue;
         m_windows.append(window);

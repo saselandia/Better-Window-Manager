@@ -646,6 +646,10 @@ siendo el nombre del escritorio original que imita Breeze.
   compositor desechable de `src/bwm-plasma-host/check-focus-safety.py`, nunca en la sesión diaria.
   La marca `bwm-plasma-host.ready` puede sobrevivir a una caída: comprobar su PID con
   `plasma-host.py ready`, nunca sólo la existencia del archivo (§366).
+  `plasma-host.py build` deja `build/bwm-plasma-host` con `BUILD_TESTING=OFF`: su CTest
+  ejecuta binarios de prueba viejos. Probar en `build/bwm-plasma-host-tests` (ON) (§383).
+  `FocusGrab` confirma primero sólo el popup y luego el panel: Hyprland da el teclado a
+  cualquier superficie de la lista y, si es el panel, libplasma oculta el popup (§383).
   El ensayo `--edit-mode` incluye teclado/puntero virtuales sólo tras verificar el PID/UID
   del peer y su configuración temporal (§370); nunca inyectar entrada en el compositor diario.
   Esperar la activación que devuelve el compositor tras Escape antes de enviar la siguiente

@@ -14,6 +14,21 @@
 #include <QEvent>
 #include <QTimer>
 
+namespace {
+// The nearest applet of this containment (or the containment) that visually holds the
+// anchor. A nested containment (the system tray's private one) is skipped up to the
+// panel applet that hosts it; without such an ancestor the nearest applet is returned.
+Plasma::Applet *visualOwner(QQuickItem *anchor,Plasma::Containment *containment){
+    Plasma::Applet *nearest=nullptr;
+    for(auto *item=anchor;item;item=item->parentItem())
+        if(auto *quick=qobject_cast<PlasmaQuick::AppletQuickItem*>(item)) {
+            auto *applet=quick->applet();
+            if(!nearest)nearest=applet;
+            if(containment && (applet==containment || containment->applets().contains(applet)))return applet;
+        }
+    return nearest;
+}
+}
 PackageWindows::PackageWindows(Plasma::Containment *containment,QObject *parent)
     :QObject(parent),m_containment(containment) {
     qApp->installEventFilter(this);schedule();
@@ -45,22 +60,14 @@ void PackageWindows::suspend() {
         if(auto *popup=qobject_cast<PlasmaQuick::AppletPopup*>(quick)) {
             auto *item=qobject_cast<PlasmaQuick::AppletQuickItem*>(popup->appletInterface());if(item)owner=item->applet();
         }
-        if(!owner)if(auto *popup=qobject_cast<PlasmaQuick::PopupPlasmaWindow*>(quick)) {
-            for(auto *anchor=popup->visualParent();anchor;anchor=anchor->parentItem())
-                if(auto *item=qobject_cast<PlasmaQuick::AppletQuickItem*>(anchor)){owner=item->applet();break;}
-        }
+        if(!owner || !(owner==m_containment || m_containment->applets().contains(owner)))
+            if(auto *popup=qobject_cast<PlasmaQuick::PopupPlasmaWindow*>(quick))
+                if(auto *visual=visualOwner(popup->visualParent(),m_containment))owner=visual;
         if(!owner)if(auto *context=qmlContext(quick))owner=context->contextProperty("plasmoid").value<Plasma::Applet*>();
         if(owner && (owner==m_containment || m_containment->applets().contains(owner)))targets.append(quick);
     }
     // A package's onVisibleChanged may destroy another window in the snapshot.
     for(const auto &window:targets)if(window)window->hide();
-}
-namespace {
-Plasma::Applet *visualOwner(QQuickItem *anchor){
-    for(auto *item=anchor;item;item=item->parentItem())
-        if(auto *applet=qobject_cast<PlasmaQuick::AppletQuickItem*>(item))return applet->applet();
-    return nullptr;
-}
 }
 bool PackageWindows::eventFilter(QObject *object,QEvent *event) {
     // PopupPlasmaWindow/ToolTipDialog can be created and shown in one C++ call,
@@ -79,7 +86,14 @@ void PackageWindows::refresh() {
     for(auto *window:QGuiApplication::allWindows())if(auto *quick=qobject_cast<QQuickWindow*>(window))prepare(quick);
 }
 void PackageWindows::prepare(QQuickWindow *quick,bool creatingSurface) {
-    if(!m_containment || !quick || qobject_cast<PlasmaQuick::AppletPopup*>(quick))return;
+    if(!m_containment || !quick)return;
+    // AppletPopups of compact applets are anchored by the shell's CompactApplet.qml. An
+    // AppletPopup created by the package itself (system tray, third-party plasmoids)
+    // has no anchor and would map as an ordinary, compositor-centred toplevel.
+    if(qobject_cast<PlasmaQuick::AppletPopup*>(quick)) {
+        auto *anchored=quick->property("bwmPopupAnchor").value<QObject*>();
+        if(anchored && anchored->objectName()!=QLatin1String("bwmPackagePopupAnchor"))return;
+    }
     auto *dialog=qobject_cast<PlasmaQuick::Dialog*>(quick);
     auto *popup=qobject_cast<PlasmaQuick::PopupPlasmaWindow*>(quick);
     if(popup && !m_observedPopups.contains(quick)){
@@ -90,7 +104,7 @@ void PackageWindows::prepare(QQuickWindow *quick,bool creatingSurface) {
     auto *anchor=popup?popup->visualParent():dialog?dialog->visualParent():nullptr;
     // If the shared tooltip moves into an ordinary configuration window, restore
     // its original backend. A Wayland role cannot be changed on a mapped surface.
-    if(popup && anchor && anchor->window() && !anchor->window()->property("bwmLayerPanel").toBool() &&
+    if(popup && anchor && anchor->window() && !BwmSurface::isPopupHost(anchor->window()) &&
        quick->property("bwmPackageWindowAdapted").toBool()){
         const bool visible=quick->isVisible();quick->hide();quick->destroy();
         delete quick->findChild<PopupAnchor*>(QStringLiteral("bwmPackagePopupAnchor"),Qt::FindDirectChildrenOnly);
@@ -103,7 +117,7 @@ void PackageWindows::prepare(QQuickWindow *quick,bool creatingSurface) {
     // The current visual owner wins for a C++ shared tooltip, which is reused
     // across applets/containments. Never infer ownership from process/window title.
     auto *context=qmlContext(quick);
-    auto *owner=popup?visualOwner(anchor):context?context->contextProperty("plasmoid").value<Plasma::Applet*>():nullptr;
+    auto *owner=popup?visualOwner(anchor,m_containment):context?context->contextProperty("plasmoid").value<Plasma::Applet*>():nullptr;
     // R5: the panel containment's own popups (ConfigOverlay's handle popup, the paneltoolbox
     // tooltip) are anchored to items of the panel window: they need the same layer role,
     // or they map as ordinary toplevels away from the panel. Only by visual anchor: windows
@@ -121,13 +135,13 @@ void PackageWindows::prepare(QQuickWindow *quick,bool creatingSurface) {
     if(!anchor)anchor=item;
     auto *adapter=quick->findChild<PopupAnchor*>(QStringLiteral("bwmPackagePopupAnchor"),Qt::FindDirectChildrenOnly);
     if(popup && !adapter && !creatingSurface && quick->property("bwmPackagePopupManaged").toBool() &&
-       item->window()->property("bwmLayerPanel").toBool() && anchor->window()==item->window() &&
+       BwmSurface::isPopupHost(item->window()) && anchor->window()==item->window() &&
        (quick->isVisible() || quick->handle())){
         const bool visible=quick->isVisible();quick->hide();quick->destroy();
         prepare(quick);if(visible)quick->show();return;
     }
     if(!dialog && !popup)record["status"]="requires-explicit-window-type-adapter";
-    else if(!item->window()->property("bwmLayerPanel").toBool())record["status"]="normal-window-preview";
+    else if(!BwmSurface::isPopupHost(item->window()))record["status"]="normal-window-preview";
     else if(anchor->window()!=item->window())record["status"]="unsupported-foreign-anchor";
     else if(!adapter && !creatingSurface && (quick->isVisible() || quick->handle()))record["status"]="requires-pre-surface-registration";
     else {

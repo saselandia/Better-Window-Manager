@@ -3,6 +3,7 @@
 #include <LayerShellQt/Window>
 #include <QScreen>
 #include <QtTest>
+#include <PlasmaQuick/AppletPopup>
 class SurfaceTest:public QObject {
     Q_OBJECT
 private Q_SLOTS:
@@ -38,6 +39,27 @@ private Q_SLOTS:
         panel.setProperty("bwmAvailableRect",QRect(panel.screen()->geometry().topLeft(),QSize(200,100)));
         QVERIFY(QRect(panel.screen()->geometry().topLeft(),QSize(200,100)).contains(popup.property("bwmPopupRect").toRect()));
         panel.setProperty("bwmAvailableRect",QVariant());panel.resize(320,60);QCOMPARE(popup.property("bwmPopupRect").toRect(),expected());
+    }
+    void popupBordersFollowStrategyAndRealPlacement() {
+        // PopupPlasmaWindowPrivate::updateBorders rules on the placed layer rect: the panel side
+        // (AtPanelEdges) and an output edge it touches (AtScreenEdges) lose their border, so the
+        // theme draws square corners there; libplasma's own recomputation does not win.
+        QQuickWindow panel;panel.resize(300,48);BwmSurface::configurePanel(&panel,Qt::BottomEdge,0);
+        QQuickItem widget(panel.contentItem());widget.setPosition({0,4});widget.setSize({40,40});
+        PlasmaQuick::AppletPopup popup;popup.resize(200,120);popup.setPopupDirection(Qt::TopEdge);
+        popup.setRemoveBorderStrategy(PlasmaQuick::PopupPlasmaWindow::AtScreenEdges|PlasmaQuick::PopupPlasmaWindow::AtPanelEdges);
+        PopupAnchor adapter;adapter.setPopup(&popup);adapter.setVisualParent(&widget);
+        const QRect placed=popup.property("bwmPopupRect").toRect();
+        QCOMPARE(placed.left(),panel.screen()->geometry().left());
+        QCOMPARE(popup.borders(),Qt::Edges(Qt::TopEdge|Qt::RightEdge));
+        popup.setBorders(Qt::LeftEdge|Qt::RightEdge|Qt::TopEdge|Qt::BottomEdge); // libplasma's guess
+        QTRY_COMPARE(popup.borders(),Qt::Edges(Qt::TopEdge|Qt::RightEdge));
+        // A floating panel margin keeps every border, as in Plasma.
+        popup.setMargin(8);
+        QTRY_COMPARE(popup.borders(),Qt::Edges(Qt::LeftEdge|Qt::RightEdge|Qt::TopEdge|Qt::BottomEdge));
+        // No strategy (applet default): all borders.
+        popup.setMargin(0);popup.setRemoveBorderStrategy({});
+        QTRY_COMPARE(popup.borders(),Qt::Edges(Qt::LeftEdge|Qt::RightEdge|Qt::TopEdge|Qt::BottomEdge));
     }
     void packageRequestedGeometryIsPreservedAndClamped() {
         QQuickWindow panel;panel.resize(300,48);BwmSurface::configurePanel(&panel,Qt::BottomEdge);

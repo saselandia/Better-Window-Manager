@@ -68,6 +68,31 @@ private Q_SLOTS:
         QTRY_COMPARE(cleared.count(),1);QVERIFY(!oldGrab.active());
         QVERIFY(newGrab.active());newGrab.stop();
     }
+    void grabKeepsKeyboardOnPopupNotPanel() {
+        // Hyprland's refocusKeyboard picks any committed surface of an unordered map when the
+        // focused one is outside the whitelist. If that was the panel, Qt reported the panel as
+        // focus window and PopupPlasmaWindow hid the launcher it had just opened. Repeat with
+        // fresh surfaces: the map order is not fixed.
+        QQuickWindow app;app.setTitle("BWM focus fixture");app.resize(500,350);app.show();
+        QTRY_VERIFY(app.isExposed());app.requestActivate();QTRY_VERIFY(app.isActive());
+        for(int round=0;round<12;++round) {
+            QQuickWindow panel;panel.resize(500,48);BwmSurface::configurePanel(&panel,Qt::BottomEdge);
+            panel.show();QTRY_VERIFY(panel.isExposed());
+            QQuickItem widget(panel.contentItem());widget.setSize({32,32});
+            QQuickWindow popup;popup.resize(160,100);popup.setProperty("hideOnWindowDeactivate",true);
+            QList<QWindow*> focused;
+            auto connection=connect(qApp,&QGuiApplication::focusWindowChanged,this,[&focused](QWindow *w){focused.append(w);});
+            PopupAnchor anchor;anchor.setPopup(&popup);anchor.setVisualParent(&widget);
+            popup.show();QTRY_VERIFY(popup.isExposed());
+            QTRY_VERIFY_WITH_TIMEOUT(QGuiApplication::focusWindow()==&popup,2000);
+            QTest::qWait(150);
+            disconnect(connection);
+            QVERIFY2(!focused.contains(&panel),qPrintable(QStringLiteral("round %1: panel received keyboard focus").arg(round)));
+            QCOMPARE(QGuiApplication::focusWindow(),&popup);
+            popup.hide();
+            app.requestActivate();QTRY_VERIFY(app.isActive());
+        }
+    }
     void closingPopupPreservesApplicationFocus() {
         QQuickWindow app;app.setTitle("BWM focus fixture");app.resize(500,350);app.show();
         QTRY_VERIFY(app.isExposed());app.requestActivate();QTRY_VERIFY(app.isActive());

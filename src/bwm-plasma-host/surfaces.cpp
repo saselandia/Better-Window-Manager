@@ -319,6 +319,9 @@ void setPanelAcceptsInput(QQuickWindow *window,bool accepts) {
     role->setKeyboardInteractivity(accepts ? LayerShellQt::Window::KeyboardInteractivityOnDemand : LayerShellQt::Window::KeyboardInteractivityNone);
     window->update();
 }
+bool isPopupHost(const QWindow *window) {
+    return window && (window->property("bwmLayerPanel").toBool() || window->property("bwmLayerDesktop").toBool());
+}
 void registerTypes(){qmlRegisterType<PopupAnchor>("org.bwm.plasma.host",1,0,"PopupAnchor");}
 }
 void PopupAnchor::bindMainItem() {
@@ -339,10 +342,14 @@ void PopupAnchor::setPopup(QQuickWindow *popup) {
     if(m_popup){m_popup->removeEventFilter(this);disconnect(m_popup,nullptr,this,nullptr);}
     if(m_watchedMainItem){disconnect(m_watchedMainItem,nullptr,this,nullptr);m_watchedMainItem=nullptr;}
     if(m_boundScreen)disconnect(m_boundScreen,nullptr,this,nullptr);
+    if(m_popup && m_popup->property("bwmPopupAnchor").value<QObject*>()==this)m_popup->setProperty("bwmPopupAnchor",QVariant());
     m_popup=popup;
-    m_roleConfigured=false;m_boundScreen=nullptr;
+    m_roleConfigured=false;m_boundScreen=nullptr;m_bordersKnown=false;
     if(popup) {
-        if(m_panel && m_panel->property("bwmLayerPanel").toBool())LayerShellQt::Window::get(popup);
+        // PackageWindows adapts every applet popup that no PopupAnchor owns yet (such as the
+        // system tray's own AppletPopup); mark this one as already anchored.
+        popup->setProperty("bwmPopupAnchor",QVariant::fromValue<QObject*>(this));
+        if(BwmSurface::isPopupHost(m_panel))LayerShellQt::Window::get(popup);
         popup->installEventFilter(this);
         connect(popup,&QQuickWindow::widthChanged,this,&PopupAnchor::update);
         connect(popup,&QQuickWindow::heightChanged,this,&PopupAnchor::update);
@@ -350,6 +357,13 @@ void PopupAnchor::setPopup(QQuickWindow *popup) {
         connect(popup,&QQuickWindow::visibleChanged,this,&PopupAnchor::visibilityChanged);
         connect(popup,&QQuickWindow::xChanged,this,[this]{if(m_requestedPosition)update();});
         connect(popup,&QQuickWindow::yChanged,this,[this]{if(m_requestedPosition)update();});
+        // libplasma recomputes borders from the position it believes the popup has; the
+        // layer surface may sit elsewhere (clamped to the usable area), so keep ours.
+        for(const char *signal:{"removeBorderStrategyChanged()","marginChanged()","popupDirectionChanged()"})
+            if(popup->metaObject()->indexOfSignal(signal)>=0)
+                connect(popup,QByteArray(QByteArray("2")+signal).constData(),this,SLOT(update()));
+        if(popup->metaObject()->indexOfSignal("bordersChanged()")>=0)
+            connect(popup,SIGNAL(bordersChanged()),this,SLOT(reapplyBorders()),Qt::QueuedConnection);
         if(popup->metaObject()->indexOfSignal("mainItemChanged()")>=0)
             connect(popup,SIGNAL(mainItemChanged()),this,SLOT(bindMainItem()));
         bindMainItem();
@@ -377,12 +391,15 @@ void PopupAnchor::setNonInteractive(bool enabled) {
 void PopupAnchor::tryFocusGrab(int attempt,quint64 generation) {
     if(generation!=m_grabGeneration)return;
     if(!m_popup || !m_popup->isVisible() || m_nonInteractive || m_grab.active())return;
-    if(!m_panel || !m_panel->property("bwmLayerPanel").toBool() || !FocusGrab::available())return;
+    if(!BwmSurface::isPopupHost(m_panel) || !FocusGrab::available())return;
     if(!m_popup->property("hideOnWindowDeactivate").toBool())return;
     // The panel stays whitelisted so its launcher can toggle the popup closed itself, like a
     // click on a Plasma panel (it never takes focus). Only mapped companion Dialogs
     // belonging to this panel may join; another output/package must remain outside.
-    QList<QWindow*> windows{m_popup.data(),m_panel.data()};
+    // A layer desktop is not whitelisted: a click on the desktop closes the popup, as the
+    // desktop view taking focus does under KWin.
+    QList<QWindow*> windows{m_popup.data()};
+    if(m_panel->property("bwmLayerPanel").toBool())windows.append(m_panel.data());
     for(auto *window:QGuiApplication::allWindows())
         if(window->isVisible() && window->isExposed() && window->property("bwmPackageWindowNonInteractive").toBool()) {
             auto *anchor=window->findChild<PopupAnchor*>(QStringLiteral("bwmPackagePopupAnchor"),Qt::FindDirectChildrenOnly);
@@ -437,7 +454,7 @@ bool PopupAnchor::eventFilter(QObject *object,QEvent *event) {
     return false;
 }
 void PopupAnchor::update() {
-    if(m_updating || !m_popup || !m_parent || !m_panel || !m_panel->property("bwmLayerPanel").toBool())return;
+    if(m_updating || !m_popup || !m_parent || !BwmSurface::isPopupHost(m_panel))return;
     if(!m_panel->screen())return;
     m_updating=true;
     auto *screen=m_panel->screen();
@@ -567,6 +584,7 @@ void PopupAnchor::update() {
         role->setDesiredSize(placed.size());
         role->setMargins(popupMargins);
         m_popup->setProperty("bwmPopupRect",placed);
+        applyBorders(placed,screen->geometry());
         // Publish the final position (fixed positions are disabled in main): packages that
         // place companion Dialogs from root.x/y, such as Andromeda's avatar, follow it.
         // The resulting move signal is ignored while m_updating is set.
@@ -576,4 +594,37 @@ void PopupAnchor::update() {
     m_updating=false;
     if(expanded)QTimer::singleShot(0,this,[this]{if(m_parent && m_popup)m_parent->setProperty("expanded",true);});
     else if(restoreWindow)QTimer::singleShot(0,this,[this]{if(m_popup)m_popup->show();});
+}
+void PopupAnchor::applyBorders(const QRect &placed,const QRect &screen) {
+    if(!m_popup || !m_popup->inherits("PlasmaQuick::PopupPlasmaWindow"))return;
+    // Same rules as PopupPlasmaWindowPrivate::updateBorders: AtScreenEdges (1) removes
+    // the borders that touch the output edge, AtPanelEdges (2) the one facing the panel;
+    // a positive margin (floating panel) keeps all of them. The theme SVG draws the rest.
+    const int strategy=m_popup->property("removeBorderStrategy").toInt();
+    const int margin=m_popup->property("margin").toInt();
+    const auto direction=Qt::Edge(m_popup->property("popupDirection").toInt());
+    Qt::Edges enabled=Qt::LeftEdge|Qt::RightEdge|Qt::TopEdge|Qt::BottomEdge;
+    if(!margin) {
+        if(strategy&1) {
+            if(placed.top()<=screen.top())enabled.setFlag(Qt::TopEdge,false);
+            if(placed.bottom()>=screen.bottom())enabled.setFlag(Qt::BottomEdge,false);
+            if(placed.left()<=screen.left())enabled.setFlag(Qt::LeftEdge,false);
+            if(placed.right()>=screen.right())enabled.setFlag(Qt::RightEdge,false);
+        }
+        if(strategy&2) {
+            switch(direction) {
+            case Qt::LeftEdge:enabled.setFlag(Qt::RightEdge,false);break;
+            case Qt::RightEdge:enabled.setFlag(Qt::LeftEdge,false);break;
+            case Qt::BottomEdge:enabled.setFlag(Qt::TopEdge,false);break;
+            default:enabled.setFlag(Qt::BottomEdge,false);break;
+            }
+        }
+    }
+    m_borders=enabled;m_bordersKnown=true;
+    reapplyBorders();
+}
+void PopupAnchor::reapplyBorders() {
+    if(!m_popup || !m_bordersKnown)return;
+    if(m_popup->property("borders").value<Qt::Edges>()!=m_borders)
+        m_popup->setProperty("borders",QVariant::fromValue(m_borders));
 }

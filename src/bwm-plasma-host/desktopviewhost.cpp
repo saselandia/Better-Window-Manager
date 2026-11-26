@@ -14,6 +14,8 @@
 #include "containmentconfigview.h"
 #include "panelviewhost.h"
 #include "viewcorona.h"
+#include "packagewindows.h"
+#include "surfaces.h"
 
 #include <KPackage/Package>
 #include <KPackage/PackageLoader>
@@ -112,6 +114,21 @@ DesktopViewHost::DesktopViewHost(Plasma::Corona *corona, bool layerShell, QScree
 
     if (m_layerShell) {
         configureLayerSurface();
+        // Applet popups, tooltips and dialogs of desktop widgets anchor to this layer like
+        // to a panel (PopupAnchor/PackageWindows): publish the output and its usable area.
+        setProperty("bwmLayerDesktop", true);
+        setProperty("bwmPanelEdge", int(Qt::BottomEdge));
+        auto publish = [this] {
+            QScreen *s = screenToFollow();
+            if (!s)
+                return;
+            setProperty("bwmPanelRect", s->geometry());
+            const QRect local = strictAvailableScreenRect();
+            setProperty("bwmAvailableRect", local.isValid() ? local.translated(s->geometry().topLeft()) : s->availableGeometry());
+        };
+        connect(this, &DesktopViewHost::strictAvailableScreenRectChanged, this, publish);
+        connect(this, &DesktopViewHost::screenToFollowChanged, this, publish);
+        publish();
     }
 
     connect(this, &QWindow::screenChanged, this, [this] {
@@ -457,6 +474,8 @@ void DesktopViewHost::connectContainment(Plasma::Containment *c)
     if (m_connectedContainments.contains(c))
         return;
     m_connectedContainments.append(c);
+    if (m_layerShell)
+        new PackageWindows(c, this);
     connect(c, &Plasma::Containment::showAddWidgetsInterface, this, [this, c](const QPointF &) {
         if (containment() == c)
             toggleWidgetExplorer();

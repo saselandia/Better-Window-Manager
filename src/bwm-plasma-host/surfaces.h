@@ -49,6 +49,9 @@ QRect withoutPanelStrip(const QRect &area, const QRect &panel, Qt::Edge edge);
 // PanelView::refreshStatus (plasma-workspace 6.7.5): a panel never takes keyboard focus
 // unless its containment reports AcceptingInputStatus (e.g. a widget with a text field).
 void setPanelAcceptsInput(QQuickWindow *window, bool accepts);
+// Layer windows that anchor popups: native panels (bwmLayerPanel) and layer desktops
+// (bwmLayerDesktop, which publish bwmPanelRect = output and bwmAvailableRect).
+bool isPopupHost(const QWindow *window);
 void registerTypes();
 }
 class QScreen;
@@ -73,7 +76,10 @@ protected:
 private Q_SLOTS:
     void update();
     void bindMainItem();
+    void reapplyBorders();
 private:
+    // PopupPlasmaWindowPrivate::updateBorders (libplasma 6.7.5) on the placed layer rect.
+    void applyBorders(const QRect &placed,const QRect &screen);
     void visibilityChanged();
     void tryFocusGrab(int attempt, quint64 generation);
     void bindPanel();
@@ -87,6 +93,8 @@ private:
     bool m_requestedPosition=false;
     bool m_independentWindow=false;
     bool m_nonInteractive=false;
+    bool m_bordersKnown=false;
+    Qt::Edges m_borders;
     FocusGrab m_grab;
     quint64 m_grabGeneration=0;
 };

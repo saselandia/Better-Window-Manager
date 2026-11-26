@@ -7170,3 +7170,71 @@ git status; git log --oneline -5; git push origin main
 
 
 
+
+### 383. Host nativo: lanzador que se cerraba, desplegables de la bandeja centrados y modo edición con «Mostrar escritorio» (2026-11-26)
+
+* **Reportado por el usuario tras §382:** el lanzador (Kickoff o AndromedaLauncher) se abría un instante
+  y se cerraba, tanto con Super como con clic; los desplegables de la bandeja (Bluetooth, audio…) salían
+  en el centro de la pantalla; las miniaturas de grupos se veían enormes; en modo edición las ventanas
+  seguían encima del escritorio alejado, a diferencia de Plasma.
+* **Lanzador (causa reproducida):** `FocusGrab::start` confirmaba popup y panel en un solo commit.
+  `CFocusGrab::refocusKeyboard` de Hyprland 0.56.2 da el teclado a la primera superficie confirmada de un
+  `unordered_map` si la enfocada no está en la lista: a veces el panel. Qt pasaba entonces el foco a la
+  vista del panel y `PopupPlasmaWindowPrivate::handleFocusChanged` (libplasma 6.7.5, `viewClicked`)
+  ocultaba el popup. Ahora se confirma primero sólo el popup y después los acompañantes; vale para todos
+  los popups del host (lanzadores de terceros incluidos). Regresión `grabKeepsKeyboardOnPopupNotPanel`
+  en `test-focus-safety` (Hyprland anidado, 12 rondas): falla con el código anterior en la ronda 0
+  («panel received keyboard focus») y pasa con el nuevo.
+* **Bandeja:** la bandeja de Plasma crea su propio `AppletPopup` (`systemtray/qml/main.qml`) y
+  `PackageWindows` ignoraba todo `AppletPopup`, así que salía como ventana normal centrada. `PopupAnchor`
+  marca los popups que ancla (`bwmPopupAnchor`) y `PackageWindows` adapta cualquier `AppletPopup` sin
+  ancla; el dueño se busca subiendo hasta el applet del panel (salta la contención privada de la
+  bandeja). También en `suspend()`.
+* **Escritorio:** `DesktopViewHost` publica `bwmLayerDesktop`, `bwmPanelRect` y `bwmAvailableRect` y crea
+  un `PackageWindows` para su contención: desplegables, tooltips y diálogos de los widgets del escritorio
+  se anclan como capas (`BwmSurface::isPopupHost`). Con el escritorio no se incluye la vista en la
+  captura: un clic en el escritorio cierra el popup, como cuando la vista toma el foco en KWin.
+* **Modo edición:** `ShellCorona` 6.7.5 llama a `setDashboardShown(edit)` (`KWindowSystem::setShowingDesktop`)
+  y sale del modo edición al dejar de mostrar el escritorio. `ViewCorona` hace lo mismo cuando
+  `BWM_R4_DESKTOP_ACTIONS=1`; el adaptador de KWindowSystem lo lleva al «Mostrar escritorio» común de
+  BWM (`toggle-minimize.py show-desktop`), así que las ventanas se minimizan mientras `DesktopEditMode.qml`
+  aleja el escritorio y vuelven al salir. Hyprland no puede escalar ventanas ajenas: es el mismo
+  resultado visual que Plasma (que también las oculta), no un efecto de zoom sobre ellas.
+* **Miniaturas de grupos:** medidas en sesión con el cursor: 2 ventanas 602×249, 3 ventanas 908×249, una
+  296×213; al pasar de un grupo a una app de una ventana el tamaño se reduce. Coincide con la fórmula
+  del `ToolTipDelegate.qml` original (16 gridUnit por ventana). No se reprodujo un tamaño mayor; pendiente
+  de una captura del usuario.
+* **Pruebas:** `build/bwm-plasma-host` tiene `BUILD_TESTING=OFF` (lo configura `plasma-host.py build`), así
+  que el CTest «8/8» de §382 ejecutó binarios de prueba del 25-nov. Nueva compilación de pruebas
+  `build/bwm-plasma-host-tests` (ON): CTest 8/8, `test-focus-safety` 11/11 y `test-editmode-session` 6/6
+  en Hyprland anidado, pantallas físicas intactas. Instalado con `plasma-host.py install`
+  (SHA256 `f758e54b08d3a95d…`) y host reiniciado. En sesión: Super abre Kickoff en el LG, sigue visible
+  a los 3,3 s y se cierra con Super. **Pendiente del usuario:** bandeja, widgets de escritorio y modo
+  edición con ventanas abiertas (no se inyecta entrada en la sesión diaria).
+
+### 384. Bordes de los desplegables de plasmoides como en Plasma (2026-11-26)
+
+* **Petición:** el desplegable de los lanzadores (y de cualquier plasmoide) salía con los cuatro bordes
+  redondeados; debe tener los bordes que correspondan, y si un tema o un lanzador distinto los cambia,
+  que cambien bien.
+* **Causa:** el paquete de shell del host tenía un `CompactApplet.qml` mínimo propio (R4): dirección fija
+  hacia arriba, sin `removeBorderStrategy`, sin `margin`, sin `backgroundHints` ni línea separadora. Con
+  la estrategia vacía, libplasma dibuja los cuatro bordes del SVG del tema y sus cuatro esquinas.
+  Además, `PopupPlasmaWindowPrivate::updateBorders` calcula qué bordes quitar con la posición que
+  libplasma cree que tiene el popup, no con la de la capa que coloca `PopupAnchor`.
+* **Hecho:** `shell/contents/applet/CompactApplet.qml` pasa a ser el original de plasma-desktop 6.7.5
+  (GPL-2.0-or-later, cabecera conservada) con sólo el `PopupAnchor` y dos `objectName` cambiados: dirección
+  y margen según el borde del panel y si flota, `AtScreenEdges | AtPanelEdges` (o sólo pantalla en el
+  escritorio), fondo sólido si la contención lo pide, línea con el panel, tooltip, Escape y estado del
+  plasmoide como Plasma. `PopupAnchor::applyBorders` aplica la misma regla de `updateBorders` sobre el
+  rectángulo real de la capa (estrategia, margen y dirección que fije cada plasmoide), la vuelve a
+  imponer si libplasma la recalcula y reacciona a cambios de estrategia, margen o dirección. La forma de
+  las esquinas sigue saliendo del SVG del tema activo. Vale también para el desplegable de la bandeja.
+* **Comprobado:** prueba nueva `popupBordersFollowStrategyAndRealPlacement` en `test-surfaces`
+  (panel y borde de pantalla sin borde, margen flotante y estrategia vacía con los cuatro, libplasma no
+  gana); CTest 8/8 en `build/bwm-plasma-host-tests`, `test-focus-safety` 11/11 y
+  `test-editmode-session` 6/6 en Hyprland anidado. Host instalado (SHA256 `f2f9d08199060900…`) y reiniciado;
+  en sesión, Kickoff en el MSI pegado al borde izquierdo: esquina superior izquierda e inferiores rectas,
+  superior derecha redondeada por el tema, como en Plasma. Sin errores QML en el registro del host.
+  Bandeja y lanzadores de terceros (AndromedaLauncher crea su propio `PlasmaCore.Dialog`) sin comprobar
+  a la vista.

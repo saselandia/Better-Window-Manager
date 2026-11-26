@@ -6,8 +6,10 @@ El modo `--session` tiene instalación y hooks mediante `plasma-host.py`; desde 
 `BWM_CONTEXT.md` se activa por defecto en Breeze con las correcciones de foco de §363.
 Cada monitor usa `org.kde.plasma.folder` como escritorio (muestra los iconos y lanzadores de
 `~/Desktop`, igual que Plasma), y expone `$XDG_RUNTIME_DIR/bwm-plasma-host.sock` (`toggle-launcher`)
-para que la tecla `Super` abra el lanzador del monitor enfocado. En Edit Mode las ventanas de otras
-aplicaciones no se encogen dentro de un monitor virtual (ese efecto de zoom-out es de KWin).
+para que la tecla `Super` abra el lanzador del monitor enfocado. En modo edición el host activa
+«Mostrar escritorio» como `ShellCorona` (las ventanas se minimizan mientras `DesktopEditMode.qml` aleja
+el escritorio) y lo desactiva al salir (§383). Pruebas: `build/bwm-plasma-host-tests` (`BUILD_TESTING=ON`);
+`build/bwm-plasma-host` la compila `plasma-host.py build` sin pruebas.
 `bar.plasma.nativeHost=false` o `BWM_PLASMA_NATIVE_HOST=0` conserva el panel de respaldo.
 No ejecutar sobre la configuración real como ensayo.
 

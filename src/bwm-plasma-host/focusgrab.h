@@ -16,7 +16,8 @@ public:
     explicit FocusGrab(QObject *parent=nullptr);
     ~FocusGrab() override;
     static bool available();
-    // The first window is the keyboard destination, the rest are companions. All must
+    // The first window is the keyboard destination (committed alone first, so the compositor
+    // focuses it), the rest are companions added in a second commit. All must
     // be visible and exposed before committing: a panel alone must never grab input
     // while its popup is still mapping. Hiding/destroying any member releases the grab.
     bool start(const QList<QWindow*> &windows);
