@@ -24,6 +24,15 @@ hl.env("OMARCHY_PATH", os.getenv("HOME") .. "/.config/hypr/omarchy")
 local ok_theme, active_theme = pcall(require, "modules.theme")
 local skin = ok_theme and active_theme.name or "default"
 
+-- GTK native file choosers use the selected portal in Breeze. Preserve the
+-- login environment outside Breeze; the user's final Lua still has precedence.
+local gtk_portal = os.getenv("BWM_ORIGINAL_GTK_USE_PORTAL")
+if gtk_portal == nil then
+    gtk_portal = os.getenv("GTK_USE_PORTAL") or ""
+    hl.env("BWM_ORIGINAL_GTK_USE_PORTAL", gtk_portal)
+end
+hl.env("GTK_USE_PORTAL", skin == "plasma" and "1" or gtk_portal)
+
 local function qt_plugin(path)
     return exists("/usr/lib64/qt6/plugins/" .. path) or exists("/usr/lib/qt6/plugins/" .. path)
 end

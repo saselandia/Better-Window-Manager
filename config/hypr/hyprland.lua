@@ -43,6 +43,8 @@ require("modules.nightlight")
 
 require("modules.cursor")
 require("modules.native_desktops")
+-- Atajos globales de KDE que BWM no usa (sólo Breeze, generados por bwm-kglobalaccel)
+pcall(require, "modules.kde_shortcuts")
 
 -- Tu configuración en texto (~/.config/bwm/user/hyprland.lua): se carga la última, así que manda
 -- sobre todo lo anterior. Un error en ella se avisa sin romper la de BWM. Se edita desde el menú

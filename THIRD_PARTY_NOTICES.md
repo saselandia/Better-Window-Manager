@@ -430,6 +430,9 @@ de plasma-desktop 6.7.5 (Marco Martin, GPL-2.0-or-later) con su cabecera SPDX; B
 de colocación en capa y cambia dos `objectName` (marcados «BWM», §384).
 `DefaultCompactRepresentation.qml` y `AppletError.qml` de esa misma carpeta son los de plasma-desktop 6.7.5
 sin cambios (Marco Martin, GPL-2.0-or-later, §386).
+- `src/bwm-kglobalaccel` (Breeze, §391): código propio GPL-2.0-or-later que enlaza sin modificar la biblioteca
+  `libKGlobalAccelD` de kglobalacceld 6.7.5 (KDE, LGPL-2.0-or-later) y usa la API privada `QXkbCommon` de Qt 6.11.2
+  (Qt GUI, LGPL-3.0/GPL). No incluye código copiado de kglobalacceld ni de KWin.
 `src/bwm-plasma-host/shell/contents/defaults` copia el grupo `[Panel]` de `desktoppackage/contents/defaults`
 de plasma-desktop 6.7.5 (caja de herramientas `org.kde.paneltoolbox` y acción `org.kde.contextmenu`), con
 un comentario de procedencia; los paquetes que nombra se cargan instalados, sin copiarlos.
@@ -973,3 +976,34 @@ Se ensayó el script original de **Layan** (Vince Liuice, metadata declara `GPL3
 revisión `a0b6a4956022276aee33309b2e07d1d0ef3db30c`, en rutas temporales aisladas. Sus recursos
 no se incorporan a BWM. Breeze/Sweet también se cargan desde sus instalaciones; sus avisos
 existentes se conservan. Resultados y limitaciones: `docs/BREEZE_T4_RESULTS.md`.
+
+### Integración de escritorio y paquetes de Plasma (T6, 6.7.5)
+
+`traydefaults.h`, `desktop-actions.py`, `bwm_portals.py` y sus pruebas son código BWM
+GPL-2.0-or-later. La política de bandeja usa `knownItems`/`extraItems` originales, conforme al
+contrato de `applets/systemtray/{main.xml,plasmoidregistry.cpp}` de plasma-workspace 6.7.5;
+no copia ni modifica el registro o el QML de KDE. Emoji Selector, FileChooser KDE, ksystemstats,
+sensores libksysguard y widgets adicionales se cargan/ejecutan desde los paquetes instalados.
+No se añaden sus binarios o recursos a BWM. Se revisó PowerDevil 6.7.5 para detectar el solapamiento
+de políticas de energía; no se incorpora su código ni se activa el demonio. Fuente y resultados
+en `docs/BREEZE_T6_RESULTS.md`; los tarballs revisados se cotejaron con Manifest de Portage.
+La regresión de teclado enlaza libxkbcommon y utiliza los mapas xkeyboard-config instalados
+para US/es; no incorpora copias de esos mapas. El código del inyector sigue siendo sólo de
+prueba, GPL-2.0-or-later, con los XML Wayland ya declarados y validación del peer conservada.
+
+### Medición de compatibilidad con la tienda KDE (T7, 2026-11-27)
+
+`src/bwm-plasma-host/{kns-store.cpp,store-preview.cpp,store-compat.py,prepare-store-fixtures.py,check-store-session.py}`
+y `tests/test_breeze_store.py` son código de pruebas de BWM **GPL-2.0-or-later**; sólo se compilan
+con `BUILD_TESTING=ON` y usan las bibliotecas KDE/X11 instaladas (`KNewStuffCore`, `KColorScheme`,
+`KIconThemes`, `libXcursor`) y `bubblewrap` sin incorporar recursos de terceros. La corrección de
+`LayoutTemplateWidget::writeConfig` en `src/bwm-plasma-host/layouttemplate.{h,cpp}` (conversión de
+`QJSValue` y actualización de `KConfigLoader`) conserva **LGPL-2.0-or-later** y su procedencia de
+`shell/scripting/applet.cpp` de plasma-workspace 6.7.5 (Aaron Seigo, 2009).
+
+Los 18 paquetes de la KDE Store evaluados (Sweet, WhiteSur, Sweet Mars, Layan, Edna,
+BreezeChameleon, Klassy, Papirus, Candy icons, Andromeda Launcher y KDE Control Station) se
+descargaron, revisaron, ensayaron y retiraron en raíces temporales aisladas; **ninguno de sus
+archivos o binarios se redistribuye en BWM**. Lista completa y enlaces a la tienda en
+`docs/BREEZE_STORE_COMPAT.md` y `docs/BREEZE_T7_RESULTS.md`.
+

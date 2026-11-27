@@ -10,14 +10,16 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <cstring>
+#include <xkbcommon/xkbcommon.h>
 
 NestedInput::~NestedInput() {
+    if(keymap)xkb_keymap_unref(keymap);
     if(!display)return;
     if(keyboard)zwp_virtual_keyboard_v1_destroy(keyboard);
     if(pointer)zwlr_virtual_pointer_v1_destroy(pointer);
     wl_display_flush(display);wl_display_disconnect(display);
 }
-bool NestedInput::open() {
+bool NestedInput::open(const QString &layout) {
     const QString config=qEnvironmentVariable("BWM_FOCUS_CONFIG");
     bool pidOk=false;const int expected=qEnvironmentVariableIntValue("BWM_FOCUS_COMPOSITOR_PID",&pidOk);
     if(qEnvironmentVariable("BWM_FOCUS_NESTED")!="1" || !pidOk || expected<=0 ||
@@ -62,15 +64,47 @@ bool NestedInput::open() {
         xkb_compatibility "fixture" {};
         xkb_symbols "fixture" { key <AC01> { [ a ] }; key <ESC> { [ Escape ] }; };
     };)";
+    QByteArray map(keymap,sizeof(keymap));
+    if(!layout.isEmpty()) {
+        if(layout!="us" && layout!="es"){error="Unsupported fixture layout";return false;}
+        auto *context=xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+        const auto name=layout.toUtf8();xkb_rule_names names{};names.layout=name.constData();
+        this->keymap=xkb_keymap_new_from_names(context,&names,XKB_KEYMAP_COMPILE_NO_FLAGS);
+        xkb_context_unref(context);
+        if(!this->keymap){error="Cannot compile fixture layout";return false;}
+        char *text=xkb_keymap_get_as_string(this->keymap,XKB_KEYMAP_FORMAT_TEXT_V1);
+        map=QByteArray(text,int(std::strlen(text)+1));free(text);
+    }
     const int fd=memfd_create("bwm-test-keymap",MFD_CLOEXEC);
     if(fd<0){error="Cannot allocate fixture keymap";return false;}
-    const bool written=write(fd,keymap,sizeof(keymap))==sizeof(keymap);
+    const bool written=write(fd,map.constData(),map.size())==map.size();
     if(!written){close(fd);error="Cannot write fixture keymap";return false;}
     keyboard=zwp_virtual_keyboard_manager_v1_create_virtual_keyboard(keyboards,seat);
-    zwp_virtual_keyboard_v1_keymap(keyboard,WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,fd,sizeof(keymap));
+    zwp_virtual_keyboard_v1_keymap(keyboard,WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,fd,map.size());
     close(fd);
     pointer=zwlr_virtual_pointer_manager_v1_create_virtual_pointer(pointers,seat);
     if(wl_display_roundtrip(display)<0){error="Input fixture setup failed";return false;}
+    return true;
+}
+bool NestedInput::shortcut(const QString &symbol,bool shift) {
+    if(!keymap)return false;
+    const auto wanted=xkb_keysym_from_name(symbol.toUtf8().constData(),XKB_KEYSYM_NO_FLAGS);
+    xkb_keycode_t found=0;
+    for(auto code=xkb_keymap_min_keycode(keymap);code<=xkb_keymap_max_keycode(keymap);++code) {
+        const xkb_keysym_t *syms=nullptr;
+        const int count=xkb_keymap_key_get_syms_by_level(keymap,code,0,shift?1:0,&syms);
+        if(count==1 && syms[0]==wanted){found=code;break;}
+    }
+    if(found<8)return false;
+    const auto logo=xkb_keymap_mod_get_index(keymap,XKB_MOD_NAME_LOGO);
+    const auto shifted=xkb_keymap_mod_get_index(keymap,XKB_MOD_NAME_SHIFT);
+    zwp_virtual_keyboard_v1_key(keyboard,++timestamp,125,WL_KEYBOARD_KEY_STATE_PRESSED);
+    if(shift)zwp_virtual_keyboard_v1_key(keyboard,++timestamp,42,WL_KEYBOARD_KEY_STATE_PRESSED);
+    zwp_virtual_keyboard_v1_modifiers(keyboard,(1u<<logo)|(shift?(1u<<shifted):0),0,0,0);
+    key(found-8);
+    if(shift)zwp_virtual_keyboard_v1_key(keyboard,++timestamp,42,WL_KEYBOARD_KEY_STATE_RELEASED);
+    zwp_virtual_keyboard_v1_key(keyboard,++timestamp,125,WL_KEYBOARD_KEY_STATE_RELEASED);
+    zwp_virtual_keyboard_v1_modifiers(keyboard,0,0,0,0);wl_display_roundtrip(display);
     return true;
 }
 void NestedInput::key(uint32_t code) {

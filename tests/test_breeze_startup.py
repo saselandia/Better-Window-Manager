@@ -61,7 +61,7 @@ hyprctl() {
                 self.assertEqual(len(provider), 1)
                 helpers = [c for c in calls if c.startswith('python ') and c not in provider]
                 expected = ['kde-config-bridge.py enter', 'kde-config-bridge.py start',
-                            'decorator.py start', 'plasma-host.py start'] if skin == 'plasma' else []
+                            'decorator.py start', 'kde-shortcuts.py start', 'plasma-host.py start'] if skin == 'plasma' else []
                 self.assertEqual([h.rsplit('/', 1)[1] for h in helpers], expected)
                 if helpers:
                     self.assertLess(calls.index(helpers[0]), calls.index(loads[0]))

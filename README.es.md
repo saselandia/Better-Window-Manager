@@ -51,7 +51,7 @@ Es la finalidad del proyecto, así que la medimos. Son estimaciones del porcenta
 | :--- | :---: | :---: | :--- |
 | **Retro** (Omarchy) | **~90 %** | **~80 %** | Temas: se aplican `colors.toml`, fondos y los archivos de apps (Neovim, VS Code, btop…); no `hyprland.lua` del tema, `icons.theme` (Retro usa Papirus con el acento) ni el tema de Chromium (necesita root). Plugins: los de barra y servicios funcionan sin cambios; no los que sustituyen la barra, el bloqueo, overlays o paneles |
 | **default (end-4)** | **~90 %** | — | Cualquier fondo genera su paleta (100 %); plantillas de matugen de terceros se añaden a `matugen/config.toml`. end-4 no tiene catálogo de plugins |
-| **Breeze (Kde plasma)** | **~50 %** | **0 %** | Sweet instalado con Obtener nuevos y aplicado en Preferencias: colores, estilo SVG, iconos y Aurorae; cursor de BWM conservado. Pendientes: plasmoides externos, efectos y pruebas físicas completas de CSD/snapping/autenticación. [Resultados F13](docs/BREEZE_F13_RESULTS.md). |
+| **Breeze (Kde plasma)** | **75 %** (12/16; 16/16 con diferencias) | **50 %** (1/2) | **Medido el 2026-11-27** sobre una muestra de 18 paquetes más descargados de la KDE Store (XDG aislado + Hyprland anidado): 12/16 temas/recursos funcionan sin cambios y 4/16 con diferencias (temas globales sin efectos KWin, decoraciones C++ que requieren compilación); 1/2 plasmoides funciona (`Andromeda Launcher`), `KDE Control Station` falla por módulo privado ausente de PowerDevil. No certifica toda la tienda. [Tabla medida](docs/BREEZE_STORE_COMPAT.md) · [Resultados T7](docs/BREEZE_T7_RESULTS.md). |
 
 ### Hacia un único compositor: Hyprland
 

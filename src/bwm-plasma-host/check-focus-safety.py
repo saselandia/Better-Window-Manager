@@ -36,6 +36,8 @@ def main():
     parser.add_argument('--report', type=Path, required=True)
     parser.add_argument('--edit-mode', action='store_true',
                         help='Run native panel settings, widget explorer and desktop edit mode with direct disposable views')
+    parser.add_argument('--client-timeout', type=int, default=55,
+                        help='Deadline for a disposable client matrix (default 55 seconds, maximum 600)')
     args = parser.parse_args()
     if not os.environ.get('HYPRLAND_INSTANCE_SIGNATURE'):
         parser.error('A Hyprland parent session is required')
@@ -90,7 +92,7 @@ hl.window_rule({name="typing-fixture",match={title="^BWM typing fixture$"},float
                 cases = ['inputFixtureRejectsWrongPeer', 'typingSurvivesNativeSurfaces',
                          'originalEditorAndExplorerOnNestedOutput', 'originalDesktopEditModeOnNestedOutput']
             reply = subprocess.run([str(args.binary.resolve()), *cases], env=env, capture_output=True, text=True,
-                                   timeout=100 if args.edit_mode else 55)
+                                   timeout=100 if args.edit_mode else min(600, max(1, args.client_timeout)))
             report.update(passed=reply.returncode == 0, testExit=reply.returncode,
                           testOutput=reply.stdout, diagnostics=reply.stderr,
                           nestedConfigErrors=hypr('configerrors', instance=signature).strip())

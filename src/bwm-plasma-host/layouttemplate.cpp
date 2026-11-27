@@ -24,6 +24,7 @@
 #include <QScreen>
 #include <QDebug>
 #include <KConfigGroup>
+#include <KConfigLoader>
 #include <QJSValueIterator>
 #include <condition_variable>
 #include <thread>
@@ -280,10 +281,19 @@ QVariant LayoutTemplateWidget::readConfig(const QString &key, const QVariant &fa
     auto group=m_applet->config(); for(const auto &part:m_group) group=group.group(part);
     return group.readEntry(key,fallback);
 }
-void LayoutTemplateWidget::writeConfig(const QString &key,const QVariant &value) {
+void LayoutTemplateWidget::writeConfig(const QString &key,const QJSValue &value) {
     if(!m_applet || key.isEmpty()) return;
     auto group=m_applet->config();for(const auto &part:m_group)group=group.group(part);
-    if(!group.isEntryImmutable(key)){group.writeEntry(key,value);m_applet->configChanged();}
+    if(group.isEntryImmutable(key))return;
+    // Plasma's scripting::Applet takes QJSValue, converts JS arrays, and updates
+    // the original schema before writing the group. Passing QVariant directly
+    // left a QJSValue in KConfig and silently dropped WhiteSur's launcher list.
+    const auto converted=value.toVariant();
+    if(auto *scheme=m_applet->configScheme())if(auto *item=scheme->findItemByName(key)){
+        item->setProperty(converted);scheme->blockSignals(true);scheme->save();scheme->read();scheme->blockSignals(false);
+        Q_EMIT scheme->configChanged();
+    }
+    group.writeEntry(key,converted);m_applet->configChanged();
 }
 QString LayoutTemplatePanel::wallpaperPlugin()const{return m_containment?m_containment->wallpaperPlugin():QString();}
 void LayoutTemplatePanel::setWallpaperPlugin(const QString &v){if(m_containment)m_containment->setWallpaperPlugin(v);}

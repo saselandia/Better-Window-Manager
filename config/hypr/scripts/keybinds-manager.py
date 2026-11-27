@@ -610,6 +610,36 @@ for i in range(1, 11):
         "enabled": True
     })
 
+# Breeze desktop actions belong to this skin; the key reaches apps in other skins.
+for action, key, description in (
+    ("emoji", "period", "Selector de emojis de Plasma"),
+    ("zoom in", "equal", "Ampliar pantalla"),
+    ("zoom out", "minus", "Reducir ampliación de pantalla"),
+    ("zoom reset", "0", "Restablecer ampliación de pantalla"),
+):
+    DEFAULT_KEYBINDS.append({
+        "id": "plasma_" + action.replace(" ", "_"),
+        "category": "Lanzadores" if action == "emoji" else "Accesibilidad",
+        "description": description, "mods": ["SUPER"], "key": key,
+        "action_type": "exec",
+        "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py " + action,
+        "dispatcher": None, "dispatcher_arg": None, "options": {},
+        "skins": ["plasma"], "is_default": True, "enabled": True,
+    })
+
+# '+' has its own key on Spanish keyboards; '=' is Shift+0. Keep the
+# unshifted '=' for US layouts. Hyprland matches the unshifted symbol, so US '+'
+# needs Shift+equal and Spanish '=' needs Shift+0.
+for suffix, mods, key in (("plus", ["SUPER"], "plus"), ("shift_equal", ["SUPER", "SHIFT"], "equal"), ("shift_zero", ["SUPER", "SHIFT"], "0")):
+    bind = copy.deepcopy(next(b for b in DEFAULT_KEYBINDS if b["id"] == "plasma_zoom_in"))
+    bind.update(id="plasma_zoom_in_" + suffix, mods=mods, key=key)
+    DEFAULT_KEYBINDS.append(bind)
+
+for action, key in (("in", "KP_Add"), ("out", "KP_Subtract")):
+    bind = copy.deepcopy(next(b for b in DEFAULT_KEYBINDS if b["id"] == "plasma_zoom_" + action))
+    bind.update(id="plasma_zoom_" + action + "_keypad", key=key)
+    DEFAULT_KEYBINDS.append(bind)
+
 DEFAULT_DICT = {item["id"]: item for item in DEFAULT_KEYBINDS}
 
 def load_keybinds() -> List[Dict[str, Any]]:
@@ -879,7 +909,7 @@ def save_keybinds(binds: List[Dict[str, Any]]) -> bool:
         print(f"[KeybindsManager] Error saving keybinds: {e}", file=sys.stderr)
         return False
 
-def add_keybind(category: str, description: str, mods: List[str], key: str, action_type: str, exec_cmd: Optional[str] = None, dispatcher: Optional[str] = None, dispatcher_arg: Optional[str] = None) -> bool:
+def add_keybind(category: str, description: str, mods: List[str], key: str, action_type: str, exec_cmd: Optional[str] = None, dispatcher: Optional[str] = None, dispatcher_arg: Optional[str] = None, skins: Optional[List[str]] = None, skins_except: Optional[List[str]] = None) -> bool:
     """Adds a new keybind."""
     binds = load_keybinds()
     bind_id = f"custom_{int(time.time())}_{len(binds)}"
@@ -897,10 +927,14 @@ def add_keybind(category: str, description: str, mods: List[str], key: str, acti
         "is_default": False,
         "enabled": True
     }
+    if skins:
+        new_bind["skins"] = skins
+    elif skins_except:
+        new_bind["skins_except"] = skins_except
     binds.append(new_bind)
     return save_keybinds(binds)
 
-def update_keybind(bind_id: str, mods: Optional[List[str]] = None, key: Optional[str] = None, description: Optional[str] = None, action_type: Optional[str] = None, exec_cmd: Optional[str] = None, dispatcher: Optional[str] = None, dispatcher_arg: Optional[str] = None, enabled: Optional[bool] = None) -> bool:
+def update_keybind(bind_id: str, mods: Optional[List[str]] = None, key: Optional[str] = None, description: Optional[str] = None, action_type: Optional[str] = None, exec_cmd: Optional[str] = None, dispatcher: Optional[str] = None, dispatcher_arg: Optional[str] = None, enabled: Optional[bool] = None, skins: Optional[List[str]] = None, skins_except: Optional[List[str]] = None) -> bool:
     """Updates an existing keybind."""
     binds = load_keybinds()
     found = False
@@ -922,6 +956,12 @@ def update_keybind(bind_id: str, mods: Optional[List[str]] = None, key: Optional
                 b["dispatcher_arg"] = dispatcher_arg.strip()
             if enabled is not None:
                 b["enabled"] = enabled
+            if skins is not None:
+                b["skins"] = skins
+                b.pop("skins_except", None)
+            elif skins_except is not None:
+                b["skins_except"] = skins_except
+                b.pop("skins", None)
             found = True
             break
     if not found:
@@ -1009,6 +1049,9 @@ def main():
     add_p.add_argument("--exec", dest="exec_cmd", default=None)
     add_p.add_argument("--dispatcher", default=None)
     add_p.add_argument("--dispatcher-arg", default=None)
+    add_skin = add_p.add_mutually_exclusive_group()
+    add_skin.add_argument("--skins", default=None, help="Comma-separated skin ids")
+    add_skin.add_argument("--skins-except", default=None, help="Exclude these skin ids")
 
     # update
     up_p = subparsers.add_parser("update", help="Update an existing keybind")
@@ -1021,6 +1064,9 @@ def main():
     up_p.add_argument("--dispatcher", default=None)
     up_p.add_argument("--dispatcher-arg", default=None)
     up_p.add_argument("--enabled", choices=["true", "false"], default=None)
+    up_skin = up_p.add_mutually_exclusive_group()
+    up_skin.add_argument("--skins", default=None, help="Comma-separated skin ids; empty clears the filter")
+    up_skin.add_argument("--skins-except", default=None, help="Exclude these skin ids; empty clears the filter")
 
     # delete
     del_p = subparsers.add_parser("delete", help="Delete or disable a keybind")
@@ -1047,12 +1093,14 @@ def main():
         print(json.dumps(load_keybinds(), indent=2, ensure_ascii=False))
     elif args.command == "add":
         mods = [m.strip() for m in args.mods.split(",") if m.strip()]
-        ok = add_keybind(args.category, args.desc, mods, args.key, args.type, args.exec_cmd, args.dispatcher, args.dispatcher_arg)
+        selected = lambda value: [s.strip() for s in value.split(",") if s.strip()] if value is not None else None
+        ok = add_keybind(args.category, args.desc, mods, args.key, args.type, args.exec_cmd, args.dispatcher, args.dispatcher_arg, selected(args.skins), selected(args.skins_except))
         print(json.dumps({"success": ok}))
     elif args.command == "update":
         mods = [m.strip() for m in args.mods.split(",")] if args.mods is not None else None
         enabled = (args.enabled == "true") if args.enabled is not None else None
-        ok = update_keybind(args.id, mods, args.key, args.desc, args.type, args.exec_cmd, args.dispatcher, args.dispatcher_arg, enabled)
+        selected = lambda value: [s.strip() for s in value.split(",") if s.strip()] if value is not None else None
+        ok = update_keybind(args.id, mods, args.key, args.desc, args.type, args.exec_cmd, args.dispatcher, args.dispatcher_arg, enabled, selected(args.skins), selected(args.skins_except))
         print(json.dumps({"success": ok}))
     elif args.command == "delete":
         ok = delete_keybind(args.id)

@@ -3,6 +3,10 @@
 #include "profilestore.h"
 #include "sessionui.h"
 #include "viewcorona.h"
+#include "layouttemplate.h"
+#include <KConfigLoader>
+#include <KPackage/PackageLoader>
+#include <QJSEngine>
 #include <Plasma/Containment>
 #include <KConfig>
 #include <KConfigGroup>
@@ -50,6 +54,21 @@ private Q_SLOTS:
         QElapsedTimer deadline;deadline.start();rejected=false;
         try{LookAndFeelLayout::prepare("org.bwm.t4.loop",legacy,BWM_SHELL_SOURCE_DIR);}catch(const std::exception&){rejected=true;}
         QVERIFY(rejected);QVERIFY(deadline.elapsed()<5500);QCOMPARE(read(legacy+"/appletsrc"),original);
+    }
+    void originalScriptArrayUpdatesSchemaAndSurvivesReload(){
+        ViewCorona corona;corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",BWM_SHELL_SOURCE_DIR));
+        const auto file=legacy+"/store-array-appletsrc";corona.loadLayout(file);
+        auto *containment=corona.createContainment("null");QVERIFY(containment);
+        auto *applet=containment->createApplet("org.kde.plasma.icontasks");QVERIFY(applet);
+        LayoutTemplateWidget script(applet,nullptr);script.setCurrentConfigGroup({"General"});
+        QJSEngine engine;
+        script.writeConfig("launchers",engine.evaluate("['preferred://filemanager','preferred://browser','applications:systemsettings.desktop']"));
+        const QStringList expected={"preferred://filemanager","preferred://browser","applications:systemsettings.desktop"};
+        QCOMPARE(applet->config().group("General").readEntry("launchers",QStringList()),expected);
+        auto *item=applet->configScheme()->findItemByName("launchers");QVERIFY(item);QCOMPARE(item->property().toStringList(),expected);
+        corona.saveLayout(file);QVERIFY(corona.config()->sync());
+        KConfig disk(file,KConfig::SimpleConfig);
+        QCOMPARE(disk.group("Containments").group(QString::number(containment->id())).group("Applets").group(QString::number(applet->id())).group("Configuration").group("General").readEntry("launchers",QStringList()),expected);
     }
     void doesNotReplaceARealPlasmashell(){
         auto foreign=QDBusConnection::connectToBus(QDBusConnection::SessionBus,"t4-existing-plasmashell");

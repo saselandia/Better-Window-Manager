@@ -1673,4 +1673,33 @@ El runner crea XDG/D-Bus y Hyprland privados en una salida temporal, dos pantall
 1/1,25, helper de energía ficticio y auxiliar en dry-run. Retira compositor/reglas/salida.
 No aplica un tema ni ejecuta energía en la sesión diaria. El supervisor real ensaya rollback;
 su rama de éxito se cubre con un doble del estado de salida, sin certificar una aplicación
-completa en monitores físicos. Esa aceptación y el próximo login siguen pendientes.
+completa en monitores físicos. Esa aceptación sigue pendiente; la bienvenida del login
+2026-11-27 quedó confirmada por el usuario.
+
+## T6: bandejas nuevas y datos de widgets
+
+`traydefaults.h` usa knownItems de Plasma para no autoactivar clipboard/keyboardlayout en
+bandejas nuevas. El portapapeles sigue usando cliphist/Super+V y la distribución, Hyprland.
+Se aplica sólo a appletCreated (instancias nuevas), nunca al restaurar una bandeja ni sobre claves inmutables. Los paquetes originales
+siguen disponibles para activación explícita; no se altera el registro de Plasma.
+
+CTest `native-tray-defaults` comprueba persistencia, elecciones e inmutabilidad. Para zoom,
+Emoji Selector, portal KDE desde Gio/GTK y sensores/widgets originales ya instalados:
+
+```bash
+python3 src/bwm-plasma-host/check-focus-safety.py \
+  --binary src/bwm-plasma-host/check-t6-session.py \
+  --report build/bwm-plasma-host-tests/t6-session-results.json
+```
+
+El cliente sólo corre dentro del arnés desechable, con bus/raíces privadas. Requiere Gio/GTK 3
+de PyGObject, qml de Qt, grim, los portales KDE y los paquetes ksystemstats/kdeplasma-addons;
+no los instala ni toca el escritorio diario. Muestra CPU/memoria/calculadora en el envoltorio
+de preview, no una sesión Plasma. La captura temporal de CPU se revisa y se borra al terminar.
+Resultados y límites, incluido PowerDevil, en `docs/BREEZE_T6_RESULTS.md`.
+
+Zoom: `test-zoom-shortcuts` se ejecuta con `check-focus-safety.py` como `--binary`. Usa los
+binds del JSON y el aplicador real, con estado temporal y teclas/modificadores virtuales en
+US/es (libxkbcommon, declarado en los requisitos de compilación/pruebas). Comprueba = y +,
+incluido el teclado numérico, reducir y restablecer. El mismo NestedInput valida el peer antes de crear cualquier dispositivo;
+sin los datos del compositor desechable no puede abrirlo. No se enlaza al host diario.

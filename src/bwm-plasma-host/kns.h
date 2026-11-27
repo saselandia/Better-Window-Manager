@@ -7,7 +7,8 @@
 // a dialog. Every question KNewStuff asks is answered with Cancel/No (fail closed).
 // Installs into the caller's XDG_DATA_HOME; main.cpp only allows temporary roots.
 namespace BwmKns {
-QJsonObject search(const QString &term, int page, int timeoutMs=30000);
-QJsonObject install(const QString &uniqueId, int timeoutMs=120000);
-QJsonObject uninstall(const QString &uniqueId, int timeoutMs=60000);
+QJsonObject search(const QString &term, int page, int timeoutMs=30000, const QString &provider="plasmoids");
+QJsonObject install(const QString &uniqueId, int timeoutMs=120000, const QString &provider="plasmoids");
+QJsonObject uninstall(const QString &uniqueId, int timeoutMs=60000, const QString &provider="plasmoids");
+QJsonObject metadata(const QString &uniqueId, int timeoutMs=30000, const QString &provider="plasmoids");
 }

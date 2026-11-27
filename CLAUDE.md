@@ -76,6 +76,8 @@ siendo el nombre del escritorio original que imita Breeze.
 6. **Atajos**: `config/hypr/keybinds.json` + `scripts/keybinds-manager.py add|update|purge|reload` (regenera
    `modules/user_binds.lua`; uno añadido sólo al `.lua` se pierde). Fijos (Alt+Tab, Alt+`, Super+Backspace…) en
    el bloque «helpers» de `generate_lua()`. Usa rutas absolutas en `exec` (el PATH de Hyprland no tiene `~/.local/bin`).
+   En Hyprland 0.56 los símbolos con Mayús se vinculan con el símbolo base: español `=` = `SHIFT + 0`,
+   US `+` = `SHIFT + equal`; el numérico usa `KP_Add`/`KP_Subtract`. Probar la pulsación completa en anidado.
 7. Acciones con sudo (emerge, install-boot-theme.sh…) las ejecuta el usuario: dale el comando exacto.
 8. **Ventanas de Hyprland**: una ventana nueva puede reutilizar la dirección de la anterior (pasó con Spotify):
    distingue una ventana reiniciada por **PID**, no por `address`.
@@ -156,6 +158,8 @@ siendo el nombre del escritorio original que imita Breeze.
 | Menús contextuales de Breeze (ventana, tareas, escritorio, panel) | `quickshell/ii/modules/plasma/menus/` (PC3.Menu, README), IPC `plasmaWindowMenu`; acciones en `kwin-window.py`; traducciones `menus/po` (`extract.py`); pruebas `tests/test_plasma_menus_ui.py` |
 | Detección CSD/SSD de Breeze | `src/breezebars/CSDLogic.hpp` y `CSDDetect.cpp` (negociación aplicada, X11 asíncrono); `hyprctl -j breezebars-csd` / Lua `hl.plugin.breezebars.decoration(address,pid)` dan el marco real para Python y placement. Auditoría `skins/plasma/scripts/csd-audit.py`; matriz `docs/BREEZE_CSD_RESULTS.md`. Sólo probar plugin nuevo tras reiniciar sesión |
 | Selector de skins de Breeze (Alt+T) | `modules/plasma/skinPicker`, diseño anterior recuperado; IPC plasmaThemePicker; paleta de PlasmaTheme y fuente Noto Sans 10. Los temas globales KDE se eligen en Preferencias |
+| Atajos globales de KDE (Breeze, T5) | `src/bwm-kglobalaccel` (kglobalacceld 6.7.5 original con backend «bwm»; README), supervisor `skins/plasma/scripts/kde-shortcuts.py build|start|stop|status`, binds en `~/.local/state/bwm/kde-shortcuts.lua` cargados por `modules/kde_shortcuts.lua` (sólo Breeze, antes del Lua del usuario). Los binds de BWM se registran como componente «bwm»: KDE nunca los recibe. Pruebas `check-daemon.py` (CTest) y `check-nested.py` (Hyprland real) |
+| Detalles de Breeze (T6): emojis, zoom, portal y bandeja nueva | `skins/plasma/scripts/desktop-actions.py`, atajos por skin vía `keybinds-manager.py --skins/--skins-except`; `scripts/bwm_portals.py` lee `portals` del manifiesto y limita el perfil al servicio con un drop-in runtime (lo retira fuera de Breeze, no edita portals.conf del usuario). `src/bwm-plasma-host/traydefaults.h` usa knownItems nativo sólo sin elecciones previas. PowerDevil no se activa junto a BwmIdle. Informe `docs/BREEZE_T6_RESULTS.md` |
 | Interfaces de Plasma (F12) | `modules/plasma/{switcher,osd,lock,runtime}`; `interface-theme.py` lee LayoutName/LookAndFeelPackage y adapta QML en caché. ThemeHost en `src/bwm-kcmhost` (API 2, motores separados; Qt.quit de un tema no cierra el shell). Controlador MRU común intacto. KRunner nativo en Alt+Espacio sólo Breeze; agente polkit desde manifiesto vía `bwm_polkit.py` (KDE en Breeze, Omarchy embebido en Retro) |
 | Cierre del port Breeze y pruebas de integración | `docs/BREEZE_F13_RESULTS.md` (limpieza, Sweet/KNS, cambios de skin y lista manual); `scripts/bwm-shell-conflicts.py` repara sólo reservas de bandeja rotas de kded sin módulos activos salvo ktimezoned |
 | Reglas y encaje de KWin (Breeze, F10) | `skins/plasma/scripts/kwin_rules.py`, `kwin_tiles.py`, `kwin-tiles.py`; vigilante único F2 y Lua generado, `skins/plasma/hypr/{rules,kwinrules}.lua`; plugin `KWinSnap.hpp`/`SnapGeometry.hpp`; outline/editor `modules/plasma/tiling`. Ctrl+flechas conservado; Meta+T editor reducido. Cobertura y opt-out en `skins/plasma/scripts/KWIN_RULES.md`, lista tras reinicio en `docs/BREEZE_F10_CHECKLIST.md` |
@@ -315,6 +319,7 @@ siendo el nombre del escritorio original que imita Breeze.
   ajenos (`nmcli monitor`, `inotifywait -m`…) envuélvelos con `scripts/follow-reader` (§379).
   Dos módulos importados con un archivo del mismo nombre: gana el último import (pasó con `Dock.qml` de `dock` y
   `omarchyDock`); usa `import … as Nombre`.
+- **Objetos keybind de Lua (Hyprland 0.56.2):** `:remove()`/`:set_enabled()` sobre un bind ya retirado tumba Hyprland (`LuaKeybind.cpp` comprueba un `std::optional<SP>` siempre lleno y desreferencia el puntero nulo). Quitar un bind quita todos los de la misma tecla (pulsación y liberación). Retirar con `hl.unbind("MODS + tecla")` y, antes de llamar a un método, comprobar `tostring(b) ~= "HL.Keybind(expired)"`. Pasó con bwm-kglobalaccel (§391): sesión en modo seguro. Todo Lua generado que se evalúe en caliente se prueba antes con un Hyprland desechable, no con un `hyprctl` falso.
 - **Hyprland 0.55 Lua**: `hyprctl dispatch 'hl.dsp.…'`; inyectar atajos con
   `hyprctl eval 'return hl.dispatch(hl.dsp.send_shortcut({…}))'`.
 - `pkill -f <patrón>` mata tu propia shell si el patrón está en el comando: mata por PID. Lo mismo `pgrep -f` en un

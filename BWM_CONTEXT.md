@@ -106,6 +106,22 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 
 ### 2.4 Breeze (Kde plasma): port sobre Hyprland
 
+* **Compatibilidad medida con la KDE Store (T7, §394):** muestra de 18 paquetes más descargados en
+  raíces XDG aisladas con `bubblewrap` y Hyprland anidado (2026-11-27): **12/16 (75 %)** temas y
+  recursos funcionan sin cambios y **4/16 (25 %)** con diferencias (temas globales sin efectos KWin;
+  decoraciones C++ BreezeChameleon/Klassy requieren compilación desde fuente, pero cargan y aplican
+  opciones nativas en `bwm-decorator`); **1/2 (50 %)** plasmoides funciona (`Andromeda Launcher`),
+  `KDE Control Station` falla por `org.kde.plasma.private.brightnesscontrolplugin` ausente
+  (PowerDevil). **18/18** instalan y retiran limpios; `layouttemplate.cpp` corregido para arrays JS
+  en `writeConfig`. Tabla en `docs/BREEZE_STORE_COMPAT.md`, informe en `docs/BREEZE_T7_RESULTS.md`.
+
+* **Paquetes y detalles (T6, §392):** ksystemstats y kdeplasma-addons 6.7.5 instalados, sensores
+  CPU/memoria reales y widgets originales comprobados en aislamiento. Super+. usa Emoji Selector,
+  Meta+=/-/0 el zoom de Hyprland, con +/− numéricos y símbolos desplazados (§393). Portal FileChooser KDE limitado a su servicio en Breeze,
+  GTK_USE_PORTAL para las apps nuevas; conserva preferencias y se retira al salir. Bandejas
+  nuevas sin clipboard/keyboardlayout autoactivados; elecciones existentes intactas. PowerDevil
+  catalogado pero no activado/recomendado hasta coordinarlo con BwmIdle. Informe T6 y límites.
+
 * **Fondo único BWM ↔ Plasma (T3, §389):** `WallpaperBridge` comparte el aplicador original con
   «Escritorio y fondo…». BWM aplica a todos los containments; Plasma conserva elecciones por
   pantalla. La principal de Qt alimenta las cachés/perfiles/bloqueo de BWM; presentación publica
@@ -115,14 +131,20 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
   aplana la configuración por pantalla. Host nuevo activado y fondos diarios originales
   restaurados; paleta intacta. Pruebas y límites: `docs/BREEZE_T3_RESULTS.md`.
 
+* **Atajos globales de KDE (T5, §391):** `bwm-kglobalaccel` (biblioteca original kglobalacceld 6.7.5 +
+  backend «bwm») es `org.kde.kglobalaccel` sólo en Breeze. Los binds de BWM se registran como componente
+  «bwm» y mandan siempre; las demás teclas de KDE pasan a binds de Hyprland (`modules/kde_shortcuts.lua`).
+  `kcm_keys` habilitado en Preferencias. Probado en D-Bus privado y Hyprland desechable; una primera
+  versión tumbó la sesión diaria (fallo de objetos keybind de Hyprland, corregido). Aceptación en la
+  sesión pendiente. Informe `docs/BREEZE_T5_RESULTS.md`.
 * **Temas globales (T4, §390):** host con `org.kde.PlasmaShell` limitado a immutable y carga de
   disposición original; ProfileStore prepara generaciones/checkpoints sin sobrescribir la
   Corona viva, supervisor selecciona perfil y recupera el anterior al fallar. KSplash original
   al iniciar Breeze, respeta None. Salida del tema original en ThemeHost separado, IPC/atajos
   y botones nativos por `bwm-power`; auxiliar único sin host. Instalado y apertura/cancelación
-  diaria verificadas; aplicación de disposición física y próximo login pendientes.
+  diaria verificadas; aplicación de disposición física pendiente. Bienvenida del login 2026-11-27 confirmada por el usuario.
   `docs/BREEZE_T4_RESULTS.md` documenta API admitida y pruebas; no compatibilidad universal.
-* **Breeze III (`docs/BREEZE_PLAN_V3.md`, T0–T9, 2026-11-26, §385):** plan activo. Avisos de Plasma, Preferencias que funcionan u ocultan, fondo único BWM ↔ Plasma, temas globales completos (disposición, bienvenida, salida), atajos globales de KDE sin pisar los de BWM, paquetes que faltan, compatibilidad medida con la tienda y vista general. T0–T3 completadas (§386–389); T4 implementada con aceptación física parcial (§390). T5 no empezada.
+* **Breeze III (`docs/BREEZE_PLAN_V3.md`, T0–T9, 2026-11-26, §385):** plan activo. Avisos de Plasma, Preferencias que funcionan u ocultan, fondo único BWM ↔ Plasma, temas globales completos (disposición, bienvenida, salida), atajos globales de KDE sin pisar los de BWM, paquetes que faltan, compatibilidad medida con la tienda y vista general. T0–T3 completadas (§386–389); T4 implementada con aceptación física parcial (§390), bienvenida confirmada (§392). T5 implementada (§391), servicio arrancado en el nuevo login; T6 implementada (§392), T7 siguiente.
 * **Breeze II (`BREEZE_PLAN_V2.md`, R0–R9 cerrados — 2026-11-26, §§372–381):** plan completado
   con los binarios finales cargados en la nueva sesión (`breezebars.so` §376, `omarchy-titlebars.so`
   §377, `bwm-plasma-host` ready en ambas pantallas, `bwm-plasma-desktops`, `bwm-decorator` y
@@ -7369,3 +7391,112 @@ git status; git log --oneline -5; git push origin main
   usuario en Preferencias; no se ensayaron scripts en el escritorio diario. No se certifica
   compatibilidad universal de tienda ni acciones de energía físicas. T4 implementada con
   aceptación física parcial; T5 no empezada. Informe: docs/BREEZE_T4_RESULTS.md.
+
+### 391. Breeze III, T5: atajos globales de KDE sin pisar los de BWM (2026-11-26)
+
+* **Diseño:** `src/bwm-kglobalaccel` incrusta `libKGlobalAccelD` 6.7.5 original (como KWin en Wayland) con
+  un plugin estático de plataforma `bwm` (`KGLOBALACCELD_PLATFORM=bwm`). El controlador registra cada bind
+  de BWM del Hyprland en marcha como componente «bwm» (antes de atender D-Bus), quita esas teclas a las
+  acciones de KDE que las tuvieran (quedan sin asignar; aviso) y deshace los cambios a «bwm» hechos desde
+  Preferencias. Las teclas restantes se convierten en binds `KDE: …` (pulsar/soltar → `--trigger`) en
+  `~/.local/state/bwm/kde-shortcuts.lua`, aplicados con `hyprctl eval` y recreados tras cada recarga por
+  `modules/kde_shortcuts.lua` (sólo Breeze, antes del Lua del usuario). Sincroniza al cambiar capturas,
+  con `configreloaded` y al escribirse `kglobalshortcutsrc` (kglobalacceld 6.7 admite dos acciones con la
+  misma tecla: gana la más antigua, por eso hay que quitarla explícitamente). Supervisor `kde-shortcuts.py`;
+  arranque/parada en `autostart.sh` y `bwm-theme-manager.py`. `kcm_keys` deja de estar restringido (alias
+  `globalshortcuts`); `keybinds|shortcuts` sigue abriendo BWM — Atajos. Requisitos `bwm-kglobalaccel(-build)`.
+* **Incidente:** la prueba en la sesión con un cliente de prueba hizo caer Hyprland (SIGSEGV, informe
+  `hyprlandCrashReport3197.txt`); la sesión volvió en **modo seguro**. Causa: el script de retirada
+  llamaba `:remove()` al bind de pulsación (que se lleva también el de soltar) y luego al de soltar ya
+  caducado; `LuaKeybind.cpp` de 0.56.2 desreferencia entonces un puntero nulo. Reproducido en un Hyprland
+  anidado (4 líneas de Lua). Corregido con `hl.unbind(tecla)` y `tostring()` antes de cualquier método.
+  La prueba con `hyprctl` falso no podía verlo: se añade `check-nested.py` contra Hyprland real.
+  Retirados el archivo de estado y la prueba; trampa añadida a AGENTS/CLAUDE.
+* **Comprobado:** CTest 2/2 (`test-keymap` 21 casos; `check-daemon.py` con cliente KDE real: atajo libre
+  enlazado y disparado, Alt+F1 de BWM retirado a KDE y listado en conflicto, edición de «bwm» deshecha,
+  tecla que BWM empieza a usar sólo desactivada, parada limpia). `check-nested.py` 5/5 en Hyprland 0.56.2
+  desechable (crear, disparar por `exec`, recarga, retirar pulsar+soltar sin caída, tecla tomada por BWM
+  conserva el bind de BWM, parada). `tests/test_kde_shortcuts.py` 7/7 y suites de skins/arranque/cambio de
+  skin/Preferencias. Binario instalado `5d59c1a8…` (antes del arreglo: no se usa). Preferencias lista `kcm_keys`.
+* **Pendiente:** aceptación en la sesión (está en modo seguro: hay que cerrar sesión y volver a entrar),
+  atajo de un widget del panel nativo y apps KDE reales pulsados con teclado, visual de `kcm_keys`.
+  Observado antes de la caída: Dolphin recibe Meta+E porque el Meta+E de BWM está desactivado en
+  `keybinds.json` (correcto según la regla).
+
+
+### 392. Breeze III: nuevo login confirmado y T6, paquetes y detalles de escritorio (2026-11-27)
+
+* **Login:** el usuario confirma que apareció la bienvenida de Plasma y se cerró correctamente.
+  Host 3653 ready al entrar, Quickshell único 3306, Hyprland 0.56.2 con breezebars y
+  bwm-plasma-desktops cargados, configerrors vacío. T5 arrancó solo: bwm-kglobalaccel 3532,
+  dueño único de org.kde.kglobalaccel, sin error. Super+V/volumen de BWM protegidos como
+  conflictos y Meta+E libre en KDE; no se inyectó teclado físico. Resuelto el reinicio tras
+  el incidente de §391, sin certificar aún sus pruebas manuales ni disposición física T4.
+* **Paquetes:** el usuario instaló ksystemstats 6.7.5 y kdeplasma-addons 6.7.5-r1; catálogo,
+  recommends y tabla actualizados. Emoji Selector y portal KDE también declarados. Los
+  cuatro aparecen ok en el comprobador. PowerDevil revisado contra su fuente 6.7.5 y
+  añadido al catálogo, pero NO recomendado/activado: duplica DPMS, suspensión, perfiles y
+  tapa de BwmIdle/bwm-power. Integrarlo exige resolver esa autoridad, no otro demonio paralelo.
+* **Bandeja:** BwmTrayDefaults marca clipboard y keyboardlayout conocidos en una bandeja nueva
+  para que el registro nativo no los autoactive. Historial común cliphist/Super+V y teclado de
+  Hyprland conservados. Aplica sólo appletCreated y actualiza el KConfigLoader nativo; no migra bandejas restauradas
+  ni grupos inmutables; una elección previa de Klipper puede seguir duplicando historiales.
+* **Acciones:** desktop-actions.py en la skin; Super+. abre plasma-emojier, Meta+=/Meta+-
+  cambian cursor:zoom_factor entre 1 y 8 (pasos 1,2), Meta+0 restablece. flock y valor vivo;
+  salir devuelve el factor previo sólo si no cambió externamente. keybinds-manager add/update
+  acepta --skins/--skins-except; JSON y Lua regenerados por el gestor, con los cuatro defaults
+  de fábrica. Fuera de Breeze se conserva el selector anterior; T5 ha seguido funcionando
+  tras las recargas. Pulsaciones físicas del teclado español pendientes.
+* **Portal:** manifiesto portals.FileChooser=[kde,gtk]. bwm_portals.py conserva las demás
+  preferencias en una copia runtime, con XDG_CONFIG_HOME limitado al servicio por drop-in.
+  No edita la configuración fuente ni XDG_CURRENT_DESKTOP. Respeta un chooser personalizado;
+  al salir retira su drop-in. GTK_USE_PORTAL=1 en Breeze, valor del login fuera y Lua del
+  usuario al final; exportado por la ruta común de activación. Portal diario activo con
+  backend KDE introspectado, sin cambiar los proveedores de captura.
+* **Pruebas:** Python T6 10/10; regresiones T4 9/9, skins 7/7, T5 7/7, arranque 4/4,
+  procesos 7/7 y atajos Retro 4/4. CTest 16/16 tras instalar paquetes (95,25 s), incluye
+  persistencia nativa, elecciones existentes e inmutabilidad de la bandeja. Hyprland/bus
+  privados: zoom real, Emoji Selector, petición portal KDE/cancelación, varias actualizaciones
+  reales CPU/memoria con Sensor original; widgets originales CPU/memoria/calculadora cargan
+  en preview sin módulos ausentes. CPU muestra porcentaje en captura aislada revisada y borrada.
+* **Despliegue:** host instalado atómicamente SHA256 8ab4c18d1da79fa0…, activo 121531 tras
+  mantenimiento: dos paneles/escritorios, notificaciones válidas, fondos originales idénticos.
+  Un solo Quickshell; ningún plugin del compositor recargado. Cambios previos T5 sin commit
+  conservados y separados de los nuevos; esta fase no hace commit/push.
+* **Límites:** aceptación física de atajos, disposición T4, bandejas existentes y cambio diario
+  de skin/portal pendientes; PowerDevil no integrado, no acciones de energía probadas.
+  No se certifica todo kdeplasma-addons (T7). Informe docs/BREEZE_T6_RESULTS.md. T7 no iniciada.
+
+
+### 393. T6: zoom con + y = en teclado español, confirmado con entrada Wayland (2026-11-27)
+
+* El usuario confirma Emoji Selector, pero el zoom no amplía ni con + ni con =. El helper
+  funcionaba en el arnés; faltaba probar la pulsación completa. Hyprland 0.56.2 compara la
+  máscara y el símbolo sin modificadores: en español = requiere Super+Mayús+0; US + usa
+  Super+Mayús+=. Se añaden esos alias y Super++ al Super+= original, sólo Breeze, mediante
+  keybinds-manager add --skins plasma. Defaults de fábrica y Lua regenerado coherentes.
+* Regresión nueva test-zoom-shortcuts: 6/6 recorridos US =/+/numérico, español =/+/numérico pasan con el JSON
+  real, teclas/modificadores Wayland y aplicador real contra Hyprland desechable. Cada
+  recorrido amplía una sola vez, reduce y restablece. Se aísla sólo el estado del helper;
+  no se simula hyprctl ni se envía entrada a la sesión diaria. Salidas físicas intactas y
+  limpieza verificada. Python T6/T5/skins/Retro 28/28; configerrors diario vacío.
+* NestedInput conserva la guarda de PID/UID/configuración del peer y el mapa mínimo previo;
+  el nuevo modo US/es usa libxkbcommon, declarado en requisitos de compilación y tabla.
+  Los dispositivos sólo pertenecen al compositor hijo. No se recompila/reinicia el host
+  diario ni sus plugins para este arreglo. El usuario confirma que ya funciona tras la corrección
+  y pide también el numérico: KP_Add/KP_Subtract añadidos mediante el gestor y a sus defaults.
+  Regresión previa de entrada/edición conserva 6/6 PASS, incluidos el rechazo de peer erróneo
+  y 20 ciclos de escritura/foco. La ampliación al numérico queda pendiente de confirmación física.
+
+
+### 394. Breeze III: T7, compatibilidad medida con la tienda KDE (2026-11-27)
+
+* **Aislamiento y herramientas:** `src/bwm-plasma-host/{kns-store.cpp,store-preview.cpp,store-compat.py,prepare-store-fixtures.py,check-store-session.py}` y `tests/test_breeze_store.py` (sólo `BUILD_TESTING=ON`). KNS corre sobre raíces temporales `0700` dentro de `bubblewrap` con el host en sólo lectura y red cortada al renderizar. Al probar dependencias de temas globales se detectó que `xcursor.knsrc` (`InstallPath=.icons`) creaba submotores que escribían en `~/.icons`: se bloqueó enlazando `~/.icons` al `data/icons` temporal (cubierto por `test_breeze_store.py`) y se retiró el cursor temporal `WhiteSur` sin tocar la sesión diaria. Todo QML/JS/C++ externo se revisó y selló por SHA-256 en `review.json` antes de cargarse.
+* **Medición (18 paquetes más descargados, 2 por categoría separando Aurorae y C++):**
+  * **Temas y recursos de aspecto (16):** **12/16 (75 %)** funcionan sin cambios (2 estilos de Plasma, 2 esquemas de color, 4 Aurorae, 2 iconos, 2 cursores) y **4/16 (25 %)** funcionan con diferencias (2 temas globales —Sweet KDE y WhiteSur-Dark— sin efectos KWin y con cursor común de BWM; 2 decoraciones C++ —BreezeChameleon 6.5 y Klassy 6.7.3— distribuidas como código fuente que requiere compilación, pero cargan en `bwm-decorator` a escala 1,0/1,5 y aplican opciones nativas en `breezerc`/`klassyrc` con cambio real de píxeles). **0/16** fallan.
+  * **Plasmoides (2):** **1/2 (50 %)** funciona completo (`Andromeda Launcher Plasma 6`, incluyendo persistencia de opciones y aislamiento entre instancias) y **1/2 (50 %)** no carga (`KDE Control Station` 2.13.0 falla por `org.kde.plasma.private.brightnesscontrolplugin` ausente, módulo privado de PowerDevil; sus 5 páginas de configuración sí cargan y guardan).
+  * **Total:** **13/18 (72 %)** funcionan, **4/18 (22 %)** con diferencias, **1/18 (6 %)** no funciona. **18/18** instalan y retiran limpiamente por KNS (`0` archivos residuales). **41/42** casos visuales cargados con capturas válidas en Hyprland anidado (`nested.json`: `dailyHostStarted=false`, `physicalOutputsUnchanged=true`, `cleanupVerified=true`).
+* **Fallo de BWM corregido:** `LayoutTemplateWidget::writeConfig` (`src/bwm-plasma-host/layouttemplate.{h,cpp}`) recibía `QVariant` en vez de `QJSValue`, descartando silenciosamente los arrays JS de lanzadores del `layout.js` de WhiteSur-Dark. Corregido convirtiendo `QJSValue::toVariant()` y actualizando `KConfigLoader` como `scripting::Applet` de Plasma 6.7.5; regresión `originalScriptArrayUpdatesSchemaAndSurvivesReload` añadida a `test-t4-session.cpp` (3/3 PASS) y binario `build/bwm-plasma-host` recompilado sin reiniciar la sesión diaria.
+* **Pruebas y documentación:** `tests/test_breeze_store.py` 5/5 PASS; regresiones Python T6/arranque/T5 21/21 PASS; CTest `build/bwm-plasma-host-tests` 16/16 PASS (57,46 s). Requisito opcional `bwm-plasma-store-tests` añadido a `requirements.json`, `plasma/skin.json` y `docs/REQUIREMENTS.md`. Publicados `docs/BREEZE_STORE_COMPAT.md` y `docs/BREEZE_T7_RESULTS.md`; actualizados `README.md`, `README.es.md`, `docs/SKINS.md`, `docs/BREEZE_PLAN_V3.md` y `THIRD_PARTY_NOTICES.md`.
+* **Límites:** los porcentajes describen la muestra de 18 paquetes (no toda la tienda); vistas directas en Hyprland anidado por ausencia de EDID virtual; sin commit/push. Siguiente fase del plan: **T8** (vista general y esquinas activas).
+

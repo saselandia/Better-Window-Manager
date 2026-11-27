@@ -12,7 +12,8 @@ case "${1:-}" in
     windowbehavior|windows|kcm_kwinoptions) shift; set -- kcm_bwm_windows "$@" ;;
     display|screens|kcm_kscreen) shift; set -- kcm_bwm_screens "$@" ;;
     workspaces|kcm_kwin_virtualdesktops) shift; set -- kcm_bwm_workspaces "$@" ;;
-    keybinds|shortcuts|kcm_keys) shift; set -- kcm_bwm_shortcuts "$@" ;;
+    keybinds|shortcuts) shift; set -- kcm_bwm_shortcuts "$@" ;;
+    globalshortcuts) shift; set -- kcm_keys "$@" ;;
     cursor|cursors|kcm_cursortheme) shift; set -- kcm_bwm_cursor "$@" ;;
     mouse|touchpad|input|kcm_mouse|kcm_touchpad) shift; set -- kcm_bwm_input "$@" ;;
     idle|energy|power|kcm_powerdevilprofilesconfig) shift; set -- kcm_bwm_energy "$@" ;;

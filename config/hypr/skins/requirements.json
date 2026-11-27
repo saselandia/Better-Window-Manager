@@ -807,6 +807,42 @@
       "build": "make -C {repo}/src/bwm-decorator install",
       "notes": {"all": "Necesita kdecoration, breeze y las cabeceras de Qt 6 y KF6 (Config, ColorScheme, CoreAddons, Service). Proceso aparte: no se carga en Hyprland."}
     },
+    "bwm-kglobalaccel": {
+      "label": "Atajos globales de KDE (bwm-kglobalaccel)",
+      "why": "Servicio org.kde.kglobalaccel de Breeze: atajos de widgets y apps KDE como binds de Hyprland, sin pisar los de BWM",
+      "check": {
+        "type": "path",
+        "any": [
+          "~/.local/share/bwm/bin/bwm-kglobalaccel"
+        ]
+      },
+      "provider": "build",
+      "build": "python3 {repo}/config/hypr/skins/plasma/scripts/kde-shortcuts.py build",
+      "notes": {
+        "all": "Incrusta la biblioteca original de kglobalacceld 6.7.5 (la que usa KWin en Wayland) con un backend propio; proceso aparte, no se carga en Hyprland."
+      }
+    },
+    "bwm-kglobalaccel-build": {
+      "label": "Compilación de bwm-kglobalaccel",
+      "why": "Construye el servicio de atajos globales de KDE de Breeze",
+      "check": {
+        "type": "path",
+        "any": [
+          "/usr/include/KGlobalAccelD/kglobalacceld.h"
+        ],
+        "cmds": [
+          "cmake",
+          "c++"
+        ]
+      },
+      "packages": {
+        "gentoo": "kde-plasma/kglobalacceld kde-frameworks/kglobalaccel dev-qt/qtbase x11-libs/libxkbcommon dev-build/cmake",
+        "arch": "kglobalacceld kglobalaccel qt6-base libxkbcommon cmake",
+        "fedora": null,
+        "opensuse": null,
+        "debian": null
+      }
+    },
     "bwm-systemsettings-build": {
       "label": "Compilación de KCM nativos BWM (Qt Widgets y KF6)",
       "why": "Construye los módulos nativos experimentales para System Settings real",
@@ -957,6 +993,31 @@
       "check": {"type": "pkgconfig", "modules": ["gio-unix-2.0"], "cmds": ["cc", "meson", "ninja", "patch"]},
       "packages": {"gentoo": "dev-libs/glib dev-build/meson dev-build/ninja sys-devel/patch", "arch": "glib2 meson ninja patch"}
     },
+    "bwm-plasma-store-tests": {
+      "label": "Pruebas de KDE Store en aislamiento (T7)",
+      "why": "Sólo para desarrollar y repetir la medición: escritura limitada con bubblewrap, recursos KDE originales y cursores Xcursor; no inicia servicios en la sesión diaria",
+      "check": {
+        "type": "pkgconfig",
+        "modules": [
+          "xcursor"
+        ],
+        "cmds": [
+          "bwrap",
+          "grim",
+          "dbus-run-session"
+        ]
+      },
+      "packages": {
+        "gentoo": "sys-apps/bubblewrap x11-libs/libXcursor kde-frameworks/kcolorscheme kde-frameworks/kiconthemes",
+        "arch": "bubblewrap libxcursor kcolorscheme kiconthemes",
+        "fedora": null,
+        "opensuse": null,
+        "debian": null
+      },
+      "notes": {
+        "all": "Opcional, sólo arneses store-compat.py/prepare-store-fixtures.py con BUILD_TESTING=ON. Qt Test, libplasma y el resto del host se declaran en bwm-plasma-host-build. Pillow y grim son requisitos comunes. No es requisito para aplicar temas ni para ejecutar Breeze."
+      }
+    },
     "bwm-plasma-host-build": {
       "label": "Anfitrión experimental libplasma R4 (compilación y pruebas)",
       "why": "Prueba aislada de Corona, PlasmoidItem, páginas y KPackage; no sustituye todavía el panel",
@@ -969,7 +1030,8 @@
           "Qt6WaylandClient",
           "wayland-client",
           "wayland-protocols",
-          "hyprland-protocols"
+          "hyprland-protocols",
+          "xkbcommon"
         ],
         "cmds": [
           "cmake",
@@ -979,17 +1041,16 @@
         ]
       },
       "packages": {
-        "gentoo": "kde-plasma/libplasma kde-frameworks/kpackage kde-frameworks/kconfig dev-qt/qtbase dev-qt/qtdeclarative dev-build/cmake kde-frameworks/knewstuff kde-plasma/layer-shell-qt kde-frameworks/kcoreaddons dev-qt/qtwayland dev-libs/hyprland-protocols kde-frameworks/ksvg kde-frameworks/kwindowsystem kde-plasma/plasma-workspace kde-frameworks/kservice dev-libs/wayland dev-libs/plasma-wayland-protocols dev-libs/wayland-protocols kde-frameworks/kio",
-        "arch": "libplasma kpackage kconfig qt6-base qt6-declarative cmake knewstuff layer-shell-qt kcoreaddons qt6-wayland hyprland-protocols ksvg kwindowsystem plasma-workspace kservice wayland plasma-wayland-protocols wayland-protocols kio",
+        "gentoo": "kde-plasma/libplasma kde-frameworks/kpackage kde-frameworks/kconfig dev-qt/qtbase dev-qt/qtdeclarative dev-build/cmake kde-frameworks/knewstuff kde-plasma/layer-shell-qt kde-frameworks/kcoreaddons dev-qt/qtwayland dev-libs/hyprland-protocols kde-frameworks/ksvg kde-frameworks/kwindowsystem kde-plasma/plasma-workspace kde-frameworks/kservice dev-libs/wayland dev-libs/plasma-wayland-protocols dev-libs/wayland-protocols kde-frameworks/kio x11-libs/libxkbcommon",
+        "arch": "libplasma kpackage kconfig qt6-base qt6-declarative cmake knewstuff layer-shell-qt kcoreaddons qt6-wayland hyprland-protocols ksvg kwindowsystem plasma-workspace kservice wayland plasma-wayland-protocols wayland-protocols kio libxkbcommon",
         "fedora": null,
         "opensuse": null,
         "debian": null
       },
       "notes": {
-        "all": "CMake valida Plasma/PlasmaQuick 6.7.5, LayerShellQt >=6.7.5, KF6 CoreAddons/Package/Config/ConfigQml/NewStuffWidgets/Svg, Qt6 WaylandClient y sus headers privados (registro de layer-shell v5), además de hyprland-protocols (focus grab para cerrar menús al pulsar fuera). El adaptador KWindowSystem usa ABI privada V5 y exige 6.29.0 EXACT y sus headers private; sólo dentro del auxiliar, sin instalar un plugin global. LibTaskManager 6.7.5 EXACT de plasma-workspace y KF6 Service aportan el modelo nativo y metadatos de apps; la fuente BWM es opt-in y no acredita escritorios virtuales ni compatibilidad completa del widget. Qt Test con BUILD_TESTING. Las pruebas de org.kde.panel, Panel.qml original y la migración necesitan plasma-desktop. Vistas y staging aislados: no sustituyen el panel ni activan una migración. Instalar recursos no demuestra compatibilidad de sus servicios con Hyprland. KIOGui aporta ApplicationLauncherJob nativo para Nueva ventana/abrir archivos de una tarea, lanzadores anclados y Actions .desktop; proceso separado con entorno de sesión restaurado, sin interpretar Exec a mano. KIOFileWidgets (mismo paquete kio) aporta KFilePlacesModel para identificar los Lugares del menú original. Miniaturas opt-in del preview: wayland-protocols con ext-foreign-toplevel-list/ext-image-capture-source/ext-image-copy-capture y hyprland-protocols con toplevel-mapping; sólo captura por ventana en memoria con guarda verificada del compositor activo; aceptación visual por entorno. No requiere org.kde.pipewire para esa adaptación. BUILD_TESTING añade servidor Wayland sólo de fixture por socketpair privado y usa los XML plasma-wayland-protocols 1.23.0 (hash fijado) y wayland-protocols; no conecta a la sesión."
+        "all": "CMake valida Plasma/PlasmaQuick 6.7.5, LayerShellQt >=6.7.5, KF6 CoreAddons/Package/Config/ConfigQml/NewStuffWidgets/Svg, Qt6 WaylandClient y sus headers privados (registro de layer-shell v5), además de hyprland-protocols (focus grab para cerrar menús al pulsar fuera). El adaptador KWindowSystem usa ABI privada V5 y exige 6.29.0 EXACT y sus headers private; sólo dentro del auxiliar, sin instalar un plugin global. LibTaskManager 6.7.5 EXACT de plasma-workspace y KF6 Service aportan el modelo nativo y metadatos de apps; la fuente BWM es opt-in y no acredita escritorios virtuales ni compatibilidad completa del widget. Qt Test con BUILD_TESTING; libxkbcommon compila mapas US/es para probar atajos con entrada virtual limitada al compositor desechable. Las pruebas de org.kde.panel, Panel.qml original y la migración necesitan plasma-desktop. Vistas y staging aislados: no sustituyen el panel ni activan una migración. Instalar recursos no demuestra compatibilidad de sus servicios con Hyprland. KIOGui aporta ApplicationLauncherJob nativo para Nueva ventana/abrir archivos de una tarea, lanzadores anclados y Actions .desktop; proceso separado con entorno de sesión restaurado, sin interpretar Exec a mano. KIOFileWidgets (mismo paquete kio) aporta KFilePlacesModel para identificar los Lugares del menú original. Miniaturas opt-in del preview: wayland-protocols con ext-foreign-toplevel-list/ext-image-capture-source/ext-image-copy-capture y hyprland-protocols con toplevel-mapping; sólo captura por ventana en memoria con guarda verificada del compositor activo; aceptación visual por entorno. No requiere org.kde.pipewire para esa adaptación. BUILD_TESTING añade servidor Wayland sólo de fixture por socketpair privado y usa los XML plasma-wayland-protocols 1.23.0 (hash fijado) y wayland-protocols; no conecta a la sesión."
       }
     },
-
     "bwm-plasma-desktops-build": {
       "label": "Proveedor experimental de escritorios Plasma (sólo compilación R4)",
       "why": "Protocolo nativo de escritorios sobre el display existente; opt-in desactivado y sin carga automática",
@@ -1043,6 +1104,92 @@
         "gentoo": "R4 se contrasta con 6.7.5. Revisar emerge --pretend antes de instalar. -semantic-desktop evita añadir Baloo para este ensayo; es una elección temporal si se aplica mediante USE en el comando.",
         "all": "La presencia del paquete sólo acredita recursos disponibles. Modelo de tareas, escritorios y APIs del shell necesitan adaptadores BWM y validación independiente."
       }
+    },
+    "ksystemstats": {
+      "label": "KSystemStats",
+      "why": "Datos de CPU, memoria, red y discos para los widgets nativos de Monitor del sistema",
+      "check": {
+        "type": "cmd",
+        "any": [
+          "ksystemstats",
+          "/usr/libexec/ksystemstats"
+        ]
+      },
+      "packages": {
+        "gentoo": "kde-plasma/ksystemstats",
+        "arch": "ksystemstats",
+        "fedora": "ksystemstats",
+        "opensuse": "ksystemstats6",
+        "debian": "ksystemstats"
+      }
+    },
+    "kdeplasma-addons": {
+      "label": "Widgets adicionales de Plasma",
+      "why": "Widgets estándar de KDE: tiempo, calculadora, selector de color y otros",
+      "check": {
+        "type": "qtplugin",
+        "path": "plasma/applets/org.kde.plasma.weather.so"
+      },
+      "packages": {
+        "gentoo": "kde-plasma/kdeplasma-addons",
+        "arch": "kdeplasma-addons",
+        "fedora": "kdeplasma-addons",
+        "opensuse": "plasma6-addons",
+        "debian": "kdeplasma-addons"
+      }
+    },
+    "plasma-emojier": {
+      "label": "Emoji Selector de Plasma",
+      "why": "Super+. abre el selector nativo en Breeze",
+      "check": {
+        "type": "cmd",
+        "any": [
+          "plasma-emojier"
+        ]
+      },
+      "packages": {
+        "gentoo": "kde-plasma/plasma-desktop",
+        "arch": "plasma-desktop",
+        "fedora": "plasma-desktop",
+        "opensuse": "plasma6-desktop",
+        "debian": "plasma-desktop"
+      }
+    },
+    "portal-kde": {
+      "label": "Portal de archivos KDE",
+      "why": "Diálogo de abrir/guardar de KDE en Breeze; las demás skins usan GTK",
+      "check": {
+        "type": "path",
+        "any": [
+          "/usr/share/xdg-desktop-portal/portals/kde.portal"
+        ]
+      },
+      "packages": {
+        "gentoo": "kde-plasma/xdg-desktop-portal-kde",
+        "arch": "xdg-desktop-portal-kde",
+        "fedora": "xdg-desktop-portal-kde",
+        "opensuse": "xdg-desktop-portal-kde",
+        "debian": "xdg-desktop-portal-kde"
+      }
+    },
+    "powerdevil": {
+      "label": "PowerDevil (no recomendado automáticamente)",
+      "why": "Gestor de energía de Plasma; necesita coordinar inactividad, bloqueo y suspensión con BWM antes de activarlo",
+      "check": {
+        "type": "cmd",
+        "any": [
+          "org_kde_powerdevil",
+          "/usr/libexec/org_kde_powerdevil"
+        ]
+      },
+      "packages": {
+        "gentoo": "kde-plasma/powerdevil",
+        "arch": "powerdevil",
+        "fedora": "powerdevil",
+        "opensuse": "powerdevil6",
+        "debian": "powerdevil"
+      },
+      "manual": "No activar junto a BwmIdle: ambos gestionan DPMS/suspensión; pendiente una integración de autoridad única."
     }
   }
 }

@@ -3,12 +3,14 @@
 #include "containmentmanagement.h"
 #include "desktopviewhost.h"
 #include "outputidentity.h"
+#include "traydefaults.h"
 #include <Plasma/Containment>
 #include <Plasma/PluginLoader>
 #include <PlasmaQuick/Dialog>
 #include <KPackage/Package>
 #include <KPackage/PackageLoader>
 #include <KPluginMetaData>
+#include <KConfigLoader>
 #include <QMap>
 #include <QAction>
 #include <QGuiApplication>
@@ -35,6 +37,22 @@ QScreen *boundScreen(QQuickWindow *window) {
 }
 }
 ViewCorona::ViewCorona() {
+    connect(this,&Plasma::Corona::containmentAdded,this,[this](Plasma::Containment *containment){
+        connect(containment,&Plasma::Containment::appletCreated,this,[](Plasma::Applet *applet,const QRectF &){
+            if(applet->pluginMetaData().pluginId()!=QLatin1String("org.kde.plasma.systemtray"))return;
+            auto general=applet->config().group(QStringLiteral("General"));
+            if(!BwmTrayDefaults::apply(general,true))return;
+            // SystemTraySettings already caches the native registry defaults.
+            // Use its own KConfigLoader save/read contract to update that cache.
+            if(auto *scheme=applet->configScheme()) {
+                for(const auto *key:{"knownItems","extraItems"})if(auto *item=scheme->findItemByName(key)) {
+                    item->setWriteFlags(KConfigBase::Notify);
+                    item->setProperty(general.readEntry(key,QStringList()));
+                }
+                scheme->save();scheme->read();
+            }
+        });
+    });
     for(auto *screen:QGuiApplication::screens())observe(screen);
     for(int i=0;i<numScreens();++i)m_screenIds.insert(QGuiApplication::screens()[i],i);
     connect(qApp,&QGuiApplication::screenAdded,this,[this](QScreen *screen){observe(screen);Q_EMIT screenAdded(QGuiApplication::screens().indexOf(screen));notifyScreens();});

@@ -1241,7 +1241,10 @@
     "options": {},
     "is_default": false,
     "enabled": true,
-    "is_modified": false
+    "is_modified": false,
+    "skins_except": [
+      "plasma"
+    ]
   },
   {
     "id": "custom_1792988610_71",
@@ -1540,5 +1543,186 @@
       "plasma"
     ],
     "is_modified": false
+  },
+  {
+    "id": "custom_1795776236_86",
+    "category": "Lanzadores",
+    "description": "Selector de emojis de Plasma",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "period",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py emoji",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "custom_1795776236_87",
+    "category": "Accesibilidad",
+    "description": "Ampliar pantalla",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "equal",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom in",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "custom_1795776236_88",
+    "category": "Accesibilidad",
+    "description": "Reducir ampliación de pantalla",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "minus",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom out",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "custom_1795776236_89",
+    "category": "Accesibilidad",
+    "description": "Restablecer ampliación de pantalla",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "0",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom reset",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "custom_1795779886_90",
+    "category": "Accesibilidad",
+    "description": "Ampliar pantalla",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "plus",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom in",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "custom_1795779886_91",
+    "category": "Accesibilidad",
+    "description": "Ampliar pantalla",
+    "mods": [
+      "SUPER",
+      "SHIFT"
+    ],
+    "key": "equal",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom in",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "custom_1795779966_92",
+    "category": "Accesibilidad",
+    "description": "Ampliar pantalla",
+    "mods": [
+      "SUPER",
+      "SHIFT"
+    ],
+    "key": "0",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom in",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "custom_1795780156_93",
+    "category": "Accesibilidad",
+    "description": "Ampliar pantalla",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "KP_Add",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom in",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "custom_1795780156_94",
+    "category": "Accesibilidad",
+    "description": "Reducir ampliación de pantalla",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "KP_Subtract",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom out",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ]
   }
 ]

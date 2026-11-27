@@ -1,10 +1,10 @@
 # Process-local KDE Kiosk policy for the experimental BWM System Settings launcher.
-# Native equivalents require KWin/PowerDevil/kglobalaccel APIs that BWM does not own.
+# Native equivalents require KWin/PowerDevil APIs that BWM does not own. kcm_keys works
+# with bwm-kglobalaccel (T5): KDE shortcuts editable, BWM's shown as component «BWM».
 # Do not install as the user's kdeglobals or change system plugin metadata.
 [KDE Control Module Restrictions][$i]
 kcm_kscreen=false
 kcm_kwin_virtualdesktops=false
-kcm_keys=false
 kcm_powerdevilprofilesconfig=false
 kcm_energyinfo=false
 kcm_kwin_effects=false

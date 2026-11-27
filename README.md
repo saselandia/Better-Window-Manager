@@ -51,7 +51,7 @@ This is the point of the project, so we measure it. Estimated share of the origi
 | :--- | :---: | :---: | :--- |
 | **Retro** (Omarchy) | **~90 %** | **~80 %** | Themes: `colors.toml`, wallpapers and app files (Neovim, VS Code, btop…) are applied; not the theme's `hyprland.lua`, `icons.theme` (Retro uses Papirus with the accent) or the Chromium theme (needs root). Plugins: bar widgets and services work unchanged; not those replacing the bar, lock screen, overlays or panels |
 | **default (end-4)** | **~90 %** | — | Any wallpaper builds its palette (100 %); third-party matugen templates are added to `matugen/config.toml`. end-4 has no plugin catalogue |
-| **Breeze (Kde plasma)** | **~50 %** | **0 %** | Sweet installed through KDE Get New and applied in Preferences: colours, SVG style, icons and Aurorae; BWM cursor preserved. External plasmoids, effects and full physical CSD/snapping/authentication checks remain pending. [F13 results](docs/BREEZE_F13_RESULTS.md). |
+| **Breeze (Kde plasma)** | **75 %** (12/16; 16/16 with differences) | **50 %** (1/2) | **Measured on 2026-11-27** on an 18-package KDE Store sample (top 2 per category, isolated XDG + nested Hyprland): 12/16 themes/resources work unchanged and 4/16 work with differences (global themes without KWin effects, C++ decorations needing source build); 1/2 plasmoids works (`Andromeda Launcher`), `KDE Control Station` fails due to missing PowerDevil QML module. Not a full-store certification. [Store compatibility](docs/BREEZE_STORE_COMPAT.md) · [T7 results](docs/BREEZE_T7_RESULTS.md). |
 
 ### Towards a single compositor: Hyprland
 

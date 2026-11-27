@@ -105,6 +105,9 @@
       "src/bwm-kcmhost",
       "src/bwm-systemsettings",
       "src/bwm-plasma-host",
+      "src/bwm-kglobalaccel",
+      "config/hypr/skins/plasma/scripts/kde-shortcuts.py",
+      "config/hypr/modules/kde_shortcuts.lua",
       "config/hypr/skins/plasma/scripts/decorator.py",
       "config/hypr/skins/plasma/scripts/plasma-host.py",
       "config/hypr/skins/plasma/scripts/wallpaper-sync.py",
@@ -130,7 +133,9 @@
       "config/hypr/skins/plasma/settings-profile",
       "config/hypr/scripts/bwm-shared-settings.py",
       "src/bwm-plasma-host",
-      "src/bwm-plasma-desktops"
+      "src/bwm-plasma-desktops",
+      "config/hypr/skins/plasma/scripts/desktop-actions.py",
+      "config/hypr/scripts/bwm_portals.py"
     ]
   },
   "requires": [
@@ -189,16 +194,29 @@
     "kwin-rules-kcm",
     "ki18n",
     "bwm-plasma-host-build",
+    "bwm-plasma-store-tests",
     "breezebars-build",
     "r4-native-tray-proxy",
     "r4-native-tray-proxy-build",
     "bwm-plasma-desktops-build",
-    "plasma-desktop-widgets"
+    "plasma-desktop-widgets",
+    "bwm-kglobalaccel",
+    "bwm-kglobalaccel-build",
+    "ksystemstats",
+    "kdeplasma-addons",
+    "plasma-emojier",
+    "portal-kde"
   ],
   "polkitAgent": [
     "/usr/libexec/polkit-kde-authentication-agent-1",
     "/usr/lib/polkit-kde-authentication-agent-1",
     "/usr/lib64/libexec/polkit-kde-authentication-agent-1",
     "/usr/lib/x86_64-linux-gnu/libexec/polkit-kde-authentication-agent-1"
-  ]
+  ],
+  "portals": {
+    "FileChooser": [
+      "kde",
+      "gtk"
+    ]
+  }
 }

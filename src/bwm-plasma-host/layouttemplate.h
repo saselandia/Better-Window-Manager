@@ -37,7 +37,7 @@ public:
     QStringList currentConfigGroup() const { return m_group; }
     void setCurrentConfigGroup(const QStringList &group) { m_group = group; }
     Q_INVOKABLE QVariant readConfig(const QString &key, const QVariant &fallback = {}) const;
-    Q_INVOKABLE void writeConfig(const QString &key, const QVariant &value);
+    Q_INVOKABLE void writeConfig(const QString &key, const QJSValue &value);
 protected:
     QPointer<Plasma::Applet> m_applet;
     QStringList m_group;

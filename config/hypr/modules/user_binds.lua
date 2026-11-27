@@ -114,7 +114,7 @@ hl.bind((is_plasma and "CTRL + ALT + down" or "SUPER + ALT + down"), hl.dsp.exec
 hl.bind((is_plasma and "CTRL + ALT + up" or "SUPER + ALT + up"), hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/quick-tile.py bottom-left"), { description = "Ventanas: Ajustar esquina inferior izquierda (Quick Tile)" })
 -- [Lanzadores]
 hl.bind("SUPER + V", hl.dsp.exec_cmd("omarchy-shell clipboard toggle"), { description = "Lanzadores: Historial del portapapeles" })
-hl.bind("SUPER + period", hl.dsp.exec_cmd("omarchy-shell emojis toggle"), { description = "Lanzadores: Selector de emojis" })
+if active_skin ~= "plasma" then hl.bind("SUPER + period", hl.dsp.exec_cmd("omarchy-shell emojis toggle"), { description = "Lanzadores: Selector de emojis" }) end
 hl.bind("SUPER + SPACE", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/app-launcher.sh apps"), { description = "Lanzadores: Aplicaciones (cuadrícula Apps de Omarchy en Retro)" })
 -- [Ventanas]
 hl.bind("SUPER + M", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/omarchy-shims/omarchy-hyprland-window-minimize"), { description = "Ventanas: Minimizar al dock (Omarchy, en workspaces sin mosaico)" })
@@ -136,6 +136,16 @@ if active_skin == "plasma" then hl.bind("ALT + F3", hl.dsp.exec_cmd("python3 /ho
 if active_skin == "plasma" then hl.bind("SUPER + T", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/kwin-tiles.py open"), { description = "Ventanas: Editor de mosaico (Breeze)" }) end
 -- [Lanzadores]
 if active_skin == "plasma" then hl.bind("ALT + SPACE", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/krunner.sh"), { description = "Lanzadores: KRunner (Breeze)" }) end
+if active_skin == "plasma" then hl.bind("SUPER + period", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py emoji"), { description = "Lanzadores: Selector de emojis de Plasma" }) end
+-- [Accesibilidad]
+if active_skin == "plasma" then hl.bind("SUPER + equal", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom in"), { description = "Accesibilidad: Ampliar pantalla" }) end
+if active_skin == "plasma" then hl.bind("SUPER + minus", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom out"), { description = "Accesibilidad: Reducir ampliación de pantalla" }) end
+if active_skin == "plasma" then hl.bind("SUPER + 0", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom reset"), { description = "Accesibilidad: Restablecer ampliación de pantalla" }) end
+if active_skin == "plasma" then hl.bind("SUPER + plus", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom in"), { description = "Accesibilidad: Ampliar pantalla" }) end
+if active_skin == "plasma" then hl.bind("SUPER + SHIFT + equal", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom in"), { description = "Accesibilidad: Ampliar pantalla" }) end
+if active_skin == "plasma" then hl.bind("SUPER + SHIFT + 0", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom in"), { description = "Accesibilidad: Ampliar pantalla" }) end
+if active_skin == "plasma" then hl.bind("SUPER + KP_Add", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom in"), { description = "Accesibilidad: Ampliar pantalla" }) end
+if active_skin == "plasma" then hl.bind("SUPER + KP_Subtract", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom out"), { description = "Accesibilidad: Reducir ampliación de pantalla" }) end
 
 -- BWMenu: dos teclas normales a la vez, independiente de Quickshell; cualquier orden
 hl.bind("plus + minus", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm menu --open"), { ignore_mods = true, description = "General: BWMenu (+ y - a la vez)" })

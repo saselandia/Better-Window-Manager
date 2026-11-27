@@ -860,11 +860,14 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         # que otra skin escriba el suyo. Sólo restaura claves que siguen teniendo su valor.
         kde_bridge = [sys.executable, str(PLASMA_SCRIPTS / "kde-config-bridge.py")]
         if curr_theme == "plasma" and not cfg.get("is_plasma"):
+            subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "desktop-actions.py"), "zoom", "leave"], check=False)
             subprocess.run(kde_bridge + ["import", "--no-reload"], check=True)
             subprocess.run(kde_bridge + ["leave"], check=True)
             # Auxiliar de decoraciones de KDE (F6a) y anfitrión nativo de Plasma (R4–R5): sólo en Breeze
             subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "decorator.py"), "stop"], check=False)
             subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "plasma-host.py"), "stop"], check=False)
+            # Atajos globales de KDE (T5): fuera de Breeze no hay binds de KDE
+            subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "kde-shortcuts.py"), "stop"], check=False)
 
         # 1. Guardar la configuración del tema actual antes de cambiar
         save_current_theme_config(curr_theme)
@@ -1069,6 +1072,7 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
         if cfg.get("is_plasma"):
             subprocess.run(kde_bridge + ["start"], check=False)
             subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "decorator.py"), "start"], check=False)
+            subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "kde-shortcuts.py"), "start"], check=False)
             subprocess.run([sys.executable, str(PLASMA_SCRIPTS / "plasma-host.py"), "start"], check=False)
 
         if not refreshed:
@@ -1077,6 +1081,11 @@ def apply_theme(theme_name: str, restart_shell: bool = False):
             # comprobación inicial vea `ready` y no reclame org.freedesktop.Notifications.
             bwm_session.start_shell()
 
+        try:
+            import bwm_portals
+            bwm_portals.apply(theme_name)
+        except Exception as error:
+            print(f"No se pudo actualizar el portal de archivos: {error}", file=sys.stderr)
         bwm_settings_hooks.skin_changed('after', curr_theme, theme_name)
 
         # Una sola restauración, después de la geometría; los hooks no reinician apps ni restauran focos antiguos.

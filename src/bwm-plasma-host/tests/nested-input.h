@@ -9,10 +9,12 @@ struct zwp_virtual_keyboard_manager_v1;
 struct zwp_virtual_keyboard_v1;
 struct zwlr_virtual_pointer_manager_v1;
 struct zwlr_virtual_pointer_v1;
+struct xkb_keymap;
 class NestedInput {
 public:
     ~NestedInput();
-    bool open();
+    bool open(const QString &layout = {});
+    bool shortcut(const QString &symbol, bool shift = false);
     void key(uint32_t code);
     void move(uint32_t x,uint32_t y,uint32_t width,uint32_t height);
     QString error;
@@ -24,4 +26,5 @@ private:
     zwlr_virtual_pointer_manager_v1 *pointers=nullptr;
     zwlr_virtual_pointer_v1 *pointer=nullptr;
     uint32_t timestamp=0;
+    xkb_keymap *keymap=nullptr;
 };

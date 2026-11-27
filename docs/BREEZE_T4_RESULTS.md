@@ -2,8 +2,8 @@
 
 Fecha: 2026-11-26. Plan: [BREEZE_PLAN_V3.md](BREEZE_PLAN_V3.md). Implementación instalada;
 pruebas aisladas y apertura/cancelación diaria comprobadas según el inventario inferior.
-La sustitución completa de una disposición en pantallas físicas y el próximo inicio de sesión
-siguen pendientes de aceptación. No se ha aplicado un layout de prueba al escritorio diario.
+La bienvenida del nuevo login queda confirmada por el usuario el 2026-11-27: apareció y se
+cerró correctamente. La sustitución de una disposición en pantallas físicas sigue pendiente. No se ha aplicado un layout de prueba al escritorio diario.
 
 ## Disposición original y recuperación
 
@@ -125,7 +125,7 @@ IPC `session open/close` del Quickshell único comprobada: dos ventanas del diá
 cancelación y cero ventanas después; sin accionar botones de energía. Se corrigió el import
 QtQuick del proxy y se verificó cargado tras reinicio de mantenimiento del shell.
 
-Pendiente: primer inicio de sesión físico con KSplash; aplicación elegida por el usuario
+Pendiente: aplicación elegida por el usuario
 desde Preferencias de una disposición completa con sus monitores; revisión visual de los
 temas y pruebas físicas de energía por el usuario. T4 no promete compatibilidad universal
-de temas de tienda. La medición amplia sigue siendo T7; T5 no se ha empezado.
+de temas de tienda. La medición amplia sigue siendo T7; la aceptación de T5 se sigue en su informe.

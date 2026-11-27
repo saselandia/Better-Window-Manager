@@ -663,3 +663,22 @@ aloja el logout QML instalado mediante ThemeHost (motor separado por pantalla), 
 botones nativos; el proxy modules/plasma/session conserva IPC y atajos de BWM. Sin host, un
 auxiliar del mismo binario ofrece sólo el diálogo. No restaura sesiones ni ofrece actualizaciones
 offline o selección del cargador. Pruebas físicas pendientes declaradas en el informe T4.
+
+## 21. Detalles y proveedores de escritorio (Breeze III, T6)
+
+El manifiesto declara proveedores por interfaz en `portals` (actualmente FileChooser KDE con
+respaldo GTK). `bwm_portals.py` conserva el resto de la configuración seleccionada por XDG en
+una copia runtime y limita su XDG_CONFIG_HOME al servicio mediante drop-in temporal. Al salir
+de la skin se retira ese drop-in. No cambia la fuente de configuración ni XDG_CURRENT_DESKTOP;
+un chooser personalizado prevalece. GTK_USE_PORTAL se activa en Breeze para apps nuevas y se
+restaura el valor de entrada fuera; el Lua del usuario permanece al final.
+
+`desktop-actions.py` implementa sólo las acciones Breeze: Emoji Selector original y zoom de
+Hyprland, con estado/lock runtime y restauración condicional al salir. Sus binds se registran
+con el gestor común y filtros de skin. T5 conserva las reservas de teclas de BWM tras recargas.
+
+La bandeja nueva usa knownItems original para no autoactivar Klipper ni el indicador de KWin
+cuando BWM ya ofrece portapapeles/teclado. Elecciones existentes y claves inmutables quedan
+intactas. ksystemstats proporciona los datos originales a libksysguard; los widgets de addons
+se descubren mediante el catálogo normal. PowerDevil no se activa junto a BwmIdle: coordinar
+sus políticas es trabajo pendiente, no un segundo servicio recomendado. Informe T6.

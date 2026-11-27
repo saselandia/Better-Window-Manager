@@ -254,6 +254,21 @@ private Q_SLOTS:
         a->destroy();QTRY_COMPARE(session.widgetBackends().size(),1);
         QCOMPARE(session.widgetBackends().first().toMap().value("id").toUInt(),second);
     }
+    void nativeNewTrayUsesSharedClipboardDefaults() {
+        ViewCorona corona;
+        corona.setKPackage(KPackage::PackageLoader::self()->loadPackage("Plasma/Shell",BWM_SHELL_SOURCE_DIR));
+        auto *panel=corona.createContainment("org.kde.panel");QVERIFY(panel);
+        auto *tray=panel->createApplet("org.kde.plasma.systemtray");QVERIFY(tray);
+        // Inspect the native KConfigLoader before creating visual representations:
+        // the registry must see these values as soon as the QML engine starts.
+        QTRY_VERIFY_WITH_TIMEOUT(tray->configScheme(),3000);
+        auto *known=tray->configScheme()->KCoreConfigSkeleton::findItem("knownItems");QVERIFY(known);
+        auto *enabled=tray->configScheme()->KCoreConfigSkeleton::findItem("extraItems");QVERIFY(enabled);
+        QTRY_VERIFY_WITH_TIMEOUT(known->property().toStringList().contains("org.kde.plasma.clipboard"),3000);
+        QVERIFY(known->property().toStringList().contains("org.kde.plasma.keyboardlayout"));
+        QVERIFY(!enabled->property().toStringList().contains("org.kde.plasma.clipboard"));
+        QVERIFY(!enabled->property().toStringList().contains("org.kde.plasma.keyboardlayout"));
+    }
     void nativeTrayPropertyRoles() {
         using ItemStatus = Plasma::Types::ItemStatus;
         // StatusNotifierModel::data returns the enum through QVariant implicitly.

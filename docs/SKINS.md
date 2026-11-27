@@ -55,13 +55,13 @@ de un tema; cambiar el fondo no los toca.
 | :--- | :---: | :---: | :--- |
 | Retro | ~90 % | ~80 % | `hyprland.lua` e `icons.theme` de los temas, tema de Chromium (root); plugins que sustituyen barra, bloqueo, overlays o paneles |
 | default (end-4) | ~90 % | — | Plantillas de matugen de terceros: se añaden a mano en `matugen/config.toml` |
-| Breeze (Kde plasma) | ~50 % | 0 % | Sweet instalado por KNS y aplicado desde Preferencias: colores, estilo SVG, candy-icons y Aurorae; cursor común conservado. Panel, Kickoff, applets y vistas de sesión portados. Faltan plasmoides externos, efectos/disposición y pruebas físicas completas de CSD, snapping y autenticación. [Resultados F13](BREEZE_F13_RESULTS.md). |
+| Breeze (Kde plasma) | **75 %** (12/16; 16/16 con diferencias) | **50 %** (1/2) | **Medido el 2026-11-27** (muestra de 18 paquetes más descargados de la KDE Store en aislamiento): 12/16 temas/recursos funcionan sin cambios y 4/16 con diferencias (efectos KWin ausentes en temas globales; compilación necesaria en decoraciones C++); 1/2 plasmoides funciona (`Andromeda Launcher`), `KDE Control Station` falla por falta de PowerDevil (`brightnesscontrolplugin`). [Tabla medida](BREEZE_STORE_COMPAT.md) · [Resultados T7](BREEZE_T7_RESULTS.md). |
 
-Estimación prudente de cobertura, no porcentaje medido de paquetes de la Store. Las pruebas con
-Sweet no certifican todos los temas privados ni equivalencia con Plasma completo. La sesión ya
-carga el plugin; siguen pendientes la matriz de apps y ratón en
-[BREEZE_CSD_RESULTS.md](BREEZE_CSD_RESULTS.md) y [BREEZE_F10_CHECKLIST.md](BREEZE_F10_CHECKLIST.md).
-F13 no modifica el binario del plugin ni necesita otra salida de sesión por sí misma.
+Para Retro y default (end-4) los porcentajes siguen siendo estimaciones. Para Breeze (Kde plasma)
+corresponden a la muestra medida de 18 paquetes del 2026-11-27 (13/18 funcionan, 4/18 con diferencias,
+1/18 no funciona; 18/18 instalan y retiran limpios) y no certifican todos los paquetes de la tienda.
+Siguen pendientes pruebas físicas de [BREEZE_CSD_RESULTS.md](BREEZE_CSD_RESULTS.md),
+[BREEZE_F10_CHECKLIST.md](BREEZE_F10_CHECKLIST.md) y la integración de PowerDevil.
 
 ## Qué se conserva entre skins
 

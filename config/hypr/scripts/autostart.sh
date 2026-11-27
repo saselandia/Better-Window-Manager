@@ -61,8 +61,11 @@ export QML_IMPORT_PATH="${XDG_DATA_HOME:-$HOME/.local/share}/bwm/qml${QML_IMPORT
 
 # Actualizar entorno en systemd y dbus (también defaults/menús de KDE y LC_* de plasma-localerc).
 if command -v dbus-update-activation-environment >/dev/null 2>&1; then
-    dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP QT_QPA_PLATFORMTHEME XDG_CONFIG_DIRS XDG_MENU_PREFIX OMARCHY_PATH QML_IMPORT_PATH LC_NUMERIC LC_TIME LC_MONETARY LC_MEASUREMENT LC_COLLATE LC_ADDRESS LC_NAME LC_PAPER LC_TELEPHONE 2>/dev/null || true
+    dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE XDG_SESSION_DESKTOP QT_QPA_PLATFORMTHEME GTK_USE_PORTAL XDG_CONFIG_DIRS XDG_MENU_PREFIX OMARCHY_PATH QML_IMPORT_PATH LC_NUMERIC LC_TIME LC_MONETARY LC_MEASUREMENT LC_COLLATE LC_ADDRESS LC_NAME LC_PAPER LC_TELEPHONE 2>/dev/null || true
 fi
+
+# The portal profile affects only xdg-desktop-portal, with preferences from the skin manifest.
+python3 "$HOME/.config/hypr/scripts/bwm_portals.py" "$(python3 "$HOME/.config/hypr/scripts/bwm-theme-manager.py" get)" >/dev/null 2>&1 &
 
 # T4: once per Hyprland login, only Breeze. The original KSplash closes when the
 # native host is ready (or after a bounded fallback deadline), before normal use.
@@ -205,6 +208,8 @@ fi
         # Subsequent changes are debounced by the single F2 bridge.
         python3 "$HOME/.config/hypr/skins/plasma/scripts/kde-config-bridge.py" start
         python3 "$HOME/.config/hypr/skins/plasma/scripts/decorator.py" start
+        # T5: atajos globales de KDE (org.kde.kglobalaccel) antes del host, que registra los de sus widgets
+        python3 "$HOME/.config/hypr/skins/plasma/scripts/kde-shortcuts.py" start
         python3 "$HOME/.config/hypr/skins/plasma/scripts/plasma-host.py" start
     fi
 ) &
