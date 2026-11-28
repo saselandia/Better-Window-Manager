@@ -36,11 +36,12 @@ target_sources(bwm-plasma-configuration PRIVATE taskthumbnail.cpp tasklauncher.c
 target_sources(bwm-plasma-configuration PRIVATE panelclone.cpp alternativeshelper.cpp desktopviewhost.cpp containmentconfigview.cpp currentcontainmentactionsmodel.cpp layouttemplate.cpp)
 target_sources(bwm-plasma-configuration PRIVATE containmentmanagement.cpp ../bwm-kcmhost/themehost.cpp ../bwm-kcmhost/themehost.h)
 target_include_directories(bwm-plasma-configuration PRIVATE ../bwm-kcmhost)
-target_sources(bwm-plasma-configuration PRIVATE panelshadows.cpp notificationhost.cpp wallpaperbridge.cpp sessionprofile.cpp lookandfeellayout.cpp sessionui.cpp)
+target_sources(bwm-plasma-configuration PRIVATE panelshadows.cpp notificationhost.cpp wallpaperbridge.cpp sessionprofile.cpp lookandfeellayout.cpp sessionui.cpp expolayout.cpp overviewhost.cpp screenedges.cpp)
 target_compile_definitions(bwm-plasma-configuration PRIVATE BWM_TASK_THUMBNAIL_QML="${CMAKE_CURRENT_SOURCE_DIR}/qml/TaskThumbnail.qml"
     BWM_SHELL_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shell"
     BWM_SESSION_UI_HELPER="${CMAKE_CURRENT_SOURCE_DIR}/../../config/hypr/skins/plasma/scripts/session-ui.py"
-    BWM_WIDGET_EXPLORER_HOST_QML="${CMAKE_CURRENT_SOURCE_DIR}/qml/WidgetExplorerHost.qml")
+    BWM_WIDGET_EXPLORER_HOST_QML="${CMAKE_CURRENT_SOURCE_DIR}/qml/WidgetExplorerHost.qml"
+    BWM_OVERVIEW_MAIN_QML="${CMAKE_CURRENT_SOURCE_DIR}/qml/OverviewMain.qml")
 target_include_directories(bwm-plasma-configuration PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 add_library(bwm-thumbnail-protocols STATIC)
 target_link_libraries(bwm-plasma-configuration PUBLIC bwm-thumbnail-protocols)
@@ -221,6 +222,9 @@ if(BUILD_TESTING)
     add_executable(test-traydefaults test-traydefaults.cpp)
     target_link_libraries(test-traydefaults PRIVATE Qt6::Test KF6::ConfigCore)
     add_test(NAME native-tray-defaults COMMAND test-traydefaults)
+    add_executable(test-overview-screenedges test-overview-screenedges.cpp)
+    target_link_libraries(test-overview-screenedges PRIVATE bwm-plasma-configuration Qt6::Test)
+    add_test(NAME native-overview-screenedges COMMAND test-overview-screenedges)
     target_link_libraries(test-t4-session PRIVATE bwm-plasma-configuration Qt6::Test)
     target_compile_definitions(test-t4-session PRIVATE BWM_SHELL_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shell")
     add_executable(test-wallpapers-session test-wallpapers-session.cpp)

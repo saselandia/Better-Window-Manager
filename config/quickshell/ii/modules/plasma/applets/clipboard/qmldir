@@ -1,7 +1,0 @@
-ClipboardItemDelegate 1.0 ClipboardItemDelegate.qml
-TextItemDelegate 1.0 TextItemDelegate.qml
-ImageItemDelegate 1.0 ImageItemDelegate.qml
-DelegateToolButtons 1.0 DelegateToolButtons.qml
-BarcodePage 1.0 BarcodePage.qml
-EditPage 1.0 EditPage.qml
-UrlItemDelegate 1.0 UrlItemDelegate.qml

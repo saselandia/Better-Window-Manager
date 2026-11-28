@@ -682,3 +682,37 @@ cuando BWM ya ofrece portapapeles/teclado. Elecciones existentes y claves inmuta
 intactas. ksystemstats proporciona los datos originales a libksysguard; los widgets de addons
 se descubren mediante el catálogo normal. PowerDevil no se activa junto a BwmIdle: coordinar
 sus políticas es trabajo pendiente, no un segundo servicio recomendado. Informe T6.
+
+## 22. Vista general y esquinas activas (Breeze III, T8)
+
+`OverviewHost` (`src/bwm-plasma-host/overviewhost.{h,cpp}`) aloja los cuatro modos de Plasma 6 en
+capas `LayerShellQt` (`LayerOverlay`) por monitor dentro del host nativo, usando el algoritmo
+original `ExpoLayout`/`ExpoCell` de KWin 6.7.5 (`src/bwm-plasma-host/expolayout.{h,cpp}`),
+búsqueda real de KRunner mediante `org.kde.milou` y miniaturas en vivo `TaskThumbnail` con la
+guarda `bwmScreenshareMonitorGuard` (con icono `Kirigami.Icon` como respaldo en minimizadas o sin
+screencopy). Las acciones sobre ventanas y escritorios delegan en lo común (`kwin-window.py`,
+`toggle-minimize.py` y `hyprctl`). `desktop-actions.py` envía `overview-toggle <modo>` al socket
+del host (`bwm-plasma-host.sock`) y cae a `quickshell -c ii ipc call overview toggle` si el host
+nativo no corre (`bar.plasma.nativeHost=false`). Atajos sólo Breeze registrados con
+`keybinds-manager.py --skins plasma` (`Meta+W`, `Meta+G`, `Ctrl+F9`, `Ctrl+F10`).
+
+`ScreenEdges` (`src/bwm-plasma-host/screenedges.{h,cpp}`) lee y vigila `~/.config/kwinrc`
+(claves exactas de `kcm_kwinscreenedges`, desbloqueado en `settings-profile/kdeglobals`). Crea
+sensores `LayerShellQt` de 2 px únicamente en esquinas/bordes **exteriores** (comprobando la
+geometría de todos los monitores para no interferir con el paso del ratón entre pantallas),
+respeta `ElectricBorderDelay`, `ElectricBorderCooldown` y `RemainActiveOnFullscreen`, y bloquea
+el disparo mientras haya un botón pulsado/arrastre activo para no interferir con el snapping de
+`breezebars` (§17). No toca `breezebars.so` ni requiere reiniciar sesión. Informe T8.
+
+## 23. Respaldo sin duplicados (Breeze III, T9)
+
+Tras completar el port nativo (T0–T8), se retiraron los ports QML duplicados de
+`config/quickshell/ii/modules/plasma/{applets,kickoff,panel,tray}` y `menus/DesktopCatcher.qml`
+(~15 090 líneas, 180 archivos) junto con sus 5 pruebas obsoletas. Si `bwm-plasma-host` se detiene
+o se desactiva (`bar.plasma.nativeHost=false`), `IllogicalImpulseFamily.qml` activa automáticamente
+la barra común (`Bar`) y las notificaciones comunes (`NotificationPopup`) de BWM. En Quickshell
+sólo permanecen las piezas activas con el host (`theme`, `runtime`, `lock`, `osd`, `switcher`,
+`skinPicker`, `tiling`, `session`, `menus` de ventana y `settings`/`plasmaSettings.qml` para
+páginas exclusivas de BWM). Informe `docs/BREEZE_T9_RESULTS.md`.
+
+

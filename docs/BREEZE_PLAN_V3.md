@@ -90,8 +90,8 @@ otro `qs -c ii`, pruebas en compositor anidado y ventanas desechables, informe p
 | T5 | Atajos globales de KDE coherentes con BWM — **implementada**, aceptación en sesión pendiente (§391; BREEZE_T5_RESULTS.md) | **high** | T2 (página de Atajos) | No previsto |
 | T6 | Paquetes, bandeja nueva y detalles — **implementada**, límites de PowerDevil/bandejas existentes en §392 y BREEZE_T6_RESULTS.md | **medium** | T5 (Meta+=, Super+.) | No |
 | T7 | Compatibilidad medida con la tienda KDE — **hecha** (§394; BREEZE_STORE_COMPAT.md, BREEZE_T7_RESULTS.md) | **medium** | T4 | No |
-| T8 | Vista general y esquinas activas | **high** | T5 | Si cambia `breezebars` |
-| T9 | Respaldo sin duplicados y aceptación final | **high** | T8 | Probar tras cargar binarios finales |
+| T8 | Vista general y esquinas activas — **implementada**, aceptación física pendiente (§395; BREEZE_T8_RESULTS.md) | **high** | T5 | No (sin cambios en `breezebars`) |
+| T9 | Respaldo sin duplicados y aceptación final — **implementada**, regresión completa en verde, aceptación física final pendiente (§396; BREEZE_T9_RESULTS.md) | **high** | T8 | No (binarios finales ya cargados) |
 
 T1, T3 y T5 tocan piezas distintas; aun así se ejecutan en orden para no tener dos sesiones
 trabajando sobre el host a la vez.

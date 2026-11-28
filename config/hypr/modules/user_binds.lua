@@ -146,6 +146,11 @@ if active_skin == "plasma" then hl.bind("SUPER + SHIFT + equal", hl.dsp.exec_cmd
 if active_skin == "plasma" then hl.bind("SUPER + SHIFT + 0", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom in"), { description = "Accesibilidad: Ampliar pantalla" }) end
 if active_skin == "plasma" then hl.bind("SUPER + KP_Add", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom in"), { description = "Accesibilidad: Ampliar pantalla" }) end
 if active_skin == "plasma" then hl.bind("SUPER + KP_Subtract", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py zoom out"), { description = "Accesibilidad: Reducir ampliación de pantalla" }) end
+-- [Ventanas]
+if active_skin == "plasma" then hl.bind("SUPER + W", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py overview"), { description = "Ventanas: Vista general de Plasma (Breeze)" }) end
+if active_skin == "plasma" then hl.bind("SUPER + G", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py grid"), { description = "Ventanas: Rejilla de escritorios de Plasma (Breeze)" }) end
+if active_skin == "plasma" then hl.bind("CTRL + F9", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py windowview"), { description = "Ventanas: Ventanas expuestas del escritorio actual (Breeze)" }) end
+if active_skin == "plasma" then hl.bind("CTRL + F10", hl.dsp.exec_cmd("/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py windowview-all"), { description = "Ventanas: Ventanas expuestas de todos los escritorios (Breeze)" }) end
 
 -- BWMenu: dos teclas normales a la vez, independiente de Quickshell; cualquier orden
 hl.bind("plus + minus", hl.dsp.exec_cmd("/home/sasel/.config/hypr/scripts/bwm menu --open"), { ignore_mods = true, description = "General: BWMenu (+ y - a la vez)" })

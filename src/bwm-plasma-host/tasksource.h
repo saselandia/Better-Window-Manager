@@ -17,6 +17,7 @@ public:
     bool apply(const QJsonObject &snapshot);
     void clear();
     QJsonObject thumbnailTarget(const QUuid &uuid)const;
+    QString uuidForAddress(const QString &address)const;
     void requestNewInstance(const QModelIndex &index)override;
     void requestOpenUrls(const QModelIndex &index,const QList<QUrl> &urls)override;
     void requestActivate(const QModelIndex &index)override;

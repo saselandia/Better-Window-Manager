@@ -140,6 +140,14 @@ QJsonObject BwmTaskSource::thumbnailTarget(const QUuid &uuid)const {
     }
     return {};
 }
+QString BwmTaskSource::uuidForAddress(const QString &address)const {
+    const auto needle=address.trimmed().toLower();
+    if(needle.isEmpty())return {};
+    for(const auto &r:m_rows)
+        if(r.data.value("address").toString().trimmed().toLower()==needle)
+            return r.uuid.toString();
+    return {};
+}
 void BwmTaskSource::request(const QModelIndex &i,const QString &action,const QJsonObject &extra) {
     const auto *r=row(i);if(!r)return;
     QJsonObject request{{"version",1},{"action",action},

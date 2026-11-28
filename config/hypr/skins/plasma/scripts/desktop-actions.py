@@ -7,6 +7,7 @@ import math
 import os
 from pathlib import Path
 import shutil
+import socket
 import subprocess
 import sys
 
@@ -15,13 +16,37 @@ import bwm_session
 
 RUNTIME = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
 STATE = RUNTIME / "bwm-plasma-zoom.json"
+HOST_SOCK = RUNTIME / "bwm-plasma-host.sock"
 CONFIG = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+OVERVIEW_MODES = ("overview", "grid", "windowview", "windowview-all")
 
 def skin():
     return json.loads((CONFIG / "illogical-impulse/config.json").read_text()).get("appearance", {}).get("bwmTheme")
 
 def run(*args):
     return subprocess.run(args, check=True, capture_output=True, text=True, timeout=3).stdout
+
+def send_host_command(command: str) -> bool:
+    if not HOST_SOCK.exists():
+        return False
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+            sock.settimeout(1.5)
+            sock.connect(str(HOST_SOCK))
+            sock.sendall((command + "\n").encode("utf-8"))
+            reply = sock.recv(1024).decode("utf-8", errors="replace").strip()
+            return reply == "ok"
+    except OSError:
+        return False
+
+def overview(mode: str) -> int:
+    if skin() != "plasma":
+        return 1
+    if send_host_command(f"overview-toggle {mode}"):
+        return 0
+    # Fallback when nativeHost=false or bwm-plasma-host is not running.
+    qs = shutil.which("quickshell") or "quickshell"
+    return 0 if bwm_session.spawn([qs, "-c", "ii", "ipc", "call", "overview", "toggle"], allow_fallback=False) else 1
 
 def zoom(action):
     with (RUNTIME / "bwm-plasma-zoom.lock").open("w") as lock:
@@ -59,6 +84,10 @@ def main(args):
         return 0 if bwm_session.spawn([executable], allow_fallback=False) else 1
     if len(args) == 2 and args[0] == "zoom" and args[1] in ("in", "out", "reset", "leave"):
         return zoom(args[1])
+    if len(args) == 1 and args[0] in OVERVIEW_MODES:
+        return overview(args[0])
+    if len(args) == 2 and args[0] == "overview" and args[1] in OVERVIEW_MODES:
+        return overview(args[1])
     return 2
 
 if __name__ == "__main__":

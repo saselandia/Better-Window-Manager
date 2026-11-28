@@ -1723,6 +1723,87 @@
     "enabled": true,
     "skins": [
       "plasma"
-    ]
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "custom_1795805579_95",
+    "category": "Ventanas",
+    "description": "Vista general de Plasma (Breeze)",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "W",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py overview",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "custom_1795805579_96",
+    "category": "Ventanas",
+    "description": "Rejilla de escritorios de Plasma (Breeze)",
+    "mods": [
+      "SUPER"
+    ],
+    "key": "G",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py grid",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "custom_1795805579_97",
+    "category": "Ventanas",
+    "description": "Ventanas expuestas del escritorio actual (Breeze)",
+    "mods": [
+      "CTRL"
+    ],
+    "key": "F9",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py windowview",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
+  },
+  {
+    "id": "custom_1795805579_98",
+    "category": "Ventanas",
+    "description": "Ventanas expuestas de todos los escritorios (Breeze)",
+    "mods": [
+      "CTRL"
+    ],
+    "key": "F10",
+    "action_type": "exec",
+    "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py windowview-all",
+    "dispatcher": null,
+    "dispatcher_arg": null,
+    "options": {},
+    "is_default": false,
+    "enabled": true,
+    "skins": [
+      "plasma"
+    ],
+    "is_modified": false
   }
 ]

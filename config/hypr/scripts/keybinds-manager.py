@@ -640,6 +640,22 @@ for action, key in (("in", "KP_Add"), ("out", "KP_Subtract")):
     bind.update(id="plasma_zoom_" + action + "_keypad", key=key)
     DEFAULT_KEYBINDS.append(bind)
 
+for action, mods, key, description in (
+    ("overview", ["SUPER"], "W", "Vista general de Plasma (Breeze)"),
+    ("grid", ["SUPER"], "G", "Rejilla de escritorios de Plasma (Breeze)"),
+    ("windowview", ["CTRL"], "F9", "Ventanas expuestas del escritorio actual (Breeze)"),
+    ("windowview-all", ["CTRL"], "F10", "Ventanas expuestas de todos los escritorios (Breeze)"),
+):
+    DEFAULT_KEYBINDS.append({
+        "id": "plasma_" + action.replace("-", "_"),
+        "category": "Ventanas",
+        "description": description, "mods": mods, "key": key,
+        "action_type": "exec",
+        "exec": "/home/sasel/.config/hypr/skins/plasma/scripts/desktop-actions.py " + action,
+        "dispatcher": None, "dispatcher_arg": None, "options": {},
+        "skins": ["plasma"], "is_default": True, "enabled": True,
+    })
+
 DEFAULT_DICT = {item["id"]: item for item in DEFAULT_KEYBINDS}
 
 def load_keybinds() -> List[Dict[str, Any]]:

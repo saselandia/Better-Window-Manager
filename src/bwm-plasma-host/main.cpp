@@ -17,6 +17,7 @@
 #include <QScreen>
 #include <QMetaProperty>
 #include <QRegularExpression>
+#include <QProcess>
 #include <QSocketNotifier>
 #include <QStandardPaths>
 #include <sys/socket.h>
@@ -43,6 +44,8 @@
 #include "migration.h"
 #include "panelprobe.h"
 #include "panelsession.h"
+#include "overviewhost.h"
+#include "screenedges.h"
 #include "themeinventory.h"
 #include "viewcorona.h"
 #include "kns.h"
@@ -450,6 +453,39 @@ int main(int argc, char **argv) {
         QObject::connect(&layoutApi, &LookAndFeelLayout::restartRequested, &app, &QCoreApplication::quit);
         SessionUi sessionUi(QFileInfo(QStringLiteral(BWM_WALLPAPER_HELPER_SOURCE)).dir().absoluteFilePath("../../../scripts/bwm-power"));
         if(ownsShellApi)sessionUi.start();
+        const QDir plasmaScriptsDir = QFileInfo(QStringLiteral(BWM_WALLPAPER_HELPER_SOURCE)).dir();
+        const QString kwinWindowHelper = plasmaScriptsDir.absoluteFilePath(QStringLiteral("kwin-window.py"));
+        const QString minimizeHelper = plasmaScriptsDir.absoluteFilePath(QStringLiteral("../../../scripts/toggle-minimize.py"));
+        OverviewHost overviewHost(kwinWindowHelper, minimizeHelper);
+        ScreenEdges screenEdges;
+        screenEdges.setActionHandler([&](ScreenEdges::Action action, QScreen *) {
+            switch (action) {
+            case ScreenEdges::Action::Overview:
+                overviewHost.toggle(QStringLiteral("overview"));
+                break;
+            case ScreenEdges::Action::Grid:
+                overviewHost.toggle(QStringLiteral("grid"));
+                break;
+            case ScreenEdges::Action::WindowViewCurrent:
+                overviewHost.toggle(QStringLiteral("windowview"));
+                break;
+            case ScreenEdges::Action::WindowViewAll:
+                overviewHost.toggle(QStringLiteral("windowview-all"));
+                break;
+            case ScreenEdges::Action::ShowDesktop:
+                QProcess::startDetached(QStringLiteral("python3"), {kwinWindowHelper, QStringLiteral("show-desktop")});
+                break;
+            case ScreenEdges::Action::LockScreen:
+                QProcess::startDetached(QStringLiteral("quickshell"), {QStringLiteral("-c"), QStringLiteral("ii"), QStringLiteral("ipc"), QStringLiteral("call"), QStringLiteral("lock"), QStringLiteral("activate")});
+                break;
+            case ScreenEdges::Action::TabBox:
+                QProcess::startDetached(QStringLiteral("quickshell"), {QStringLiteral("-c"), QStringLiteral("ii"), QStringLiteral("ipc"), QStringLiteral("call"), QStringLiteral("altTab"), QStringLiteral("open")});
+                break;
+            case ScreenEdges::Action::None:
+                break;
+            }
+        });
+        if (ownsShellApi) screenEdges.start();
         const QString sockPath = runtimeDir + QStringLiteral("/bwm-plasma-host.sock");
         QLocalServer control;
         control.setSocketOptions(QLocalServer::UserAccessOption);
@@ -548,6 +584,22 @@ int main(int argc, char **argv) {
                                 reply = QJsonDocument(notificationHost.status()).toJson(QJsonDocument::Compact) + "\n";
                             } else if(line == QStringLiteral("notifications-claim")) {
                                 reply = notificationHost.claimService() ? "ok\n" : "err\n";
+                            } else if(line == QStringLiteral("overview-toggle") || line.startsWith(QStringLiteral("overview-toggle "))) {
+                                const QString m = line.mid(QStringLiteral("overview-toggle").size()).trimmed();
+                                reply = overviewHost.toggle(m.isEmpty() ? QStringLiteral("overview") : m) ? "ok\n" : "err\n";
+                            } else if(line == QStringLiteral("overview-open") || line.startsWith(QStringLiteral("overview-open "))) {
+                                const QString m = line.mid(QStringLiteral("overview-open").size()).trimmed();
+                                reply = overviewHost.open(m.isEmpty() ? QStringLiteral("overview") : m) ? "ok\n" : "err\n";
+                            } else if(line == QStringLiteral("overview-close")) {
+                                overviewHost.close();
+                                reply = "ok\n";
+                            } else if(line == QStringLiteral("overview-status")) {
+                                reply = QJsonDocument(overviewHost.status()).toJson(QJsonDocument::Compact) + "\n";
+                            } else if(line == QStringLiteral("screenedges-status")) {
+                                reply = QJsonDocument(screenEdges.status()).toJson(QJsonDocument::Compact) + "\n";
+                            } else if(line == QStringLiteral("screenedges-reload")) {
+                                screenEdges.reload();
+                                reply = "ok\n";
                             }
                         client->write(reply);
                         client->disconnectFromServer();

@@ -106,6 +106,15 @@ end-4/illogical-impulse), con tres estilos que cambian todo el escritorio y las 
 
 ### 2.4 Breeze (Kde plasma): port sobre Hyprland
 
+* **Respaldo sin duplicados y regresión final (T9, §396):** retirados `modules/plasma/{applets,kickoff,panel,tray}`, `menus/DesktopCatcher.qml` (~15 090 líneas, 180 archivos) y 5 pruebas obsoletas; sin host nativo (`nativeHost=false`), Breeze cae a `Bar` y `NotificationPopup` comunes de BWM. Conservados `theme`, `runtime`, `lock`, `osd`, `switcher`, `skinPicker`, `tiling`, `session`, `menus` de ventana y `settings`/`plasmaSettings.qml` (páginas sólo-BWM). Regresión completa en verde: 149 tests Python (0 fallos), CTest host 17/17, `bwm-kglobalaccel` 2/2, `bwm-systemsettings` 3/3. Informe `docs/BREEZE_T9_RESULTS.md`.
+
+* **Vista general y esquinas activas (T8, §395):** `OverviewHost` + `ExpoLayout` de KWin 6.7.5 +
+  `Milou` (carga perezosa al escribir) + `TaskThumbnail` (`bwmScreenshareMonitorGuard`) en
+  `bwm-plasma-host` para `Meta+W` (vista general), `Meta+G` (rejilla), `Ctrl+F9`/`Ctrl+F10`
+  (ventanas expuestas), con respaldo Quickshell sin host. `ScreenEdges` vigila `kwinrc` y coloca
+  sensores `LayerShellQt` de 2 px sólo en esquinas exteriores (sin tocar `breezebars` ni interferir
+  con el snapping de §17); `kcm_kwinscreenedges` desbloqueado en Preferencias. Informe `docs/BREEZE_T8_RESULTS.md`.
+
 * **Compatibilidad medida con la KDE Store (T7, §394):** muestra de 18 paquetes más descargados en
   raíces XDG aisladas con `bubblewrap` y Hyprland anidado (2026-11-27): **12/16 (75 %)** temas y
   recursos funcionan sin cambios y **4/16 (25 %)** con diferencias (temas globales sin efectos KWin;
@@ -7499,4 +7508,28 @@ git status; git log --oneline -5; git push origin main
 * **Fallo de BWM corregido:** `LayoutTemplateWidget::writeConfig` (`src/bwm-plasma-host/layouttemplate.{h,cpp}`) recibía `QVariant` en vez de `QJSValue`, descartando silenciosamente los arrays JS de lanzadores del `layout.js` de WhiteSur-Dark. Corregido convirtiendo `QJSValue::toVariant()` y actualizando `KConfigLoader` como `scripting::Applet` de Plasma 6.7.5; regresión `originalScriptArrayUpdatesSchemaAndSurvivesReload` añadida a `test-t4-session.cpp` (3/3 PASS) y binario `build/bwm-plasma-host` recompilado sin reiniciar la sesión diaria.
 * **Pruebas y documentación:** `tests/test_breeze_store.py` 5/5 PASS; regresiones Python T6/arranque/T5 21/21 PASS; CTest `build/bwm-plasma-host-tests` 16/16 PASS (57,46 s). Requisito opcional `bwm-plasma-store-tests` añadido a `requirements.json`, `plasma/skin.json` y `docs/REQUIREMENTS.md`. Publicados `docs/BREEZE_STORE_COMPAT.md` y `docs/BREEZE_T7_RESULTS.md`; actualizados `README.md`, `README.es.md`, `docs/SKINS.md`, `docs/BREEZE_PLAN_V3.md` y `THIRD_PARTY_NOTICES.md`.
 * **Límites:** los porcentajes describen la muestra de 18 paquetes (no toda la tienda); vistas directas en Hyprland anidado por ausencia de EDID virtual; sin commit/push. Siguiente fase del plan: **T8** (vista general y esquinas activas).
+
+
+### 395. Breeze III: T8, vista general y esquinas activas (2026-11-27)
+
+* **Decisiones con el usuario:** (1) Vista general / Rejilla / Ventanas expuestas portadas en `bwm-plasma-host` reutilizando `ExpoLayout` de KWin 6.7.5, `org.kde.milou` (KRunner) y `TaskThumbnail` (`bwmScreenshareMonitorGuard`); (2) desbloquear `kcm_kwinscreenedges` y usar sensores `LayerShellQt` de 2 px en esquinas exteriores sin tocar `breezebars.so` ni requerir reinicio de sesión.
+* **Vista general (`OverviewHost`):** `src/bwm-plasma-host/{expolayout,overviewhost}.{h,cpp}` + `qml/OverviewMain.qml` y `BwmTaskSource::uuidForAddress` en `tasksource.{h,cpp}`. Cuatro modos (`overview`, `grid`, `windowview`, `windowview-all`), capa `LayerOverlay` por monitor, entrada con `ExpoCell.partialActivationFactor` (`Kirigami.Units.longDuration`), `DesktopBar` con arrastre de ventanas entre escritorios, carga perezosa de `Milou.ResultsView` al teclear (evita bloqueo en D-Bus privado y hace la apertura instantánea), soporte de escalas fraccionarias y `special:magic` abierto. Acciones sobre ventanas y escritorios vía `kwin-window.py`, `toggle-minimize.py` y `hyprctl`. `desktop-actions.py` enruta al socket `bwm-plasma-host.sock` con respaldo a `quickshell -c ii ipc call overview toggle` si el host no corre. Atajos sólo Breeze (`Meta+W`, `Meta+G`, `Ctrl+F9`, `Ctrl+F10`) registrados con `keybinds-manager.py --skins plasma` y añadidos a `DEFAULT_KEYBINDS`.
+* **Esquinas activas (`ScreenEdges`):** `src/bwm-plasma-host/screenedges.{h,cpp}` lee y vigila `~/.config/kwinrc` (`ElectricBorderDelay`, `ElectricBorderCooldown`, `RemainActiveOnFullscreen`, `[Effect-overview]`, `[Effect-windowview]`, `[ElectricBorders]`, `[TabBox]`; por defecto `TopLeft -> Overview`). `isExteriorEdge` descarta uniones entre monitores; no dispara con botones de ratón pulsados (protege snapping §17) ni en pantalla completa si corresponde. `kcm_kwinscreenedges` desbloqueado en `settings-profile/kdeglobals` (`kcm_kwintouchscreen` sigue oculto).
+* **Pruebas y despliegue:** `tests/test_breeze_t8.py` + regresiones Python 27/27 PASS; `test-overview-screenedges` 7/7 PASS; CTest completo `build/bwm-plasma-host-tests` 17/17 PASS (56,87 s); Hyprland anidado (`check-focus-safety.py --binary check-t8-session.py`) PASS (4/4 modos cargados sin errores QML, `screenedges` activo, limpieza verificada). Binario `bwm-plasma-host` instalado atómicamente (`b32f1eb2ffd0785b…`) y reiniciado en sesión (PID 87186, `ready: true`, 2 sensores exteriores `TopLeft -> Overview` en ambos monitores). Documentación en `docs/BREEZE_T8_RESULTS.md`, `docs/BREEZE_ARCH.md` §22, `docs/BREEZE_PLAN_V3.md`, `THIRD_PARTY_NOTICES.md` y `AGENTS.md`/`CLAUDE.md`.
+* **Límites y pendiente:** en `kcm_kwinscreenedges` las acciones exclusivas de KWin (cubo, etc.) y `EdgeBarrier` físico no aplican desde `LayerShellQt`. Pendiente comprobación física del usuario (atajos, esquina superior izquierda, Milou, arrastre entre monitores y Preferencias → Bordes de la pantalla). Sin commit/push. Siguiente fase: **T9**.
+
+
+### 396. Breeze III: T9, retirada de respaldo duplicado y regresión completa (2026-11-28)
+
+* **Respaldo sin duplicados (acordado con el usuario):** retirados los ports QML duplicados de `config/quickshell/ii/modules/plasma/{applets,kickoff,panel,tray}` y `menus/DesktopCatcher.qml` (180 archivos, ~15 090 líneas QML/JS) junto con sus 5 pruebas obsoletas (`tests/test_plasma_{kickoff_ui,panel,panel_native,task_input,tray}.py`). Limpiadas las referencias en `IllogicalImpulseFamily.qml`, `menus/qmldir`, `plasma-theme.py` y `plasma/skin.json`. Si `bwm-plasma-host` se detiene o se desactiva (`bar.plasma.nativeHost=false`), `IllogicalImpulseFamily.qml` activa automáticamente la barra común (`Bar`) y las notificaciones comunes (`NotificationPopup`) de BWM. Conservadas intactas todas las piezas activas con el host (`theme`, `runtime`, `lock`, `osd`, `switcher`, `skinPicker`, `tiling`, `session`, `menus` de ventana y `settings`/`plasmaSettings.qml` para páginas exclusivas de BWM).
+* **Batería completa de regresión:**
+  * Python (22 suites: `test_breeze_*`, `test_kde_shortcuts`, `test_native_plasma_host`, `test_plasma_*`, `test_r3_native_settings`, `test_r7_effects`, `test_breezebars`, `test_bwm_decorator`): **149 tests ejecutados, 0 fallos** (16 omitidos por sesión/display; 51,66 s).
+  * CTest `build/bwm-plasma-host-tests` (`BUILD_TESTING=ON`): **17/17 PASS** (56,61 s).
+  * CTest `build/bwm-kglobalaccel`: **2/2 PASS** (1,33 s).
+  * CTest `src/bwm-systemsettings/build`: **3/3 PASS** (4,48 s).
+  * Matriz real entre skins (`check-skin-lifecycle.py --run`, tras corregir bloqueo por pipes heredados en `subprocess.run`): **PASS** (`retro` 4,02 s, `plasma` 5,22 s, `default` 5,07 s, `plasma` 4,17 s; cero ventanas perdidas/movidas, reservas idénticas).
+  * `docs/REQUIREMENTS.md` regenerado sin cambios pendientes.
+* **Documentación y pendiente:** creados/actualizados `docs/BREEZE_T9_RESULTS.md`, `docs/BREEZE_PLAN_V3.md`, `docs/BREEZE_ARCH.md` §23, `AGENTS.md`/`CLAUDE.md` y `BWM_CONTEXT.md`. Pendiente únicamente la aceptación física interactiva del usuario de T1–T8.
+
+
 

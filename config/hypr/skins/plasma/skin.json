@@ -64,13 +64,9 @@
   "parts": {
     "quickshell": [
       "config/quickshell/ii/modules/plasma/theme",
-      "config/quickshell/ii/modules/plasma/kickoff",
-      "config/quickshell/ii/modules/plasma/panel",
       "config/quickshell/ii/modules/plasma/menus",
       "config/quickshell/ii/plasmaSettings.qml",
       "config/quickshell/ii/modules/plasma/settings",
-      "config/quickshell/ii/modules/plasma/tray",
-      "config/quickshell/ii/modules/plasma/applets",
       "config/quickshell/ii/modules/plasma/tiling",
       "config/quickshell/ii/modules/plasma/switcher",
       "config/quickshell/ii/modules/plasma/osd",

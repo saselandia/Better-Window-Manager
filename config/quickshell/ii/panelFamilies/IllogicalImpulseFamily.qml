@@ -31,7 +31,6 @@ import qs.modules.ii.verticalBar
 import qs.modules.ii.wallpaperSelector
 import qs.modules.ii.altTab
 import qs.modules.ii.omarchyMenu
-import qs.modules.plasma.kickoff as PlasmaKickoffPort
 import qs.modules.ii.idle
 import qs.modules.ii.screenshotPreview
 import qs.modules.ii.omarchyNotifications
@@ -39,8 +38,9 @@ import qs.omarchyShell
 
 Scope {
     id: familyRoot
-    // R4–R5: while native bwm-plasma-host (--session) is running, it owns the Plasma panel,
-    // Kickoff, System Tray, Notifications and DesktopEditMode; Quickshell keeps the fallback ready if it stops.
+    // R4–T9: while native bwm-plasma-host (--session) is running, it owns the Plasma panel,
+    // Kickoff, System Tray, Notifications, Overview and DesktopEditMode. If it is stopped or
+    // disabled (bar.plasma.nativeHost=false), Breeze falls back to BWM's common Bar and NotificationPopup.
     property bool _nativeHostReady: false
     readonly property bool nativePlasmaHost: Appearance.isPlasma && _nativeHostReady && (Config.options?.bar?.plasma?.nativeHost ?? true)
     readonly property string _nativeHostHelper: FileUtils.trimFileProtocol(Quickshell.shellPath("../..")) + "/hypr/skins/plasma/scripts/plasma-host.py"
@@ -77,14 +77,10 @@ Scope {
         onTriggered: nativeHostProbe.check()
     }
 
-    // Retro: Omarchy's own bar, inside omarchy-shell's host (omarchyShell/), with its panels and plugins
-    PanelLoader { extraCondition: !Config.options.bar.vertical && !Appearance.isRetro && !Appearance.isPlasma; component: Bar {} }
+    // Retro: Omarchy's own bar, inside omarchy-shell's host (omarchyShell/), with its panels and plugins.
+    // Breeze uses bwm-plasma-host natively and falls back to BWM's common Bar if the host is not ready.
+    PanelLoader { extraCondition: !Config.options.bar.vertical && !Appearance.isRetro && (!Appearance.isPlasma || !familyRoot.nativePlasmaHost); component: Bar {} }
     PanelLoader { extraCondition: Appearance.isRetro; component: OmarchyShell {} }
-    // The source is empty outside Breeze: its KDE QML dependencies remain skin-specific.
-    PanelLoader {
-        extraCondition: Appearance.isPlasma && !familyRoot.nativePlasmaHost
-        source: extraCondition ? Qt.resolvedUrl("../modules/plasma/panel/Panel.qml") : ""
-    }
     // Fondo pintado por el shell, como en el original: el de end-4 en default (end-4) y el de
     // Omarchy (con su transición) en Retro; Breeze sigue con swww salvo background.enable
     PanelLoader { extraCondition: (!Appearance.isRetro && !Appearance.isPlasma) || (Appearance.isPlasma && !familyRoot.nativePlasmaHost && Boolean(Config.options.background?.enable)); component: Background {} }
@@ -94,7 +90,7 @@ Scope {
     PanelLoader { extraCondition: Config.options.dock.enable && !Appearance.isRetro; component: Dock {} }
     PanelLoader { component: Lock {} }
     PanelLoader { component: MediaControls {} }
-    PanelLoader { extraCondition: !Appearance.isRetro && !Appearance.isPlasma; component: NotificationPopup {} }
+    PanelLoader { extraCondition: !Appearance.isRetro && (!Appearance.isPlasma || !familyRoot.nativePlasmaHost); component: NotificationPopup {} }
     PanelLoader { component: OnScreenDisplay {} }
     PanelLoader { component: OnScreenKeyboard {} }
     PanelLoader { component: Overlay {} }
@@ -119,14 +115,9 @@ Scope {
     PanelLoader { component: WallpaperSelector {} }
     PanelLoader { component: AltTab {} }
     PanelLoader { component: OmarchyMenu {} }
-    PanelLoader { extraCondition: Appearance.isPlasma && !familyRoot.nativePlasmaHost; component: PlasmaKickoffPort.KickoffWindow {} } // F4: Kickoff de Plasma 6.7.5 portado
     PanelLoader { component: BwmIdle {} }
-    // F5 fallback: KDE applet interfaces over Quickshell's server; off while native host owns notifications.
-    PanelLoader { extraCondition: Appearance.isPlasma && !familyRoot.nativePlasmaHost; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/tray/TrayController.qml") : "" }
-    PanelLoader { extraCondition: Appearance.isPlasma && !familyRoot.nativePlasmaHost; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/applets/NotificationPopups.qml") : "" }
-    // F9: menús contextuales de Plasma (ventana, tareas, escritorio, panel) y el clic derecho en el fondo
+    // F9: menús contextuales de ventana de Plasma (Alt+F3 y barra de título de breezebars)
     PanelLoader { extraCondition: Appearance.isPlasma; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/menus/MenuHost.qml") : "" }
-    PanelLoader { extraCondition: Appearance.isPlasma && !familyRoot.nativePlasmaHost; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/menus/DesktopCatcher.qml") : "" }
     PanelLoader { extraCondition: Appearance.isPlasma; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/skinPicker/SkinPicker.qml") : "" }
     // F10: KSvg outline and KWin-format custom tiling editor, Breeze only.
     PanelLoader { extraCondition: Appearance.isPlasma; source: extraCondition ? Qt.resolvedUrl("../modules/plasma/tiling/Outline.qml") : "" }

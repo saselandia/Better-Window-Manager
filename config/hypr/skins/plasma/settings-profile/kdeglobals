@@ -30,7 +30,6 @@ kcm_virtualkeyboard=false
 kcm_wallpaper=false
 kcm_mouse=false
 kcm_touchpad=false
-kcm_kwinscreenedges=false
 kcm_kwinscreenedges_x11=false
 kcm_kwintouchscreen=false
 kcm_kwintouchscreen_x11=false

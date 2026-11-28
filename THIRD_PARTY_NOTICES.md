@@ -1007,3 +1007,17 @@ descargaron, revisaron, ensayaron y retiraron en raíces temporales aisladas; **
 archivos o binarios se redistribuye en BWM**. Lista completa y enlaces a la tienda en
 `docs/BREEZE_STORE_COMPAT.md` y `docs/BREEZE_T7_RESULTS.md`.
 
+### Vista general y esquinas activas (T8, KWin 6.7.5)
+
+`src/bwm-plasma-host/expolayout.{h,cpp}` incorpora el algoritmo `ExpoLayout` y `ExpoCell` de
+`src/plugins/private/expolayout.{h,cpp}` de [KWin 6.7.5](https://invent.kde.org/plasma/kwin/-/tree/v6.7.5/src/plugins/private)
+(Vlad Zahorodnii / KDE, **GPL-2.0-or-later**), sin dependencias de KWin core y conservando sus
+cabeceras SPDX originales. `src/bwm-plasma-host/qml/OverviewMain.qml` adapta la estructura y
+lenguaje visual de `src/plugins/{overview,windowview,private}` de KWin 6.7.5 (**GPL-2.0-or-later**)
+al modelo de ventanas de Hyprland, las miniaturas `TaskThumbnail` (`bwmScreenshareMonitorGuard`) y
+el módulo instalado `org.kde.milou` (KRunner). `src/bwm-plasma-host/{overviewhost,screenedges}.{h,cpp}`,
+`check-t8-session.py`, `test-overview-screenedges.cpp` y `tests/test_breeze_t8.py` son código de
+BWM **GPL-2.0-or-later**. La página `kcm_kwinscreenedges` se carga directamente del plugin KDE
+instalado en el sistema, sin copiar ni modificar sus archivos.
+
+

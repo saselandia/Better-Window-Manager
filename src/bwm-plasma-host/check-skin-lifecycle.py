@@ -122,13 +122,17 @@ def run(sequence: list[str]) -> dict:
     try:
         for skin in sequence:
             started = time.monotonic()
-            res = subprocess.run([sys.executable, str(MANAGER), "set", skin],
-                                 capture_output=True, text=True, timeout=120)
+            import tempfile
+            with tempfile.TemporaryFile(mode="w+") as out_f, tempfile.TemporaryFile(mode="w+") as err_f:
+                res = subprocess.run([sys.executable, str(MANAGER), "set", skin],
+                                     stdout=out_f, stderr=err_f, timeout=120)
+                err_f.seek(0)
+                err_text = err_f.read()
             switch_s = round(time.monotonic() - started, 2)
             snap = wait_settled(skin)
             issues = problems(snap, skin)
             if res.returncode:
-                issues.append(f"gestor salió con {res.returncode}: {res.stderr.strip()[-400:]}")
+                issues.append(f"gestor salió con {res.returncode}: {err_text.strip()[-400:]}")
             lost = sorted(set(initial["clients"]) - set(snap["clients"]))
             moved = sorted(k for k, ws in initial["clients"].items()
                            if k in snap["clients"] and snap["clients"][k] != ws)
